@@ -1,0 +1,187 @@
+name: Agent Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_agents:
+        description: 'Maximum concurrent agents'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+        default: '2'
+      dry_run:
+        description: 'Plan-only mode (no execution)'
+        type: boolean
+        default: false
+  
+  issues:
+    types: [labeled, opened, reopened]
+  
+  schedule:
+    # Run every hour to catch any missed issues
+    - cron: '0 * * * *'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: agent-orchestrator
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Discover Ready Issues
+    runs-on: ubuntu-latest
+    outputs:
+      issues: ${{ steps.find-issues.outputs.issues }}
+      count: ${{ steps.find-issues.outputs.count }}
+    
+    steps:
+      - name: Find AI-Ready Issues
+        id: find-issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔍 Discovering issues labeled 'ai:ready'..."
+          
+          # First get all ai:ready issues
+          ALL_ISSUES=$(gh issue list \
+            --repo ${{ github.repository }} \
+            --label "ai:ready" \
+            --state open \
+            --json number,title,labels,assignees \
+            --limit 10)
+          
+          echo "Raw issues found:"
+          echo "$ALL_ISSUES" | jq '.'
+          
+          # Filter out issues that are already in progress or assigned
+          ISSUES=$(echo "$ALL_ISSUES" | jq '[
+            .[] | 
+            select(.assignees | length == 0) |
+            select(
+              .labels | 
+              map(.name) | 
+              contains(["ai:in-progress"]) | not
+            )
+          ]')
+          
+          # Limit to max_agents input
+          MAX_AGENTS=${{ inputs.max_agents || 2 }}
+          ISSUES=$(echo "$ISSUES" | jq ".[:$MAX_AGENTS]")
+          
+          # Count issues
+          COUNT=$(echo "$ISSUES" | jq 'length')
+          
+          echo "📋 Found $COUNT ready issues after filtering"
+          echo "$ISSUES" | jq '.'
+          
+          # Output for matrix - ensure valid JSON
+          if [ "$COUNT" -eq 0 ]; then
+            echo "issues=[]" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+          else
+            ISSUES_JSON=$(echo "$ISSUES" | jq -c '.')
+            echo "issues=$ISSUES_JSON" >> $GITHUB_OUTPUT
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+          fi
+
+  prepare:
+    name: Prepare Agents
+    needs: discover
+    if: needs.discover.outputs.count > 0
+    runs-on: ubuntu-latest
+    outputs:
+      issues_matrix: ${{ steps.prepare.outputs.issues_matrix }}
+    steps:
+      - name: Prepare Issue Matrix
+        id: prepare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Preparing issue matrix for agent execution..."
+          ISSUES='${{ needs.discover.outputs.issues }}'
+          
+          # Process and claim issues
+          CLAIMED_ISSUES="[]"
+          for row in $(echo "$ISSUES" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+            
+            ISSUE_NUM=$(_jq '.number')
+            ISSUE_TITLE=$(_jq '.title')
+            
+            echo "Processing issue #$ISSUE_NUM: $ISSUE_TITLE"
+            
+            # Check if already in progress
+            CURRENT_LABELS=$(gh issue view $ISSUE_NUM \
+              --repo ${{ github.repository }} \
+              --json labels \
+              --jq '.labels | map(.name) | join(",")')
+            
+            if [[ "$CURRENT_LABELS" != *"ai:in-progress"* ]]; then
+              # Claim the issue
+              gh issue edit $ISSUE_NUM \
+                --repo ${{ github.repository }} \
+                --add-label "ai:in-progress" \
+                --remove-label "ai:ready" > /dev/null 2>&1 || true
+              
+              COMMENT_BODY="🤖 **Agent Claimed**: Starting autonomous work on this issue. Mode: ${{ inputs.dry_run && 'Plan-only (dry run)' || 'Full execution' }}. Run: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+              
+              gh issue comment $ISSUE_NUM \
+                --repo ${{ github.repository }} \
+                --body "$COMMENT_BODY" > /dev/null 2>&1
+              
+              # Re-enable command echoing
+              set -x
+              
+              # Add to claimed issues
+              CLAIMED_ISSUES=$(echo "$CLAIMED_ISSUES" | jq ". += [{\"number\": $ISSUE_NUM}]")
+            fi
+          done
+          
+          # Ensure JSON is properly formatted for GitHub Output
+          CLAIMED_JSON=$(echo "$CLAIMED_ISSUES" | jq -c '.')
+          echo "issues_matrix=$CLAIMED_JSON" >> $GITHUB_OUTPUT
+  
+  execute:
+    name: Execute Agent (${{ matrix.issue.number }})
+    needs: prepare
+    if: needs.prepare.outputs.issues_matrix != '[]' && needs.prepare.outputs.issues_matrix != null
+    strategy:
+      matrix:
+        issue: ${{ fromJson(needs.prepare.outputs.issues_matrix) }}
+      max-parallel: 2
+      fail-fast: false
+    uses: ./.github/workflows/agent-executor.yml
+    with:
+      issue_number: '${{ matrix.issue.number }}'
+      dry_run: ${{ inputs.dry_run || false }}
+    secrets: inherit
+
+  summary:
+    name: Orchestration Summary
+    needs: [discover, prepare]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Report Summary
+        run: |
+          echo "## 🤖 Agent Orchestration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Issues Found**: ${{ needs.discover.outputs.count || 0 }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode**: ${{ inputs.dry_run && 'Plan-only (dry run)' || 'Full execution' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Max Agents**: ${{ inputs.max_agents || 2 }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.discover.outputs.count }}" == "0" ]]; then
+            echo "ℹ️ No ready issues found. Add `ai:ready` label to issues for agent processing." >> $GITHUB_STEP_SUMMARY
+          fi
