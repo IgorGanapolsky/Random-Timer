@@ -1,0 +1,243 @@
+name: Auto-Merge Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["CI Pipeline", "Security Scan"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  checks: read
+
+jobs:
+  dependabot-auto-merge:
+    name: Auto-Merge Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    
+    steps:
+      - name: Get PR Details
+        id: pr-details
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get PR information
+          PR_INFO=$(gh pr view ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }} \
+            --repo ${{ github.repository }} \
+            --json number,title,body,mergeable,mergeStateStatus,statusCheckRollup,labels,author)
+          
+          echo "PR Info: $PR_INFO"
+          
+          # Extract key information
+          PR_NUM=$(echo "$PR_INFO" | jq -r '.number')
+          TITLE=$(echo "$PR_INFO" | jq -r '.title')
+          MERGEABLE=$(echo "$PR_INFO" | jq -r '.mergeable')
+          MERGE_STATUS=$(echo "$PR_INFO" | jq -r '.mergeStateStatus')
+          AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+          
+          # Determine update type and risk level
+          RISK_LEVEL="unknown"
+          AUTO_MERGE_ELIGIBLE="false"
+          
+          if [[ "$TITLE" =~ "patch" ]] || [[ "$TITLE" =~ "Bump.*[0-9]+\.[0-9]+\.[0-9]+ to [0-9]+\.[0-9]+\.[0-9]+" ]]; then
+            # Extract version numbers to determine if it's a patch update
+            OLD_VERSION=$(echo "$TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            NEW_VERSION=$(echo "$TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | tail -1)
+            
+            if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
+              OLD_MAJOR=$(echo "$OLD_VERSION" | cut -d. -f1)
+              OLD_MINOR=$(echo "$OLD_VERSION" | cut -d. -f2)
+              NEW_MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
+              NEW_MINOR=$(echo "$NEW_VERSION" | cut -d. -f2)
+              
+              if [[ "$OLD_MAJOR" == "$NEW_MAJOR" ]] && [[ "$OLD_MINOR" == "$NEW_MINOR" ]]; then
+                RISK_LEVEL="patch"
+                AUTO_MERGE_ELIGIBLE="true"
+              elif [[ "$OLD_MAJOR" == "$NEW_MAJOR" ]]; then
+                RISK_LEVEL="minor"
+                AUTO_MERGE_ELIGIBLE="true"
+              else
+                RISK_LEVEL="major"
+                AUTO_MERGE_ELIGIBLE="false"
+              fi
+            fi
+          fi
+          
+          # Security updates are always eligible
+          if [[ "$TITLE" =~ "security" ]] || [[ "$TITLE" =~ "vulnerability" ]]; then
+            RISK_LEVEL="security"
+            AUTO_MERGE_ELIGIBLE="true"
+          fi
+          
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "mergeable=$MERGEABLE" >> $GITHUB_OUTPUT
+          echo "merge_status=$MERGE_STATUS" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "risk_level=$RISK_LEVEL" >> $GITHUB_OUTPUT
+          echo "auto_merge_eligible=$AUTO_MERGE_ELIGIBLE" >> $GITHUB_OUTPUT
+
+      - name: Check CI Status
+        id: ci-status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Wait a bit for checks to register
+          sleep 30
+          
+          # Get latest status checks
+          CHECKS=$(gh pr view ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --json statusCheckRollup | jq '.statusCheckRollup')
+          
+          echo "Status checks: $CHECKS"
+          
+          # Count critical failures (exclude known flaky checks)
+          CRITICAL_FAILURES=$(echo "$CHECKS" | jq '
+            [.[] | 
+            select(.conclusion == "FAILURE" or .state == "FAILURE") |
+            select(.name != "Sync to Kanban Board") |
+            select(.name != "Kanban Board Sync v2") |
+            select(.name != "CodeRabbit") |
+            select(.name != "SonarCloud") |  # Allow SonarCloud to be flaky
+            .name] | unique | length')
+          
+          PENDING_CRITICAL=$(echo "$CHECKS" | jq '
+            [.[] | 
+            select(.conclusion == "PENDING" or .state == "PENDING" or .conclusion == null) |
+            select(.name == "CI Pipeline" or .name == "Security Scan" or .name == "Build" or .name == "Test") |
+            .name] | unique | length')
+          
+          echo "Critical failures: $CRITICAL_FAILURES"
+          echo "Pending critical checks: $PENDING_CRITICAL"
+          
+          if [[ "$CRITICAL_FAILURES" == "0" ]] && [[ "$PENDING_CRITICAL" == "0" ]]; then
+            echo "ci_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "ci_passed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "critical_failures=$CRITICAL_FAILURES" >> $GITHUB_OUTPUT
+          echo "pending_critical=$PENDING_CRITICAL" >> $GITHUB_OUTPUT
+
+      - name: Auto-Approve Dependabot PR
+        if: |
+          steps.pr-details.outputs.author == 'dependabot[bot]' &&
+          (steps.pr-details.outputs.risk_level == 'patch' || 
+           steps.pr-details.outputs.risk_level == 'minor' || 
+           steps.pr-details.outputs.risk_level == 'security')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🤖 Auto-approving Dependabot PR #${{ steps.pr-details.outputs.pr_number }}"
+          
+          # Approve the PR
+          gh pr review ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --approve \
+            --body "🤖 **Auto-approved**: ${{ steps.pr-details.outputs.risk_level }} update detected. Safe to merge automatically."
+          
+          # Add auto-merge label for the existing workflow
+          gh pr edit ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "auto-merge"
+
+      - name: Auto-Merge Dependabot PR
+        if: |
+          steps.pr-details.outputs.author == 'dependabot[bot]' &&
+          steps.pr-details.outputs.auto_merge_eligible == 'true' &&
+          steps.ci-status.outputs.ci_passed == 'true' &&
+          (steps.pr-details.outputs.mergeable == 'MERGEABLE' || steps.pr-details.outputs.merge_status == 'CLEAN')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔀 Auto-merging Dependabot PR #${{ steps.pr-details.outputs.pr_number }}"
+          
+          # Add merge comment
+          gh pr comment ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --body "🤖 **Auto-merge**: ${{ steps.pr-details.outputs.risk_level }} update with passing CI. Merging automatically.
+            
+            **Risk Assessment**: ${{ steps.pr-details.outputs.risk_level }}
+            **CI Status**: ✅ All critical checks passed
+            **Merge Status**: ✅ Ready to merge"
+          
+          # Merge the PR
+          gh pr merge ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --merge \
+            --delete-branch \
+            --subject "Auto-merge: ${{ steps.pr-details.outputs.title }}" \
+            --body "Automatically merged Dependabot ${{ steps.pr-details.outputs.risk_level }} update after CI validation."
+
+      - name: Handle Major Updates
+        if: |
+          steps.pr-details.outputs.author == 'dependabot[bot]' &&
+          steps.pr-details.outputs.risk_level == 'major' &&
+          steps.ci-status.outputs.ci_passed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "⚠️ Major version update detected - requires manual review"
+          
+          # Add comment explaining why it needs manual review
+          gh pr comment ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --body "⚠️ **Major Version Update Detected**
+            
+            This PR contains a major version update that requires manual review:
+            - ${{ steps.pr-details.outputs.title }}
+            - **Risk Level**: MAJOR - may contain breaking changes
+            - **CI Status**: ✅ All checks passed
+            - **Action Required**: Manual review and approval needed
+            
+            Please review the changelog and test thoroughly before merging."
+          
+          # Add labels for manual review
+          gh pr edit ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "needs-manual-review" \
+            --add-label "major-version-update"
+
+      - name: Handle CI Failures
+        if: |
+          steps.pr-details.outputs.author == 'dependabot[bot]' &&
+          steps.ci-status.outputs.ci_passed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "❌ CI failures detected - skipping auto-merge"
+          
+          gh pr comment ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --body "❌ **Auto-merge skipped**: CI failures detected
+            
+            **Issues found**:
+            - Critical failures: ${{ steps.ci-status.outputs.critical_failures }}
+            - Pending critical checks: ${{ steps.ci-status.outputs.pending_critical }}
+            
+            Auto-merge will retry once all critical checks pass."
+          
+          # Add label to track
+          gh pr edit ${{ steps.pr-details.outputs.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "ci-failure"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🤖 Dependabot Auto-Merge Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: #${{ steps.pr-details.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Title**: ${{ steps.pr-details.outputs.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Risk Level**: ${{ steps.pr-details.outputs.risk_level }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Auto-Merge Eligible**: ${{ steps.pr-details.outputs.auto_merge_eligible }}" >> $GITHUB_STEP_SUMMARY
+          echo "**CI Passed**: ${{ steps.ci-status.outputs.ci_passed }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Mergeable**: ${{ steps.pr-details.outputs.mergeable }}" >> $GITHUB_STEP_SUMMARY
