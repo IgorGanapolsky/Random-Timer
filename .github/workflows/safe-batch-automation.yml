@@ -1,0 +1,257 @@
+name: Safe Batch Automation
+
+on:
+  # Run twice daily at low-traffic times
+  schedule:
+    - cron: '0 6 * * *'   # 6 AM UTC daily
+    - cron: '0 18 * * *'  # 6 PM UTC daily
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode'
+        type: boolean
+        default: true
+      max_operations:
+        description: 'Maximum operations per run'
+        type: number
+        default: 5
+
+# CRITICAL: Prevent parallel runs
+concurrency:
+  group: batch-automation
+  cancel-in-progress: false
+
+env:
+  MAX_DAILY_RUNS: 20
+  MAX_OPERATIONS: 5
+  COST_LIMIT_MINUTES: 10
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  safety-checks:
+    name: Pre-flight Safety Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+      
+    steps:
+      - name: Check rate limits
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔍 Performing safety checks..."
+          
+          # Check if we've exceeded daily run limit
+          RUNS_TODAY=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '[.workflow_runs[] | 
+                   select(.created_at > (now - 86400 | todate))] | length' \
+            2>/dev/null || echo "0")
+          
+          echo "Runs today: $RUNS_TODAY / $MAX_DAILY_RUNS"
+          
+          if [ "$RUNS_TODAY" -gt "$MAX_DAILY_RUNS" ]; then
+            echo "❌ Daily limit exceeded. Stopping."
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check GitHub API rate limit
+          RATE_REMAINING=$(gh api rate_limit --jq '.rate.remaining' 2>/dev/null || echo "0")
+          echo "API calls remaining: $RATE_REMAINING"
+          
+          if [ "$RATE_REMAINING" -lt "100" ]; then
+            echo "❌ API rate limit too low. Stopping."
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "✅ All safety checks passed"
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
+  batch-processor:
+    name: Batch Process Operations
+    needs: safety-checks
+    if: needs.safety-checks.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(env.COST_LIMIT_MINUTES) }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup environment
+        run: |
+          echo "🔧 Setting up batch processor..."
+          echo "DRY_RUN=${{ inputs.dry_run || 'false' }}" >> $GITHUB_ENV
+          echo "MAX_OPS=${{ inputs.max_operations || env.MAX_OPERATIONS }}" >> $GITHUB_ENV
+      
+      - name: Process ready issues (batched)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📋 Processing ready issues..."
+          
+          # Get all ready issues in one call
+          ISSUES=$(gh issue list \
+            --state open \
+            --label "ai:ready" \
+            --limit $MAX_OPS \
+            --json number,title \
+            --jq '.[] | "\(.number):\(.title)"' || echo "")
+          
+          if [ -z "$ISSUES" ]; then
+            echo "No issues to process"
+            exit 0
+          fi
+          
+          PROCESSED=0
+          echo "$ISSUES" | while IFS=: read -r number title; do
+            if [ "$PROCESSED" -ge "$MAX_OPS" ]; then
+              echo "Reached operation limit"
+              break
+            fi
+            
+            echo "Processing issue #$number: $title"
+            
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[DRY RUN] Would process issue #$number"
+            else
+              # Add processing logic here
+              gh issue comment "$number" \
+                --body "🤖 Batch processor acknowledged issue"
+              
+              # Add artificial delay to prevent API spam
+              sleep 2
+            fi
+            
+            PROCESSED=$((PROCESSED + 1))
+          done
+          
+          echo "✅ Processed $PROCESSED issues"
+      
+      - name: Auto-merge ready PRs (batched)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔀 Checking for auto-mergeable PRs..."
+          
+          # Get all mergeable PRs in one call
+          PRS=$(gh pr list \
+            --state open \
+            --label "auto-merge" \
+            --json number,mergeable,statusCheckRollup \
+            --jq '.[] | select(.mergeable == "MERGEABLE") | .number' \
+            --limit $MAX_OPS || echo "")
+          
+          if [ -z "$PRS" ]; then
+            echo "No PRs ready to merge"
+            exit 0
+          fi
+          
+          MERGED=0
+          echo "$PRS" | while read -r pr_num; do
+            if [ "$MERGED" -ge "$MAX_OPS" ]; then
+              echo "Reached operation limit"
+              break
+            fi
+            
+            echo "Checking PR #$pr_num..."
+            
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[DRY RUN] Would merge PR #$pr_num"
+            else
+              # Check if all status checks passed
+              CHECKS_PASSED=$(gh pr view "$pr_num" \
+                --json statusCheckRollup \
+                --jq '[.statusCheckRollup[] | 
+                       select(.conclusion != "SUCCESS")] | length' || echo "1")
+              
+              if [ "$CHECKS_PASSED" = "0" ]; then
+                echo "✅ Merging PR #$pr_num"
+                gh pr merge "$pr_num" \
+                  --squash \
+                  --delete-branch || echo "Failed to merge PR #$pr_num"
+                
+                MERGED=$((MERGED + 1))
+                sleep 3  # Rate limiting
+              else
+                echo "⏳ PR #$pr_num has pending checks"
+              fi
+            fi
+          done
+          
+          echo "✅ Merged $MERGED PRs"
+      
+      - name: Generate metrics
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📊 Generating batch metrics..."
+          
+          # Simple metrics without creating issues
+          OPEN_ISSUES=$(gh issue list --state open --json number | jq '. | length')
+          OPEN_PRS=$(gh pr list --state open --json number | jq '. | length')
+          
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 📊 Batch Automation Report
+          
+          **Run Time**: $(date -u +"%Y-%m-%d %H:%M UTC")
+          **Mode**: ${{ inputs.dry_run && 'DRY RUN' || 'PRODUCTION' }}
+          
+          ### Metrics
+          - Open Issues: $OPEN_ISSUES
+          - Open PRs: $OPEN_PRS
+          - Max Operations: $MAX_OPS
+          
+          ### Safety Limits
+          - Daily Run Limit: $MAX_DAILY_RUNS
+          - Cost Limit: $COST_LIMIT_MINUTES minutes
+          - API Rate Limit Check: ✅ Enabled
+          
+          ### Next Run
+          - Scheduled: In ~12 hours
+          EOF
+
+  cost-monitor:
+    name: Cost Monitoring
+    needs: [batch-processor]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    
+    steps:
+      - name: Check monthly usage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "💰 Checking monthly usage..."
+          
+          # Estimate monthly usage (simplified)
+          MONTH_START=$(date -u -d "$(date +%Y-%m-01)" +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Note: This is a simplified check
+          echo "⚠️ Remember to check GitHub billing page for actual usage"
+          echo "📊 Set spending limits at: github.com/settings/billing/spending_limits"
+          
+          # Add to summary
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          
+          ## 💰 Cost Reminder
+          - Free tier: 2,000 minutes/month
+          - Current workflow timeout: $COST_LIMIT_MINUTES minutes
+          - Estimated runs/month: ~60 (2x daily)
+          - Estimated minutes/month: ~600 (well under limit)
+          
+          **Action Required**: Set GitHub spending limit to \$10/month maximum
+          EOF
