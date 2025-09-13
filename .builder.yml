@@ -1,0 +1,213 @@
+# Builder Configuration
+# For reliable CI/CD in solo developer projects
+
+version: "1.0"
+
+# Project metadata
+project:
+  name: SuperPassword
+  type: react-native
+  platform: mobile
+
+# Environment settings
+environment:
+  node: "20.x"
+  npm: "10.x"
+  expo: "49.x"
+
+# Build configuration
+build:
+  # Default command to build the project
+  command: |
+    npm ci --legacy-peer-deps
+    npm run build --if-present
+
+  # Caching configuration
+  cache:
+    # What to cache
+    paths:
+      - node_modules
+      - .expo
+      - ios/Pods
+      - android/.gradle
+    # Cache key
+    key: v1-${{ checksum "package-lock.json" }}
+
+  # Matrix testing
+  matrix:
+    # Test on multiple Node.js versions
+    node:
+      - 18.x
+      - 20.x
+    # Test on multiple platforms
+    platform:
+      - ios
+      - android
+      - web
+
+# Test configuration
+test:
+  # Commands to run tests
+  command: |
+    npm test --if-present
+    npm run type-check --if-present || npx tsc --noEmit
+
+  # Test coverage configuration  
+  coverage:
+    provider: codecov
+    threshold: 60%
+
+# Linting configuration
+lint:
+  # Commands to run linters
+  command: |
+    npm run lint --if-present
+    npm run format --if-present
+
+  # Files to ignore
+  ignore:
+    - node_modules
+    - .expo
+    - ios/Pods
+    - android/build
+    - "**/*.d.ts"
+
+# Security scanning
+security:
+  # Enable security scanning
+  enabled: true
+  # Commands to run security checks
+  command: |
+    npm audit
+    npx snyk test --severity-threshold=high
+
+# Performance testing
+performance:
+  # Enable performance testing
+  enabled: true
+  # Commands to run performance tests
+  command: |
+    npm run perf --if-present
+    lighthouse --output json --output-path=./lighthouse-report.json
+
+# Release configuration
+release:
+  # Commands to run before release
+  before:
+    - npm version patch
+    - git push --follow-tags
+
+  # Commands to run after release  
+  after:
+    - npm run deploy --if-present
+
+# Dependencies
+dependencies:
+  # NPM packages to install
+  packages:
+    - "@sentry/react-native"
+    - "@expo/vector-icons"
+    - "react-native-paper"
+
+  # Dev dependencies
+  dev:
+    - "@typescript-eslint/eslint-plugin"
+    - "@typescript-eslint/parser" 
+    - "jest"
+    - "prettier"
+
+# Scripts configuration
+scripts:
+  # Build scripts
+  build:
+    ios: eas build --platform ios --local
+    android: eas build --platform android --local
+    web: expo build:web
+
+  # Test scripts  
+  test:
+    unit: jest
+    e2e: detox test
+    types: tsc --noEmit
+
+  # Lint scripts
+  lint:
+    js: eslint .
+    ts: tsc --noEmit
+    style: prettier --check .
+
+  # Dev scripts
+  dev:
+    ios: expo start --ios
+    android: expo start --android
+    web: expo start --web
+
+# Notifications
+notifications:
+  # Enable notifications
+  enabled: true
+  # Notification channels
+  channels:
+    # GitHub issues
+    github:
+      enabled: true
+      labels:
+        - ci
+        - automated
+    # Email notifications    
+    email:
+      enabled: false
+
+# Monitoring
+monitoring:
+  # Enable monitoring
+  enabled: true
+  # Metrics to collect
+  metrics:
+    - build_time
+    - test_coverage
+    - error_rate
+    - performance_score
+
+# Resource limits
+resources:
+  # Build limits
+  build:
+    timeout: 30m
+    memory: 4G
+    cpu: 2
+
+  # Test limits
+  test:
+    timeout: 10m
+    memory: 2G
+    cpu: 1
+
+# Cleanup
+cleanup:
+  # Enable cleanup
+  enabled: true
+  # Cleanup rules
+  rules:
+    # Clean build artifacts
+    artifacts:
+      age: 7d
+      size: 1G
+    # Clean cache
+    cache:
+      age: 30d
+      size: 5G
+
+# Reports
+reports:
+  # Enable reporting
+  enabled: true
+  # Report types
+  types:
+    - test
+    - coverage
+    - lint
+    - security
+    - performance
+  # Report format
+  format: html
