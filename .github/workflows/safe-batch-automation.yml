@@ -81,7 +81,7 @@ jobs:
     needs: safety-checks
     if: needs.safety-checks.outputs.proceed == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ fromJSON(env.COST_LIMIT_MINUTES) }}
+    timeout-minutes: 10  # Fixed value for cost control
     
     steps:
       - name: Checkout
@@ -93,7 +93,7 @@ jobs:
         run: |
           echo "🔧 Setting up batch processor..."
           echo "DRY_RUN=${{ inputs.dry_run || 'false' }}" >> $GITHUB_ENV
-          echo "MAX_OPS=${{ inputs.max_operations || env.MAX_OPERATIONS }}" >> $GITHUB_ENV
+          echo "MAX_OPS=${{ inputs.max_operations || '5' }}" >> $GITHUB_ENV
       
       - name: Process ready issues (batched)
         env:
@@ -249,7 +249,7 @@ jobs:
           
           ## 💰 Cost Reminder
           - Free tier: 2,000 minutes/month
-          - Current workflow timeout: $COST_LIMIT_MINUTES minutes
+          - Current workflow timeout: 10 minutes
           - Estimated runs/month: ~60 (2x daily)
           - Estimated minutes/month: ~600 (well under limit)
           
