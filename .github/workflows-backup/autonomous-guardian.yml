@@ -2,7 +2,7 @@ name: Autonomous Guardian System
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # Every 2 hours
+    - cron: '0 */6 * * *'  # Every 6 hours instead of 2
   workflow_dispatch:
     inputs:
       mode:
@@ -15,6 +15,11 @@ on:
           - repair
           - emergency
           - reset
+
+# Add concurrency control
+concurrency:
+  group: autonomous-guardian
+  cancel-in-progress: false  # Don't cancel guardian operations
 
 env:
   GUARDIAN_VERSION: '2.0.0'

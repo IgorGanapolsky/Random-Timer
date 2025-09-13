@@ -9,8 +9,12 @@ on:
     workflows: ["CI Pipeline", "Security Scan"]
     types: [completed]
   schedule:
-    # Check every 30 minutes for mergeable PRs
-    - cron: '*/30 * * * *'
+    # Check every 6 hours for mergeable PRs (reduced from 30 minutes)
+    - cron: '0 */6 * * *'
+
+concurrency:
+  group: pr-auto-merge-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write

@@ -41,6 +41,7 @@ jobs:
     outputs:
       issues: ${{ steps.find-issues.outputs.issues }}
       count: ${{ steps.find-issues.outputs.count }}
+      specialized: ${{ steps.categorize.outputs.specialized }}
     
     steps:
       - name: Find AI-Ready Issues
@@ -91,6 +92,39 @@ jobs:
             echo "issues=$ISSUES_JSON" >> $GITHUB_OUTPUT
             echo "count=$COUNT" >> $GITHUB_OUTPUT
           fi
+      
+      - name: Categorize Issues by Specialization
+        id: categorize
+        run: |
+          echo "🧠 Categorizing issues by agent specialization..."
+          ISSUES='${{ steps.find-issues.outputs.issues }}'
+          
+          if [ "$ISSUES" = "[]" ]; then
+            echo "specialized={}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Categorize each issue
+          SPECIALIZED=$(echo "$ISSUES" | jq '{
+            security: [.[] | select(.title | test("security|encryption|auth|biometric"; "i"))],
+            frontend: [.[] | select(.title | test("ui|dialog|screen|component|display"; "i"))],
+            backend: [.[] | select(.title | test("api|server|database|service"; "i"))],
+            mobile: [.[] | select(.title | test("ios|android|react native|mobile"; "i"))],
+            ai: [.[] | select(.title | test("ai|ml|intelligence|recommendation"; "i"))],
+            general: [.[] | select(
+              (.title | test("security|encryption|auth|biometric"; "i") | not) and
+              (.title | test("ui|dialog|screen|component|display"; "i") | not) and
+              (.title | test("api|server|database|service"; "i") | not) and
+              (.title | test("ios|android|react native|mobile"; "i") | not) and
+              (.title | test("ai|ml|intelligence|recommendation"; "i") | not)
+            )]
+          }')
+          
+          echo "Specialized assignments:"
+          echo "$SPECIALIZED" | jq '.'
+          
+          SPECIALIZED_JSON=$(echo "$SPECIALIZED" | jq -c '.')
+          echo "specialized=$SPECIALIZED_JSON" >> $GITHUB_OUTPUT
 
   prepare:
     name: Prepare Agents
