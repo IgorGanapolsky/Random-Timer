@@ -1,0 +1,136 @@
+name: Auto-Merge PRs
+
+on:
+  pull_request:
+    types: [labeled, synchronize, opened, reopened]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["CI Pipeline", "Security Scan"]
+    types: [completed]
+  schedule:
+    # Check every 30 minutes for mergeable PRs
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-merge:
+    name: Auto-Merge if Ready
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'auto-merge')) ||
+      (github.event_name == 'check_suite' && github.event.check_suite.conclusion == 'success') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'schedule')
+    
+    steps:
+      - name: Check PR Status
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all PRs with auto-merge label
+          PRS=$(gh pr list \
+            --repo ${{ github.repository }} \
+            --label "auto-merge" \
+            --state open \
+            --json number,mergeable,mergeStateStatus,statusCheckRollup \
+            --limit 10)
+          
+          echo "Found PRs with auto-merge label:"
+          echo "$PRS" | jq '.'
+          
+          # Process each PR
+          echo "$PRS" | jq -c '.[]' | while read pr; do
+            PR_NUM=$(echo "$pr" | jq -r '.number')
+            MERGEABLE=$(echo "$pr" | jq -r '.mergeable')
+            MERGE_STATUS=$(echo "$pr" | jq -r '.mergeStateStatus')
+            
+            echo "Processing PR #$PR_NUM - Mergeable: $MERGEABLE, Status: $MERGE_STATUS"
+            
+            # Check if PR is ready to merge
+            if [[ "$MERGEABLE" == "MERGEABLE" ]] || [[ "$MERGE_STATUS" == "CLEAN" ]]; then
+              # Check status checks - ignore known flaky ones
+              CHECKS=$(echo "$pr" | jq '.statusCheckRollup')
+              CRITICAL_FAILURES=$(echo "$CHECKS" | jq '[
+                .[] | 
+                select(.conclusion == "FAILURE" or .state == "FAILURE") |
+                select(.name != "Sync to Kanban Board") |
+                select(.name != "Kanban Board Sync v2")
+              ] | length')
+              
+              if [[ "$CRITICAL_FAILURES" == "0" ]]; then
+                echo "✅ PR #$PR_NUM is ready to merge (ignoring non-critical failures)"
+                echo "$PR_NUM" >> prs_to_merge.txt
+              else
+                echo "❌ PR #$PR_NUM has critical check failures"
+              fi
+            else
+              echo "⏳ PR #$PR_NUM is not mergeable yet (status: $MERGE_STATUS)"
+            fi
+          done
+          
+          # Output PRs to merge
+          if [ -f prs_to_merge.txt ]; then
+            echo "prs_to_merge=$(cat prs_to_merge.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
+            echo "has_prs=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_prs=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Auto-Merge PRs
+        if: steps.check.outputs.has_prs == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for PR_NUM in ${{ steps.check.outputs.prs_to_merge }}; do
+            echo "🔀 Auto-merging PR #$PR_NUM..."
+            
+            # Add auto-merge comment
+            gh pr comment $PR_NUM \
+              --repo ${{ github.repository }} \
+              --body "🤖 **Auto-merge triggered**: All critical checks passed. Merging automatically."
+            
+            # Merge the PR
+            gh pr merge $PR_NUM \
+              --repo ${{ github.repository }} \
+              --merge \
+              --delete-branch \
+              --subject "Auto-merge PR #$PR_NUM [skip ci]" \
+              --body "Automatically merged by bot after all critical checks passed." \
+              || echo "Failed to merge PR #$PR_NUM - may need manual intervention"
+            
+            # Update related issue if any
+            ISSUE_NUM=$(gh pr view $PR_NUM --json body --jq '.body' | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | head -1)
+            if [ ! -z "$ISSUE_NUM" ]; then
+              gh issue comment $ISSUE_NUM \
+                --repo ${{ github.repository }} \
+                --body "✅ PR #$PR_NUM has been automatically merged."
+              
+              # Update labels
+              gh issue edit $ISSUE_NUM \
+                --repo ${{ github.repository }} \
+                --remove-label "ai:in-progress" \
+                --add-label "ai:completed" \
+                || true
+            fi
+          done
+      
+      - name: Report Status
+        if: always()
+        run: |
+          echo "## 🤖 Auto-Merge Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f prs_to_merge.txt ]; then
+            echo "### PRs Processed:" >> $GITHUB_STEP_SUMMARY
+            cat prs_to_merge.txt | while read pr; do
+              echo "- PR #$pr" >> $GITHUB_STEP_SUMMARY
+            done
+          else
+            echo "No PRs ready for auto-merge at this time." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,778 +1,352 @@
-# SuperPassword
+# SuperPassword 🧠 AI-Powered Password Manager
 
 [![CI Status](https://github.com/IgorGanapolsky/SuperPassword/workflows/CI/badge.svg?branch=main)](https://github.com/IgorGanapolsky/SuperPassword/actions)
 [![CodeQL](https://github.com/IgorGanapolsky/SuperPassword/workflows/CodeQL/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/security/code-scanning)
 [![codecov](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A professional password generator React Native Expo app with material design, leveraging modern security standards and ready for 2025 deployment requirements.
+**The world's first password manager with true AI intelligence** - built with React Native + Expo frontend and Eko-powered Node.js AI backend.
 
-## Features
+## 🚀 Revolutionary AI Features
 
-### Core Features (Free)
+- **🔍 AI Vault Security Audits** - Claude-powered vulnerability analysis
+- **🎣 Real-time Phishing Detection** - Intelligent URL threat analysis  
+- **🔄 Smart Password Rotation Planning** - AI-optimized rotation schedules
+- **📊 Executive Security Reports** - Professional insights and trends
+- **🤖 Multi-Agent Development** - Claude + Git worktrees workflow
+- **🛡️ Proactive Breach Monitoring** - HaveIBeenPwned integration with AI analysis
 
-- ✨ Clean Material Design interface with gradient background
-- 🔐 Password generation with customizable length (8-50 characters)
-- ⚙️ Toggle options for uppercase, lowercase, numbers, special characters
-- 💪 Real-time password strength meter with color coding
-- 📋 One-tap copy to clipboard with success animation
-- 📜 Password history (last 10 generated passwords) with timestamps
-- 🌓 Dark mode toggle with system preference detection
-- 📳 Haptic feedback for interactions
-- 🖥️ Web support with PWA capabilities
+## ✨ Core Features
 
-### Premium Features ($2.99 one-time purchase)
+### 🆓 Free Tier
+- Clean Material Design interface with gradient background
+- Password generation with customizable length (8-50 characters)
+- Toggle options for uppercase, lowercase, numbers, special characters
+- Real-time password strength meter with color coding
+- One-tap copy to clipboard with success animation
+- Password history (last 10 generated passwords) with timestamps
+- Dark mode toggle with system preference detection
+- Haptic feedback for interactions
+- **Basic AI vault audits (10 passwords max)**
 
-- 📜 Unlimited password history
-- ☁️ Cloud sync across devices
-- 🎯 Custom character sets and exclusion rules
-- 📦 Bulk password generation (up to 100 at once)
-- 📊 Export passwords to CSV
-- 🔒 Advanced security settings
-- 🚫 No advertisements
+### 💎 Premium Tiers
 
-## Tech Stack (2025 Standards)
+#### Plus Tier ($5.99/mo)
+- Unlimited password history
+- **Advanced AI security audits**
+- **Real-time breach monitoring**
+- Cloud sync across devices
+- Export passwords to CSV
+- No advertisements
 
-### Core
+#### Pro Tier ($9.99/mo)
+- Everything in Plus
+- **AI-powered password rotation planning**
+- **Executive security reports**
+- **Phishing URL protection**
+- Advanced security settings
+- Custom character sets and exclusion rules
+- Bulk password generation (up to 100 at once)
 
-- React Native with Expo SDK 53
-- TypeScript 5.x
-- React Navigation 7.x
-- React Native Paper (Material Design)
+#### Family Tier ($14.99/mo)
+- Everything in Pro
+- **Multi-user AI features**
+- **Family security dashboard**
+- 6 user accounts
+- Shared password vaults
 
-### Testing
+#### Enterprise (Custom Pricing)
+- Everything in Family
+- **Advanced AI analytics**
+- **Custom security policies**
+- SSO integration
+- Admin dashboard
+- Priority support
 
-- Jest + React Testing Library
-- Component testing with @testing-library/react-native
-- E2E testing with Maestro
-- Contract testing with Pact
+## 🏗️ Architecture
 
-### State & Storage
-
-- AsyncStorage for local data
-- Firebase Cloud Storage
-- Redux Toolkit for state management
-
-### Security & Analytics
-
-- Firebase Authentication
-- Google AdMob
-- Sentry error tracking
-- API contract validation
-
-### Performance
-
-- Lighthouse CI integration
-- Real User Monitoring (RUM)
-- Performance budgets
-- Bundle size optimization
-
-## CI/CD Pipeline (Consolidated)
-
-Our single workflow `.github/workflows/main.yml` orchestrates:
-
-- Validate: TypeScript, ESLint, tests, SonarCloud, Codecov
-- Security: OWASP Dependency-Check (SARIF), Snyk (optional), CodeQL
-- Build (gated on push to main/develop): EAS build and optional submit
-- Issue Management: automation and status updates
-
-Branch protection rules:
-
-- All work branches from `develop`
-- PRs require green checks, review approval, squash merges
-- `main` is protected and requires admin approval for merges
-
-### Branch Protection
-
-- All work branches from `develop`
-- PRs require:
-  - CI pipeline success
-  - Code review approval
-  - Up-to-date branch status
-- `main` branch:
-  - Protected from direct pushes
-  - Requires admin approval for merges
-  - Release tags trigger deployments
-
-### Security Features
-
-- CodeQL analysis
-- OWASP dependency checking
-- Secret scanning
-- Mobile security framework integration
-- SBOM generation
-- Dependency audit
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 16+ and npm/yarn
-- Expo CLI
-- iOS Simulator (Mac only) or Android Emulator
-
-### Installation
-
-1. Copy env and install dependencies:
-
-```bash
-cp .env.example .env
-npm install
+### Mobile App (React Native + Expo)
 ```
-
-2. Start the development server:
-
-```bash
-npx expo start
-```
-
-3. Run on iOS Simulator:
-
-```bash
-npx expo run:ios
-```
-
-4. Run on Android Emulator:
-
-```bash
-npx expo run:android
-```
-
-## License
-
-MIT
-
-# SuperPassword
-
-[![Main Pipeline](https://github.com/IgorGanapolsky/SuperPassword/workflows/Main%20Pipeline/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![Code Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A professional password generator React Native Expo app with material design, ready for deployment.
-
-## Features
-
-### Core Features (Free)
-
-- ✨ Clean Material Design interface with gradient background
-- 🔐 Password generation with customizable length (8-50 characters)
-- ⚙️ Toggle options for uppercase, lowercase, numbers, special characters
-- 💪 Real-time password strength meter with color coding
-- 📋 One-tap copy to clipboard with success animation
-- 📜 Password history (last 10 generated passwords) with timestamps
-- 🌓 Dark mode toggle with system preference detection
-- 📳 Haptic feedback for interactions
-
-### Premium Features ($2.99 one-time purchase)
-
-- 📜 Unlimited password history
-- ☁️ Cloud sync across devices
-- 🎯 Custom character sets and exclusion rules
-- 📦 Bulk password generation (up to 100 at once)
-- 📊 Export passwords to CSV
-- 🔒 Advanced security settings
-- 🚫 No advertisements
-
-## Tech Stack
-
-- React Native with Expo
-- TypeScript
-- React Navigation
-- React Native Paper (Material Design)
-- AsyncStorage for local data
-- Firebase (ready for integration)
-- Google AdMob (ready for integration)
-
-## CI/CD Pipeline
-
-Our CI/CD pipeline is designed to ensure code quality, security, and reliable deployments:
-
-### Workflows
-
-1. **CI Pipeline** (.github/workflows/ci.yml)
-   - Runs on all PRs and pushes to develop
-   - Validates code quality (TypeScript, lint, tests)
-   - Performs security checks
-   - Builds development versions
-
-2. **Security Pipeline** (.github/workflows/security.yml)
-   - Daily security scans
-   - Dependency vulnerability checks
-   - Code security analysis
-   - Mobile-specific security checks
-
-3. **Release Pipeline** (.github/workflows/release.yml)
-   - Triggered by version tags or manually
-   - Supports staging and production deployments
-   - Generates SBOM and release notes
-   - Handles app store submissions
-
-### Branch Protection
-
-- All work branches from `develop`
-- PRs require:
-  - CI pipeline success
-  - Code review approval
-  - Up-to-date branch status
-- `main` branch:
-  - Protected from direct pushes
-  - Requires admin approval for merges
-  - Release tags trigger deployments
-
-### Security Features
-
-- CodeQL analysis
-- OWASP dependency checking
-- Secret scanning
-- Mobile security framework integration
-- SBOM generation
-- Dependency audit
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 16+ and npm/yarn
-- Expo CLI
-- iOS Simulator (Mac only) or Android Emulator
-
-### Installation
-
-1. Copy env and install dependencies:
-
-```bash
-cp .env.example .env
-npm install
-```
-
-2. Start the development server:
-
-```bash
-npx expo start
-```
-
-3. Run on iOS Simulator:
-
-```bash
-npx expo run:ios
-```
-
-4. Run on Android Emulator:
-
-```bash
-npx expo run:android
-```
-
-## License
-
-MIT
-
-<<<<<<< HEAD
-
-# SuperPassword - Secure Password Management App
-
-## CI/CD Pipeline
-
-Our CI/CD pipeline is designed to ensure code quality, security, and reliable deployments:
-
-### Workflows
-
-1. **CI Pipeline** (.github/workflows/ci.yml)
-   - Runs on all PRs and pushes to develop
-   - Validates code quality (TypeScript, lint, tests)
-   - Performs security checks
-   - Builds development versions
-
-2. **Security Pipeline** (.github/workflows/security.yml)
-   - Daily security scans
-   - Dependency vulnerability checks
-   - Code security analysis
-   - Mobile-specific security checks
-
-3. **Release Pipeline** (.github/workflows/release.yml)
-   - Triggered by version tags or manually
-   - Supports staging and production deployments
-   - Generates SBOM and release notes
-   - Handles app store submissions
-
-### Branch Protection
-
-- All work branches from `develop`
-- PRs require:
-  - CI pipeline success
-  - Code review approval
-  - Up-to-date branch status
-- `main` branch:
-  - Protected from direct pushes
-  - Requires admin approval for merges
-  - Release tags trigger deployments
-
-### Security Features
-
-- CodeQL analysis
-- OWASP dependency checking
-- Secret scanning
-- Mobile security framework integration
-- SBOM generation
-- Dependency audit
-
-### Release Process
-
-1. Create feature branch from develop
-2. Open PR to develop
-3. Pass CI and get approval
-4. Merge to develop
-5. Create release PR to main (when ready)
-6. Get admin approval
-7. Tag release triggers deployment
-
-# SuperPassword
-
-## Development Workflow
-
-### Branch Strategy
-
-- `main`: Production-ready code
-- `develop`: Primary development branch
-- Feature branches: Create from `develop`, merge back to `develop`
-
-### Pull Request Process
-
-1. Create branch from `develop`
-2. Make your changes
-3. Ensure all checks pass:
-   - Linting
-   - Type checking
-   - Tests
-   - Build verification
-4. Submit PR to `develop`
-5. Once approved, merge to `develop`
-
-### Active GitHub Actions
-
-- **CI**: Runs on PRs and pushes to main/develop
-  - Linting, type checking, tests, and build verification
-- **CodeQL**: Security scanning
-  - Runs weekly and on PRs to main
-- **Dependabot**: Dependency updates
-  - Monthly schedule
-  - Security updates as needed
-
-### Development Commands
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run start
-
-# Run tests
-npm run test
-
-# Lint code
-npm run lint
-
-# Type check
-npm run typecheck
-
-# Build app
-npm run build
-```
-
-# SecurePass - Password Generator
-
-=======
-
-# SuperPassword
-
-> > > > > > > develop
-
-[![CI Status](https://github.com/IgorGanapolsky/SuperPassword/workflows/CI%20Pipeline/badge.svg?branch=main)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![CodeQL](https://github.com/IgorGanapolsky/SuperPassword/workflows/CodeQL/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/security/code-scanning)
-[![codecov](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-## CI/CD Pipeline
-
-Our CI/CD pipeline is designed to ensure code quality, security, and reliable deployments:
-
-### Workflows
-
-1. **CI Pipeline** (.github/workflows/ci.yml)
-   - Runs on all PRs and pushes to develop
-   - Validates code quality (TypeScript, lint, tests)
-   - Performs security checks
-   - Builds development versions
-
-2. **Security Pipeline** (.github/workflows/security.yml)
-   - Daily security scans
-   - Dependency vulnerability checks
-   - Code security analysis
-   - Mobile-specific security checks
-
-3. **Release Pipeline** (.github/workflows/release.yml)
-   - Triggered by version tags or manually
-   - Supports staging and production deployments
-   - Generates SBOM and release notes
-   - Handles app store submissions
-
-### Branch Protection
-
-- All work branches from `develop`
-- PRs require:
-  - CI pipeline success
-  - Code review approval
-  - Up-to-date branch status
-- `main` branch:
-  - Protected from direct pushes
-  - Requires admin approval for merges
-  - Release tags trigger deployments
-
-### Security Features
-
-- CodeQL analysis
-- OWASP dependency checking
-- Secret scanning
-- Mobile security framework integration
-- SBOM generation
-- Dependency audit
-
-### Release Process
-
-1. Create feature branch from develop
-2. Open PR to develop
-3. Pass CI and get approval
-4. Merge to develop
-5. Create release PR to main (when ready)
-6. Get admin approval
-7. Tag release triggers deployment
-
-### Branch Strategy
-
-- `main`: Production-ready code
-- `develop`: Primary development branch
-- Feature branches: Create from `develop`, merge back to `develop`
-
-### Pull Request Process
-
-1. Create branch from `develop`
-2. Make your changes
-3. Ensure all checks pass:
-   - Linting
-   - Type checking
-   - Tests
-   - Build verification
-4. Submit PR to `develop`
-5. Once approved, merge to `develop`
-
-### Active GitHub Actions
-
-- **CI**: Runs on PRs and pushes to main/develop
-  - Linting, type checking, tests, and build verification
-- **CodeQL**: Security scanning
-  - Runs weekly and on PRs to main
-- **Dependabot**: Dependency updates
-  - Monthly schedule
-  - Security updates as needed
-
-### Development Commands
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run start
-
-# Run tests
-npm run test
-
-# Lint code
-npm run lint
-
-# Type check
-npm run typecheck
-
-# Build app
-npm run build
-```
-
-A professional password generator
-
-## Features
-
-### Core Features (Free)
-
-- ✨ Clean Material Design interface with gradient background
-- 🔐 Password generation with customizable length (8-50 characters)
-- ⚙️ Toggle options for uppercase, lowercase, numbers, special characters
-- 💪 Real-time password strength meter with color coding
-- 📋 One-tap copy to clipboard with success animation
-- 📜 Password history (last 10 generated passwords) with timestamps
-- 🌓 Dark mode toggle with system preference detection
-- 📳 Haptic feedback for interactions
-
-### Premium Features ($2.99 one-time purchase)
-
-- 📜 Unlimited password history
-- ☁️ Cloud sync across devices
-- 🎯 Custom character sets and exclusion rules
-- 📦 Bulk password generation (up to 100 at once)
-- 📊 Export passwords to CSV
-- 🔒 Advanced security settings
-- 🚫 No advertisements
-
-## Tech Stack
-
-- React Native with Expo
-- TypeScript
-- React Navigation
-- React Native Paper (Material Design)
-- AsyncStorage for local data
-- Firebase (ready for integration)
-- Google AdMob (ready for integration)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 16+ and npm/yarn
-- Expo CLI
-- iOS Simulator (Mac only) or Android Emulator
-
-### Installation
-
-1. Copy env and install dependencies:
-
-```bash
-cp .env.example .env
-npm install
-```
-
-2. Start the development server:
-
-```bash
-npx expo start
-```
-
-3. Run on iOS Simulator:
-
-```bash
-npx expo run:ios
-```
-
-4. Run on Android Emulator:
-
-```bash
-npx expo run:android
-```
-
-## Project Structure
-
-```
-src/
+/src
 ├── components/     # Reusable UI components
-├── screens/        # App screens
-├── navigation/     # Navigation setup
-├── services/       # Services (storage, Firebase, etc.)
-├── utils/          # Utility functions
-├── hooks/          # Custom React hooks
-├── types/          # TypeScript type definitions
-├── constants/      # App constants and theme
-└── store/          # State management
+├── contexts/       # React Context providers  
+├── hooks/         # Custom React hooks
+├── navigation/    # Navigation configuration
+├── screens/       # Feature-specific screens
+├── services/      # Business logic layer
+├── types/         # TypeScript definitions
+└── utils/         # Helper utilities
 ```
 
-## Building for Production
-
-### Using EAS Build
-
-1. Install EAS CLI:
-
-```bash
-npm install -g eas-cli
+### AI Backend Service (Node.js + Eko)
+```
+/server/sp-ai-service/
+├── src/
+│   ├── agents/     # Specialized AI agents
+│   ├── routes/     # API endpoints
+│   ├── services/   # Core business logic
+│   └── types/      # TypeScript definitions
+├── package.json    # Node.js dependencies
+└── test-demo.mjs   # AI features demo
 ```
 
-2. Configure EAS:
+## 🛠️ Technology Stack
 
+### Frontend
+- **React Native 0.79.5** with Expo SDK 53
+- **TypeScript 5.x** with comprehensive type safety
+- **React Navigation 7.x** with bottom tabs
+- **React Native Paper** for Material Design
+- **AsyncStorage** for local persistence
+- **Sentry** for error monitoring
+
+### AI Backend
+- **🤖 Eko Framework 3.0.2** for agentic workflows
+- **👤 Claude 3.5 Sonnet** for AI analysis
+- **🔍 Node.js + Fastify** backend service
+- **🔒 Firebase Authentication & Firestore**
+- **🌐 HaveIBeenPwned API** integration
+- **📊 Real-time security analytics**
+
+### Testing & Quality
+- **Jest + React Testing Library** for unit tests
+- **E2E testing** with Detox (planned)
+- **SonarCloud** for code quality
+- **CodeQL** for security analysis
+- **Codecov** for test coverage
+
+### CI/CD & Security
+- **GitHub Actions** for automated pipelines
+- **EAS Build** for mobile app distribution
+- **OWASP Dependency-Check** for vulnerabilities
+- **Snyk** for security monitoring
+- **Branch protection** with required reviews
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- Expo CLI (`npm install -g @expo/cli`)
+- iOS Simulator (Mac only) or Android Emulator
+
+### 1. Clone and Setup
 ```bash
-eas build:configure
+git clone https://github.com/IgorGanapolsky/SuperPassword.git
+cd SuperPassword
+git checkout develop
+npm install
 ```
 
-3. Build for iOS:
-
+### 2. Mobile App Development
 ```bash
-eas build --platform ios --profile production
+# Start the mobile development server
+npm start
+
+# Run on iOS Simulator
+npm run ios
+
+# Run on Android Emulator  
+npm run android
 ```
 
-4. Build for Android:
-
+### 3. AI Backend Development
 ```bash
-eas build --platform android --profile production
+# Navigate to AI service
+cd server/sp-ai-service
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start AI service in development mode
+npm run dev
+
+# Run AI feature demos
+./test-demo.mjs
 ```
 
-5. Submit to stores (after first credential setup):
-
+### 4. Test Everything
 ```bash
-eas submit --platform ios --profile production
-.eas submit --platform android --profile production
-```
-
-## App Store Configuration
-
-### Google Play Store
-
-- Package name: `com.securepass.generator`
-- Target SDK: 34
-- Min SDK: 24 (Android 7.0+)
-
-### Apple App Store
-
-- Bundle ID: `com.securepass.generator`
-- Deployment target: iOS 15.1+
-
-## Firebase Setup (Required for production)
-
-1. Create a Firebase project at https://console.firebase.google.com
-2. Add iOS and Android apps with the package/bundle IDs
-3. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-4. Place configuration files in the project root
-5. Configure Firebase services:
-   - Authentication
-   - Firestore
-   - Remote Config
-   - Analytics
-   - Crashlytics
-
-## AdMob Setup (Required for monetization)
-
-1. Create AdMob account at https://admob.google.com
-2. Create ad units:
-   - Banner ad for main screen
-   - Interstitial ad for password generations
-   - Rewarded video for premium trial
-3. Add AdMob App IDs to app configuration
-4. Test with test ad unit IDs during development
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and set values. Key settings:
-
-- APP_NAME, APP_SLUG, APP_SCHEME, EXPO_OWNER
-- IOS_BUNDLE_ID, ANDROID_PACKAGE
-- EAS_PROJECT_ID
-- ADMOB_APP_ID_IOS, ADMOB_APP_ID_ANDROID
-- SENTRY_DSN
-
-## CI/CD & Autonomous Ops
-
-- Local hourly autofix: LaunchAgent runs `scripts/autofix-local.sh` to format/lint, commit, and push.
-- Cloud hourly autofix: `.github/workflows/autofix.yml` runs Prettier + ESLint and auto-commits.
-- CI checks: `.github/workflows/ci.yml` runs tsc, expo-doctor, lint, and prettier on PRs.
-- OTA updates (optional): use EAS Update to ship JS-only fixes to channels.
-
-### Sentry (crash and error reporting)
-
-1. Create a Sentry project (React Native) and get DSN.
-2. Set env:
-
-```bash
-echo "SENTRY_DSN=your_sentry_dsn" >> .env
-```
-
-3. For CI/EAS builds, set secrets:
-   - GitHub Actions: `SENTRY_AUTH_TOKEN` (org:project release:write)
-   - EAS Secrets: `SENTRY_AUTH_TOKEN`
-
-4. Build a release with EAS so source maps upload and crashes link to code:
-
-```bash
-eas build --platform ios --profile production
-eas build --platform android --profile production
-```
-
-### Firebase (Auth, Analytics, Crashlytics, Firestore, Remote Config)
-
-1. Download platform configs from Firebase Console and place at project root:
-   - iOS: `GoogleService-Info.plist` (path referenced in `app.config.ts`)
-   - Android: `google-services.json` (path referenced in `app.config.ts`)
-2. Dev client (required for local dev with native SDKs):
-   - iOS: `eas build --profile development --platform ios && eas build:run --platform ios`
-   - Android: `eas build --profile development --platform android && eas build:run --platform android`
-3. Start server: `npx expo start --dev-client`
-4. Verify Crashlytics: trigger `FirebaseService.logError(new Error('test'), { screen: 'Home' })` and check Firebase console.
-
-### Release flow (fully scripted)
-
-```bash
-# 1) Set env vars in .env or CI secrets (bundle IDs, EAS_PROJECT_ID, AdMob, Sentry)
-# 2) Build
-EAS_NO_VCS=1 eas build --platform ios --profile production
-EAS_NO_VCS=1 eas build --platform android --profile production
-# 3) Submit
-EAS_NO_VCS=1 eas submit --platform ios --profile production
-EAS_NO_VCS=1 eas submit --platform android --profile production
-```
-
-Notes:
-
-- Manage credentials via EAS on first run; subsequent runs use stored credentials.
-- For multiple apps, keep a repo per app; parameterize via `app.config.ts` + `.env`.
-
-## Testing
-
-Run tests:
-
-```bash
+# Mobile app tests
 npm test
+
+# Backend tests
+cd server/sp-ai-service && npm test
+
+# Lint everything
+npm run lint
 ```
 
-Run TypeScript type checking:
+## 🤖 Multi-Agent Development Workflow
 
+We use **git worktrees** + **specialized Claude agents** for parallel development:
+
+### Git Worktrees Setup
 ```bash
-npx tsc --noEmit
+# Create parallel development environments
+git worktree add ../sp-ai-intelligence -b feature/ai-intelligence
+git worktree add ../sp-secure-storage -b feature/secure-storage  
+git worktree add ../sp-biometrics -b feature/biometrics
+git worktree add ../sp-ci-hardening -b chore/ci-hardening
+
+# List all worktrees
+git worktree list
 ```
 
-## License
+### Agent Specialization
+- **Security Claude**: E2EE implementation, SecureStore, key rotation
+- **Auth Claude**: Biometrics, session hardening, Firebase Auth
+- **AI Claude**: Eko integration, intelligence features, backend API
+- **DevOps Claude**: CI/CD, testing, automation, deployment
 
-MIT
+### Development Process
+1. **Plan & Document** in `docs/agents/{feature}/PLAN.md`
+2. **TDD Loop**: Write failing tests → Make pass → Refactor  
+3. **Multi-Agent Review**: Agent A implements → Agent B reviews → Agent C verifies
+4. **Conventional Commits**: `feat: implement AI vault auditing`
+5. **Open PR** with clear scope and rollback plan
 
-## Issue Management & Support
+## 🔒 AI Intelligence Features
 
-### 🐛 Reporting Issues
+### 🔍 Vault Security Audit
+```bash
+POST /api/v1/intelligence/audit
+```
+- AI-powered password vulnerability analysis
+- Security score calculation (0-100)
+- Identifies weak, breached, duplicate, and stale passwords  
+- Actionable recommendations with priority rankings
+- Executive summary for non-technical users
 
-SuperPassword uses GitHub Issues for bug tracking and feature requests. Before creating an issue, please:
+### 🎣 Phishing URL Detection  
+```bash
+POST /api/v1/intelligence/phishing-check
+```
+- Real-time URL threat analysis
+- Domain lookalike detection
+- Phishing pattern recognition
+- Risk level assessment (LOW/MEDIUM/HIGH/CRITICAL)
+- Safe alternative suggestions
 
-1. Search existing issues to avoid duplicates
-2. Use our issue templates:
-   - 🐛 [Report a Bug](../../issues/new?template=bug_report.yml)
-   - 💡 [Request a Feature](../../issues/new?template=feature_request.yml)
+### 🔄 Password Rotation Planning
+```bash
+POST /api/v1/intelligence/rotation-plan  
+```
+- AI-optimized rotation schedules
+- Priority-based timeline creation
+- Site-specific rotation guidance
+- Time estimation and milestone tracking
+- User preference integration
 
-### 📊 Issue Status Dashboard
+### 📊 Security Reports & Analytics
+```bash
+POST /api/v1/intelligence/generate-report
+```
+- Executive, technical, and user-friendly formats
+- Security trends and improvement tracking
+- Personalized recommendations
+- Visual charts and insights
+- Exportable reports
 
-Track issue status and project health at our [Project Dashboard](../../projects/3)
+## 🏃‍♂️ Quick Commands for AI Agents
 
-### ⏱️ Response Times
+### Architecture Check
+```bash
+# Verify current architecture
+cat WARP.md | grep -A 10 "AI INTELLIGENCE"
 
-We aim to provide initial responses within:
+# Check service health  
+cd server/sp-ai-service && ./test-demo.mjs --health
 
-- 🔴 Critical issues: 2 hours
-- 🟠 High priority: 24 hours
-- 🟡 Medium priority: 48 hours
-- 🟢 Low priority: 72 hours
+# Run comprehensive AI demos
+cd server/sp-ai-service && ./test-demo.mjs
+```
 
-### 💬 Community & Support
+### Development Workflow
+```bash
+# Switch to specific worktree
+cd ../sp-ai-intelligence
 
-- 📱 [FAQ](docs/FAQ.md)
-- 🔍 [Knowledge Base](docs/KB.md)
-- 💭 [Discord Community](https://discord.gg/superpassword)
-- 📧 Email: support@securepass.app
+# Test specific AI features
+./test-demo.mjs --audit          # Vault security audit
+./test-demo.mjs --phishing       # Phishing detection  
+./test-demo.mjs --rotation       # Rotation planning
+
+# Check service logs
+tail -f server/sp-ai-service/server.log
+```
+
+## 🚢 Deployment
+
+### Mobile App (EAS Build)
+```bash
+# Configure EAS (first time)
+eas configure
+
+# Build for development
+eas build --profile development --platform all
+
+# Build for production
+eas build --profile production --platform all
+
+# Submit to app stores
+eas submit --platform all
+```
+
+### AI Backend Service
+- **Platform**: Railway, Render, or DigitalOcean
+- **Environment**: Node.js 20+, PM2 process manager
+- **Database**: Firebase Firestore for user data & audit history
+- **Monitoring**: Sentry error tracking, Fastify logging
+- **Security**: Firebase Auth tokens, rate limiting, API key protection
+
+## 📈 Business Model
+
+### Revenue Streams
+1. **Subscription Tiers**: $5.99-$14.99/month for AI-powered features
+2. **Enterprise Licensing**: Custom pricing for businesses
+3. **API Access**: White-label AI security for other password managers
+4. **Professional Services**: Security consulting and implementation
+
+### Competitive Advantages
+- **First-to-market** with true AI intelligence in password management
+- **Advanced threat detection** with real-time phishing and breach monitoring
+- **Executive-grade reporting** for business and enterprise users
+- **Multi-agent development** enabling rapid innovation and feature delivery
+
+## 🤝 Contributing
+
+1. **Fork the repository** and create your feature branch from `develop`
+2. **Follow the multi-agent workflow** outlined above
+3. **Write comprehensive tests** for all new features
+4. **Update documentation** including WARP.md for architecture changes
+5. **Ensure CI passes** before submitting pull requests
+6. **Use conventional commits** for clear change tracking
+
+### Development Guidelines
+- **Security First**: All password data must be encrypted and never logged
+- **AI Ethics**: Transparent AI decision-making with user control
+- **Performance**: Mobile-first with <3s AI response times
+- **Accessibility**: WCAG 2.1 AA compliance for all UI elements
+- **Privacy**: GDPR/CCPA compliant with minimal data collection
+
+## 🆘 Support & Community
+
+- **📚 Documentation**: Full API docs at `http://localhost:3001/docs`
+- **🐛 Bug Reports**: GitHub Issues with detailed reproduction steps
+- **💡 Feature Requests**: GitHub Discussions with use case examples
+- **🔒 Security Issues**: Private disclosure via security@superpassword.app
+- **💬 Community**: Discord server for developers and users
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+**SuperPassword** - The future of password security is here. 🚀🔐🧠

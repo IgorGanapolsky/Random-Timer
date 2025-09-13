@@ -17,9 +17,12 @@ on:
         type: boolean
         default: false
   
+  issues:
+    types: [labeled, opened, reopened]
+  
   schedule:
-    # Run every 2 hours during business hours
-    - cron: '0 8,10,12,14,16,18 * * 1-5'
+    # Run every hour to catch any missed issues
+    - cron: '0 * * * *'
 
 permissions:
   contents: write
@@ -47,14 +50,27 @@ jobs:
         run: |
           echo "🔍 Discovering issues labeled 'ai:ready'..."
           
-          # Query for open issues with ai:ready label, not already in progress
-          ISSUES=$(gh issue list \
+          # First get all ai:ready issues
+          ALL_ISSUES=$(gh issue list \
             --repo ${{ github.repository }} \
             --label "ai:ready" \
             --state open \
             --json number,title,labels,assignees \
-            --limit 10 \
-            --jq '[.[] | select(.assignees | length == 0) | select(.labels | map(.name) | contains(["ai:in-progress"]) | not)]')
+            --limit 10)
+          
+          echo "Raw issues found:"
+          echo "$ALL_ISSUES" | jq '.'
+          
+          # Filter out issues that are already in progress or assigned
+          ISSUES=$(echo "$ALL_ISSUES" | jq '[
+            .[] | 
+            select(.assignees | length == 0) |
+            select(
+              .labels | 
+              map(.name) | 
+              contains(["ai:in-progress"]) | not
+            )
+          ]')
           
           # Limit to max_agents input
           MAX_AGENTS=${{ inputs.max_agents || 2 }}
@@ -63,13 +79,18 @@ jobs:
           # Count issues
           COUNT=$(echo "$ISSUES" | jq 'length')
           
-          echo "📋 Found $COUNT ready issues"
+          echo "📋 Found $COUNT ready issues after filtering"
           echo "$ISSUES" | jq '.'
           
-          # Output for matrix - JSON must be single line
-          ISSUES_JSON=$(echo "$ISSUES" | jq -c '.')
-          echo "issues=$ISSUES_JSON" >> $GITHUB_OUTPUT
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          # Output for matrix - ensure valid JSON
+          if [ "$COUNT" -eq 0 ]; then
+            echo "issues=[]" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+          else
+            ISSUES_JSON=$(echo "$ISSUES" | jq -c '.')
+            echo "issues=$ISSUES_JSON" >> $GITHUB_OUTPUT
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+          fi
 
   prepare:
     name: Prepare Agents
