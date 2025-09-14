@@ -33,7 +33,7 @@
     "expo-haptics": "^14.1.4",
     "expo-linear-gradient": "^14.1.5",
     "expo-splash-screen": "^31.0.10",
-    "expo-status-bar": "~2.2.3",
+    "expo-status-bar": "~3.0.8",
     "metro": "^0.82.5",
     "metro-config": "^0.82.5",
     "metro-resolver": "^0.82.5",
