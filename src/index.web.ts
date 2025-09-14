@@ -1,22 +1,25 @@
 // Web entry point
 
-import { AppRegistry } from "react-native";
-
-import { App } from "./App";
+import React from 'react';
+import { AppRegistry } from 'react-native';
+import App from '../App';
+import { FirebaseService } from './services/firebase';
 
 // Declare DOM types for web
 declare global {
   interface Window {
-    addEventListener: (_type: string, _listener: EventListener) => void;
-  }
-  interface Navigator {
-    serviceWorker: {
-      register: (_scriptURL: string) => Promise<ServiceWorkerRegistration>;
-    };
+    __INITIAL_STATE__: any;
   }
 }
 
-AppRegistry.registerComponent("SuperPassword", () => App);
+// Ensure Firebase is initialized before rendering the app
+const SuperPasswordApp = () => {
+  // Firebase is already initialized via the platform-specific import
+  // This component just wraps the main App component
+  return React.createElement(App);
+};
+
+AppRegistry.registerComponent("SuperPassword", () => SuperPasswordApp);
 AppRegistry.runApplication("SuperPassword", {
   rootTag: document.getElementById("root"),
   initialProps: {},
