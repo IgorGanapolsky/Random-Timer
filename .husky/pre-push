@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Run full TypeScript check
+echo "🔎 Running TypeScript checks..."
+yarn tsc --noEmit || exit 1
+
+# Run all tests with coverage
+echo "🧪 Running test suite..."
+yarn test:coverage || exit 1
+
+# Check test coverage thresholds
+if [ -f "coverage/lcov.info" ]; then
+  # Extract coverage percentages
+  LINES=$(lcov --summary coverage/lcov.info | grep "lines" | awk '{print $2}' | cut -d'.' -f1)
+  FUNCTIONS=$(lcov --summary coverage/lcov.info | grep "functions" | awk '{print $2}' | cut -d'.' -f1)
+  BRANCHES=$(lcov --summary coverage/lcov.info | grep "branches" | awk '{print $2}' | cut -d'.' -f1)
+
+  # Check against thresholds
+  if [ "$LINES" -lt 80 ] || [ "$FUNCTIONS" -lt 80 ] || [ "$BRANCHES" -lt 80 ]; then
+    echo "❌ Test coverage is below 80%"
+    echo "Lines: $LINES%"
+    echo "Functions: $FUNCTIONS%"
+    echo "Branches: $BRANCHES%"
+    exit 1
+  fi
+fi
+
+# Run security audit
+echo "🔒 Running security audit..."
+yarn audit || true # Don't fail push on security warnings
+
+echo "✅ All pre-push checks passed!"
