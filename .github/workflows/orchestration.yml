@@ -8,7 +8,7 @@ on:
   check_suite:
     types: [completed]
   schedule:
-    - cron: "*/3 * * * *" # Run every 3 minutes
+    - cron: "*/30 * * * *" # Run every 30 minutes (reduced frequency)
   workflow_dispatch:
 
 jobs:
