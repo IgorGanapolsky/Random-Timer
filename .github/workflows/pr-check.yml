@@ -1,0 +1,48 @@
+name: PR Status Check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate PR Title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            revert
+          requireScope: false
+          
+      - name: Check Files Changed
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
+          if echo "$CHANGED_FILES" | grep -E "^(yarn\.lock|package\.json)$"; then
+            echo "⚠️ Dependencies changed - please ensure updates are safe"
+            echo "::warning::Dependencies changed - review carefully"
+          fi
+          if echo "$CHANGED_FILES" | grep -E "^(android/|ios/)"; then
+            echo "⚠️ Native code changed - requires thorough testing"
+            echo "::warning::Native code changed - ensure mobile testing"
+          fi
+
+      - name: Assign Reviewers
+        uses: kentaro-m/auto-assign-action@v1.2.4
+        with: 
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
