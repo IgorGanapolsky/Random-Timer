@@ -1,0 +1,244 @@
+name: Project V2 Sync
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Every 5 minutes
+  issues:
+    types: [opened, closed, labeled, unlabeled]
+  pull_request:
+    types: [opened, closed, labeled, unlabeled]
+  workflow_dispatch:  # Manual trigger
+
+env:
+  OWNER: IgorGanapolsky
+  PROJECT_NUMBER: 3
+
+jobs:
+  sync:
+    name: Sync with Project
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      repository-projects: write
+      
+    steps:
+      - name: Get project data
+        id: project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ env.OWNER }}
+          NUMBER: ${{ env.PROJECT_NUMBER }}
+        run: |
+          # Get project ID
+          project_id=$(gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              user(login: $org) {
+                projectV2(number: $number) {
+                  id
+                  field(name: "Status") {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      options {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f org=$OWNER -f number=$NUMBER --jq '.data.user.projectV2.id')
+          
+          echo "PROJECT_ID=$project_id" >> $GITHUB_OUTPUT
+          
+          # Get Status field ID and options
+          status_data=$(gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              user(login: $org) {
+                projectV2(number: $number) {
+                  field(name: "Status") {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      options {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f org=$OWNER -f number=$NUMBER --jq '.data.user.projectV2.field')
+          
+          echo "STATUS_FIELD_ID=$(echo $status_data | jq -r '.id')" >> $GITHUB_OUTPUT
+          echo "STATUS_OPTIONS=$(echo $status_data | jq -c '.options')" >> $GITHUB_OUTPUT
+
+      - name: Process open issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_ID: ${{ steps.project.outputs.PROJECT_ID }}
+          STATUS_FIELD_ID: ${{ steps.project.outputs.STATUS_FIELD_ID }}
+          STATUS_OPTIONS: ${{ steps.project.outputs.STATUS_OPTIONS }}
+        run: |
+          # Helper to get status option ID
+          get_status_id() {
+            echo "$STATUS_OPTIONS" | jq -r --arg name "$1" '.[] | select(.name == $name) | .id'
+          }
+          
+          # Process each open issue
+          gh issue list --json number,title,labels,state --jq '.[] | select(.state == "OPEN")' | while read -r issue; do
+            number=$(echo "$issue" | jq -r '.number')
+            labels=$(echo "$issue" | jq -r '.labels[].name')
+            
+            # Add to project if not already there
+            item_id=$(gh api graphql -f query='
+              mutation($project:ID!, $issue:ID!) {
+                addProjectV2ItemById(input: {projectId: $project, contentId: $issue}) {
+                  item {
+                    id
+                  }
+                }
+              }' -f project=$PROJECT_ID -f issue=$number --jq '.data.addProjectV2ItemById.item.id' || echo '')
+            
+            if [ -n "$item_id" ]; then
+              # Determine status based on labels
+              status=""
+              if echo "$labels" | grep -q "claude/refactoring"; then
+                status="Refactoring"
+              elif echo "$labels" | grep -q "claude/testing"; then
+                status="Testing"
+              elif echo "$labels" | grep -q "claude/security-audit"; then
+                status="Security"
+              elif echo "$labels" | grep -q "claude/api-docs"; then
+                status="Documentation"
+              elif echo "$labels" | grep -q "claude/ui-enhancements"; then
+                status="UI/UX"
+              elif echo "$labels" | grep -q "ai:ready"; then
+                status="AI Analysis"
+              else
+                status="Backlog"
+              fi
+              
+              # Update status
+              status_id=$(get_status_id "$status")
+              if [ -n "$status_id" ]; then
+                gh api graphql -f query='
+                  mutation($project:ID!, $item:ID!, $field:ID!, $value:String!) {
+                    updateProjectV2ItemFieldValue(input: {
+                      projectId: $project
+                      itemId: $item
+                      fieldId: $field
+                      value: { singleSelectOptionId: $value }
+                    }) {
+                      projectV2Item {
+                        id
+                      }
+                    }
+                  }' -f project=$PROJECT_ID -f item=$item_id -f field=$STATUS_FIELD_ID -f value=$status_id
+              fi
+            fi
+          done
+          
+      - name: Process pull requests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_ID: ${{ steps.project.outputs.PROJECT_ID }}
+          STATUS_FIELD_ID: ${{ steps.project.outputs.STATUS_FIELD_ID }}
+          STATUS_OPTIONS: ${{ steps.project.outputs.STATUS_OPTIONS }}
+        run: |
+          # Helper to get status option ID
+          get_status_id() {
+            echo "$STATUS_OPTIONS" | jq -r --arg name "$1" '.[] | select(.name == $name) | .id'
+          }
+          
+          # Process each open PR
+          gh pr list --json number,title,state,reviewDecision,mergeStateStatus --jq '.[] | select(.state == "OPEN")' | while read -r pr; do
+            number=$(echo "$pr" | jq -r '.number')
+            review=$(echo "$pr" | jq -r '.reviewDecision')
+            merge_status=$(echo "$pr" | jq -r '.mergeStateStatus')
+            
+            # Add to project if not already there
+            item_id=$(gh api graphql -f query='
+              mutation($project:ID!, $pr:ID!) {
+                addProjectV2ItemById(input: {projectId: $project, contentId: $pr}) {
+                  item {
+                    id
+                  }
+                }
+              }' -f project=$PROJECT_ID -f pr=$number --jq '.data.addProjectV2ItemById.item.id' || echo '')
+            
+            if [ -n "$item_id" ]; then
+              # Determine status based on PR state
+              status="Code Review"
+              if [ "$review" = "APPROVED" ] && [ "$merge_status" = "CLEAN" ]; then
+                status="Ready to Deploy"
+              fi
+              
+              # Update status
+              status_id=$(get_status_id "$status")
+              if [ -n "$status_id" ]; then
+                gh api graphql -f query='
+                  mutation($project:ID!, $item:ID!, $field:ID!, $value:String!) {
+                    updateProjectV2ItemFieldValue(input: {
+                      projectId: $project
+                      itemId: $item
+                      fieldId: $field
+                      value: { singleSelectOptionId: $value }
+                    }) {
+                      projectV2Item {
+                        id
+                      }
+                    }
+                  }' -f project=$PROJECT_ID -f item=$item_id -f field=$STATUS_FIELD_ID -f value=$status_id
+              fi
+            fi
+          done
+
+      - name: Update agent statuses
+        if: github.event_name != 'schedule'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all issues with ai:in-progress label
+          gh issue list --json number,title,labels --jq '.[] | select(.labels[].name == "ai:in-progress")' | while read -r issue; do
+            number=$(echo "$issue" | jq -r '.number')
+            agent=$(echo "$issue" | jq -r '.labels[] | select(.name | startswith("claude/")) | .name[7:]')
+            
+            if [ -n "$agent" ]; then
+              comment="🤖 **Claude Agent Status Update** ($(date -u +"%Y-%m-%d %H:%M UTC"))
+              
+Working on: ${agent} tasks
+Status: In Progress
+Next check: ~5 minutes
+
+*This is an automated status update from the Claude agent.*"
+              
+              gh issue comment "$number" --body "$comment"
+            fi
+          done
+
+  metrics:
+    name: Update Metrics
+    needs: sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate metrics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 📊 Project Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "### Status Distribution" >> $GITHUB_STEP_SUMMARY
+          
+          # Count issues per status
+          for status in "Backlog" "AI Analysis" "Refactoring" "Testing" "Security" "Documentation" "UI/UX" "Code Review" "Ready to Deploy" "Done"; do
+            count=$(gh issue list --json labels --jq "[.[] | select(.labels[].name | startswith(\"claude/\"))] | length")
+            echo "- $status: $count" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          # Agent performance
+          echo "### Agent Performance" >> $GITHUB_STEP_SUMMARY
+          for agent in "refactoring" "testing" "security-audit" "api-docs" "ui-enhancements"; do
+            total=$(gh issue list --json labels --jq "[.[] | select(.labels[].name == \"claude/$agent\")] | length")
+            closed=$(gh issue list --json labels,state --jq "[.[] | select(.labels[].name == \"claude/$agent\" and .state == \"closed\")] | length")
+            rate=$((closed * 100 / (total > 0 ? total : 1)))
+            echo "- claude/$agent: $rate% completion rate ($closed/$total)" >> $GITHUB_STEP_SUMMARY
+          done

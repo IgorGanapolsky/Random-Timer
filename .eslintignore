@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+
+# Build output
+build/
+dist/
+
+# Demo files
+server/sp-ai-service/test-demo.mjs
+
+# Config files
+.eslintrc.js
+.prettierrc.js
+babel.config.js
+metro.config.js
+webpack.config.js
+
+# Coverage output
+coverage/
+
+# Temporary files
+*.log
+*.tmp
