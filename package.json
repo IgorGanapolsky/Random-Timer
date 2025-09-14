@@ -68,7 +68,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-unused-imports": "^4.2.0",
-    "expo-dev-client": "^5.2.4",
+    "expo-dev-client": "^6.0.12",
     "husky": "^9.1.6",
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
