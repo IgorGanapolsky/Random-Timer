@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run Snyk to check for vulnerabilities
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: ${{ secrets.SNYK_TOKEN }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -56,7 +56,7 @@ jobs:
           args: --severity-threshold=high
           
       - name: Skip Snyk (no token configured)
-        if: ${{ secrets.SNYK_TOKEN == '' }}
+        if: ${{ !secrets.SNYK_TOKEN }}
         run: echo "⚠️ Snyk token not configured - skipping vulnerability scan"
           
       - name: Initialize CodeQL
