@@ -55,9 +55,13 @@ jobs:
           
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        
+        with:
+          category: "/language:javascript,/language:typescript"
+          
       - name: Run Dependency Review
         uses: actions/dependency-review-action@v3
+        with:
+          args: --severity-threshold=high
 
   build-ios:
     name: Build iOS
@@ -72,11 +76,22 @@ jobs:
         with:
           node-version: "20"
           cache: "yarn"
-          
+      
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+            
       - name: Install dependencies
         run: |
           yarn install --frozen-lockfile
-          cd ios && pod install
+          cd ios && pod install --repo-update && cd ..
           
       - name: Build iOS
         run: |
@@ -87,6 +102,8 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -archivePath $PWD/build/SuperPassword.xcarchive \
+            -allowProvisioningUpdates \
+            CODE_SIGNING_ALLOWED=NO \
             clean archive
 
   build-android:
@@ -94,6 +111,8 @@ jobs:
     needs: [validate, security]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
+    env:
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
     steps:
       - uses: actions/checkout@v4
       
@@ -102,20 +121,40 @@ jobs:
         with:
           node-version: "20"
           cache: "yarn"
-          
+      
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
           
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-        
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
         
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          
       - name: Build Android
         run: |
           cd android
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease -PreactNativeArchitectures=x86_64,armeabi-v7a,arm64-v8a
+          
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/app-release.apk
