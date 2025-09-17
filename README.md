@@ -1,7 +1,7 @@
 # 🔐 SecurePass - Next Gen Password Manager
 
-[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/workflows/CI/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
+[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/workflows/SuperPassword%20CI%2FCD/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions)
+[![Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/develop/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
