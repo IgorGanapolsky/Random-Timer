@@ -1,0 +1,121 @@
+name: SuperPassword CI/CD
+
+on:
+  push:
+    branches: [main, develop, gitbutler/workspace]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+          
+      - name: Lint
+        run: yarn lint
+        
+      - name: Type check
+        run: yarn tsc --noEmit
+        
+      - name: Test
+        run: yarn test --coverage
+        
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+          
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        
+      - name: Run Dependency Review
+        uses: actions/dependency-review-action@v3
+
+  build-ios:
+    name: Build iOS
+    needs: [validate, security]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          cd ios && pod install
+          
+      - name: Build iOS
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace SuperPassword.xcworkspace \
+            -scheme SuperPassword \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/SuperPassword.xcarchive \
+            clean archive
+
+  build-android:
+    name: Build Android
+    needs: [validate, security]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        
+      - name: Build Android
+        run: |
+          cd android
+          ./gradlew assembleRelease
