@@ -53,15 +53,22 @@ jobs:
         with:
           args: --severity-threshold=high
           
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+          
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+          
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:javascript,/language:typescript"
           
       - name: Run Dependency Review
-        uses: actions/dependency-review-action@v3
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
         with:
-          args: --severity-threshold=high
+          fail-on-severity: high
 
   build-ios:
     name: Build iOS
