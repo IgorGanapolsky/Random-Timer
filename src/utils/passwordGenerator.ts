@@ -78,7 +78,7 @@ export const generatePassword = (options: PasswordOptions): string => {
   let password = "";
   const requiredChars: string[] = [];
   const entropyPool = createEntropyPool();
-  let entropyIndex = 0;
+  const entropyIndex = 0;
 
   // Build character set based on options
   if (options.includeLowercase) {
