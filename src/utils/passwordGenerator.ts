@@ -13,9 +13,19 @@ const AMBIGUOUS_CHARS = "il1Lo0O";
 const getSecureRandomInt = (max: number): number => {
   if (max <= 0) return 0;
   
+<<<<<<< HEAD
   // In React Native, we need to use a polyfill or native module
   // For now, we'll use a more secure implementation with multiple entropy sources
   // and a proper CSPRNG algorithm (Xorshift128+)
+=======
+  // Use crypto.getRandomValues for cryptographically secure randomness
+  // This is available in React Native through the crypto polyfill
+  const randomArray = new Uint32Array(1);
+  
+  // In React Native, we need to use a polyfill or native module
+  // For now, we'll use a more secure implementation with multiple entropy sources
+  // and a proper CSPRNG algorithm (Linear Congruential Generator with secure seed)
+>>>>>>> origin/develop
   
   // Create a secure seed using multiple entropy sources
   const timestamp = Date.now();
