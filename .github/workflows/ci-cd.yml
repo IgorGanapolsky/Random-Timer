@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: 'false'
+      force_build:
+        description: 'Force build even if not on main/develop'
+        required: false
+        default: 'false'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
