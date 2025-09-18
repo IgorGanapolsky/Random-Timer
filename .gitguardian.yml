@@ -21,6 +21,9 @@ ignore:
   - "*.yml"
   - "*.yaml"
   - "*.lock"
+  - "babel.config.*"
+  - "tsconfig.json"
+  - "package.json"
 
 # Secret patterns to ignore (false positives)
 ignore-secrets:
