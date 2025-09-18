@@ -17,6 +17,11 @@ export default [
         ecmaFeatures: {
           jsx: true
         }
+      },
+      globals: {
+        crypto: 'readonly',
+        __DEV__: 'readonly',
+        performance: 'readonly'
       }
     },
     plugins: {
