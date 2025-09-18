@@ -1,0 +1,288 @@
+name: 🎮 PR Command Handler
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+  issues: write
+  actions: write
+
+jobs:
+  handle-commands:
+    name: Process PR Commands
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse and Execute Commands
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const comment = context.payload.comment.body.trim();
+            const pr_number = context.payload.issue.number;
+            const commenter = context.payload.comment.user.login;
+            
+            console.log(`Processing command: "${comment}" from ${commenter} on PR #${pr_number}`);
+
+            // Get PR details
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number
+            });
+
+            // Command parsing
+            const commands = {
+              '/merge': {
+                description: 'Enable auto-merge for this PR',
+                action: async () => {
+                  await github.rest.pulls.createReview({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr_number,
+                    event: 'APPROVE',
+                    body: `✅ Approved by ${commenter} via command`
+                  });
+
+                  await exec.exec('gh', [
+                    'pr', 'merge', pr_number.toString(),
+                    '--repo', `${context.repo.owner}/${context.repo.repo}`,
+                    '--auto', '--squash'
+                  ], {
+                    env: { ...process.env, GH_TOKEN: process.env.GITHUB_TOKEN }
+                  });
+
+                  return `🚀 Auto-merge enabled by ${commenter}`;
+                }
+              },
+
+              '/approve': {
+                description: 'Approve this PR',
+                action: async () => {
+                  await github.rest.pulls.createReview({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr_number,
+                    event: 'APPROVE',
+                    body: `✅ Approved by ${commenter} via command`
+                  });
+                  return `✅ PR approved by ${commenter}`;
+                }
+              },
+
+              '/rerun': {
+                description: 'Rerun failed checks',
+                action: async () => {
+                  // Get failed workflow runs
+                  const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    head_sha: pr.data.head.sha,
+                    status: 'completed',
+                    conclusion: 'failure'
+                  });
+
+                  let rerunCount = 0;
+                  for (const run of runs.data.workflow_runs.slice(0, 5)) {
+                    try {
+                      await github.rest.actions.reRunWorkflow({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        run_id: run.id
+                      });
+                      rerunCount++;
+                    } catch (error) {
+                      console.log(`Could not rerun ${run.name}: ${error.message}`);
+                    }
+                  }
+
+                  return `🔄 Rerunning ${rerunCount} failed checks as requested by ${commenter}`;
+                }
+              },
+
+              '/update': {
+                description: 'Update PR branch with latest changes',
+                action: async () => {
+                  await exec.exec('gh', [
+                    'pr', 'merge', pr_number.toString(),
+                    '--repo', `${context.repo.owner}/${context.repo.repo}`,
+                    '--update-branch'
+                  ], {
+                    env: { ...process.env, GH_TOKEN: process.env.GITHUB_TOKEN }
+                  });
+
+                  return `🔄 Updated PR branch with latest changes from ${pr.data.base.ref} as requested by ${commenter}`;
+                }
+              },
+
+              '/analyze': {
+                description: 'Run AI analysis on this PR',
+                action: async () => {
+                  // Trigger AI analysis workflow
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    workflow_id: 'ai-pr-orchestrator.yml',
+                    ref: 'main',
+                    inputs: {
+                      pr_number: pr_number.toString()
+                    }
+                  });
+
+                  return `🧠 AI analysis triggered for PR #${pr_number} by ${commenter}`;
+                }
+              },
+
+              '/label': {
+                description: 'Add/remove labels (e.g., /label add bug, /label remove feature)',
+                action: async () => {
+                  const parts = comment.split(' ');
+                  if (parts.length < 3) {
+                    return '❌ Usage: /label add|remove label1,label2,...';
+                  }
+
+                  const action = parts[1]; // add or remove
+                  const labels = parts.slice(2).join(' ').split(',').map(l => l.trim());
+
+                  if (action === 'add') {
+                    await github.rest.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: pr_number,
+                      labels: labels
+                    });
+                    return `🏷️ Added labels: ${labels.join(', ')} by ${commenter}`;
+                  } else if (action === 'remove') {
+                    for (const label of labels) {
+                      try {
+                        await github.rest.issues.removeLabel({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr_number,
+                          name: label
+                        });
+                      } catch (error) {
+                        console.log(`Could not remove label ${label}: ${error.message}`);
+                      }
+                    }
+                    return `🏷️ Removed labels: ${labels.join(', ')} by ${commenter}`;
+                  }
+
+                  return '❌ Invalid action. Use "add" or "remove"';
+                }
+              },
+
+              '/assign': {
+                description: 'Assign reviewers (e.g., /assign @user1,@user2)',
+                action: async () => {
+                  const parts = comment.split(' ');
+                  if (parts.length < 2) {
+                    return '❌ Usage: /assign @user1,@user2,...';
+                  }
+
+                  const users = parts.slice(1).join(' ')
+                    .split(',')
+                    .map(u => u.trim().replace('@', ''));
+
+                  await github.rest.pulls.requestReviewers({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr_number,
+                    reviewers: users
+                  });
+
+                  return `👥 Assigned reviewers: ${users.map(u => '@' + u).join(', ')} by ${commenter}`;
+                }
+              },
+
+              '/help': {
+                description: 'Show available commands',
+                action: async () => {
+                  let helpText = '## 🎮 Available PR Commands\n\n';
+                  for (const [cmd, info] of Object.entries(commands)) {
+                    helpText += `- **${cmd}**: ${info.description}\n`;
+                  }
+                  helpText += '\n*Commands can only be used by repository collaborators*';
+                  return helpText;
+                }
+              }
+            };
+
+            // Extract command
+            const commandMatch = comment.match(/^\/(\w+)/);
+            if (!commandMatch) {
+              return;
+            }
+
+            const commandName = '/' + commandMatch[1];
+            const command = commands[commandName];
+
+            if (!command) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_number,
+                body: `❌ Unknown command: ${commandName}\n\nUse \`/help\` to see available commands.`
+              });
+              return;
+            }
+
+            // Check permissions (only allow repo collaborators)
+            try {
+              await github.rest.repos.checkCollaborator({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: commenter
+              });
+            } catch (error) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_number,
+                body: `❌ Sorry ${commenter}, only repository collaborators can use PR commands.`
+              });
+              return;
+            }
+
+            // Execute command
+            try {
+              const result = await command.action();
+              
+              // React to the original comment
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'rocket'
+              });
+
+              // Post result
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_number,
+                body: result
+              });
+
+            } catch (error) {
+              console.error('Command execution failed:', error);
+              
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'confused'
+              });
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_number,
+                body: `❌ Command failed: ${error.message}\n\nPlease check the logs or try again later.`
+              });
+            }
