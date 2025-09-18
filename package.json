@@ -6,19 +6,13 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint . --max-warnings=0",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "fmt": "prettier --check .",
-    "fmt:fix": "prettier --write .",
-    "autofix": "npm run fmt:fix && npm run lint:fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "prepare": "husky install",
     "pre-commit": "lint-staged",
-    "typecheck": "tsc --noEmit",
->>>>>>> Stashed changes
     "check-types": "tsc --noEmit",
     "validate": "yarn lint && yarn test && yarn check-types"
   },
