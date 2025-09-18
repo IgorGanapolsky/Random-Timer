@@ -1,0 +1,161 @@
+name: Kanban Board Automation
+
+on:
+  issues:
+    types: [opened, closed, reopened, assigned, unassigned]
+  pull_request:
+    types:
+      [
+        opened,
+        closed,
+        reopened,
+        ready_for_review,
+        review_requested,
+        converted_to_draft,
+      ]
+  pull_request_review:
+    types: [submitted]
+
+env:
+  PROJECT_ID: "PVT_kwHOAAMR-c4BCPGq"
+  STATUS_FIELD_ID: "PVTSSF_lAHOAAMR-c4BCPGqzg0gbWE"
+  STATUS_TODO: "f75ad846"
+  STATUS_IN_PROGRESS: "47fc9ee4"
+  STATUS_REVIEW: "c8b5dbeb"
+  STATUS_DONE: "98236657"
+
+jobs:
+  manage_project_items:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: Add to project
+        if: github.event_name == 'issues' || github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const { owner, repo } = context.repo;
+            const contentId = context.payload.issue?.node_id || context.payload.pull_request?.node_id;
+
+            if (!contentId) {
+              console.log('No issue or PR found');
+              return;
+            }
+
+            // Add to project
+            await github.graphql(`
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: {
+                  projectId: $projectId
+                  contentId: $contentId
+                }) {
+                  item {
+                    id
+                  }
+                }
+              }
+            `, {
+              projectId: process.env.PROJECT_ID,
+              contentId: contentId
+            });
+
+      - name: Update status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            let newStatus = '';
+
+            if (context.payload.issue) {
+              if (context.payload.action === 'opened') {
+                newStatus = process.env.STATUS_TODO;
+              } else if (context.payload.action === 'closed') {
+                newStatus = process.env.STATUS_DONE;
+              } else if (context.payload.action === 'assigned') {
+                newStatus = process.env.STATUS_IN_PROGRESS;
+              }
+            }
+
+            if (context.payload.pull_request) {
+              if (context.payload.action === 'converted_to_draft') {
+                newStatus = process.env.STATUS_IN_PROGRESS;
+              } else if (context.payload.action === 'ready_for_review') {
+                newStatus = process.env.STATUS_REVIEW;
+              } else if (context.payload.action === 'closed') {
+                newStatus = context.payload.pull_request.merged ? process.env.STATUS_DONE : process.env.STATUS_TODO;
+              }
+            }
+
+            if (context.payload.review) {
+              if (context.payload.review.state === 'approved') {
+                newStatus = process.env.STATUS_DONE;
+              } else if (context.payload.review.state === 'changes_requested') {
+                newStatus = process.env.STATUS_IN_PROGRESS;
+              }
+            }
+
+            if (newStatus) {
+              const contentId = context.payload.issue?.node_id || context.payload.pull_request?.node_id;
+              
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $statusFieldId: ID!, $statusValue: String!) {
+                  updateProjectV2ItemFieldValue(
+                    input: {
+                      projectId: $projectId
+                      itemId: $itemId
+                      fieldId: $statusFieldId
+                      value: { 
+                        singleSelectOptionId: $statusValue
+                      }
+                    }
+                  ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `, {
+                projectId: process.env.PROJECT_ID,
+                itemId: contentId,
+                statusFieldId: process.env.STATUS_FIELD_ID,
+                statusValue: newStatus
+              });
+            }
+
+  sync_agents:
+    needs: manage_project_items
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync GitKraken
+        env:
+          GK_TOKEN: ${{ secrets.GK_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ github.event.action }}" == "closed" ]]; then
+              if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+                echo "PR merged - ending GitKraken work item"
+                gk work end
+              fi
+            elif [[ "${{ github.event.action }}" == "converted_to_draft" ]]; then
+              echo "PR marked as draft - updating GitKraken status"
+              gk work set "${{ github.event.pull_request.head.ref }}"
+            fi
+          fi
+
+      - name: Sync GitButler
+        if: hashFiles('.git/gitbutler/virtual_branches.toml') != ''
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ github.event.action }}" == "closed" ]]; then
+              echo "PR closed - cleaning up GitButler virtual branch"
+              # Here we would update GitButler's virtual branch status
+              # This would be done through GitButler's API when available
+            fi
+          fi
