@@ -36,6 +36,8 @@ A professional password generator built with React Native CLI, featuring Materia
 
 ---
 
+🤖 **AI Integration**: This project now features GitButler AI integration for automated commit management!
+
 ## Features
 
 ### Core Features (Free)
