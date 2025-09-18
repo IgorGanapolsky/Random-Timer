@@ -69,7 +69,6 @@ export default function App() {
           });
         }
       } catch (e) {
-        console.warn(e);
         // Safely capture exception to Sentry
         captureException(e);
       } finally {

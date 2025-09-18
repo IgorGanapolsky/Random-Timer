@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { PasswordEntry, UserPreferences, User, AdConfig } from "@/types";
+import Logger from "@/utils/logger";
 
 const STORAGE_KEYS = {
   PASSWORD_HISTORY: "@SecurePass:passwordHistory",
@@ -27,7 +28,7 @@ export class StorageService {
       }
       return [];
     } catch (error) {
-      console.error("Error loading password history:", error);
+      Logger.error("Error loading password history:", error);
       return [];
     }
   }
@@ -39,7 +40,7 @@ export class StorageService {
         JSON.stringify(history),
       );
     } catch (error) {
-      console.error("Error saving password history:", error);
+      Logger.error("Error saving password history:", error);
       throw error;
     }
   }
