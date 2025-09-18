@@ -1,0 +1,93 @@
+name: Claude Agent + GitButler Integration
+
+# Configuration for integrating Claude agents with GitButler virtual branches
+agent_config:
+  default_branch: main
+  worktree_path: .git/worktrees
+  virtual_branch_path: .git/gitbutler
+
+# Virtual Branch Templates
+branch_templates:
+  feature:
+    prefix: "feature/"
+    claude_prompt: |
+      Create a new feature implementation following these guidelines:
+      1. Create modular, testable code
+      2. Follow existing patterns in the codebase
+      3. Include unit tests
+      4. Update documentation as needed
+
+  bugfix:
+    prefix: "fix/"
+    claude_prompt: |
+      Fix the reported issue following these guidelines:
+      1. Add regression tests
+      2. Verify edge cases
+      3. Document the fix
+      4. Update error handling
+
+  security:
+    prefix: "security/"
+    claude_prompt: |
+      Implement security changes following these guidelines:
+      1. Follow security best practices
+      2. Add security tests
+      3. Document security implications
+      4. Update security documentation
+
+# Worktree Management
+worktrees:
+  base_paths:
+    - security
+    - android
+    - ios
+    - native
+    - rn-core
+    - testing
+
+  auto_cleanup: true
+  preserve_uncommitted: true
+
+# GitButler Integration
+gitbutler:
+  virtual_branch_config:
+    auto_commit: true
+    auto_push: false
+    require_review: true
+
+  commit_template: |
+    {{type}}: {{summary}}
+
+    {{body}}
+
+    Testing:
+    {{testing_notes}}
+
+    Security:
+    {{security_notes}}
+
+    Co-authored-by: Claude <claude@anthropic.com>
+
+# Claude Agent Configuration
+claude_agent:
+  review_template: |
+    Review Guidelines:
+    1. Code quality and standards
+    2. Test coverage
+    3. Security implications
+    4. Performance considerations
+    5. Documentation updates
+
+  auto_fixes:
+    - lint_errors
+    - type_errors
+    - security_warnings
+    - test_coverage
+
+  notifications:
+    slack_channel: "#claude-alerts"
+    notify_on:
+      - branch_created
+      - review_completed
+      - security_issue
+      - test_failure
