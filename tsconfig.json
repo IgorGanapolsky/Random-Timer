@@ -25,13 +25,16 @@
     "moduleResolution": "node",
     "jsx": "react-native",
     "lib": ["ES2021"],
-    "types": ["react-native"]
+    "types": ["react-native", "jest", "node"]
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
   "exclude": [
     "node_modules",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js"
+    "jest.config.js",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**/*"
   ]
 }
