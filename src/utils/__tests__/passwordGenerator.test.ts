@@ -6,7 +6,7 @@ import {
   generateMultiplePasswords,
   validatePasswordOptions 
 } from '../passwordGenerator';
-import { PasswordOptions, PasswordStrength } from '@/types';
+import { PasswordOptions, PasswordStrength } from '../../types';
 
 describe('Password Generator Security Tests', () => {
   describe('Cryptographic Security', () => {
