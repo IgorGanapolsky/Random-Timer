@@ -22,8 +22,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "module": "es2015",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "jsx": "react-native",
     "lib": ["ES2021"],
     "types": ["react-native", "jest"]
