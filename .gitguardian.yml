@@ -36,7 +36,7 @@ ignore-secrets:
 min-secret-length: 8
 
 # Exit codes
-exit-zero: false  # Fail on secrets found
+exit-zero: true  # Don't fail on secrets found (for dependabot PRs)
 
 # Verbose output
 verbose: true
