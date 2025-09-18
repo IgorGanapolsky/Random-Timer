@@ -6,6 +6,13 @@
       "headers": {
         "nonce": "d8880cc3-bf56-4e97-a168-5ed0e8f7ddad"
       }
+    },
+    "gitbutler": {
+      "command": "gitbutler",
+      "args": ["mcp", "server"],
+      "env": {
+        "GITBUTLER_PROJECT_PATH": "."
+      }
     }
   }
 }
