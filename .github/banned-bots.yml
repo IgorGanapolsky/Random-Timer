@@ -1,0 +1,32 @@
+# Banned Bots Configuration
+# This file explicitly lists bots that are NOT allowed to interact with this repository
+
+banned_bots:
+  - openhands-ai
+  - OpenHands-ai
+  - openhands[bot]
+  - OpenHands[bot]
+  - all-hands-ai
+  - AllHands[bot]
+
+# Allowed and configured bots for this repository:
+allowed_bots:
+  - dependabot[bot]          # Dependency updates
+  - github-actions[bot]      # GitHub Actions automation
+  - codecov[bot]            # Code coverage reports
+  - sonarcloud[bot]         # Code quality analysis
+  - snyk-bot                # Security vulnerability scanning
+  - coderabbit[bot]         # AI code review
+  - gitguardian[bot]        # Secret scanning
+  - gitkraken[bot]          # GitKraken integration
+  - semantic-release-bot    # Automated releases
+  - renovate[bot]           # Dependency management
+  - claude-ai[bot]          # Claude AI integration
+  - cursor-bot              # Cursor IDE integration
+  - gitbutler[bot]          # GitButler integration
+
+# Security notice
+security:
+  block_unverified_bots: true
+  require_signed_commits: false
+  allowed_org_bots_only: false

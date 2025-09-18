@@ -1,0 +1,75 @@
+name: 🚫 Block OpenHands Bot
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  block-openhands:
+    name: Block OpenHands Interactions
+    runs-on: ubuntu-latest
+    if: |
+      github.actor == 'openhands-ai' ||
+      github.actor == 'OpenHands-ai' ||
+      github.actor == 'openhands[bot]' ||
+      github.actor == 'OpenHands[bot]' ||
+      github.actor == 'all-hands-ai' ||
+      contains(github.event.comment.user.login, 'openhands') ||
+      contains(github.event.comment.user.login, 'OpenHands')
+
+    steps:
+      - name: Delete OpenHands Comment
+        if: github.event.comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🚫 **OpenHands bot is banned from this repository.**\n\nThis repository does not use OpenHands. Please use our configured bots:\n- CodeRabbit for AI code review\n- Dependabot for dependency updates\n- SonarCloud for code quality\n- GitGuardian for security scanning'
+            });
+
+      - name: Close OpenHands PR
+        if: github.event.pull_request
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              state: 'closed'
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: '🚫 **This PR has been automatically closed.**\n\nOpenHands bot is not authorized to create pull requests in this repository.'
+            });
+
+      - name: Report Unauthorized Access
+        uses: actions/github-script@v8
+        with:
+          script: |
+            console.log(`⚠️ Blocked OpenHands bot attempt by: ${context.actor}`);
+
+            // Create security alert issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Blocked OpenHands Bot Attempt',
+              body: `An unauthorized bot interaction was blocked:\n\n- Bot: ${context.actor}\n- Type: ${context.eventName}\n- Time: ${new Date().toISOString()}\n\nAction taken: Interaction was blocked and removed.`,
+              labels: ['security', 'bot-blocked']
+            });
