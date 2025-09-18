@@ -1,0 +1,65 @@
+# GitButler Configuration for SuperPassword Multi-Agent Workflow
+
+[project]
+name = "SuperPassword"
+path = "/Users/igorganapolsky/workspace/git/apps/SuperPassword"
+
+[experimental]
+# Enable GitButler Actions for AI integration
+gitbutler_actions = true
+# Enable MCP server integration
+mcp_integration = true
+# Enable automatic commit management
+auto_commit = true
+# Enable virtual branch management
+virtual_branches = true
+
+[ai]
+# AI provider configuration
+provider = "claude"
+model = "claude-3-5-sonnet"
+# Enable AI-powered commit messages
+auto_commit_messages = true
+# Enable conflict resolution assistance
+conflict_resolution = true
+
+[agents]
+# Multi-agent worktree configuration
+[agents.security]
+worktree = "worktrees/security"
+branch_prefix = "security/"
+focus = ["authentication", "encryption", "security-policies"]
+
+[agents.testing]
+worktree = "worktrees/testing"
+branch_prefix = "test/"
+focus = ["unit-tests", "integration-tests", "e2e-tests"]
+
+[agents.feature]
+worktree = "worktrees/feature-agent"
+branch_prefix = "feat/"
+focus = ["new-features", "enhancements"]
+
+[agents.bugfix]
+worktree = "worktrees/bugfix-agent"
+branch_prefix = "fix/"
+focus = ["bug-fixes", "performance", "refactoring"]
+
+[hooks]
+# Enable automatic hooks for Claude Code integration
+pre_commit = true
+post_commit = true
+auto_pr = true
+
+[mcp]
+# MCP server configuration
+server_port = 3001
+auto_start = true
+log_level = "info"
+
+[workflow]
+# Workflow automation settings
+auto_merge_strategy = "ours"
+squash_commits = true
+delete_merged_branches = true
+linear_history = true
