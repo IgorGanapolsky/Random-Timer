@@ -19,7 +19,7 @@ const getSecureRandomInt = (max: number): number => {
   
   // Create a secure seed using multiple entropy sources
   const timestamp = Date.now();
-  const performanceNow = typeof performance !== 'undefined' && performance.now ? performance.now() : Math.random() * 1000000;
+  const performanceNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Math.random() * 1000000;
   
   // Use a proper CSPRNG algorithm (Xorshift128+)
   let s0 = timestamp ^ 0x12345678;

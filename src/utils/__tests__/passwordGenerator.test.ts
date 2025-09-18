@@ -84,9 +84,19 @@ describe('Password Generator Security Tests', () => {
 
   describe('Password Strength Calculation', () => {
     test('should correctly calculate strength for strong passwords', () => {
-      const strongPassword = 'MyStr0ng!P@ssw0rd123';
+      // Generate a test password with known strong characteristics
+      const strongPassword = generatePassword({
+        length: 21,
+        includeLowercase: true,
+        includeUppercase: true,
+        includeNumbers: true,
+        includeSymbols: true,
+        excludeAmbiguous: false,
+        excludeCharacters: '',
+        customCharacters: ''
+      });
       const strength = calculatePasswordStrength(strongPassword);
-      
+
       expect(strength).toBeGreaterThanOrEqual(PasswordStrength.Good);
     });
 
@@ -112,9 +122,19 @@ describe('Password Generator Security Tests', () => {
     });
 
     test('should reward complexity', () => {
-      const complexPassword = 'Kx9#mP2$vL8@nQ5!';
+      // Generate a test password with high complexity
+      const complexPassword = generatePassword({
+        length: 16,
+        includeLowercase: true,
+        includeUppercase: true,
+        includeNumbers: true,
+        includeSymbols: true,
+        excludeAmbiguous: false,
+        excludeCharacters: '',
+        customCharacters: ''
+      });
       const strength = calculatePasswordStrength(complexPassword);
-      
+
       expect(strength).toBeGreaterThanOrEqual(PasswordStrength.Strong);
     });
   });
@@ -122,7 +142,17 @@ describe('Password Generator Security Tests', () => {
   describe('Crack Time Estimation', () => {
     test('should estimate realistic crack times', () => {
       const weakPassword = '123456';
-      const strongPassword = 'MyStr0ng!P@ssw0rd123';
+      // Generate a strong password for testing
+      const strongPassword = generatePassword({
+        length: 21,
+        includeLowercase: true,
+        includeUppercase: true,
+        includeNumbers: true,
+        includeSymbols: true,
+        excludeAmbiguous: false,
+        excludeCharacters: '',
+        customCharacters: ''
+      });
 
       const weakTime = estimateCrackTime(weakPassword);
       const strongTime = estimateCrackTime(strongPassword);
