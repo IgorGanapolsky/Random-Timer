@@ -1620,3 +1620,148 @@ tsconfig.json 0ms (unchanged)
 > superpassword@1.0.0 lint:fix
 > eslint . --ext .ts,.tsx --fix
 
+Already up to date.
+
+> superpassword@1.0.0 prepare
+> husky install
+
+
+added 1152 packages in 4m
+
+> superpassword@1.0.0 autofix
+> npm run fmt:fix && npm run lint:fix
+
+
+> superpassword@1.0.0 fmt:fix
+> prettier --write .
+
+.cursor/mcp.json 193ms (unchanged)
+.cursor/rules.json 6ms (unchanged)
+.eas/project.json 3ms (unchanged)
+.eslintrc.cjs 142ms (unchanged)
+.github/dependabot.yml 136ms (unchanged)
+.github/ISSUE_TEMPLATE/bug_report.yml 79ms (unchanged)
+.github/ISSUE_TEMPLATE/config.yml 7ms (unchanged)
+.github/ISSUE_TEMPLATE/feature_request.yml 46ms (unchanged)
+.github/ISSUE_TEMPLATE/security.yml 11ms (unchanged)
+.github/orchestration.yml 27ms (unchanged)
+.github/pull_request_template.md 674ms (unchanged)
+.github/scripts/repo-guardian.mjs 836ms (unchanged)
+.github/workflows/autofix.yml 38ms (unchanged)
+.github/workflows/ci.yml 9ms (unchanged)
+.github/workflows/codeql.yml 42ms (unchanged)
+.github/workflows/dependabot-auto-merge.yml 59ms (unchanged)
+.github/workflows/eas-build.yml 13ms (unchanged)
+.github/workflows/main.yml 186ms (unchanged)
+.github/workflows/merge-queue-helper.yml 10ms (unchanged)
+.github/workflows/orchestration.yml 27ms (unchanged)
+.github/workflows/pr-automation.yml 12ms
+.github/workflows/pr-health.yml 7ms (unchanged)
+.github/workflows/repo-guardian.yml 8ms (unchanged)
+.github/workflows/secret-scan.yml 8ms (unchanged)
+.github/workflows/update-badges.yml 7ms (unchanged)
+.trunk/configs/.markdownlint.yaml 4ms (unchanged)
+.trunk/trunk.yaml 8ms (unchanged)
+app.config.ts 685ms (unchanged)
+App.tsx 366ms (unchanged)
+babel.config.js 21ms (unchanged)
+DEPLOYMENT_CHECKLIST.md 92ms (unchanged)
+docs/BRANCH_STRATEGY.md 174ms (unchanged)
+eas.json 22ms (unchanged)
+eslint.config.js 13ms
+index.web.ts 13ms (unchanged)
+metro.config.js 16ms (unchanged)
+package-lock.json 2507ms (unchanged)
+package.json 4ms (unchanged)
+PRIVACY_POLICY.md 97ms (unchanged)
+README.md 161ms (unchanged)
+scripts/generate-icon.js 148ms (unchanged)
+src/components/ErrorFallback.tsx 145ms (unchanged)
+src/components/SentryTest.tsx 52ms (unchanged)
+src/constants/theme.ts 23ms (unchanged)
+src/contexts/ThemeContext.tsx 36ms (unchanged)
+src/hooks/useTheme.ts 8ms (unchanged)
+src/navigation/AppNavigator.tsx 29ms (unchanged)
+src/screens/HistoryScreen.tsx 75ms (unchanged)
+src/screens/HomeScreen.tsx 134ms (unchanged)
+src/screens/PremiumScreen.tsx 121ms (unchanged)
+src/screens/SettingsScreen.tsx 83ms (unchanged)
+src/services/ads.tsx 13ms (unchanged)
+src/services/firebase.ts 13ms (unchanged)
+src/services/sentry.ts 13ms (unchanged)
+src/services/storage.ts 52ms (unchanged)
+src/types/index.ts 14ms (unchanged)
+src/utils/passwordGenerator.ts 38ms (unchanged)
+store-listings/APP_STORE_LISTING.md 30ms (unchanged)
+tsconfig.json 2ms (unchanged)
+worktrees/security/.agent-task-194.md 21ms
+worktrees/security/.cursor/agent.json 2ms
+worktrees/security/.cursor/agent.yaml 5ms
+worktrees/security/.cursor/config.json 3ms
+worktrees/security/.cursor/mcp.json 3ms (unchanged)
+worktrees/security/.cursor/rules.json 40ms (unchanged)
+worktrees/security/.eas/project.json 9ms (unchanged)
+worktrees/security/.eslintrc.cjs 20ms
+worktrees/security/.eslintrc.js 6ms
+worktrees/security/.gitguardian.yml 5ms
+worktrees/security/.github/dependabot.yml 4ms
+worktrees/security/.github/ISSUE_TEMPLATE/bug_report.yml 10ms
+worktrees/security/.github/ISSUE_TEMPLATE/config.yml 3ms (unchanged)
+worktrees/security/.github/ISSUE_TEMPLATE/feature_request.yml 26ms
+worktrees/security/.github/ISSUE_TEMPLATE/security.yml 18ms
+worktrees/security/.github/orchestration.yml 22ms
+worktrees/security/.github/pull_request_template.md 8ms (unchanged)
+worktrees/security/.github/scripts/repo-guardian.mjs 103ms
+worktrees/security/.github/workflows/autofix.yml 12ms
+worktrees/security/.github/workflows/ci-cd.yml 31ms
+worktrees/security/.github/workflows/codeql.yml 7ms
+worktrees/security/.github/workflows/dependabot-auto-merge.yml 40ms
+worktrees/security/.github/workflows/eas-build.yml 5ms (unchanged)
+worktrees/security/.github/workflows/merge-queue-helper.yml 10ms (unchanged)
+worktrees/security/.github/workflows/orchestration.yml 25ms
+worktrees/security/.github/workflows/pr-automation.yml 32ms
+worktrees/security/.github/workflows/pr-check.yml 6ms
+worktrees/security/.github/workflows/pr-health.yml 20ms
+worktrees/security/.github/workflows/repo-guardian.yml 16ms
+worktrees/security/.github/workflows/secret-scan.yml 7ms (unchanged)
+worktrees/security/.github/workflows/update-badges.yml 24ms
+worktrees/security/.lintstagedrc.js 34ms (unchanged)
+worktrees/security/.prettierrc 10ms
+worktrees/security/.trunk/configs/.markdownlint.yaml 25ms (unchanged)
+worktrees/security/.trunk/trunk.yaml 39ms (unchanged)
+worktrees/security/.vscode/settings.json 40ms
+worktrees/security/App.tsx 36ms
+worktrees/security/babel.config.js 3ms
+worktrees/security/codecov.yml 14ms
+worktrees/security/DEPLOYMENT_CHECKLIST.md 70ms (unchanged)
+worktrees/security/docs/BRANCH_STRATEGY.md 34ms (unchanged)
+worktrees/security/eslint.config.js 16ms
+worktrees/security/index.web.ts 6ms
+worktrees/security/jest.config.js 176ms
+worktrees/security/metro.config.js 29ms
+worktrees/security/MIGRATION.md 38ms
+worktrees/security/package-lock.json 787ms (unchanged)
+worktrees/security/package.json 4ms (unchanged)
+worktrees/security/PRIVACY_POLICY.md 666ms (unchanged)
+worktrees/security/README.md 738ms
+worktrees/security/scripts/generate-icon.js 71ms
+worktrees/security/SECURITY_HOOKS.md 37ms
+worktrees/security/SECURITY.md 18ms (unchanged)
+worktrees/security/src/App.tsx 11ms (unchanged)
+worktrees/security/src/components/ErrorFallback.tsx 145ms
+worktrees/security/src/components/SentryTest.tsx 187ms
+worktrees/security/src/constants/theme.ts 15ms
+worktrees/security/src/contexts/ThemeContext.tsx 12ms
+worktrees/security/src/hooks/useTheme.ts 86ms
+worktrees/security/src/navigation/AppNavigator.tsx 57ms
+worktrees/security/src/screens/HistoryScreen.tsx 225ms
+worktrees/security/src/screens/HomeScreen.tsx 276ms
+worktrees/security/src/screens/PremiumScreen.tsx 122ms
+worktrees/security/src/screens/SettingsScreen.tsx 97ms
+worktrees/security/src/services/ads.tsx 31ms
+worktrees/security/src/services/firebase.ts 18ms
+worktrees/security/src/services/sentry.ts 33ms
+worktrees/security/src/services/storage.ts 67ms
+worktrees/security/src/types/index.ts 233ms
+worktrees/security/store-listings/APP_STORE_LISTING.md 77ms (unchanged)
+worktrees/security/tsconfig.json 6ms
