@@ -1,0 +1,96 @@
+repos:
+  # GitGuardian for secret detection
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.43.0
+    hooks:
+      - id: ggshield
+        name: GitGuardian Shield
+        description: Scan for secrets, credentials, and sensitive data
+        entry: ggshield secret scan pre-commit
+        language: python
+        language_version: python3
+        args: [--exit-zero]  # Don't fail on warnings, only on actual secrets
+
+  # Pre-commit hooks for code quality
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+      - id: detect-aws-credentials
+      - id: detect-gcp-credentials
+      - id: detect-azure-credentials
+
+  # ESLint for JavaScript/TypeScript
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.57.0
+    hooks:
+      - id: eslint
+        files: \.(js|jsx|ts|tsx)$
+        types: [file]
+        additional_dependencies:
+          - eslint@8.57.0
+          - @typescript-eslint/eslint-plugin@5.37.0
+          - @typescript-eslint/parser@5.37.0
+          - @react-native/eslint-config@0.81.1
+
+  # Prettier for code formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier
+        files: \.(js|jsx|ts|tsx|json|md|yml|yaml)$
+        args: [--write]
+
+  # TypeScript type checking
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier
+        files: \.(ts|tsx)$
+        args: [--write]
+
+  # Custom security checks
+  - repo: local
+    hooks:
+      - id: security-scan
+        name: Security Scan
+        entry: bash -c 'echo "🔒 Running security scan..." && npm audit --audit-level=high'
+        language: system
+        files: package\.json$
+        pass_filenames: false
+        always_run: true
+
+      - id: sonar-check
+        name: SonarQube Quality Check
+        entry: bash -c 'echo "🔍 Checking code quality..." && npx eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0'
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+      - id: no-secrets
+        name: No Secrets Check
+        entry: bash -c 'echo "🚫 Checking for hardcoded secrets..." && grep -r -i "password\|secret\|key\|token" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" src/ && echo "❌ Found potential secrets!" && exit 1 || echo "✅ No hardcoded secrets found"'
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+# Configuration
+default_language_version:
+  python: python3
+  node: 20
+
+# Fail fast on first error
+fail_fast: true
+
+# Minimum pre-commit version
+minimum_pre_commit_version: 3.0.0

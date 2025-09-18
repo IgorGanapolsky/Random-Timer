@@ -1,0 +1,13 @@
+{
+  "version": "2025.3",
+  "project": "SuperPassword",
+  "architecture": "React Native + Expo + AI Backend",
+  "workflowType": "multi-agent-worktrees",
+  "defaultModel": "claude-3.5-sonnet",
+  "agents": {
+    "feature": "../worktrees/feature-agent",
+    "bugfix": "../worktrees/bugfix-agent", 
+    "security": "../worktrees/security-agent",
+    "testing": "../worktrees/testing-agent"
+  }
+}

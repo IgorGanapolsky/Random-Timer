@@ -1,27 +1,20 @@
-const { getDefaultConfig } = require("expo/metro-config");
+const { getDefaultConfig } = require('@react-native/metro-config');
 
-/** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
+module.exports = (async () => {
+  const config = await getDefaultConfig(__dirname);
+  
+  const { transformer, resolver } = config;
 
-// Ensure proper module resolution
-config.resolver = {
-  ...config.resolver,
-  // Add tslib to extra node modules to ensure it's resolved correctly
-  extraNodeModules: {
-    ...config.resolver.extraNodeModules,
-    tslib: require.resolve("tslib"),
-  },
-};
+  config.transformer = {
+    ...transformer,
+    babelTransformerPath: require.resolve('react-native-svg-transformer'),
+  };
+  
+  config.resolver = {
+    ...resolver,
+    assetExts: resolver.assetExts.filter((ext) => ext !== 'svg'),
+    sourceExts: [...resolver.sourceExts, 'svg'],
+  };
 
-// Ensure source map support for better debugging
-config.transformer = {
-  ...config.transformer,
-  minifierConfig: {
-    keep_fnames: true,
-    mangle: {
-      keep_fnames: true,
-    },
-  },
-};
-
-module.exports = config;
+  return config;
+})();
