@@ -47,27 +47,6 @@ const getSecureRandomInt = (max: number): number => {
   return ((random32 ^ timestamp) >>> 0) % max;
 };
 
-/**
- * Enhanced entropy pool for additional randomness
- */
-const createEntropyPool = (): number[] => {
-  const pool: number[] = [];
-  const poolSize = 256;
-  
-  // Fill pool with secure random values
-  for (let i = 0; i < poolSize; i++) {
-    // Use our secure random generator for each byte
-    pool.push(getSecureRandomInt(256));
-  }
-  
-  // Fisher-Yates shuffle for additional mixing
-  for (let i = poolSize - 1; i > 0; i--) {
-    const j = getSecureRandomInt(i + 1);
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  
-  return pool;
-};
 
 export const generatePassword = (options: PasswordOptions): string => {
   let availableChars = "";
