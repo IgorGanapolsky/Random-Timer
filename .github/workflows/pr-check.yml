@@ -43,6 +43,15 @@ jobs:
           fi
 
       - name: Assign Reviewers
-        uses: kentaro-m/auto-assign-action@v1.2.4
-        with: 
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Auto-assign reviewer for non-dependabot PRs
+            if (context.payload.pull_request.user.login !== 'dependabot[bot]') {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                reviewers: ['IgorGanapolsky']
+              });
+            }

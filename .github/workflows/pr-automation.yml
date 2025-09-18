@@ -95,24 +95,36 @@ jobs:
                 status = '⏳ Waiting for checks';
               } else if (!hasApproval) {
                 status = '👀 Needs review';
-                // Request review if not already requested
-                if (!pr.requested_reviewers?.length) {
-                  await github.rest.pulls.requestReviewers({
+                // Request review if not already requested and author is not the reviewer
+                if (!pr.requested_reviewers?.length && pr.user.login !== 'IgorGanapolsky') {
+                  try {
+                    await github.rest.pulls.requestReviewers({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: pr.number,
+                      reviewers: ['IgorGanapolsky']
+                    });
+                  } catch (error) {
+                    console.log(`Could not request review for PR #${pr.number}: ${error.message}`);
+                  }
+                }
+              } else if (pr.mergeable === true) {
+                status = '✅ Ready to merge';
+                // Auto-merge if everything passes
+                try {
+                  await github.rest.pulls.merge({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: pr.number,
-                    reviewers: ['IgorGanapolsky']
+                    merge_method: 'squash'
                   });
+                  console.log(`Successfully merged PR #${pr.number}`);
+                } catch (error) {
+                  console.log(`Could not merge PR #${pr.number}: ${error.message}`);
+                  status = '❌ Merge failed';
                 }
-              } else if (pr.mergeable) {
-                status = '✅ Ready to merge';
-                // Auto-merge if everything passes
-                await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number,
-                  merge_method: 'squash'
-                });
+              } else if (pr.mergeable === false) {
+                status = '⚠️ Has conflicts';
               }
 
               // Update PR status in first comment
@@ -151,6 +163,8 @@ jobs:
 
       - name: Update Status Board
         if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BOARD_ISSUE=$(gh issue list --label status-board --json number -q '.[0].number')
           
