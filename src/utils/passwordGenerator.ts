@@ -7,44 +7,41 @@ const SYMBOL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 const AMBIGUOUS_CHARS = "il1Lo0O";
 
 /**
- * Cryptographically secure random number generator
- * Uses React Native's crypto module for true randomness
+ * Cryptographically secure random number in [0, max)
+ * Prefers Web Crypto / React Native polyfill, falls back to Node crypto, then Math.random.
  */
 const getSecureRandomInt = (max: number): number => {
   if (max <= 0) return 0;
-  
-  // In React Native, we need to use a polyfill or native module
-  // For now, we'll use a more secure implementation with multiple entropy sources
-  // and a proper CSPRNG algorithm (Xorshift128+)
-  
-  // Create a secure seed using multiple entropy sources
-  const timestamp = Date.now();
-  const performanceNow = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  
-  // Use a proper CSPRNG algorithm (Xorshift128+)
-  let s0 = timestamp ^ 0x12345678;
-  let s1 = performanceNow ^ 0x87654321;
-  
-  // Xorshift128+ algorithm
-  const x = s0;
-  const y = s1;
-  s0 = y;
-  let t = x ^ (x << 23);
-  t = t ^ (t >> 17);
-  t = t ^ y ^ (y >> 26);
-  s1 = t;
-  
-  // Generate a uniform random number in range [0, max)
-  const random32 = (s0 + s1) >>> 0;
-  
-  // Avoid modulo bias by rejection sampling
-  const buckets = Math.floor(0x100000000 / max) * max;
-  if (random32 < buckets) {
-    return random32 % max;
+
+  // Prefer Web Crypto API (available in RN with react-native-get-random-values polyfill)
+  const cryptoObj: any = (globalThis as any).crypto;
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const arr = new Uint32Array(1);
+    while (true) {
+      cryptoObj.getRandomValues(arr);
+      const random32 = arr[0];
+      const buckets = Math.floor(0x100000000 / max) * max;
+      if (random32 < buckets) return random32 % max;
+    }
   }
-  
-  // Fallback with additional entropy mixing
-  return ((random32 ^ timestamp) >>> 0) % max;
+
+  // Node.js fallback for test environment
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const nodeCrypto = require('crypto');
+    if (typeof nodeCrypto.randomInt === 'function') {
+      return nodeCrypto.randomInt(0, max);
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  // Final fallback (non-crypto) with rejection sampling
+  while (true) {
+    const random32 = Math.floor(Math.random() * 0x100000000) >>> 0;
+    const buckets = Math.floor(0x100000000 / max) * max;
+    if (random32 < buckets) return random32 % max;
+  }
 };
 
 /**
@@ -53,19 +50,19 @@ const getSecureRandomInt = (max: number): number => {
 const createEntropyPool = (): number[] => {
   const pool: number[] = [];
   const poolSize = 256;
-  
+
   // Fill pool with secure random values
   for (let i = 0; i < poolSize; i++) {
     // Use our secure random generator for each byte
     pool.push(getSecureRandomInt(256));
   }
-  
+
   // Fisher-Yates shuffle for additional mixing
   for (let i = poolSize - 1; i > 0; i--) {
     const j = getSecureRandomInt(i + 1);
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  
+
   return pool;
 };
 
@@ -74,79 +71,70 @@ export const generatePassword = (options: PasswordOptions): string => {
   let password = "";
   const requiredChars: string[] = [];
 
-  // Build character set based on options
-  if (options.includeLowercase) {
-    availableChars += LOWERCASE_CHARS;
-    requiredChars.push(
-      LOWERCASE_CHARS[getSecureRandomInt(LOWERCASE_CHARS.length)],
-    );
-  }
+  const excludeSet = new Set<string>(options.excludeCharacters ? options.excludeCharacters.split("") : []);
+  const shouldExclude = (ch: string): boolean => excludeSet.has(ch) || (options.excludeAmbiguous ? AMBIGUOUS_CHARS.includes(ch) : false);
+  const filterChars = (chars: string): string => chars.split("").filter((c) => !shouldExclude(c)).join("");
 
-  if (options.includeUppercase) {
-    availableChars += UPPERCASE_CHARS;
-    requiredChars.push(
-      UPPERCASE_CHARS[getSecureRandomInt(UPPERCASE_CHARS.length)],
-    );
-  }
+  const lower = options.includeLowercase ? filterChars(LOWERCASE_CHARS) : "";
+  const upper = options.includeUppercase ? filterChars(UPPERCASE_CHARS) : "";
+  const nums = options.includeNumbers ? filterChars(NUMBER_CHARS) : "";
+  const syms = options.includeSymbols ? filterChars(SYMBOL_CHARS) : "";
+  const custom = options.customCharacters ? filterChars(options.customCharacters) : "";
 
-  if (options.includeNumbers) {
-    availableChars += NUMBER_CHARS;
-    requiredChars.push(
-      NUMBER_CHARS[getSecureRandomInt(NUMBER_CHARS.length)],
-    );
-  }
+  availableChars = lower + upper + nums + syms + custom;
 
-  if (options.includeSymbols) {
-    availableChars += SYMBOL_CHARS;
-    requiredChars.push(
-      SYMBOL_CHARS[getSecureRandomInt(SYMBOL_CHARS.length)],
-    );
-  }
-
-  // Add custom characters
-  if (options.customCharacters) {
-    availableChars += options.customCharacters;
-  }
-
-  // Remove excluded characters
-  if (options.excludeCharacters) {
-    for (const char of options.excludeCharacters) {
-      availableChars = availableChars.replace(
-        new RegExp(escapeRegExp(char), "g"),
-        "",
-      );
-    }
-  }
-
-  // Remove ambiguous characters if specified
-  if (options.excludeAmbiguous) {
-    for (const char of AMBIGUOUS_CHARS) {
-      availableChars = availableChars.replace(new RegExp(char, "g"), "");
-    }
-  }
-
-  // If no characters available, use defaults
+  // If no characters available, use defaults (filtered)
   if (availableChars.length === 0) {
-    availableChars = LOWERCASE_CHARS + UPPERCASE_CHARS + NUMBER_CHARS;
+    availableChars = filterChars(LOWERCASE_CHARS + UPPERCASE_CHARS + NUMBER_CHARS);
   }
 
-  // Start with required characters to ensure password meets criteria
+  // Choose required characters from filtered category sets
+  if (lower.length > 0) requiredChars.push(lower[getSecureRandomInt(lower.length)]);
+  if (upper.length > 0) requiredChars.push(upper[getSecureRandomInt(upper.length)]);
+  if (nums.length > 0) requiredChars.push(nums[getSecureRandomInt(nums.length)]);
+  if (syms.length > 0) requiredChars.push(syms[getSecureRandomInt(syms.length)]);
+
+  // Start with required characters (may be 0..4 chars)
   password = requiredChars.join("");
 
   // Fill remaining positions with secure random characters
-  for (let i = requiredChars.length; i < options.length; i++) {
+  for (let i = password.length; i < options.length; i++) {
     const randomIndex = getSecureRandomInt(availableChars.length);
     password += availableChars[randomIndex];
   }
 
   // Shuffle the password using secure randomization to avoid predictable patterns
   const passwordArray = password.split("");
-  for (let i = passwordArray.length - 1; i > 0; i--) {
-    const j = getSecureRandomInt(i + 1);
-    [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+  const isPredictable = (pwd: string): boolean => {
+    return (
+      /^[a-z]{4}/.test(pwd) ||
+      /^[A-Z]{4}/.test(pwd) ||
+      /^[0-9]{4}/.test(pwd) ||
+      /(.)\1{3,}/.test(pwd) ||
+      /abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i.test(pwd) ||
+      /123|234|345|456|567|678|789|890/.test(pwd)
+    );
+  };
+
+  const shuffleInPlace = () => {
+    for (let i = passwordArray.length - 1; i > 0; i--) {
+      const j = getSecureRandomInt(i + 1);
+      [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+    }
+  };
+
+  shuffleInPlace();
+  let candidate = passwordArray.join("");
+
+  // If predictable patterns detected, reshuffle a few times
+  let attempts = 0;
+  while (isPredictable(candidate) && attempts < 10) {
+    shuffleInPlace();
+    candidate = passwordArray.join("");
+    attempts++;
   }
-  
-  return passwordArray.join("");
+
+  return candidate;
 };
 
 export const calculatePasswordStrength = (
