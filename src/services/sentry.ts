@@ -1,5 +1,5 @@
-import Constants from "expo-constants";
-import * as Sentry from "sentry-expo";
+import { Config } from "react-native-config";
+import * as Sentry from "@sentry/react-native";
 
 let isInitialized = false;
 
@@ -14,8 +14,7 @@ export const initializeSentry = async (): Promise<boolean> => {
 
   try {
     Sentry.init({
-      dsn: Constants.expoConfig?.extra?.SENTRY_DSN as string,
-      enableInExpoDevelopment: true,
+      dsn: process.env.SENTRY_DSN || Config?.SENTRY_DSN,
       debug: __DEV__,
       tracesSampleRate: 1.0,
       enableAutoPerformanceTracing: true,
@@ -39,7 +38,7 @@ export const captureException = (error: Error | unknown): void => {
     return;
   }
 
-  Sentry.Native.captureException(error);
+  Sentry.captureException(error);
 };
 
 /**
@@ -57,9 +56,7 @@ export const captureMessage = (
     return;
   }
 
-  Sentry.Native.captureMessage(message, {
-    level: level || "info",
-  });
+  Sentry.captureMessage(message, level || "info");
 };
 
 /**
@@ -73,7 +70,7 @@ export const addBreadcrumb = (message: string, category?: string): void => {
     return;
   }
 
-  Sentry.Native.addBreadcrumb({
+  Sentry.addBreadcrumb({
     message,
     category: category || "custom",
   });
@@ -88,7 +85,7 @@ export const getErrorBoundary = (): React.ComponentType<any> | null => {
     return null;
   }
 
-  return Sentry.Native.ErrorBoundary;
+  return Sentry.ErrorBoundary;
 };
 
 /**
