@@ -1,0 +1,353 @@
+name: Security Monitor & Auto-Remediation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 */6 * * *" # Every 6 hours
+  workflow_dispatch:
+
+concurrency:
+  group: security-monitor-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-scan:
+    name: Comprehensive Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      security-events: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for better secret detection
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: GitGuardian Security Scan
+        id: gitguardian
+        run: |
+          echo "🔍 Running GitGuardian security scan..."
+          
+          # Install GitGuardian CLI
+          pip install ggshield
+          
+          # Run comprehensive scan
+          ggshield secret scan repo . --show-secrets --exit-zero > gitguardian-report.txt 2>&1 || true
+          
+          # Check if secrets were found
+          if grep -q "incident" gitguardian-report.txt; then
+            echo "secrets_found=true" >> $GITHUB_OUTPUT
+            echo "❌ Secrets detected by GitGuardian!"
+            cat gitguardian-report.txt
+          else
+            echo "secrets_found=false" >> $GITHUB_OUTPUT
+            echo "✅ No secrets found by GitGuardian"
+          fi
+
+      - name: Advanced Secret Pattern Detection
+        id: secret-patterns
+        run: |
+          echo "🔍 Running advanced secret pattern detection..."
+          
+          # Define comprehensive patterns
+          declare -a PATTERNS=(
+            # API Keys and Tokens
+            "(?i)(api[_-]?key|apikey)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            "(?i)(secret[_-]?key|secretkey)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            "(?i)(access[_-]?token|accesstoken)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            "(?i)(auth[_-]?token|authtoken)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            
+            # Database URLs and Passwords
+            "(?i)(database[_-]?url|db[_-]?url)\s*[=:]\s*['\"][^'\"]+['\"]"
+            "(?i)(password|passwd|pwd)\s*[=:]\s*['\"][^'\"]{3,}['\"]"
+            
+            # Cloud Provider Keys
+            "(?i)(aws[_-]?access[_-]?key|aws[_-]?secret)\s*[=:]\s*['\"][A-Z0-9]{20}['\"]"
+            "(?i)(gcp[_-]?key|google[_-]?key)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            "(?i)(azure[_-]?key|az[_-]?key)\s*[=:]\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+            
+            # Generic long strings that might be secrets
+            "['\"][a-zA-Z0-9+/]{40,}={0,2}['\"]"  # Base64-like
+            "['\"][a-fA-F0-9]{32,}['\"]"          # Hex strings
+          )
+          
+          found_patterns=()
+          
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -r -P "$pattern" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --exclude="*.test.*" --exclude="*.spec.*" src/ 2>/dev/null; then
+              found_patterns+=("$pattern")
+            fi
+          done
+          
+          if [ ${#found_patterns[@]} -gt 0 ]; then
+            echo "patterns_found=true" >> $GITHUB_OUTPUT
+            echo "pattern_count=${#found_patterns[@]}" >> $GITHUB_OUTPUT
+            echo "❌ Found ${#found_patterns[@]} potential secret patterns"
+          else
+            echo "patterns_found=false" >> $GITHUB_OUTPUT
+            echo "pattern_count=0" >> $GITHUB_OUTPUT
+            echo "✅ No suspicious patterns found"
+          fi
+
+      - name: Dependency Security Audit
+        id: audit
+        run: |
+          echo "🔍 Running dependency security audit..."
+          
+          # Run npm audit
+          npm audit --audit-level=moderate --json > audit-report.json || true
+          
+          # Check for vulnerabilities
+          if [ -f audit-report.json ]; then
+            vulnerabilities=$(jq '.metadata.vulnerabilities.total // 0' audit-report.json)
+            high_vulns=$(jq '.metadata.vulnerabilities.high // 0' audit-report.json)
+            critical_vulns=$(jq '.metadata.vulnerabilities.critical // 0' audit-report.json)
+            
+            echo "total_vulnerabilities=$vulnerabilities" >> $GITHUB_OUTPUT
+            echo "high_vulnerabilities=$high_vulns" >> $GITHUB_OUTPUT
+            echo "critical_vulnerabilities=$critical_vulns" >> $GITHUB_OUTPUT
+            
+            if [ "$critical_vulns" -gt 0 ] || [ "$high_vulns" -gt 0 ]; then
+              echo "security_issues=true" >> $GITHUB_OUTPUT
+              echo "❌ Found $critical_vulns critical and $high_vulns high severity vulnerabilities"
+            else
+              echo "security_issues=false" >> $GITHUB_OUTPUT
+              echo "✅ No critical or high severity vulnerabilities"
+            fi
+          fi
+
+      - name: Auto-Remediate Secrets
+        if: steps.gitguardian.outputs.secrets_found == 'true' || steps.secret-patterns.outputs.patterns_found == 'true'
+        id: remediate
+        run: |
+          echo "🔧 Attempting automatic secret remediation..."
+          
+          remediated_files=()
+          
+          # Common secret remediation patterns
+          for file in $(find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v test | grep -v spec); do
+            if [ -f "$file" ]; then
+              # Replace hardcoded passwords with environment variable references
+              if sed -i.bak 's/password\s*[=:]\s*["'\'']\([^"'\'']*\)["'\'']/password: process.env.PASSWORD || ""/gi' "$file" 2>/dev/null; then
+                if ! cmp -s "$file" "$file.bak"; then
+                  remediated_files+=("$file")
+                  echo "🔧 Remediated secrets in $file"
+                fi
+                rm -f "$file.bak"
+              fi
+              
+              # Replace API keys with environment variables
+              if sed -i.bak 's/api[_-]\?key\s*[=:]\s*["'\'']\([^"'\'']*\)["'\'']/apiKey: process.env.API_KEY || ""/gi' "$file" 2>/dev/null; then
+                if ! cmp -s "$file" "$file.bak"; then
+                  remediated_files+=("$file")
+                  echo "🔧 Remediated API key in $file"
+                fi
+                rm -f "$file.bak"
+              fi
+            fi
+          done
+          
+          if [ ${#remediated_files[@]} -gt 0 ]; then
+            echo "remediated=true" >> $GITHUB_OUTPUT
+            echo "remediated_files=${remediated_files[*]}" >> $GITHUB_OUTPUT
+            echo "✅ Automatically remediated secrets in ${#remediated_files[@]} files"
+          else
+            echo "remediated=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No automatic remediation possible"
+          fi
+
+      - name: Create Security Environment Template
+        if: steps.gitguardian.outputs.secrets_found == 'true'
+        run: |
+          echo "📝 Creating secure environment template..."
+          
+          cat > .env.security-template << 'EOF'
+# 🔒 SECURITY TEMPLATE - Replace with actual values
+# Never commit actual secrets to version control!
+
+# Sentry Configuration
+EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn-here
+SENTRY_AUTH_TOKEN=your-sentry-auth-token-here
+
+# Firebase Configuration
+FIREBASE_API_KEY=your-firebase-api-key-here
+FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+FIREBASE_PROJECT_ID=your-project-id
+
+# API Keys (use secure environment variable injection)
+API_KEY=your-api-key-here
+SECRET_KEY=your-secret-key-here
+
+# Database (use connection strings without embedded credentials)
+DATABASE_URL=your-secure-database-url-here
+
+# Instructions:
+# 1. Copy this file to .env
+# 2. Replace all placeholder values with real ones
+# 3. Add .env to .gitignore (already done)
+# 4. Use environment variable injection in production
+EOF
+          
+          echo "✅ Created secure environment template"
+
+      - name: Update .gitignore for Security
+        run: |
+          echo "🔒 Updating .gitignore for security..."
+          
+          # Ensure sensitive files are ignored
+          cat >> .gitignore << 'EOF'
+
+# Security - Never commit these files
+.env
+.env.local
+.env.production
+.env.staging
+*.key
+*.pem
+*.p12
+*.keystore
+google-services.json
+GoogleService-Info.plist
+secrets.json
+config/secrets.yml
+
+# Temporary security files
+gitguardian-report.txt
+audit-report.json
+.env.security-template
+EOF
+          
+          echo "✅ Updated .gitignore with security patterns"
+
+      - name: Commit Security Fixes
+        if: steps.remediate.outputs.remediated == 'true'
+        run: |
+          git config --local user.email "security@github.com"
+          git config --local user.name "Security Auto-Remediation"
+          git add .
+          git commit -m "🔒 Auto-remediate security issues
+
+          Automatically fixed:
+          ${{ steps.remediate.outputs.remediated_files }}
+          
+          - Replaced hardcoded secrets with environment variables
+          - Updated .gitignore for security
+          - Created secure environment template
+          
+          ⚠️ IMPORTANT: Update environment variables in production!" || exit 0
+
+      - name: Create Security Issue
+        if: steps.gitguardian.outputs.secrets_found == 'true' || steps.secret-patterns.outputs.patterns_found == 'true' || steps.audit.outputs.security_issues == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const secretsFound = '${{ steps.gitguardian.outputs.secrets_found }}' === 'true';
+            const patternsFound = '${{ steps.secret-patterns.outputs.patterns_found }}' === 'true';
+            const securityIssues = '${{ steps.audit.outputs.security_issues }}' === 'true';
+            const remediated = '${{ steps.remediate.outputs.remediated }}' === 'true';
+            
+            const issueTitle = '🚨 Security Alert: Secrets and Vulnerabilities Detected';
+            const issueBody = `## Security Scan Results
+            
+            **Scan Date**: ${new Date().toISOString()}
+            **Status**: ❌ Security issues detected
+            
+            ### GitGuardian Results
+            ${secretsFound ? '❌ Secrets detected by GitGuardian' : '✅ No secrets found by GitGuardian'}
+            
+            ### Pattern Detection
+            ${patternsFound ? `❌ Found ${{ steps.secret-patterns.outputs.pattern_count }} suspicious patterns` : '✅ No suspicious patterns found'}
+            
+            ### Dependency Vulnerabilities
+            ${securityIssues ? `❌ Found ${{ steps.audit.outputs.critical_vulnerabilities }} critical and ${{ steps.audit.outputs.high_vulnerabilities }} high severity vulnerabilities` : '✅ No critical vulnerabilities found'}
+            
+            ### Auto-Remediation Status
+            ${remediated ? `✅ Automatically fixed issues in: ${{ steps.remediate.outputs.remediated_files }}` : 'ℹ️ No automatic fixes applied'}
+            
+            ### Required Actions
+            
+            1. **Review GitGuardian Dashboard**: [View Details](https://dashboard.gitguardian.com)
+            2. **Update Environment Variables**: Replace hardcoded secrets with secure environment variables
+            3. **Rotate Compromised Secrets**: Any exposed secrets should be rotated immediately
+            4. **Update Dependencies**: Run \`npm audit fix\` to resolve vulnerabilities
+            5. **Configure Secure Storage**: Use secure vaults for production secrets
+            
+            ### Prevention
+            
+            - ✅ Pre-commit hooks are configured to block future secrets
+            - ✅ Automated scanning runs every 6 hours
+            - ✅ Security monitoring is active
+            
+            ### Links
+            
+            - [GitGuardian Dashboard](https://dashboard.gitguardian.com)
+            - [Security Best Practices](https://docs.github.com/en/code-security)
+            - [Environment Variable Setup](docs/SECURITY.md)
+            
+            ---
+            
+            *This issue was created automatically by the Security Monitor. It will be updated with each scan.*`;
+            
+            // Check if there's already an open security issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['security', 'automated'],
+              state: 'open'
+            });
+            
+            if (issues.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['security', 'automated', 'critical']
+              });
+              console.log('Created new security issue');
+            } else {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                title: issueTitle,
+                body: issueBody
+              });
+              console.log('Updated existing security issue');
+            }
+
+      - name: Block PR if Critical Issues
+        if: github.event_name == 'pull_request' && (steps.gitguardian.outputs.secrets_found == 'true' || steps.audit.outputs.critical_vulnerabilities > 0)
+        run: |
+          echo "❌ BLOCKING PR: Critical security issues detected!"
+          echo "🔒 Secrets or critical vulnerabilities must be resolved before merging"
+          exit 1
+
+      - name: Security Scan Summary
+        if: always()
+        run: |
+          echo "📊 Security Scan Summary"
+          echo "========================"
+          echo "GitGuardian: ${{ steps.gitguardian.outputs.secrets_found == 'true' && '❌ Secrets found' || '✅ Clean' }}"
+          echo "Pattern Detection: ${{ steps.secret-patterns.outputs.patterns_found == 'true' && '❌ Patterns found' || '✅ Clean' }}"
+          echo "Dependencies: ${{ steps.audit.outputs.security_issues == 'true' && '❌ Vulnerabilities found' || '✅ Clean' }}"
+          echo "Auto-Remediation: ${{ steps.remediate.outputs.remediated == 'true' && '✅ Applied fixes' || 'ℹ️ No fixes needed' }}"
+          echo ""
+          echo "🔒 Security monitoring is active and will continue to protect your repository!"

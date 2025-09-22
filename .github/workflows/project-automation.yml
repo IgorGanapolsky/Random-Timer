@@ -1,0 +1,219 @@
+name: Project Board Automation
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+  pull_request_target:
+    types: [opened, closed, reopened, ready_for_review]
+  workflow_dispatch:
+
+jobs:
+  update-project:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      repository-projects: write
+
+    steps:
+      - name: Update Project Board
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const PROJECT_ID = 'PVT_kwHOAAMR-c4BCPGq';
+            // Status field IDs will be dynamically retrieved
+
+            // Get the project node ID
+            const projectQuery = `
+              query($id: ID!) {
+                node(id: $id) {
+                  ... on ProjectV2 {
+                    id
+                    fields(first: 20) {
+                      nodes {
+                        id
+                        name
+                        dataType
+                        options {
+                          id
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            const projectData = await github.graphql(projectQuery, {
+              id: PROJECT_ID
+            });
+
+            const projectNodeId = projectData.node.id;
+            const statusField = projectData.node.fields.nodes.find(field => field.name === 'Status');
+
+            if (!statusField) {
+              console.log('Status field not found in project');
+              return;
+            }
+
+            // Get status option IDs dynamically
+            const TODO_STATUS_ID = statusField.options.find(opt => opt.name === 'To Do')?.id || 'f75ad846';
+            const IN_PROGRESS_STATUS_ID = statusField.options.find(opt => opt.name === 'In Progress')?.id || '47fc9ee4';
+            const DONE_STATUS_ID = statusField.options.find(opt => opt.name === 'Done')?.id || '98236657';
+
+            if (!TODO_STATUS_ID || !IN_PROGRESS_STATUS_ID || !DONE_STATUS_ID) {
+              console.log('Required status options not found in project');
+              return;
+            }
+
+            // Helper function to add item to project
+            async function addToProject(itemId, statusId) {
+              const mutation = `
+                mutation($projectId: ID!, $itemId: ID!, $statusId: ID!) {
+                  addProjectV2ItemById(input: {
+                    projectId: $projectId
+                    contentId: $itemId
+                  }) {
+                    item {
+                      id
+                    }
+                  }
+                }
+              `;
+
+              try {
+                const result = await github.graphql(mutation, {
+                  projectId: projectNodeId,
+                  itemId: itemId
+                });
+
+                console.log(`Added item ${itemId} to project`);
+
+                // Update the status field
+                if (statusId) {
+                  const statusMutation = `
+                    mutation($projectId: ID!, $itemId: ID!, $statusId: ID!) {
+                      updateProjectV2ItemFieldValue(input: {
+                        projectId: $projectId
+                        itemId: $itemId
+                        fieldId: "${statusField.id}"
+                        value: {
+                          singleSelectOptionId: $statusId
+                        }
+                      }) {
+                        projectV2Item {
+                          id
+                        }
+                      }
+                    }
+                  `;
+
+                  await github.graphql(statusMutation, {
+                    projectId: projectNodeId,
+                    itemId: result.addProjectV2ItemById.item.id,
+                    statusId: statusId
+                  });
+
+                  console.log(`Set status to ${statusId} for item ${itemId}`);
+                }
+              } catch (error) {
+                console.log(`Error adding item to project: ${error.message}`);
+              }
+            }
+
+            // Helper function to update item status
+            async function updateItemStatus(itemId, statusId) {
+              const mutation = `
+                mutation($projectId: ID!, $itemId: ID!, $statusId: ID!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: "${statusField.id}"
+                    value: {
+                      singleSelectOptionId: $statusId
+                    }
+                  }) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+
+              try {
+                await github.graphql(mutation, {
+                  projectId: projectNodeId,
+                  itemId: itemId,
+                  statusId: statusId
+                });
+
+                console.log(`Updated status to ${statusId} for item ${itemId}`);
+              } catch (error) {
+                console.log(`Error updating item status: ${error.message}`);
+              }
+            }
+
+            // Get the item ID based on the event type
+            let itemId;
+            let targetStatusId;
+
+            if (context.eventName === 'issues') {
+              itemId = context.payload.issue.node_id;
+              if (context.payload.action === 'opened' || context.payload.action === 'reopened') {
+                targetStatusId = TODO_STATUS_ID;
+              } else if (context.payload.action === 'closed') {
+                targetStatusId = DONE_STATUS_ID;
+              }
+            } else if (context.eventName === 'pull_request_target' || context.eventName === 'pull_request') {
+              itemId = context.payload.pull_request.node_id;
+              if (context.payload.action === 'opened' || context.payload.action === 'reopened' || context.payload.action === 'ready_for_review') {
+                targetStatusId = IN_PROGRESS_STATUS_ID;
+              } else if (context.payload.action === 'closed') {
+                targetStatusId = DONE_STATUS_ID;
+              }
+            }
+
+            if (itemId && targetStatusId) {
+              // Check if item is already in project
+              const checkQuery = `
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100) {
+                        nodes {
+                          id
+                          content {
+                            ... on Issue {
+                              id
+                            }
+                            ... on PullRequest {
+                              id
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const checkData = await github.graphql(checkQuery, {
+                projectId: projectNodeId
+              });
+
+              const existingItem = checkData.node.items.nodes.find(item =>
+                item.content && item.content.id === itemId
+              );
+
+              if (existingItem) {
+                // Update existing item status
+                await updateItemStatus(existingItem.id, targetStatusId);
+              } else {
+                // Add new item to project
+                await addToProject(itemId, targetStatusId);
+              }
+            } else {
+              console.log('No item ID or target status found for this event');
+            }
