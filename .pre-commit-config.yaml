@@ -1,12 +1,11 @@
 repos:
-  # GitGuardian for secret detection - BLOCKS COMMITS WITH SECRETS
-  - repo: https://github.com/gitguardian/ggshield
-    rev: v1.43.0
+  # GitGuardian wrapper: only runs if GITGUARDIAN_API_KEY is set
+  - repo: local
     hooks:
-      - id: ggshield
-        name: GitGuardian Shield
-        entry: ggshield secret scan pre-commit
-        language: python
+      - id: ggshield-conditional
+        name: GitGuardian Shield (conditional)
+        entry: bash -c 'if [ -n "$GITGUARDIAN_API_KEY" ]; then ggshield secret scan pre-commit; else echo "🔑 GITGUARDIAN_API_KEY not set; skipping ggshield"; fi'
+        language: system
 
   # Basic file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -19,6 +18,7 @@ repos:
       - id: check-merge-conflict
       - id: detect-private-key
       - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
 
   # Simple secret detection
   - repo: local
