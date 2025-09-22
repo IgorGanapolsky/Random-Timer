@@ -1,0 +1,73 @@
+name: 🤖 CTO Auto-Assignment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-assign-cto:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-assign CTO to technical PRs
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { number } = context.payload.pull_request;
+
+            // Get PR files
+            const files = await github.rest.pulls.listFiles({
+              owner,
+              repo,
+              pull_number: number
+            });
+
+            const technicalFiles = [
+              '.github/',
+              'package.json',
+              'package-lock.json',
+              'yarn.lock',
+              'tsconfig.json',
+              'jest.config.js',
+              'babel.config.js',
+              'eslint.config.js',
+              '.husky/',
+              'Dockerfile',
+              'docker-compose',
+              '.env',
+              'src/services/',
+              'src/utils/'
+            ];
+
+            const isTechnicalPR = files.data.some(file =>
+              technicalFiles.some(pattern => file.filename.includes(pattern))
+            );
+
+            if (isTechnicalPR) {
+              // Add CTO assignment and labels
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: number,
+                assignees: ['IgorGanapolsky']  // You as CTO
+              });
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: number,
+                labels: ['technical-infrastructure', 'cto-review']
+              });
+
+              // Add comment explaining CTO assignment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: `🤖 **CTO Auto-Assignment**\n\nThis PR contains technical infrastructure changes and has been automatically assigned to the CTO for review.\n\n**Files requiring CTO attention:**\n${files.data.filter(f => technicalFiles.some(p => f.filename.includes(p))).map(f => `- \`${f.filename}\``).join('\n')}`
+              });
+            }

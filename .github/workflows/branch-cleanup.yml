@@ -1,0 +1,87 @@
+name: 🧹 Auto Branch Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    # Run daily at 2 AM to clean up stale branches
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-merged-branches:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete merged branch
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branchName = context.payload.pull_request.head.ref;
+
+            // Don't delete protected branches
+            const protectedBranches = ['main', 'master', 'develop', 'staging'];
+            if (protectedBranches.includes(branchName)) {
+              console.log(`Skipping deletion of protected branch: ${branchName}`);
+              return;
+            }
+
+            try {
+              await github.rest.git.deleteRef({
+                owner,
+                repo,
+                ref: `heads/${branchName}`
+              });
+              console.log(`✅ Deleted merged branch: ${branchName}`);
+            } catch (error) {
+              console.log(`⚠️ Could not delete branch ${branchName}: ${error.message}`);
+            }
+
+  cleanup-stale-branches:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup stale branches
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 30); // 30 days old
+
+            // Get all branches
+            const branches = await github.rest.repos.listBranches({
+              owner,
+              repo
+            });
+
+            const protectedBranches = ['main', 'master', 'develop', 'staging'];
+
+            for (const branch of branches.data) {
+              if (protectedBranches.includes(branch.name)) continue;
+
+              // Get last commit date
+              const commit = await github.rest.repos.getCommit({
+                owner,
+                repo,
+                ref: branch.commit.sha
+              });
+
+              const commitDate = new Date(commit.data.commit.committer.date);
+
+              if (commitDate < cutoffDate) {
+                try {
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `heads/${branch.name}`
+                  });
+                  console.log(`🧹 Deleted stale branch: ${branch.name} (last commit: ${commitDate.toISOString()})`);
+                } catch (error) {
+                  console.log(`⚠️ Could not delete stale branch ${branch.name}: ${error.message}`);
+                }
+              }
+            }

@@ -1,0 +1,90 @@
+name: ⚡ Performance Monitoring
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  performance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for performance-critical changes
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { number } = context.payload.pull_request;
+
+            // Get PR files
+            const files = await github.rest.pulls.listFiles({
+              owner,
+              repo,
+              pull_number: number
+            });
+
+            const performanceCriticalFiles = [
+              'src/utils/passwordGenerator.ts',
+              'src/services/',
+              'src/components/',
+              'src/hooks/',
+              'App.tsx',
+              'src/navigation/'
+            ];
+
+            const performanceChanges = files.data.filter(file =>
+              performanceCriticalFiles.some(pattern =>
+                file.filename.includes(pattern)
+              )
+            );
+
+            if (performanceChanges.length > 0) {
+              // Add performance review label
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: number,
+                labels: ['performance-review', 'cto-review']
+              });
+
+              // Create performance checklist
+              const checklist = `⚡ **PERFORMANCE REVIEW CHECKLIST**
+
+**Performance-critical files changed:**
+${performanceChanges.map(f => `- \`${f.filename}\``).join('\n')}
+
+**CTO Performance Review:**
+- [ ] No unnecessary re-renders introduced
+- [ ] Heavy computations are memoized
+- [ ] No memory leaks in component lifecycle
+- [ ] Password generation performance maintained
+- [ ] Navigation performance not degraded
+- [ ] Bundle size impact acceptable
+- [ ] Consider performance testing if needed
+
+@IgorGanapolsky - Please review performance impact as CTO.`;
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: checklist
+              });
+
+              // Create performance check
+              await github.rest.checks.create({
+                owner,
+                repo,
+                name: 'Performance Review',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: 'neutral',
+                output: {
+                  title: 'Performance Review Recommended',
+                  summary: 'This PR modifies performance-critical code. CTO review recommended.'
+                }
+              });
+            }
