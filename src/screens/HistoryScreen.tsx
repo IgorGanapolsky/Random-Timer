@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { format } from "date-fns";
-import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
+import Clipboard from "@react-native-clipboard/clipboard";
+import HapticFeedback from "react-native-haptic-feedback";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -56,9 +56,9 @@ export const HistoryScreen: React.FC = () => {
   }, []);
 
   const handleCopyPassword = async (password: string) => {
-    await Clipboard.setStringAsync(password);
+    await Clipboard.setString(password);
     if (Platform.OS === "ios") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      HapticFeedback.trigger('notificationSuccess');
     }
     Alert.alert("Copied!", "Password copied to clipboard");
   };
@@ -76,7 +76,7 @@ export const HistoryScreen: React.FC = () => {
             await StorageService.removePasswordFromHistory(id);
             await loadHistory();
             if (Platform.OS === "ios") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              HapticFeedback.trigger('impactMedium');
             }
           },
         },
@@ -97,7 +97,7 @@ export const HistoryScreen: React.FC = () => {
             await StorageService.clearPasswordHistory();
             setHistory([]);
             if (Platform.OS === "ios") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              HapticFeedback.trigger('impactHeavy');
             }
           },
         },

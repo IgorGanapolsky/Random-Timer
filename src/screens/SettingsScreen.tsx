@@ -1,7 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Application from "expo-application";
-import * as Device from "expo-device";
-import * as Haptics from "expo-haptics";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import DeviceInfo from "react-native-device-info";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -49,14 +48,14 @@ export const SettingsScreen: React.FC = () => {
     await StorageService.saveUserPreferences(updatedPreferences);
 
     if (Platform.OS === "ios" && preferences.hapticFeedback) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      ReactNativeHapticFeedback.trigger('impactLight');
     }
   };
 
   const handleThemeChange = (mode: ThemeMode) => {
     toggleTheme(mode);
     if (Platform.OS === "ios" && preferences?.hapticFeedback) {
-      Haptics.selectionAsync();
+      ReactNativeHapticFeedback.trigger('selection');
     }
   };
 
@@ -455,10 +454,10 @@ export const SettingsScreen: React.FC = () => {
         {/* Version Info */}
         <View style={styles.versionInfo}>
           <Text style={styles.versionText}>
-            SecurePass v{Application.nativeApplicationVersion || "1.0.0"}
+            SecurePass v{DeviceInfo.getVersion() || "1.0.0"}
           </Text>
           <Text style={styles.versionText}>
-            {Device.modelName} • {Device.osName} {Device.osVersion}
+            {DeviceInfo.getModel()} • {DeviceInfo.getSystemName()} {DeviceInfo.getSystemVersion()}
           </Text>
         </View>
       </ScrollView>

@@ -1,9 +1,5 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Font from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { StatusBar as RNStatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider as PaperProvider } from "react-native-paper";
 
@@ -18,10 +14,7 @@ import {
 import { StorageService } from "@/services/storage";
 import { PasswordOptions } from "@/types";
 
-// Keep the splash screen visible while we fetch resources
-if (Platform.OS !== "web") {
-  SplashScreen.preventAutoHideAsync();
-}
+// No longer using Expo splash screen - removed for React Native CLI compatibility
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -32,10 +25,7 @@ export default function App() {
         // Initialize Sentry first (safe initialization)
         await initializeSentry();
 
-        // Pre-load fonts
-        if (Platform.OS !== "web") {
-          await Font.loadAsync(MaterialCommunityIcons.font);
-        }
+        // Fonts are now handled via react-native-vector-icons auto-linking
 
         // Initialize user preferences if first launch
         const isFirstLaunch = await StorageService.isFirstLaunch();
@@ -74,9 +64,6 @@ export default function App() {
       } finally {
         // Tell the application to render
         setIsReady(true);
-        if (Platform.OS !== "web") {
-          await SplashScreen.hideAsync();
-        }
       }
     }
 
@@ -92,7 +79,7 @@ export default function App() {
       <ThemeProvider>
         <PaperProvider>
           <AppNavigator />
-          <StatusBar style="auto" />
+          <RNStatusBar barStyle="default" />
         </PaperProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

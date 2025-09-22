@@ -1,8 +1,8 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Slider from "@react-native-community/slider";
-import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
+import Clipboard from "@react-native-clipboard/clipboard";
+import HapticFeedback from "react-native-haptic-feedback";
+import LinearGradient from "react-native-linear-gradient";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
@@ -102,7 +102,7 @@ export const HomeScreen: React.FC = () => {
 
       // Haptic feedback
       if (Platform.OS === "ios") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        HapticFeedback.trigger('impactLight');
       } else {
         Vibration.vibrate(50);
       }
@@ -148,11 +148,11 @@ export const HomeScreen: React.FC = () => {
   const handleCopyToClipboard = async () => {
     if (!password) return;
 
-    await Clipboard.setStringAsync(password);
+    await Clipboard.setString(password);
 
     // Haptic feedback
     if (Platform.OS === "ios") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      HapticFeedback.trigger('notificationSuccess');
     } else {
       Vibration.vibrate([0, 50, 100, 50]);
     }

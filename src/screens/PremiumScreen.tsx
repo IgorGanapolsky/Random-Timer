@@ -1,6 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
+import LinearGradient from "react-native-linear-gradient";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -130,7 +130,7 @@ export const PremiumScreen: React.FC = () => {
   const handlePurchase = async () => {
     setIsLoading(true);
     if (Platform.OS === "ios") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      ReactNativeHapticFeedback.trigger('impactMedium');
     }
 
     // Simulate purchase process
