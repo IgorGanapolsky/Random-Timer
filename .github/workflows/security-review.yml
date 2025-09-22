@@ -1,0 +1,94 @@
+name: 🔒 Security Review Enforcement
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  security-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for security-sensitive changes
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { number } = context.payload.pull_request;
+
+            // Get PR files
+            const files = await github.rest.pulls.listFiles({
+              owner,
+              repo,
+              pull_number: number
+            });
+
+            const securityFiles = [
+              '.env',
+              'firebase.ts',
+              'sentry.ts',
+              'auth',
+              'security',
+              'secrets',
+              'password',
+              'token',
+              'key',
+              'credential'
+            ];
+
+            const securityChanges = files.data.filter(file =>
+              securityFiles.some(pattern =>
+                file.filename.toLowerCase().includes(pattern) ||
+                file.patch?.toLowerCase().includes(pattern)
+              )
+            );
+
+            if (securityChanges.length > 0) {
+              // Add security labels
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: number,
+                labels: ['security-review', 'cto-required']
+              });
+
+              // Create security checklist
+              const checklist = `🔒 **SECURITY REVIEW CHECKLIST**
+
+**Files requiring security review:**
+${securityChanges.map(f => `- \`${f.filename}\``).join('\n')}
+
+**CTO Security Review Required:**
+- [ ] No secrets or credentials are hardcoded
+- [ ] Environment variables are properly secured
+- [ ] Authentication changes are backward compatible
+- [ ] No sensitive data is logged
+- [ ] Security best practices are followed
+- [ ] Code follows principle of least privilege
+
+@IgorGanapolsky - This PR requires your security review as CTO.`;
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: checklist
+              });
+
+              // Block auto-merge for security changes
+              await github.rest.checks.create({
+                owner,
+                repo,
+                name: 'Security Review Required',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: 'action_required',
+                output: {
+                  title: 'CTO Security Review Required',
+                  summary: 'This PR contains security-sensitive changes that require manual CTO approval.'
+                }
+              });
+            }
