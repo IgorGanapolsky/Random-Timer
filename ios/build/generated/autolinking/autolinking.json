@@ -190,7 +190,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "/Users/igorganapolsky/workspace/git/apps/SuperPassword/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
-          "version": "4.14.1",
+          "version": "5.6.1",
           "configurations": [],
           "scriptPhases": []
         },

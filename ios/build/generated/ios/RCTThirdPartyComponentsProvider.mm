@@ -22,6 +22,8 @@
     thirdPartyComponents = @{
 		@"RNCSlider": NSClassFromString(@"RNCSliderComponentView"), // @react-native-community/slider
 		@"RNGestureHandlerButton": NSClassFromString(@"RNGestureHandlerButtonComponentView"), // react-native-gesture-handler
+		@"RNCSafeAreaProvider": NSClassFromString(@"RNCSafeAreaProviderComponentView"), // react-native-safe-area-context
+		@"RNCSafeAreaView": NSClassFromString(@"RNCSafeAreaViewComponentView"), // react-native-safe-area-context
 		@"RNSVGCircle": NSClassFromString(@"RNSVGCircle"), // react-native-svg
 		@"RNSVGClipPath": NSClassFromString(@"RNSVGClipPath"), // react-native-svg
 		@"RNSVGDefs": NSClassFromString(@"RNSVGDefs"), // react-native-svg
