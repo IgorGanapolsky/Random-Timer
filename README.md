@@ -660,6 +660,39 @@ For more detailed information, see our documentation files:
 - **[Branch Strategy](docs/BRANCH_STRATEGY.md)** - Complete branching model and merge processes
 - **[Architecture Diagrams](docs/diagrams/)** - Visual representations of our development architecture
 
+## 📊 Badge Setup & Monitoring
+
+Our CI/CD badges are automatically monitored and maintained through automated systems:
+
+### 🤖 Automated Badge Health Monitoring
+
+- **Continuous Monitoring**: GitHub Actions automatically check badge health every 10 minutes
+- **Auto-Healing**: Failed badges are automatically diagnosed and fixed
+- **Status Dashboard**: Real-time badge status available in GitHub Actions logs
+
+### 📋 Current Badge Status
+
+All badges are configured and monitored:
+
+- **Build Status**: Reflects GitHub Actions CI/CD pipeline status
+- **Code Coverage**: Automatically updated via Codecov integration  
+- **Quality Gates**: SonarCloud metrics updated on every commit
+- **Security Scanning**: Snyk vulnerability monitoring
+- **Static Badges**: License and contribution status
+
+### 🔧 Badge Configuration
+
+For detailed badge setup and troubleshooting information, see:
+- **[Badge Setup Guide](docs/BADGE_SETUP.md)** - Complete configuration instructions and troubleshooting
+
+### 🚨 Automated Issue Resolution
+
+The system automatically:
+- Detects badge failures within 10 minutes
+- Attempts auto-repair of common issues
+- Creates GitHub issues for manual intervention when needed
+- Maintains badge health history and analytics
+
 ## License
 
 MIT

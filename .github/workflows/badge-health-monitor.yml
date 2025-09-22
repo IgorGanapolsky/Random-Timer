@@ -1,0 +1,249 @@
+name: Badge Health Monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # Every 10 minutes
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['README.md', '.github/workflows/badge-health-monitor.yml']
+
+concurrency:
+  group: badge-health-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor-badges:
+    name: Monitor & Auto-Fix Badges
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Check Badge Health
+        id: badge-check
+        run: |
+          echo "🔍 Checking badge health..."
+          
+          # Repository info
+          REPO="IgorGanapolsky/SuperPassword"
+          
+          # Badge URLs to test
+          declare -a BADGES=(
+            "GitHub_Actions|https://github.com/$REPO/actions/workflows/ci-cd.yml/badge.svg"
+            "Codecov|https://codecov.io/gh/$REPO/branch/main/graph/badge.svg"
+            "SonarCloud_Quality|https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status"
+            "SonarCloud_Security|https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating"
+            "SonarCloud_Maintainability|https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating"
+            "Snyk|https://snyk.io/test/github/$REPO/badge.svg?targetFile=package.json"
+          )
+          
+          failed_badges=()
+          all_results=""
+          
+          for badge_info in "${BADGES[@]}"; do
+            IFS='|' read -r name url <<< "$badge_info"
+            display_name=$(echo "$name" | sed 's/_/ /g')
+            
+            echo "Testing $display_name..."
+            response=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+            
+            if [ "$response" = "200" ]; then
+              status="✅ Working"
+              all_results="${all_results}- **${display_name}**: ✅ Working (HTTP $response)\n"
+            else
+              status="❌ Failed (HTTP $response)"
+              failed_badges+=("$display_name")
+              all_results="${all_results}- **${display_name}**: ❌ Failed (HTTP $response)\n"
+              echo "::warning::Badge failed: $display_name (HTTP $response)"
+            fi
+            
+            echo "$display_name: $status"
+          done
+          
+          # Set outputs
+          echo "failed_count=${#failed_badges[@]}" >> $GITHUB_OUTPUT
+          echo "failed_badges=${failed_badges[*]}" >> $GITHUB_OUTPUT
+          echo -e "all_results<<EOF\n$all_results\nEOF" >> $GITHUB_OUTPUT
+          
+          if [ ${#failed_badges[@]} -gt 0 ]; then
+            echo "❌ Found ${#failed_badges[@]} failed badge(s): ${failed_badges[*]}"
+            exit 1
+          else
+            echo "✅ All badges are healthy!"
+          fi
+
+      - name: Auto-Fix Common Badge Issues
+        if: failure()
+        id: auto-fix
+        run: |
+          echo "🔧 Attempting to auto-fix badge issues..."
+          
+          fixed_issues=()
+          
+          # Check if ci-cd.yml workflow exists
+          if [ ! -f ".github/workflows/ci-cd.yml" ]; then
+            echo "::warning::CI/CD workflow file missing"
+            # Could create a basic workflow here if needed
+          fi
+          
+          # Check README badge URLs
+          if grep -q "workflows/SuperPassword%20CI%2FCD/badge.svg" README.md; then
+            echo "🔧 Fixing old GitHub Actions badge URL..."
+            sed -i 's|workflows/SuperPassword%20CI%2FCD/badge.svg|workflows/ci-cd.yml/badge.svg|g' README.md
+            fixed_issues+=("GitHub Actions badge URL")
+          fi
+          
+          # Check for develop branch references
+          if grep -q "branch/develop" README.md; then
+            echo "🔧 Fixing branch references from develop to main..."
+            sed -i 's|branch/develop|branch/main|g' README.md
+            fixed_issues+=("Branch references")
+          fi
+          
+          # Set output
+          if [ ${#fixed_issues[@]} -gt 0 ]; then
+            echo "fixed_issues=${fixed_issues[*]}" >> $GITHUB_OUTPUT
+            echo "has_fixes=true" >> $GITHUB_OUTPUT
+            echo "✅ Auto-fixed: ${fixed_issues[*]}"
+          else
+            echo "has_fixes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No auto-fixable issues found"
+          fi
+
+      - name: Commit Auto-Fixes
+        if: steps.auto-fix.outputs.has_fixes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Badge Health Monitor"
+          git add README.md
+          git commit -m "🔧 Auto-fix badge issues: ${{ steps.auto-fix.outputs.fixed_issues }}" || exit 0
+          git push
+
+      - name: Create Issue for Failed Badges
+        if: failure() && steps.badge-check.outputs.failed_count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedBadges = '${{ steps.badge-check.outputs.failed_badges }}';
+            const allResults = `${{ steps.badge-check.outputs.all_results }}`;
+            const failedCount = '${{ steps.badge-check.outputs.failed_count }}';
+            
+            const issueTitle = `🚨 Badge Health Alert: ${failedCount} Badge(s) Failing`;
+            const issueBody = `## Badge Health Report
+            
+            **Status**: ❌ ${failedCount} badge(s) are currently failing
+            **Detected**: ${new Date().toISOString()}
+            **Auto-Fix Attempted**: Yes
+            
+            ### Badge Status Details
+            
+            ${allResults}
+            
+            ### Failed Badges
+            
+            The following badges need manual attention:
+            ${failedBadges.split(' ').map(badge => `- ${badge}`).join('\n')}
+            
+            ### Recommended Actions
+            
+            1. **GitHub Actions**: Check if workflows are running successfully
+            2. **Codecov**: Verify CODECOV_TOKEN is set in repository secrets
+            3. **SonarCloud**: Ensure project exists and is properly configured
+            4. **Snyk**: Check repository connection and scan permissions
+            
+            ### Auto-Fix Attempts
+            
+            The system attempted to fix common issues automatically. If badges are still failing, manual intervention may be required.
+            
+            ---
+            
+            *This issue was created automatically by the Badge Health Monitor. It will be closed when all badges are healthy.*`;
+            
+            // Check if there's already an open issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['badge-health'],
+              state: 'open'
+            });
+            
+            if (issues.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['badge-health', 'automated', 'bug']
+              });
+              console.log('Created new badge health issue');
+            } else {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                title: issueTitle,
+                body: issueBody
+              });
+              console.log('Updated existing badge health issue');
+            }
+
+      - name: Close Badge Health Issues
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Close any open badge health issues since all badges are now working
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['badge-health'],
+              state: 'open'
+            });
+            
+            for (const issue of issues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '✅ All badges are now healthy! Auto-closing this issue.\n\n*Closed automatically by Badge Health Monitor*'
+              });
+              
+              console.log(`Closed badge health issue #${issue.number}`);
+            }
+
+      - name: Update Badge Health Dashboard
+        if: always()
+        run: |
+          echo "📊 Updating badge health dashboard..."
+          
+          # Create or update a badge health log
+          mkdir -p .github/badge-health
+          echo "$(date -u): Badge health check completed" >> .github/badge-health/history.log
+          
+          # Keep only last 100 entries
+          tail -n 100 .github/badge-health/history.log > .github/badge-health/history.tmp
+          mv .github/badge-health/history.tmp .github/badge-health/history.log
+          
+          echo "✅ Badge health monitoring completed"
