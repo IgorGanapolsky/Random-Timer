@@ -9,7 +9,7 @@ repos:
         entry: ggshield secret scan pre-commit
         language: python
         language_version: python3
-        args: [--exit-zero]  # Don't fail on warnings, only on actual secrets
+        # No args = FAIL on ANY secrets found (this will block commits)
 
   # Pre-commit hooks for code quality
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -79,7 +79,37 @@ repos:
 
       - id: no-secrets
         name: No Secrets Check
-        entry: bash -c 'echo "🚫 Checking for hardcoded secrets..." && grep -r -i "password\|secret\|key\|token" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" src/ && echo "❌ Found potential secrets!" && exit 1 || echo "✅ No hardcoded secrets found"'
+        entry: bash -c '
+          echo "🚫 Checking for hardcoded secrets..."
+          
+          # More comprehensive secret patterns
+          PATTERNS=(
+            "password\s*[=:]\s*['\"][^'\"]{3,}['\"]"  # password = "value"
+            "secret\s*[=:]\s*['\"][^'\"]{3,}['\"]"    # secret = "value"
+            "key\s*[=:]\s*['\"][^'\"]{3,}['\"]"       # key = "value"
+            "token\s*[=:]\s*['\"][^'\"]{3,}['\"]"     # token = "value"
+            "api[_-]?key\s*[=:]\s*['\"][^'\"]{10,}['\"]" # api_key = "long_value"
+            "['\"][A-Za-z0-9+/]{20,}['\"]"           # Base64-like strings
+            "['\"][A-Za-z0-9_-]{32,}['\"]"           # Long random strings
+          )
+          
+          found_secrets=false
+          
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -r -E -i "$pattern" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --exclude="*.test.*" --exclude="*.spec.*" src/ 2>/dev/null; then
+              echo "❌ Found potential secret matching pattern: $pattern"
+              found_secrets=true
+            fi
+          done
+          
+          if [ "$found_secrets" = true ]; then
+            echo "❌ COMMIT BLOCKED: Hardcoded secrets detected!"
+            echo "💡 Use environment variables or secure vaults instead"
+            exit 1
+          else
+            echo "✅ No hardcoded secrets found"
+          fi
+        '
         language: system
         files: \.(ts|tsx|js|jsx)$
         pass_filenames: false

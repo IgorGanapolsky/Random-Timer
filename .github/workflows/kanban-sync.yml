@@ -1,0 +1,211 @@
+name: 🗂️ Kanban Project Sync
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, reopened, closed]
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, reopened, closed, converted_to_draft, ready_for_review, synchronize]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync to GitHub Project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync item to Project
+        uses: actions/github-script@v8
+        env:
+          PROJECT_TITLE: SuperPassword Development
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const isIssue = !!context.payload.issue;
+            const isPr = !!context.payload.pull_request;
+
+            // Helper to run GraphQL
+            async function gql(query, variables) {
+              return github.graphql(query, variables);
+            }
+
+            // 1) Resolve ProjectV2 by title within org/user automatically
+            let project;
+            try {
+              // Try under user first
+              const userProjects = await gql(`
+                query($login:String!, $first:Int!) {
+                  user(login:$login){
+                    projectsV2(first:$first){ nodes { id title number } }
+                  }
+                }
+              `, { login: owner, first: 50 });
+              project = userProjects?.user?.projectsV2?.nodes?.find(p => p.title === process.env.PROJECT_TITLE);
+            } catch {}
+
+            if (!project) {
+              try {
+                const orgProjects = await gql(`
+                  query($login:String!, $first:Int!) {
+                    organization(login:$login){
+                      projectsV2(first:$first){ nodes { id title number } }
+                    }
+                  }
+                `, { login: owner, first: 50 });
+                project = orgProjects?.organization?.projectsV2?.nodes?.find(p => p.title === process.env.PROJECT_TITLE);
+              } catch {}
+            }
+
+            if (!project) {
+              core.setFailed(`Project '${process.env.PROJECT_TITLE}' not found under ${owner}`);
+              return;
+            }
+
+            // 2) Get fields (Status, Title)
+            const projectFields = await gql(`
+              query($projectId:ID!) {
+                node(id:$projectId){
+                  ... on ProjectV2 {
+                    id
+                    fields(first:50){ nodes { id name dataType ... on ProjectV2SingleSelectField { options { id name } } } }
+                  }
+                }
+              }
+            `, { projectId: project.id });
+
+            const fields = projectFields.node.fields.nodes;
+            const statusField = fields.find(f => f.name.toLowerCase() === 'status');
+            if (!statusField) {
+              core.setFailed('Status field not found in project');
+              return;
+            }
+
+            // 3) Determine desired status based on labels/state
+            async function getLabelsAndState() {
+              if (isIssue) {
+                const number = context.payload.issue.number;
+                const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: number });
+                const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
+                return { labels, state: issue.state, isDraft: false, number };
+              } else if (isPr) {
+                const number = context.payload.pull_request.number;
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+                const labels = (context.payload.pull_request.labels || []).map(l => l.name);
+                return { labels, state: pr.state, merged: pr.merged, isDraft: pr.draft, number };
+              }
+              // Scheduled run: iterate a subset of open items for sync noop
+              return null;
+            }
+
+            function mapToStatusOption(labels, state, merged, isDraft) {
+              // Map to common Kanban statuses: To Do, In Progress, Review, Done
+              let target = 'To Do';
+              if (merged || state === 'closed') target = 'Done';
+              else if (labels?.includes('review') || labels?.includes('needs-review') || labels?.includes('ready-for-review')) target = 'Review';
+              else if (labels?.includes('in-progress') || labels?.includes('ai:in-progress')) target = 'In Progress';
+              else if (isDraft) target = 'In Progress';
+              return target;
+            }
+
+            function findStatusOptionId(name) {
+              const opt = (statusField.options || []).find(o => o.name.toLowerCase() === name.toLowerCase());
+              return opt?.id;
+            }
+
+            async function ensureItemInProject(contentId) {
+              // Check if content already added to project
+              const res = await gql(`
+                query($projectId:ID!, $contentId:ID!){
+                  node(id:$projectId){
+                    ... on ProjectV2 {
+                      items(first:50, query:"${repo}") { nodes { id content { ... on Issue { id number } ... on PullRequest { id number } } }
+                    }
+                  }
+                }
+              `, { projectId: project.id, contentId });
+
+              const existing = res.node.items.nodes.find(n => n.content && n.content.id === contentId);
+              if (existing) return existing.id;
+
+              const addRes = await gql(`
+                mutation($projectId:ID!, $contentId:ID!){
+                  addProjectV2ItemById(input:{projectId:$projectId, contentId:$contentId}){ item { id } }
+                }
+              `, { projectId: project.id, contentId });
+              return addRes.addProjectV2ItemById.item.id;
+            }
+
+            async function setItemStatus(itemId, statusOptionId){
+              await gql(`
+                mutation($projectId:ID!, $itemId:ID!, $fieldId:ID!, $optionId:String!){
+                  updateProjectV2ItemFieldValue(input:{
+                    projectId:$projectId,
+                    itemId:$itemId,
+                    fieldId:$fieldId,
+                    value:{ singleSelectOptionId:$optionId }
+                  }){ clientMutationId }
+                }
+              `, { projectId: project.id, itemId, fieldId: statusField.id, optionId: statusOptionId });
+            }
+
+            // Handle direct event
+            if (isIssue || isPr) {
+              const number = isIssue ? context.payload.issue.number : context.payload.pull_request.number;
+              const type = isIssue ? 'Issue' : 'PullRequest';
+
+              const node = await gql(`
+                query($owner:String!, $repo:String!, $number:Int!){
+                  repository(owner:$owner, name:$repo){ ${isIssue ? 'issue' : 'pullRequest'}(number:$number){ id number }
+                  }
+                }
+              `, { owner, repo, number });
+
+              const content = isIssue ? node.repository.issue : node.repository.pullRequest;
+              const stateInfo = await getLabelsAndState();
+              const statusName = mapToStatusOption(stateInfo.labels, stateInfo.state, stateInfo.merged, stateInfo.isDraft);
+              const optionId = findStatusOptionId(statusName);
+              if (!optionId) {
+                core.warning(`Status option '${statusName}' not found; skipping.`);
+                return;
+              }
+
+              const itemId = await ensureItemInProject(content.id);
+              await setItemStatus(itemId, optionId);
+              core.info(`Synced #${number} → ${statusName}`);
+              return;
+            }
+
+            // Scheduled catch-up: sync last 20 updated issues and PRs
+            async function scheduledSync() {
+              const { data: issues } = await github.rest.issues.listForRepo({ owner, repo, state: 'open', per_page: 20, sort: 'updated', direction: 'desc' });
+              for (const i of issues) {
+                const isPull = !!i.pull_request;
+                const number = i.number;
+                const node = await gql(`
+                  query($owner:String!, $repo:String!, $number:Int!){
+                    repository(owner:$owner, name:$repo){ ${isPull ? 'pullRequest' : 'issue'}(number:$number){ id number }
+                    }
+                  }
+                `, { owner, repo, number });
+                const content = isPull ? node.repository.pullRequest : node.repository.issue;
+                const labels = i.labels.map(l => typeof l === 'string' ? l : l.name);
+                const statusName = mapToStatusOption(labels, i.state, i.pull_request ? i.merged_at != null : false, i.draft ?? false);
+                const optionId = findStatusOptionId(statusName);
+                if (!optionId) continue;
+                const itemId = await ensureItemInProject(content.id);
+                await setItemStatus(itemId, optionId);
+              }
+            }
+
+            await scheduledSync();
+
+

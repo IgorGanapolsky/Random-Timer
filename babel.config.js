@@ -12,4 +12,11 @@ module.exports = {
       },
     ]
   ],
+  env: {
+    test: {
+      presets: [
+        ['@babel/preset-typescript', { allExtensions: true, isTSX: true }],
+      ],
+    },
+  },
 };
