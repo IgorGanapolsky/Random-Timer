@@ -1,15 +1,22 @@
 # 🔐 SecurePass - Next Gen Password Manager
 
-[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/workflows/SuperPassword%20CI%2FCD/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/develop/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
+[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/ci-cd.yml)
+[![Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Known Vulnerabilities](https://snyk.io/test/github/IgorGanapolsky/SuperPassword/badge.svg)](https://snyk.io/test/github/IgorGanapolsky/SuperPassword)
+[![Known Vulnerabilities](https://snyk.io/test/github/IgorGanapolsky/SuperPassword/badge.svg?targetFile=package.json)](https://snyk.io/test/github/IgorGanapolsky/SuperPassword)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
+<!-- Alternative badges for fallback -->
+<!-- [![Build](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=build)](https://github.com/IgorGanapolsky/SuperPassword/actions) -->
+<!-- [![Tests](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=tests)](https://github.com/IgorGanapolsky/SuperPassword/actions) -->
+<!-- [![CodeQL](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml) -->
+
 A professional password generator built with React Native CLI, featuring Material Design and ready for deployment to Google Play Store and Apple App Store.
+
+> **Note**: If any badges above show as "failing" or "unknown", this may indicate that the external services (SonarCloud, Codecov, Snyk) need to be configured or that the project is private. The GitHub Actions badge should always work for public repositories.
 
 ## 📋 Table of Contents
 
