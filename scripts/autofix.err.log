@@ -833,3 +833,32 @@ npm error
 npm error For a full report see:
 npm error /Users/igorganapolsky/.npm/_logs/2025-09-22T14_21_57_182Z-eresolve-report.txt
 npm error A complete log of this run can be found in: /Users/igorganapolsky/.npm/_logs/2025-09-22T14_21_57_182Z-debug-0.log
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+npm error code ERESOLVE
+npm error ERESOLVE unable to resolve dependency tree
+npm error
+npm error While resolving: superpassword@1.0.0
+npm error Found: react@18.2.0
+npm error node_modules/react
+npm error   react@"18.2.0" from the root project
+npm error   peer react@"*" from react-native-svg@15.13.0
+npm error   node_modules/react-native-svg
+npm error     react-native-svg@"^15.13.0" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peer react@"^19.1.0" from react-native@0.81.4
+npm error node_modules/react-native
+npm error   react-native@"^0.81.4" from the root project
+npm error   peer react-native@"*" from react-native-svg@15.13.0
+npm error   node_modules/react-native-svg
+npm error     react-native-svg@"^15.13.0" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /Users/igorganapolsky/.npm/_logs/2025-09-22T16_22_02_421Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /Users/igorganapolsky/.npm/_logs/2025-09-22T16_22_02_421Z-debug-0.log
