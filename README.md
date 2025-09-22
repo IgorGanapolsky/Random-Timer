@@ -38,6 +38,7 @@ A professional password generator built with React Native CLI, featuring Materia
 - [⚙️ CI/CD & Autonomous Ops](#️-cicd--autonomous-ops)
 - [🧪 Testing](#-testing)
 - [🤝 Contributing](#-contributing)
+- [📊 Badge Setup & Monitoring](#-badge-setup--monitoring)
 - [📄 License](#-license)
 - [💬 Support](#-support)
 
