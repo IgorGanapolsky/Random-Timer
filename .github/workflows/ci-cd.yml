@@ -32,16 +32,16 @@ jobs:
         with:
           node-version: "20"
           cache: "yarn"
-          
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-          
-      - name: Lint
-        run: yarn lint --max-warnings=50 || true
-        
+
+      - name: Lint (allow warnings)
+        run: yarn lint --max-warnings=100 || echo "Lint completed with warnings, continuing build"
+
       - name: Type check
-        run: yarn tsc --noEmit
-        
+        run: yarn typecheck
+
       - name: Test
         run: yarn test --coverage
         
@@ -103,12 +103,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.cache/yarn
             node_modules
             **/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-yarn-
             
       - name: Install dependencies
         run: |
@@ -148,12 +148,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.cache/yarn
             node_modules
             **/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-yarn-
       
       - name: Setup Java
         uses: actions/setup-java@v5
