@@ -90,55 +90,73 @@
 <a name='L25'></a><a href='#L25'>25</a>
 <a name='L26'></a><a href='#L26'>26</a>
 <a name='L27'></a><a href='#L27'>27</a>
-<a name='L28'></a><a href='#L28'>28</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">declare const __DEV__: boolean;
+&nbsp;
+/**
  * Simple logger utility for development and production
  */
 class Logger {
-<span class="fstat-no" title="function not covered" >  st</span>atic log(message: string, ...args: any[]): void {
+<span class="fstat-no" title="function not covered" >  st</span>atic log(message: string, ...args: unknown[]): void {
 <span class="cstat-no" title="statement not covered" >    if (__DEV__) {</span>
+      // eslint-disable-next-line no-console
 <span class="cstat-no" title="statement not covered" >      console.log(`[SecurePass] ${message}`, ...args);</span>
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  st</span>atic warn(message: string, ...args: any[]): void {
+<span class="fstat-no" title="function not covered" >  st</span>atic warn(message: string, ...args: unknown[]): void {
 <span class="cstat-no" title="statement not covered" >    if (__DEV__) {</span>
+      // eslint-disable-next-line no-console
 <span class="cstat-no" title="statement not covered" >      console.warn(`[SecurePass] ${message}`, ...args);</span>
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  st</span>atic error(message: string, ...args: any[]): void {
+<span class="fstat-no" title="function not covered" >  st</span>atic error(message: string, ...args: unknown[]): void {
+    // eslint-disable-next-line no-console
 <span class="cstat-no" title="statement not covered" >    console.error(`[SecurePass] ${message}`, ...args);</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  st</span>atic debug(message: string, ...args: any[]): void {
+<span class="fstat-no" title="function not covered" >  st</span>atic debug(message: string, ...args: unknown[]): void {
 <span class="cstat-no" title="statement not covered" >    if (__DEV__) {</span>
+      // eslint-disable-next-line no-console
 <span class="cstat-no" title="statement not covered" >      console.debug(`[SecurePass] ${message}`, ...args);</span>
     }
   }
@@ -151,7 +169,7 @@ export default Logger;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-23T12:09:26.223Z
+                at 2025-09-23T12:15:57.932Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
