@@ -14,11 +14,12 @@ const getSecureRandomInt = (max: number): number => {
   if (max <= 0) return 0;
 
   // Prefer Web Crypto API (available in RN with react-native-get-random-values polyfill)
-  const cryptoObj: any = (globalThis as any).crypto;
-  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+  const cryptoObj: unknown = (globalThis as Record<string, unknown>).crypto;
+  if (cryptoObj && typeof (cryptoObj as { getRandomValues?: unknown }).getRandomValues === 'function') {
     const arr = new Uint32Array(1);
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      cryptoObj.getRandomValues(arr);
+      (cryptoObj as { getRandomValues: (arr: Uint32Array) => void }).getRandomValues(arr);
       const random32 = arr[0];
       const buckets = Math.floor(0x100000000 / max) * max;
       if (random32 < buckets) return random32 % max;
@@ -27,16 +28,17 @@ const getSecureRandomInt = (max: number): number => {
 
   // Node.js fallback for test environment
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-undef
     const nodeCrypto = require('crypto');
     if (typeof nodeCrypto.randomInt === 'function') {
       return nodeCrypto.randomInt(0, max);
     }
-  } catch (_) {
+  } catch {
     // ignore
   }
 
   // Final fallback (non-crypto) with rejection sampling
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const random32 = Math.floor(Math.random() * 0x100000000) >>> 0;
     const buckets = Math.floor(0x100000000 / max) * max;
@@ -45,26 +47,26 @@ const getSecureRandomInt = (max: number): number => {
 };
 
 /**
- * Enhanced entropy pool for additional randomness
+ * Enhanced entropy pool for additional randomness (currently unused)
  */
-const createEntropyPool = (): number[] => {
-  const pool: number[] = [];
-  const poolSize = 256;
+// const createEntropyPool = (): number[] => {
+//   const pool: number[] = [];
+//   const poolSize = 256;
 
-  // Fill pool with secure random values
-  for (let i = 0; i < poolSize; i++) {
-    // Use our secure random generator for each byte
-    pool.push(getSecureRandomInt(256));
-  }
+//   // Fill pool with secure random values
+//   for (let i = 0; i < poolSize; i++) {
+//     // Use our secure random generator for each byte
+//     pool.push(getSecureRandomInt(256));
+//   }
 
-  // Fisher-Yates shuffle for additional mixing
-  for (let i = poolSize - 1; i > 0; i--) {
-    const j = getSecureRandomInt(i + 1);
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
+//   // Fisher-Yates shuffle for additional mixing
+//   for (let i = poolSize - 1; i > 0; i--) {
+//     const j = getSecureRandomInt(i + 1);
+//     [pool[i], pool[j]] = [pool[j], pool[i]];
+//   }
 
-  return pool;
-};
+//   return pool;
+// };
 
 export const generatePassword = (options: PasswordOptions): string => {
   let availableChars = "";
@@ -206,19 +208,19 @@ export const estimateCrackTime = (password: string): string => {
   return "Centuries";
 };
 
-// Helper functions
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
-}
+// Helper functions (currently unused but kept for future use)
+// function escapeRegExp(string: string): string {
+//   return string.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
+// }
 
-function shuffleString(str: string): string {
-  const arr = str.split("");
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = getSecureRandomInt(i + 1);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr.join("");
-}
+// function shuffleString(str: string): string {
+//   const arr = str.split("");
+//   for (let i = arr.length - 1; i > 0; i--) {
+//     const j = getSecureRandomInt(i + 1);
+//     [arr[i], arr[j]] = [arr[j], arr[i]];
+//   }
+//   return arr.join("");
+// }
 
 function getCharsetSize(password: string): number {
   let size = 0;

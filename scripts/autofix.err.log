@@ -1039,3 +1039,61 @@ npm error
 npm error For a full report see:
 npm error /Users/igorganapolsky/.npm/_logs/2025-09-22T19_29_34_684Z-eresolve-report.txt
 npm error A complete log of this run can be found in: /Users/igorganapolsky/.npm/_logs/2025-09-22T19_29_34_684Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: @react-native/virtualized-lists@0.81.4
+npm warn Found: @types/react@18.3.24
+npm warn node_modules/@types/react
+npm warn   dev @types/react@"^18.0.24" from the root project
+npm warn   2 more (@types/react-test-renderer, @types/react-native-vector-icons)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peerOptional @types/react@"^19.1.0" from @react-native/virtualized-lists@0.81.4
+npm warn node_modules/@react-native/virtualized-lists
+npm warn   @react-native/virtualized-lists@"0.81.4" from react-native@0.81.4
+npm warn   node_modules/react-native
+npm warn
+npm warn Conflicting peer dependency: @types/react@19.1.13
+npm warn node_modules/@types/react
+npm warn   peerOptional @types/react@"^19.1.0" from @react-native/virtualized-lists@0.81.4
+npm warn   node_modules/@react-native/virtualized-lists
+npm warn     @react-native/virtualized-lists@"0.81.4" from react-native@0.81.4
+npm warn     node_modules/react-native
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: react-native@0.81.4
+npm error Found: @types/react@18.3.24
+npm error node_modules/@types/react
+npm error   dev @types/react@"^18.0.24" from the root project
+npm error   @types/react@"*" from @types/react-test-renderer@19.1.0
+npm error   node_modules/@types/react-test-renderer
+npm error     dev @types/react-test-renderer@"^19.1.0" from the root project
+npm error   1 more (@types/react-native-vector-icons)
+npm error
+npm error Could not resolve dependency:
+npm error peerOptional @types/react@"^19.1.0" from react-native@0.81.4
+npm error node_modules/react-native
+npm error   react-native@"^0.81.4" from the root project
+npm error   peer react-native@"^0.0.0-0 || >=0.65 <1.0" from @react-native-async-storage/async-storage@2.2.0
+npm error   node_modules/@react-native-async-storage/async-storage
+npm error     @react-native-async-storage/async-storage@"^2.2.0" from the root project
+npm error   21 more (@react-native-clipboard/clipboard, ...)
+npm error
+npm error Conflicting peer dependency: @types/react@19.1.13
+npm error node_modules/@types/react
+npm error   peerOptional @types/react@"^19.1.0" from react-native@0.81.4
+npm error   node_modules/react-native
+npm error     react-native@"^0.81.4" from the root project
+npm error     peer react-native@"^0.0.0-0 || >=0.65 <1.0" from @react-native-async-storage/async-storage@2.2.0
+npm error     node_modules/@react-native-async-storage/async-storage
+npm error       @react-native-async-storage/async-storage@"^2.2.0" from the root project
+npm error     21 more (@react-native-clipboard/clipboard, ...)
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /Users/igorganapolsky/.npm/_logs/2025-09-23T12_07_38_700Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /Users/igorganapolsky/.npm/_logs/2025-09-23T12_07_38_700Z-debug-0.log
