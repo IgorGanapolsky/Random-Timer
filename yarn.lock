@@ -2463,11 +2463,6 @@
   dependencies:
     undici-types "~7.12.0"
 
-"@types/prop-types@*":
-  version "15.7.15"
-  resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz"
-  integrity sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==
-
 "@types/react-native-vector-icons@^6.4.18":
   version "6.4.18"
   resolved "https://registry.yarnpkg.com/@types/react-native-vector-icons/-/react-native-vector-icons-6.4.18.tgz#18671c617b9d0958747bc959903470dde91a8c79"
@@ -2490,12 +2485,11 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^18.0.24":
-  version "18.3.24"
-  resolved "https://registry.npmjs.org/@types/react/-/react-18.3.24.tgz"
-  integrity sha512-0dLEBsA1kI3OezMBF8nSsb7Nk19ZnsyE1LLhB8r27KbgU5H4pvuqZLdtE+aUkJVoXgTVuA+iLIwmZ0TuK4tx6A==
+"@types/react@*", "@types/react@^19.2.0":
+  version "19.2.0"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.0.tgz#8412946e7e1efb0de9bb59b3aa87676d96add385"
+  integrity sha512-1LOH8xovvsKsCBq1wnT4ntDUdCJKmnEakhsuoUSy6ExlHCkGP2hqnatagYTgFk6oeL0VU31u7SNjunPN+GchtA==
   dependencies:
-    "@types/prop-types" "*"
     csstype "^3.0.2"
 
 "@types/semver@^7.3.12":
@@ -7503,9 +7497,9 @@ react-test-renderer@19.1.1:
     scheduler "^0.26.0"
 
 react@^19.1.1:
-  version "19.1.1"
-  resolved "https://registry.npmjs.org/react/-/react-19.1.1.tgz"
-  integrity sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==
+  version "19.2.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-19.2.0.tgz#d33dd1721698f4376ae57a54098cb47fc75d93a5"
+  integrity sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==
 
 readable-stream@^3.4.0:
   version "3.6.2"
