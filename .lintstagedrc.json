@@ -1,0 +1,7 @@
+{
+  "**/*.{ts,tsx,json,md}": ["prettier --write"],
+  "**/*.{ts,tsx}": ["eslint --fix"],
+  "{src,tests}/**/*.{ts,tsx}": ["jest --bail --findRelatedTests --passWithNoTests"],
+  "ios/**/*.{h,m,mm,swift}": ["cd ios && swiftlint", "cd ios && pod install"],
+  "android/**/*.{java,kt}": ["cd android && ./gradlew ktlintCheck"]
+}

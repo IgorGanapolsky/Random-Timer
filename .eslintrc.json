@@ -1,23 +1,28 @@
-/* eslint-env node */
-module.exports = {
-  root: true,
-  env: { es2021: true, node: true, jest: true },
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    ecmaFeatures: { jsx: true },
-    ecmaVersion: "latest",
-    sourceType: "module",
-    project: undefined,
+{
+  "root": true,
+  "env": {
+    "es2021": true,
+    "node": true,
+    "jest": true
   },
-  plugins: [
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": null
+  },
+  "plugins": [
     "@typescript-eslint",
     "react",
     "react-native",
     "react-hooks",
     "unused-imports",
-    "import",
+    "import"
   ],
-  extends: [
+  "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
@@ -25,17 +30,23 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
-    "prettier",
+    "prettier"
   ],
-  settings: {
-    react: { version: "detect" },
-    "import/resolver": {
-      node: { extensions: [".js", ".jsx", ".ts", ".tsx"] },
-      typescript: { project: ["./tsconfig.json"] },
+  "settings": {
+    "react": {
+      "version": "detect"
     },
-    "import/ignore": ["react-native", "react-native/.*"],
+    "import/resolver": {
+      "node": {
+        "extensions": [".ts", ".tsx"]
+      },
+      "typescript": {
+        "project": ["./tsconfig.json"]
+      }
+    },
+    "import/ignore": ["react-native", "react-native/.*"]
   },
-  rules: {
+  "rules": {
     "react/react-in-jsx-scope": "off",
     "react-native/no-inline-styles": "off",
     "react-native/sort-styles": "off",
@@ -50,24 +61,33 @@ module.exports = {
       "warn",
       {
         "newlines-between": "always",
-        groups: [
+        "groups": [
           ["builtin", "external"],
           ["internal"],
-          ["parent", "sibling", "index"],
+          ["parent", "sibling", "index"]
         ],
-        pathGroups: [{ pattern: "@/**", group: "internal", position: "after" }],
-        pathGroupsExcludedImportTypes: ["builtin"],
-        alphabetize: { order: "asc", caseInsensitive: true },
-      },
-    ],
+        "pathGroups": [
+          {
+            "pattern": "@/**",
+            "group": "internal",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["builtin"],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
   },
-  ignorePatterns: [
+  "ignorePatterns": [
     "node_modules/",
     "dist/",
     "build/",
     ".expo/",
     ".expo-shared/",
     "android/",
-    "ios/",
-  ],
-};
+    "ios/"
+  ]
+}
