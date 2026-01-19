@@ -65,8 +65,8 @@ export const RandomTimerScreen = () => {
   }, []);
 
   const startTimer = useCallback(() => {
-    const min = parseInt(minInterval, 10) * 1000;
-    const max = parseInt(maxInterval, 10) * 1000;
+    const min = parseFloat(minInterval) * 1000;
+    const max = parseFloat(maxInterval) * 1000;
 
     if (isNaN(min) || isNaN(max) || min <= 0 || max <= 0) {
       Alert.alert('Invalid Input', 'Please enter valid positive numbers for intervals');
