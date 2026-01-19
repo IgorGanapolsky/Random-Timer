@@ -1,4 +1,5 @@
-import {createCanvas} from 'canvas';
+/* eslint-disable @typescript-eslint/no-var-requires */
+const {createCanvas} = require('canvas');
 import fs from 'fs';
 import path from 'path';
 
