@@ -24,14 +24,16 @@ jobs:
 
       - name: Sync item to Project
         uses: actions/github-script@v8
+        continue-on-error: true
         env:
           PROJECT_TITLE: SuperPassword Development
         with:
           script: |
             const { owner, repo } = context.repo;
 
-            const isIssue = !!context.payload.issue;
-            const isPr = !!context.payload.pull_request;
+            try {
+              const isIssue = !!context.payload.issue;
+              const isPr = !!context.payload.pull_request;
 
             // Helper to run GraphQL
             async function gql(query, variables) {
@@ -66,7 +68,7 @@ jobs:
             }
 
             if (!project) {
-              core.setFailed(`Project '${process.env.PROJECT_TITLE}' not found under ${owner}`);
+              core.warning(`Project '${process.env.PROJECT_TITLE}' not found under ${owner}. Skipping sync.`);
               return;
             }
 
@@ -85,7 +87,7 @@ jobs:
             const fields = projectFields.node.fields.nodes;
             const statusField = fields.find(f => f.name.toLowerCase() === 'status');
             if (!statusField) {
-              core.setFailed('Status field not found in project');
+              core.warning('Status field not found in project. Skipping sync.');
               return;
             }
 
@@ -207,5 +209,8 @@ jobs:
             }
 
             await scheduledSync();
+            } catch (error) {
+              core.warning(`Project sync skipped: ${error.message}`);
+            }
 
 

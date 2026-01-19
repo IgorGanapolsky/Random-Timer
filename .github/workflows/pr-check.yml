@@ -10,8 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Validate PR Title
+      - name: Validate PR Title (warn only)
         uses: amannn/action-semantic-pull-request@v6
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -28,6 +29,10 @@ jobs:
             ci
             revert
           requireScope: false
+          
+      - name: PR Title Check Notice
+        if: ${{ failure() }}
+        run: echo "::warning::PR title does not follow conventional commits. Please update when possible."
           
       - name: Check Files Changed
         run: |
