@@ -24,7 +24,7 @@ export class RandomTimer {
    */
   private generateRandomInterval(): number {
     const { minInterval, maxInterval } = this.config;
-    return Math.floor(Math.random() * (maxInterval - minInterval)) + minInterval;
+    return Math.random() * (maxInterval - minInterval) + minInterval;
   }
 
   /**

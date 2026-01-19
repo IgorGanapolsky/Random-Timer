@@ -24,6 +24,8 @@ interface TimerLog {
   message: string;
 }
 
+const MAX_LOG_ENTRIES = 20;
+
 export const RandomTimerScreen = () => {
   const [minInterval, setMinInterval] = useState('3');
   const [maxInterval, setMaxInterval] = useState('10');
@@ -61,7 +63,7 @@ export const RandomTimerScreen = () => {
       timestamp: new Date(),
       message: `Timer triggered at ${new Date().toLocaleTimeString()}`,
     };
-    setLogs((prevLogs) => [newLog, ...prevLogs.slice(0, 19)]); // Keep last 20 logs
+    setLogs((prevLogs) => [newLog, ...prevLogs.slice(0, MAX_LOG_ENTRIES - 1)]);
   }, []);
 
   const startTimer = useCallback(() => {
