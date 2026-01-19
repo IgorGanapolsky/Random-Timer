@@ -6,8 +6,9 @@
 
 ## Session Start Protocol
 1. Read this file.
-2. Review open PRs and branches.
-3. Check CI status.
+2. Query Vertex AI RAG for relevant lessons.
+3. Review open PRs and branches.
+4. Check CI status.
 
 ## PR & Branch Management
 1. List all open PRs with status.
@@ -21,6 +22,12 @@
 - Evidence-based communication with command/output proof.
 - No manual handoffs to the user when automation is possible.
 - Honesty protocol: report failures immediately.
+
+## Continuous Learning
+- Record every trade and lesson in Vertex AI RAG.
+- Log mistakes in both Vertex AI RAG and Langsmith ML.
+- Query RAG at session start; update RAG at session end.
+- Self-assess: Is RAG helping or hindering? Is Langsmith useful? Report status.
 
 ## Completion Requirements
 - Confirm work only after verification.
