@@ -14,9 +14,11 @@ or haptic alarm without revealing the countdown.
 ## Getting started
 1. Install dependencies:
    - yarn install
-2. Start Metro:
+2. Install iOS pods:
+   - cd ios && pod install && cd ..
+3. Start Metro:
    - yarn start
-3. Run the app:
+4. Run the app:
    - yarn ios
    - yarn android
 
