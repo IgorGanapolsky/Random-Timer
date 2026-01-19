@@ -21,7 +21,20 @@ export default [
       globals: {
         crypto: 'readonly',
         __DEV__: 'readonly',
-        performance: 'readonly'
+        performance: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        describe: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        jest: 'readonly',
       }
     },
     plugins: {

@@ -1,8 +1,5 @@
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Slider from "@react-native-community/slider";
 import Clipboard from "@react-native-clipboard/clipboard";
-import HapticFeedback from "react-native-haptic-feedback";
-import LinearGradient from "react-native-linear-gradient";
+import Slider from "@react-native-community/slider";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
@@ -15,8 +12,11 @@ import {
   Platform,
   Vibration,
 } from "react-native";
+import HapticFeedback from "react-native-haptic-feedback";
+import LinearGradient from "react-native-linear-gradient";
 import { Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import {
   spacing,

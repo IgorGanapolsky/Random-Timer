@@ -1,6 +1,3 @@
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import DeviceInfo from "react-native-device-info";
-import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -13,7 +10,10 @@ import {
   Platform,
   Linking,
 } from "react-native";
+import DeviceInfo from "react-native-device-info";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { spacing, borderRadius, fontSize, shadows } from "@/constants/theme";
 import { useTheme, ThemeMode } from "@/contexts/ThemeContext";

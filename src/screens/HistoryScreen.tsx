@@ -1,7 +1,5 @@
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { format } from "date-fns";
 import Clipboard from "@react-native-clipboard/clipboard";
-import HapticFeedback from "react-native-haptic-feedback";
+import { format } from "date-fns";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -14,7 +12,9 @@ import {
   Platform,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
+import HapticFeedback from "react-native-haptic-feedback";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import {
   spacing,

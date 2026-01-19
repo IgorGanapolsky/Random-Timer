@@ -1,6 +1,3 @@
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import LinearGradient from "react-native-linear-gradient";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -12,7 +9,10 @@ import {
   Platform,
   Animated,
 } from "react-native";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
+import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { spacing, borderRadius, fontSize, shadows } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";

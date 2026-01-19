@@ -1,5 +1,5 @@
-import { Config } from "react-native-config";
 import * as Sentry from "@sentry/react-native";
+import { Config } from "react-native-config";
 
 let isInitialized = false;
 

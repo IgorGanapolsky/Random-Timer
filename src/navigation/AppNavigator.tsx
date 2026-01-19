@@ -1,13 +1,14 @@
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { HistoryScreen } from "@/screens/HistoryScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { PremiumScreen } from "@/screens/PremiumScreen";
+import { RandomTimerScreen } from "@/screens/RandomTimerScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
 import { BottomTabParamList, RootStackParamList } from "@/types";
 
@@ -55,6 +56,16 @@ const TabNavigator: React.FC = () => {
           tabBarLabel: "History",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="history" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="RandomTimer"
+        component={RandomTimerScreen}
+        options={{
+          tabBarLabel: "Timer",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="timer-outline" size={size} color={color} />
           ),
         }}
       />

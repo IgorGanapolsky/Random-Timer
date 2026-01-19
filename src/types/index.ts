@@ -105,6 +105,7 @@ export type NavigationParamList = {
   PrivacyPolicy: undefined;
   TermsOfService: undefined;
   MainTabs: undefined;
+  RandomTimer: undefined;
 };
 
 // Narrowed navigator param lists for specific navigators
@@ -113,6 +114,7 @@ export type BottomTabParamList = {
   History: undefined;
   Settings: undefined;
   Premium: { source?: "menu" | "limit" | "feature" } | undefined;
+  RandomTimer: undefined;
 };
 
 export type RootStackParamList = {
