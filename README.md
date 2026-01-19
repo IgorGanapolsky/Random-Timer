@@ -1,22 +1,10 @@
-# 🔐 SecurePass - Next Gen Password Manager
+# ⏲️ Random Timer
 
-[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/ci-cd.yml)
-[![Coverage](https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg)](https://codecov.io/gh/IgorGanapolsky/SuperPassword)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)
-[![Known Vulnerabilities](https://snyk.io/test/github/IgorGanapolsky/SuperPassword/badge.svg?targetFile=package.json)](https://snyk.io/test/github/IgorGanapolsky/SuperPassword)
+[![Build Status](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci-cd.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-<!-- Alternative badges for fallback -->
-<!-- [![Build](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=build)](https://github.com/IgorGanapolsky/SuperPassword/actions) -->
-<!-- [![Tests](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=tests)](https://github.com/IgorGanapolsky/SuperPassword/actions) -->
-<!-- [![CodeQL](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml) -->
-
-A professional password generator built with React Native CLI, featuring Material Design and ready for deployment to Google Play Store and Apple App Store.
-
-> **Note**: If any badges above show as "failing" or "unknown", this may indicate that the external services (SonarCloud, Codecov, Snyk) need to be configured or that the project is private. The GitHub Actions badge should always work for public repositories.
+A React Native application featuring a Random Timer that triggers events at configurable, random intervals. Built with React Native CLI for deployment to Android and iOS platforms.
 
 ## 📋 Table of Contents
 
@@ -24,72 +12,58 @@ A professional password generator built with React Native CLI, featuring Materia
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Getting Started](#-getting-started)
 - [📁 Project Structure](#-project-structure)
-- [🏗️ Development Workflow](#️-development-workflow)
-  - [Architecture Overview](#️-architecture-overview)
-  - [Multi-Agent System](#-multi-agent-system)
-  - [Branch Strategy](#-branch-strategy)
-  - [Development Process](#️-development-process)
-  - [GitButler CLI & MCP Integration](#-gitbutler-cli--mcp-integration)
-- [🏭 Building for Production](#-building-for-production)
-- [📱 App Store Configuration](#-app-store-configuration)
-- [🔥 Firebase Setup](#-firebase-setup)
-- [📊 AdMob Integration](#-admob-integration)
-- [🌍 Environment Variables](#-environment-variables)
-- [⚙️ CI/CD & Autonomous Ops](#️-cicd--autonomous-ops)
+- [⚙️ GitHub Actions](#️-github-actions)
+- [🔮 Future Enhancements](#-future-enhancements)
 - [🧪 Testing](#-testing)
 - [🤝 Contributing](#-contributing)
-- [📊 Badge Setup & Monitoring](#-badge-setup--monitoring)
 - [📄 License](#-license)
 - [💬 Support](#-support)
 
 ---
 
-🤖 **AI Integration**: This project now features GitButler AI integration for automated commit management!
+## ✨ Features
 
-## Features
+### Core Features
 
-### Core Features (Free)
+- ⏲️ **Random Timer**: Triggers events at configurable, random intervals
+- ⚙️ **Customizable Intervals**: Set minimum and maximum time ranges for random triggering
+- 🎯 **Event Notifications**: Get notified when the random timer triggers
+- 📱 **Cross-Platform**: Works on both Android and iOS devices
+- 🎨 **Material Design**: Clean, modern user interface
+- 💾 **Persistent Settings**: Your timer preferences are saved between sessions
 
-- ✨ Clean Material Design interface with gradient background
-- 🔐 Password generation with customizable length (8-50 characters)
-- ⚙️ Toggle options for uppercase, lowercase, numbers, special characters
-- 💪 Real-time password strength meter with color coding
-- 📋 One-tap copy to clipboard with success animation
-- 📜 Password history (last 10 generated passwords) with timestamps
-- 🌓 Dark mode toggle with system preference detection
-- 📳 Haptic feedback for interactions
+## 🛠️ Tech Stack
 
-### Premium Features ($2.99 one-time purchase)
+- **React Native CLI** - Native mobile app framework
+- **TypeScript** - Type-safe JavaScript
+- **React Navigation** - Navigation library for React Native
+- **React Native Paper** - Material Design components
+- **AsyncStorage** - Local data persistence
+- **React Native Haptic Feedback** - Tactile feedback for interactions
 
-- 📜 Unlimited password history
-- ☁️ Cloud sync across devices
-- 🎯 Custom character sets and exclusion rules
-- 📦 Bulk password generation (up to 100 at once)
-- 📊 Export passwords to CSV
-- 🔒 Advanced security settings
-- 🚫 No advertisements
+## 🚀 Getting Started
 
-## Tech Stack
+Follow these steps to get the Random Timer app running on your local machine.
 
-- React Native CLI
-- TypeScript
-- React Navigation
-- React Native Paper (Material Design)
-- @react-native-async-storage/async-storage for local data
-- React Native Keychain for secure storage
-- Firebase (ready for integration)
-- Google AdMob (ready for integration)
+### Prerequisites
 
-## Getting Started
+Before you begin, ensure you have the following installed:
 
-1. **Prerequisites**
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Yarn** package manager (`npm install -g yarn`)
+- **React Native CLI** (`npm install -g react-native-cli`)
+- **Android Studio** (for Android development)
+- **Xcode** (for iOS development, macOS only)
+- **CocoaPods** (for iOS dependencies: `sudo gem install cocoapods`)
 
-   - Node.js 18+
-   - Yarn
-   - React Native CLI (`npm install -g react-native-cli`)
-   - Android Studio (for Android development)
-   - Xcode (for iOS development, macOS only)
-   - CocoaPods (`sudo gem install cocoapods`)
+### Installation
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/IgorGanapolsky/Random-Timer.git
+   cd Random-Timer
+   ```
 
 2. **Install Dependencies**
 
@@ -97,573 +71,294 @@ A professional password generator built with React Native CLI, featuring Materia
    # Install JavaScript dependencies
    yarn install
 
-   # Install iOS dependencies
+   # Install iOS dependencies (macOS only)
    cd ios && pod install && cd ..
    ```
 
-3. **Start Development Server**
+### Running the App
 
-   ```bash
-   # Start Metro bundler
-   yarn start
-
-   # In a new terminal, run for iOS
-   yarn ios
-
-   # Or for Android
-   yarn android
-   ```
-
-4. **Troubleshooting**
-   - If you encounter issues with iOS builds, try:
-     ```bash
-     cd ios
-     pod deintegrate
-     pod install
-     cd ..
-     ```
-   - For Android, ensure you have the correct Android SDK versions installed in Android Studio
+#### Start Metro Bundler
 
 ```bash
-npx expo run:android
+yarn start
 ```
 
-## Project Structure
+#### Run on Android
 
-```
-src/
-├── components/     # Reusable UI components
-├── screens/        # App screens
-├── navigation/     # Navigation setup
-├── services/       # Services (storage, Firebase, etc.)
-├── utils/          # Utility functions
-├── hooks/          # Custom React hooks
-├── types/          # TypeScript type definitions
-├── constants/      # App constants and theme
-└── store/          # State management
-```
-
-## Building for Production
-
-### Using EAS Build
-
-1. Install EAS CLI:
+In a new terminal window:
 
 ```bash
-npm install -g eas-cli
+yarn android
 ```
 
-2. Configure EAS:
+Make sure you have an Android emulator running or a physical device connected via USB with debugging enabled.
+
+#### Run on iOS (macOS only)
+
+In a new terminal window:
 
 ```bash
-eas build:configure
+yarn ios
 ```
 
-3. Build for iOS:
+This will launch the iOS simulator. For physical devices, you'll need to configure code signing in Xcode.
+
+### Troubleshooting
+
+#### iOS Build Issues
+
+If you encounter issues with iOS builds:
 
 ```bash
-eas build --platform ios --profile production
+cd ios
+pod deintegrate
+pod install
+cd ..
 ```
 
-4. Build for Android:
+#### Android Build Issues
+
+- Ensure you have the correct Android SDK versions installed in Android Studio
+- Check that the `ANDROID_HOME` environment variable is set correctly
+- Try cleaning the build: `cd android && ./gradlew clean && cd ..`
+
+#### Metro Bundler Issues
+
+If the bundler cache is causing problems:
 
 ```bash
-eas build --platform android --profile production
+yarn start --reset-cache
 ```
 
-5. Submit to stores (after first credential setup):
+## 📁 Project Structure
+
+```
+Random-Timer/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── screens/        # App screens (Timer, Settings, etc.)
+│   ├── navigation/     # Navigation configuration
+│   ├── services/       # Services (storage, notifications, etc.)
+│   ├── utils/          # Utility functions
+│   ├── hooks/          # Custom React hooks
+│   ├── types/          # TypeScript type definitions
+│   ├── constants/      # App constants and theme
+│   └── contexts/       # React context providers
+├── android/            # Android native code
+├── ios/                # iOS native code
+├── __tests__/          # Test files
+└── App.tsx             # App entry point
+```
+
+## ⚙️ GitHub Actions
+
+This repository uses GitHub Actions for automated CI/CD workflows.
+
+### Continuous Integration
+
+The CI/CD pipeline runs automatically on every push to `main` and `develop` branches, as well as on pull requests.
+
+#### Validation Workflow
+
+- **Linting**: Checks code style and quality with ESLint
+- **Type Checking**: Validates TypeScript types with `tsc`
+- **Testing**: Runs the test suite with Jest
+- **Coverage**: Uploads test coverage to Codecov
+
+#### Security Checks
+
+- **CodeQL Analysis**: Scans for security vulnerabilities
+- **Dependency Review**: Checks for vulnerable dependencies
+- **Snyk Scanning**: Additional vulnerability scanning (when configured)
+
+### Android APK Builds
+
+When code is merged into the `develop` branch, GitHub Actions automatically:
+
+1. **Builds the Android APK** using Gradle
+2. **Runs all tests** to ensure quality
+3. **Uploads the APK** as a build artifact
+
+You can download the built APK from the [Actions tab](https://github.com/IgorGanapolsky/Random-Timer/actions) after a successful build.
+
+#### Build Configuration
+
+- **Target SDK**: 34 (Android 14)
+- **Minimum SDK**: 24 (Android 7.0)
+- **Architectures**: x86_64, armeabi-v7a, arm64-v8a
+
+### Workflow Files
+
+- `.github/workflows/ci-cd.yml` - Main CI/CD pipeline
+- `.github/workflows/eas-build.yml` - EAS build configuration (optional)
+
+### Manual Builds
+
+You can also trigger builds manually from the GitHub Actions tab using the "workflow_dispatch" event.
+
+## 🧪 Testing
+
+### Running Tests
+
+Run the test suite:
 
 ```bash
-eas submit --platform ios --profile production
-.eas submit --platform android --profile production
+yarn test
 ```
 
-## App Store Configuration
-
-### Google Play Store
-
-- Package name: `com.securepass.generator`
-- Target SDK: 34
-- Min SDK: 24 (Android 7.0+)
-
-### Apple App Store
-
-- Bundle ID: `com.securepass.generator`
-- Deployment target: iOS 15.1+
-
-## Firebase Setup (Required for production)
-
-1. Create a Firebase project at https://console.firebase.google.com
-2. Add iOS and Android apps with the package/bundle IDs
-3. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-4. Place configuration files in the project root
-5. Configure Firebase services:
-   - Authentication
-   - Firestore
-   - Remote Config
-   - Analytics
-   - Crashlytics
-
-## AdMob Setup (Required for monetization)
-
-1. Create AdMob account at https://admob.google.com
-2. Create ad units:
-   - Banner ad for main screen
-   - Interstitial ad for password generations
-   - Rewarded video for premium trial
-3. Add AdMob App IDs to app configuration
-4. Test with test ad unit IDs during development
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and set values. Key settings:
-
-- APP_NAME, APP_SLUG, APP_SCHEME, EXPO_OWNER
-- IOS_BUNDLE_ID, ANDROID_PACKAGE
-- EAS_PROJECT_ID
-- ADMOB_APP_ID_IOS, ADMOB_APP_ID_ANDROID
-- SENTRY_DSN
-
-## Development Workflow
-
-This project uses **GitButler virtual branches** with **specialized Claude AI agents** for parallel development. Each agent works in isolation with dedicated worktrees and virtual branches.
-
-### 🏗️ Architecture Overview
-
-![GitButler Architecture](docs/diagrams/gitbutler-architecture.svg)
-
-Our development architecture consists of three layers:
-
-- **GitButler Virtual Branches**: Isolated development streams
-- **Physical Worktrees**: Dedicated workspaces per agent
-- **Claude AI Agents**: Specialized development roles
-
-### 🤖 Multi-Agent System
-
-![Agent Architecture](docs/diagrams/agent-architecture.svg)
-
-We employ five specialized Claude AI agents:
-
-#### 🔐 **Security Agent**
-
-- **Worktree**: `/worktrees/security`
-- **Branch**: `security/*`
-- **Focus**: Biometric authentication, encryption, security policies
-- **Current Work**: TouchID/FaceID implementation (#179)
-
-#### 🧪 **Testing Agent**
-
-- **Worktree**: `/worktrees/testing`
-- **Branch**: `test/*`
-- **Focus**: Test coverage, QA automation, performance benchmarks
-- **Current Work**: Comprehensive test coverage (#180)
-
-#### 🤖 **Android Agent**
-
-- **Worktree**: `/worktrees/platform/android`
-- **Branch**: `platform/android`
-- **Focus**: Android-specific features, Play Store compliance
-- **Current Work**: Native Android features (#181)
-
-#### 🍎 **iOS Agent**
-
-- **Worktree**: `/worktrees/platform/ios`
-- **Branch**: `platform/ios`
-- **Focus**: iOS-specific features, App Store compliance
-- **Current Work**: Native iOS features (#182)
-
-#### 🐛 **Bugfix Agent**
-
-- **Worktree**: `/worktrees/bugfix`
-- **Branch**: `bugfix/*`
-- **Focus**: Bug fixes, performance optimization, refactoring
-- **Current Work**: Native performance improvements (#183)
-
-### 🔄 Branch Strategy
-
-![Branch Strategy](docs/diagrams/branch-strategy.svg)
-
-We follow a **GitFlow-inspired** strategy enhanced with **GitButler virtual branches**:
-
-#### Protected Branches
-
-- **`main`**: Production releases (protected)
-- **`develop`**: Integration branch (protected)
-
-#### Working Branches
-
-- **`feat/*`**: New features → merge to `develop`
-- **`fix/*`**: Bug fixes → merge to `develop`
-- **`hotfix/*`**: Critical fixes → merge to `main` and `develop`
-- **`release/*`**: Release preparation → merge to `main` and `develop`
-
-#### GitButler Integration
-
-- **Virtual Branches**: Each agent works on isolated virtual branches
-- **Auto-Merge**: Conflicts resolved with "ours" strategy
-- **PR Automation**: Virtual branches automatically create PRs
-- **Squash Merge**: Clean history with atomic commits
-
-### 🛠️ Development Process
-
-1. **Task Assignment** → Specialized agent selected
-2. **Virtual Branch** → GitButler creates isolated branch
-3. **Development** → Agent implements in dedicated worktree
-4. **Auto PR** → GitButler creates pull request
-5. **Review & Merge** → Human review + automated merge
-
-### 📋 Branch Protection Rules
-
-- **PR Reviews Required**: All changes to `main`/`develop`
-- **Status Checks**: CI must pass before merge
-- **Linear History**: Enforced for clean git history
-- **Auto-Delete**: Head branches removed after merge
-
-### 💬 Commit Message Format
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-
-**Example**:
-
-```
-feat(auth): implement biometric authentication
-
-- Add FaceID/TouchID support
-- Add fallback to PIN
-- Add user preference toggle
-
-Closes #123
-```
-
-### 🔧 GitButler CLI & MCP Integration
-
-This project integrates **GitButler CLI** with **Model Context Protocol (MCP)** for seamless AI-powered development.
-
-#### GitButler CLI Setup
+Run tests with coverage:
 
 ```bash
-# Install GitButler CLI
-brew install gitbutler-cli
-
-# Initialize in project
-gitbutler init
-
-# Configure AI agents
-gitbutler config set ai.provider claude
-gitbutler config set ai.model claude-3-5-sonnet
-```
-
-#### MCP Server Configuration
-
-The project includes MCP server integration for Claude Code:
-
-```json
-// .cursor/config.json
-{
-  "mcp": {
-    "servers": {
-      "gitbutler": {
-        "command": "gitbutler",
-        "args": ["mcp", "server"],
-        "env": {
-          "GITBUTLER_PROJECT_PATH": "."
-        }
-      }
-    }
-  }
-}
-```
-
-#### Agent Worktree Management
-
-```bash
-# Create agent worktrees
-./setup-cursor-agents.sh
-
-# List active agents
-gitbutler agents list
-
-# Switch agent context
-gitbutler agent switch security
-
-# Sync virtual branches
-gitbutler sync --all
-```
-
-#### CLI Advantages Over UI
-
-- **Automation**: Script complex workflows
-- **Integration**: Works with any editor (Cursor, VS Code, etc.)
-- **Performance**: Faster than GUI operations
-- **CI/CD**: Integrate with automated pipelines
-- **Flexibility**: Custom hooks and automation rules
-
-#### MCP Benefits
-
-- **Real-time Context**: Claude sees current branch state
-- **Smart Suggestions**: Context-aware code recommendations
-- **Conflict Resolution**: AI-assisted merge conflict resolution
-- **Code Review**: Automated PR analysis and feedback
-
-#### Available Commands
-
-```bash
-# Branch management
-gitbutler branch create feat/new-feature
-gitbutler branch list --agent security
-gitbutler branch merge feat/auth-improvements
-
-# Agent operations
-gitbutler agent assign security feat/biometric-auth
-gitbutler agent status --all
-gitbutler agent sync security
-
-# Automation
-gitbutler hooks enable auto-pr
-gitbutler hooks enable conflict-resolution
-gitbutler workflow run security-audit
-```
-
-## CI/CD & Autonomous Ops
-
-- Local hourly autofix: LaunchAgent runs `scripts/autofix-local.sh` to format/lint, commit, and push.
-- Cloud hourly autofix: `.github/workflows/autofix.yml` runs Prettier + ESLint and auto-commits.
-- CI checks: `.github/workflows/ci.yml` runs tsc, expo-doctor, lint, and prettier on PRs.
-- OTA updates (optional): use EAS Update to ship JS-only fixes to channels.
-
-### Sentry (crash and error reporting)
-
-1. Create a Sentry project (React Native) and get DSN.
-2. Set env:
-
-```bash
-echo "SENTRY_DSN=your_sentry_dsn" >> .env
-```
-
-3. For CI/EAS builds, set secrets:
-
-   - GitHub Actions: `SENTRY_AUTH_TOKEN` (org:project release:write)
-   - EAS Secrets: `SENTRY_AUTH_TOKEN`
-
-4. Build a release with EAS so source maps upload and crashes link to code:
-
-```bash
-eas build --platform ios --profile production
-eas build --platform android --profile production
-```
-
-### Firebase (Auth, Analytics, Crashlytics, Firestore, Remote Config)
-
-1. Download platform configs from Firebase Console and place at project root:
-   - iOS: `GoogleService-Info.plist` (path referenced in `app.config.ts`)
-   - Android: `google-services.json` (path referenced in `app.config.ts`)
-2. Dev client (required for local dev with native SDKs):
-   - iOS: `eas build --profile development --platform ios && eas build:run --platform ios`
-   - Android: `eas build --profile development --platform android && eas build:run --platform android`
-3. Start server: `npx expo start --dev-client`
-4. Verify Crashlytics: trigger `FirebaseService.logError(new Error('test'), { screen: 'Home' })` and check Firebase console.
-
-### Release flow (fully scripted)
-
-```bash
-# 1) Set env vars in .env or CI secrets (bundle IDs, EAS_PROJECT_ID, AdMob, Sentry)
-# 2) Build
-EAS_NO_VCS=1 eas build --platform ios --profile production
-EAS_NO_VCS=1 eas build --platform android --profile production
-# 3) Submit
-EAS_NO_VCS=1 eas submit --platform ios --profile production
-EAS_NO_VCS=1 eas submit --platform android --profile production
-```
-
-Notes:
-
-- Manage credentials via EAS on first run; subsequent runs use stored credentials.
-- For multiple apps, keep a repo per app; parameterize via `app.config.ts` + `.env`.
-
-## Testing
-
-Run tests:
-
-```bash
-npm test
+yarn test:coverage
 ```
 
 Run TypeScript type checking:
 
 ```bash
-npx tsc --noEmit
+yarn typecheck
 ```
+
+### Linting and Formatting
+
+Check code style with ESLint:
+
+```bash
+yarn lint
+```
+
+Auto-fix linting issues:
+
+```bash
+yarn lint:fix
+```
+
+Format code with Prettier:
+
+```bash
+yarn fmt:fix
+```
+
+Run all checks:
+
+```bash
+yarn validate
+```
+
+## 🔮 Future Enhancements
+
+We have exciting plans to expand the Random Timer app with additional features and improvements:
+
+### Planned Features
+
+- **🔐 Code Signing**: Implement proper code signing for production releases to both app stores
+- **⏰ Multiple Timers**: Support for running multiple independent random timers simultaneously
+- **🎨 UI/UX Improvements**: 
+  - Enhanced visual feedback when timers trigger
+  - Customizable themes and color schemes
+  - Timer history and statistics
+  - Visual timer progress indicators
+- **🔔 Advanced Notifications**: 
+  - Customizable notification sounds
+  - Rich notifications with actions
+  - Notification categories and priorities
+- **📊 Analytics & Insights**: 
+  - Track timer usage patterns
+  - Statistics dashboard
+  - Export timer data
+- **⚙️ Advanced Configuration**:
+  - Timer presets for common use cases
+  - Import/export timer configurations
+  - Timer groups and categories
+- **🌐 Cloud Sync**: Synchronize timer settings across multiple devices
+- **🎯 Event Actions**: Trigger specific actions when timers expire
+- **♿ Accessibility**: Enhanced support for screen readers and accessibility features
+
+### Contributing Ideas
+
+Have an idea for a new feature? We welcome suggestions! Please:
+
+1. Check the [issues page](https://github.com/IgorGanapolsky/Random-Timer/issues) for existing feature requests
+2. Open a new issue with the `enhancement` label
+3. Describe your idea and its potential use cases
+4. Join the discussion with other community members
 
 ## 🤝 Contributing
 
-We welcome contributions! This project uses a **multi-agent GitButler workflow** with specialized development roles.
+We welcome contributions to the Random Timer project!
 
-### Getting Started
+### How to Contribute
 
-1. **Fork & Clone**
-
-   ```bash
-   git clone https://github.com/yourusername/SuperPassword.git
-   cd SuperPassword
-   ```
-
-2. **Setup Development Environment**
+1. **Fork the Repository**
 
    ```bash
-   npm install
-   ./setup-cursor-agents.sh
+   git clone https://github.com/yourusername/Random-Timer.git
+   cd Random-Timer
    ```
 
-3. **Choose Your Agent Role**
-   - 🔐 **Security**: Authentication, encryption, security policies
-   - 🧪 **Testing**: Test coverage, QA automation, benchmarks
-   - 🤖 **Android**: Android-specific features, Play Store
-   - 🍎 **iOS**: iOS-specific features, App Store
-   - 🐛 **Bugfix**: Bug fixes, performance, refactoring
-
-### Agent-Specific Guidelines
-
-#### 🔐 Security Agent
-
-- **Worktree**: `/worktrees/security`
-- **Branch Prefix**: `security/`
-- **Focus Areas**:
-  - Biometric authentication (TouchID/FaceID)
-  - Encryption algorithms and key management
-  - Security policy implementation
-  - Vulnerability assessments
-- **Required Reviews**: Security team + 1 other agent
-- **Testing**: Security-focused unit tests required
-
-#### 🧪 Testing Agent
-
-- **Worktree**: `/worktrees/testing`
-- **Branch Prefix**: `test/`
-- **Focus Areas**:
-  - Unit test coverage (target: >90%)
-  - Integration test suites
-  - Performance benchmarking
-  - E2E test automation
-- **Required Reviews**: 1 feature agent + maintainer
-- **Testing**: Meta-testing for test infrastructure
-
-#### 🤖 Android Agent
-
-- **Worktree**: `/worktrees/platform/android`
-- **Branch Prefix**: `platform/android`
-- **Focus Areas**:
-  - Android-specific native features
-  - Play Store compliance
-  - Android UI/UX patterns
-  - Performance optimization
-- **Required Reviews**: iOS agent (cross-platform consistency)
-- **Testing**: Android device testing required
-
-#### 🍎 iOS Agent
-
-- **Worktree**: `/worktrees/platform/ios`
-- **Branch Prefix**: `platform/ios`
-- **Focus Areas**:
-  - iOS-specific native features
-  - App Store compliance
-  - iOS UI/UX patterns
-  - Performance optimization
-- **Required Reviews**: Android agent (cross-platform consistency)
-- **Testing**: iOS device testing required
-
-#### 🐛 Bugfix Agent
-
-- **Worktree**: `/worktrees/bugfix`
-- **Branch Prefix**: `bugfix/`
-- **Focus Areas**:
-  - Bug reproduction and fixes
-  - Performance improvements
-  - Code refactoring
-  - Technical debt reduction
-- **Required Reviews**: Original feature author + 1 other
-- **Testing**: Regression tests required
-
-### Development Process
-
-1. **Issue Assignment**
-
-   - Issues are labeled by agent type
-   - Self-assign or request assignment
-   - Check agent-specific project boards
-
-2. **Branch Creation**
+2. **Create a Feature Branch**
 
    ```bash
-   # Switch to agent worktree
-   cd /worktrees/[agent-name]
-
-   # Create feature branch
-   gitbutler branch create [prefix]/[feature-name]
+   git checkout -b feature/your-feature-name
    ```
 
-3. **Development**
+3. **Make Your Changes**
 
-   - Follow agent-specific coding standards
-   - Write tests for your changes
+   - Write clean, readable code
+   - Follow the existing code style
+   - Add tests for new features
    - Update documentation as needed
 
-4. **Pull Request**
-   - Use agent-specific PR template
-   - Include relevant screenshots/demos
-   - Tag appropriate reviewers
-   - Ensure CI passes
+4. **Test Your Changes**
+
+   ```bash
+   yarn test
+   yarn lint
+   yarn typecheck
+   ```
+
+5. **Commit Your Changes**
+
+   Follow conventional commit format:
+
+   ```bash
+   git commit -m "feat: add new timer feature"
+   ```
+
+   Commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+6. **Push and Create a Pull Request**
+
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+   Then open a pull request on GitHub.
 
 ### Code Standards
 
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Follow project configuration
-- **Prettier**: Auto-formatting on save
-- **Commit Messages**: Follow conventional commits
-- **Testing**: Minimum 80% coverage for new code
-
-### Review Process
-
-- **Agent Reviews**: Each agent reviews their domain expertise
-- **Cross-Agent Reviews**: Platform agents review each other
-- **Security Reviews**: Required for authentication/encryption changes
-- **Final Approval**: Maintainer approval required for merge
-
-### Documentation
-
-- Update relevant documentation in `/docs`
-- Add inline code comments for complex logic
-- Update README if adding new features
-- Include architecture decision records (ADRs) for major changes
+- **TypeScript**: Use strict typing
+- **ESLint**: Follow project linting rules
+- **Prettier**: Code is auto-formatted
+- **Testing**: Maintain or improve test coverage
+- **Documentation**: Update README and inline comments
 
 ### Questions?
 
-Reach out in the appropriate channel:
+- **General Questions**: Use GitHub Discussions
+- **Bug Reports**: Open an issue with the `bug` label
+- **Feature Requests**: Open an issue with the `enhancement` label
 
-- **General**: GitHub Discussions
-- **Security**: Private security channel
-- **Bugs**: GitHub Issues with `bug` label
-- **Features**: GitHub Issues with `enhancement` label
+## 📄 License
 
-### 📚 Additional Documentation
+MIT License - see the [LICENSE](LICENSE) file for details.
 
-For more detailed information, see our documentation files:
+## 💬 Support
 
-- **[GitButler Claude Workflow](docs/GITBUTLER_CLAUDE_WORKFLOW.md)** - Detailed workflow setup and agent coordination
-- **[Branch Strategy](docs/BRANCH_STRATEGY.md)** - Complete branching model and merge processes
-- **[Architecture Diagrams](docs/diagrams/)** - Visual representations of our development architecture
+For support and questions:
 
-## License
+- **GitHub Issues**: [Report bugs or request features](https://github.com/IgorGanapolsky/Random-Timer/issues)
+- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/IgorGanapolsky/Random-Timer/discussions)
 
-MIT
+---
 
-## Support
-
-For support, email support@securepass.app
+Made with ❤️ by the Random Timer team
