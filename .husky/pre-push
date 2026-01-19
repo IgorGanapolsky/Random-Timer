@@ -32,11 +32,8 @@ fi
 
 # 5. Security audit
 echo "🔒 Running security audit..."
-yarn audit --audit-level=high
-if [ $? -ne 0 ]; then
-    echo "⚠️  Security vulnerabilities found in dependencies (not blocking push)"
-fi
-echo "✅ Security audit completed"
+yarn audit --audit-level=high || true
+echo "⚠️  Security audit completed (vulnerabilities in dependencies are not blocking)"
 
 # 6. Check for sensitive files
 echo "📁 Checking for sensitive files..."
