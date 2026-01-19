@@ -22,6 +22,15 @@ or haptic alarm without revealing the countdown.
    - yarn ios
    - yarn android
 
+## TypeScript-only setup
+- This repo avoids `.js` config files on purpose.
+- Babel and ESLint are configured via JSON files.
+- Metro uses React Native defaults unless a custom config is required.
+
+## Useful scripts
+- Generate icons and splash:
+  - yarn generate:icons
+
 ## App behavior
 - Set a min and max range, then press Start.
 - The trigger time is hidden so you cannot predict it.
