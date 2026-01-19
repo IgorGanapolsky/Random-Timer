@@ -1,1 +1,0 @@
-../../../../../node_modules/react-native-keychain/ios/RNKeychainManager/RNKeychainManager.h
