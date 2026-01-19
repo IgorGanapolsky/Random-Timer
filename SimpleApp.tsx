@@ -111,9 +111,6 @@ const SimpleApp = () => {
   const [maxMinutes, setMaxMinutes] = useState('5');
   const [nextTriggerAt, setNextTriggerAt] = useState<number | null>(null);
   const [triggeredAt, setTriggeredAt] = useState<number | null>(null);
-  const [selectedDelayMs, setSelectedDelayMs] = useState<number | null>(
-    null,
-  );
   const [now, setNow] = useState(Date.now());
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,10 +121,7 @@ const SimpleApp = () => {
     minValue !== null && maxValue !== null && minValue <= maxValue;
   const modeDisabled = status !== 'idle';
 
-  const countdownMs = nextTriggerAt ? Math.max(0, nextTriggerAt - now) : 0;
   const elapsedMs = triggeredAt ? Math.max(0, now - triggeredAt) : 0;
-  const selectedDelayText =
-    selectedDelayMs !== null ? formatDuration(selectedDelayMs) : null;
 
   const clearTimer = () => {
     if (timeoutRef.current) {
@@ -147,7 +141,6 @@ const SimpleApp = () => {
     const delayMs = Math.max(0, Math.round(randomMinutes * 60 * 1000));
     const startTime = Date.now();
     setActiveMode(mode);
-    setSelectedDelayMs(delayMs);
     setNextTriggerAt(startTime + delayMs);
     setTriggeredAt(null);
     setStatus('scheduled');
@@ -161,7 +154,6 @@ const SimpleApp = () => {
     setActiveMode(null);
     setNextTriggerAt(null);
     setTriggeredAt(null);
-    setSelectedDelayMs(null);
     setNow(Date.now());
   };
 
@@ -173,7 +165,6 @@ const SimpleApp = () => {
     const startTime = Date.now();
     Vibration.cancel();
     setActiveMode('alarm');
-    setSelectedDelayMs(snoozeDelayMs);
     setNextTriggerAt(startTime + snoozeDelayMs);
     setTriggeredAt(null);
     setStatus('scheduled');
@@ -238,14 +229,14 @@ const SimpleApp = () => {
     status === 'idle'
       ? 'Ready'
       : status === 'scheduled'
-        ? 'Next trigger in'
+        ? 'Random trigger armed'
         : status === 'running'
           ? 'Timer running'
           : 'Alarm active';
 
   const statusValue =
     status === 'scheduled'
-      ? formatDuration(countdownMs)
+      ? 'Waiting...'
       : status === 'running'
         ? formatDuration(elapsedMs)
         : status === 'alarming'
@@ -256,9 +247,9 @@ const SimpleApp = () => {
     status === 'idle'
       ? 'Choose a random range and press Start.'
       : status === 'scheduled'
-        ? `Random delay selected: ${selectedDelayText ?? '—'}.`
+        ? 'No countdown by design. It will trigger within your range.'
         : status === 'running'
-          ? `Started after ${selectedDelayText ?? '—'} delay.`
+          ? 'Triggered randomly within your range.'
           : 'Stop or snooze to pause the alarm.';
 
   const rangeSummary =
@@ -485,8 +476,8 @@ const SimpleApp = () => {
         </View>
 
         <Text style={styles.footnote}>
-          Alarm mode uses haptics and visual cues. Keep haptics enabled for the
-          best experience.
+          Countdown is hidden on purpose. Alarm mode uses haptics and visual
+          cues, so keep haptics enabled for the best experience.
         </Text>
       </ScrollView>
     </SafeAreaView>
