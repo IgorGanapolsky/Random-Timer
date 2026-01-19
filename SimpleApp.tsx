@@ -273,8 +273,8 @@ const SimpleApp = () => {
         <View style={styles.header}>
           <Text style={styles.title}>Random Timer</Text>
           <Text style={styles.subtitle}>
-            A single-screen randomizer that launches a timer or haptic alarm
-            when you least expect it.
+            A single-screen randomizer for sports and combative training that
+            launches a timer or haptic alarm when you least expect it.
           </Text>
         </View>
 
@@ -476,8 +476,9 @@ const SimpleApp = () => {
         </View>
 
         <Text style={styles.footnote}>
-          Countdown is hidden on purpose. Alarm mode uses haptics and visual
-          cues, so keep haptics enabled for the best experience.
+          Countdown is hidden on purpose to mirror chaotic scenarios. Alarm
+          mode uses haptics and visual cues, so keep haptics enabled for the
+          best experience.
         </Text>
       </ScrollView>
     </SafeAreaView>
