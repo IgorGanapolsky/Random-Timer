@@ -131,11 +131,11 @@ function generateSplashScreen() {
   ctx.fillStyle = "white";
   ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
   ctx.textAlign = "center";
-  ctx.fillText("SecurePass", 621, 1600);
+  ctx.fillText("Random Timer", 621, 1600);
 
   ctx.font = '60px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
   ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.fillText("Password Generator", 621, 1700);
+  ctx.fillText("Chaotic intervals", 621, 1700);
 
   // Save splash screen
   const buffer = canvas.toBuffer("image/png");

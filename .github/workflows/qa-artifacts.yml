@@ -1,0 +1,95 @@
+name: QA Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_android:
+        description: "Build Android debug APK"
+        type: boolean
+        required: false
+        default: true
+      build_ios_simulator:
+        description: "Build iOS simulator app"
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  android-debug:
+    name: Android Debug APK
+    if: ${{ inputs.build_android }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: random-timer-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  ios-simulator:
+    name: iOS Simulator App
+    if: ${{ inputs.build_ios_simulator }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          cd ios && pod install --repo-update && cd ..
+
+      - name: Build iOS simulator app
+        run: |
+          xcodebuild \
+            -workspace ios/RandomTimer.xcworkspace \
+            -scheme RandomTimer \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath ios/build \
+            clean build
+
+      - name: Archive simulator app
+        run: |
+          APP_PATH="ios/build/Build/Products/Debug-iphonesimulator/RandomTimer.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "RandomTimer.app not found at $APP_PATH"
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" RandomTimer-simulator.zip
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: random-timer-ios-simulator
+          path: RandomTimer-simulator.zip

@@ -1,4 +1,4 @@
-package com.superpassword
+package com.randomtimer
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -21,7 +21,10 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
-const REPO = process.env.REPO || "IgorGanapolsky/SuperPassword";
+const REPO =
+  process.env.REPO ||
+  process.env.GITHUB_REPOSITORY ||
+  "IgorGanapolsky/RandomTimer";
 const [OWNER, REPO_NAME] = REPO.split("/");
 
 // Labels for tracking guardian actions

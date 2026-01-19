@@ -1,6 +1,6 @@
 # GitButler + Claude Agents Workflow Guide
 
-This guide explains how to use GitButler with Claude Code agents for the SuperPassword project's multi-agent development workflow.
+This guide explains how to use GitButler with Claude Code agents for the RandomTimer project's multi-agent development workflow.
 
 ## 🏗️ Architecture Overview
 

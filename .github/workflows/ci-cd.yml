@@ -1,4 +1,4 @@
-name: SuperPassword CI/CD
+name: Random Timer CI/CD
 
 on:
   push:
@@ -119,11 +119,11 @@ jobs:
         run: |
           cd ios
           xcodebuild \
-            -workspace SuperPassword.xcworkspace \
-            -scheme SuperPassword \
+            -workspace RandomTimer.xcworkspace \
+            -scheme RandomTimer \
             -configuration Release \
             -sdk iphoneos \
-            -archivePath $PWD/build/SuperPassword.xcarchive \
+            -archivePath $PWD/build/RandomTimer.xcarchive \
             -allowProvisioningUpdates \
             CODE_SIGNING_ALLOWED=NO \
             clean archive
@@ -178,5 +178,5 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: random-timer-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk

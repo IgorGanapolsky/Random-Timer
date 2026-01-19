@@ -3,22 +3,22 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.securepass.autofix</string>
+    <string>com.randomtimer.autofix</string>
     <key>ProgramArguments</key>
     <array>
       <string>/bin/zsh</string>
-      <string>/Users/igorganapolsky/workspace/git/apps/SuperPassword/scripts/autofix-local.sh</string>
+      <string>/Users/igorganapolsky/workspace/git/apps/RandomTimer/scripts/autofix-local.sh</string>
     </array>
     <key>StartInterval</key>
     <integer>3600</integer>
     <key>StandardOutPath</key>
-    <string>/Users/igorganapolsky/workspace/git/apps/SuperPassword/scripts/autofix.log</string>
+    <string>/Users/igorganapolsky/workspace/git/apps/RandomTimer/scripts/autofix.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/igorganapolsky/workspace/git/apps/SuperPassword/scripts/autofix.err.log</string>
+    <string>/Users/igorganapolsky/workspace/git/apps/RandomTimer/scripts/autofix.err.log</string>
     <key>RunAtLoad</key>
     <true/>
     <key>WorkingDirectory</key>
-    <string>/Users/igorganapolsky/workspace/git/apps/SuperPassword</string>
+    <string>/Users/igorganapolsky/workspace/git/apps/RandomTimer</string>
     <key>EnvironmentVariables</key>
     <dict>
       <key>PATH</key>
@@ -26,5 +26,3 @@
     </dict>
   </dict>
 </plist>
-
-

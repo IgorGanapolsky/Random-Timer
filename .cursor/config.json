@@ -1,7 +1,7 @@
 {
   "version": "2025.3",
-  "project": "SuperPassword",
-  "architecture": "React Native + Expo + AI Backend",
+  "project": "RandomTimer",
+  "architecture": "React Native CLI",
   "workflowType": "multi-agent-worktrees",
   "defaultModel": "claude-3.5-sonnet",
   "agents": {

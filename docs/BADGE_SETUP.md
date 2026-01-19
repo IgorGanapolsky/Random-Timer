@@ -1,6 +1,6 @@
 # 🏆 Badge Setup Guide
 
-This guide helps you configure all the CI/CD badges for the SuperPassword project.
+This guide helps you configure all the CI/CD badges for the RandomTimer project.
 
 ## 🚀 Quick Fix
 
@@ -25,12 +25,12 @@ These badges need external service configuration:
 
 #### 1. GitHub Actions Badge
 - **Status**: Should work if workflows exist
-- **URL**: `https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/ci-cd.yml/badge.svg`
+- **URL**: `https://github.com/IgorGanapolsky/RandomTimer/actions/workflows/ci-cd.yml/badge.svg`
 - **Setup**: Ensure your `ci-cd.yml` workflow runs successfully
 
 #### 2. Codecov Badge
 - **Status**: Requires Codecov account setup
-- **URL**: `https://codecov.io/gh/IgorGanapolsky/SuperPassword/branch/main/graph/badge.svg`
+- **URL**: `https://codecov.io/gh/IgorGanapolsky/RandomTimer/branch/main/graph/badge.svg`
 - **Setup**:
   1. Sign up at [codecov.io](https://codecov.io)
   2. Connect your GitHub repository
@@ -43,12 +43,12 @@ These badges need external service configuration:
 - **Setup**:
   1. Sign up at [sonarcloud.io](https://sonarcloud.io)
   2. Import your GitHub repository
-  3. Ensure project key matches: `IgorGanapolsky_SuperPassword`
+  3. Ensure project key matches: `IgorGanapolsky_RandomTimer`
   4. Run analysis via GitHub Actions or manually
 
 #### 4. Snyk Badge
 - **Status**: Requires Snyk account setup
-- **URL**: `https://snyk.io/test/github/IgorGanapolsky/SuperPassword/badge.svg?targetFile=package.json`
+- **URL**: `https://snyk.io/test/github/IgorGanapolsky/RandomTimer/badge.svg?targetFile=package.json`
 - **Setup**:
   1. Sign up at [snyk.io](https://snyk.io)
   2. Connect your GitHub repository
@@ -71,12 +71,12 @@ If external services fail, you can use these alternatives:
 ### GitHub-based Badges (Always Reliable)
 
 ```markdown
-[![Build](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=build)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![Tests](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/SuperPassword/ci-cd.yml?branch=main&label=tests)](https://github.com/IgorGanapolsky/SuperPassword/actions)
-[![CodeQL](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/codeql.yml)
-[![Last Commit](https://img.shields.io/github/last-commit/IgorGanapolsky/SuperPassword)](https://github.com/IgorGanapolsky/SuperPassword/commits)
-[![Issues](https://img.shields.io/github/issues/IgorGanapolsky/SuperPassword)](https://github.com/IgorGanapolsky/SuperPassword/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/IgorGanapolsky/SuperPassword)](https://github.com/IgorGanapolsky/SuperPassword/pulls)
+[![Build](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/RandomTimer/ci-cd.yml?branch=main&label=build)](https://github.com/IgorGanapolsky/RandomTimer/actions)
+[![Tests](https://img.shields.io/github/actions/workflow/status/IgorGanapolsky/RandomTimer/ci-cd.yml?branch=main&label=tests)](https://github.com/IgorGanapolsky/RandomTimer/actions)
+[![CodeQL](https://github.com/IgorGanapolsky/RandomTimer/actions/workflows/codeql.yml/badge.svg)](https://github.com/IgorGanapolsky/RandomTimer/actions/workflows/codeql.yml)
+[![Last Commit](https://img.shields.io/github/last-commit/IgorGanapolsky/RandomTimer)](https://github.com/IgorGanapolsky/RandomTimer/commits)
+[![Issues](https://img.shields.io/github/issues/IgorGanapolsky/RandomTimer)](https://github.com/IgorGanapolsky/RandomTimer/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/IgorGanapolsky/RandomTimer)](https://github.com/IgorGanapolsky/RandomTimer/pulls)
 ```
 
 ### Static Badges for Project Info
@@ -106,7 +106,7 @@ If external services fail, you can use these alternatives:
 1. Visit [sonarcloud.io](https://sonarcloud.io) and sign in with GitHub
 2. Import your repository
 3. Configure the project:
-   - Project key: `IgorGanapolsky_SuperPassword`
+   - Project key: `IgorGanapolsky_RandomTimer`
    - Organization: `igorganapol` (or create new)
 4. Add analysis to your CI workflow (already configured in `ci-cd.yml`)
 

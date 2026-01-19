@@ -82,13 +82,15 @@ jobs:
 
           # Add badges section to README
           {
-            echo "# SecurePass - Password Generator"
+            REPO="${GITHUB_REPOSITORY}"
+            SONAR_PROJECT="IgorGanapolsky_RandomTimer"
+            echo "# Random Timer"
             echo ""
-            echo "[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/orchestration.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/orchestration.yml)"
-            echo "[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)"
-            echo "[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)"
-            echo "[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=coverage)](https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword)"
-            echo "[![PRs](https://img.shields.io/github/issues-pr/IgorGanapolsky/SuperPassword)](https://github.com/IgorGanapolsky/SuperPassword/pulls)"
+            echo "[![Build Status](https://github.com/${REPO}/actions/workflows/orchestration.yml/badge.svg)](https://github.com/${REPO}/actions/workflows/orchestration.yml)"
+            echo "[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=${SONAR_PROJECT}&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=${SONAR_PROJECT})"
+            echo "[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=${SONAR_PROJECT}&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=${SONAR_PROJECT})"
+            echo "[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=${SONAR_PROJECT}&metric=coverage)](https://sonarcloud.io/summary/new_code?id=${SONAR_PROJECT})"
+            echo "[![PRs](https://img.shields.io/github/issues-pr/${REPO})](https://github.com/${REPO}/pulls)"
             echo "[![Security](https://img.shields.io/badge/security-GitGuardian-blue)](https://www.gitguardian.com/)"
             echo "[![Monitoring](https://img.shields.io/badge/monitoring-Sentry-purple)](https://sentry.io/)"
             echo ""

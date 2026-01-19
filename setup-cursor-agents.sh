@@ -1,14 +1,14 @@
 #!/bin/bash
 
-echo "🚀 Setting up Cursor configurations for SuperPassword..."
+echo "🚀 Setting up Cursor configurations for RandomTimer..."
 
 # Main repository cursor config
 mkdir -p .cursor
 cat > .cursor/config.json << 'CONFIG'
 {
   "version": "2025.3",
-  "project": "SuperPassword",
-  "architecture": "React Native + Expo + AI Backend",
+  "project": "RandomTimer",
+  "architecture": "React Native CLI",
   "workflowType": "multi-agent-worktrees",
   "defaultModel": "claude-3.5-sonnet",
   "agents": {
@@ -26,21 +26,20 @@ mkdir -p ../worktrees/feature-agent/.cursor
 cat > ../worktrees/feature-agent/.cursor/agent.md << 'PROMPT'
 # Feature Development Agent
 
-You are specialized in implementing new features for SuperPassword.
+You are specialized in implementing new features for RandomTimer.
 
-## Current Task: AI Intelligence Features
-- Implement Eko AI backend integration
-- Add vault security audit endpoint
-- Create phishing detection service
-- Build password rotation planner
+## Current Task: Training Enhancements
+- Add preset training ranges
+- Add optional sound cues
+- Add background notification triggers
+- Add interval history summary
 
 ## Architecture Context
-- Eko Framework 3.0.2 for agentic workflows
-- Claude 3.5 Sonnet for AI analysis
-- Node.js + Fastify backend
-- Firebase for auth and data storage
+- React Native CLI
+- TypeScript strict mode
+- Minimal native dependencies
 
-## Branch: feature/ai-intelligence
+## Branch: feature/training-enhancements
 PROMPT
 
 # Bugfix Agent Setup
@@ -69,12 +68,11 @@ cat > ../worktrees/security-agent/.cursor/agent.md << 'PROMPT'
 You are specialized in implementing security features.
 
 ## Current Tasks
-- AES-256 encryption implementation
-- Biometric authentication
-- Zero-knowledge architecture
-- Secure key management
+- Audit privacy and data minimization
+- Validate background behavior permissions
+- Confirm haptic usage compliance
 
-## Branch: security/encryption
+## Branch: security/privacy
 PROMPT
 
 # Testing Agent Setup
@@ -86,12 +84,12 @@ cat > ../worktrees/testing-agent/.cursor/agent.md << 'PROMPT'
 You are specialized in writing comprehensive tests.
 
 ## Coverage Goals
-- Unit tests: 90%+ coverage
-- Integration tests for AI features
+- Unit tests: 80%+ coverage
+- Integration tests for timer scheduling
 - E2E tests with Detox
-- Security vulnerability tests
+- Performance checks for long runs
 
-## Branch: test/coverage
+## Branch: test/qa-coverage
 PROMPT
 
 echo "✅ Cursor configurations created successfully!"

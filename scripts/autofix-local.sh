@@ -4,7 +4,7 @@ set -euo pipefail
 # Ensure PATH works under launchd (no shell rc files are sourced)
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-REPO_DIR="/Users/igorganapolsky/workspace/git/apps/SuperPassword"
+REPO_DIR="/Users/igorganapolsky/workspace/git/apps/RandomTimer"
 
 cd "$REPO_DIR"
 

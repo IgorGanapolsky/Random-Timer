@@ -21,10 +21,11 @@ jobs:
         id: sonar
         run: |
           METRICS="alert_status coverage security_rating sqale_rating reliability_rating sqale_index"
+          SONAR_PROJECT="IgorGanapolsky_RandomTimer"
           JSON="{"
 
           for METRIC in $METRICS; do
-            RESPONSE=$(curl -s "https://sonarcloud.io/api/measures/component?component=IgorGanapolsky_SuperPassword&metricKeys=$METRIC")
+            RESPONSE=$(curl -s "https://sonarcloud.io/api/measures/component?component=$SONAR_PROJECT&metricKeys=$METRIC")
             VALUE=$(echo $RESPONSE | jq -r '.component.measures[0].value')
             JSON="$JSON\"$METRIC\":\"$VALUE\","
           done
@@ -41,7 +42,7 @@ jobs:
       - name: Get Dependencies Status
         id: deps
         run: |
-          RESPONSE=$(curl -s "https://libraries.io/api/github/IgorGanapolsky/SuperPassword/dependencies")
+          RESPONSE=$(curl -s "https://libraries.io/api/github/${GITHUB_REPOSITORY}/dependencies")
           OUTDATED=$(echo $RESPONSE | jq -r '[.[] | select(.outdated == true)] | length')
           TOTAL=$(echo $RESPONSE | jq -r '. | length')
           echo "outdated=$OUTDATED" >> $GITHUB_OUTPUT
@@ -59,23 +60,25 @@ jobs:
           }
 
           # Create badges section
-          BADGES="# SecurePass - Password Generator\n\n"
+          BADGES="# Random Timer\n\n"
+          REPO="$GITHUB_REPOSITORY"
+          SONAR_PROJECT="IgorGanapolsky_RandomTimer"
 
           # Build Status
-          BADGES+="[![Build Status](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/eas-build.yml/badge.svg)](https://github.com/IgorGanapolsky/SuperPassword/actions/workflows/eas-build.yml)\n"
+          BADGES+="[![Build Status](https://github.com/${REPO}/actions/workflows/eas-build.yml/badge.svg)](https://github.com/${REPO}/actions/workflows/eas-build.yml)\n"
 
           # SonarCloud Badges
           SONAR_METRICS=${{ steps.sonar.outputs.metrics }}
           for METRIC in $(echo $SONAR_METRICS | jq -r 'keys[]'); do
             VALUE=$(echo $SONAR_METRICS | jq -r ".$METRIC")
-            BADGE_URL="https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=$METRIC"
-            LINK_URL="https://sonarcloud.io/summary/new_code?id=IgorGanapolsky_SuperPassword"
+            BADGE_URL="https://sonarcloud.io/api/project_badges/measure?project=$SONAR_PROJECT&metric=$METRIC"
+            LINK_URL="https://sonarcloud.io/summary/new_code?id=$SONAR_PROJECT"
             BADGES+="[![$(echo $METRIC | tr '_' ' ' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')](${BADGE_URL})](${LINK_URL})\n"
           done
 
           # Dependencies Badge
           DEPS_STATUS="${{ steps.deps.outputs.outdated }}/${{ steps.deps.outputs.total }} outdated"
-          BADGES+=$(create_badge "Dependencies" "$DEPS_STATUS" "blue" "https://libraries.io/github/IgorGanapolsky/SuperPassword")
+          BADGES+=$(create_badge "Dependencies" "$DEPS_STATUS" "blue" "https://libraries.io/github/${REPO}")
           BADGES+="\n"
 
           # Monitoring Badges

@@ -22,7 +22,7 @@ body:
     id: version
     attributes:
       label: App Version
-      description: What version of SecurePass are you running?
+      description: What version of Random Timer are you running?
       placeholder: "1.0.0"
     validations:
       required: true

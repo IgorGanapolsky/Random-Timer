@@ -1,8 +1,8 @@
-# GitButler Configuration for SuperPassword Multi-Agent Workflow
+# GitButler Configuration for RandomTimer Multi-Agent Workflow
 
 [project]
-name = "SuperPassword"
-path = "/Users/igorganapolsky/workspace/git/apps/SuperPassword"
+name = "RandomTimer"
+path = "/workspace"
 
 [experimental]
 # Enable GitButler Actions for AI integration

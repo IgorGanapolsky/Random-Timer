@@ -3,11 +3,11 @@
 # Badge Health Check Script
 # This script tests all badges in the README to identify which ones are working
 
-echo "🔍 Checking badge health for SuperPassword..."
+echo "🔍 Checking badge health for RandomTimer..."
 echo "================================================"
 
 # GitHub repository info
-REPO="IgorGanapolsky/SuperPassword"
+REPO="IgorGanapolsky/RandomTimer"
 GITHUB_URL="https://github.com/$REPO"
 
 # Function to test badge URL
@@ -32,9 +32,9 @@ test_badge() {
 echo ""
 test_badge "GitHub Actions" "https://github.com/$REPO/actions/workflows/ci-cd.yml/badge.svg"
 test_badge "Codecov" "https://codecov.io/gh/$REPO/branch/main/graph/badge.svg"
-test_badge "SonarCloud Quality Gate" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=alert_status"
-test_badge "SonarCloud Security" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=security_rating"
-test_badge "SonarCloud Maintainability" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_SuperPassword&metric=sqale_rating"
+test_badge "SonarCloud Quality Gate" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_RandomTimer&metric=alert_status"
+test_badge "SonarCloud Security" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_RandomTimer&metric=security_rating"
+test_badge "SonarCloud Maintainability" "https://sonarcloud.io/api/project_badges/measure?project=IgorGanapolsky_RandomTimer&metric=sqale_rating"
 test_badge "Snyk Vulnerabilities" "https://snyk.io/test/github/$REPO/badge.svg?targetFile=package.json"
 
 echo ""
@@ -48,5 +48,5 @@ echo ""
 echo "🔗 Useful links:"
 echo "• GitHub Actions: $GITHUB_URL/actions"
 echo "• Repository Settings: $GITHUB_URL/settings"
-echo "• SonarCloud Project: https://sonarcloud.io/project/overview?id=IgorGanapolsky_SuperPassword"
+echo "• SonarCloud Project: https://sonarcloud.io/project/overview?id=IgorGanapolsky_RandomTimer"
 echo "• Codecov Dashboard: https://codecov.io/gh/$REPO"

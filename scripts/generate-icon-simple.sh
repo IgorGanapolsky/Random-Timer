@@ -20,7 +20,7 @@ then
         -fill white \
         -font Helvetica-Bold \
         -pointsize 200 \
-        -annotate +0+0 'SP' \
+        -annotate +0+0 'RT' \
         assets/icon.png
     
     # Copy for adaptive icon
@@ -33,9 +33,9 @@ then
         -fill white \
         -font Helvetica-Bold \
         -pointsize 150 \
-        -annotate +0-300 'SecurePass' \
+        -annotate +0-300 'Random Timer' \
         -pointsize 60 \
-        -annotate +0-100 'Password Generator' \
+        -annotate +0-100 'Chaotic intervals' \
         assets/splash.png
     
     echo "✅ Icons generated with ImageMagick"

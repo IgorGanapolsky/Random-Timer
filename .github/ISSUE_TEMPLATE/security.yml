@@ -7,9 +7,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping us keep SecurePass secure! Please fill out this form with your security concern.
+        Thanks for helping us keep Random Timer secure! Please fill out this form with your security concern.
 
-        ⚠️ If this is a critical security vulnerability, please report it directly to security@securepass.app instead.
+        ⚠️ If this is a critical security vulnerability, please report it directly to security@randomtimer.app instead.
 
   - type: dropdown
     id: severity
