@@ -27,23 +27,33 @@ yarn test:coverage || exit 1
 # 4. Coverage checks
 if [ -f "coverage/lcov.info" ]; then
     echo "📊 Checking test coverage..."
-    # Extract coverage percentages
-    LINES=$(lcov --summary coverage/lcov.info | grep "lines" | awk '{print $2}' | cut -d'.' -f1)
-    FUNCTIONS=$(lcov --summary coverage/lcov.info | grep "functions" | awk '{print $2}' | cut -d'.' -f1)
-    BRANCHES=$(lcov --summary coverage/lcov.info | grep "branches" | awk '{print $2}' | cut -d'.' -f1)
+    # Check if lcov is installed
+    if command -v lcov >/dev/null 2>&1; then
+        # Extract coverage percentages
+        LINES=$(lcov --summary coverage/lcov.info 2>/dev/null | grep "lines" | awk '{print $2}' | cut -d'.' -f1)
+        FUNCTIONS=$(lcov --summary coverage/lcov.info 2>/dev/null | grep "functions" | awk '{print $2}' | cut -d'.' -f1)
+        BRANCHES=$(lcov --summary coverage/lcov.info 2>/dev/null | grep "branches" | awk '{print $2}' | cut -d'.' -f1)
 
-    echo "Coverage Report:"
-    echo "  Lines: $LINES%"
-    echo "  Functions: $FUNCTIONS%"
-    echo "  Branches: $BRANCHES%"
+        # Only check thresholds if we got valid numbers
+        if [ -n "$LINES" ] && [ -n "$FUNCTIONS" ] && [ -n "$BRANCHES" ]; then
+            echo "Coverage Report:"
+            echo "  Lines: $LINES%"
+            echo "  Functions: $FUNCTIONS%"
+            echo "  Branches: $BRANCHES%"
 
-    # Check against thresholds
-    if [ "$LINES" -lt 15 ] || [ "$FUNCTIONS" -lt 5 ] || [ "$BRANCHES" -lt 15 ]; then
-        echo "❌ Test coverage is below minimum threshold!"
-        echo "🚫 Push blocked due to insufficient coverage!"
-        exit 1
+            # Check against thresholds
+            if [ "$LINES" -lt 15 ] || [ "$FUNCTIONS" -lt 5 ] || [ "$BRANCHES" -lt 15 ]; then
+                echo "❌ Test coverage is below minimum threshold!"
+                echo "🚫 Push blocked due to insufficient coverage!"
+                exit 1
+            fi
+            echo "✅ Coverage requirements met"
+        else
+            echo "⚠️  Could not parse coverage data"
+        fi
+    else
+        echo "⚠️  lcov not installed, skipping coverage threshold check"
     fi
-    echo "✅ Coverage requirements met"
 fi
 
 # 5. Security audit
