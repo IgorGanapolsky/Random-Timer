@@ -1,16 +1,21 @@
 name: Android APK Build
 
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
+    branches: [develop]
 
 jobs:
   build-android:
     name: Build Android APK
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
