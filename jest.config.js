@@ -12,11 +12,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFilesAfterEnv: [],
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.test.{ts,tsx}',
-    '!src/**/*.spec.{ts,tsx}',
-    '!src/types/**/*',
-    '!src/constants/**/*',
+    'SimpleApp.tsx',
+    'index.js',
   ],
   coverageThreshold: {
     global: {

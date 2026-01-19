@@ -1,4 +1,4 @@
 import {AppRegistry} from 'react-native';
 import App from './SimpleApp';
 
-AppRegistry.registerComponent('SuperPassword', () => App);
+AppRegistry.registerComponent('RandomTimer', () => App);
