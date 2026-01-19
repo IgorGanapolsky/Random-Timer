@@ -26,6 +26,16 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# IDE
+.idea/
+
+# local artifacts
+*.bak
+*.backup
+*.log
+logs/
+.agent-task-*.md
+
 # macOS
 .DS_Store
 *.pem
