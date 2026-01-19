@@ -6,9 +6,8 @@
 
 ## Session Start Protocol
 1. Read this file.
-2. Query the configured RAG system for relevant lessons if available.
-3. Review open PRs and branches.
-4. Check CI status.
+2. Review open PRs and branches.
+3. Check CI status.
 
 ## PR & Branch Management
 1. List all open PRs with status.
@@ -22,10 +21,6 @@
 - Evidence-based communication with command/output proof.
 - No manual handoffs to the user when automation is possible.
 - Honesty protocol: report failures immediately.
-
-## Continuous Learning
-- Log lessons and mistakes to the configured RAG and ML systems when available.
-- Self-assess whether these systems help or hinder progress.
 
 ## Completion Requirements
 - Confirm work only after verification.
