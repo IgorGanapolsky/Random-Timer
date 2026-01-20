@@ -1,0 +1,43 @@
+{
+  "name": "RandomTimer",
+  "slug": "random-timer",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "scheme": "randomtimer",
+  "userInterfaceStyle": "automatic",
+  "newArchEnabled": true,
+  "jsEngine": "hermes",
+  "splash": {
+    "image": "./assets/splash-icon.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#0F0A1A"
+  },
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.iganapolsky.randomtimer"
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#0F0A1A"
+    },
+    "package": "com.iganapolsky.randomtimer"
+  },
+  "web": {
+    "favicon": "./assets/favicon.png",
+    "bundler": "metro"
+  },
+  "plugins": [
+    "expo-font",
+    [
+      "expo-splash-screen",
+      {
+        "backgroundColor": "#0F0A1A",
+        "image": "./assets/splash-icon.png",
+        "imageWidth": 200
+      }
+    ],
+    "expo-build-properties"
+  ]
+}

@@ -1,0 +1,194 @@
+/**
+ * ActiveTimerScreen
+ * Display running timer with controls
+ */
+
+import { StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import Animated, {
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  useSharedValue,
+} from 'react-native-reanimated';
+
+import { Screen, Text, GlassCard } from '@shared/components';
+import { colors, spacing } from '@shared/theme';
+import { CircularTimer, TimerControls } from '../components';
+import { useRandomTimer, TimerConfig } from '../hooks/useRandomTimer';
+import { soundService } from '../services/soundService';
+
+type RootStackParamList = {
+  Setup: undefined;
+  Timer: { config: TimerConfig };
+};
+
+interface ActiveTimerScreenProps {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Timer'>;
+  route: RouteProp<RootStackParamList, 'Timer'>;
+}
+
+export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps) {
+  const { config } = route.params;
+  const { state, start, pause, resume, reset, stop } = useRandomTimer(config);
+
+  // Pulsing animation for alarm state
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(1);
+
+  // Initialize sound and start timer
+  useEffect(() => {
+    soundService.initialize();
+    start();
+
+    return () => {
+      soundService.stop();
+    };
+  }, []);
+
+  // Handle alarm state
+  useEffect(() => {
+    if (state.isComplete) {
+      // Play alarm sound
+      soundService.play(config.alarmDuration * 1000);
+
+      // Start pulse animation
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 500 }),
+          withTiming(1, { duration: 500 })
+        ),
+        -1,
+        true
+      );
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.7, { duration: 500 }),
+          withTiming(1, { duration: 500 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      // Stop animation
+      pulseScale.value = withTiming(1);
+      pulseOpacity.value = withTiming(1);
+    }
+  }, [state.isComplete, config.alarmDuration, pulseScale, pulseOpacity]);
+
+  const handlePlayPause = () => {
+    if (state.isComplete) {
+      // Dismiss alarm and reset
+      soundService.stop();
+      reset();
+    } else if (state.isRunning) {
+      pause();
+    } else {
+      resume();
+    }
+  };
+
+  const handleReset = () => {
+    soundService.stop();
+    reset();
+  };
+
+  const handleStop = () => {
+    soundService.stop();
+    stop();
+    navigation.goBack();
+  };
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
+
+  return (
+    <Screen preset="center">
+      <Animated.View style={[styles.timerContainer, state.isComplete && pulseStyle]}>
+        {state.isComplete ? (
+          <GlassCard glow glowColor={colors.timerDanger} padding={spacing['3xl']}>
+            <View style={styles.alarmContent}>
+              <Text preset="h1" center color={colors.timerDanger}>
+                ⏰
+              </Text>
+              <Text preset="h2" center style={styles.alarmTitle}>
+                Time's Up!
+              </Text>
+              <Text preset="body" center color={colors.textDim}>
+                Alarm stops in {state.alarmTimeRemaining}s
+              </Text>
+            </View>
+          </GlassCard>
+        ) : (
+          <CircularTimer
+            timeRemaining={state.timeRemaining}
+            totalTime={state.totalTime}
+            hideTime={config.mysteryMode}
+            isPaused={!state.isRunning}
+          />
+        )}
+      </Animated.View>
+
+      {!config.mysteryMode && state.totalTime > 0 && !state.isComplete && (
+        <Text preset="caption" center color={colors.textMuted} style={styles.totalTime}>
+          Total: {formatTime(state.totalTime)}
+        </Text>
+      )}
+
+      <View style={styles.controls}>
+        <TimerControls
+          isRunning={state.isRunning}
+          onPlayPause={handlePlayPause}
+          onReset={handleReset}
+          onStop={handleStop}
+        />
+      </View>
+
+      {config.mysteryMode && !state.isComplete && (
+        <GlassCard style={styles.mysteryBadge} padding={spacing.md}>
+          <Text preset="caption" center color={colors.palette.secondary400}>
+            🎭 MYSTERY MODE
+          </Text>
+        </GlassCard>
+      )}
+    </Screen>
+  );
+}
+
+function formatTime(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins > 0) {
+    return `${mins}m ${secs}s`;
+  }
+  return `${secs}s`;
+}
+
+const styles = StyleSheet.create({
+  timerContainer: {
+    marginBottom: spacing['2xl'],
+  },
+  alarmContent: {
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  alarmTitle: {
+    marginTop: spacing.sm,
+  },
+  totalTime: {
+    marginBottom: spacing.lg,
+  },
+  controls: {
+    marginTop: spacing['3xl'],
+  },
+  mysteryBadge: {
+    position: 'absolute',
+    top: spacing['5xl'],
+    alignSelf: 'center',
+  },
+});
