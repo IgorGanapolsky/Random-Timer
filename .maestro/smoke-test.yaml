@@ -1,0 +1,13 @@
+appId: com.iganapolsky.randomtimer
+---
+# Smoke test: Verify app launches and core UI is visible
+- launchApp
+
+# Verify main screen elements are visible
+- assertVisible: "Random Timer"
+- assertVisible: ".*Timer Range.*"
+- assertVisible: "5s"  # Min range label should be 5s
+- assertVisible: "10m" # Max range label should be 10m
+- assertVisible: ".*Alarm Duration.*"
+- assertVisible: ".*Mystery Mode.*"
+- assertVisible: "Start Timer"
