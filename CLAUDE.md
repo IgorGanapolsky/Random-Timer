@@ -91,6 +91,21 @@ import logo from '@assets/logo.png';
 
 ---
 
+## Core Directives
+
+### Act, Don't Instruct
+**Never tell the user to do something you can do yourself.** If a task is technically possible (installing packages, running commands, making API calls, purging git history, rotating keys, etc.), execute it directly. Only inform the user of tasks that genuinely require their manual intervention (e.g., logging into a third-party web console that requires their credentials).
+
+### Test-Driven Development
+Use Maestro smoke tests to verify changes before considering them complete. Run `maestro test .maestro/` after UI changes. Never guess - verify with tests.
+
+### Security
+- Never commit secrets (`google-services.json`, `.env`, API keys)
+- If secrets are detected, immediately purge from git history using BFG or git-filter-repo
+- Rotate compromised keys via the appropriate cloud console
+
+---
+
 ## Coding Standards
 
 ### TypeScript
