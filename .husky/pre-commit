@@ -1,0 +1,73 @@
+#!/usr/bin/env sh
+
+# Pre-Commit Hook - Quality Checks for Random Timer
+# - TypeScript check
+# - Lint staged files
+# - Run Trunk checks
+
+echo "⚡ [pre-commit] Running quality checks..."
+
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info() {
+  echo "${BLUE}ℹ️  $1${NC}"
+}
+
+log_success() {
+  echo "${GREEN}✅ $1${NC}"
+}
+
+log_error() {
+  echo "${RED}❌ $1${NC}"
+}
+
+# Check if we have staged files
+STAGED_FILES=$(git diff --cached --name-only)
+if [ -z "${STAGED_FILES}" ]; then
+  log_info "No staged files, skipping checks"
+  exit 0
+fi
+
+# 1. TypeScript Check
+log_info "TypeScript: Checking types..."
+if ! npm run compile 2>&1; then
+  log_error "TypeScript check failed!"
+  exit 1
+fi
+log_success "TypeScript passed"
+
+# 2. Trunk Check (linting, formatting, security)
+if command -v trunk &> /dev/null; then
+  log_info "Trunk: Running checks..."
+  STAGED_TS_FILES=$(echo "${STAGED_FILES}" | grep -E '\.(ts|tsx|js|jsx)$' || true)
+  if [ -n "${STAGED_TS_FILES}" ]; then
+    if ! trunk check --ci ${STAGED_TS_FILES} 2>&1; then
+      log_error "Trunk check failed!"
+      echo ""
+      echo "💡 Run: trunk check --fix"
+      exit 1
+    fi
+    log_success "Trunk passed"
+  fi
+else
+  log_info "Trunk not installed, skipping (install: brew install trunk-io)"
+fi
+
+# 3. Secret Detection - Never commit these files
+FORBIDDEN_FILES="google-services.json GoogleService-Info.plist .env .env.local"
+for file in $FORBIDDEN_FILES; do
+  if echo "${STAGED_FILES}" | grep -q "$file"; then
+    log_error "BLOCKED: Cannot commit $file (contains secrets)"
+    exit 1
+  fi
+done
+log_success "No secrets detected"
+
+echo ""
+log_success "All pre-commit checks passed!"

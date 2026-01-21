@@ -1,0 +1,114 @@
+#!/usr/bin/env sh
+
+# Commit Message Validation Hook
+# Validates Azure Boards work item references in commit messages
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info() {
+  echo "${BLUE}ℹ️  $1${NC}"
+}
+
+log_success() {
+  echo "${GREEN}✅ $1${NC}"
+}
+
+log_warning() {
+  echo "${YELLOW}⚠️  $1${NC}"
+}
+
+log_error() {
+  echo "${RED}❌ $1${NC}"
+}
+
+# Skip validation for certain branches
+if echo "$BRANCH" | grep -qE '^(develop|main|master|release/)'; then
+  log_info "On protected branch - skipping AB# validation"
+  exit 0
+fi
+
+# Skip for docs-only branches
+if echo "$BRANCH" | grep -q '^docs/'; then
+  log_info "Documentation branch - skipping AB# validation"
+  exit 0
+fi
+
+# Skip for merge commits
+if echo "$COMMIT_MSG" | grep -q '^Merge '; then
+  log_info "Merge commit - skipping AB# validation"
+  exit 0
+fi
+
+# Check if branch follows work item pattern (ALL branch types)
+# Format: [prefix]/[work-item-id]-description
+WORK_ITEM_PREFIXES="^(feature|bugfix|hotfix|task|pbi|spike|chore|refactor)/"
+
+if echo "$BRANCH" | grep -qE "$WORK_ITEM_PREFIXES"; then
+  # Extract work item ID from branch name (first numeric sequence after prefix)
+  WORK_ITEM_ID=$(echo "$BRANCH" | grep -oE '/[0-9]+' | grep -oE '[0-9]+' | head -1)
+
+  if [ -z "$WORK_ITEM_ID" ]; then
+    log_warning "Branch follows work item naming pattern but no numeric ID found"
+    log_info "Expected format: [prefix]/[work-item-id]-description"
+    log_info "Example: feature/1610889-add-payment-flow"
+    echo ""
+    log_info "Commit will proceed - pre-push hook will validate branch naming"
+    exit 0
+  fi
+
+  # Check if commit message already has AB#
+  if echo "$COMMIT_MSG" | grep -qE 'AB#[0-9]+'; then
+    log_success "Commit message contains AB# reference"
+
+    # Optional: Verify it matches branch ID
+    COMMIT_AB=$(echo "$COMMIT_MSG" | grep -oE 'AB#[0-9]+' | grep -oE '[0-9]+' | head -1)
+    if [ "$COMMIT_AB" != "$WORK_ITEM_ID" ]; then
+      log_warning "AB#$COMMIT_AB in commit doesn't match branch work item #$WORK_ITEM_ID"
+      log_info "Consider using AB#$WORK_ITEM_ID to match your branch"
+    fi
+  else
+    # Auto-add AB# from branch name
+    log_info "Auto-adding AB#$WORK_ITEM_ID from branch name..."
+
+    # Append AB# to commit message
+    echo "" >> "$COMMIT_MSG_FILE"
+    echo "AB#$WORK_ITEM_ID" >> "$COMMIT_MSG_FILE"
+
+    log_success "Added AB#$WORK_ITEM_ID to commit message"
+  fi
+
+  # Optional: Verify work item exists in Azure DevOps (if az CLI is available and configured)
+  if command -v az >/dev/null 2>&1; then
+    log_info "Verifying work item #$WORK_ITEM_ID in Azure DevOps..."
+
+    if az boards work-item show --id "$WORK_ITEM_ID" \
+       --org https://subwaytechnology.visualstudio.com \
+       --query 'fields."System.Title"' -o tsv >/dev/null 2>&1; then
+      log_success "Work item #$WORK_ITEM_ID verified"
+    else
+      log_warning "Could not verify work item #$WORK_ITEM_ID"
+      log_info "This may be normal if:"
+      log_info "  - You're not logged into Azure CLI (run: az login)"
+      log_info "  - You don't have access to the work item"
+      log_info "  - The work item doesn't exist"
+      echo ""
+      log_info "🔗 Verify manually: https://subwaytechnology.visualstudio.com/Digi%20EComm/_workitems/edit/$WORK_ITEM_ID"
+      echo ""
+      log_info "Commit will proceed - PR validation will catch any issues"
+    fi
+  fi
+
+  exit 0
+fi
+
+log_info "Branch '$BRANCH' doesn't match conventional naming - skipping AB# validation"
+exit 0
