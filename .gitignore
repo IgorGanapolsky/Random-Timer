@@ -38,6 +38,10 @@ yarn-error.*
 .env*.local
 .env
 
+# Firebase/Google services (NEVER commit these - contain API keys)
+google-services.json
+GoogleService-Info.plist
+
 # typescript
 *.tsbuildinfo
 
