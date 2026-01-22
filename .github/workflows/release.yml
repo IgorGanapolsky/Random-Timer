@@ -148,9 +148,6 @@ jobs:
     if: always() && vars.SLACK_ENABLED == 'true'
     steps:
       - name: Notify release status
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -158,4 +155,6 @@ jobs:
           text: |
             Release completed with status: ${{ job.status }}
         env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
