@@ -1,0 +1,43 @@
+{
+  "totalFeedback": 4,
+  "thumbsUp": 1,
+  "thumbsDown": 3,
+  "lastUpdated": "2026-01-21T17:56:41.773Z",
+  "currentSessionId": "session_2026-01-21",
+  "sequenceCount": 4,
+  "topPatterns": {
+    "positive": {
+      "implementation": 1,
+      "act-dont-instruct": 1
+    },
+    "negative": {
+      "act-dont-instruct": 2,
+      "violation": 2,
+      "assumption": 1,
+      "shallow-answer": 1
+    }
+  },
+  "actionOutcomes": {
+    "act-dont-instruct": {
+      "positive": 1,
+      "negative": 2,
+      "ratio": 0.33
+    },
+    "violation": {
+      "positive": 0,
+      "negative": 2,
+      "ratio": 0
+    },
+    "implementation": {
+      "positive": 1,
+      "negative": 0,
+      "ratio": 1
+    }
+  },
+  "currentStreak": {
+    "type": "positive",
+    "count": 1
+  },
+  "longestPositiveStreak": 1,
+  "longestNegativeStreak": 3
+}
