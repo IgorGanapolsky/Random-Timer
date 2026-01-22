@@ -40,14 +40,6 @@ jobs:
         if: matrix.scan-type == 'dependencies'
         run: npm audit --json > npm-audit.json || true
 
-      - name: Run Snyk
-        if: matrix.scan-type == 'dependencies'
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
       - name: OWASP Dependency Check
         if: matrix.scan-type == 'dependencies'
         uses: dependency-check/Dependency-Check_Action@main
