@@ -1,0 +1,46 @@
+# Gitleaks configuration for Random Timer
+# https://github.com/gitleaks/gitleaks
+
+title = "Random Timer Secret Detection"
+
+[extend]
+# Use default rules
+useDefault = true
+
+# Additional rules specific to this project
+[[rules]]
+id = "sentry-auth-token"
+description = "Sentry Auth Token"
+regex = '''sntrys_[A-Za-z0-9=_+/]{50,}'''
+keywords = ["sntrys_"]
+
+[[rules]]
+id = "sentry-dsn"
+description = "Sentry DSN"
+regex = '''https://[a-f0-9]+@[a-z0-9.]+\.sentry\.io/[0-9]+'''
+keywords = ["sentry.io"]
+
+[[rules]]
+id = "expo-token"
+description = "Expo Access Token"
+regex = '''expo_[A-Za-z0-9]{40,}'''
+keywords = ["expo_"]
+
+[[rules]]
+id = "firebase-api-key"
+description = "Firebase API Key"
+regex = '''AIza[0-9A-Za-z_-]{35}'''
+keywords = ["AIza"]
+
+# Paths to ignore
+[allowlist]
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''node_modules/''',
+  '''\.git/''',
+  '''ios/Pods/''',
+  '''android/build/''',
+]
+
+# Commits to ignore (after purge, add old commit hashes here if needed)
+# commits = ["abc123", "def456"]

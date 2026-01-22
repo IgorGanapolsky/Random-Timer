@@ -67,7 +67,22 @@ for file in $FORBIDDEN_FILES; do
     exit 1
   fi
 done
-log_success "No secrets detected"
+log_success "No forbidden files staged"
+
+# 4. Gitleaks - Scan staged content for secrets
+if command -v gitleaks &> /dev/null; then
+  log_info "Gitleaks: Scanning for secrets in staged changes..."
+  if ! gitleaks protect --staged --no-banner 2>&1; then
+    log_error "SECRETS DETECTED! Commit blocked."
+    echo ""
+    echo "💡 Remove secrets before committing"
+    echo "💡 Use environment variables or .env (gitignored)"
+    exit 1
+  fi
+  log_success "No secrets in staged content"
+else
+  log_info "Gitleaks not installed, skipping content scan (install: brew install gitleaks)"
+fi
 
 echo ""
 log_success "All pre-commit checks passed!"
