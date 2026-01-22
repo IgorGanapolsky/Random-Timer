@@ -47,7 +47,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - name: Cache dependencies (CodeQL)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -80,7 +80,7 @@ jobs:
           cache: 'npm'
 
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -108,7 +108,7 @@ jobs:
         run: npm test -- --coverage
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
@@ -137,7 +137,7 @@ jobs:
           cache: 'npm'
 
       - name: Cache dependencies (Security)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules

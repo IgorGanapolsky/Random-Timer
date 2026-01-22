@@ -26,7 +26,7 @@ jobs:
 
       - name: Cache dependencies
         id: npm-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -130,7 +130,7 @@ jobs:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
 
       - name: Store build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-builds
           path: |
