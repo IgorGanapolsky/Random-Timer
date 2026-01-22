@@ -13,14 +13,13 @@ on:
       - '**/*.ts'
       - '**/*.tsx'
 
-permissions:
-  contents: read
-  security-events: write
-  actions: read
-
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     strategy:
       matrix:
         scan-type: [dependencies, code, mobile]
@@ -106,6 +105,8 @@ jobs:
     needs: security-scan
     if: always() && vars.SLACK_ENABLED == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Notify Security Issues
         if: always()

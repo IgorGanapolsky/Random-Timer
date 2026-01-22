@@ -18,15 +18,11 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
-  id-token: write
-  issues: write
-  pull-requests: write
-
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     steps:
@@ -59,6 +55,9 @@ jobs:
   build:
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
@@ -144,14 +143,19 @@ jobs:
   notify:
     needs: [prepare, build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: always() && vars.SLACK_ENABLED == 'true'
     steps:
       - name: Notify release status
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
           text: |
-            Release ${{ needs.prepare.outputs.version }} to ${{ github.event.inputs.environment || 'production' }} completed with status: ${{ job.status }}
+            Release completed with status: ${{ job.status }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

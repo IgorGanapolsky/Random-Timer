@@ -7,14 +7,6 @@ on:
   push:
     branches: [develop, main]
 
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-  security-events: write
-  actions: write
-  issues: write
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,6 +14,8 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -75,6 +69,9 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,6 +105,9 @@ jobs:
     needs: [validate, security]
     if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -141,6 +141,8 @@ jobs:
     needs: [build]
     if: always() && vars.SLACK_ENABLED == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Notify status
         if: always()
