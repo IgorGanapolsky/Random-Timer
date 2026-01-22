@@ -1,5 +1,5 @@
 // Jest setup file
-import '@testing-library/react-native/extend-expect';
+import '@testing-library/react-native';
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {

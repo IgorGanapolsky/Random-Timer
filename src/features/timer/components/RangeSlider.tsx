@@ -3,7 +3,6 @@
  * Dual-thumb slider for selecting min/max time range
  */
 
-import { useRef } from 'react';
 import { StyleSheet, View, LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -12,7 +11,6 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-
 import { spacing, radii, timing, useTheme } from '@shared/theme';
 import { Text } from '@shared/components';
 import { useHaptics } from '@shared/hooks/useHaptics';
@@ -43,7 +41,7 @@ export function RangeSlider({
   maxValue,
   onValueChange,
   step = 1,
-  formatValue = (v) => `${v}s`,
+  formatValue = v => `${v}s`,
   label,
 }: RangeSliderProps) {
   const { colors } = useTheme();
@@ -73,10 +71,10 @@ export function RangeSlider({
   };
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    const { width, x } = event.nativeEvent.layout;
+    const { width } = event.nativeEvent.layout;
     trackWidth.value = width;
     // Measure absolute X position on screen
-    event.target.measureInWindow((pageX) => {
+    event.target.measureInWindow(pageX => {
       sliderX.value = pageX;
     });
     minPosition.value = valueToPosition(minValue, width);
@@ -93,12 +91,12 @@ export function RangeSlider({
 
   // Min thumb gesture
   const minGesture = Gesture.Pan()
-    .onUpdate((event) => {
+    .onUpdate(event => {
       // Calculate position relative to slider
       const relativeX = event.absoluteX - sliderX.value;
       const newPos = Math.max(
         0,
-        Math.min(maxPosition.value - MIN_DISTANCE, relativeX - THUMB_RADIUS)
+        Math.min(maxPosition.value - MIN_DISTANCE, relativeX - THUMB_RADIUS),
       );
       minPosition.value = newPos;
       const newValue = positionToValue(newPos, trackWidth.value);
@@ -111,12 +109,12 @@ export function RangeSlider({
 
   // Max thumb gesture
   const maxGesture = Gesture.Pan()
-    .onUpdate((event) => {
+    .onUpdate(event => {
       // Calculate position relative to slider
       const relativeX = event.absoluteX - sliderX.value;
       const newPos = Math.max(
         minPosition.value + MIN_DISTANCE,
-        Math.min(trackWidth.value - THUMB_SIZE, relativeX - THUMB_RADIUS)
+        Math.min(trackWidth.value - THUMB_SIZE, relativeX - THUMB_RADIUS),
       );
       maxPosition.value = newPos;
       const newValue = positionToValue(newPos, trackWidth.value);
@@ -165,18 +163,32 @@ export function RangeSlider({
         <View style={[styles.track, { backgroundColor: colors.glass.border }]} />
 
         {/* Active range track */}
-        <Animated.View style={[styles.activeTrack, { backgroundColor: colors.primary }, activeTrackStyle]} />
+        <Animated.View
+          style={[styles.activeTrack, { backgroundColor: colors.primary }, activeTrackStyle]}
+        />
 
         {/* Min thumb */}
         <GestureDetector gesture={minGesture}>
-          <Animated.View style={[styles.thumb, { backgroundColor: colors.primary, shadowColor: colors.primary }, minThumbStyle]}>
+          <Animated.View
+            style={[
+              styles.thumb,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+              minThumbStyle,
+            ]}
+          >
             <View style={[styles.thumbInner, { backgroundColor: colors.palette.neutral100 }]} />
           </Animated.View>
         </GestureDetector>
 
         {/* Max thumb */}
         <GestureDetector gesture={maxGesture}>
-          <Animated.View style={[styles.thumb, { backgroundColor: colors.primary, shadowColor: colors.primary }, maxThumbStyle]}>
+          <Animated.View
+            style={[
+              styles.thumb,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+              maxThumbStyle,
+            ]}
+          >
             <View style={[styles.thumbInner, { backgroundColor: colors.palette.neutral100 }]} />
           </Animated.View>
         </GestureDetector>
@@ -195,55 +207,55 @@ export function RangeSlider({
 }
 
 const styles = StyleSheet.create({
+  activeTrack: {
+    borderRadius: radii.full,
+    height: 6,
+    position: 'absolute',
+  },
   container: {
     width: '100%',
   },
   label: {
     marginBottom: spacing.sm,
   },
-  valuesContainer: {
+  rangeLabels: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
   },
   sliderContainer: {
     height: 40,
     justifyContent: 'center',
   },
-  track: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 6,
-    borderRadius: radii.full,
-  },
-  activeTrack: {
-    position: 'absolute',
-    height: 6,
-    borderRadius: radii.full,
-  },
   thumb: {
-    position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 14,
+    elevation: 5,
+    height: 28,
+    justifyContent: 'center',
+    position: 'absolute',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-    elevation: 5,
+    width: 28,
   },
   thumbInner: {
-    width: 12,
-    height: 12,
     borderRadius: 6,
+    height: 12,
+    width: 12,
   },
-  rangeLabels: {
+  track: {
+    borderRadius: radii.full,
+    height: 6,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  valuesContainer: {
+    alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
+    gap: spacing.md,
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
   },
 });

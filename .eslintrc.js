@@ -16,11 +16,6 @@ module.exports = {
         alwaysTryTypes: true,
         project: './tsconfig.json',
       },
-      'babel-module': {
-        alias: {
-          '@': './src',
-        },
-      },
     },
   },
   rules: {
