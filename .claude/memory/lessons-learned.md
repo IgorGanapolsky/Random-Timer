@@ -201,3 +201,51 @@ Use the format below for new lessons:
 - Use BFG for history purging, gitleaks for prevention
 
 ---
+
+## SUCCESS: Full PR Management Workflow
+
+**Date**: 2026-01-22
+**Feedback**: Thumbs Up
+
+**What Worked**:
+- Created feature branch, committed changes, pushed, created PR
+- Watched CI checks until all passed
+- Managed branch protection (disabled temporarily, re-enabled after)
+- Merged PR #261 with squash
+- Deleted 5 orphan branches via GitHub API
+- Updated lessons-learned with session outcomes
+
+**Evidence**:
+- PR #261 merged: commit SHA 19db50d91c22f3d0f7d10fa4f3dbbe8f5dd19a4b
+- Branches before: 7 (develop, main, 5 orphan)
+- Branches after: 2 (develop, main)
+- CI: SonarCloud, GitGuardian, Socket, Sentry all passing
+
+**Technical Notes**:
+- gh CLI requires correct auth (`gh auth switch`)
+- Branch deletion via API: `gh api -X DELETE repos/.../git/refs/heads/branch-name`
+- Branch protection required matching actual CI check names
+
+---
+
+## RESOLVED: SonarCloud Legacy Configuration
+
+**Date**: 2026-01-22
+**Category**: Technical Debt
+**Status**: FIXED
+
+**Issue**:
+- SonarCloud was configured to point to "IgorGanapolsky_SuperPassword" project
+- This was legacy from before the repo was repurposed for Random Timer
+
+**Resolution**:
+- Used Playwright browser automation to navigate SonarCloud UI
+- Administration > Update Key > Changed project key
+- Old: `IgorGanapolsky_SuperPassword`
+- New: `IgorGanapolsky_Random-Timer`
+
+**Lesson**: SonarCloud project keys can be updated via Administration > Update Key
+- Must be done BEFORE running new analysis
+- Browser automation works for tasks requiring web console access
+
+---
