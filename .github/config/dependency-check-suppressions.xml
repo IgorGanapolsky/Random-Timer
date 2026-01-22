@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<suppressions xmlns="https://dependency-check.github.io/DependencyCheck"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="https://dependency-check.github.io/DependencyCheck https://dependency-check.github.io/DependencyCheck/1.8/suppression.xsd">
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 
     <!--
         CVE-2025-55182 and CVE-2025-55184 affect React Server Components (RSC)
