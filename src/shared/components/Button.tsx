@@ -4,12 +4,7 @@
  */
 
 import { StyleSheet, Pressable, ViewStyle, ActivityIndicator } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { colors, spacing, radii, timing } from '../theme';
 import { Text } from './Text';
 import { useHaptics } from '../hooks/useHaptics';
@@ -89,15 +84,9 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variantStyles.textColor}
-        />
+        <ActivityIndicator size="small" color={variantStyles.textColor} />
       ) : (
-        <Text
-          preset={size === 'lg' ? 'buttonLarge' : 'button'}
-          color={variantStyles.textColor}
-        >
+        <Text preset={size === 'lg' ? 'buttonLarge' : 'button'} color={variantStyles.textColor}>
           {label}
         </Text>
       )}
@@ -159,28 +148,28 @@ function getSizeStyles(size: ButtonSize) {
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
-    justifyContent: 'center',
     borderRadius: radii.lg,
     flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  dangerContainer: {
+    backgroundColor: colors.timerDanger,
+  },
+  disabled: {
+    opacity: 0.5,
   },
   fullWidth: {
     width: '100%',
   },
-  disabled: {
-    opacity: 0.5,
+  ghostContainer: {
+    backgroundColor: colors.transparent,
   },
   primaryContainer: {
     backgroundColor: colors.primary,
   },
   secondaryContainer: {
     backgroundColor: colors.glass.backgroundLight,
-    borderWidth: 1,
     borderColor: colors.primary,
-  },
-  ghostContainer: {
-    backgroundColor: 'transparent',
-  },
-  dangerContainer: {
-    backgroundColor: colors.timerDanger,
+    borderWidth: 1,
   },
 });

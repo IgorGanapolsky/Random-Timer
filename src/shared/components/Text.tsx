@@ -3,8 +3,7 @@
  * Typography component with preset styles and dynamic theming
  */
 
-import { Text as RNText, TextProps as RNTextProps, TextStyle } from 'react-native';
-
+import { StyleSheet, Text as RNText, TextProps as RNTextProps, TextStyle } from 'react-native';
 import { typography, useTheme } from '../theme';
 
 type TextPreset = keyof typeof typography.presets;
@@ -35,15 +34,16 @@ export function Text({
 
   return (
     <RNText
-      style={[
-        presetStyle,
-        { color: resolvedColor },
-        center && { textAlign: 'center' },
-        style,
-      ]}
+      style={[presetStyle, { color: resolvedColor }, center && styles.centered, style]}
       {...props}
     >
       {children}
     </RNText>
   );
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    textAlign: 'center',
+  },
+});

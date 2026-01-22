@@ -3,8 +3,8 @@
  * Audio playback for timer alarm using expo-av
  */
 
-import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Platform } from 'react-native';
+import { Audio } from 'expo-av';
 
 class SoundService {
   private sound: Audio.Sound | null = null;
@@ -32,7 +32,7 @@ class SoundService {
         // Using a built-in system sound as fallback
         // Replace with: require('@assets/sounds/alarm.mp3')
         { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
-        { shouldPlay: false, isLooping: true }
+        { shouldPlay: false, isLooping: true },
       );
 
       this.sound = sound;

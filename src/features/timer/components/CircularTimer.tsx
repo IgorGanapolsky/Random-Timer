@@ -3,16 +3,10 @@
  * Beautiful circular countdown with animated progress arc
  */
 
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
-import Animated, {
-  useAnimatedProps,
-  useDerivedValue,
-  interpolateColor,
-  withTiming,
-} from 'react-native-reanimated';
-
-import { colors, spacing, typography } from '@shared/theme';
+import Animated, { useAnimatedProps, useDerivedValue, withTiming } from 'react-native-reanimated';
+import { colors } from '@shared/theme';
 import { Text } from '@shared/components';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -57,24 +51,6 @@ export function CircularTimer({
     };
   });
 
-  // Color based on progress (green -> yellow -> red)
-  const strokeColor = useDerivedValue(() => {
-    if (progress.value > 0.5) {
-      return interpolateColor(
-        progress.value,
-        [0.5, 1],
-        [colors.timerWarning, colors.timerActive]
-      );
-    } else if (progress.value > 0.2) {
-      return interpolateColor(
-        progress.value,
-        [0.2, 0.5],
-        [colors.timerDanger, colors.timerWarning]
-      );
-    }
-    return colors.timerDanger;
-  }, [progress.value]);
-
   // Format time display
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -103,20 +79,22 @@ export function CircularTimer({
           fill="transparent"
         />
 
-        {/* Progress arc */}
-        <AnimatedCircle
-          cx={center}
-          cy={center}
-          r={radius}
-          stroke="url(#timerGradient)"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          animatedProps={animatedProps}
-          rotation={-90}
-          origin={`${center}, ${center}`}
-        />
+        {/* Progress arc - hidden in mystery mode */}
+        {!hideTime && (
+          <AnimatedCircle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke="url(#timerGradient)"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            animatedProps={animatedProps}
+            rotation={-90}
+            origin={`${center}, ${center}`}
+          />
+        )}
       </Svg>
 
       {/* Time display */}
@@ -149,17 +127,17 @@ export function CircularTimer({
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pausedText: {
+    opacity: 0.6,
   },
   svg: {
     position: 'absolute',
   },
   timeContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  pausedText: {
-    opacity: 0.6,
+    justifyContent: 'center',
   },
 });

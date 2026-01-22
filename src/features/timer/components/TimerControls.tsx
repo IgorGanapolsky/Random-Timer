@@ -12,8 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-
-import { colors, spacing, radii, timing, shadows } from '@shared/theme';
+import { colors, spacing, timing, shadows } from '@shared/theme';
 import { useHaptics } from '@shared/hooks/useHaptics';
 
 interface TimerControlsProps {
@@ -29,12 +28,7 @@ interface TimerControlsProps {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function TimerControls({
-  isRunning,
-  onPlayPause,
-  onReset,
-  onStop,
-}: TimerControlsProps) {
+export function TimerControls({ isRunning, onPlayPause, onReset, onStop }: TimerControlsProps) {
   const { trigger } = useHaptics();
 
   return (
@@ -99,17 +93,14 @@ function ControlButton({ icon, size, variant, onPress }: ControlButtonProps) {
       // Spin animation for reset
       rotation.value = withSequence(
         withTiming(0, { duration: 0 }),
-        withSpring(-360, timing.spring.gentle)
+        withSpring(-360, timing.spring.gentle),
       );
     }
     onPress();
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotate: `${rotation.value}deg` },
-    ],
+    transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
   }));
 
   const isPrimary = variant === 'primary';
@@ -151,7 +142,8 @@ function IconSvg({ icon, size, color }: IconSvgProps) {
   const paths = {
     play: 'M8 5v14l11-7z',
     pause: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
-    reset: 'M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
+    reset:
+      'M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
     stop: 'M6 6h12v12H6z',
   };
 
@@ -163,22 +155,22 @@ function IconSvg({ icon, size, color }: IconSvgProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing['2xl'],
-  },
   button: {
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  primaryButton: {
-    backgroundColor: colors.primary,
+  container: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing['2xl'],
+    justifyContent: 'center',
   },
   ghostButton: {
     backgroundColor: colors.glass.background,
-    borderWidth: 1,
     borderColor: colors.glass.border,
+    borderWidth: 1,
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
   },
 });
