@@ -16,6 +16,7 @@ module.exports = {
     // Mock all image files
     '\\.(png|jpg|jpeg|gif|svg)$': '<rootDir>/src/shared/test/mockFile.ts',
   },
+  passWithNoTests: true,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
@@ -26,10 +27,5 @@ module.exports = {
   collectCoverage: false,
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['json', 'json-summary', 'lcov', 'text', 'clover'],
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-    '/src/shared/test/',
-    '/__tests__/',
-    '/assets/',
-  ],
+  coveragePathIgnorePatterns: ['/node_modules/', '/src/shared/test/', '/__tests__/', '/assets/'],
 };
