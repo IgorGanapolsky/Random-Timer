@@ -80,7 +80,7 @@ module.exports = {
     'import/order': [
       'warn',
       {
-        'newlines-between': 'always',
+        'newlines-between': 'never',
         groups: [['builtin', 'external'], 'internal', 'unknown', ['parent', 'sibling'], 'index'],
         distinctGroup: false,
         pathGroups: [
