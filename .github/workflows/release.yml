@@ -36,18 +36,23 @@ jobs:
 
       - name: Get version
         id: get-version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          GITHUB_REF_VAR: ${{ github.ref }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "version=$INPUT_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "version=${GITHUB_REF_VAR#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
       - name: Validate version
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          version=${{ steps.get-version.outputs.version }}
-          if ! [[ $version =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-            echo "Invalid version format: $version"
+          if ! [[ $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
             exit 1
           fi
 
@@ -80,31 +85,35 @@ jobs:
           output-file: sbom.cdx.json
 
       - name: Update app version
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          version=${{ needs.prepare.outputs.version }}
-          jq --arg v "${version#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${VERSION#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
           npx expo config --type bare
 
       - name: Build iOS
-        run: |
-          eas build --platform ios --profile ${{ github.event.inputs.environment || 'production' }} --non-interactive --no-wait --auto-submit
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          BUILD_PROFILE: ${{ github.event.inputs.environment || 'production' }}
+        run: |
+          eas build --platform ios --profile "$BUILD_PROFILE" --non-interactive --no-wait --auto-submit
 
       - name: Build Android
-        run: |
-          eas build --platform android --profile ${{ github.event.inputs.environment || 'production' }} --non-interactive --no-wait --auto-submit
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          BUILD_PROFILE: ${{ github.event.inputs.environment || 'production' }}
+        run: |
+          eas build --platform android --profile "$BUILD_PROFILE" --non-interactive --no-wait --auto-submit
 
       - name: Generate release notes
         id: release-notes
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          version=${{ needs.prepare.outputs.version }}
           previous_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$previous_tag" ]; then
             echo "# Changes since $previous_tag" > RELEASE_NOTES.md
