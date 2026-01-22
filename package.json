@@ -15,6 +15,7 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier --write .",
+    "fmt": "npm run format",
     "format:check": "prettier --check .",
     "quality": "npm run compile && npm run lint:check && npm run format:check && npm run test:ci",
     "test": "jest --watchman=false",
