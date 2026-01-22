@@ -3,19 +3,18 @@
  * Display running timer with controls
  */
 
-import { StyleSheet, View } from 'react-native';
 import { useEffect } from 'react';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   withRepeat,
   withSequence,
   withTiming,
-  useSharedValue,
 } from 'react-native-reanimated';
-
-import { Screen, Text, GlassCard } from '@shared/components';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { GlassCard, Screen, Text } from '@shared/components';
 import { colors, spacing } from '@shared/theme';
 import { CircularTimer, TimerControls } from '../components';
 import { useRandomTimer, TimerConfig } from '../hooks/useRandomTimer';
@@ -47,6 +46,7 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
     return () => {
       soundService.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle alarm state
@@ -57,20 +57,14 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
 
       // Start pulse animation
       pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.05, { duration: 500 }),
-          withTiming(1, { duration: 500 })
-        ),
+        withSequence(withTiming(1.05, { duration: 500 }), withTiming(1, { duration: 500 })),
         -1,
-        true
+        true,
       );
       pulseOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.7, { duration: 500 }),
-          withTiming(1, { duration: 500 })
-        ),
+        withSequence(withTiming(0.7, { duration: 500 }), withTiming(1, { duration: 500 })),
         -1,
-        true
+        true,
       );
     } else {
       // Stop animation
@@ -108,45 +102,47 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
   }));
 
   return (
-    <Screen preset="center">
-      <Animated.View style={[styles.timerContainer, state.isComplete && pulseStyle]}>
-        {state.isComplete ? (
-          <GlassCard glow glowColor={colors.timerDanger} padding={spacing['3xl']}>
-            <View style={styles.alarmContent}>
-              <Text preset="h1" center color={colors.timerDanger}>
-                ⏰
-              </Text>
-              <Text preset="h2" center style={styles.alarmTitle}>
-                Time's Up!
-              </Text>
-              <Text preset="body" center color={colors.textDim}>
-                Alarm stops in {state.alarmTimeRemaining}s
-              </Text>
-            </View>
-          </GlassCard>
-        ) : (
-          <CircularTimer
-            timeRemaining={state.timeRemaining}
-            totalTime={state.totalTime}
-            hideTime={config.mysteryMode}
-            isPaused={!state.isRunning}
-          />
+    <Screen preset="fill">
+      <View style={styles.mainContent}>
+        <Animated.View style={[styles.timerContainer, state.isComplete && pulseStyle]}>
+          {state.isComplete ? (
+            <GlassCard glow glowColor={colors.timerDanger} padding={spacing['3xl']}>
+              <View style={styles.alarmContent}>
+                <Text preset="h1" center color={colors.timerDanger}>
+                  ⏰
+                </Text>
+                <Text preset="h2" center style={styles.alarmTitle}>
+                  Time&apos;s Up!
+                </Text>
+                <Text preset="body" center color={colors.textDim}>
+                  Alarm stops in {state.alarmTimeRemaining}s
+                </Text>
+              </View>
+            </GlassCard>
+          ) : (
+            <CircularTimer
+              timeRemaining={state.timeRemaining}
+              totalTime={state.totalTime}
+              hideTime={config.mysteryMode}
+              isPaused={!state.isRunning}
+            />
+          )}
+        </Animated.View>
+
+        {!config.mysteryMode && state.totalTime > 0 && !state.isComplete && (
+          <Text preset="caption" center color={colors.textMuted} style={styles.totalTime}>
+            TOTAL: {formatTime(state.totalTime).toUpperCase()}
+          </Text>
         )}
-      </Animated.View>
 
-      {!config.mysteryMode && state.totalTime > 0 && !state.isComplete && (
-        <Text preset="caption" center color={colors.textMuted} style={styles.totalTime}>
-          Total: {formatTime(state.totalTime)}
-        </Text>
-      )}
-
-      <View style={styles.controls}>
-        <TimerControls
-          isRunning={state.isRunning}
-          onPlayPause={handlePlayPause}
-          onReset={handleReset}
-          onStop={handleStop}
-        />
+        <View style={styles.controls}>
+          <TimerControls
+            isRunning={state.isRunning}
+            onPlayPause={handlePlayPause}
+            onReset={handleReset}
+            onStop={handleStop}
+          />
+        </View>
       </View>
 
       {config.mysteryMode && !state.isComplete && (
@@ -170,9 +166,6 @@ function formatTime(seconds: number) {
 }
 
 const styles = StyleSheet.create({
-  timerContainer: {
-    marginBottom: spacing['2xl'],
-  },
   alarmContent: {
     alignItems: 'center',
     gap: spacing.md,
@@ -180,15 +173,25 @@ const styles = StyleSheet.create({
   alarmTitle: {
     marginTop: spacing.sm,
   },
-  totalTime: {
-    marginBottom: spacing.lg,
-  },
   controls: {
-    marginTop: spacing['3xl'],
+    marginTop: spacing.xl,
+  },
+  mainContent: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingTop: spacing['2xl'],
   },
   mysteryBadge: {
+    alignSelf: 'center',
     position: 'absolute',
     top: spacing['5xl'],
-    alignSelf: 'center',
+  },
+  timerContainer: {
+    marginBottom: spacing.lg,
+  },
+  totalTime: {
+    letterSpacing: 2,
+    marginBottom: spacing.xl,
   },
 });
