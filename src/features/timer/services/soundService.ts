@@ -33,9 +33,9 @@ class SoundService {
         shouldPlayInBackground: true,
       });
 
-      // Create audio player with buzzer sound
+      // Create audio player with classic alarm clock sound
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this.player = createAudioPlayer(require('@assets/sounds/buzzer.mp3'));
+      this.player = createAudioPlayer(require('@assets/sounds/alarm-clock.mp3'));
 
       this.player.loop = true;
       this.player.volume = this.volume;

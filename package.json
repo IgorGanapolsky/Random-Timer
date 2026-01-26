@@ -10,6 +10,8 @@
     "ios": "expo run:ios",
     "ios:device": "expo run:ios --device",
     "android:device": "expo run:android --device",
+    "connect": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:8097 tcp:8097 && echo '✅ Metro connection configured'",
+    "android:connected": "npm run connect && npm run android:device",
     "compile": "tsc --noEmit -p . --pretty",
     "typecheck": "npm run compile",
     "lint": "eslint . --fix",
