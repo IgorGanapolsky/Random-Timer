@@ -11,7 +11,7 @@ import { TimerConfig } from '@features/timer';
 import { useTheme } from '@shared/theme';
 
 /**
- * Debug parameters for testing timer states without waiting
+ * Debug parameters for testing timer states without waiting.
  * Use via deep links: randomtimer://timer?debugTimeRemaining=5&debugState=warning
  */
 export interface TimerDebugParams {
