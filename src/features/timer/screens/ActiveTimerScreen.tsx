@@ -16,24 +16,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { GlassCard, Screen, Text } from '@shared/components';
 import { colors, spacing } from '@shared/theme';
+import { RootStackParamList, TimerDebugParams } from '@navigation';
 import { CircularTimer, TimerControls } from '../components';
-import { useRandomTimer, TimerConfig } from '../hooks/useRandomTimer';
+import { useRandomTimer } from '../hooks/useRandomTimer';
 import { soundService } from '../services/soundService';
-
-/**
- * Debug parameters for testing timer states
- * @see AppNavigation.tsx for full documentation
- */
-interface TimerDebugParams {
-  debugTimeRemaining?: number;
-  debugState?: 'running' | 'warning' | 'danger' | 'complete';
-  debugSkipToAlarm?: boolean;
-}
-
-type RootStackParamList = {
-  Setup: undefined;
-  Timer: { config: TimerConfig; debug?: TimerDebugParams };
-};
 
 interface ActiveTimerScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Timer'>;
