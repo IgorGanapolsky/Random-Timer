@@ -1,56 +1,61 @@
 /**
  * Sound Service
- * Audio playback for timer alarm using expo-av
+ * Audio playback for timer alarm using expo-audio
  */
 
 import { Platform } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { storage } from '@shared/utils/storage';
+
+const VOLUME_STORAGE_KEY = 'alarm_volume';
 
 class SoundService {
-  private sound: Audio.Sound | null = null;
+  private player: AudioPlayer | null = null;
   private isLoaded = false;
+  private volume = 1.0; // Default to max volume
 
   async initialize() {
     if (Platform.OS === 'web') {
-      // Web audio requires user interaction, handle differently
       console.log('Sound service: Web platform, using fallback');
       return;
     }
 
     try {
-      // Configure audio mode
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
+      // Load saved volume preference
+      const savedVolume = storage.getString(VOLUME_STORAGE_KEY);
+      if (savedVolume) {
+        this.volume = parseFloat(savedVolume);
+      }
+
+      // Configure audio mode for alarm-like behavior
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
       });
 
-      // Load the alarm sound
-      // Note: You'll need to add an alarm.mp3 to assets/sounds/
-      // For now, we'll use a placeholder that can be replaced
-      const { sound } = await Audio.Sound.createAsync(
-        // Using a built-in system sound as fallback
-        // Replace with: require('@assets/sounds/alarm.mp3')
-        { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
-        { shouldPlay: false, isLooping: true },
-      );
+      // Create audio player with alarm sound
+      // Note: Replace with local asset: require('@assets/sounds/alarm.mp3')
+      this.player = createAudioPlayer({
+        uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
+      });
 
-      this.sound = sound;
+      this.player.loop = true;
+      this.player.volume = this.volume;
       this.isLoaded = true;
     } catch (error) {
-      console.error('Failed to load alarm sound:', error);
+      console.error('Failed to initialize sound service:', error);
     }
   }
 
   async play(durationMs?: number) {
-    if (!this.isLoaded || !this.sound) {
-      console.log('Sound not loaded, playing fallback');
+    if (!this.isLoaded || !this.player) {
+      console.log('Sound not loaded, skipping playback');
       return;
     }
 
     try {
-      await this.sound.setPositionAsync(0);
-      await this.sound.playAsync();
+      this.player.seekTo(0);
+      this.player.play();
 
       // Auto-stop after duration
       if (durationMs) {
@@ -64,34 +69,41 @@ class SoundService {
   }
 
   async stop() {
-    if (!this.sound) return;
+    if (!this.player) return;
 
     try {
-      await this.sound.stopAsync();
+      this.player.pause();
+      this.player.seekTo(0);
     } catch (error) {
       console.error('Failed to stop sound:', error);
     }
   }
 
-  async setVolume(volume: number) {
-    if (!this.sound) return;
+  getVolume(): number {
+    return this.volume;
+  }
 
-    try {
-      await this.sound.setVolumeAsync(Math.max(0, Math.min(1, volume)));
-    } catch (error) {
-      console.error('Failed to set volume:', error);
+  setVolume(volume: number) {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    this.volume = clampedVolume;
+
+    // Persist volume preference
+    storage.set(VOLUME_STORAGE_KEY, clampedVolume.toString());
+
+    if (this.player) {
+      this.player.volume = clampedVolume;
     }
   }
 
-  async unload() {
-    if (!this.sound) return;
+  release() {
+    if (!this.player) return;
 
     try {
-      await this.sound.unloadAsync();
-      this.sound = null;
+      this.player.release();
+      this.player = null;
       this.isLoaded = false;
     } catch (error) {
-      console.error('Failed to unload sound:', error);
+      console.error('Failed to release sound:', error);
     }
   }
 }
