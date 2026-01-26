@@ -121,13 +121,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # SonarCloud (optional, runs in parallel)
+  # SonarCloud code quality and coverage enforcement
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
-    if: vars.SONAR_ENABLED == 'true'
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -154,18 +154,23 @@ jobs:
           npm ci --legacy-peer-deps
           npx expo install --fix --non-interactive || true
 
+      - name: Run tests with coverage
+        run: npm test -- --coverage --coverageReporters=lcov
+
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@master
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
 
   # Notify on completion
   notify:
     name: Notify
     runs-on: ubuntu-latest
-    needs: [quality, security]
+    needs: [quality, security, sonar]
     if: always() && github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -176,13 +181,14 @@ jobs:
           script: |
             const qualityResult = '${{ needs.quality.result }}';
             const securityResult = '${{ needs.security.result }}';
+            const sonarResult = '${{ needs.sonar.result }}';
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             let emoji, status;
-            if (qualityResult === 'success' && securityResult === 'success') {
+            if (qualityResult === 'success' && securityResult === 'success' && sonarResult === 'success') {
               emoji = '✅';
               status = 'All checks passed';
-            } else if (qualityResult === 'failure' || securityResult === 'failure') {
+            } else if (qualityResult === 'failure' || securityResult === 'failure' || sonarResult === 'failure') {
               emoji = '❌';
               status = 'Some checks failed';
             } else {
@@ -194,5 +200,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Quality | ${qualityResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
+              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Quality | ${qualityResult} |\n| Security | ${securityResult} |\n| SonarCloud | ${sonarResult} |\n\n[View details](${runUrl})`
             });
