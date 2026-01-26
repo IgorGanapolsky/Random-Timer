@@ -256,8 +256,75 @@ Located in `~/.claude-shared/skills/`, symlinked to `.claude/shared-skills/`
 ### Project-Specific Skills
 Located in `.claude/skills/`
 
-These skills are specific to Random-Timer and not shared with other projects.
+| Skill | Trigger | Description |
+|-------|---------|-------------|
+| `/ralph-mode` | Complex tasks, iterations | Track attempts in ATTEMPTS.md with specs and learnings |
+| `/self-heal` | After mistakes | Consolidate lessons from feedback logs |
+| `/delegate` | Delegate to Copilot | Create issue and assign to GitHub Copilot coding agent |
+| `/copilot-agent` | Full Copilot workflow | Create detailed issue with context for Copilot |
+| `/dual-review` | PR review | Synthesize feedback from both Claude and Copilot |
+| `/auto-pr` | Autonomous PR | Create PR, wait for CI + AI reviews, auto-merge |
+| `/sync-memory` | Copilot memory | Reinforce Copilot's memory of project patterns |
 
 ### Adding Skills
 - **Shared skill:** Create in `~/.claude-shared/skills/`
 - **Project skill:** Create in `.claude/skills/`
+
+---
+
+## Autonomous Operation
+
+### Hooks System
+The project uses Claude Code hooks for autonomous operation:
+
+| Hook | Purpose |
+|------|---------|
+| `SessionStart` | Load context, RAG injection, pre-flight checks |
+| `UserPromptSubmit` | Validate user prompts |
+| `PreToolUse` | Validate commands before execution |
+| `PostToolUse` | Auto-RLHF feedback capture, anti-pattern detection |
+| `PermissionRequest` | Auto-approve safe read operations |
+| `Stop` | Verify task completion, log incomplete work |
+
+### Self-Improvement Protocol
+When I make a mistake:
+1. The error is automatically logged to `.claude/memory/feedback/feedback-log.jsonl`
+2. At session start, past mistakes are loaded via RAG
+3. Run `/self-heal` periodically to consolidate lessons
+
+### Automatic Anti-Pattern Detection
+The PostToolUse hook detects:
+- SafeAreaView from wrong import
+- Direct MMKV imports
+- Hardcoded colors outside theme
+- Dangerous bash commands
+- Edits to sensitive files
+
+### CI/CD Integration
+PRs are automatically reviewed by dual AI systems:
+
+**Claude (via GitHub Actions):**
+- Critical checks (imports, theme, TypeScript)
+- Style suggestions
+- Security scan
+- On-demand assist via `@claude` mention in PR comments
+
+**GitHub Copilot (native):**
+- Automatic code review on all PRs
+- Copilot coding agent for issue implementation
+- Copilot Memory for pattern learning
+
+### GitHub Copilot Integration
+
+The project uses GitHub Copilot Pro features:
+
+| Feature | How to Use |
+|---------|------------|
+| **Coding Agent** | Assign issue to `@copilot` or use `/delegate` skill |
+| **Code Review** | Automatic on all PRs |
+| **Memory** | Learns patterns from `.github/copilot-instructions.md` |
+| **Spaces** | Bundle project context (optional) |
+
+Custom instructions location:
+- `.github/copilot-instructions.md` - Main rules
+- `.github/instructions/*.instructions.md` - Path-specific rules
