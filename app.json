@@ -38,6 +38,15 @@
         "imageWidth": 200
       }
     ],
-    "expo-build-properties"
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "usesCleartextTraffic": true,
+          "networkInspector": true
+        }
+      }
+    ],
+    "expo-asset"
   ]
 }
