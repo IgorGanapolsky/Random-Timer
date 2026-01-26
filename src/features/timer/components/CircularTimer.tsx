@@ -3,9 +3,17 @@
  * Beautiful circular countdown with animated progress arc
  */
 
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
-import Animated, { useAnimatedProps, useDerivedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedProps,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { colors } from '@shared/theme';
 import { Text } from '@shared/components';
 
@@ -37,6 +45,25 @@ export function CircularTimer({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const center = size / 2;
+
+  // Flashing animation for mystery mode
+  const flashOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (hideTime && !isPaused) {
+      flashOpacity.value = withRepeat(
+        withTiming(0.3, { duration: 800 }),
+        -1,
+        true, // reverse - this creates smooth ping-pong animation
+      );
+    } else {
+      flashOpacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [hideTime, isPaused, flashOpacity]);
+
+  const mysteryTextStyle = useAnimatedStyle(() => ({
+    opacity: flashOpacity.value,
+  }));
 
   // Progress percentage (1 = full, 0 = empty)
   const progress = useDerivedValue(() => {
@@ -100,9 +127,11 @@ export function CircularTimer({
       {/* Time display */}
       <View style={styles.timeContainer}>
         {hideTime ? (
-          <Text preset="timerLarge" center color={colors.text}>
-            ???
-          </Text>
+          <Animated.View style={mysteryTextStyle}>
+            <Text preset="timerLarge" center color={colors.text}>
+              ???
+            </Text>
+          </Animated.View>
         ) : (
           <>
             <Text

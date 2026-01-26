@@ -90,6 +90,7 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
             maxValue={config.maxSeconds}
             onValueChange={handleRangeChange}
             step={5}
+            minGap={55}
             formatValue={formatTime}
           />
         </GlassCard>

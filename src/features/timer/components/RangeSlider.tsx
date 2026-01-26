@@ -32,6 +32,8 @@ interface RangeSliderProps {
   formatValue?: (value: number) => string;
   /** Label */
   label?: string;
+  /** Minimum gap between min and max values (in value units, not pixels) */
+  minGap?: number;
 }
 
 export function RangeSlider({
@@ -43,6 +45,7 @@ export function RangeSlider({
   step = 1,
   formatValue = v => `${v}s`,
   label,
+  minGap,
 }: RangeSliderProps) {
   const { colors } = useTheme();
   const trackWidth = useSharedValue(0);
@@ -54,7 +57,8 @@ export function RangeSlider({
 
   const THUMB_SIZE = 28;
   const THUMB_RADIUS = THUMB_SIZE / 2;
-  const MIN_DISTANCE = THUMB_SIZE + 4; // Minimum gap between thumbs
+  // Use value-based gap if provided, otherwise fall back to step
+  const effectiveMinGap = minGap ?? step;
 
   const valueToPosition = (value: number, width: number) => {
     'worklet';
@@ -89,18 +93,26 @@ export function RangeSlider({
     trigger('selection');
   };
 
+  // Calculate the gap in pixels based on the value gap
+  const gapInPixels = (gap: number, width: number) => {
+    'worklet';
+    if (width <= THUMB_SIZE) return 0;
+    return (gap / (max - min)) * (width - THUMB_SIZE);
+  };
+
   // Min thumb gesture
   const minGesture = Gesture.Pan()
     .onUpdate(event => {
       // Calculate position relative to slider
       const relativeX = event.absoluteX - sliderX.value;
-      const newPos = Math.max(
-        0,
-        Math.min(maxPosition.value - MIN_DISTANCE, relativeX - THUMB_RADIUS),
-      );
+      // Calculate max allowed position: max thumb position minus gap
+      const gapPx = gapInPixels(effectiveMinGap, trackWidth.value);
+      const maxConstraint = maxPosition.value - gapPx;
+      const newPos = Math.max(0, Math.min(maxConstraint, relativeX - THUMB_RADIUS));
       minPosition.value = newPos;
-      const newValue = positionToValue(newPos, trackWidth.value);
-      runOnJS(updateValues)(newValue, maxValue);
+      const newMinValue = positionToValue(newPos, trackWidth.value);
+      const currentMaxValue = positionToValue(maxPosition.value, trackWidth.value);
+      runOnJS(updateValues)(newMinValue, currentMaxValue);
     })
     .onEnd(() => {
       runOnJS(triggerHaptic)();
@@ -112,13 +124,17 @@ export function RangeSlider({
     .onUpdate(event => {
       // Calculate position relative to slider
       const relativeX = event.absoluteX - sliderX.value;
+      // Calculate min allowed position: min thumb position plus gap
+      const gapPx = gapInPixels(effectiveMinGap, trackWidth.value);
+      const minConstraint = minPosition.value + gapPx;
       const newPos = Math.max(
-        minPosition.value + MIN_DISTANCE,
+        minConstraint,
         Math.min(trackWidth.value - THUMB_SIZE, relativeX - THUMB_RADIUS),
       );
       maxPosition.value = newPos;
-      const newValue = positionToValue(newPos, trackWidth.value);
-      runOnJS(updateValues)(minValue, newValue);
+      const currentMinValue = positionToValue(minPosition.value, trackWidth.value);
+      const newMaxValue = positionToValue(newPos, trackWidth.value);
+      runOnJS(updateValues)(currentMinValue, newMaxValue);
     })
     .onEnd(() => {
       runOnJS(triggerHaptic)();
