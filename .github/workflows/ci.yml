@@ -125,6 +125,8 @@ jobs:
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
+    # Continue even if SonarCloud fails (token may not be configured)
+    continue-on-error: true
     permissions:
       contents: read
       pull-requests: read
@@ -185,10 +187,17 @@ jobs:
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             let emoji, status;
-            if (qualityResult === 'success' && securityResult === 'success' && sonarResult === 'success') {
+            // SonarCloud is optional (continue-on-error), so only quality and security are required
+            const requiredPassed = qualityResult === 'success' && securityResult === 'success';
+            const requiredFailed = qualityResult === 'failure' || securityResult === 'failure';
+
+            if (requiredPassed && sonarResult === 'success') {
               emoji = '✅';
               status = 'All checks passed';
-            } else if (qualityResult === 'failure' || securityResult === 'failure' || sonarResult === 'failure') {
+            } else if (requiredPassed && sonarResult !== 'success') {
+              emoji = '⚠️';
+              status = 'Required checks passed (SonarCloud skipped/failed)';
+            } else if (requiredFailed) {
               emoji = '❌';
               status = 'Some checks failed';
             } else {
