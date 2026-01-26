@@ -33,11 +33,9 @@ class SoundService {
         shouldPlayInBackground: true,
       });
 
-      // Create audio player with alarm sound
-      // Note: Replace with local asset: require('@assets/sounds/alarm.mp3')
-      this.player = createAudioPlayer({
-        uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
-      });
+      // Create audio player with buzzer sound
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      this.player = createAudioPlayer(require('@assets/sounds/buzzer.mp3'));
 
       this.player.loop = true;
       this.player.volume = this.volume;
