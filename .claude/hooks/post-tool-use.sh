@@ -115,6 +115,32 @@ if [ "$ERROR_DETECTED" = true ]; then
     fi
 fi
 
+# TDD Enforcement: Run related tests after code edits
+TDD_TRIGGERED=false
+if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
+    TOOL_INPUT=$(echo "$HOOK_DATA" | jq -r '.tool_input // {}' 2>/dev/null || echo "{}")
+    EDITED_FILE=$(echo "$TOOL_INPUT" | jq -r '.file_path // ""' 2>/dev/null || echo "")
+
+    # Only run tests for source files (not config, not test files themselves)
+    if echo "$EDITED_FILE" | grep -q "^.*src/.*\.\(ts\|tsx\)$" && ! echo "$EDITED_FILE" | grep -q "\.test\.\|\.spec\."; then
+        TDD_TRIGGERED=true
+        echo ""
+        echo "=================================================="
+        echo "TDD: Running related tests for $EDITED_FILE"
+        echo "=================================================="
+
+        # Run Jest with findRelatedTests (async, don't block)
+        cd "$PROJECT_ROOT" && npm test -- --findRelatedTests "$EDITED_FILE" --passWithNoTests 2>&1 | head -20 &
+        TDD_PID=$!
+
+        # Wait briefly for quick test results
+        sleep 2
+        if ps -p $TDD_PID > /dev/null 2>&1; then
+            echo "(Tests running in background - check output)"
+        fi
+    fi
+fi
+
 # Detect success patterns for positive reinforcement
 SUCCESS_DETECTED=false
 if [ "$TOOL_NAME" = "Bash" ]; then

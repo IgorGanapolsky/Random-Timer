@@ -10,9 +10,22 @@ import { TimerSetupScreen, ActiveTimerScreen } from '@features/timer';
 import { TimerConfig } from '@features/timer';
 import { useTheme } from '@shared/theme';
 
+/**
+ * Debug parameters for testing timer states without waiting
+ * Use via deep links: randomtimer://timer?debugTimeRemaining=5&debugState=warning
+ */
+export interface TimerDebugParams {
+  /** Override remaining time in seconds */
+  debugTimeRemaining?: number;
+  /** Jump to specific state: 'running' | 'warning' | 'danger' | 'complete' */
+  debugState?: 'running' | 'warning' | 'danger' | 'complete';
+  /** Skip directly to alarm */
+  debugSkipToAlarm?: boolean;
+}
+
 export type RootStackParamList = {
   Setup: undefined;
-  Timer: { config: TimerConfig };
+  Timer: { config: TimerConfig; debug?: TimerDebugParams };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

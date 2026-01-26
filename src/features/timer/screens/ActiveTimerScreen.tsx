@@ -20,9 +20,19 @@ import { CircularTimer, TimerControls } from '../components';
 import { useRandomTimer, TimerConfig } from '../hooks/useRandomTimer';
 import { soundService } from '../services/soundService';
 
+/**
+ * Debug parameters for testing timer states
+ * @see AppNavigation.tsx for full documentation
+ */
+interface TimerDebugParams {
+  debugTimeRemaining?: number;
+  debugState?: 'running' | 'warning' | 'danger' | 'complete';
+  debugSkipToAlarm?: boolean;
+}
+
 type RootStackParamList = {
   Setup: undefined;
-  Timer: { config: TimerConfig };
+  Timer: { config: TimerConfig; debug?: TimerDebugParams };
 };
 
 interface ActiveTimerScreenProps {
@@ -31,8 +41,11 @@ interface ActiveTimerScreenProps {
 }
 
 export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps) {
-  const { config } = route.params;
+  const { config, debug } = route.params;
   const { state, start, pause, resume, reset, stop } = useRandomTimer(config);
+
+  // Apply debug overrides for testing (development only)
+  const effectiveState = __DEV__ && debug ? applyDebugOverrides(state, debug) : state;
 
   // Pulsing animation for alarm state
   const pulseScale = useSharedValue(1);
@@ -51,7 +64,7 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
 
   // Handle alarm state
   useEffect(() => {
-    if (state.isComplete) {
+    if (effectiveState.isComplete) {
       // Play alarm sound
       soundService.play(config.alarmDuration * 1000);
 
@@ -71,14 +84,14 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
       pulseScale.value = withTiming(1);
       pulseOpacity.value = withTiming(1);
     }
-  }, [state.isComplete, config.alarmDuration, pulseScale, pulseOpacity]);
+  }, [effectiveState.isComplete, config.alarmDuration, pulseScale, pulseOpacity]);
 
   const handlePlayPause = () => {
-    if (state.isComplete) {
+    if (effectiveState.isComplete) {
       // Dismiss alarm and reset
       soundService.stop();
       reset();
-    } else if (state.isRunning) {
+    } else if (effectiveState.isRunning) {
       pause();
     } else {
       resume();
@@ -104,8 +117,8 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
   return (
     <Screen preset="fill">
       <View style={styles.mainContent}>
-        <Animated.View style={[styles.timerContainer, state.isComplete && pulseStyle]}>
-          {state.isComplete ? (
+        <Animated.View style={[styles.timerContainer, effectiveState.isComplete && pulseStyle]}>
+          {effectiveState.isComplete ? (
             <GlassCard glow glowColor={colors.timerDanger} padding={spacing['3xl']}>
               <View style={styles.alarmContent}>
                 <Text preset="h1" center color={colors.timerDanger}>
@@ -115,29 +128,29 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
                   Time&apos;s Up!
                 </Text>
                 <Text preset="body" center color={colors.textDim}>
-                  Alarm stops in {state.alarmTimeRemaining}s
+                  Alarm stops in {effectiveState.alarmTimeRemaining}s
                 </Text>
               </View>
             </GlassCard>
           ) : (
             <CircularTimer
-              timeRemaining={state.timeRemaining}
-              totalTime={state.totalTime}
+              timeRemaining={effectiveState.timeRemaining}
+              totalTime={effectiveState.totalTime}
               hideTime={config.mysteryMode}
-              isPaused={!state.isRunning}
+              isPaused={!effectiveState.isRunning}
             />
           )}
         </Animated.View>
 
-        {!config.mysteryMode && state.totalTime > 0 && !state.isComplete && (
+        {!config.mysteryMode && effectiveState.totalTime > 0 && !effectiveState.isComplete && (
           <Text preset="caption" center color={colors.textMuted} style={styles.totalTime}>
-            TOTAL: {formatTime(state.totalTime).toUpperCase()}
+            TOTAL: {formatTime(effectiveState.totalTime).toUpperCase()}
           </Text>
         )}
 
         <View style={styles.controls}>
           <TimerControls
-            isRunning={state.isRunning}
+            isRunning={effectiveState.isRunning}
             onPlayPause={handlePlayPause}
             onReset={handleReset}
             onStop={handleStop}
@@ -145,7 +158,7 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
         </View>
       </View>
 
-      {config.mysteryMode && !state.isComplete && (
+      {config.mysteryMode && !effectiveState.isComplete && (
         <GlassCard style={styles.mysteryBadge} padding={spacing.md}>
           <Text preset="caption" center color={colors.palette.secondary400}>
             🎭 MYSTERY MODE
@@ -163,6 +176,45 @@ function formatTime(seconds: number) {
     return `${mins}m ${secs}s`;
   }
   return `${secs}s`;
+}
+
+/**
+ * Apply debug overrides for testing timer states
+ * Only active in __DEV__ mode
+ */
+function applyDebugOverrides(
+  state: ReturnType<typeof useRandomTimer>['state'],
+  debug: TimerDebugParams,
+): typeof state {
+  const overrides: Partial<typeof state> = {};
+
+  if (debug.debugTimeRemaining !== undefined) {
+    overrides.timeRemaining = debug.debugTimeRemaining;
+  }
+
+  if (debug.debugSkipToAlarm) {
+    overrides.isComplete = true;
+    overrides.timeRemaining = 0;
+  }
+
+  if (debug.debugState) {
+    switch (debug.debugState) {
+      case 'warning':
+        // Warning state: ~30% remaining
+        overrides.timeRemaining = Math.floor(state.totalTime * 0.3);
+        break;
+      case 'danger':
+        // Danger state: ~10% remaining
+        overrides.timeRemaining = Math.floor(state.totalTime * 0.1);
+        break;
+      case 'complete':
+        overrides.isComplete = true;
+        overrides.timeRemaining = 0;
+        break;
+    }
+  }
+
+  return { ...state, ...overrides };
 }
 
 const styles = StyleSheet.create({
