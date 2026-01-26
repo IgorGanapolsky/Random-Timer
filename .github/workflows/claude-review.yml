@@ -1,143 +1,111 @@
-name: Claude Automated Review
+name: AI Code Review
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
 
 jobs:
+  # Claude deep review for architectural and project-specific checks
   claude-review:
-    name: Claude Review (API)
+    name: Claude Review
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       statuses: write
     steps:
-      - name: Collect PR context and prepare prompt
-        id: prep
+      - uses: actions/checkout@v4
+
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this React Native PR for Random Timer app. Be thorough and specific.
+
+            CRITICAL CHECKS (fail the review if violated):
+            1. SafeAreaView MUST be imported from 'react-native-safe-area-context', NOT 'react-native'
+            2. MMKV MUST be imported from '@shared/utils/storage', NOT 'react-native-mmkv' directly
+            3. Colors MUST use theme constants from '@shared/theme', NO hardcoded hex values
+            4. New Redux slices MUST be added to persistConfig.whitelist in store.ts
+            5. TypeScript strict mode compliance - no implicit any, no implicit returns
+
+            STYLE CHECKS (suggest improvements):
+            - Use spacing constants (spacing.xs, spacing.sm, etc.) instead of raw numbers
+            - Functional components with hooks only (no class components)
+            - Named exports preferred over default exports
+            - useCallback for functions passed to children, useMemo for expensive computations
+
+            SECURITY CHECKS:
+            - No secrets, API keys, or credentials in code
+            - No google-services.json or .env files committed
+
+            Output format:
+            - Start with overall assessment (APPROVE, REQUEST_CHANGES, or COMMENT)
+            - List specific issues with file:line references
+            - Provide fix suggestions for each issue
+          claude_args: "--max-turns 10 --model claude-sonnet-4-5-20250929"
+
+  # On-demand Claude assist via @claude mention
+  claude-assist:
+    name: Claude Assist
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Claude Code Assist
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            A reviewer mentioned @claude with the following comment:
+
+            ${{ github.event.comment.body }}
+
+            Context: This is a React Native/Expo app (Random Timer) with:
+            - TypeScript strict mode
+            - Redux Toolkit + MMKV persistence
+            - Dark-first glassmorphism theme
+            - Path aliases: @navigation, @shared, @features, @assets
+
+            Respond helpfully to their request. If they're asking for code changes,
+            explain what needs to be done and where. Be specific with file paths.
+          claude_args: "--max-turns 5"
+
+  # Copilot coding agent for auto-fix (triggered by @copilot in comments)
+  copilot-autofix:
+    name: Copilot Auto-Fix
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@copilot fix')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Notify Copilot triggered
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { owner, repo } = context.repo;
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setFailed('No pull_request in event context.');
-              return;
-            }
-
-            // Fetch changed files with patches, but cap payload to ~40KB to control token usage
-            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
-            let budget = 40000; // bytes
-            const snippets = [];
-            for (const f of files) {
-              const header = `FILE: ${f.filename} (+${f.additions}/-${f.deletions})`;
-              const patch = f.patch || '';
-              const take = Math.max(0, Math.min(budget - header.length - 100, patch.length));
-              const chunk = patch.slice(0, take);
-              budget -= (header.length + chunk.length + 100);
-              snippets.push(`${header}\n${chunk}`);
-              if (budget <= 0) break;
-            }
-
-            const prompt = [
-              `Repository: ${owner}/${repo}`,
-              `PR #${pr.number}: ${pr.title}`,
-              'Review the following diff snippets for correctness, security, test impact, and style.',
-              'Reply with:',
-              ' - A short overall assessment',
-              ' - Concrete, line-anchored suggestions in markdown bullets',
-              ' - Any security concerns and suggested remediations',
-              '',
-              'Diff snippets (truncated):',
-              '---',
-              ...snippets,
-            ].join('\n');
-
-            core.setOutput('prompt', prompt);
-            core.setOutput('sha', pr.head.sha);
-            core.setOutput('issue', pr.number.toString());
-
-      - name: Call Claude API and generate review
-        id: call
-        uses: actions/github-script@v7
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          PROMPT: ${{ steps.prep.outputs.prompt }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const apiKey = process.env.ANTHROPIC_API_KEY;
-            if (!apiKey) {
-              core.warning('ANTHROPIC_API_KEY missing; skipping Claude review.');
-              core.setOutput('review', 'Claude API key not configured.');
-              core.setOutput('ok', 'false');
-              return;
-            }
-            const prompt = process.env.PROMPT || '';
-            if (!prompt) {
-              core.warning('No prompt available from prep step; skipping Claude review.');
-              core.setOutput('review', 'No diff context available.');
-              core.setOutput('ok', 'false');
-              return;
-            }
-            const body = {
-              model: 'claude-3-5-sonnet-20240620',
-              max_tokens: 1200,
-              temperature: 0.2,
-              messages: [{ role: 'user', content: prompt }]
-            };
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
-                'x-api-key': apiKey,
-                'anthropic-version': '2023-06-01'
-              },
-              body: JSON.stringify(body)
-            });
-            if (!res.ok) {
-              const t = await res.text();
-              core.warning(`Claude API error: ${res.status} ${t.slice(0,300)}`);
-              core.setOutput('review', `Claude API error ${res.status}.`);
-              core.setOutput('ok', 'false');
-              return;
-            }
-            const data = await res.json();
-            const text = (data && data.content && data.content[0] && data.content[0].text) || 'No content';
-            core.setOutput('review', text);
-            core.setOutput('ok', 'true');
-
-      - name: Post review as PR comment
-        if: steps.call.outputs.ok == 'true'
-        uses: actions/github-script@v7
-        env:
-          ISSUE: ${{ steps.prep.outputs.issue }}
-          REVIEW: ${{ steps.call.outputs.review }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const issue_number = parseInt(process.env.ISSUE, 10);
-            const body = `### 🤖 Claude Automated Review\n\n${process.env.REVIEW || 'No review content.'}`;
-            await github.rest.issues.createComment({ owner, repo, issue_number, body });
-
-      - name: Set commit status (Claude Review)
-        uses: actions/github-script@v7
-        env:
-          SHA: ${{ steps.prep.outputs.sha }}
-          OK: ${{ steps.call.outputs.ok }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const sha = process.env.SHA;
-            const ok = (process.env.OK === 'true');
-            await github.rest.repos.createCommitStatus({
-              owner, repo, sha,
-              state: ok ? 'success' : 'failure',
-              context: 'Claude Review',
-              description: ok ? 'Claude review posted' : 'Claude review unavailable'
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🤖 Copilot coding agent triggered. Check your repository settings to ensure Copilot coding agent is enabled.\n\nTo use: Assign an issue to `@copilot` or mention `@copilot` in the issue description.'
             });

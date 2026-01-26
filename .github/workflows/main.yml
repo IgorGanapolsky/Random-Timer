@@ -1,178 +1,18 @@
-name: Random-Timer Main Pipeline
+name: Project Automation
 
 on:
-  push:
-    branches:
-      - develop
-      - main
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-  pull_request:
-    branches:
-      - develop
-      - main
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
   schedule:
-    - cron: '*/30 * * * *' # Run metrics every 30 minutes
+    - cron: '0 */6 * * *' # Run metrics every 6 hours (reduced from 30 min)
   issues:
     types: [opened, edited, labeled, unlabeled, reopened, assigned, unassigned]
   issue_comment:
     types: [created]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_dispatch:
 
 jobs:
-  # Security Analysis
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
-          queries: security-and-quality
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Cache dependencies (CodeQL)
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.npm
-          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-deps-
-      - run: |
-          npm ci --legacy-peer-deps
-          npm run build --if-present
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: '/language:javascript'
-
-  # Code Validation
-  validate:
-    name: Validate
-    runs-on: ubuntu-latest
-    needs: codeql
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      checks: write
-      statuses: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.npm
-            ~/.expo
-          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-deps-
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Align Expo dependencies
-        run: npx expo install --fix --non-interactive || true
-
-      - name: Type check
-        run: npx tsc --noEmit
-
-      - name: Lint
-        run: |
-          npm run lint
-          npm run fmt
-
-      - name: Test
-        run: npm test -- --coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-      - name: SonarCloud Analysis
-        uses: SonarSource/sonarcloud-github-action@master
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-
-  # Security Checks
-  security:
-    name: Security
-    runs-on: ubuntu-latest
-    needs: validate
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-    permissions:
-      security-events: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Cache dependencies (Security)
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.npm
-          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-deps-
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Run OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'Random-Timer'
-          path: '.'
-          format: 'SARIF'
-          args: >
-            --failOnCVSS 7
-            --enableRetired
-            --scan ./
-            --out ./reports/
-            --suppression ./.github/config/dependency-check-suppressions.xml
-
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: reports/dependency-check-report.sarif
-
-  # Project Board and Issue Management
   project-sync:
     name: Project Sync
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'issues' || github.event_name == 'issue_comment'
     permissions:
       contents: read
       issues: write
@@ -214,7 +54,6 @@ jobs:
 
             // Fetch Projects v2 swimlane counts (Status field) via GraphQL
             async function fetchProjectsV2Swimlanes(login, number) {
-              // Get project and discover Status-like field name
               const header = await github.graphql(`
                 query($login: String!, $number: Int!) {
                   user(login: $login) {
@@ -284,7 +123,6 @@ jobs:
               return { counts, statusFieldName, projectTitle: project.title };
             }
 
-            // Always compute, we update on schedule and events
             const STATUS_ISSUE = 81;
             const allOpenIssues = await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: 'open', per_page: 100
@@ -352,7 +190,7 @@ jobs:
               pv2Section = `\n> Projects v2 data unavailable (${String(e).slice(0,140)}).`;
             }
 
-            const body = `# 📊 Random-Timer Project Status\n\n*Last updated: ${fmtDate}*\n\n## 📈 Current Metrics\n\n| Metric | Count | Status |\n| --- | ---: | --- |\n| 📋 Open Issues | ${issueCount} | ${issueHealth} |\n| 🔧 Open PRs | ${prCount} | ${prHealth} |\n| 🏃 In Progress | ${inProgress} | ${progressRate}% of issues |\n| 🐛 Bugs | ${bugCount} | ${bugHealth} |\n| ✨ Features | ${featureCount} | ${featureCount} planned |\n\n## 🚀 Delivery (last 30 days)\n- Merged PRs: ${throughput}\n- Median PR lead time: ${fmtDuration(medianLead)}\n\n## 📊 Activity (last 7 days)\n- Active items updated: ${activityCount}\n- Activity rate: ${activityRate}% (${activityHealth})\n${pv2Section}\n${priorities.length ? '## 🔝 Top Priorities\n' + priorities.join('\n') + '\n' : ''}\n\n## 🎯 Recommendations\n${recs.map(r => `- ${r}`).join('\n')}\n\n---\n\nAutomation: hourly + on repo events. Manual refresh via local script or rerun workflow.`;
+            const body = `# 📊 Random-Timer Project Status\n\n*Last updated: ${fmtDate}*\n\n## 📈 Current Metrics\n\n| Metric | Count | Status |\n| --- | ---: | --- |\n| 📋 Open Issues | ${issueCount} | ${issueHealth} |\n| 🔧 Open PRs | ${prCount} | ${prHealth} |\n| 🏃 In Progress | ${inProgress} | ${progressRate}% of issues |\n| 🐛 Bugs | ${bugCount} | ${bugHealth} |\n| ✨ Features | ${featureCount} | ${featureCount} planned |\n\n## 🚀 Delivery (last 30 days)\n- Merged PRs: ${throughput}\n- Median PR lead time: ${fmtDuration(medianLead)}\n\n## 📊 Activity (last 7 days)\n- Active items updated: ${activityCount}\n- Activity rate: ${activityRate}% (${activityHealth})\n${pv2Section}\n${priorities.length ? '## 🔝 Top Priorities\n' + priorities.join('\n') + '\n' : ''}\n\n## 🎯 Recommendations\n${recs.map(r => `- ${r}`).join('\n')}\n\n---\n\nAutomation: every 6 hours + on repo events. Manual refresh via workflow dispatch.`;
 
             // Ensure the status issue exists; create if missing, then update
             try {
@@ -377,62 +215,4 @@ jobs:
               if (labels.length) {
                 await github.rest.issues.addLabels({ owner, repo, issue_number: context.payload.issue.number, labels });
               }
-            }
-
-  # Notifications
-  notify:
-    name: Notify
-    runs-on: ubuntu-latest
-    needs: [validate, security]
-    if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Notify on failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              const { repo, owner } = context.repo;
-              const run_url = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
-
-              const message = `⚠️ CI Pipeline failed for ${context.sha}\nSee details: ${run_url}`;
-
-              if (context.payload.pull_request) {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: context.payload.pull_request.number,
-                  body: message
-                });
-              }
-            } catch (error) {
-              console.error('Error creating notification:', error);
-            }
-
-      - name: Notify on success
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              const { repo, owner } = context.repo;
-              const run_url = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
-
-              const message = `✅ CI Pipeline passed successfully!\nSee details: ${run_url}`;
-
-              if (context.payload.pull_request) {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: context.payload.pull_request.number,
-                  body: message
-                });
-              }
-            } catch (error) {
-              console.error('Error creating notification:', error);
             }
