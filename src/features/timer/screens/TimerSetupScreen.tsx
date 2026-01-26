@@ -3,10 +3,9 @@
  * Initial screen for configuring timer settings
  */
 
-import { StyleSheet, View, Switch, ScrollView } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, View, Switch, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 import { Screen, Text, Button, GlassCard } from '@shared/components';
 import { spacing, useTheme } from '@shared/theme';
 import { RangeSlider, DurationPicker, VolumeSlider } from '../components';
@@ -117,10 +116,11 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
             />
             <View style={{ marginTop: spacing.sm }}>
               <VolumeSlider
-              value={volume}
-              onValueChange={handleVolumeChange}
-              onSlidingComplete={handleVolumePreview}
-            />
+                value={volume}
+                onValueChange={handleVolumeChange}
+                onSlidingComplete={handleVolumePreview}
+              />
+            </View>
           </GlassCard>
 
           {/* Mystery Mode Card */}
