@@ -205,6 +205,29 @@ npm run prebuild:clean
 - Mocks: `src/shared/test/mockFile.ts`
 - Pattern: `*.test.ts` / `*.test.tsx` (excluded from tsconfig)
 
+### TDD Enforcement
+The PostToolUse hook automatically runs related tests after editing source files:
+- Triggered on Write/Edit to `src/**/*.ts` or `src/**/*.tsx`
+- Runs `npm test -- --findRelatedTests <file>`
+- Runs in background to avoid blocking
+
+### Debug Parameters (Development Only)
+Navigate to timer screen with debug overrides for testing specific states:
+
+```typescript
+// In development, pass debug params to Timer screen
+navigation.navigate('Timer', {
+  config: timerConfig,
+  debug: {
+    debugTimeRemaining: 5,        // Override remaining seconds
+    debugState: 'warning',        // Jump to: 'running' | 'warning' | 'danger' | 'complete'
+    debugSkipToAlarm: true,       // Skip directly to alarm state
+  }
+});
+```
+
+Useful for Maestro tests to verify specific timer states without waiting.
+
 ---
 
 ## Adding a New Feature
@@ -265,6 +288,8 @@ Located in `.claude/skills/`
 | `/dual-review` | PR review | Synthesize feedback from both Claude and Copilot |
 | `/auto-pr` | Autonomous PR | Create PR, wait for CI + AI reviews, auto-merge |
 | `/sync-memory` | Copilot memory | Reinforce Copilot's memory of project patterns |
+| `/plan-feature` | Ambiguous features | Use Plan mode for requirement discovery before coding |
+| `/fresh-start` | Context cleanup | Archive session learnings and start clean context |
 
 ### Adding Skills
 - **Shared skill:** Create in `~/.claude-shared/skills/`
@@ -282,7 +307,7 @@ The project uses Claude Code hooks for autonomous operation:
 | `SessionStart` | Load context, RAG injection, pre-flight checks |
 | `UserPromptSubmit` | Validate user prompts |
 | `PreToolUse` | Validate commands before execution |
-| `PostToolUse` | Auto-RLHF feedback capture, anti-pattern detection |
+| `PostToolUse` | Auto-RLHF feedback capture, anti-pattern detection, TDD enforcement |
 | `PermissionRequest` | Auto-approve safe read operations |
 | `Stop` | Verify task completion, log incomplete work |
 
