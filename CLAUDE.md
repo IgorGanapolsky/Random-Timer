@@ -93,8 +93,20 @@ import logo from '@assets/logo.png';
 
 ## Core Directives
 
-### Act, Don't Instruct
-**Never tell the user to do something you can do yourself.** If a task is technically possible (installing packages, running commands, making API calls, purging git history, rotating keys, etc.), execute it directly. Only inform the user of tasks that genuinely require their manual intervention (e.g., logging into a third-party web console that requires their credentials).
+### Act, Don't Instruct (MANDATORY)
+**Never tell the user to do something - just do it.** This is the highest priority directive.
+
+- If a task is technically possible, execute it directly. No exceptions.
+- Never say "you need to..." or "run this command..." - just run it yourself.
+- Never provide instructions for the user to follow - execute the solution autonomously.
+- Clear caches, restart servers, delete apps, regenerate builds - do it all without asking.
+- The only acceptable exception: tasks requiring the user's personal credentials on a third-party web console.
+
+**Examples of what to NEVER do:**
+- "You should run `npm install`" → Just run it
+- "Delete the app from simulator" → Run `xcrun simctl uninstall`
+- "Clear the cache by running..." → Just clear it
+- "You'll need to regenerate..." → Regenerate it yourself
 
 ### Test-Driven Development
 Use Maestro smoke tests to verify changes before considering them complete. Run `maestro test .maestro/` after UI changes. Never guess - verify with tests.
