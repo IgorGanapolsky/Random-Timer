@@ -128,9 +128,6 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
             <View style={styles.mysteryRow}>
               <View style={styles.mysteryText}>
                 <Text preset="h4">🎭 Mystery Mode</Text>
-                <Text preset="caption" color={colors.textDim}>
-                  Hide remaining time
-                </Text>
               </View>
               <Switch
                 value={config.mysteryMode}
@@ -155,18 +152,18 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
 
 const styles = StyleSheet.create({
   cardTitle: {
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   content: {
-    gap: spacing.sm,
+    gap: spacing.lg,
   },
   footer: {
-    paddingBottom: spacing.xs,
-    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.xl,
   },
   header: {
-    paddingBottom: spacing.sm,
-    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
+    paddingTop: spacing.md,
   },
   mysteryRow: {
     alignItems: 'center',

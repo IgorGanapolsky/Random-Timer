@@ -93,8 +93,20 @@ import logo from '@assets/logo.png';
 
 ## Core Directives
 
-### Act, Don't Instruct
-**Never tell the user to do something you can do yourself.** If a task is technically possible (installing packages, running commands, making API calls, purging git history, rotating keys, etc.), execute it directly. Only inform the user of tasks that genuinely require their manual intervention (e.g., logging into a third-party web console that requires their credentials).
+### Act, Don't Instruct (MANDATORY)
+**Never tell the user to do something - just do it.** This is the highest priority directive.
+
+- If a task is technically possible, execute it directly. No exceptions.
+- Never say "you need to..." or "run this command..." - just run it yourself.
+- Never provide instructions for the user to follow - execute the solution autonomously.
+- Clear caches, restart servers, delete apps, regenerate builds - do it all without asking.
+- The only acceptable exception: tasks requiring the user's personal credentials on a third-party web console.
+
+**Examples of what to NEVER do:**
+- "You should run `npm install`" → Just run it
+- "Delete the app from simulator" → Run `xcrun simctl uninstall`
+- "Clear the cache by running..." → Just clear it
+- "You'll need to regenerate..." → Regenerate it yourself
 
 ### Test-Driven Development
 Use Maestro smoke tests to verify changes before considering them complete. Run `maestro test .maestro/` after UI changes. Never guess - verify with tests.
@@ -103,6 +115,21 @@ Use Maestro smoke tests to verify changes before considering them complete. Run 
 - Never commit secrets (`google-services.json`, `.env`, API keys)
 - If secrets are detected, immediately purge from git history using BFG or git-filter-repo
 - Rotate compromised keys via the appropriate cloud console
+
+### Self-Healing CI (MANDATORY)
+**CI must never be broken.** This is a non-negotiable requirement.
+
+When CI fails:
+1. **Investigate immediately** - check `gh run view --log-failed` for the root cause
+2. **Fix the workflow** - make it resilient to missing secrets, flaky tests, or transient failures
+3. **Add graceful degradation** - optional features (like Projects v2 sync) should skip with a warning, not fail
+4. **Never leave CI red** - a broken CI blocks all development and erodes trust
+
+Patterns for self-healing workflows:
+- Check for required secrets before using them; skip gracefully if missing
+- Use `continue-on-error: true` for non-critical steps
+- Add retry logic for network-dependent operations
+- Fail fast on actual code issues, but be resilient to infrastructure issues
 
 ---
 
