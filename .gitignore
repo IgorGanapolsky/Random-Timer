@@ -56,3 +56,15 @@ coverage/
 *.log
 tmp/
 temp/
+
+# Trunk (linter cache)
+.trunk/
+
+# Python virtual environments
+.venv/
+venv/
+
+# Claude Code memory/cache (session-specific, not project config)
+.claude/memory/
+.claude/hooks/
+.claude/scripts/

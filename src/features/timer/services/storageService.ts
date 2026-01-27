@@ -8,7 +8,7 @@ import { TimerConfig } from '../hooks/useRandomTimer';
 
 export const DEFAULT_CONFIG: TimerConfig = {
   minSeconds: 5, // 5 seconds
-  maxSeconds: 60, // 1 minute (default: 5s to 1m)
+  maxSeconds: 60, // 1 minute (default: 5s to 1m, respects 55s minGap)
   alarmDuration: 10, // 10 seconds
   mysteryMode: false,
 };

@@ -104,6 +104,21 @@ Use Maestro smoke tests to verify changes before considering them complete. Run 
 - If secrets are detected, immediately purge from git history using BFG or git-filter-repo
 - Rotate compromised keys via the appropriate cloud console
 
+### Self-Healing CI (MANDATORY)
+**CI must never be broken.** This is a non-negotiable requirement.
+
+When CI fails:
+1. **Investigate immediately** - check `gh run view --log-failed` for the root cause
+2. **Fix the workflow** - make it resilient to missing secrets, flaky tests, or transient failures
+3. **Add graceful degradation** - optional features (like Projects v2 sync) should skip with a warning, not fail
+4. **Never leave CI red** - a broken CI blocks all development and erodes trust
+
+Patterns for self-healing workflows:
+- Check for required secrets before using them; skip gracefully if missing
+- Use `continue-on-error: true` for non-critical steps
+- Add retry logic for network-dependent operations
+- Fail fast on actual code issues, but be resilient to infrastructure issues
+
 ---
 
 ## Coding Standards

@@ -10,7 +10,7 @@
   "jsEngine": "hermes",
   "splash": {
     "image": "./assets/splash-icon.png",
-    "resizeMode": "contain",
+    "resizeMode": "cover",
     "backgroundColor": "#0F0A1A"
   },
   "ios": {
@@ -35,7 +35,7 @@
       {
         "backgroundColor": "#0F0A1A",
         "image": "./assets/splash-icon.png",
-        "imageWidth": 200
+        "imageWidth": 300
       }
     ],
     [
