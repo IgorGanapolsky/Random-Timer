@@ -55,7 +55,7 @@ export function RangeSlider({
   const minPosition = useSharedValue(0);
   const maxPosition = useSharedValue(0);
 
-  const THUMB_SIZE = 28;
+  const THUMB_SIZE = 24;
   const THUMB_RADIUS = THUMB_SIZE / 2;
   // Use value-based gap if provided, otherwise fall back to step
   const effectiveMinGap = minGap ?? step;
@@ -245,20 +245,20 @@ const styles = StyleSheet.create({
   },
   thumb: {
     alignItems: 'center',
-    borderRadius: 14,
+    borderRadius: 12,
     elevation: 5,
-    height: 28,
+    height: 24,
     justifyContent: 'center',
     position: 'absolute',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-    width: 28,
+    width: 24,
   },
   thumbInner: {
-    borderRadius: 6,
-    height: 12,
-    width: 12,
+    borderRadius: 5,
+    height: 10,
+    width: 10,
   },
   track: {
     borderRadius: radii.full,
