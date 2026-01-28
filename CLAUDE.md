@@ -341,7 +341,7 @@ Located in `.claude/skills/`
 
 | Skill            | Trigger                   | Description                                            |
 | ---------------- | ------------------------- | ------------------------------------------------------ |
-| `/ralph-mode`    | Complex tasks, iterations | Track attempts in ATTEMPTS.md with specs and learnings |
+| `/ralph-mode`    | Multi-file changes        | Continuous iteration loop with superior intelligence review |
 | `/self-heal`     | After mistakes            | Consolidate lessons from feedback logs                 |
 | `/delegate`      | Delegate to Copilot       | Create issue and assign to GitHub Copilot coding agent |
 | `/copilot-agent` | Full Copilot workflow     | Create detailed issue with context for Copilot         |
@@ -355,6 +355,59 @@ Located in `.claude/skills/`
 
 - **Shared skill:** Create in `~/.claude-shared/skills/`
 - **Project skill:** Create in `.claude/skills/`
+
+---
+
+## Ralph Mode (2026 Best Practices)
+
+Autonomous iteration loop for complex, well-defined coding tasks.
+
+### When to Use Ralph
+
+- Multi-file changes with clear acceptance criteria
+- Bug fixes requiring test→fix→retry cycles
+- Refactoring with existing test coverage
+- Any task that can be broken into checkboxes
+
+### Starting Ralph Mode
+
+```bash
+# Start session
+.claude/scripts/ralph-loop.sh start "Add user authentication" AUTH-123
+
+# Check status
+.claude/scripts/ralph-loop.sh status
+
+# Add checkpoint
+.claude/scripts/ralph-loop.sh checkpoint "Completed login form"
+```
+
+### The Loop Protocol
+
+1. **Break down task** into checkboxes in ATTEMPTS.md
+2. **Implement** one checkbox at a time
+3. **Run quality checks** after each change: `npm run quality`
+4. **Retry on failure** - log error, fix, retry
+5. **Superior review** before commit: `.claude/scripts/ralph-review.sh`
+6. **Commit** only after review approval
+
+### Superior Intelligence Review
+
+Before committing, invoke a smarter agent to review:
+
+```bash
+.claude/scripts/ralph-review.sh --staged
+```
+
+Then use Task tool with `subagent_type: compound-engineering:review:code-simplicity-reviewer`
+
+### Key Principles
+
+- **Fail Fast, Fix Fast** - Quick iteration over analysis paralysis
+- **Checkpoint Often** - Save progress after each step
+- **Learn from Failures** - Log what didn't work
+- **Trust Tests** - If tests pass, move forward
+- **Review Before Commit** - Superior intelligence catches what tests miss
 
 ---
 

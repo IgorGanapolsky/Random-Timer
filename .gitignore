@@ -67,4 +67,5 @@ venv/
 # Claude Code memory/cache (session-specific, not project config)
 .claude/memory/
 .claude/hooks/
-.claude/scripts/
+.claude/ralph/
+.claude/scripts/feedback/
