@@ -14,6 +14,7 @@ Create a GitHub issue and assign it to Copilot coding agent for autonomous imple
    - Identify acceptance criteria
 
 2. **Create GitHub Issue**
+
    ```bash
    curl -s -X POST \
      -H "Authorization: token $GITHUB_PAT" \
@@ -27,6 +28,7 @@ Create a GitHub issue and assign it to Copilot coding agent for autonomous imple
    ```
 
 3. **Assign to Copilot**
+
    ```bash
    curl -s -X POST \
      -H "Authorization: token $GITHUB_PAT" \
@@ -45,6 +47,7 @@ Create a GitHub issue and assign it to Copilot coding agent for autonomous imple
 User: "Create a settings screen with a dark mode toggle"
 
 Claude creates issue:
+
 ```
 Title: Add settings screen with dark mode toggle
 

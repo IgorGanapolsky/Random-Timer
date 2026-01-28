@@ -11,11 +11,18 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { GlassCard, Screen, Text } from '@shared/components';
 import { colors, spacing } from '@shared/theme';
+import {
+  analyticsService,
+  AnalyticsEvents,
+  AnalyticsScreens,
+  reviewService,
+} from '@shared/services';
 import { RootStackParamList, TimerDebugParams } from '@navigation';
 import { CircularTimer, TimerControls } from '../components';
 import { useRandomTimer } from '../hooks/useRandomTimer';
@@ -36,11 +43,18 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
   // Pulsing animation for alarm state
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
 
   // Initialize sound and start timer
   useEffect(() => {
+    analyticsService.screen(AnalyticsScreens.ACTIVE_TIMER);
     soundService.initialize();
     start();
+    analyticsService.track(AnalyticsEvents.TIMER_STARTED, {
+      minSeconds: config.minSeconds,
+      maxSeconds: config.maxSeconds,
+      randomMode: config.randomMode,
+    });
 
     return () => {
       soundService.stop();
@@ -54,23 +68,34 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
       // Play alarm sound
       soundService.play(config.alarmDuration * 1000);
 
-      // Start pulse animation
-      pulseScale.value = withRepeat(
-        withSequence(withTiming(1.05, { duration: 500 }), withTiming(1, { duration: 500 })),
-        -1,
-        true,
-      );
-      pulseOpacity.value = withRepeat(
-        withSequence(withTiming(0.7, { duration: 500 }), withTiming(1, { duration: 500 })),
-        -1,
-        true,
-      );
+      // Track completion and maybe request review
+      analyticsService.track(AnalyticsEvents.TIMER_COMPLETED, {
+        totalTime: effectiveState.totalTime,
+      });
+      reviewService.recordSuccess();
+      reviewService.maybeRequestReview();
+
+      // Start pulse animation (skip if reduce motion enabled)
+      if (!reduceMotion) {
+        pulseScale.value = withRepeat(
+          withSequence(withTiming(1.05, { duration: 500 }), withTiming(1, { duration: 500 })),
+          -1,
+          true,
+        );
+        pulseOpacity.value = withRepeat(
+          withSequence(withTiming(0.7, { duration: 500 }), withTiming(1, { duration: 500 })),
+          -1,
+          true,
+        );
+      }
     } else {
       // Stop animation
       pulseScale.value = withTiming(1);
       pulseOpacity.value = withTiming(1);
     }
-  }, [effectiveState.isComplete, config.alarmDuration, pulseScale, pulseOpacity]);
+    // effectiveState.totalTime is intentionally excluded - we only want to track once on completion
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveState.isComplete, config.alarmDuration, pulseScale, pulseOpacity, reduceMotion]);
 
   const handlePlayPause = () => {
     if (effectiveState.isComplete) {
@@ -79,19 +104,23 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
       reset();
     } else if (effectiveState.isRunning) {
       pause();
+      analyticsService.track(AnalyticsEvents.TIMER_PAUSED);
     } else {
       resume();
+      analyticsService.track(AnalyticsEvents.TIMER_RESUMED);
     }
   };
 
   const handleReset = () => {
     soundService.stop();
     reset();
+    analyticsService.track(AnalyticsEvents.TIMER_RESET);
   };
 
   const handleStop = () => {
     soundService.stop();
     stop();
+    analyticsService.track(AnalyticsEvents.TIMER_STOPPED);
     navigation.goBack();
   };
 
@@ -107,7 +136,12 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
           {effectiveState.isComplete ? (
             <GlassCard glow glowColor={colors.timerDanger} padding={spacing['3xl']}>
               <View style={styles.alarmContent}>
-                <Text preset="h1" center color={colors.timerDanger}>
+                <Text
+                  preset="h1"
+                  center
+                  color={colors.timerDanger}
+                  accessibilityIgnoresInvertColors
+                >
                   ⏰
                 </Text>
                 <Text preset="h2" center style={styles.alarmTitle}>
@@ -122,13 +156,13 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
             <CircularTimer
               timeRemaining={effectiveState.timeRemaining}
               totalTime={effectiveState.totalTime}
-              hideTime={config.mysteryMode}
+              hideTime={config.randomMode}
               isPaused={!effectiveState.isRunning}
             />
           )}
         </Animated.View>
 
-        {!config.mysteryMode && effectiveState.totalTime > 0 && !effectiveState.isComplete && (
+        {!config.randomMode && effectiveState.totalTime > 0 && !effectiveState.isComplete && (
           <Text preset="caption" center color={colors.textMuted} style={styles.totalTime}>
             TOTAL: {formatTime(effectiveState.totalTime).toUpperCase()}
           </Text>
@@ -144,10 +178,10 @@ export function ActiveTimerScreen({ navigation, route }: ActiveTimerScreenProps)
         </View>
       </View>
 
-      {config.mysteryMode && !effectiveState.isComplete && (
-        <GlassCard style={styles.mysteryBadge} padding={spacing.md}>
+      {config.randomMode && !effectiveState.isComplete && (
+        <GlassCard style={styles.randomBadge} padding={spacing.md}>
           <Text preset="caption" center color={colors.palette.secondary400}>
-            🎭 MYSTERY MODE
+            🎲 RANDOM MODE
           </Text>
         </GlassCard>
       )}
@@ -220,7 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: spacing['2xl'],
   },
-  mysteryBadge: {
+  randomBadge: {
     alignSelf: 'center',
     position: 'absolute',
     top: spacing['5xl'],

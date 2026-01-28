@@ -6,7 +6,6 @@
 import { StyleSheet, View, ViewStyle, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { spacing, useTheme } from '../theme';
 
 interface ScreenProps {

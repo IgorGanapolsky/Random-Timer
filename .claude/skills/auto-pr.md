@@ -9,6 +9,7 @@ Create a PR, wait for CI + AI reviews to pass, then auto-merge. Full autonomous 
 ## Workflow
 
 1. **Pre-flight Checks**
+
    ```bash
    # Ensure we're on a feature branch
    git branch --show-current
@@ -21,11 +22,13 @@ Create a PR, wait for CI + AI reviews to pass, then auto-merge. Full autonomous 
    ```
 
 2. **Push Branch**
+
    ```bash
    git push -u origin $(git branch --show-current)
    ```
 
 3. **Create PR**
+
    ```bash
    curl -s -X POST \
      -H "Authorization: token $GITHUB_PAT" \
@@ -40,6 +43,7 @@ Create a PR, wait for CI + AI reviews to pass, then auto-merge. Full autonomous 
    ```
 
 4. **Wait for Checks**
+
    ```bash
    # Poll for check status
    while true; do
@@ -59,6 +63,7 @@ Create a PR, wait for CI + AI reviews to pass, then auto-merge. Full autonomous 
    - Verify no REQUEST_CHANGES
 
 6. **Auto-Merge**
+
    ```bash
    curl -s -X PUT \
      -H "Authorization: token $GITHUB_PAT" \

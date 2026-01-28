@@ -5,7 +5,6 @@
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import { TimerSetupScreen, ActiveTimerScreen } from '@features/timer';
 import { TimerConfig } from '@features/timer';
 import { useTheme } from '@shared/theme';

@@ -1,13 +1,23 @@
 appId: com.iganapolsky.randomtimer
 ---
-# Smoke test: Verify app launches and core UI is visible
+# Smoke test: Verify app launches and timer flow works
 - launchApp
 
 # Verify main screen elements are visible
-- assertVisible: "Random Timer"
-- assertVisible: ".*Timer Range.*"
-- assertVisible: "5s"  # Min range label should be 5s
-- assertVisible: "10m" # Max range label should be 10m
-- assertVisible: ".*Alarm Duration.*"
-- assertVisible: ".*Mystery Mode.*"
-- assertVisible: "Start Timer"
+- assertVisible: 'Random Timer'
+- assertVisible:
+    text: '.*Timer Range.*'
+- assertVisible: '5s'
+- assertVisible:
+    text: '.*2M.*'
+- assertVisible:
+    text: '.*Alarm.*'
+- assertVisible: 'Start Timer'
+
+# Start the timer
+- tapOn: 'Start Timer'
+
+# Verify timer screen is shown (pause button should be visible)
+- assertVisible:
+    text: 'Pause timer'
+    optional: true

@@ -78,6 +78,13 @@ class SoundService {
   }
 
   getVolume(): number {
+    // Load from storage if not yet initialized (for setup screen)
+    if (!this.isLoaded) {
+      const savedVolume = storage.getString(VOLUME_STORAGE_KEY);
+      if (savedVolume) {
+        this.volume = parseFloat(savedVolume);
+      }
+    }
     return this.volume;
   }
 

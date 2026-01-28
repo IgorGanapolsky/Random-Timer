@@ -62,13 +62,13 @@ src/
 
 ### Colors
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `background` | `#0F0A1A` | Deep purple-black |
-| `primary` | `#6366F1` | Indigo accent |
-| `timerActive` | `#10B981` | Green - time remaining |
-| `timerWarning` | `#F59E0B` | Amber - almost done |
-| `timerDanger` | `#EF4444` | Red - expired |
+| Token          | Value     | Usage                  |
+| -------------- | --------- | ---------------------- |
+| `background`   | `#0F0A1A` | Deep purple-black      |
+| `primary`      | `#6366F1` | Indigo accent          |
+| `timerActive`  | `#10B981` | Green - time remaining |
+| `timerWarning` | `#F59E0B` | Amber - almost done    |
+| `timerDanger`  | `#EF4444` | Red - expired          |
 
 ### Typography
 
@@ -78,6 +78,7 @@ src/
 ### Animations
 
 All animations use **React Native Reanimated** spring configs for smooth, natural motion:
+
 - `snappy`: Buttons, toggles (damping: 20, stiffness: 300)
 - `gentle`: Page transitions (damping: 25, stiffness: 120)
 - `bouncy`: Playful elements (damping: 10, stiffness: 180)
@@ -87,6 +88,7 @@ All animations use **React Native Reanimated** spring configs for smooth, natura
 ## How to Run
 
 ### Prerequisites
+
 - Node.js 20+
 - Xcode (for iOS)
 - Android Studio (for Android)
@@ -123,19 +125,19 @@ flowchart TD
     B --> C[Set time range<br/>1-10 minutes]
     B --> D[Set alarm duration<br/>5-60 seconds]
     B --> E[Toggle mystery mode]
-    
+
     C & D & E --> F[Tap Start Timer]
     F --> G[Random time selected]
     G --> H[Active Timer Screen]
-    
+
     H --> I{Timer running}
     I -->|Countdown| J[Circular timer animates]
     I -->|Complete| K[Alarm plays!]
-    
+
     K --> L{User action}
     L -->|Dismiss| M[Reset timer]
     L -->|Stop| A
-    
+
     J -->|Pause| N[Timer paused]
     N -->|Resume| I
     N -->|Reset| G

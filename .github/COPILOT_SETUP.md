@@ -15,6 +15,7 @@ This document lists the manual GitHub settings you need to configure to fully en
 > Allows Copilot to learn repository-specific patterns and remember them across sessions.
 
 **Steps:**
+
 1. Go to https://github.com/IgorGanapolsky/Random-Timer/settings
 2. Click **Code security and analysis** in the sidebar
 3. Scroll to **GitHub Copilot**
@@ -29,6 +30,7 @@ This document lists the manual GitHub settings you need to configure to fully en
 > Allows you to assign GitHub issues directly to Copilot for autonomous implementation.
 
 **Steps:**
+
 1. Go to https://github.com/IgorGanapolsky/Random-Timer/settings
 2. Click **Copilot** in the sidebar (or **Code security and analysis**)
 3. Under "Copilot coding agent", enable:
@@ -36,6 +38,7 @@ This document lists the manual GitHub settings you need to configure to fully en
    - **"Allow Copilot to push to branches"**
 
 **Usage:**
+
 - Assign an issue to `Copilot` (type `@copilot` in assignees)
 - Or comment `@copilot implement this` on an issue
 - Copilot creates a `copilot/` branch and opens a draft PR
@@ -47,6 +50,7 @@ This document lists the manual GitHub settings you need to configure to fully en
 > Copilot automatically reviews all PRs (in addition to Claude review).
 
 **Steps:**
+
 1. Go to https://github.com/IgorGanapolsky/Random-Timer/settings
 2. Click **Rules** → **Rulesets** in the sidebar
 3. Create a new ruleset or edit existing
@@ -63,6 +67,7 @@ This document lists the manual GitHub settings you need to configure to fully en
 > Bundle project context for better Copilot suggestions.
 
 **Steps:**
+
 1. Go to https://github.com/codespaces (or your Copilot dashboard)
 2. Click **Spaces** → **New Space**
 3. Name it "Random Timer"
@@ -77,12 +82,12 @@ This document lists the manual GitHub settings you need to configure to fully en
 
 ## Files Created by This Setup
 
-| File | Purpose |
-|------|---------|
-| `.github/copilot-instructions.md` | Main Copilot instructions (read on every request) |
-| `.github/instructions/react-native.instructions.md` | RN-specific patterns for `src/**/*.tsx` |
-| `.github/instructions/redux.instructions.md` | Redux patterns for `src/shared/redux/**/*.ts` |
-| `.github/instructions/theme.instructions.md` | Theme usage for all source files |
+| File                                                | Purpose                                           |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `.github/copilot-instructions.md`                   | Main Copilot instructions (read on every request) |
+| `.github/instructions/react-native.instructions.md` | RN-specific patterns for `src/**/*.tsx`           |
+| `.github/instructions/redux.instructions.md`        | Redux patterns for `src/shared/redux/**/*.ts`     |
+| `.github/instructions/theme.instructions.md`        | Theme usage for all source files                  |
 
 ---
 
@@ -100,15 +105,18 @@ After enabling all settings, test:
 ## Troubleshooting
 
 **Copilot not following instructions?**
+
 - Verify `.github/copilot-instructions.md` exists
 - Check that the file is on the default branch (develop)
 
 **Coding agent not working?**
+
 - Ensure you have Copilot Pro or higher
 - Check repository settings → Copilot → Agent is enabled
 - Agent only works on issues, not PRs
 
 **Memory not persisting?**
+
 - Memory is in public preview, may have delays
 - Memories expire after 28 days
 - Check https://github.com/settings/copilot for memory management

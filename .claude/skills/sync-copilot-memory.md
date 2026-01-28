@@ -9,6 +9,7 @@ Reinforce GitHub Copilot's memory by making interactions that teach it project p
 ## Why This Exists
 
 Copilot Memory (agentic memory) learns from interactions but can forget or miss patterns. This skill:
+
 1. Reviews current Copilot instructions
 2. Tests if Copilot remembers them
 3. Reinforces patterns through targeted interactions
@@ -16,6 +17,7 @@ Copilot Memory (agentic memory) learns from interactions but can forget or miss 
 ## Workflow
 
 1. **Check Current Instructions**
+
    ```bash
    cat .github/copilot-instructions.md
    cat .github/instructions/*.instructions.md
@@ -62,12 +64,14 @@ Run through these in VS Code Copilot Chat periodically:
 ## Troubleshooting
 
 **Copilot ignoring instructions?**
+
 1. Verify `.github/copilot-instructions.md` is on default branch
 2. Check file is under 8KB (Copilot has size limits)
 3. Ensure instructions are clear and specific
 4. Try more explicit wording
 
 **Memory not persisting?**
+
 1. Memory is scoped to repository
 2. Expires after 28 days of no interaction
 3. Check https://github.com/settings/copilot for memory management
@@ -84,7 +88,7 @@ If automated approaches fail, manually reinforce by:
 
 ## Example Session
 
-```
+````
 User: /sync-memory
 
 Claude: Testing Copilot memory for Random Timer project...
@@ -104,7 +108,10 @@ import { MMKV } from 'react-native-mmkv';
 
 // CORRECT - always use the wrapper
 import { storage } from '@shared/utils/storage';
-```
+````
 
 Memory sync complete. Test again in next session.
+
+```
+
 ```

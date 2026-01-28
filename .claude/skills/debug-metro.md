@@ -3,6 +3,7 @@
 Diagnose and fix Metro bundler connection issues. Nuclear option for when nothing else works.
 
 ## Trigger
+
 User invokes `/debug-metro` or mentions Metro connection problems, "unable to load script", or bundler not connecting.
 
 ## Workflow
@@ -10,6 +11,7 @@ User invokes `/debug-metro` or mentions Metro connection problems, "unable to lo
 Execute these steps autonomously:
 
 ### 1. Kill Existing Metro Processes
+
 ```bash
 # Kill any running Metro processes
 pkill -f "react-native.*start" || true
@@ -21,6 +23,7 @@ lsof -ti:8081 | xargs kill -9 2>/dev/null || true
 ```
 
 ### 2. Clear All Caches
+
 ```bash
 # Clear Expo cache
 rm -rf .expo
@@ -38,6 +41,7 @@ rm -rf $TMPDIR/haste-* 2>/dev/null || true
 ```
 
 ### 3. Android-Specific Fixes
+
 ```bash
 # Setup ADB reverse proxy
 adb reverse tcp:8081 tcp:8081
@@ -47,6 +51,7 @@ adb devices
 ```
 
 ### 4. Verify Network
+
 ```bash
 # Get local IP for Wi-Fi debugging
 ipconfig getifaddr en0 || ipconfig getifaddr en1
@@ -55,16 +60,19 @@ ipconfig getifaddr en0 || ipconfig getifaddr en1
 Report the IP address for manual device configuration if needed.
 
 ### 5. Restart Metro Fresh
+
 ```bash
 npm start
 ```
 
 Or if that fails:
+
 ```bash
 npx expo start --dev-client --clear
 ```
 
 ### 6. If Still Failing - Nuclear Option
+
 ```bash
 # Remove node_modules and reinstall
 rm -rf node_modules
@@ -78,13 +86,16 @@ cd android && ./gradlew clean && cd ..
 ```
 
 ## Diagnostic Checks
+
 - Is Metro actually running? Check for process on port 8081
 - Can device reach the bundler? Test http://localhost:8081/status
 - Is ADB connected? `adb devices` should show device
 - Same network? Compare device IP with computer IP
 
 ## Output
+
 Report:
+
 1. What processes were killed
 2. What caches were cleared
 3. Current device connection status

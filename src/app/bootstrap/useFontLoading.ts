@@ -6,10 +6,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import {
-  SpaceMono_400Regular,
-  SpaceMono_700Bold,
-} from '@expo-google-fonts/space-mono';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 
 /**
  * Hook for loading custom fonts

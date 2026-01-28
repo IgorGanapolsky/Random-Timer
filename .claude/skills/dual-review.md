@@ -19,6 +19,7 @@ Trigger both Claude and Copilot to review a PR, then synthesize their feedback.
    Copilot review runs automatically if auto-review is enabled in repo settings
 
 3. **Fetch Review Comments**
+
    ```bash
    # Get Claude review (from Actions bot)
    curl -s -H "Authorization: token $GITHUB_PAT" \
@@ -37,27 +38,31 @@ Trigger both Claude and Copilot to review a PR, then synthesize their feedback.
    - Create action items
 
 5. **Report Summary**
+
    ```markdown
    ## AI Review Summary for PR #<number>
 
    ### Critical Issues (must fix)
+
    - [Claude] SafeAreaView imported from wrong package (file:line)
    - [Copilot] Missing error handling in async function
 
    ### Style Issues (should fix)
+
    - [Claude] Use spacing.md instead of 16
    - [Copilot] Consider extracting to custom hook
 
    ### Suggestions (nice to have)
+
    - [Copilot] Add JSDoc comments
    ```
 
 ## Checks Performed
 
-| Reviewer | Focus Area |
-|----------|------------|
-| **Claude** | SafeAreaView imports, MMKV imports, theme usage, Redux patterns, project-specific rules |
-| **Copilot** | General code quality, security, performance, best practices, test coverage |
+| Reviewer    | Focus Area                                                                              |
+| ----------- | --------------------------------------------------------------------------------------- |
+| **Claude**  | SafeAreaView imports, MMKV imports, theme usage, Redux patterns, project-specific rules |
+| **Copilot** | General code quality, security, performance, best practices, test coverage              |
 
 ## Example Usage
 

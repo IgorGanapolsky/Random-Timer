@@ -1,10 +1,11 @@
 # Redux Instructions
 
-applyTo: "src/shared/redux/**/*.ts"
+applyTo: "src/shared/redux/\*_/_.ts"
 
 ## Slice Creation
 
 Create slices using Redux Toolkit:
+
 ```tsx
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
@@ -33,6 +34,7 @@ export default mySlice.reducer;
 ## Using Redux in Components
 
 ALWAYS use the typed hooks:
+
 ```tsx
 // CORRECT
 import { useAppDispatch, useAppSelector } from '@shared/redux';
@@ -44,19 +46,20 @@ import { useDispatch, useSelector } from 'react-redux';
 ## Selectors
 
 Create selectors for derived state:
+
 ```tsx
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@shared/redux';
 
-export const selectDerivedValue = createSelector(
-  [(state: RootState) => state.slice.value],
-  (value) => computeDerivation(value)
+export const selectDerivedValue = createSelector([(state: RootState) => state.slice.value], value =>
+  computeDerivation(value),
 );
 ```
 
 ## Persistence
 
 For persisted state, add to whitelist in store.ts:
+
 ```tsx
 const persistConfig = {
   key: 'root',
@@ -68,6 +71,7 @@ const persistConfig = {
 ## Async Actions
 
 Use createAsyncThunk for async operations:
+
 ```tsx
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -80,6 +84,6 @@ export const fetchData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 ```

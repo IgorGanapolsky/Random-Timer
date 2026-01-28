@@ -48,7 +48,7 @@ jobs:
             - Start with overall assessment (APPROVE, REQUEST_CHANGES, or COMMENT)
             - List specific issues with file:line references
             - Provide fix suggestions for each issue
-          claude_args: "--max-turns 10 --model claude-sonnet-4-5-20250929"
+          claude_args: '--max-turns 10 --model claude-sonnet-4-5-20250929'
 
   # On-demand Claude assist via @claude mention
   claude-assist:
@@ -82,7 +82,7 @@ jobs:
 
             Respond helpfully to their request. If they're asking for code changes,
             explain what needs to be done and where. Be specific with file paths.
-          claude_args: "--max-turns 5"
+          claude_args: '--max-turns 5'
 
   # Copilot coding agent for auto-fix (triggered by @copilot in comments)
   copilot-autofix:

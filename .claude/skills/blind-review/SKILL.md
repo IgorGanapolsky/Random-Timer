@@ -23,6 +23,7 @@ Claude executes ALL phases without user intervention. Never ask user to run comm
 ## Phase 1: Identify Review Target
 
 Determine what to review:
+
 - If user specifies files/PR → use those
 - If recent changes exist → review uncommitted changes
 - If neither → ask user what to review
@@ -42,6 +43,7 @@ Launch 3 reviewer agents **in parallel** using a SINGLE message with multiple Ta
 **CRITICAL**: Each agent works in ISOLATION - they do NOT see each other's prompts or outputs.
 
 ### Reviewer 1: Architecture Strategist
+
 ```
 Prompt: Review this code from an architectural perspective. Focus on:
 - Component boundaries and responsibilities
@@ -55,6 +57,7 @@ Files to review: [FILE_LIST]
 ```
 
 ### Reviewer 2: Pattern Recognition Specialist
+
 ```
 Prompt: Analyze this code for patterns and anti-patterns. Focus on:
 - Code duplication
@@ -68,6 +71,7 @@ Files to review: [FILE_LIST]
 ```
 
 ### Reviewer 3: Domain Expert (project-specific)
+
 ```
 Prompt: Review this code for domain-specific correctness. For Random Timer:
 - Timer logic accuracy
@@ -85,22 +89,22 @@ Files to review: [FILE_LIST]
 ```typescript
 // SINGLE message with 3 parallel Task calls
 Task({
-  subagent_type: "compound-engineering:review:architecture-strategist",
-  prompt: "[Architecture review prompt with files]",
-  description: "Blind architecture review"
-})
+  subagent_type: 'compound-engineering:review:architecture-strategist',
+  prompt: '[Architecture review prompt with files]',
+  description: 'Blind architecture review',
+});
 
 Task({
-  subagent_type: "compound-engineering:review:pattern-recognition-specialist",
-  prompt: "[Pattern review prompt with files]",
-  description: "Blind pattern review"
-})
+  subagent_type: 'compound-engineering:review:pattern-recognition-specialist',
+  prompt: '[Pattern review prompt with files]',
+  description: 'Blind pattern review',
+});
 
 Task({
-  subagent_type: "general-purpose",
-  prompt: "[Domain review prompt with files]",
-  description: "Blind domain review"
-})
+  subagent_type: 'general-purpose',
+  prompt: '[Domain review prompt with files]',
+  description: 'Blind domain review',
+});
 ```
 
 ---
@@ -182,24 +186,31 @@ After all phases complete, present:
 ## Blind Peer Review Complete
 
 ### Review Scope
+
 - Files reviewed: [count]
 - Reviewers: Architecture, Patterns, Domain
 - Mode: Blind (isolated) + Private Synthesis
 
 ### High Priority Issues
+
 [From synthesis]
 
 ### Medium Priority Issues
+
 [From synthesis]
 
 ### Low Priority Issues
+
 [From synthesis]
 
 ### Consensus Areas
+
 Issues flagged by multiple reviewers:
+
 - [List]
 
 ### Unique Insights
+
 - Architecture: [unique finding]
 - Patterns: [unique finding]
 - Domain: [unique finding]
@@ -209,12 +220,12 @@ Issues flagged by multiple reviewers:
 
 ## Why This Works
 
-| Traditional Review | Blind Peer Review |
-|-------------------|-------------------|
-| Reviewers see each other | Reviewers isolated |
-| Ideas converge (groupthink) | Ideas stay diverse |
-| Later reviewers copy earlier | All reviews original |
-| One perspective dominates | All perspectives equal |
+| Traditional Review           | Blind Peer Review      |
+| ---------------------------- | ---------------------- |
+| Reviewers see each other     | Reviewers isolated     |
+| Ideas converge (groupthink)  | Ideas stay diverse     |
+| Later reviewers copy earlier | All reviews original   |
+| One perspective dominates    | All perspectives equal |
 
 The isolation phase protects **originality**.
 The synthesis phase captures **quality feedback**.
@@ -224,6 +235,7 @@ The synthesis phase captures **quality feedback**.
 ## Automatic Invocation
 
 Claude detects when blind review is appropriate:
+
 - After significant code changes (3+ files modified)
 - Before creating PRs with complex changes
 - When user mentions "review" in context of recent work
@@ -235,6 +247,7 @@ No user commands needed - Claude invokes this skill autonomously when beneficial
 ## ACT DON'T INSTRUCT
 
 This skill is FULLY AUTONOMOUS:
+
 - Claude launches all agents directly
 - Claude collects and synthesizes results
 - Claude presents findings

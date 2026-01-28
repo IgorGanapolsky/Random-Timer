@@ -8,6 +8,7 @@ import { StyleSheet, View, Switch, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, Text, Button, GlassCard } from '@shared/components';
 import { spacing, useTheme } from '@shared/theme';
+import { analyticsService, AnalyticsEvents, AnalyticsScreens } from '@shared/services';
 import { RangeSlider, DurationPicker, VolumeSlider } from '../components';
 import { TimerConfig } from '../hooks/useRandomTimer';
 import { storageService, DEFAULT_CONFIG } from '../services/storageService';
@@ -27,11 +28,13 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
   const [config, setConfig] = useState<TimerConfig>(DEFAULT_CONFIG);
   const [volume, setVolume] = useState(1.0);
 
-  // Load saved settings on mount
+  // Load saved settings on mount and track screen view
   useEffect(() => {
+    analyticsService.screen(AnalyticsScreens.TIMER_SETUP);
     const savedConfig = storageService.loadConfig();
     setConfig(savedConfig);
     setVolume(soundService.getVolume());
+    soundService.initialize();
   }, []);
 
   // Save settings when changed
@@ -47,13 +50,15 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
     setConfig(prev => ({ ...prev, alarmDuration: duration }));
   }, []);
 
-  const handleMysteryToggle = useCallback((value: boolean) => {
-    setConfig(prev => ({ ...prev, mysteryMode: value }));
+  const handleRandomModeToggle = useCallback((value: boolean) => {
+    setConfig(prev => ({ ...prev, randomMode: value }));
+    analyticsService.track(AnalyticsEvents.RANDOM_MODE_TOGGLED, { enabled: value });
   }, []);
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume);
     soundService.setVolume(newVolume);
+    analyticsService.track(AnalyticsEvents.VOLUME_CHANGED, { volume: newVolume });
   }, []);
 
   const handleVolumePreview = useCallback(() => {
@@ -94,7 +99,7 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
             </Text>
             <RangeSlider
               min={5}
-              max={600}
+              max={120}
               minValue={config.minSeconds}
               maxValue={config.maxSeconds}
               onValueChange={handleRangeChange}
@@ -123,15 +128,23 @@ export function TimerSetupScreen({ navigation }: TimerSetupScreenProps) {
             </View>
           </GlassCard>
 
-          {/* Mystery Mode Card */}
+          {/* Random Mode Card */}
           <GlassCard delay={300} padding={spacing.md}>
-            <View style={styles.mysteryRow}>
-              <View style={styles.mysteryText}>
-                <Text preset="h4">🎭 Mystery Mode</Text>
+            <View style={styles.randomModeRow}>
+              <View style={styles.randomModeText}>
+                <Text preset="h4">🎲 Random Mode</Text>
+                <Text
+                  preset="caption"
+                  color={colors.textDim}
+                  style={styles.randomModeCaption}
+                  numberOfLines={2}
+                >
+                  Hide countdown timer
+                </Text>
               </View>
               <Switch
-                value={config.mysteryMode}
-                onValueChange={handleMysteryToggle}
+                value={config.randomMode}
+                onValueChange={handleRandomModeToggle}
                 trackColor={{
                   false: colors.glass.background,
                   true: colors.primary,
@@ -165,12 +178,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     paddingTop: spacing.md,
   },
-  mysteryRow: {
+  randomModeCaption: {
+    marginTop: spacing.xs,
+  },
+  randomModeRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  mysteryText: {
+  randomModeText: {
     flex: 1,
     marginRight: spacing.md,
   },

@@ -4,12 +4,7 @@
  */
 
 import { StyleSheet, View, Pressable } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  useSharedValue,
-} from 'react-native-reanimated';
-
+import Animated, { useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 import { colors, spacing, radii, timing } from '@shared/theme';
 import { Text } from '@shared/components';
 import { useHaptics } from '@shared/hooks/useHaptics';
@@ -53,7 +48,7 @@ export function DurationPicker({
       )}
 
       <View style={styles.optionsContainer}>
-        {options.map((option) => (
+        {options.map(option => (
           <OptionButton
             key={option}
             value={option}
@@ -97,16 +92,9 @@ function OptionButton({ label, isSelected, onPress }: OptionButtonProps) {
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[
-        styles.optionButton,
-        isSelected && styles.optionButtonSelected,
-        animatedStyle,
-      ]}
+      style={[styles.optionButton, isSelected && styles.optionButtonSelected, animatedStyle]}
     >
-      <Text
-        preset="button"
-        color={isSelected ? colors.palette.neutral100 : colors.textDim}
-      >
+      <Text preset="button" color={isSelected ? colors.palette.neutral100 : colors.textDim}>
         {label}
       </Text>
     </AnimatedPressable>
@@ -121,21 +109,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     textAlign: 'center',
   },
-  optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
   optionButton: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.lg,
     backgroundColor: colors.glass.background,
-    borderWidth: 1,
     borderColor: colors.glass.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   optionButtonSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'center',
   },
 });

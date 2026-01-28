@@ -16,6 +16,7 @@ Quickly delegate the current task or a described task to GitHub Copilot coding a
 2. **Create & Assign Issue**
 
    Single API call approach:
+
    ```bash
    # Create issue with @copilot mention (triggers assignment)
    curl -s -X POST \
@@ -39,13 +40,16 @@ Always append these technical notes to the issue body:
 
 ```markdown
 ## Project Context
+
 - React Native 0.81.4 / Expo SDK 54
 - TypeScript strict mode
 - Redux Toolkit with MMKV persistence
 - Dark-first glassmorphism UI
 
 ## Copilot Instructions
+
 Follow .github/copilot-instructions.md:
+
 - SafeAreaView from 'react-native-safe-area-context'
 - Storage from '@shared/utils/storage'
 - Colors from '@shared/theme'
@@ -55,6 +59,7 @@ Follow .github/copilot-instructions.md:
 ## Example Interactions
 
 **Simple delegation:**
+
 ```
 User: delegate adding a vibration toggle to settings
 
@@ -70,6 +75,7 @@ Claude: Created issue #267: "Add vibration toggle to settings"
 ```
 
 **With context:**
+
 ```
 User: let copilot handle refactoring the timer slice to use RTK Query
 
@@ -86,11 +92,11 @@ Claude: Created issue #268: "Refactor timerSlice to use RTK Query"
 
 ## When to Use
 
-| Scenario | Use `/delegate` |
-|----------|-----------------|
-| Simple feature additions | ✅ Yes |
-| Bug fixes with clear repro | ✅ Yes |
-| Refactoring with clear scope | ✅ Yes |
-| Complex architectural changes | ❌ No (do manually) |
-| Security-sensitive code | ❌ No (review carefully) |
-| Unclear requirements | ❌ No (clarify first) |
+| Scenario                      | Use `/delegate`          |
+| ----------------------------- | ------------------------ |
+| Simple feature additions      | ✅ Yes                   |
+| Bug fixes with clear repro    | ✅ Yes                   |
+| Refactoring with clear scope  | ✅ Yes                   |
+| Complex architectural changes | ❌ No (do manually)      |
+| Security-sensitive code       | ❌ No (review carefully) |
+| Unclear requirements          | ❌ No (clarify first)    |

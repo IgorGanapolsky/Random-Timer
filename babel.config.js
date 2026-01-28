@@ -1,7 +1,7 @@
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = function (api) {
   // Get platform info before caching
-  const caller = api.caller((c) => c?.platform);
+  const caller = api.caller(c => c?.platform);
   const isWeb = caller === 'web';
 
   // Cache the config based on platform

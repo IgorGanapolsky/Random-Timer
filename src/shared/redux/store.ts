@@ -9,9 +9,7 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-
 import { storage } from '@shared/utils/storage';
-
 import { timerReducer } from './slices/timerSlice';
 
 // Redux Persist storage adapter for MMKV

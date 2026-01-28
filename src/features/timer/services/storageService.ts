@@ -10,7 +10,7 @@ export const DEFAULT_CONFIG: TimerConfig = {
   minSeconds: 5, // 5 seconds
   maxSeconds: 15, // 15 seconds (default: 5s to 15s)
   alarmDuration: 10, // 10 seconds
-  mysteryMode: false,
+  randomMode: true, // Default ON - aligns with app brand
 };
 
 export const storageService = {

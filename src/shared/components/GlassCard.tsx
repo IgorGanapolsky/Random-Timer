@@ -3,6 +3,7 @@
  * Glassmorphism card with blur effect and subtle border
  */
 
+import { useEffect } from 'react';
 import { StyleSheet, View, ViewStyle, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, {
@@ -11,8 +12,6 @@ import Animated, {
   useSharedValue,
   withDelay,
 } from 'react-native-reanimated';
-import { useEffect } from 'react';
-
 import { spacing, radii, shadows, timing, useTheme } from '../theme';
 
 interface GlassCardProps {
@@ -115,10 +114,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.md,
   },
-  webCard: {
-    ...shadows.md,
-  },
   content: {
     borderWidth: 1,
+  },
+  webCard: {
+    ...shadows.md,
   },
 });

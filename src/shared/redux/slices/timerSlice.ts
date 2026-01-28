@@ -47,14 +47,7 @@ const timerSlice = createSlice({
   },
 });
 
-export const {
-  setMinTime,
-  setMaxTime,
-  setTimeRange,
-  startTimer,
-  stopTimer,
-  resetTimer,
-  tick,
-} = timerSlice.actions;
+export const { setMinTime, setMaxTime, setTimeRange, startTimer, stopTimer, resetTimer, tick } =
+  timerSlice.actions;
 
 export const timerReducer = timerSlice.reducer;

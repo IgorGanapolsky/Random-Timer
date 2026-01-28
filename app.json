@@ -15,7 +15,7 @@
   },
   "ios": {
     "supportsTablet": true,
-    "bundleIdentifier": "com.iganapolsky.randomtimer"
+    "bundleIdentifier": "com.igorganapolsky.randomtimer"
   },
   "android": {
     "adaptiveIcon": {

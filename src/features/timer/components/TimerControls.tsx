@@ -10,6 +10,7 @@ import Animated, {
   useSharedValue,
   withSequence,
   withTiming,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { colors, spacing, timing, shadows } from '@shared/theme';
@@ -38,6 +39,7 @@ export function TimerControls({ isRunning, onPlayPause, onReset, onStop }: Timer
         icon="reset"
         size={56}
         variant="ghost"
+        accessibilityLabel="Reset timer"
         onPress={() => {
           trigger('medium');
           onReset();
@@ -49,6 +51,7 @@ export function TimerControls({ isRunning, onPlayPause, onReset, onStop }: Timer
         icon={isRunning ? 'pause' : 'play'}
         size={80}
         variant="primary"
+        accessibilityLabel={isRunning ? 'Pause timer' : 'Start timer'}
         onPress={() => {
           trigger('medium');
           onPlayPause();
@@ -60,6 +63,7 @@ export function TimerControls({ isRunning, onPlayPause, onReset, onStop }: Timer
         icon="stop"
         size={56}
         variant="ghost"
+        accessibilityLabel="Stop and go back"
         onPress={() => {
           trigger('medium');
           onStop();
@@ -74,23 +78,29 @@ interface ControlButtonProps {
   size: number;
   variant: 'primary' | 'ghost';
   onPress: () => void;
+  accessibilityLabel: string;
 }
 
-function ControlButton({ icon, size, variant, onPress }: ControlButtonProps) {
+function ControlButton({ icon, size, variant, onPress, accessibilityLabel }: ControlButtonProps) {
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.9, timing.spring.snappy);
+    if (!reduceMotion) {
+      scale.value = withSpring(0.9, timing.spring.snappy);
+    }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, timing.spring.snappy);
+    if (!reduceMotion) {
+      scale.value = withSpring(1, timing.spring.snappy);
+    }
   };
 
   const handlePress = () => {
-    if (icon === 'reset') {
-      // Spin animation for reset
+    if (icon === 'reset' && !reduceMotion) {
+      // Spin animation for reset (skip if reduce motion enabled)
       rotation.value = withSequence(
         withTiming(0, { duration: 0 }),
         withSpring(-360, timing.spring.gentle),
@@ -111,6 +121,8 @@ function ControlButton({ icon, size, variant, onPress }: ControlButtonProps) {
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       style={[
         styles.button,
         {
@@ -166,8 +178,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ghostButton: {
-    backgroundColor: colors.glass.background,
-    borderColor: colors.glass.border,
+    backgroundColor: colors.glass.backgroundLight,
+    borderColor: colors.glass.borderLight,
     borderWidth: 1,
   },
   primaryButton: {

@@ -3,6 +3,7 @@
  * Dual-thumb slider for selecting min/max time range
  */
 
+import { useEffect } from 'react';
 import { StyleSheet, View, LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -84,6 +85,16 @@ export function RangeSlider({
     minPosition.value = valueToPosition(minValue, width);
     maxPosition.value = valueToPosition(maxValue, width);
   };
+
+  // Sync positions when values change from parent (e.g., loaded from storage)
+  useEffect(() => {
+    if (trackWidth.value > 0) {
+      minPosition.value = valueToPosition(minValue, trackWidth.value);
+      maxPosition.value = valueToPosition(maxValue, trackWidth.value);
+    }
+    // Position functions are stable - intentionally excluded to prevent animation restarts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minValue, maxValue]);
 
   const updateValues = (newMin: number, newMax: number) => {
     onValueChange(newMin, newMax);

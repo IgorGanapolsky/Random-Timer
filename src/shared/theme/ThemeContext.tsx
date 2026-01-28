@@ -8,7 +8,6 @@
 
 import { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
-
 import { darkTheme, lightTheme } from './colors';
 
 // Union type for both themes

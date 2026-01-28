@@ -28,7 +28,7 @@ interface CircularTimerProps {
   size?: number;
   /** Stroke width */
   strokeWidth?: number;
-  /** Hide time display (mystery mode) */
+  /** Hide time display (random mode) */
   hideTime?: boolean;
   /** Timer is paused */
   isPaused?: boolean;
@@ -46,7 +46,7 @@ export function CircularTimer({
   const circumference = radius * 2 * Math.PI;
   const center = size / 2;
 
-  // Flashing animation for mystery mode
+  // Flashing animation for random mode
   const flashOpacity = useSharedValue(1);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function CircularTimer({
     }
   }, [hideTime, isPaused, flashOpacity]);
 
-  const mysteryTextStyle = useAnimatedStyle(() => ({
+  const hiddenTextStyle = useAnimatedStyle(() => ({
     opacity: flashOpacity.value,
   }));
 
@@ -106,7 +106,7 @@ export function CircularTimer({
           fill="transparent"
         />
 
-        {/* Progress arc - hidden in mystery mode */}
+        {/* Progress arc - hidden in random mode */}
         {!hideTime && (
           <AnimatedCircle
             cx={center}
@@ -127,7 +127,7 @@ export function CircularTimer({
       {/* Time display */}
       <View style={styles.timeContainer}>
         {hideTime ? (
-          <Animated.View style={mysteryTextStyle}>
+          <Animated.View style={hiddenTextStyle}>
             <Text preset="timerLarge" center color={colors.text}>
               ???
             </Text>

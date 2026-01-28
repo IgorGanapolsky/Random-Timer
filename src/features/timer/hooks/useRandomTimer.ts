@@ -13,8 +13,8 @@ export interface TimerConfig {
   maxSeconds: number;
   /** How long the alarm should sound (seconds) */
   alarmDuration: number;
-  /** Hide remaining time (mystery mode) */
-  mysteryMode: boolean;
+  /** Hide remaining time (random mode - aligns with app brand) */
+  randomMode: boolean;
 }
 
 export interface TimerState {
@@ -75,14 +75,14 @@ export function useRandomTimer(config: TimerConfig): UseRandomTimerReturn {
 
   // Pause the timer
   const pause = useCallback(() => {
-    setState((prev) => ({ ...prev, isRunning: false }));
+    setState(prev => ({ ...prev, isRunning: false }));
     trigger('light');
   }, [trigger]);
 
   // Resume the timer
   const resume = useCallback(() => {
     if (state.timeRemaining > 0) {
-      setState((prev) => ({ ...prev, isRunning: true }));
+      setState(prev => ({ ...prev, isRunning: true }));
       trigger('light');
     }
   }, [state.timeRemaining, trigger]);
@@ -138,7 +138,7 @@ export function useRandomTimer(config: TimerConfig): UseRandomTimerReturn {
   useEffect(() => {
     if (state.isRunning && state.timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
-        setState((prev) => {
+        setState(prev => {
           const newTime = prev.timeRemaining - 1;
 
           // Timer complete!
@@ -175,7 +175,7 @@ export function useRandomTimer(config: TimerConfig): UseRandomTimerReturn {
   useEffect(() => {
     if (state.isComplete && state.alarmTimeRemaining > 0) {
       alarmIntervalRef.current = setInterval(() => {
-        setState((prev) => {
+        setState(prev => {
           const newAlarmTime = prev.alarmTimeRemaining - 1;
 
           if (newAlarmTime <= 0) {

@@ -19,6 +19,7 @@ triggers:
 ## When to Capture Feedback
 
 ### Capture (Thumbs Down) When:
+
 - User says "that's wrong", "no", "incorrect", "that broke something"
 - User corrects my answer
 - User has to repeat themselves
@@ -27,6 +28,7 @@ triggers:
 - I gave instructions instead of acting (violated ACT DON'T INSTRUCT)
 
 ### Capture (Thumbs Up) When:
+
 - User says "good", "thanks", "that worked", "perfect"
 - Task completed successfully on first try
 - User doesn't need to correct me
@@ -51,6 +53,7 @@ node "$CLAUDE_PROJECT_DIR/.claude/scripts/feedback/capture-feedback.js" \
 ## Domain Tags for Random Timer
 
 Use these tags to categorize feedback:
+
 - `timer-logic` - Timer countdown, random time generation
 - `redux-state` - State management, slices, persistence
 - `ui-components` - Buttons, sliders, screens
@@ -73,6 +76,7 @@ Use these tags to categorize feedback:
 ## Examples
 
 ### User says "that broke the slider"
+
 ```bash
 node .claude/scripts/feedback/capture-feedback.js \
   --feedback=down \
@@ -81,6 +85,7 @@ node .claude/scripts/feedback/capture-feedback.js \
 ```
 
 ### User says "perfect, timer works now"
+
 ```bash
 node .claude/scripts/feedback/capture-feedback.js \
   --feedback=up \
@@ -89,6 +94,7 @@ node .claude/scripts/feedback/capture-feedback.js \
 ```
 
 ### User has to repeat themselves
+
 ```bash
 node .claude/scripts/feedback/capture-feedback.js \
   --feedback=down \
@@ -99,6 +105,7 @@ node .claude/scripts/feedback/capture-feedback.js \
 ## Data Storage
 
 All feedback is LOCAL ONLY (excluded from git):
+
 - `.claude/memory/feedback/feedback-log.jsonl`
 - `.claude/memory/feedback/feedback-summary.json`
 

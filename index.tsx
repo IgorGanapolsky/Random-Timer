@@ -1,7 +1,6 @@
 import { Platform } from 'react-native';
 import '@expo/metro-runtime';
 import { registerRootComponent } from 'expo';
-
 import { App } from './src/app/App';
 
 // Only import native-specific modules on native platforms

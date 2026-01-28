@@ -46,9 +46,11 @@ This project implements several security measures:
 ## Scope
 
 This security policy applies to:
+
 - The Random Timer mobile application
 - Associated build scripts and configuration
 
 Out of scope:
+
 - Third-party dependencies (report to their maintainers)
 - Issues in development/testing environments only
