@@ -1,6 +1,7 @@
 {
   "name": "RandomTimer",
   "slug": "random-timer",
+  "owner": "igorganapolsky",
   "version": "1.0.0",
   "orientation": "portrait",
   "icon": "./assets/icon.png",
@@ -15,7 +16,10 @@
   },
   "ios": {
     "supportsTablet": true,
-    "bundleIdentifier": "com.igorganapolsky.randomtimer"
+    "bundleIdentifier": "com.igorganapolsky.randomtimer",
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
   },
   "android": {
     "adaptiveIcon": {

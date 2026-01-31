@@ -77,6 +77,26 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Configure EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # Check current user
+          eas whoami
+
+          # Create/link the EAS project
+          # This will create the project on Expo if it doesn't exist
+          # The --non-interactive flag requires the project to already exist OR owner to be set in app.json
+          eas project:init --non-interactive 2>/dev/null || eas build:configure --platform all --non-interactive || true
+
+          # Verify the project is configured
+          if grep -q "projectId" app.json; then
+            echo "Project configured successfully"
+            cat app.json | grep -A5 "extra"
+          else
+            echo "Warning: projectId not found in app.json, build may fail"
+          fi
+
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
