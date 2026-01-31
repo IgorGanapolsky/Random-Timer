@@ -88,8 +88,8 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           jq --arg v "${VERSION#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
-          # Update app.json version (preserving existing fields)
-          jq --arg v "${VERSION#v}" '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
+          # Update app.json version (config is at root level, not under .expo)
+          jq --arg v "${VERSION#v}" '.version = $v' app.json > tmp.json && mv tmp.json app.json
 
       - name: Configure EAS project
         env:
