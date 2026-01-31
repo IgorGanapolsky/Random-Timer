@@ -77,6 +77,20 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Update app version
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          jq --arg v "${VERSION#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+          # Update app.json version (preserving existing fields)
+          jq --arg v "${VERSION#v}" '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
+
       - name: Configure EAS project
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -95,20 +109,6 @@ jobs:
             echo "ERROR: projectId not found in app.json"
             exit 1
           fi
-
-      - name: Generate SBOM
-        uses: anchore/sbom-action@v0
-        with:
-          format: cyclonedx-json
-          output-file: sbom.cdx.json
-
-      - name: Update app version
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          jq --arg v "${VERSION#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
-          # Update app.json version
-          jq --arg v "${VERSION#v}" '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
 
       - name: Build iOS
         env:
