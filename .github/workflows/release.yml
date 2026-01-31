@@ -88,7 +88,8 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           jq --arg v "${VERSION#v}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
-          npx expo config --type bare
+          # Update app.json version
+          jq --arg v "${VERSION#v}" '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
 
       - name: Build iOS
         env:
