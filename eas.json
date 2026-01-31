@@ -14,11 +14,23 @@
         "simulator": false
       }
     },
+    "staging": {
+      "distribution": "store",
+      "channel": "staging"
+    },
     "production": {
+      "distribution": "store",
       "autoIncrement": true
     }
   },
   "submit": {
+    "staging": {
+      "ios": {
+        "appleId": "iganapolsky@gmail.com",
+        "ascAppId": "6746442874",
+        "appleTeamId": "9GMM26JC5X"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "iganapolsky@gmail.com",
