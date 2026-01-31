@@ -15,9 +15,14 @@
       }
     },
     "staging": {
-      "distribution": "store",
+      "distribution": "store"
+    },
+    "ci": {
       "ios": {
-        "credentialsSource": "local"
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {

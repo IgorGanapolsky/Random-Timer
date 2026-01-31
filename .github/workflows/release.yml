@@ -113,8 +113,8 @@ jobs:
       - name: Build iOS
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
-          # Use the same profile name as the environment (staging or production)
-          BUILD_PROFILE: ${{ github.event.inputs.environment || 'production' }}
+          # CI builds use 'ci' profile (simulator/APK) - production builds require manual credential setup first via 'eas credentials'
+          BUILD_PROFILE: ci
         run: |
           # Build without auto-submit - credentials need to be set up on EAS first
           # After build completes on EAS, manually submit via: eas submit --platform ios
@@ -123,8 +123,8 @@ jobs:
       - name: Build Android
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
-          # Use the same profile name as the environment (staging or production)
-          BUILD_PROFILE: ${{ github.event.inputs.environment || 'production' }}
+          # CI builds use 'ci' profile (simulator/APK) - production builds require manual credential setup first via 'eas credentials'
+          BUILD_PROFILE: ci
         run: |
           # Build without auto-submit
           eas build --platform android --profile "$BUILD_PROFILE" --non-interactive --no-wait
