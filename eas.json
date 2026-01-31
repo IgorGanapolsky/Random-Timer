@@ -16,7 +16,9 @@
     },
     "staging": {
       "distribution": "store",
-      "channel": "staging"
+      "ios": {
+        "credentialsSource": "local"
+      }
     },
     "production": {
       "distribution": "store",
