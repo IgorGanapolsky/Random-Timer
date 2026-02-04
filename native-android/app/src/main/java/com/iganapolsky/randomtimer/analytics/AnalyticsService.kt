@@ -15,9 +15,9 @@ class AnalyticsService @Inject constructor() {
     fun initialize(application: Application) {
         if (initialized) return
 
-        val apiKey = BuildConfig.POSTHOG_API_KEY
-        if (apiKey.isBlank()) {
-            // Skip initialization if no API key configured
+        val apiKey = "phc_REPLACE_WITH_YOUR_KEY" // TODO: Replace with actual PostHog API key
+        if (apiKey.startsWith("phc_REPLACE")) {
+            // Skip initialization if no real API key
             return
         }
 
