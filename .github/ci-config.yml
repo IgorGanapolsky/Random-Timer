@@ -1,9 +1,9 @@
 ---
-# CI/CD Configuration for SuperPassword (2025)
+# CI/CD Configuration for RandomTimer-Native (2025)
 
 # Project Configuration
 project:
-  name: SuperPassword
+  name: RandomTimer-Native
   type: mobile
   platform: react-native
   status_issue: 81
@@ -58,7 +58,7 @@ quality:
 # Notifications
 notifications:
   slack:
-    channel: "#superpassword-ci"
+    channel: "#randomtimer-native-ci"
     alerts:
       - build_failure
       - security_critical

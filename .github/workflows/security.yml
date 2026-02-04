@@ -53,7 +53,7 @@ jobs:
         if: matrix.scan-type == 'dependencies'
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: "SuperPassword"
+          project: "RandomTimer-Native"
           path: "."
           format: "HTML"
           args: >

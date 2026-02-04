@@ -1,4 +1,4 @@
-# SuperPassword Issue Management Configuration (2025)
+# RandomTimer-Native Issue Management Configuration (2025)
 
 # Issue Categories
 categories:
@@ -156,7 +156,7 @@ templates:
     In the meantime:
     - 📱 For immediate support, check our [FAQ](docs/FAQ.md)
     - 🔍 Search our [knowledge base](docs/KB.md)
-    - 💬 Join our [Discord community](https://discord.gg/superpassword)
+    - 💬 Join our [Discord community](https://discord.gg/randomtimer-native)
 
   needs_info: |
     We need some additional information to help resolve this issue:
@@ -193,7 +193,7 @@ sla:
 notifications:
   channels:
     - type: slack
-      channel: "#superpassword-issues"
+      channel: "#randomtimer-native-issues"
       triggers:
         - new_critical_bug
         - sla_breach

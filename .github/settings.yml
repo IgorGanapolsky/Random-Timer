@@ -1,7 +1,7 @@
 repository:
-  name: SuperPassword
+  name: RandomTimer-Native
   description: Secure password management app built with React Native and Expo
-  homepage: https://github.com/IgorGanapolsky/SuperPassword
+  homepage: https://github.com/IgorGanapolsky/RandomTimer-Native
   topics: react-native, expo, password-manager, security, mobile-app
   private: false
   has_issues: true
