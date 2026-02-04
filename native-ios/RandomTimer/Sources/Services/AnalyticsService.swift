@@ -1,57 +1,56 @@
 import Foundation
+import PostHog
 
 /// Analytics Service for PostHog integration
-/// To enable: Add PostHog Swift SDK via SPM and set your API key below
 @MainActor
 final class AnalyticsService {
     static let shared = AnalyticsService()
 
     private var initialized = false
 
-    // TODO: Replace with your actual PostHog API key
-    private let apiKey = "phc_REPLACE_WITH_YOUR_KEY"
+    private let apiKey = "phc_cpuhUFoXKeG15GoZBwwEZJToeRX07FRZI4Ty0WCW2da"
     private let host = "https://us.i.posthog.com"
 
     private init() {}
 
     func initialize() {
         guard !initialized else { return }
-        guard !apiKey.starts(with: "phc_REPLACE") else {
+        guard !apiKey.isEmpty else {
             print("[Analytics] No API key configured - analytics disabled")
             return
         }
 
-        // TODO: Initialize PostHog when SDK is added
-        // PostHogSDK.shared.setup(PostHogConfig(apiKey: apiKey, host: host))
+        let config = PostHogConfig(apiKey: apiKey, host: host)
+        config.captureApplicationLifecycleEvents = true
+        config.captureScreenViews = false // We track manually
+        PostHogSDK.shared.setup(config)
         initialized = true
         print("[Analytics] PostHog initialized")
     }
 
     func track(_ event: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.capture(event, properties: properties)
-        print("[Analytics] Track: \(event)")
+        PostHogSDK.shared.capture(event, properties: properties)
     }
 
     func screen(_ screenName: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.screen(screenName, properties: properties)
-        print("[Analytics] Screen: \(screenName)")
+        PostHogSDK.shared.screen(screenName, properties: properties)
     }
 
     func identify(userId: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.identify(userId, userProperties: properties)
+        PostHogSDK.shared.identify(userId, userProperties: properties)
     }
 
     func reset() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.reset()
+        PostHogSDK.shared.reset()
     }
 
     func flush() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.flush()
+        PostHogSDK.shared.flush()
     }
 }
 
