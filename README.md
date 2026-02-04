@@ -2,6 +2,12 @@
 
 Native iOS and Android apps that go off at a random time within a user-defined range.
 
+## Demo
+
+<p align="center">
+  <img src="screenshots/android-demo.gif" width="300" alt="Random Timer Demo" />
+</p>
+
 ## Screenshots
 
 <p align="center">
