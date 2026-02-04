@@ -1,0 +1,79 @@
+package com.iganapolsky.randomtimer
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
+import com.iganapolsky.randomtimer.service.TimerForegroundService
+import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
+import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
+import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Handle permission result if needed
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        requestNotificationPermission()
+
+        setContent {
+            RandomTimerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = TimerColors.BackgroundDark
+                ) {
+                    RandomTimerNavHost()
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Tell service app is in foreground - suppress notifications
+        sendAppStateToService(isInForeground = true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Tell service app is in background - show notifications
+        sendAppStateToService(isInForeground = false)
+    }
+
+    private fun sendAppStateToService(isInForeground: Boolean) {
+        val intent = Intent(this, TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_APP_STATE_CHANGED
+            putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, isInForeground)
+        }
+        startService(intent)
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+}

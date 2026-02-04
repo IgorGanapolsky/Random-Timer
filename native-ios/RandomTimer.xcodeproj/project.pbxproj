@@ -1,0 +1,701 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */; };
+		0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */; };
+		0DDD8A9A4BBA38ABE292B47F /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */; };
+		1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */; };
+		17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
+		1EF5792885AFE606EACC05F9 /* TimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */; };
+		49B707298D8B919D28D01A71 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */; };
+		4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */; };
+		4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */; };
+		4ED9D921707F80E1AC5501F3 /* RandomTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368C8F93B37D3B244F271919 /* RandomTimerApp.swift */; };
+		4F4A683B236AE94216503707 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A84792F8E1380EF1A87461 /* Colors.swift */; };
+		56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3063864498ABB31478972EDD /* alarm.mp3 */; };
+		69A55EE7F47BF51A55C13896 /* RandomTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */; };
+		840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
+		96771424C44C551B73F7732B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15E4584476AB7D519E638B /* GlassCard.swift */; };
+		BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D8BFD3BC04A1001EE7329508 /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4045FE32D7D1E2F9D4C423C /* StorageService.swift */; };
+		D91C11A4CCFA99B1AF1AEA34 /* RandomTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */; };
+		DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
+		E479E3D609A46B2F93C1BD2C /* RangeSliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A81BED66FA956A6A357D5F6D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0EDC84FE4BE7EB4ACDD83C02 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6B67826C44AEC156CD76B7DC;
+			remoteInfo = RandomTimerWidgetExtension;
+		};
+		D3B5D27FE9DAFDE56963E3F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0EDC84FE4BE7EB4ACDD83C02 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 071F286DC49E27F1773FA883;
+			remoteInfo = RandomTimer;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C1D86135661BEED30B3D6574 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RandomTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerLiveActivity.swift; sourceTree = "<group>"; };
+		1D15E4584476AB7D519E638B /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		1FEB9292178DAA002E1375B9 /* RandomTimerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RandomTimerWidgetExtension.entitlements; sourceTree = "<group>"; };
+		25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3063864498ABB31478972EDD /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
+		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
+		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		4C626B57059C6BDF97711A5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerWidgetBundle.swift; sourceTree = "<group>"; };
+		5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModels.swift; sourceTree = "<group>"; };
+		5897E50AB48E9FBF061E29B4 /* RandomTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RandomTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
+		7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerView.swift; sourceTree = "<group>"; };
+		7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModelsTests.swift; sourceTree = "<group>"; };
+		7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSliderView.swift; sourceTree = "<group>"; };
+		91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "gentle-chime.mp3"; sourceTree = "<group>"; };
+		965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTimerScreen.swift; sourceTree = "<group>"; };
+		AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSetupScreen.swift; sourceTree = "<group>"; };
+		B9A84792F8E1380EF1A87461 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerManager.swift; sourceTree = "<group>"; };
+		D4045FE32D7D1E2F9D4C423C /* StorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageService.swift; sourceTree = "<group>"; };
+		ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1F45D7F5254FAD17E047D6A3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5897E50AB48E9FBF061E29B4 /* RandomTimer.app */,
+				25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */,
+				05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3F3001C89372688DF388B3EA /* App */ = {
+			isa = PBXGroup;
+			children = (
+				368C8F93B37D3B244F271919 /* RandomTimerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4A083F7CAA823D4930153B06 /* RandomTimerTests */ = {
+			isa = PBXGroup;
+			children = (
+				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
+			);
+			path = RandomTimerTests;
+			sourceTree = "<group>";
+		};
+		552F50DFC810EB390ED7DC36 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */,
+				1D15E4584476AB7D519E638B /* GlassCard.swift */,
+				68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */,
+				7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		6413DA757BFDBE2A16F530B5 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		99BD2D54C4CED5E8976F44F9 /* UseCases */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = UseCases;
+			sourceTree = "<group>";
+		};
+		A7465B81D29C7680F842A4F4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */,
+				D4045FE32D7D1E2F9D4C423C /* StorageService.swift */,
+				CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A9369D56F8A5F3C82993B7C0 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				552F50DFC810EB390ED7DC36 /* Components */,
+				BF2FCD2370C088340557209E /* Screens */,
+				B6F0A354E3DFEC67F9B4135A /* Theme */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		B6F0A354E3DFEC67F9B4135A /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				B9A84792F8E1380EF1A87461 /* Colors.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		BF2FCD2370C088340557209E /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */,
+				AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		D30E2D221821267F7C1DCC6E /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				6413DA757BFDBE2A16F530B5 /* Models */,
+				99BD2D54C4CED5E8976F44F9 /* UseCases */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		D32BDC3522EA9C4F129D3A58 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3F3001C89372688DF388B3EA /* App */,
+				D30E2D221821267F7C1DCC6E /* Domain */,
+				A7465B81D29C7680F842A4F4 /* Services */,
+				A9369D56F8A5F3C82993B7C0 /* UI */,
+			);
+			name = Sources;
+			path = RandomTimer/Sources;
+			sourceTree = "<group>";
+		};
+		DAE21E1BE339F9330CF1883A /* SharedModels */ = {
+			isa = PBXGroup;
+			children = (
+				5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */,
+			);
+			path = SharedModels;
+			sourceTree = "<group>";
+		};
+		DB1EB0493351D1D4C087065E /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				3063864498ABB31478972EDD /* alarm.mp3 */,
+				91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */,
+			);
+			name = Sounds;
+			path = RandomTimer/Resources/Sounds;
+			sourceTree = "<group>";
+		};
+		F0050F788BCC05C75D7EA40F /* RandomTimerWidget */ = {
+			isa = PBXGroup;
+			children = (
+				4C626B57059C6BDF97711A5D /* Info.plist */,
+				1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */,
+				50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */,
+				1FEB9292178DAA002E1375B9 /* RandomTimerWidgetExtension.entitlements */,
+				ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */,
+			);
+			path = RandomTimerWidget;
+			sourceTree = "<group>";
+		};
+		F8289CF182E2C94C3F449A81 = {
+			isa = PBXGroup;
+			children = (
+				4A083F7CAA823D4930153B06 /* RandomTimerTests */,
+				F0050F788BCC05C75D7EA40F /* RandomTimerWidget */,
+				DAE21E1BE339F9330CF1883A /* SharedModels */,
+				DB1EB0493351D1D4C087065E /* Sounds */,
+				D32BDC3522EA9C4F129D3A58 /* Sources */,
+				1F45D7F5254FAD17E047D6A3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		068B65121206C32BF6322382 /* RandomTimerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D5ED6F06F95BC3C6B8B40BC6 /* Build configuration list for PBXNativeTarget "RandomTimerTests" */;
+			buildPhases = (
+				CA4E80465DB6DB61FEB6A5DF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				67ED10C9A616F8D32CF4F663 /* PBXTargetDependency */,
+			);
+			name = RandomTimerTests;
+			packageProductDependencies = (
+			);
+			productName = RandomTimerTests;
+			productReference = 25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		071F286DC49E27F1773FA883 /* RandomTimer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FC5C4B604AB7C83642F1A28 /* Build configuration list for PBXNativeTarget "RandomTimer" */;
+			buildPhases = (
+				4B3649502FCACD78DF51B7D7 /* Sources */,
+				C860582E5E34407E753D7F99 /* Resources */,
+				C1D86135661BEED30B3D6574 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B309A62F166A0C885742BA28 /* PBXTargetDependency */,
+			);
+			name = RandomTimer;
+			packageProductDependencies = (
+			);
+			productName = RandomTimer;
+			productReference = 5897E50AB48E9FBF061E29B4 /* RandomTimer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6B67826C44AEC156CD76B7DC /* RandomTimerWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6928FF87BC5E7BA0886D9F95 /* Build configuration list for PBXNativeTarget "RandomTimerWidgetExtension" */;
+			buildPhases = (
+				A082432CA7AC1CD3BEBA0A62 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RandomTimerWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = RandomTimerWidgetExtension;
+			productReference = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0EDC84FE4BE7EB4ACDD83C02 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					068B65121206C32BF6322382 = {
+						DevelopmentTeam = 9GMM26JC5X;
+						ProvisioningStyle = Automatic;
+					};
+					071F286DC49E27F1773FA883 = {
+						DevelopmentTeam = 9GMM26JC5X;
+						ProvisioningStyle = Automatic;
+					};
+					6B67826C44AEC156CD76B7DC = {
+						DevelopmentTeam = 9GMM26JC5X;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = CD36B60FFBE1306E78F16436 /* Build configuration list for PBXProject "RandomTimer" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F8289CF182E2C94C3F449A81;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				071F286DC49E27F1773FA883 /* RandomTimer */,
+				068B65121206C32BF6322382 /* RandomTimerTests */,
+				6B67826C44AEC156CD76B7DC /* RandomTimerWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C860582E5E34407E753D7F99 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */,
+				4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4B3649502FCACD78DF51B7D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */,
+				0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */,
+				4F4A683B236AE94216503707 /* Colors.swift in Sources */,
+				96771424C44C551B73F7732B /* GlassCard.swift in Sources */,
+				1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */,
+				0DDD8A9A4BBA38ABE292B47F /* PrimaryButton.swift in Sources */,
+				4ED9D921707F80E1AC5501F3 /* RandomTimerApp.swift in Sources */,
+				E479E3D609A46B2F93C1BD2C /* RangeSliderView.swift in Sources */,
+				D8BFD3BC04A1001EE7329508 /* StorageService.swift in Sources */,
+				1EF5792885AFE606EACC05F9 /* TimerManager.swift in Sources */,
+				17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */,
+				4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A082432CA7AC1CD3BEBA0A62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69A55EE7F47BF51A55C13896 /* RandomTimerLiveActivity.swift in Sources */,
+				D91C11A4CCFA99B1AF1AEA34 /* RandomTimerWidgetBundle.swift in Sources */,
+				49B707298D8B919D28D01A71 /* SharedTypes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA4E80465DB6DB61FEB6A5DF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,
+				840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		67ED10C9A616F8D32CF4F663 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 071F286DC49E27F1773FA883 /* RandomTimer */;
+			targetProxy = D3B5D27FE9DAFDE56963E3F1 /* PBXContainerItemProxy */;
+		};
+		B309A62F166A0C885742BA28 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6B67826C44AEC156CD76B7DC /* RandomTimerWidgetExtension */;
+			targetProxy = A81BED66FA956A6A357D5F6D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		02ACBFF2FE72E4428D7448AA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RandomTimer.app/RandomTimer";
+			};
+			name = Debug;
+		};
+		03FF5C3C9BD88526D12DEA51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RandomTimer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		093F04E2079538687B15A343 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RandomTimerWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		16FDC5DDEF28A124C3BFAA9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9GMM26JC5X;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4F6D27440DCBFEA2B7BABE45 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RandomTimer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		71022F62A5D06CEC91345947 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RandomTimerWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		873078713152ECDFEFD9C3CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.iganapolsky.randomtimer.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RandomTimer.app/RandomTimer";
+			};
+			name = Release;
+		};
+		A6A8B90BA24458B108276D55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9GMM26JC5X;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1FC5C4B604AB7C83642F1A28 /* Build configuration list for PBXNativeTarget "RandomTimer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F6D27440DCBFEA2B7BABE45 /* Debug */,
+				03FF5C3C9BD88526D12DEA51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6928FF87BC5E7BA0886D9F95 /* Build configuration list for PBXNativeTarget "RandomTimerWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71022F62A5D06CEC91345947 /* Debug */,
+				093F04E2079538687B15A343 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CD36B60FFBE1306E78F16436 /* Build configuration list for PBXProject "RandomTimer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16FDC5DDEF28A124C3BFAA9C /* Debug */,
+				A6A8B90BA24458B108276D55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D5ED6F06F95BC3C6B8B40BC6 /* Build configuration list for PBXNativeTarget "RandomTimerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				02ACBFF2FE72E4428D7448AA /* Debug */,
+				873078713152ECDFEFD9C3CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0EDC84FE4BE7EB4ACDD83C02 /* Project object */;
+}

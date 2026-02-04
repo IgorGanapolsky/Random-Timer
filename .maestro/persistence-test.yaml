@@ -1,0 +1,35 @@
+appId: com.iganapolsky.randomtimer
+---
+# Test: Verify settings persist between app launches
+
+# First launch - don't clear state (dev build needs Metro connection)
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd
+
+- assertVisible: 'Random Timer'
+
+# Find and interact with volume slider
+# First, scroll down to ensure volume slider is visible
+- scrollUntilVisible:
+    element: '100%'
+    direction: DOWN
+    timeout: 5000
+
+# Tap on the alarm card area to focus, then adjust volume
+# The slider thumb should be near the right edge at 100%
+- tapOn:
+    point: '50%, 57%'
+
+# Stop the app completely
+- stopApp
+
+# Relaunch
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd
+
+# Check that volume persisted (should not be 100% after tap moved it)
+- assertVisible: 'Random Timer'

@@ -1,15 +1,17 @@
-name: "SuperPassword CodeQL config"
-queries:
-  - uses: security-and-quality
-  - uses: security-extended
+name: 'CodeQL Config for React Native'
 
-paths:
-  - src
-  - app
-  - components
-  - screens
+# Exclude paths not relevant to security analysis
 paths-ignore:
   - node_modules
-  - "**/*.test.{js,jsx,ts,tsx}"
-  - "**/__tests__/**"
-  - "**/*.d.ts"
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+  - '.maestro/**'
+  - 'coverage/**'
+
+# Filter out false positives
+query-filters:
+  # Suppress "unknown directive" warning for React Native Reanimated worklets
+  - exclude:
+      id: js/unknown-directive

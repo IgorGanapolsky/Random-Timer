@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_dark">#FF0F0A1A</color>
+    <color name="background_light">#FF1A1425</color>
+    <color name="accent_primary">#FF8B5CF6</color>
+    <color name="text_primary">#FFF8FAFC</color>
+    <color name="timer_active">#FF10B981</color>
+    <color name="timer_warning">#FFF59E0B</color>
+    <color name="timer_danger">#FFEF4444</color>
+</resources>
