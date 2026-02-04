@@ -86,6 +86,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Analytics
+    implementation(libs.posthog)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
