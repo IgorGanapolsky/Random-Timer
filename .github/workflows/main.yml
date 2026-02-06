@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '0 */6 * * *' # Run metrics every 6 hours (reduced from 30 min)
   issues:
-    types: [opened, edited, labeled, unlabeled, reopened, assigned, unassigned]
+    types: [opened, labeled, unlabeled, assigned, unassigned]
   issue_comment:
     types: [created]
   workflow_dispatch:

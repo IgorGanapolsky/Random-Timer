@@ -176,7 +176,7 @@ struct ActiveTimerScreen: View {
 
     private func statusMessage(for status: TimerStatus) -> String {
         switch status {
-        case .running:
+        case .running, .warning, .danger:
             return "Timer running..."
         default:
             return ""
