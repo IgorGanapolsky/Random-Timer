@@ -1,6 +1,6 @@
-# SuperPassword Infrastructure
+# RandomTimer-Native Infrastructure
 
-This document outlines the infrastructure and CI/CD setup for SuperPassword.
+This document outlines the infrastructure and CI/CD setup for RandomTimer-Native.
 
 ## Branch Strategy
 
@@ -127,7 +127,7 @@ We follow a modified GitFlow approach:
 1. **Branch Protection**
 
    ```bash
-   export GITHUB_REPOSITORY="IgorGanapolsky/SuperPassword"
+   export GITHUB_REPOSITORY="IgorGanapolsky/RandomTimer-Native"
    ./.github/scripts/setup-branch-protection.sh
    ```
 

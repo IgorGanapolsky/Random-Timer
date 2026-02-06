@@ -12,15 +12,15 @@ struct CircularTimerView: View {
 
     // Subtle breathing animation for timer display (adds suspense)
     @State private var pulseOpacity: Double = 1.0
-    // Circle pulsing animation to show timer is active
-    @State private var circlePulseOpacity: Double = 0.4
+    // Circle pulsing animation to show timer is active (drives alpha directly)
+    @State private var circlePulseAlpha: Double = 0.3
 
     private var isComplete: Bool {
         status == .alarm || status == .complete
     }
 
-    private var backgroundOpacity: Double {
-        isComplete ? 0.4 : circlePulseOpacity
+    private var trackAlpha: Double {
+        isComplete ? 0.15 : circlePulseAlpha
     }
 
     var body: some View {
@@ -28,7 +28,7 @@ struct CircularTimerView: View {
             // Background track with pulse animation (only pulse when timer is running)
             Circle()
                 .stroke(
-                    Color.glassBackground.opacity(backgroundOpacity),
+                    Color.white.opacity(trackAlpha),
                     style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
                 )
 
@@ -121,19 +121,19 @@ struct CircularTimerView: View {
         ) {
             pulseOpacity = 0.85
         }
-        // Circle pulse to show timer is active (creates suspense)
+        // Circle pulse to show timer is active (matches Android: 0.3→0.7)
         withAnimation(
             .easeInOut(duration: 1.5)
             .repeatForever(autoreverses: true)
         ) {
-            circlePulseOpacity = 1.0
+            circlePulseAlpha = 0.7
         }
     }
 
     private func stopAnimations() {
         withAnimation(.easeOut(duration: 0.3)) {
             pulseOpacity = 1.0
-            circlePulseOpacity = 0.4
+            circlePulseAlpha = 0.15
         }
     }
 }

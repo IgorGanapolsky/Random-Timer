@@ -8,15 +8,17 @@ final class AnalyticsService {
 
     private var initialized = false
 
-    // TODO: Replace with your actual PostHog API key
-    private let apiKey = "phc_REPLACE_WITH_YOUR_KEY"
+    // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
+    private var apiKey: String {
+        Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
+    }
     private let host = "https://us.i.posthog.com"
 
     private init() {}
 
     func initialize() {
         guard !initialized else { return }
-        guard !apiKey.starts(with: "phc_REPLACE") else {
+        guard !apiKey.isEmpty else {
             print("[Analytics] No API key configured - analytics disabled")
             return
         }

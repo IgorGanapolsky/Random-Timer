@@ -2,6 +2,19 @@
 
 Native iOS and Android apps that go off at a random time within a user-defined range.
 
+## Demo
+
+<p align="center">
+  <img src="screenshots/android-demo.gif" width="300" alt="Random Timer Demo" />
+</p>
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/ios-setup.png" width="280" alt="iOS Setup Screen" />
+  <img src="screenshots/android-setup.png" width="280" alt="Android Setup Screen" />
+</p>
+
 ## Features
 
 - **Random Timer Range**: Set min/max time range (0-5 minutes), timer picks a random duration

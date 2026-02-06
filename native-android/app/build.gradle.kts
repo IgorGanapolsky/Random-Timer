@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -18,6 +20,9 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // PostHog Analytics - from gradle.properties or CI secret
+        buildConfigField("String", "POSTHOG_API_KEY", "\"${System.getenv("POSTHOG_API_KEY") ?: project.findProperty("POSTHOG_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -88,6 +93,14 @@ dependencies {
 
     // Analytics
     implementation(libs.posthog)
+
+    // In-App Review
+    implementation(libs.play.review)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 
     // Testing
     testImplementation(libs.junit)
