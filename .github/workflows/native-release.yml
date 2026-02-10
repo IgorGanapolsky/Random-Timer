@@ -85,7 +85,12 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 secret is not set"
+            exit 1
+          fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
+          echo "✅ Keystore decoded"
 
       - name: Build release AAB
         env:
@@ -101,10 +106,14 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
+          if [ -z "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ GOOGLE_PLAY_JSON_KEY secret is not set — skipping Play Store upload"
+            exit 1
+          fi
           echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
           python3 - <<'PYEOF'
-          import json
+          import sys
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
@@ -113,29 +122,33 @@ jobs:
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
 
-          credentials = service_account.Credentials.from_service_account_file(
-              '/tmp/play-service-account.json', scopes=SCOPES
-          )
-          service = build('androidpublisher', 'v3', credentials=credentials)
+          try:
+              credentials = service_account.Credentials.from_service_account_file(
+                  '/tmp/play-service-account.json', scopes=SCOPES
+              )
+              service = build('androidpublisher', 'v3', credentials=credentials)
 
-          edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
-          edit_id = edit['id']
+              edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
+              edit_id = edit['id']
 
-          bundle = service.edits().bundles().upload(
-              packageName=PACKAGE,
-              editId=edit_id,
-              media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
-          ).execute()
+              bundle = service.edits().bundles().upload(
+                  packageName=PACKAGE,
+                  editId=edit_id,
+                  media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
+              ).execute()
 
-          service.edits().tracks().update(
-              packageName=PACKAGE,
-              editId=edit_id,
-              track='internal',
-              body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
-          ).execute()
+              service.edits().tracks().update(
+                  packageName=PACKAGE,
+                  editId=edit_id,
+                  track='internal',
+                  body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
+              ).execute()
 
-          service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-          print(f"✅ Uploaded version code {bundle['versionCode']} to internal track")
+              service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
+              print(f"✅ Uploaded version code {bundle['versionCode']} to internal track")
+          except Exception as e:
+              print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+              sys.exit(1)
           PYEOF
 
       - name: Upload AAB artifact
