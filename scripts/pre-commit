@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Pre-commit hook: architecture ban checks + lint
+set -euo pipefail
+
+STAGED_KT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.kt$' || true)
+STAGED_SWIFT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
+
+ERRORS=0
+
+# ── Architecture ban checks (Kotlin) ────────────────────────────────
+if [ -n "$STAGED_KT" ]; then
+  while IFS= read -r file; do
+    # Ban AndroidViewModel (use ViewModel + DI instead)
+    if grep -n 'AndroidViewModel' "$file" | grep -v '// allow-android-viewmodel' > /dev/null 2>&1; then
+      echo "❌ $file: Uses AndroidViewModel — migrate to ViewModel with injected dependencies"
+      ERRORS=$((ERRORS + 1))
+    fi
+
+    # Ban collectAsState() (use collectAsStateWithLifecycle instead)
+    if grep -n '\.collectAsState()' "$file" > /dev/null 2>&1; then
+      echo "❌ $file: Uses .collectAsState() — use .collectAsStateWithLifecycle() instead"
+      ERRORS=$((ERRORS + 1))
+    fi
+
+    # Ban Handler(Looper (use coroutines instead)
+    if grep -n 'Handler(Looper' "$file" | grep -v '// allow-handler' > /dev/null 2>&1; then
+      echo "❌ $file: Uses Handler(Looper) — use coroutines with delay() instead"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done <<< "$STAGED_KT"
+
+  # Run ktlint via trunk if available
+  if command -v trunk > /dev/null 2>&1; then
+    echo "$STAGED_KT" | xargs trunk check --no-progress --filter=ktlint 2>/dev/null || ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+# ── Architecture ban checks (Swift) ─────────────────────────────────
+if [ -n "$STAGED_SWIFT" ]; then
+  while IFS= read -r file; do
+    # Ban print() in production code (use os.Logger instead)
+    # Allow in tests and previews
+    if echo "$file" | grep -qvE '(Tests|Preview)'; then
+      if grep -n 'print(' "$file" | grep -v '// allow-print' > /dev/null 2>&1; then
+        echo "⚠️  $file: Uses print() — prefer Logger from os.log"
+      fi
+    fi
+  done <<< "$STAGED_SWIFT"
+
+  # Run SwiftLint if available
+  if command -v swiftlint > /dev/null 2>&1; then
+    echo "$STAGED_SWIFT" | xargs swiftlint lint --strict --quiet 2>/dev/null || ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+if [ "$ERRORS" -gt 0 ]; then
+  echo ""
+  echo "Pre-commit: $ERRORS error(s) found. Fix them before committing."
+  echo "To bypass (emergency only): git commit --no-verify"
+  exit 1
+fi
