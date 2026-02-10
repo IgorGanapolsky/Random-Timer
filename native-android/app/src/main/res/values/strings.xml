@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Random Timer</string>
+    <string name="app_name">Random Tactical Timer</string>
+    <string name="launcher_label">Rand. Timer</string>
     <string name="timer_running">Timer Running</string>
     <string name="times_up">Time\'s Up!</string>
     <string name="dismiss">Dismiss</string>

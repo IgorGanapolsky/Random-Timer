@@ -1,4 +1,5 @@
 import ActivityKit
+import os
 
 /// Live Activity wrapper to allow testing via protocol
 @MainActor
@@ -28,7 +29,7 @@ final class LiveActivityService: TimerLiveActivityHandling {
                 pushType: nil
             )
         } catch {
-            print("Failed to start Live Activity: \(error)")
+            Logger.liveActivity.error("Failed to start Live Activity: \(error)")
         }
     }
 

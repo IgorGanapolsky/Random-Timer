@@ -1,4 +1,4 @@
-.PHONY: run-android-device run-android-emulator run-ios-device run-ios-sim fix-ios-device
+.PHONY: run-android-device run-android-emulator run-ios-device run-ios-sim fix-ios-device install-hooks
 
 ANDROID_DIR := native-android
 IOS_DIR := native-ios
@@ -101,3 +101,9 @@ fix-ios-device:
 	@echo "==> Verifying device connection..."
 	@xcrun devicectl list devices 2>/dev/null || echo "No devices found — reconnect USB cable"
 	@echo "==> Done. Try 'make run-ios-device' again. If still hanging, reboot your Mac."
+
+# Install git hooks
+install-hooks:
+	@cp scripts/pre-commit .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "✅ Pre-commit hook installed"

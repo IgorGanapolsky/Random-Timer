@@ -49,8 +49,8 @@ EOF
 xcrun altool --upload-app \
   --type ios \
   --file /tmp/RandomTimer.xcarchive \
-  --username igor.ganapolsky@icloud.com \
-  --password "Rockland25&*"
+  --username "$APPLE_ID" \
+  --password "@keychain:AC_PASSWORD"
 """
 
         result = subprocess.run(upload_cmd, shell=True, capture_output=True, text=True)
@@ -66,8 +66,8 @@ xcrun altool --upload-app \
 xcrun altool --upload-app \
   --type ios \
   --file /tmp/RandomTimer-ipa/RandomTimer.ipa \
-  --username igor.ganapolsky@icloud.com \
-  --password "Rockland25&*"
+  --username "$APPLE_ID" \
+  --password "@keychain:AC_PASSWORD"
 """
 
         result = subprocess.run(upload_cmd, shell=True, capture_output=True, text=True)

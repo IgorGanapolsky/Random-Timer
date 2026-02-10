@@ -79,7 +79,7 @@ fun TimerSetupScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Random Timer",
+                        text = "Random Tactical Timer",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.TextPrimary

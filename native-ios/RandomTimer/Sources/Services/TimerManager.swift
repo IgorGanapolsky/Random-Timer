@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 /// Main timer management class using Swift 6 concurrency
 @MainActor
@@ -7,8 +8,7 @@ final class TimerManager: ObservableObject {
 
     // MARK: - Published State
 
-    /// Load config synchronously at property initialization to avoid UI flicker
-    @Published private(set) var config: TimerConfig = TimerManager.loadInitialConfig()
+    @Published private(set) var config: TimerConfig = .default
     @Published private(set) var timerState: TimerState?
 
     // MARK: - Private Properties
@@ -17,15 +17,6 @@ final class TimerManager: ObservableObject {
     nonisolated private let storageService: TimerStorage
     private let notificationService: TimerNotificationHandling
     private let liveActivityService: TimerLiveActivityHandling
-
-    /// Load config directly from UserDefaults before any SwiftUI rendering
-    private nonisolated static func loadInitialConfig() -> TimerConfig {
-        guard let data = UserDefaults.standard.data(forKey: "timer_config"),
-              let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
-            return .default
-        }
-        return config
-    }
 
     // MARK: - Initialization
 
@@ -37,6 +28,9 @@ final class TimerManager: ObservableObject {
         self.storageService = storageService
         self.notificationService = notificationService
         self.liveActivityService = liveActivityService
+
+        // Load config synchronously from storage to avoid UI flicker
+        self.config = storageService.loadConfigSync() ?? .default
 
         // Wire Bluetooth/CarPlay media button to dismiss alarm
         if let notificationService = notificationService as? NotificationService {
@@ -76,6 +70,13 @@ final class TimerManager: ObservableObject {
 
     func updateConfig(_ newConfig: TimerConfig) {
         config = newConfig
+
+        // Sync config into running timer state so alarmTick sees the change
+        if var state = timerState {
+            state.config = newConfig
+            timerState = state
+        }
+
         Task {
             await storageService.saveConfig(newConfig)
         }
@@ -381,12 +382,12 @@ final class TimerManager: ObservableObject {
 
     private func tick() async {
         guard var state = timerState else {
-            print("[TimerManager] tick: no timerState")
+            Logger.timer.debug("tick: no timerState")
             return
         }
 
         state.remainingDuration -= 1
-        print("[TimerManager] tick: remaining = \(state.remainingDuration)")
+        Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
         if state.remainingDuration <= 0 {
             state.remainingDuration = 0
@@ -400,13 +401,13 @@ final class TimerManager: ObservableObject {
 
             stopCountdown()
 
-            print("[TimerManager] ALARM! Playing sound type: \(state.config.soundType), volume: \(state.config.volume)")
+            Logger.timer.info("ALARM! Playing sound type: \(String(describing: state.config.soundType)), volume: \(state.config.volume)")
             notificationService.playAlarmSound(
                 type: state.config.soundType,
                 volume: state.config.volume
             )
             if state.config.vibrationEnabled {
-                print("[TimerManager] Starting vibration...")
+                Logger.timer.info("Starting vibration...")
                 notificationService.startVibration()
             }
             // End Live Activity when alarm triggers - we don't need it anymore
@@ -453,6 +454,7 @@ final class TimerManager: ObservableObject {
             stopCountdown()
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
+            StoreReviewManager.shared.recordCompletion()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {

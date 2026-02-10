@@ -15,6 +15,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Architecture Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Architecture ban checks (Kotlin)
+        run: |
+          ERRORS=0
+          for f in $(find native-android -name '*.kt' -not -path '*/build/*'); do
+            if grep -n 'AndroidViewModel' "$f" | grep -v '// allow-android-viewmodel' > /dev/null 2>&1; then
+              echo "❌ $f: Uses AndroidViewModel"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if grep -n '\.collectAsState()' "$f" > /dev/null 2>&1; then
+              echo "❌ $f: Uses .collectAsState() instead of .collectAsStateWithLifecycle()"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if grep -n 'Handler(Looper' "$f" | grep -v '// allow-handler' > /dev/null 2>&1; then
+              echo "❌ $f: Uses Handler(Looper) instead of coroutines"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "Found $ERRORS architecture violation(s)"
+            exit 1
+          fi
+          echo "✅ No architecture violations found"
+
   android:
     name: Android Tests
     runs-on: ubuntu-latest

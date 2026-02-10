@@ -1,6 +1,7 @@
 ---
-allowed-tools: Bash(bash ccpm/scripts/pm/search.sh $ARGUMENTS)
+allowed-tools: Bash, Read, LS
 ---
 
-Output:
-!bash ccpm/scripts/pm/search.sh $ARGUMENTS
+Search PM artifacts: `grep -ri "$ARGUMENTS" .claude/prds/ .claude/epics/ 2>/dev/null`
+
+Show matching files with context.

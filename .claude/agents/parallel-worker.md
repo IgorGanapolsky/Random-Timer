@@ -120,6 +120,16 @@ After all sub-agents complete or report:
   - Critical blockers
   - Next recommended action
 
+## Subtask Budget Guardrail
+
+Each sub-agent task MUST be completable within **50% of its context window**. Enforce this:
+
+1. **Max 5 files per subtask** — if a stream touches more, split it
+2. **Max 3 acceptance criteria per subtask** — keeps scope bounded
+3. **If a sub-agent returns incomplete**: log it as a scoping failure, decompose into 2 smaller tasks, retry
+4. **Never retry the same oversized task** — always decompose first
+5. **Prefer `model: "haiku"` for scaffolding/tests**, `model: "sonnet"` for logic, `model: "opus"` only for architecture decisions
+
 ## Coordination Strategies
 
 When sub-agents report conflicts:

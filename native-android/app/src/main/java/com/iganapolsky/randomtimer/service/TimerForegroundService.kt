@@ -30,6 +30,8 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.ui.components.formatDuration
+import com.iganapolsky.randomtimer.review.StoreReviewManager
+import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +48,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class TimerForegroundService : Service() {
+
+    @Inject lateinit var storeReviewManager: StoreReviewManager
 
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -341,6 +345,7 @@ class TimerForegroundService : Service() {
                 deactivateMediaSession()
                 stopAlarmSound()
                 stopVibration()
+                storeReviewManager.recordCompletion()
 
                 val currentState = _timerState.value
                 if (currentState?.config?.repeatEnabled == true) {

@@ -93,7 +93,7 @@ public enum TimerStatus: String, Codable, Sendable {
 
 /// Represents the current state of an active timer.
 public struct TimerState: Codable, Sendable, Equatable {
-    public let config: TimerConfig
+    public var config: TimerConfig
     public let targetDuration: TimeInterval
     public let startedAt: Date
     public var remainingDuration: TimeInterval

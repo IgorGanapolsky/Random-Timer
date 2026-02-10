@@ -3,6 +3,7 @@ import UserNotifications
 import AVFoundation
 import MediaPlayer
 import UIKit
+import os
 
 /// Service for managing notifications and alarm sounds
 @MainActor
@@ -34,9 +35,9 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             let granted = try await notificationCenter.requestAuthorization(
                 options: [.alert, .sound, .badge]
             )
-            print("Notification permission granted: \(granted)")
+            Logger.notification.debug("Notification permission granted: \(granted)")
         } catch {
-            print("Failed to request notification permission: \(error)")
+            Logger.notification.error("Failed to request notification permission: \(error)")
         }
     }
 
@@ -66,7 +67,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         do {
             try await notificationCenter.add(request)
         } catch {
-            print("Failed to schedule notification: \(error)")
+            Logger.notification.error("Failed to schedule notification: \(error)")
         }
     }
 
@@ -86,7 +87,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             )
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("Failed to setup audio session: \(error)")
+            Logger.notification.error("Failed to setup audio session: \(error)")
         }
     }
 
@@ -103,13 +104,13 @@ final class NotificationService: NSObject, TimerNotificationHandling {
                 audioPlayer?.volume = volume
                 audioPlayer?.prepareToPlay()
                 audioPlayer?.play()
-                print("Playing alarm sound: \(resourceName) at volume \(volume)")
+                Logger.notification.info("Playing alarm sound: \(resourceName) at volume \(volume)")
             } catch {
-                print("Failed to create audio player: \(error)")
+                Logger.notification.error("Failed to create audio player: \(error)")
                 playSystemAlarmSound()
             }
         } else {
-            print("Sound file not found in bundle: \(resourceName).mp3")
+            Logger.notification.error("Sound file not found in bundle: \(resourceName).mp3")
             playSystemAlarmSound()
         }
     }
@@ -138,15 +139,15 @@ final class NotificationService: NSObject, TimerNotificationHandling {
                 audioPlayer?.prepareToPlay()
                 audioPlayer?.play()
                 currentlyPreviewingSound = type
-                print("Playing preview sound: \(resourceName) at volume \(volume)")
+                Logger.notification.debug("Playing preview sound: \(resourceName) at volume \(volume)")
 
                 // Stop after 5 seconds
                 schedulePreviewStop(after: 5.0)
             } catch {
-                print("Failed to play preview: \(error)")
+                Logger.notification.error("Failed to play preview: \(error)")
             }
         } else {
-            print("Preview sound file not found: \(resourceName).mp3")
+            Logger.notification.error("Preview sound file not found: \(resourceName).mp3")
         }
     }
 
@@ -205,7 +206,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             )
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("Failed to activate media session: \(error)")
+            Logger.notification.error("Failed to activate media session: \(error)")
         }
 
         let commandCenter = MPRemoteCommandCenter.shared()
@@ -259,7 +260,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             )
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("Failed to deactivate media session: \(error)")
+            Logger.notification.error("Failed to deactivate media session: \(error)")
         }
     }
 

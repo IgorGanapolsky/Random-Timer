@@ -1,6 +1,11 @@
 ---
-allowed-tools: Bash(bash ccpm/scripts/pm/init.sh)
+allowed-tools: Bash
 ---
 
-Output:
-!bash ccpm/scripts/pm/init.sh
+Initialize PM directories:
+
+```bash
+mkdir -p .claude/prds .claude/epics
+```
+
+Output: "PM initialized. Create first PRD: `/pm:prd-new <feature-name>`"
