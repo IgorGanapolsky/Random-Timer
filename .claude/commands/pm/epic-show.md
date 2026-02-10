@@ -1,6 +1,5 @@
 ---
-allowed-tools: Bash(bash ccpm/scripts/pm/epic-show.sh $ARGUMENTS)
+allowed-tools: Read, LS
 ---
 
-Output:
-!bash ccpm/scripts/pm/epic-show.sh $ARGUMENTS
+Show epic details: Read `.claude/epics/$ARGUMENTS/epic.md` and list all task files in the directory with their status from frontmatter.

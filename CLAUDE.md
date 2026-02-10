@@ -1,69 +1,47 @@
 # Random Timer
 
-React Native/Expo timer app. Package: `com.iganapolsky.randomtimer`. Expo SDK 54, RN 0.81.4 (New Architecture).
+Native Android (Kotlin/Compose) + iOS (Swift/SwiftUI) timer app. Package: `com.iganapolsky.randomtimer`.
 
 ## Commands
 
 ```bash
-npm start                    # Expo dev client (cache clear)
-npm run android / ios        # Build and run
-npm run quality              # Full check: compile + lint + format + test
-npm test                     # Jest tests
-npm run prebuild:clean       # Regenerate native projects
-adb reverse tcp:8081 tcp:8081  # Fix Android Metro connection
-maestro test .maestro/       # E2E smoke tests
+# Android
+cd native-android && ./gradlew assembleDebug
+adb reverse tcp:8081 tcp:8081    # Fix Metro connection
+
+# iOS
+cd native-ios && xcodebuild -scheme RandomTimer
+cd native-ios && pod deintegrate && pod install  # Fix pod failures
 ```
-
-## Path Aliases
-
-`@navigation`, `@shared/*`, `@features/*`, `@assets` — configured in `tsconfig.json` + `babel.config.js`.
 
 ## Non-Obvious Rules
 
-- **Act, Don't Instruct**: NEVER tell user to run commands. Execute everything autonomously.
-- **Restricted imports**: Use `SafeAreaView` from `react-native-safe-area-context` (never `react-native`). Use `@shared/utils/storage` (never import MMKV directly).
-- **Theme system**: Never hardcode colors/spacing. Use `src/shared/theme/`.
-- **Redux persistence**: Uses MMKV (not AsyncStorage). New slices go in `src/shared/redux/slices/`, add to `rootReducer` and `persistConfig.whitelist`.
+- **Act, Don't Instruct**: NEVER tell user to run commands. Execute autonomously.
 - **Named exports only**: No default exports.
-- **Branch**: `develop` is the main working branch. Use conventional commits.
-
-## Gotchas
-
-- **Android SocketTimeoutException**: Run `adb reverse tcp:8081 tcp:8081`. Check `network_security_config.xml` exists.
-- **iOS Pod failures**: `cd ios && pod deintegrate && pod install`
-- **Cache issues**: `npx expo start --clear && rm -rf node_modules/.cache`
-
-## Debug Timer States
-
-```typescript
-navigation.navigate('Timer', {
-  config: timerConfig,
-  debug: { debugTimeRemaining: 5, debugState: 'warning', debugSkipToAlarm: true },
-});
-```
+- **Branch**: `develop` is main. Conventional commits.
+- **Frontmatter dates**: Always use `date -u +"%Y-%m-%dT%H:%M:%SZ"`, never placeholders.
+- **Frontmatter stripping**: Before GitHub sync: `sed '1,/^---$/d; 1,/^---$/d'`
+- **Paths**: Always relative, never absolute. No usernames in paths.
 
 ## TDD Protocol (MANDATORY)
 
-For ALL code changes:
 1. Write failing test FIRST
 2. Run test — confirm it fails
 3. Write minimal code to pass
 4. Run test — confirm it passes
 5. Refactor if needed
 
-NEVER write production code without a failing test. No exceptions.
+NEVER write production code without a failing test.
 
-## Testing
-
-Jest + React Native Testing Library. PostToolUse hook auto-runs related tests on file edits. Never claim success without running tests.
-
-## Animation/Timing Parity Rule (added 2026-02-09)
+## Animation/Timing Parity Rule
 
 When comparing animations across platforms (iOS/Android):
-1. **COMPUTE the actual full cycle time** for each platform in a table BEFORE proposing any fix
-2. Account for repeat modes: Android `RepeatMode.Reverse` means duration × 2 for full cycle
-3. Account for repeat modes: iOS `autoreverses: true` means duration × 2 for full cycle
-4. iOS cosine/sinusoidal `period` parameter = full cycle time (NOT half-cycle)
-5. **NEVER speculate about "perceptual differences" or frame rates** — if numbers don't match, the numbers are the bug
-6. **Compare ALL visual elements** between platforms before editing (don't miss tracking dots, glows, etc.)
-7. Present the timing comparison table to the user BEFORE making any edits
+1. COMPUTE full cycle time for each platform in a table BEFORE proposing any fix
+2. Android `RepeatMode.Reverse` = duration x 2. iOS `autoreverses: true` = duration x 2.
+3. iOS cosine/sinusoidal `period` = full cycle time (NOT half-cycle)
+4. Compare ALL visual elements between platforms before editing
+5. Present timing comparison table BEFORE making edits
+
+## PM Filesystem Convention
+
+PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `cat`, `grep` — no custom scripts needed. All `/pm:*` commands read the filesystem directly.

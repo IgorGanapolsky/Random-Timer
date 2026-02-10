@@ -1,6 +1,9 @@
 ---
-allowed-tools: Bash(bash ccpm/scripts/pm/prd-status.sh)
+allowed-tools: Read, LS
 ---
 
-Output:
-!bash ccpm/scripts/pm/prd-status.sh
+Show PRD status by reading filesystem directly:
+
+1. List all `.claude/prds/*.md`
+2. For each, extract `status:` from frontmatter
+3. Count by status category and show summary
