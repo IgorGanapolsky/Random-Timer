@@ -1,9 +1,11 @@
 package com.iganapolsky.randomtimer.ui.navigation
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,6 +27,7 @@ fun RandomTimerNavHost(
 ) {
     val config by viewModel.config.collectAsState()
     val timerState by viewModel.timerState.collectAsState()
+    val activity = LocalContext.current as? Activity
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState) {
@@ -40,6 +43,8 @@ fun RandomTimerNavHost(
             // Timer stopped - go back to setup screen
             if (currentRoute == Screen.ActiveTimer.route) {
                 navController.popBackStack(Screen.Setup.route, inclusive = false)
+                // Prompt for review after timer completion (if eligible)
+                activity?.let { viewModel.storeReviewManager.requestReview(it) }
             }
         }
     }

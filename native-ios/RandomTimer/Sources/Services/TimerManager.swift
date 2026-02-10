@@ -453,6 +453,7 @@ final class TimerManager: ObservableObject {
             stopCountdown()
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
+            StoreReviewManager.shared.recordCompletion()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {

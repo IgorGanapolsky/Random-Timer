@@ -17,6 +17,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
+import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +31,8 @@ import javax.inject.Inject
 class TimerViewModel @Inject constructor(
     private val application: Application,
     private val repository: TimerRepository,
-    private val startTimerUseCase: StartTimerUseCase
+    private val startTimerUseCase: StartTimerUseCase,
+    val storeReviewManager: StoreReviewManager
 ) : AndroidViewModel(application) {
 
     val config: StateFlow<TimerConfig> = repository.getTimerConfig()
