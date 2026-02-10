@@ -196,12 +196,12 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     // MARK: - Media Session (Bluetooth / CarPlay alarm dismiss)
 
     func activateMediaSession() {
-        // Take audio focus (remove .mixWithOthers so Bluetooth routes to us)
+        // Duck other audio (like navigation apps) so alarm is heard over music
         do {
             try AVAudioSession.sharedInstance().setCategory(
                 .playback,
                 mode: .default,
-                options: []
+                options: [.duckOthers]
             )
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
@@ -246,13 +246,18 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
 
-        // Restore mixWithOthers for normal operation
+        // Deactivate with notification so ducked apps restore their volume
         do {
+            try AVAudioSession.sharedInstance().setActive(
+                false,
+                options: .notifyOthersOnDeactivation
+            )
             try AVAudioSession.sharedInstance().setCategory(
                 .playback,
                 mode: .default,
                 options: [.mixWithOthers]
             )
+            try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Failed to deactivate media session: \(error)")
         }

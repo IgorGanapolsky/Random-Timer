@@ -670,7 +670,7 @@ class TimerForegroundService : Service() {
 
         // Request audio focus to route Bluetooth controls to this app
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
