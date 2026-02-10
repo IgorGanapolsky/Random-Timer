@@ -382,3 +382,72 @@ final class TimerManagerResetTests: XCTestCase {
         XCTAssertTrue(newState.startedAt > startDate)
     }
 }
+
+// MARK: - Loop toggle regression tests (mirrors Android TimerStateFlowTest)
+
+final class TimerManagerLoopTests: XCTestCase {
+    @MainActor
+    func testUpdateConfigSyncsRepeatEnabledIntoRunningTimerState() {
+        let timerManager = TimerManager()
+
+        let config = RandomTimer.TimerConfig(
+            minSeconds: 5,
+            maxSeconds: 10,
+            alarmDuration: 5,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: true
+        )
+        let state = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 7,
+            remainingDuration: 5,
+            status: .running
+        )
+
+        timerManager._setTimerStateForTesting(state)
+        XCTAssertFalse(timerManager.timerState!.config.repeatEnabled)
+
+        // Toggle loop ON via updateConfig
+        var newConfig = config
+        newConfig = RandomTimer.TimerConfig(
+            minSeconds: config.minSeconds,
+            maxSeconds: config.maxSeconds,
+            alarmDuration: config.alarmDuration,
+            hiddenMode: config.hiddenMode,
+            repeatEnabled: true,
+            soundType: config.soundType,
+            volume: config.volume,
+            vibrationEnabled: config.vibrationEnabled
+        )
+        timerManager.updateConfig(newConfig)
+
+        // timerState.config must reflect the change
+        XCTAssertTrue(timerManager.timerState!.config.repeatEnabled,
+                      "Loop toggle must propagate into running timerState.config")
+    }
+
+    @MainActor
+    func testUpdateConfigDoesNotCrashWhenNoTimerRunning() {
+        let timerManager = TimerManager()
+
+        XCTAssertNil(timerManager.timerState)
+
+        let newConfig = RandomTimer.TimerConfig(
+            minSeconds: 1,
+            maxSeconds: 60,
+            alarmDuration: 5,
+            hiddenMode: false,
+            repeatEnabled: true,
+            soundType: .gentle,
+            volume: 0.8,
+            vibrationEnabled: false
+        )
+        // Should not crash
+        timerManager.updateConfig(newConfig)
+        XCTAssertNil(timerManager.timerState)
+        XCTAssertTrue(timerManager.config.repeatEnabled)
+    }
+}
