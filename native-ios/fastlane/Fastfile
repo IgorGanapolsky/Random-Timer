@@ -32,7 +32,7 @@ platform :ios do
   desc "Create app in App Store Connect"
   lane :create_app do
     produce(
-      app_identifier: "com.iganapolsky.randomtimer",
+      app_identifier: "com.igorganapolsky.randomtimer",
       app_name: "Random Tactical Timer",
       language: "en-US",
       app_version: "1.1.0",
@@ -46,7 +46,7 @@ platform :ios do
     if ENV["MATCH_GIT_URL"]
       match(
         type: "appstore",
-        app_identifier: ["com.iganapolsky.randomtimer", "com.iganapolsky.randomtimer.widget"],
+        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
         readonly: false,
         force_for_new_devices: true
       )
