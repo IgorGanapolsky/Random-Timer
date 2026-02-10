@@ -70,6 +70,13 @@ final class TimerManager: ObservableObject {
 
     func updateConfig(_ newConfig: TimerConfig) {
         config = newConfig
+
+        // Sync config into running timer state so alarmTick sees the change
+        if var state = timerState {
+            state.config = newConfig
+            timerState = state
+        }
+
         Task {
             await storageService.saveConfig(newConfig)
         }
