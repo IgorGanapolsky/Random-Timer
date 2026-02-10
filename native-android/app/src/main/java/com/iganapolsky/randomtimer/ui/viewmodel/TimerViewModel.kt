@@ -100,6 +100,7 @@ class TimerViewModel @Inject constructor(
             // Start foreground service with primitive extras
             val intent = Intent(application, TimerForegroundService::class.java).apply {
                 action = TimerForegroundService.ACTION_START
+                putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
                 putExtra(TimerForegroundService.EXTRA_TARGET_DURATION_MS, state.targetDuration.inWholeMilliseconds)
                 putExtra(TimerForegroundService.EXTRA_REMAINING_DURATION_MS, state.remainingDuration.inWholeMilliseconds)
                 putExtra(TimerForegroundService.EXTRA_MIN_SECONDS, state.config.minSeconds)
@@ -122,6 +123,7 @@ class TimerViewModel @Inject constructor(
 
             val intent = Intent(application, TimerForegroundService::class.java).apply {
                 action = TimerForegroundService.ACTION_STOP
+                putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
             }
             application.startService(intent)
         }
@@ -134,6 +136,7 @@ class TimerViewModel @Inject constructor(
 
             val intent = Intent(application, TimerForegroundService::class.java).apply {
                 action = TimerForegroundService.ACTION_DISMISS_ALARM
+                putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
             }
             application.startService(intent)
         }
@@ -142,6 +145,7 @@ class TimerViewModel @Inject constructor(
     fun pauseTimer() {
         val intent = Intent(application, TimerForegroundService::class.java).apply {
             action = TimerForegroundService.ACTION_PAUSE
+            putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
         }
         application.startService(intent)
     }
@@ -149,6 +153,7 @@ class TimerViewModel @Inject constructor(
     fun resumeTimer() {
         val intent = Intent(application, TimerForegroundService::class.java).apply {
             action = TimerForegroundService.ACTION_RESUME
+            putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
         }
         application.startService(intent)
     }
@@ -161,8 +166,17 @@ class TimerViewModel @Inject constructor(
 
     fun resetTimer() {
         // Reset to the SAME duration (restart from beginning)
+        _timerState.value?.let { current ->
+            _timerState.value = current.copy(
+                remainingDuration = current.targetDuration,
+                status = com.iganapolsky.randomtimer.domain.model.TimerStatus.RUNNING,
+                alarmTimeRemaining = kotlin.time.Duration.ZERO,
+                startedAt = System.currentTimeMillis()
+            )
+        }
         val intent = Intent(application, TimerForegroundService::class.java).apply {
             action = TimerForegroundService.ACTION_RESET
+            putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
         }
         application.startService(intent)
     }
@@ -183,6 +197,8 @@ class TimerViewModel @Inject constructor(
     private var previewPlayer: MediaPlayer? = null
     private val previewHandler = Handler(Looper.getMainLooper())
     private var currentlyPreviewingSound: SoundType? = null
+    private val previewMaxDurationMs = 5000L
+    private val previewVolumeStopDelayMs = 1500L
 
     fun previewSound(soundType: SoundType) {
         // If same sound is already playing, stop it (toggle behavior)
@@ -191,7 +207,29 @@ class TimerViewModel @Inject constructor(
             return
         }
 
-        // Stop any currently playing preview
+        startPreview(soundType, config.value.volume)
+        schedulePreviewStop(previewMaxDurationMs)
+    }
+
+    fun previewVolume(volume: Float) {
+        val soundType = config.value.soundType
+        if (currentlyPreviewingSound != soundType || previewPlayer?.isPlaying != true) {
+            startPreview(soundType, volume)
+        } else {
+            previewPlayer?.setVolume(volume, volume)
+        }
+        schedulePreviewStop(previewVolumeStopDelayMs)
+    }
+
+    fun stopSoundPreview() {
+        previewHandler.removeCallbacksAndMessages(null)
+        previewPlayer?.stop()
+        previewPlayer?.release()
+        previewPlayer = null
+        currentlyPreviewingSound = null
+    }
+
+    private fun startPreview(soundType: SoundType, volume: Float) {
         stopSoundPreview()
 
         // Get the resource for the sound type
@@ -203,22 +241,16 @@ class TimerViewModel @Inject constructor(
         // Play the actual sound file
         previewPlayer = MediaPlayer.create(application, resourceId)?.apply {
             isLooping = true
-            setVolume(config.value.volume, config.value.volume)
+            setVolume(volume, volume)
             start()
         }
         currentlyPreviewingSound = soundType
-
-        // Stop after 5 seconds
-        previewHandler.postDelayed({
-            stopSoundPreview()
-        }, 5000)
     }
 
-    fun stopSoundPreview() {
+    private fun schedulePreviewStop(delayMs: Long) {
         previewHandler.removeCallbacksAndMessages(null)
-        previewPlayer?.stop()
-        previewPlayer?.release()
-        previewPlayer = null
-        currentlyPreviewingSound = null
+        previewHandler.postDelayed({
+            stopSoundPreview()
+        }, delayMs)
     }
 }

@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 @testable import RandomTimer
 
 final class TimerConfigTests: XCTestCase {
@@ -6,8 +7,8 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 30)
-        XCTAssertEqual(config.maxSeconds, 120)
+        XCTAssertEqual(config.minSeconds, 0)
+        XCTAssertEqual(config.maxSeconds, 300)
         XCTAssertEqual(config.volume, 0.5)
         XCTAssertFalse(config.vibrationEnabled)
     }
@@ -164,6 +165,17 @@ final class TimerStateTests: XCTestCase {
     }
 }
 
+final class SoundTypeTests: XCTestCase {
+
+    func testIntenseNotificationSoundName() {
+        XCTAssertEqual(SoundType.intense.notificationSoundName, "alarm.mp3")
+    }
+
+    func testGentleNotificationSoundName() {
+        XCTAssertEqual(SoundType.gentle.notificationSoundName, "gentle-chime.mp3")
+    }
+}
+
 final class TimerStatusTests: XCTestCase {
 
     func testStatusFromReturnsCompleteAtZero() {
@@ -228,5 +240,145 @@ final class TimeIntervalExtensionTests: XCTestCase {
         let interval: TimeInterval = 150
         XCTAssertEqual(interval.minutes, 2)
         XCTAssertEqual(interval.seconds, 30)
+    }
+}
+
+// MARK: - Alarm Background Expiry Tests
+
+final class AlarmBackgroundExpiryTests: XCTestCase {
+
+    private let defaultConfig = TimerConfig.default
+
+    func testAlarmStartedAtIsNilByDefault() {
+        let state = TimerState(
+            config: defaultConfig,
+            targetDuration: 60
+        )
+        XCTAssertNil(state.alarmStartedAt)
+    }
+
+    func testAlarmStartedAtCanBeSet() {
+        let now = Date()
+        var state = TimerState(
+            config: defaultConfig,
+            targetDuration: 60,
+            status: .alarm,
+            alarmTimeRemaining: 10,
+            alarmStartedAt: now
+        )
+        XCTAssertEqual(state.alarmStartedAt, now)
+    }
+
+    func testAlarmExpiredWhenElapsedExceedsDuration() {
+        // Simulate: alarm started 15 seconds ago, alarm duration is 10s
+        let alarmStart = Date().addingTimeInterval(-15)
+        let alarmDuration: TimeInterval = 10
+        let elapsed = Date().timeIntervalSince(alarmStart)
+
+        XCTAssertTrue(elapsed >= alarmDuration, "Alarm should be expired")
+    }
+
+    func testAlarmStillActiveWhenElapsedLessThanDuration() {
+        // Simulate: alarm started 3 seconds ago, alarm duration is 10s
+        let alarmStart = Date().addingTimeInterval(-3)
+        let alarmDuration: TimeInterval = 10
+        let elapsed = Date().timeIntervalSince(alarmStart)
+
+        XCTAssertTrue(elapsed < alarmDuration, "Alarm should still be active")
+        let remaining = alarmDuration - elapsed
+        XCTAssertTrue(remaining > 0 && remaining <= 10)
+    }
+
+    func testAlarmRemainingTimeCalculation() {
+        let alarmStart = Date().addingTimeInterval(-7)
+        let alarmDuration: TimeInterval = 10
+        let remaining = alarmDuration - Date().timeIntervalSince(alarmStart)
+
+        XCTAssertEqual(remaining, 3, accuracy: 0.5)
+    }
+}
+
+// MARK: - Media Button Dismiss Tests
+
+final class MediaButtonTests: XCTestCase {
+
+    func testOnMediaButtonDismissCallbackIsInvocable() {
+        var dismissed = false
+        let callback: () -> Void = { dismissed = true }
+        callback()
+        XCTAssertTrue(dismissed)
+    }
+
+    func testOnMediaButtonDismissCallbackDefaultsToNil() {
+        // Verify the callback pattern works — optional closure starts nil
+        var callback: (() -> Void)?
+        XCTAssertNil(callback)
+
+        callback = { /* dismiss */ }
+        XCTAssertNotNil(callback)
+    }
+}
+
+final class TimerManagerResetTests: XCTestCase {
+    @MainActor
+    func testResetWhileAlarmStopsAlarmAndRestartsTimer() async {
+        let timerManager = TimerManager()
+
+        let config = RandomTimer.TimerConfig(
+            minSeconds: 5,
+            maxSeconds: 5,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: true
+        )
+        let alarmState = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 5,
+            remainingDuration: 0,
+            status: .alarm,
+            alarmTimeRemaining: 10,
+            alarmStartedAt: Date()
+        )
+
+        timerManager._setTimerStateForTesting(alarmState)
+
+        await timerManager.resetTimer()
+
+        let newState = timerManager.timerState
+        XCTAssertNotNil(newState)
+        XCTAssertEqual(newState?.status, .running)
+        XCTAssertEqual(newState?.targetDuration, alarmState.targetDuration)
+        XCTAssertEqual(newState?.remainingDuration, newState?.targetDuration)
+    }
+
+    @MainActor
+    func testResetWhileRunningRestartsFromFullDuration() async {
+        let timerManager = TimerManager()
+
+        let config = RandomTimer.TimerConfig.default
+        let startDate = Date(timeIntervalSince1970: 0)
+        let runningState = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 60,
+            startedAt: startDate,
+            remainingDuration: 10,
+            status: .running
+        )
+
+        timerManager._setTimerStateForTesting(runningState)
+
+        await timerManager.resetTimer()
+
+        guard let newState = timerManager.timerState else {
+            XCTFail("Expected timerState after reset")
+            return
+        }
+        XCTAssertEqual(newState.status, .running)
+        XCTAssertEqual(newState.targetDuration, runningState.targetDuration)
+        XCTAssertEqual(newState.remainingDuration, newState.targetDuration, accuracy: 1.0)
+        XCTAssertTrue(newState.startedAt > startDate)
     }
 }

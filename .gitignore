@@ -41,6 +41,7 @@ yarn-error.*
 # Firebase/Google services (NEVER commit these - contain API keys)
 google-services.json
 GoogleService-Info.plist
+play-console-service-account.json
 
 # typescript
 *.tsbuildinfo
@@ -69,3 +70,8 @@ venv/
 .claude/hooks/
 .claude/ralph/
 .claude/scripts/feedback/
+
+# CCPM local workspace (project management)
+.claude/epics/
+.claude/prds/
+.claude/context/

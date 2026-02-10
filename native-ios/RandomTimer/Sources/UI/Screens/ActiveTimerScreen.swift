@@ -4,6 +4,8 @@ import SwiftUI
 struct ActiveTimerScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @State private var loopEnabled: Bool = false // Default to LOOP OFF
+    @State private var showResetFeedback: Bool = false
+    @State private var resetFeedbackTask: Task<Void, Never>?
 
     private var state: TimerState? {
         timerManager.timerState
@@ -67,12 +69,18 @@ struct ActiveTimerScreen: View {
 
                     // Info message - fixed height placeholder to prevent layout shift
                     Group {
-                        if !isComplete {
+                        if showResetFeedback {
+                            Text("Timer restarted")
+                                .font(.subheadline)
+                                .foregroundColor(.accentPrimary)
+                        } else if isComplete {
+                            Text("Went off after \(state.targetDuration.formattedDuration)")
+                                .font(.subheadline)
+                                .foregroundColor(.textSecondary)
+                        } else {
                             Text("You don't know when it will go off...")
                                 .font(.subheadline)
                                 .foregroundColor(.textMuted)
-                        } else {
-                            Color.clear
                         }
                     }
                     .frame(height: 20)
@@ -109,6 +117,11 @@ struct ActiveTimerScreen: View {
             if let newValue = newValue {
                 loopEnabled = newValue
             }
+        }
+        .onDisappear {
+            resetFeedbackTask?.cancel()
+            resetFeedbackTask = nil
+            showResetFeedback = false
         }
     }
 
@@ -198,6 +211,9 @@ struct ActiveTimerScreen: View {
                 SecondaryButton(title: "Reset") {
                     Task {
                         await timerManager.resetTimer()
+                        await MainActor.run {
+                            triggerResetFeedback()
+                        }
                     }
                 }
             } else {
@@ -218,6 +234,9 @@ struct ActiveTimerScreen: View {
                 SecondaryButton(title: "Reset") {
                     Task {
                         await timerManager.resetTimer()
+                        await MainActor.run {
+                            triggerResetFeedback()
+                        }
                     }
                 }
 
@@ -228,6 +247,15 @@ struct ActiveTimerScreen: View {
                     }
                 }
             }
+        }
+    }
+
+    private func triggerResetFeedback() {
+        resetFeedbackTask?.cancel()
+        showResetFeedback = true
+        resetFeedbackTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.2))
+            showResetFeedback = false
         }
     }
 }

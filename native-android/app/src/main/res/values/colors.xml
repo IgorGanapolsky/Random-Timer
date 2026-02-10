@@ -7,4 +7,10 @@
     <color name="timer_active">#FF10B981</color>
     <color name="timer_warning">#FFF59E0B</color>
     <color name="timer_danger">#FFEF4444</color>
+
+    <!-- Material Design 3 - Notification colors -->
+    <color name="md3_notification_background">#FF1C1B1F</color>
+    <color name="md3_notification_text_primary">#FFE6E1E5</color>
+    <color name="md3_notification_text_secondary">#FFCAC4D0</color>
+    <color name="md3_notification_accent">#FFD0BCFF</color>
 </resources>

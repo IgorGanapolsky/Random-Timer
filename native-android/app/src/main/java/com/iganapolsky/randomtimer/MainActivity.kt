@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestNotificationPermission()
+        handleAlarmNotificationTap(intent)
 
         setContent {
             RandomTimerTheme {
@@ -45,6 +46,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleAlarmNotificationTap(intent)
+    }
+
     override fun onResume() {
         super.onResume()
         // Tell service app is in foreground - suppress notifications
@@ -55,6 +61,18 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // Tell service app is in background - show notifications
         sendAppStateToService(isInForeground = false)
+    }
+
+    private fun handleAlarmNotificationTap(intent: Intent?) {
+        if (intent?.getBooleanExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION, false) == true) {
+            // User tapped the alarm notification — stop sound/vibration but keep alarm screen.
+            // The alarm screen shows because timerState.status == ALARM.
+            val silenceIntent = Intent(this, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_SILENCE_ALARM
+            }
+            startService(silenceIntent)
+            intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION)
+        }
     }
 
     private fun sendAppStateToService(isInForeground: Boolean) {

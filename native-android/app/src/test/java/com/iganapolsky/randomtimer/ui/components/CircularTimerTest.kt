@@ -9,6 +9,41 @@ import kotlin.time.Duration.Companion.seconds
 
 class CircularTimerTest {
 
+    // -- Animation timing parity tests (must match iOS CircularTimerView) --
+
+    @Test
+    fun `shimmer orbit is 3 seconds`() {
+        assertThat(CircularTimerAnimationConfig.SHIMMER_ORBIT_MS).isEqualTo(3000)
+    }
+
+    @Test
+    fun `circle pulse full cycle is 3 seconds`() {
+        // tween(1500ms, Reverse) = 1500ms up + 1500ms down = 3000ms
+        assertThat(CircularTimerAnimationConfig.CIRCLE_PULSE_ONE_WAY_MS).isEqualTo(1500)
+        assertThat(CircularTimerAnimationConfig.CIRCLE_PULSE_FULL_CYCLE_MS).isEqualTo(3000)
+    }
+
+    @Test
+    fun `circle pulse alpha range is 0_3 to 0_7`() {
+        assertThat(CircularTimerAnimationConfig.CIRCLE_PULSE_ALPHA_MIN).isEqualTo(0.3f)
+        assertThat(CircularTimerAnimationConfig.CIRCLE_PULSE_ALPHA_MAX).isEqualTo(0.7f)
+    }
+
+    @Test
+    fun `text breathing full cycle is 4 seconds`() {
+        // tween(2000ms, Reverse) = 2000ms up + 2000ms down = 4000ms
+        assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_ONE_WAY_MS).isEqualTo(2000)
+        assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_FULL_CYCLE_MS).isEqualTo(4000)
+    }
+
+    @Test
+    fun `text breathing opacity range is 1_0 to 0_85`() {
+        assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX).isEqualTo(1.0f)
+        assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MIN).isEqualTo(0.85f)
+    }
+
+    // -- formatDuration tests --
+
     @Test
     fun `formatDuration formats minutes and seconds`() {
         val duration = 2.minutes + 30.seconds

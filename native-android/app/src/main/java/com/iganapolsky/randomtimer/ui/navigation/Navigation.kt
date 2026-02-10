@@ -58,7 +58,8 @@ fun RandomTimerNavHost(
                         launchSingleTop = true
                     }
                 },
-                onSoundPreview = viewModel::previewSound
+                onSoundPreview = viewModel::previewSound,
+                onVolumePreview = viewModel::previewVolume
             )
         }
 

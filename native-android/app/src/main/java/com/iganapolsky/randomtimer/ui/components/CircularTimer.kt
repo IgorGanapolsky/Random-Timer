@@ -1,11 +1,11 @@
 package com.iganapolsky.randomtimer.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,6 +38,33 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Animation timing constants — must match iOS CircularTimerView exactly.
+ * iOS uses SwiftUI withAnimation with these same durations.
+ */
+object CircularTimerAnimationConfig {
+    /** Ball orbit: one full 360° rotation in milliseconds (LinearEasing, Restart) */
+    const val SHIMMER_ORBIT_MS = 3000
+
+    /** Circle pulse: one-way duration in ms (default easing, Reverse). Full cycle = 2x */
+    const val CIRCLE_PULSE_ONE_WAY_MS = 1500
+    /** Circle pulse full cycle = CIRCLE_PULSE_ONE_WAY_MS * 2 */
+    const val CIRCLE_PULSE_FULL_CYCLE_MS = CIRCLE_PULSE_ONE_WAY_MS * 2
+
+    /** Circle pulse alpha range */
+    const val CIRCLE_PULSE_ALPHA_MIN = 0.3f
+    const val CIRCLE_PULSE_ALPHA_MAX = 0.7f
+
+    /** Text breathing: one-way duration in ms (default easing, Reverse). Full cycle = 2x */
+    const val TEXT_BREATHING_ONE_WAY_MS = 2000
+    /** Text breathing full cycle = TEXT_BREATHING_ONE_WAY_MS * 2 */
+    const val TEXT_BREATHING_FULL_CYCLE_MS = TEXT_BREATHING_ONE_WAY_MS * 2
+
+    /** Text breathing opacity range */
+    const val TEXT_BREATHING_OPACITY_MAX = 1.0f
+    const val TEXT_BREATHING_OPACITY_MIN = 0.85f
+}
 
 @Composable
 fun CircularTimer(
@@ -66,28 +95,57 @@ fun CircularTimer(
         label = "color"
     )
 
+    // Whether animations should be running (not paused, not complete)
+    val isActivelyRunning = status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
+
     // Subtle breathing animation for timer display (adds suspense)
-    val infiniteTransition = rememberInfiniteTransition(label = "timerPulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
+    val pulseAlphaAnim = remember { Animatable(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX) }
+    LaunchedEffect(isActivelyRunning) {
+        if (isActivelyRunning) {
+            pulseAlphaAnim.animateTo(
+                targetValue = CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MIN,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = CircularTimerAnimationConfig.TEXT_BREATHING_ONE_WAY_MS),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+        } else {
+            pulseAlphaAnim.snapTo(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX)
+        }
+    }
+    val pulseAlpha = pulseAlphaAnim.value
 
     // Circle pulse animation to show timer is active
-    val circlePulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circlePulseAlpha"
-    )
+    val circlePulseAlphaAnim = remember { Animatable(CircularTimerAnimationConfig.CIRCLE_PULSE_ALPHA_MIN) }
+    LaunchedEffect(isActivelyRunning) {
+        if (isActivelyRunning) {
+            circlePulseAlphaAnim.animateTo(
+                targetValue = CircularTimerAnimationConfig.CIRCLE_PULSE_ALPHA_MAX,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = CircularTimerAnimationConfig.CIRCLE_PULSE_ONE_WAY_MS),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+        } else {
+            circlePulseAlphaAnim.snapTo(CircularTimerAnimationConfig.CIRCLE_PULSE_ALPHA_MIN)
+        }
+    }
+    val circlePulseAlpha = circlePulseAlphaAnim.value
+
+    // Orbiting shimmer dot
+    val shimmerAngleAnim = remember { Animatable(0f) }
+    LaunchedEffect(isActivelyRunning) {
+        if (isActivelyRunning) {
+            shimmerAngleAnim.animateTo(
+                targetValue = shimmerAngleAnim.value + 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = CircularTimerAnimationConfig.SHIMMER_ORBIT_MS, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                )
+            )
+        }
+    }
+    val shimmerAngle = shimmerAngleAnim.value
 
     Box(
         modifier = modifier
@@ -101,11 +159,33 @@ fun CircularTimer(
             val strokePx = strokeWidth.toPx()
 
             // Background track (glass effect) - full circle with pulse animation
+            val effectiveTrackAlpha = if (status == TimerStatus.PAUSED) 0.3f else circlePulseAlpha
             drawCircle(
-                color = TimerColors.GlassBackground.copy(alpha = circlePulseAlpha),
+                color = TimerColors.GlassBackground.copy(alpha = effectiveTrackAlpha),
                 radius = radius - strokePx / 2,
                 style = Stroke(width = strokePx, cap = StrokeCap.Round)
             )
+
+            // Orbiting shimmer dot (only when actively running, not paused/complete)
+            if (isActivelyRunning) {
+                val shimmerAngleRad = Math.toRadians((shimmerAngle - 90).toDouble())
+                val arcRadius = radius - strokePx / 2
+                val shimmerX = (radius + arcRadius * kotlin.math.cos(shimmerAngleRad)).toFloat()
+                val shimmerY = (radius + arcRadius * kotlin.math.sin(shimmerAngleRad)).toFloat()
+
+                // Outer glow (large, soft)
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.15f),
+                    radius = strokePx * 2.5f,
+                    center = Offset(shimmerX, shimmerY)
+                )
+                // Inner bright spot
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.5f),
+                    radius = strokePx,
+                    center = Offset(shimmerX, shimmerY)
+                )
+            }
 
             // Progress arc
             val sweepAngle = 360f * animatedProgress
