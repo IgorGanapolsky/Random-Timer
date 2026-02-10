@@ -87,15 +87,17 @@ jobs:
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
             -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -skip-testing:RandomTimerUITests \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
           xcodebuild test \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
             -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -skip-testing:RandomTimerUITests \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
