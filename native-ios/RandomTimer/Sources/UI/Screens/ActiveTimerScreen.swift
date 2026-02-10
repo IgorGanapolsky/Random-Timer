@@ -67,12 +67,14 @@ struct ActiveTimerScreen: View {
 
                     // Info message - fixed height placeholder to prevent layout shift
                     Group {
-                        if !isComplete {
+                        if isComplete {
+                            Text("Went off after \(state.targetDuration.formattedDuration)")
+                                .font(.subheadline)
+                                .foregroundColor(.textSecondary)
+                        } else {
                             Text("You don't know when it will go off...")
                                 .font(.subheadline)
                                 .foregroundColor(.textMuted)
-                        } else {
-                            Color.clear
                         }
                     }
                     .frame(height: 20)

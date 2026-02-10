@@ -1,0 +1,2 @@
+json_key_file("/Users/ganapolsky_i/.config/gcloud/fastlane-deploy.json")
+package_name("com.iganapolsky.randomtimer")

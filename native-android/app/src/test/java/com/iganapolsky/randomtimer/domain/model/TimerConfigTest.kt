@@ -18,6 +18,13 @@ class TimerConfigTest {
     }
 
     @Test
+    fun `default config has loop OFF`() {
+        val config = TimerConfig.DEFAULT
+
+        assertThat(config.repeatEnabled).isFalse()
+    }
+
+    @Test
     fun `config accepts valid range`() {
         val config = TimerConfig(
             minSeconds = 60,

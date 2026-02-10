@@ -1,0 +1,37 @@
+import Foundation
+
+@MainActor
+protocol TimerNotificationHandling {
+    func requestNotificationPermission() async
+    func scheduleAlarmNotification(at date: Date, soundType: SoundType) async
+    func cancelPendingNotifications() async
+    func playAlarmSound(type: SoundType, volume: Float)
+    func stopAlarmSound()
+    func startVibration()
+    func stopVibration()
+    func playPreviewSound(type: SoundType, volume: Float)
+    func updatePreviewVolume(_ volume: Float)
+    func stopPreview()
+    var didTapAlarmNotification: Bool { get }
+    func clearNotificationTapFlag()
+}
+
+protocol TimerStorage: Sendable {
+    func saveConfig(_ config: TimerConfig) async
+    func loadConfig() async -> TimerConfig?
+    func saveTimerState(_ state: TimerState) async
+    func loadTimerState() async -> TimerState?
+    func clearTimerState() async
+
+    nonisolated func loadConfigSync() -> TimerConfig?
+    nonisolated func loadTimerStateSync() -> TimerState?
+    nonisolated func clearTimerStateSync()
+}
+
+@MainActor
+protocol TimerLiveActivityHandling {
+    func start(state: TimerState) async
+    func update(state: TimerState)
+    func end()
+    func endAll() async
+}

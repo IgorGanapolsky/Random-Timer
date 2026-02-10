@@ -6,6 +6,14 @@ import ActivityKit
 public enum SoundType: String, Codable, Sendable, CaseIterable {
     case intense
     case gentle
+
+    /// Filename for UNNotificationSound (must match bundle resource)
+    public var notificationSoundName: String {
+        switch self {
+        case .intense: return "alarm.mp3"
+        case .gentle: return "gentle-chime.mp3"
+        }
+    }
 }
 
 // MARK: - Timer Configuration
@@ -91,6 +99,7 @@ public struct TimerState: Codable, Sendable, Equatable {
     public var remainingDuration: TimeInterval
     public var status: TimerStatus
     public var alarmTimeRemaining: TimeInterval
+    public var alarmStartedAt: Date?
 
     public init(
         config: TimerConfig,
@@ -98,7 +107,8 @@ public struct TimerState: Codable, Sendable, Equatable {
         startedAt: Date = Date(),
         remainingDuration: TimeInterval? = nil,
         status: TimerStatus = .running,
-        alarmTimeRemaining: TimeInterval = 0
+        alarmTimeRemaining: TimeInterval = 0,
+        alarmStartedAt: Date? = nil
     ) {
         self.config = config
         self.targetDuration = targetDuration
@@ -106,6 +116,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         self.remainingDuration = remainingDuration ?? targetDuration
         self.status = status
         self.alarmTimeRemaining = alarmTimeRemaining
+        self.alarmStartedAt = alarmStartedAt
     }
 
     public var progress: Double {

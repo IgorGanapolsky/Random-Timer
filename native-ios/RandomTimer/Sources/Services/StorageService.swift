@@ -1,11 +1,15 @@
 import Foundation
 
 /// Service for persisting timer configuration and state
-actor StorageService {
+actor StorageService: TimerStorage {
 
-    private let defaults = UserDefaults.standard
+    nonisolated(unsafe) private let defaults: UserDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     // MARK: - Keys
 
@@ -31,7 +35,7 @@ actor StorageService {
 
     /// Synchronous config load for use in initializers (avoids async race condition)
     nonisolated func loadConfigSync() -> TimerConfig? {
-        let defaults = UserDefaults.standard
+        let defaults = self.defaults
         guard let data = defaults.data(forKey: Keys.config),
               let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
             return nil
@@ -60,7 +64,7 @@ actor StorageService {
 
     /// Synchronous timer state load for use in initializers
     nonisolated func loadTimerStateSync() -> TimerState? {
-        let defaults = UserDefaults.standard
+        let defaults = self.defaults
         guard let data = defaults.data(forKey: Keys.timerState),
               let state = try? JSONDecoder().decode(TimerState.self, from: data) else {
             return nil
@@ -70,6 +74,6 @@ actor StorageService {
 
     /// Synchronous clear for use in initializers
     nonisolated func clearTimerStateSync() {
-        UserDefaults.standard.removeObject(forKey: Keys.timerState)
+        defaults.removeObject(forKey: Keys.timerState)
     }
 }

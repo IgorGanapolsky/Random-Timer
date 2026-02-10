@@ -1,43 +1,54 @@
 import Foundation
 import UserNotifications
 import AVFoundation
+import MediaPlayer
 import UIKit
 
 /// Service for managing notifications and alarm sounds
 @MainActor
-final class NotificationService: NSObject {
+final class NotificationService: NSObject, TimerNotificationHandling {
 
     private var audioPlayer: AVAudioPlayer?
     private let notificationCenter = UNUserNotificationCenter.current()
+    /// Set to true when user taps the alarm notification
+    private(set) var didTapAlarmNotification = false
+
+    /// Callback invoked when Bluetooth/CarPlay media button is pressed during alarm
+    var onMediaButtonDismiss: (() -> Void)?
 
     override init() {
         super.init()
         setupAudioSession()
-        requestNotificationPermission()
+        notificationCenter.delegate = self
+        // Notification permission deferred to first timer start (not on launch)
     }
 
     // MARK: - Permissions
 
-    private func requestNotificationPermission() {
-        Task {
-            do {
-                let granted = try await notificationCenter.requestAuthorization(
-                    options: [.alert, .sound, .badge, .criticalAlert]
-                )
-                print("Notification permission granted: \(granted)")
-            } catch {
-                print("Failed to request notification permission: \(error)")
-            }
+    func requestNotificationPermission() async {
+        // Avoid blocking unit tests on system permission dialogs
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            return
+        }
+        do {
+            let granted = try await notificationCenter.requestAuthorization(
+                options: [.alert, .sound, .badge]
+            )
+            print("Notification permission granted: \(granted)")
+        } catch {
+            print("Failed to request notification permission: \(error)")
         }
     }
 
     // MARK: - Notifications
 
-    func scheduleAlarmNotification(at date: Date) async {
+    func scheduleAlarmNotification(at date: Date, soundType: SoundType = .intense) async {
+        await requestNotificationPermission()
+
         let content = UNMutableNotificationContent()
         content.title = "Time's Up!"
         content.body = "Your random timer has finished"
-        content.sound = .defaultCritical
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(soundType.notificationSoundName))
         content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = "TIMER_ALARM"
 
@@ -80,8 +91,8 @@ final class NotificationService: NSObject {
     }
 
     func playAlarmSound(type: SoundType = .intense, volume: Float = 1.0) {
-        // Re-activate audio session before playing
-        setupAudioSession()
+        // Activate media session for Bluetooth/CarPlay dismiss, then play
+        activateMediaSession()
 
         let resourceName = soundResourceName(for: type)
 
@@ -164,9 +175,79 @@ final class NotificationService: NSObject {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
     }
 
+    // MARK: - Media Session (Bluetooth / CarPlay alarm dismiss)
+
+    func activateMediaSession() {
+        // Take audio focus (remove .mixWithOthers so Bluetooth routes to us)
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                mode: .default,
+                options: []
+            )
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to activate media session: \(error)")
+        }
+
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            self?.onMediaButtonDismiss?()
+            return .success
+        }
+
+        commandCenter.stopCommand.isEnabled = true
+        commandCenter.stopCommand.addTarget { [weak self] _ in
+            self?.onMediaButtonDismiss?()
+            return .success
+        }
+
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            self?.onMediaButtonDismiss?()
+            return .success
+        }
+
+        // Set now playing info so the lock screen / Bluetooth shows our app
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
+            MPMediaItemPropertyTitle: "Random Timer - Alarm",
+            MPMediaItemPropertyArtist: "Random Timer"
+        ]
+    }
+
+    func deactivateMediaSession() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.stopCommand.removeTarget(nil)
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.isEnabled = false
+        commandCenter.stopCommand.isEnabled = false
+        commandCenter.playCommand.isEnabled = false
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+
+        // Restore mixWithOthers for normal operation
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                mode: .default,
+                options: [.mixWithOthers]
+            )
+        } catch {
+            print("Failed to deactivate media session: \(error)")
+        }
+    }
+
     func stopAlarmSound() {
+        deactivateMediaSession()
         audioPlayer?.stop()
         audioPlayer = nil
+    }
+
+    func clearNotificationTapFlag() {
+        didTapAlarmNotification = false
     }
 
     // MARK: - Haptics
@@ -197,5 +278,28 @@ final class NotificationService: NSObject {
     // Legacy method for single vibration
     func vibrate() {
         triggerVibration()
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        // Show banner in foreground; alarm sound is handled by AVAudioPlayer
+        return [.banner]
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        // User tapped the alarm notification — flag it so handleForeground
+        // skips replaying the alarm sound (notification already played it)
+        if response.notification.request.identifier == "timer_alarm" {
+            didTapAlarmNotification = true
+        }
     }
 }

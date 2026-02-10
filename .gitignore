@@ -69,3 +69,8 @@ venv/
 .claude/hooks/
 .claude/ralph/
 .claude/scripts/feedback/
+
+# CCPM local workspace (project management)
+.claude/epics/
+.claude/prds/
+.claude/context/

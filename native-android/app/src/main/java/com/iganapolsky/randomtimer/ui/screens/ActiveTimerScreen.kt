@@ -136,11 +136,14 @@ fun ActiveTimerScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Info message
-            AnimatedVisibility(
-                visible = !isComplete,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
+            if (isComplete) {
+                Text(
+                    text = "Went off after ${formatDurationReadable(state.targetDuration)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            } else {
                 Text(
                     text = "You don't know when it will go off...",
                     style = MaterialTheme.typography.bodyMedium,
@@ -248,6 +251,17 @@ private fun LoopBadge(
                 color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted
             )
         }
+    }
+}
+
+private fun formatDurationReadable(duration: kotlin.time.Duration): String {
+    val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
+    val mins = totalSeconds / 60
+    val secs = totalSeconds % 60
+    return when {
+        mins > 0 && secs > 0 -> "${mins}m ${secs}s"
+        mins > 0 -> "${mins}m"
+        else -> "${secs}s"
     }
 }
 
