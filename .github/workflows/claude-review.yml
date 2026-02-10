@@ -34,7 +34,6 @@ jobs:
             4. No google-services.json, .env, or local.properties committed
 
             STYLE CHECKS (suggest improvements):
-            - Named exports only (no default exports)
             - Android: Coroutines with delay() instead of Handler(Looper)
             - iOS: Swift concurrency (async/await) over completion handlers
             - Both platforms: Match animation timing parity
