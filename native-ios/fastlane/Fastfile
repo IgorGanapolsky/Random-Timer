@@ -6,28 +6,26 @@ platform :ios do
     # Increment build number
     increment_build_number(xcodeproj: "RandomTimer.xcodeproj")
 
-    # Get certificates and provisioning profiles
-    match(
-      type: "appstore",
-      app_identifier: ["com.iganapolsky.randomtimer", "com.iganapolsky.randomtimer.widget"],
-      readonly: false
-    )
+    # Use App Store Connect API key if available
+    if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APPSTORE_KEY_ID"],
+        issuer_id: ENV["APPSTORE_ISSUER_ID"],
+        key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+      )
+    end
 
-    # Build the app
+    # Build with automatic signing
     build_app(
       scheme: "RandomTimer",
       export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          "com.iganapolsky.randomtimer" => "match AppStore com.iganapolsky.randomtimer",
-          "com.iganapolsky.randomtimer.widget" => "match AppStore com.iganapolsky.randomtimer.widget"
-        }
-      }
+      xcargs: "-allowProvisioningUpdates"
     )
 
     # Upload to TestFlight
     upload_to_testflight(
-      skip_waiting_for_build_processing: true
+      skip_waiting_for_build_processing: true,
+      api_key: defined?(api_key) ? api_key : nil
     )
   end
 
@@ -35,9 +33,9 @@ platform :ios do
   lane :create_app do
     produce(
       app_identifier: "com.iganapolsky.randomtimer",
-      app_name: "Random Timer",
+      app_name: "Random Tactical Timer",
       language: "en-US",
-      app_version: "1.0",
+      app_version: "1.1.0",
       sku: "randomtimer001",
       team_id: ENV["FASTLANE_TEAM_ID"]
     )
@@ -45,11 +43,15 @@ platform :ios do
 
   desc "Setup certificates and profiles"
   lane :setup do
-    match(
-      type: "appstore",
-      app_identifier: ["com.iganapolsky.randomtimer", "com.iganapolsky.randomtimer.widget"],
-      readonly: false,
-      force_for_new_devices: true
-    )
+    if ENV["MATCH_GIT_URL"]
+      match(
+        type: "appstore",
+        app_identifier: ["com.iganapolsky.randomtimer", "com.iganapolsky.randomtimer.widget"],
+        readonly: false,
+        force_for_new_devices: true
+      )
+    else
+      UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
+    end
   end
 end
