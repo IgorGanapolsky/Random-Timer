@@ -75,6 +75,9 @@ class TimerForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.hasExtra(EXTRA_APP_IN_FOREGROUND) == true) {
+            isAppInForeground = intent.getBooleanExtra(EXTRA_APP_IN_FOREGROUND, isAppInForeground)
+        }
         when (intent?.action) {
             ACTION_APP_STATE_CHANGED -> {
                 isAppInForeground = intent.getBooleanExtra(EXTRA_APP_IN_FOREGROUND, false)
@@ -114,7 +117,6 @@ class TimerForegroundService : Service() {
             ACTION_PAUSE -> pauseTimer()
             ACTION_RESUME -> resumeTimer()
             ACTION_RESET -> resetTimer()
-            ACTION_EXTEND -> extendTimer()
             ACTION_DISMISS_ALARM -> dismissAlarm()
             ACTION_SILENCE_ALARM -> silenceAlarm()
         }
@@ -255,6 +257,7 @@ class TimerForegroundService : Service() {
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
         alarmCountdownJob = null
+        notificationManager.cancel(NOTIFICATION_ID)
         deactivateMediaSession()
         stopAlarmSound()
         stopVibration()
@@ -266,38 +269,6 @@ class TimerForegroundService : Service() {
                 startedAt = System.currentTimeMillis()
             )
             startTimer(resetState)
-        }
-    }
-
-    /**
-     * Extend timer by 5 minutes
-     * Material Design 3 enhancement - adds convenience for quick time extensions
-     */
-    private fun extendTimer() {
-        _timerState.value?.let { state ->
-            if (state.status == TimerStatus.RUNNING || state.status == TimerStatus.PAUSED) {
-                val extensionDuration = 5.seconds * 60 // 5 minutes
-                val newRemaining = state.remainingDuration + extensionDuration
-                val newTarget = state.targetDuration + extensionDuration
-
-                val extendedState = state.copy(
-                    remainingDuration = newRemaining,
-                    targetDuration = newTarget
-                )
-
-                _timerState.value = extendedState
-
-                // If timer is running, restart it with new duration
-                if (state.status == TimerStatus.RUNNING) {
-                    timerJob?.cancel()
-                    startTimer(extendedState)
-                } else {
-                    // Just update notification if paused
-                    updateNotification(extendedState)
-                }
-
-                Log.d("TimerService", "Timer extended by 5 minutes. New remaining: ${newRemaining.inWholeSeconds}s")
-            }
         }
     }
 
@@ -404,14 +375,15 @@ class TimerForegroundService : Service() {
     }
 
     private fun createNotificationChannels() {
-        // Timer progress channel (silent)
+        // Timer progress channel (lock screen visible)
         val timerChannel = NotificationChannel(
             CHANNEL_TIMER,
-            "Timer Progress",
-            NotificationManager.IMPORTANCE_LOW
+            "Active Timer",
+            NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "Shows timer countdown progress"
-            setShowBadge(false)
+            description = "Shows timer countdown on lock screen"
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setShowBadge(true)
         }
 
         // Alarm channel (high priority, no sound - we handle sound via Ringtone for better control)
@@ -433,9 +405,9 @@ class TimerForegroundService : Service() {
      * Creates Material Design 3 styled timer notification with chronometer countdown.
      *
      * Features:
-     * - Chronometer displays countdown in real-time
+     * - No countdown displayed (random timer)
      * - Material3 color scheme
-     * - Interactive action buttons (pause/resume, extend, reset, stop)
+     * - Interactive action buttons (pause/resume, reset, stop)
      * - Battery optimized (updates only every 1 second via chronometer)
      *
      * @param state Current timer state
@@ -450,10 +422,6 @@ class TimerForegroundService : Service() {
         val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
         val rangeText = "$minFormatted - $maxFormatted"
 
-        // Calculate chronometer base time (when timer will complete)
-        // System.currentTimeMillis() is "now", add remaining duration to get end time
-        val endTimeMillis = System.currentTimeMillis() + state.remainingDuration.inWholeMilliseconds
-
         val builder = NotificationCompat.Builder(this, CHANNEL_TIMER)
             .setSmallIcon(R.drawable.ic_timer)
             .setContentTitle(if (isPaused) "Timer Paused" else "Timer Running")
@@ -465,17 +433,8 @@ class TimerForegroundService : Service() {
             .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             // Material Design 3 - Color accent for notification
             .setColor(getColor(R.color.accent_primary))
-            // Chronometer countdown - only show if timer is running (not paused)
-            .apply {
-                if (!isPaused) {
-                    setUsesChronometer(true)
-                    setChronometerCountDown(true)
-                    setWhen(endTimeMillis)
-                    setShowWhen(true)
-                } else {
-                    setShowWhen(false)
-                }
-            }
+            // Never show countdown in notification for random timer
+            .setShowWhen(false)
             // Primary action: Pause/Resume
             .addAction(
                 if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
@@ -483,21 +442,12 @@ class TimerForegroundService : Service() {
                 if (isPaused) createResumeIntent() else createPauseIntent()
             )
 
-        // Add Extend (+5min) or Reset based on available space
-        // Extend is more useful during active timer, Reset when paused
-        if (!isPaused) {
-            builder.addAction(
-                R.drawable.ic_add_time,
-                "+5 Min",
-                createExtendIntent()
-            )
-        } else {
-            builder.addAction(
-                R.drawable.ic_refresh,
-                "Reset",
-                createResetIntent()
-            )
-        }
+        // Reset action (always available)
+        builder.addAction(
+            R.drawable.ic_refresh,
+            "Reset",
+            createResetIntent()
+        )
 
         // Stop action (always available)
         builder.addAction(
@@ -602,16 +552,6 @@ class TimerForegroundService : Service() {
         }
         return PendingIntent.getService(
             this, 5, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-    }
-
-    private fun createExtendIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_EXTEND
-        }
-        return PendingIntent.getService(
-            this, 7, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
@@ -768,7 +708,6 @@ class TimerForegroundService : Service() {
         const val ACTION_PAUSE = "com.iganapolsky.randomtimer.PAUSE"
         const val ACTION_RESUME = "com.iganapolsky.randomtimer.RESUME"
         const val ACTION_RESET = "com.iganapolsky.randomtimer.RESET"
-        const val ACTION_EXTEND = "com.iganapolsky.randomtimer.EXTEND" // Material Design 3 enhancement
         const val ACTION_DISMISS_ALARM = "com.iganapolsky.randomtimer.DISMISS"
         const val ACTION_SILENCE_ALARM = "com.iganapolsky.randomtimer.SILENCE"
         const val ACTION_UPDATE_LOOP = "com.iganapolsky.randomtimer.UPDATE_LOOP"

@@ -38,8 +38,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
 
     public init(
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120,
+        minSeconds: Int = 0,
+        maxSeconds: Int = 300,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF

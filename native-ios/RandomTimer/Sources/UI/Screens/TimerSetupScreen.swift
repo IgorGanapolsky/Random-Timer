@@ -95,7 +95,7 @@ struct TimerSetupScreen: View {
                             },
                             onSliding: { newVolume in
                                 updateConfig(volume: newVolume)
-                                timerManager.updatePreviewVolume()
+                                timerManager.previewVolume()
                             },
                             emoji: "🔊"
                         )

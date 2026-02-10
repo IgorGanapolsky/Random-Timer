@@ -305,6 +305,13 @@ final class TimerManager: ObservableObject {
         notificationService.updatePreviewVolume(config.volume)
     }
 
+    func previewVolume() {
+        notificationService.previewVolume(
+            type: config.soundType,
+            volume: config.volume
+        )
+    }
+
     /// Test-only hook for setting timer state without waiting on async countdowns.
     func _setTimerStateForTesting(_ state: TimerState?) {
         timerState = state

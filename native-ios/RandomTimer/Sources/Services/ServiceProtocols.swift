@@ -11,6 +11,7 @@ protocol TimerNotificationHandling {
     func stopVibration()
     func playPreviewSound(type: SoundType, volume: Float)
     func updatePreviewVolume(_ volume: Float)
+    func previewVolume(type: SoundType, volume: Float)
     func stopPreview()
     var didTapAlarmNotification: Bool { get }
     func clearNotificationTapFlag()

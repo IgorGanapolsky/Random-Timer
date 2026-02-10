@@ -116,6 +116,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
     private var previewTimer: Timer?
     private var currentlyPreviewingSound: SoundType?
+    private let previewVolumeStopDelay: TimeInterval = 1.5
 
     func playPreviewSound(type: SoundType, volume: Float) {
         // If same sound is already playing, stop it (toggle behavior)
@@ -140,16 +141,24 @@ final class NotificationService: NSObject, TimerNotificationHandling {
                 print("Playing preview sound: \(resourceName) at volume \(volume)")
 
                 // Stop after 5 seconds
-                previewTimer?.invalidate()
-                previewTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
-                    self?.stopPreview()
-                }
+                schedulePreviewStop(after: 5.0)
             } catch {
                 print("Failed to play preview: \(error)")
             }
         } else {
             print("Preview sound file not found: \(resourceName).mp3")
         }
+    }
+
+    func previewVolume(type: SoundType, volume: Float) {
+        if currentlyPreviewingSound == type && audioPlayer?.isPlaying == true {
+            audioPlayer?.volume = volume
+            schedulePreviewStop(after: previewVolumeStopDelay)
+            return
+        }
+
+        playPreviewSound(type: type, volume: volume)
+        schedulePreviewStop(after: previewVolumeStopDelay)
     }
 
     func stopPreview() {
@@ -162,6 +171,15 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
     func updatePreviewVolume(_ volume: Float) {
         audioPlayer?.volume = volume
+    }
+
+    private func schedulePreviewStop(after delay: TimeInterval) {
+        previewTimer?.invalidate()
+        previewTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.stopPreview()
+            }
+        }
     }
 
     private func soundResourceName(for type: SoundType) -> String {
@@ -260,7 +278,9 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         triggerVibration()
         // Then vibrate every 1.5 seconds
         vibrationTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
-            self?.triggerVibration()
+            Task { @MainActor in
+                self?.triggerVibration()
+            }
         }
     }
 
@@ -288,8 +308,9 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        // Show banner in foreground; alarm sound is handled by AVAudioPlayer
-        return [.banner]
+        // App is foregrounded — suppress the notification banner since the
+        // alarm UI is already visible. Alarm sound is handled by AVAudioPlayer.
+        return []
     }
 
     func userNotificationCenter(

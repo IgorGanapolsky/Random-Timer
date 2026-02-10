@@ -9,7 +9,7 @@ struct RandomTimerLiveActivity: Widget {
         ActivityConfiguration(for: TimerActivityAttributes.self) { context in
             // Lock Screen / Banner UI
             TimerLockScreenView(context: context)
-                .activityBackgroundTint(Color(hex: "0F0A1A"))
+                .activityBackgroundTint(Color.black.opacity(0.4))
                 .activitySystemActionForegroundColor(.white)
 
         } dynamicIsland: { context in
@@ -79,27 +79,27 @@ struct TimerLockScreenView: View {
         HStack(spacing: 16) {
             // Left: Animated timer icon with glow
             TimerIconView(status: context.state.status)
-                .frame(width: 44, height: 44)
+                .frame(width: 48, height: 48)
 
             // Center: Timer information
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(context.attributes.timerName)
-                    .font(.headline)
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.white)
 
                 if context.state.status == .complete || context.state.status == .alarm {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Image(systemName: "bell.badge.fill")
-                            .font(.caption)
+                            .font(.system(size: 13, weight: .medium))
                         Text("Time's up!")
-                            .font(.subheadline)
+                            .font(.system(size: 15, weight: .medium))
                     }
                     .foregroundColor(statusColor)
                 } else {
                     // Show range instead of countdown (preserves random timer surprise)
                     Text("Timer: \(context.attributes.rangeText)")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(.white.opacity(0.85))
                 }
             }
 
@@ -110,10 +110,10 @@ struct TimerLockScreenView: View {
                 status: context.state.status,
                 progress: calculateProgress(context)
             )
-            .frame(width: 40, height: 40)
+            .frame(width: 44, height: 44)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
     private var statusColor: Color {
@@ -218,16 +218,21 @@ struct TimerIconView: View {
 
     var body: some View {
         ZStack {
-            // Background glow (only for non-compact)
+            // Background circle with glow
             if !compact {
                 Circle()
-                    .fill(iconColor.opacity(0.2))
-                    .blur(radius: 8)
+                    .fill(iconColor.opacity(0.25))
+                    .frame(width: 48, height: 48)
+
+                Circle()
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 56, height: 56)
+                    .blur(radius: 6)
             }
 
             // Icon with animation
             Image(systemName: iconName)
-                .font(compact ? .caption : .title2)
+                .font(.system(size: compact ? 14 : 22, weight: .semibold))
                 .foregroundColor(iconColor)
                 .symbolEffect(.pulse, options: .repeating, value: status == .running)
         }
@@ -320,26 +325,27 @@ struct TimerProgressRing: View {
         ZStack {
             // Background ring
             Circle()
-                .stroke(ringColor.opacity(0.2), lineWidth: 3)
+                .stroke(ringColor.opacity(0.3), lineWidth: 4)
 
-            // Progress ring
+            // Progress ring with gradient
             Circle()
                 .trim(from: 0, to: animatedProgress)
                 .stroke(
                     ringColor,
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 0.5), value: animatedProgress)
+                .shadow(color: ringColor.opacity(0.4), radius: 3, x: 0, y: 0)
 
             // Center icon (for non-alarm states)
             if status != .complete && status != .alarm {
                 Image(systemName: "timer")
-                    .font(.caption2)
-                    .foregroundColor(ringColor.opacity(0.7))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(ringColor.opacity(0.9))
             } else {
                 Image(systemName: "checkmark")
-                    .font(.caption2)
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(ringColor)
             }
         }

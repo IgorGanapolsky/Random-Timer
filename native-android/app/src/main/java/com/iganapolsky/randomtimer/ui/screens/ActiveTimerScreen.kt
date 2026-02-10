@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 
 @Composable
 fun ActiveTimerScreen(
@@ -58,6 +60,15 @@ fun ActiveTimerScreen(
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
+    var showResetFeedback by remember { mutableStateOf(false) }
+    var resetFeedbackCounter by remember { mutableStateOf(0) }
+
+    LaunchedEffect(resetFeedbackCounter) {
+        if (resetFeedbackCounter == 0) return@LaunchedEffect
+        showResetFeedback = true
+        delay(1200)
+        showResetFeedback = false
+    }
 
     // Format range text (e.g., "30s - 2m")
     val rangeText = remember(state.config) {
@@ -136,7 +147,14 @@ fun ActiveTimerScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Info message
-            if (isComplete) {
+            if (showResetFeedback) {
+                Text(
+                    text = "Timer restarted",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TimerColors.AccentPrimary,
+                    textAlign = TextAlign.Center
+                )
+            } else if (isComplete) {
                 Text(
                     text = "Went off after ${formatDurationReadable(state.targetDuration)}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -184,7 +202,10 @@ fun ActiveTimerScreen(
                 // Reset - restart with same duration
                 SecondaryButton(
                     text = "Reset",
-                    onClick = onReset,
+                    onClick = {
+                        resetFeedbackCounter += 1
+                        onReset()
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
@@ -200,7 +221,10 @@ fun ActiveTimerScreen(
                 // Reset (restart with same config)
                 SecondaryButton(
                     text = "Reset",
-                    onClick = onReset,
+                    onClick = {
+                        resetFeedbackCounter += 1
+                        onReset()
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 

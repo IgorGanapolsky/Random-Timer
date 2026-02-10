@@ -46,6 +46,7 @@ fun TimerSetupScreen(
     onConfigChange: (TimerConfig) -> Unit,
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
+    onVolumePreview: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Read directly from config to avoid stale state issues
@@ -210,7 +211,10 @@ fun TimerSetupScreen(
                         // Volume Slider
                         VolumeSlider(
                             value = config.volume,
-                            onValueChange = { updateConfig(volume = it) },
+                            onValueChange = {
+                                updateConfig(volume = it)
+                                onVolumePreview(it)
+                            },
                             onValueChangeFinished = { }
                         )
 
@@ -413,7 +417,8 @@ private fun TimerSetupScreenPreview() {
             config = TimerConfig.DEFAULT,
             onConfigChange = {},
             onStartTimer = {},
-            onSoundPreview = { _ -> }
+            onSoundPreview = { _ -> },
+            onVolumePreview = { _ -> }
         )
     }
 }

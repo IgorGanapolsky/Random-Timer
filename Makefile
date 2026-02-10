@@ -43,32 +43,31 @@ run-android-emulator:
 	echo "==> Launching app..."; \
 	adb -s $$EMU shell am start -n $(ANDROID_PACKAGE)/.MainActivity
 
-# Run on connected iOS physical device (uses Apple's devicectl, not ios-deploy)
+# Run on connected iOS physical device (uses ios-deploy to avoid devicectl hanging)
 run-ios-device:
-	@xcrun devicectl list devices --json-output /tmp/_dc_devices.json > /dev/null 2>&1; \
-	DEVICE_ID=$$(python3 -c "import json; data=json.load(open('/tmp/_dc_devices.json')); \
-		devs=[d for d in data['result']['devices'] if 'Mac' not in d.get('deviceProperties',{}).get('name','')]; \
-		print(devs[0]['identifier'] if devs else '')" 2>/dev/null); \
+	@DEVICE_ID=$$(xcodebuild -project $(IOS_PROJECT) -scheme $(IOS_SCHEME) -showdestinations 2>&1 | \
+		grep "platform:iOS," | grep -v Simulator | grep -v placeholder | \
+		head -1 | sed 's/.*id:\([^,}]*\).*/\1/'); \
 	if [ -z "$$DEVICE_ID" ]; then \
 		echo "ERROR: No physical iOS device found. Connect via USB and trust the computer."; \
 		exit 1; \
 	fi; \
-	DEVICE_NAME=$$(python3 -c "import json; data=json.load(open('/tmp/_dc_devices.json')); \
-		devs=[d for d in data['result']['devices'] if 'Mac' not in d.get('deviceProperties',{}).get('name','')]; \
-		print(devs[0]['deviceProperties']['name'] if devs else 'device')" 2>/dev/null); \
-	echo "==> Building for $$DEVICE_NAME ($$DEVICE_ID)"; \
+	DEVICE_NAME=$$(xcodebuild -project $(IOS_PROJECT) -scheme $(IOS_SCHEME) -showdestinations 2>&1 | \
+		grep "platform:iOS," | grep -v Simulator | grep -v placeholder | \
+		head -1 | sed 's/.*name:\([^}]*\).*/\1/' | xargs); \
+	echo "==> Building for $$DEVICE_NAME ($$DEVICE_ID)..."; \
 	xcodebuild -project $(IOS_PROJECT) \
 		-scheme $(IOS_SCHEME) \
 		-destination "id=$$DEVICE_ID" \
 		-configuration Debug \
-		build 2>&1 | tail -5; \
-	APP_PATH=$$(xcodebuild -project $(IOS_PROJECT) -scheme $(IOS_SCHEME) -configuration Debug -showBuildSettings 2>/dev/null | grep ' BUILT_PRODUCTS_DIR' | head -1 | awk '{print $$3}')/$(IOS_SCHEME).app; \
-	echo "==> Uninstalling old version (if any)..."; \
-	xcrun devicectl device uninstall app --device "$$DEVICE_ID" com.igorganapolsky.randomtimer 2>/dev/null || true; \
-	echo "==> Installing on $$DEVICE_NAME (unlock your iPhone and keep screen on)..."; \
-	xcrun devicectl device install app --device "$$DEVICE_ID" --timeout 60 "$$APP_PATH"; \
-	echo "==> Launching app..."; \
-	xcrun devicectl device process launch --device "$$DEVICE_ID" com.igorganapolsky.randomtimer
+		build 2>&1 | tail -1; \
+	APP_PATH="$$(xcodebuild -project $(IOS_PROJECT) -scheme $(IOS_SCHEME) -configuration Debug -showBuildSettings 2>/dev/null | grep ' CONFIGURATION_BUILD_DIR' | grep -v EXCLUDED | head -1 | awk '{print $$3}')/$(IOS_SCHEME).app"; \
+	echo "==> Installing via ios-deploy..."; \
+	ios-deploy --bundle "$$APP_PATH" --no-wifi --nostart; \
+	echo "==> Launching..."; \
+	xcrun devicectl device process launch --device "$$DEVICE_ID" com.igorganapolsky.randomtimer 2>&1 | tail -1 && \
+	echo "✅ App running on $$DEVICE_NAME" || \
+	echo "❌ Launch failed. Check device connection."
 
 # Run on iOS Simulator
 run-ios-sim:
