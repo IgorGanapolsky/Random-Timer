@@ -75,9 +75,9 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then
-            echo "$GOOGLE_SERVICES_JSON" > app/src/main/google-services.json
+            echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
           else
-            echo '{"project_info":{"project_number":"","project_id":"","storage_bucket":""},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.iganapolsky.randomtimer"}},"api_key":[{"current_key":""}]}]}' > app/src/main/google-services.json
+            echo '{"project_info":{"project_number":"","project_id":"","storage_bucket":""},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.iganapolsky.randomtimer"}},"api_key":[{"current_key":""}]}]}' > app/google-services.json
           fi
         working-directory: native-android
 
