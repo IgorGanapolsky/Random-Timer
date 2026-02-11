@@ -42,9 +42,9 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.components.SecondaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
 
 @Composable
 fun ActiveTimerScreen(
@@ -55,7 +55,7 @@ fun ActiveTimerScreen(
     onResume: () -> Unit,
     onReset: () -> Unit,
     onLoopToggle: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
@@ -71,20 +71,23 @@ fun ActiveTimerScreen(
     }
 
     // Format range text (e.g., "30s - 2m")
-    val rangeText = remember(state.config) {
-        formatRangeText(state.config.minSeconds, state.config.maxSeconds)
-    }
+    val rangeText =
+        remember(state.config) {
+            formatRangeText(state.config.minSeconds, state.config.maxSeconds)
+        }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TimerColors.BackgroundDark)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(TimerColors.BackgroundDark),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Top spacer to push content down
             Spacer(modifier = Modifier.weight(0.15f))
@@ -96,7 +99,7 @@ fun ActiveTimerScreen(
                     onClick = {
                         loopEnabled = !loopEnabled
                         onLoopToggle(loopEnabled)
-                    }
+                    },
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -105,14 +108,14 @@ fun ActiveTimerScreen(
             AnimatedVisibility(
                 visible = !isComplete && !isPaused,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 Text(
                     // Random timer - just show "Timer running..." (no warning/danger messages)
                     text = "Timer running...",
                     style = MaterialTheme.typography.titleLarge,
                     color = TimerColors.TextSecondary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
 
@@ -120,13 +123,13 @@ fun ActiveTimerScreen(
             AnimatedVisibility(
                 visible = isPaused,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 Text(
                     text = "Paused",
                     style = MaterialTheme.typography.titleLarge,
                     color = TimerColors.TextMuted,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
 
@@ -137,11 +140,10 @@ fun ActiveTimerScreen(
             // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
             // Hide progress ring since we're not revealing time info
             CircularTimer(
-                remainingDuration = state.remainingDuration,
                 progress = if (isComplete) 1f else 0f, // Full progress ring when complete
                 status = state.status,
                 modifier = Modifier.size(280.dp),
-                rangeText = rangeText // ALWAYS show range, never countdown
+                rangeText = rangeText, // ALWAYS show range, never countdown
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -152,21 +154,21 @@ fun ActiveTimerScreen(
                     text = "Timer restarted",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TimerColors.AccentPrimary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             } else if (isComplete) {
                 Text(
                     text = "Went off after ${formatDurationReadable(state.targetDuration)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TimerColors.TextSecondary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             } else {
                 Text(
                     text = "You don't know when it will go off...",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TimerColors.TextMuted,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
 
@@ -174,7 +176,7 @@ fun ActiveTimerScreen(
             AnimatedVisibility(
                 visible = state.status == TimerStatus.ALARM,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 // Just show loop badge (no countdown - random timer)
                 LoopBadge(
@@ -182,7 +184,7 @@ fun ActiveTimerScreen(
                     onClick = {
                         loopEnabled = !loopEnabled
                         onLoopToggle(loopEnabled)
-                    }
+                    },
                 )
             }
 
@@ -194,7 +196,7 @@ fun ActiveTimerScreen(
                 DangerButton(
                     text = "Stop",
                     onClick = onDismissAlarm,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -206,14 +208,14 @@ fun ActiveTimerScreen(
                         resetFeedbackCounter += 1
                         onReset()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 // Pause / Resume
                 PrimaryButton(
                     text = if (isPaused) "Resume" else "Pause",
                     onClick = if (isPaused) onResume else onPause,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -225,7 +227,7 @@ fun ActiveTimerScreen(
                         resetFeedbackCounter += 1
                         onReset()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -234,7 +236,7 @@ fun ActiveTimerScreen(
                 SecondaryButton(
                     text = "Stop",
                     onClick = onStop,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
@@ -247,32 +249,33 @@ fun ActiveTimerScreen(
 private fun LoopBadge(
     enabled: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         color = TimerColors.GlassBackground,
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (enabled) TimerColors.AccentPrimary else TimerColors.GlassBorder
-        )
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+            ),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "🔁",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Text(
                 text = if (enabled) "LOOP" else "LOOP OFF",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
             )
         }
     }
@@ -289,16 +292,18 @@ private fun formatDurationReadable(duration: kotlin.time.Duration): String {
     }
 }
 
-private fun formatRangeText(minSeconds: Int, maxSeconds: Int): String {
-    fun formatTime(seconds: Int): String {
-        return if (seconds >= 60) {
+private fun formatRangeText(
+    minSeconds: Int,
+    maxSeconds: Int,
+): String {
+    fun formatTime(seconds: Int): String =
+        if (seconds >= 60) {
             val mins = seconds / 60
             val secs = seconds % 60
             if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
         } else {
             "${seconds}s"
         }
-    }
     return "${formatTime(minSeconds)} - ${formatTime(maxSeconds)}"
 }
 
@@ -307,18 +312,19 @@ private fun formatRangeText(minSeconds: Int, maxSeconds: Int): String {
 private fun ActiveTimerScreenRunningPreview() {
     RandomTimerTheme {
         ActiveTimerScreen(
-            state = TimerState(
-                config = TimerConfig.DEFAULT,
-                targetDuration = 5.minutes,
-                remainingDuration = 2.minutes + 30.seconds,
-                status = TimerStatus.RUNNING
-            ),
+            state =
+                TimerState(
+                    config = TimerConfig.DEFAULT,
+                    targetDuration = 5.minutes,
+                    remainingDuration = 2.minutes + 30.seconds,
+                    status = TimerStatus.RUNNING,
+                ),
             onStop = {},
             onDismissAlarm = {},
             onPause = {},
             onResume = {},
             onReset = {},
-            onLoopToggle = {}
+            onLoopToggle = {},
         )
     }
 }
@@ -328,18 +334,19 @@ private fun ActiveTimerScreenRunningPreview() {
 private fun ActiveTimerScreenPausedPreview() {
     RandomTimerTheme {
         ActiveTimerScreen(
-            state = TimerState(
-                config = TimerConfig.DEFAULT,
-                targetDuration = 5.minutes,
-                remainingDuration = 2.minutes,
-                status = TimerStatus.PAUSED
-            ),
+            state =
+                TimerState(
+                    config = TimerConfig.DEFAULT,
+                    targetDuration = 5.minutes,
+                    remainingDuration = 2.minutes,
+                    status = TimerStatus.PAUSED,
+                ),
             onStop = {},
             onDismissAlarm = {},
             onPause = {},
             onResume = {},
             onReset = {},
-            onLoopToggle = {}
+            onLoopToggle = {},
         )
     }
 }
@@ -349,18 +356,19 @@ private fun ActiveTimerScreenPausedPreview() {
 private fun ActiveTimerScreenCompletePreview() {
     RandomTimerTheme {
         ActiveTimerScreen(
-            state = TimerState(
-                config = TimerConfig.DEFAULT,
-                targetDuration = 5.minutes,
-                remainingDuration = 0.seconds,
-                status = TimerStatus.ALARM
-            ),
+            state =
+                TimerState(
+                    config = TimerConfig.DEFAULT,
+                    targetDuration = 5.minutes,
+                    remainingDuration = 0.seconds,
+                    status = TimerStatus.ALARM,
+                ),
             onStop = {},
             onDismissAlarm = {},
             onPause = {},
             onResume = {},
             onReset = {},
-            onLoopToggle = {}
+            onLoopToggle = {},
         )
     }
 }

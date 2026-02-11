@@ -61,11 +61,13 @@ struct ActiveTimerScreen: View {
                     // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
                     // Hide progress ring since we're not revealing time info
                     CircularTimerView(
-                        remainingDuration: state.remainingDuration,
                         progress: isComplete ? 1.0 : 0, // Full progress ring when complete
                         status: state.status,
                         rangeText: rangeText // ALWAYS show range, never countdown
                     )
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
+                    .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
 
                     // Info message - fixed height placeholder to prevent layout shift
                     Group {
@@ -130,24 +132,23 @@ struct ActiveTimerScreen: View {
             loopEnabled.toggle()
             updateLoopConfig()
         } label: {
-            HStack(spacing: 6) {
-                Text("🔁")
-                Text(loopEnabled ? "LOOP" : "LOOP OFF")
-                    .font(.caption)
-                    .fontWeight(.medium)
-            }
-            .foregroundColor(loopEnabled ? .accentPrimary : .textMuted)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.glassBackground)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
-            )
+            Label(loopEnabled ? "LOOP" : "LOOP OFF", systemImage: "repeat")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(loopEnabled ? .accentPrimary : .textMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.glassBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
+                )
         }
+        .accessibilityLabel(loopEnabled ? "Loop enabled" : "Loop disabled")
+        .accessibilityHint("Double-tap to toggle repeat timer")
     }
 
     private func updateLoopConfig() {
@@ -200,6 +201,13 @@ struct ActiveTimerScreen: View {
     private func actionButtons(for state: TimerState) -> some View {
         VStack(spacing: 12) {
             if isComplete {
+                // Silence - only shown during active alarm when sound is still playing
+                if state.status == .alarm && !timerManager.isAlarmSilenced {
+                    SecondaryButton(title: "Silence") {
+                        timerManager.silenceAlarm()
+                    }
+                }
+
                 // Stop - stops alarm and goes home
                 DangerButton(title: "Stop") {
                     Task {

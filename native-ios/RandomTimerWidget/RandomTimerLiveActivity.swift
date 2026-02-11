@@ -2,7 +2,7 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-/// Live Activity configuration for Random Timer
+/// Live Activity configuration for Random Tactical Timer
 /// Displays timer status on Lock Screen and Dynamic Island
 struct RandomTimerLiveActivity: Widget {
     var body: some WidgetConfiguration {
@@ -29,7 +29,7 @@ struct RandomTimerLiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    ExpandedBottomActions()
+                    ExpandedBottomActions(status: context.state.status)
                 }
 
             } compactLeading: {
@@ -105,12 +105,11 @@ struct TimerLockScreenView: View {
 
             Spacer()
 
-            // Right: Visual progress indicator
-            TimerProgressRing(
-                status: context.state.status,
-                progress: calculateProgress(context)
-            )
-            .frame(width: 44, height: 44)
+            // Right: Decorative progress ring with random animation
+            // Uses multi-frequency sine waves so progress looks alive
+            // but doesn't correlate with actual timer progress
+            RandomProgressRing(status: context.state.status)
+                .frame(width: 44, height: 44)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
@@ -125,23 +124,6 @@ struct TimerLockScreenView: View {
         }
     }
 
-    /// Calculate visual progress (for animation purposes only)
-    /// Note: For random timer, we show generic progress, not exact countdown
-    private func calculateProgress(_ context: ActivityViewContext<TimerActivityAttributes>) -> Double {
-        guard context.state.status == .running else { return 0 }
-
-        // Show gentle pulsing animation instead of exact progress
-        // This preserves the "random" nature while providing visual feedback
-        let elapsed = Date().timeIntervalSince(context.attributes.endDate.addingTimeInterval(-Double(context.attributes.maxSeconds)))
-        let maxDuration = Double(context.attributes.maxSeconds)
-        guard maxDuration > 0 else { return 0 }
-
-        let baseProgress = min(1.0, max(0.0, elapsed / maxDuration))
-
-        // Add subtle pulse animation
-        let pulseOffset = sin(Date().timeIntervalSinceReferenceDate * 2) * 0.05
-        return min(1.0, max(0.0, baseProgress + pulseOffset))
-    }
 }
 
 // MARK: - Dynamic Island Expanded View
@@ -191,10 +173,29 @@ struct ExpandedTimerView: View {
 
 /// Expanded Dynamic Island bottom action buttons
 struct ExpandedBottomActions: View {
+    let status: TimerStatus
+
     var body: some View {
-        HStack(spacing: 16) {
-            // Note: Button actions require App Intent implementation
-            // This UI is ready for future interactivity
+        HStack(spacing: 12) {
+            if status == .running {
+                Button(intent: PauseTimerIntent()) {
+                    Label("Pause", systemImage: "pause.fill")
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color(hex: "F59E0B"))
+                .clipShape(Capsule())
+            } else if status == .paused {
+                Button(intent: ResumeTimerIntent()) {
+                    Label("Resume", systemImage: "play.fill")
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color(hex: "10B981"))
+                .clipShape(Capsule())
+            }
 
             Button(intent: StopTimerIntent()) {
                 Label("Stop", systemImage: "stop.fill")
@@ -314,12 +315,11 @@ struct TimerStatusBadge: View {
     }
 }
 
-/// Circular progress ring with smooth animation
-struct TimerProgressRing: View {
+/// Decorative circular progress ring with pseudo-random animation.
+/// Uses overlapping sine waves so the fill level wanders unpredictably
+/// without correlating to real timer progress.
+struct RandomProgressRing: View {
     let status: TimerStatus
-    let progress: Double
-
-    @State private var animatedProgress: Double = 0
 
     var body: some View {
         ZStack {
@@ -327,36 +327,41 @@ struct TimerProgressRing: View {
             Circle()
                 .stroke(ringColor.opacity(0.3), lineWidth: 4)
 
-            // Progress ring with gradient
+            // Decorative fill — random-looking via multi-frequency sine
             Circle()
-                .trim(from: 0, to: animatedProgress)
+                .trim(from: 0, to: decorativeProgress)
                 .stroke(
                     ringColor,
                     style: StrokeStyle(lineWidth: 4, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut(duration: 0.5), value: animatedProgress)
-                .shadow(color: ringColor.opacity(0.4), radius: 3, x: 0, y: 0)
+                .shadow(color: ringColor.opacity(0.4), radius: 3)
 
-            // Center icon (for non-alarm states)
-            if status != .complete && status != .alarm {
-                Image(systemName: "timer")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(ringColor.opacity(0.9))
-            } else {
+            // Center icon
+            if status == .complete || status == .alarm {
                 Image(systemName: "checkmark")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(ringColor)
+            } else {
+                Image(systemName: "timer")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(ringColor.opacity(0.9))
             }
         }
-        .onAppear {
-            animatedProgress = progress
+        .accessibilityLabel("Timer active")
+    }
+
+    /// Pseudo-random progress using overlapping sine waves.
+    /// Oscillates between ~0.15 and ~0.85 — looks alive but reveals nothing.
+    private var decorativeProgress: Double {
+        guard status == .running || status == .warning || status == .danger else {
+            return status == .complete || status == .alarm ? 1.0 : 0.0
         }
-        .onChange(of: progress) { _, newValue in
-            animatedProgress = newValue
-        }
-        .accessibilityLabel("Timer progress")
-        .accessibilityValue("\(Int(progress * 100)) percent")
+        let t = Date().timeIntervalSinceReferenceDate
+        let wave1 = sin(t * 0.7) * 0.20
+        let wave2 = sin(t * 1.3) * 0.10
+        let wave3 = sin(t * 2.1) * 0.05
+        return min(0.85, max(0.15, 0.50 + wave1 + wave2 + wave3))
     }
 
     private var ringColor: Color {
@@ -374,14 +379,37 @@ struct TimerProgressRing: View {
 import AppIntents
 
 /// App Intent for stopping the timer from Live Activity
-/// Note: This requires proper App Intent setup in the main app
 struct StopTimerIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Stop Timer"
     static let description: IntentDescription = "Stops the currently running timer"
 
     func perform() async throws -> some IntentResult {
-        // This will be handled by the main app through URL scheme or shared container
-        // Implementation would trigger timer stop in TimerManager
+        let defaults = UserDefaults(suiteName: timerAppGroupSuite)
+        defaults?.set(TimerAction.stop.rawValue, forKey: timerPendingActionKey)
+        return .result()
+    }
+}
+
+/// App Intent for pausing the timer from Live Activity
+struct PauseTimerIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Pause Timer"
+    static let description: IntentDescription = "Pauses the currently running timer"
+
+    func perform() async throws -> some IntentResult {
+        let defaults = UserDefaults(suiteName: timerAppGroupSuite)
+        defaults?.set(TimerAction.pause.rawValue, forKey: timerPendingActionKey)
+        return .result()
+    }
+}
+
+/// App Intent for resuming the timer from Live Activity
+struct ResumeTimerIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Resume Timer"
+    static let description: IntentDescription = "Resumes the paused timer"
+
+    func perform() async throws -> some IntentResult {
+        let defaults = UserDefaults(suiteName: timerAppGroupSuite)
+        defaults?.set(TimerAction.resume.rawValue, forKey: timerPendingActionKey)
         return .result()
     }
 }
@@ -389,7 +417,7 @@ struct StopTimerIntent: LiveActivityIntent {
 // MARK: - Previews
 
 #Preview("Lock Screen - Running", as: .content, using: TimerActivityAttributes(
-    timerName: "Random Timer",
+    timerName: "Random Tactical Timer",
     endDate: Date().addingTimeInterval(180),
     minSeconds: 60,
     maxSeconds: 180
@@ -400,7 +428,7 @@ struct StopTimerIntent: LiveActivityIntent {
 }
 
 #Preview("Lock Screen - Alarm", as: .content, using: TimerActivityAttributes(
-    timerName: "Random Timer",
+    timerName: "Random Tactical Timer",
     endDate: Date(),
     minSeconds: 60,
     maxSeconds: 180
@@ -411,7 +439,7 @@ struct StopTimerIntent: LiveActivityIntent {
 }
 
 #Preview("Dynamic Island - Compact", as: .dynamicIsland(.compact), using: TimerActivityAttributes(
-    timerName: "Random Timer",
+    timerName: "Random Tactical Timer",
     endDate: Date().addingTimeInterval(180),
     minSeconds: 60,
     maxSeconds: 180
@@ -422,7 +450,7 @@ struct StopTimerIntent: LiveActivityIntent {
 }
 
 #Preview("Dynamic Island - Expanded", as: .dynamicIsland(.expanded), using: TimerActivityAttributes(
-    timerName: "Random Timer",
+    timerName: "Random Tactical Timer",
     endDate: Date().addingTimeInterval(180),
     minSeconds: 60,
     maxSeconds: 180

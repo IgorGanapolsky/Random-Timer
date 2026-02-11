@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import AVFoundation
+import CoreHaptics
 import MediaPlayer
 import UIKit
 import os
@@ -17,10 +18,20 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     /// Callback invoked when Bluetooth/CarPlay media button is pressed during alarm
     var onMediaButtonDismiss: (() -> Void)?
 
+    /// Callback invoked when user taps "Silence" action on the notification
+    var onNotificationSilence: (() -> Void)?
+
+    // MARK: - Core Haptics
+
+    private var hapticEngine: CHHapticEngine?
+    private var hapticPlayer: CHHapticPatternPlayer?
+    private var vibrationTimer: Timer?
+
     override init() {
         super.init()
-        setupAudioSession()
         notificationCenter.delegate = self
+        registerNotificationActions()
+        prepareHapticEngine()
         // Notification permission deferred to first timer start (not on launch)
     }
 
@@ -33,12 +44,37 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         }
         do {
             let granted = try await notificationCenter.requestAuthorization(
-                options: [.alert, .sound, .badge]
+                options: [.alert, .sound]
             )
             Logger.notification.debug("Notification permission granted: \(granted)")
         } catch {
             Logger.notification.error("Failed to request notification permission: \(error)")
         }
+    }
+
+    // MARK: - Notification Actions
+
+    private func registerNotificationActions() {
+        let dismissAction = UNNotificationAction(
+            identifier: "DISMISS_ACTION",
+            title: "Dismiss",
+            options: [.destructive, .foreground]
+        )
+
+        let silenceAction = UNNotificationAction(
+            identifier: "SILENCE_ACTION",
+            title: "Silence",
+            options: []
+        )
+
+        let alarmCategory = UNNotificationCategory(
+            identifier: "TIMER_ALARM",
+            actions: [silenceAction, dismissAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
+        notificationCenter.setNotificationCategories([alarmCategory])
     }
 
     // MARK: - Notifications
@@ -78,22 +114,44 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
     // MARK: - Audio
 
-    private func setupAudioSession() {
+    private func activateAudioSession(forAlarm: Bool) {
         do {
             try AVAudioSession.sharedInstance().setCategory(
                 .playback,
                 mode: .default,
-                options: [.mixWithOthers]
+                options: forAlarm ? [.duckOthers] : [.mixWithOthers]
             )
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            Logger.notification.error("Failed to setup audio session: \(error)")
+            Logger.notification.error("Failed to activate audio session: \(error)")
+        }
+    }
+
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(
+                false,
+                options: .notifyOthersOnDeactivation
+            )
+        } catch {
+            Logger.notification.error("Failed to deactivate audio session: \(error)")
         }
     }
 
     func playAlarmSound(type: SoundType = .intense, volume: Float = 1.0) {
-        // Activate media session for Bluetooth/CarPlay dismiss, then play
+        // Activate audio session with ducking for alarm
+        activateAudioSession(forAlarm: true)
+
+        // Activate media session for Bluetooth/CarPlay dismiss
         activateMediaSession()
+
+        // Observe audio interruptions (phone calls, etc.)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioInterruption(_:)),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
 
         let resourceName = soundResourceName(for: type)
 
@@ -107,11 +165,32 @@ final class NotificationService: NSObject, TimerNotificationHandling {
                 Logger.notification.info("Playing alarm sound: \(resourceName) at volume \(volume)")
             } catch {
                 Logger.notification.error("Failed to create audio player: \(error)")
-                playSystemAlarmSound()
             }
         } else {
             Logger.notification.error("Sound file not found in bundle: \(resourceName).mp3")
-            playSystemAlarmSound()
+        }
+    }
+
+    @objc private func handleAudioInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        switch type {
+        case .began:
+            // Phone call or Siri — audio paused automatically by system
+            Logger.notification.debug("Audio interruption began")
+        case .ended:
+            // Interruption ended — resume if we should
+            if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    audioPlayer?.play()
+                    Logger.notification.debug("Audio interruption ended, resuming playback")
+                }
+            }
+        @unknown default:
+            break
         }
     }
 
@@ -127,7 +206,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         }
 
         stopPreview()
-        setupAudioSession()
+        activateAudioSession(forAlarm: false)
 
         let resourceName = soundResourceName(for: type)
 
@@ -168,6 +247,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         audioPlayer?.stop()
         audioPlayer = nil
         currentlyPreviewingSound = nil
+        deactivateAudioSession()
     }
 
     func updatePreviewVolume(_ volume: Float) {
@@ -190,39 +270,26 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         }
     }
 
-    private func playSystemAlarmSound() {
-        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
-    }
-
     // MARK: - Media Session (Bluetooth / CarPlay alarm dismiss)
 
     func activateMediaSession() {
-        // Duck other audio (like navigation apps) so alarm is heard over music
-        do {
-            try AVAudioSession.sharedInstance().setCategory(
-                .playback,
-                mode: .default,
-                options: [.duckOthers]
-            )
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            Logger.notification.error("Failed to activate media session: \(error)")
-        }
-
         let commandCenter = MPRemoteCommandCenter.shared()
 
+        // Pause = silence alarm (stop sound but keep UI)
         commandCenter.pauseCommand.isEnabled = true
         commandCenter.pauseCommand.addTarget { [weak self] _ in
-            self?.onMediaButtonDismiss?()
+            self?.onNotificationSilence?()
             return .success
         }
 
+        // Stop = dismiss alarm entirely
         commandCenter.stopCommand.isEnabled = true
         commandCenter.stopCommand.addTarget { [weak self] _ in
             self?.onMediaButtonDismiss?()
             return .success
         }
 
+        // Play = also dismiss (most common Bluetooth button)
         commandCenter.playCommand.isEnabled = true
         commandCenter.playCommand.addTarget { [weak self] _ in
             self?.onMediaButtonDismiss?()
@@ -231,8 +298,8 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         // Set now playing info so the lock screen / Bluetooth shows our app
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
-            MPMediaItemPropertyTitle: "Random Timer - Alarm",
-            MPMediaItemPropertyArtist: "Random Timer"
+            MPMediaItemPropertyTitle: "Random Tactical Timer - Alarm",
+            MPMediaItemPropertyArtist: "Random Tactical Timer"
         ]
     }
 
@@ -246,46 +313,61 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         commandCenter.playCommand.isEnabled = false
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-
-        // Deactivate with notification so ducked apps restore their volume
-        do {
-            try AVAudioSession.sharedInstance().setActive(
-                false,
-                options: .notifyOthersOnDeactivation
-            )
-            try AVAudioSession.sharedInstance().setCategory(
-                .playback,
-                mode: .default,
-                options: [.mixWithOthers]
-            )
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            Logger.notification.error("Failed to deactivate media session: \(error)")
-        }
     }
 
     func stopAlarmSound() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
         deactivateMediaSession()
         audioPlayer?.stop()
         audioPlayer = nil
+        deactivateAudioSession()
+    }
+
+    /// Stops sound and vibration but keeps alarm state active (alarm UI stays visible)
+    func silenceAlarm() {
+        stopAlarmSound()
+        stopVibration()
     }
 
     func clearNotificationTapFlag() {
         didTapAlarmNotification = false
     }
 
-    // MARK: - Haptics
+    /// Test-only hook for simulating notification tap.
+    func setDidTapAlarmNotificationForTesting(_ value: Bool) {
+        didTapAlarmNotification = value
+    }
 
-    private var vibrationTimer: Timer?
+    // MARK: - Haptics (Core Haptics)
+
+    private func prepareHapticEngine() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+
+        do {
+            hapticEngine = try CHHapticEngine()
+            hapticEngine?.resetHandler = { [weak self] in
+                Task { @MainActor in
+                    try? self?.hapticEngine?.start()
+                }
+            }
+            try hapticEngine?.start()
+        } catch {
+            Logger.notification.error("Failed to start haptic engine: \(error)")
+        }
+    }
 
     func startVibration() {
         stopVibration()
-        // Vibrate immediately
-        triggerVibration()
-        // Then vibrate every 1.5 seconds
+        // Fire immediately
+        triggerHapticBurst()
+        // Repeat every 1.5 seconds
         vibrationTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.triggerVibration()
+                self?.triggerHapticBurst()
             }
         }
     }
@@ -293,17 +375,50 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     func stopVibration() {
         vibrationTimer?.invalidate()
         vibrationTimer = nil
+        try? hapticPlayer?.stop(atTime: CHHapticTimeImmediate)
+        hapticPlayer = nil
     }
 
-    private func triggerVibration() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
-        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
-    }
+    /// Plays a strong double-tap haptic pattern using Core Haptics
+    private func triggerHapticBurst() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics,
+              let engine = hapticEngine else {
+            // Fallback for devices without haptic engine
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+            return
+        }
 
-    // Legacy method for single vibration
-    func vibrate() {
-        triggerVibration()
+        do {
+            // Double-tap pattern: strong hit, brief pause, strong hit
+            let events: [CHHapticEvent] = [
+                CHHapticEvent(
+                    eventType: .hapticTransient,
+                    parameters: [
+                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0),
+                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
+                    ],
+                    relativeTime: 0
+                ),
+                CHHapticEvent(
+                    eventType: .hapticTransient,
+                    parameters: [
+                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0),
+                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
+                    ],
+                    relativeTime: 0.15
+                )
+            ]
+
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            hapticPlayer = try engine.makePlayer(with: pattern)
+            try hapticPlayer?.start(atTime: CHHapticTimeImmediate)
+        } catch {
+            Logger.notification.error("Failed to play haptic: \(error)")
+            // Fallback
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+        }
     }
 }
 
@@ -323,10 +438,21 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        // User tapped the alarm notification — flag it so handleForeground
-        // skips replaying the alarm sound (notification already played it)
-        if response.notification.request.identifier == "timer_alarm" {
+        guard response.notification.request.identifier == "timer_alarm" else { return }
+
+        switch response.actionIdentifier {
+        case "DISMISS_ACTION":
+            // User tapped "Dismiss" — flag for handleForeground
             didTapAlarmNotification = true
+            onMediaButtonDismiss?()
+        case "SILENCE_ACTION":
+            // User tapped "Silence" — stop sound but keep alarm UI
+            onNotificationSilence?()
+        case UNNotificationDefaultActionIdentifier:
+            // User tapped the notification body
+            didTapAlarmNotification = true
+        default:
+            break
         }
     }
 }

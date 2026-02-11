@@ -13,27 +13,21 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.Ringtone
 import android.media.RingtoneManager
-import android.util.Log
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.media.app.NotificationCompat.MediaStyle
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
-import com.iganapolsky.randomtimer.ui.components.formatDuration
 import com.iganapolsky.randomtimer.review.StoreReviewManager
-import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,11 +40,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class TimerForegroundService : Service() {
-
     @Inject lateinit var storeReviewManager: StoreReviewManager
 
     private val binder = LocalBinder()
@@ -62,11 +56,9 @@ class TimerForegroundService : Service() {
 
     private lateinit var notificationManager: NotificationManager
     private var isAppInForeground = false
-    private var timerEndTimeMs: Long = 0L
 
-    // Media session for Bluetooth/Android Auto alarm dismiss
-    private var mediaSession: MediaSessionCompat? = null
     private var audioFocusRequest: AudioFocusRequest? = null
+    private var vibrator: Vibrator? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -75,13 +67,24 @@ class TimerForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        vibrator =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                manager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            }
         createNotificationChannels()
-        createMediaSession()
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         if (intent?.hasExtra(EXTRA_APP_IN_FOREGROUND) == true) {
             isAppInForeground = intent.getBooleanExtra(EXTRA_APP_IN_FOREGROUND, isAppInForeground)
         }
@@ -116,7 +119,7 @@ class TimerForegroundService : Service() {
                         repeatEnabled = repeatEnabled,
                         soundType = soundType,
                         volume = volume,
-                        vibrationEnabled = vibrationEnabled
+                        vibrationEnabled = vibrationEnabled,
                     )
                 }
             }
@@ -127,7 +130,7 @@ class TimerForegroundService : Service() {
             ACTION_DISMISS_ALARM -> dismissAlarm()
             ACTION_SILENCE_ALARM -> silenceAlarm()
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun updateLoopSetting(repeatEnabled: Boolean) {
@@ -139,9 +142,7 @@ class TimerForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        deactivateMediaSession()
-        mediaSession?.release()
-        mediaSession = null
+        abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
         serviceScope.cancel()
@@ -168,75 +169,82 @@ class TimerForegroundService : Service() {
         repeatEnabled: Boolean,
         soundType: String,
         volume: Float,
-        vibrationEnabled: Boolean
+        vibrationEnabled: Boolean,
     ) {
-        val config = TimerConfig(
-            minSeconds = minSeconds,
-            maxSeconds = maxSeconds,
-            alarmDuration = alarmDuration,
-            hiddenMode = hiddenMode,
-            repeatEnabled = repeatEnabled,
-            soundType = try { SoundType.valueOf(soundType) } catch (_: Exception) { SoundType.INTENSE },
-            volume = volume,
-            vibrationEnabled = vibrationEnabled
-        )
+        val config =
+            TimerConfig(
+                minSeconds = minSeconds,
+                maxSeconds = maxSeconds,
+                alarmDuration = alarmDuration,
+                hiddenMode = hiddenMode,
+                repeatEnabled = repeatEnabled,
+                soundType =
+                    try {
+                        SoundType.valueOf(soundType)
+                    } catch (_: Exception) {
+                        SoundType.INTENSE
+                    },
+                volume = volume,
+                vibrationEnabled = vibrationEnabled,
+            )
 
-        val initialState = TimerState(
-            config = config,
-            targetDuration = kotlin.time.Duration.parse("${targetMs}ms"),
-            remainingDuration = kotlin.time.Duration.parse("${remainingMs}ms"),
-            status = TimerStatus.RUNNING
-        )
+        val initialState =
+            TimerState(
+                config = config,
+                targetDuration = kotlin.time.Duration.parse("${targetMs}ms"),
+                remainingDuration = kotlin.time.Duration.parse("${remainingMs}ms"),
+                status = TimerStatus.RUNNING,
+            )
 
         startTimer(initialState)
     }
 
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
-        timerEndTimeMs = System.currentTimeMillis() + initialState.remainingDuration.inWholeMilliseconds
-        updateMediaSessionForTimer(initialState)
         startForeground(NOTIFICATION_ID, createTimerNotification(initialState))
-        postLockScreenNotification()
 
         timerJob?.cancel()
-        timerJob = serviceScope.launch {
-            var state = initialState
+        timerJob =
+            serviceScope.launch {
+                var state = initialState
 
-            while (isActive && state.status != TimerStatus.COMPLETE) {
-                delay(1000)
+                while (isActive && state.status != TimerStatus.COMPLETE) {
+                    delay(1000)
 
-                val newRemaining = (state.remainingDuration - 1.seconds)
-                    .coerceAtLeast(kotlin.time.Duration.ZERO)
+                    val newRemaining =
+                        (state.remainingDuration - 1.seconds)
+                            .coerceAtLeast(kotlin.time.Duration.ZERO)
 
-                // Random timer - don't reveal warning/danger, just running until complete
-                val newStatus = when {
-                    newRemaining <= kotlin.time.Duration.ZERO -> TimerStatus.COMPLETE
-                    else -> TimerStatus.RUNNING
-                }
+                    // Random timer - don't reveal warning/danger, just running until complete
+                    val newStatus =
+                        when {
+                            newRemaining <= kotlin.time.Duration.ZERO -> TimerStatus.COMPLETE
+                            else -> TimerStatus.RUNNING
+                        }
 
-                // Update from current _timerState to preserve config changes
-                // (e.g. loop toggle) made between ticks
-                val current = _timerState.value ?: state
-                state = current.copy(
-                    remainingDuration = newRemaining,
-                    status = newStatus
-                )
+                    // Update from current _timerState to preserve config changes
+                    // (e.g. loop toggle) made between ticks
+                    val current = _timerState.value ?: state
+                    state =
+                        current.copy(
+                            remainingDuration = newRemaining,
+                            status = newStatus,
+                        )
 
-                _timerState.value = state
-                updateNotification(state)
+                    _timerState.value = state
+                    updateNotification(state)
 
-                if (newStatus == TimerStatus.COMPLETE) {
-                    triggerAlarm(state)
+                    if (newStatus == TimerStatus.COMPLETE) {
+                        triggerAlarm(state)
+                    }
                 }
             }
-        }
     }
 
     private fun stopTimer() {
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
-        cancelLockScreenNotification()
-        deactivateMediaSession()
+        abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
         _timerState.value = null
@@ -250,7 +258,6 @@ class TimerForegroundService : Service() {
             if (state.status != TimerStatus.PAUSED) {
                 val pausedState = state.copy(status = TimerStatus.PAUSED)
                 _timerState.value = pausedState
-                updateMediaSessionForTimer(pausedState)
                 updateNotification(pausedState)
             }
         }
@@ -261,7 +268,6 @@ class TimerForegroundService : Service() {
             if (state.status == TimerStatus.PAUSED) {
                 val resumedState = state.copy(status = TimerStatus.RUNNING)
                 _timerState.value = resumedState
-                // startTimer() already calls updateMediaSessionForTimer()
                 startTimer(resumedState)
             }
         }
@@ -272,23 +278,24 @@ class TimerForegroundService : Service() {
         alarmCountdownJob?.cancel()
         alarmCountdownJob = null
         notificationManager.cancel(NOTIFICATION_ID)
-        deactivateMediaSession()
+        abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
         _timerState.value?.let { state ->
-            val resetState = state.copy(
-                remainingDuration = state.targetDuration,
-                status = TimerStatus.RUNNING,
-                alarmTimeRemaining = kotlin.time.Duration.ZERO,
-                startedAt = System.currentTimeMillis()
-            )
+            val resetState =
+                state.copy(
+                    remainingDuration = state.targetDuration,
+                    status = TimerStatus.RUNNING,
+                    alarmTimeRemaining = kotlin.time.Duration.ZERO,
+                    startedAt = System.currentTimeMillis(),
+                )
             startTimer(resetState)
         }
     }
 
     private fun dismissAlarm() {
         alarmCountdownJob?.cancel()
-        deactivateMediaSession()
+        abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
         stopTimer()
@@ -297,20 +304,18 @@ class TimerForegroundService : Service() {
     private fun silenceAlarm() {
         // Stop sound/vibration but keep alarm state + countdown running
         // so the alarm screen stays visible in the UI
-        deactivateMediaSession()
+        abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
     }
 
     private fun triggerAlarm(state: TimerState) {
         // Update status to ALARM
-        _timerState.value = state.copy(
-            status = TimerStatus.ALARM,
-            alarmTimeRemaining = state.config.alarmDuration.seconds
-        )
-
-        // Activate media session so Bluetooth/Android Auto buttons can dismiss
-        activateMediaSession()
+        _timerState.value =
+            state.copy(
+                status = TimerStatus.ALARM,
+                alarmTimeRemaining = state.config.alarmDuration.seconds,
+            )
 
         // Only show alarm notification if app is NOT in foreground
         if (!isAppInForeground) {
@@ -336,39 +341,41 @@ class TimerForegroundService : Service() {
 
     private fun startAlarmCountdown(durationSeconds: Int) {
         alarmCountdownJob?.cancel()
-        alarmCountdownJob = serviceScope.launch {
-            var remaining = durationSeconds
-            while (isActive && remaining > 0) {
-                delay(1000)
-                remaining--
+        alarmCountdownJob =
+            serviceScope.launch {
+                var remaining = durationSeconds
+                while (isActive && remaining > 0) {
+                    delay(1000)
+                    remaining--
 
-                // Update alarm time remaining in state
-                _timerState.value?.let { current ->
-                    _timerState.value = current.copy(
-                        alarmTimeRemaining = remaining.seconds
-                    )
+                    // Update alarm time remaining in state
+                    _timerState.value?.let { current ->
+                        _timerState.value =
+                            current.copy(
+                                alarmTimeRemaining = remaining.seconds,
+                            )
+                    }
+                }
+
+                // Alarm duration finished - stop alarm and check for loop
+                if (isActive) {
+                    abandonAudioFocus()
+                    stopAlarmSound()
+                    stopVibration()
+                    storeReviewManager.recordCompletion()
+
+                    val currentState = _timerState.value
+                    if (currentState?.config?.repeatEnabled == true) {
+                        // Auto-restart timer
+                        restartTimerInternal()
+                    } else {
+                        // Alarm duration finished — clean up service and notification
+                        _timerState.value = null
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
                 }
             }
-
-            // Alarm duration finished - stop alarm and check for loop
-            if (isActive) {
-                deactivateMediaSession()
-                stopAlarmSound()
-                stopVibration()
-                storeReviewManager.recordCompletion()
-
-                val currentState = _timerState.value
-                if (currentState?.config?.repeatEnabled == true) {
-                    // Auto-restart timer
-                    restartTimerInternal()
-                } else {
-                    // Alarm duration finished — clean up service and notification
-                    _timerState.value = null
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                }
-            }
-        }
     }
 
     private fun restartTimerInternal() {
@@ -379,66 +386,51 @@ class TimerForegroundService : Service() {
         val maxMs = currentConfig.maxSeconds * 1000L
         val randomMs = kotlin.random.Random.nextLong(minMs, maxMs + 1)
 
-        val newState = TimerState(
-            config = currentConfig,
-            targetDuration = kotlin.time.Duration.parse("${randomMs}ms"),
-            remainingDuration = kotlin.time.Duration.parse("${randomMs}ms"),
-            status = TimerStatus.RUNNING
-        )
+        val newState =
+            TimerState(
+                config = currentConfig,
+                targetDuration = kotlin.time.Duration.parse("${randomMs}ms"),
+                remainingDuration = kotlin.time.Duration.parse("${randomMs}ms"),
+                status = TimerStatus.RUNNING,
+            )
 
         startTimer(newState)
     }
 
     private fun createNotificationChannels() {
-        // Delete old channels to force recreation with updated settings
-        // (Android caches channel settings and won't update them)
-        notificationManager.deleteNotificationChannel(CHANNEL_TIMER)
-        notificationManager.deleteNotificationChannel(CHANNEL_ALARM)
-        notificationManager.deleteNotificationChannel(CHANNEL_MEDIA)
-
         // Timer progress channel — DEFAULT importance so no heads-up in foreground
-        val timerChannel = NotificationChannel(
-            CHANNEL_TIMER,
-            "Active Timer",
-            NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = "Shows timer controls in notification shade"
-            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            setBypassDnd(true)
-            setShowBadge(true)
-            setSound(null, null)
-            enableVibration(false)
-        }
+        val timerChannel =
+            NotificationChannel(
+                CHANNEL_TIMER,
+                "Active Timer",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Shows timer controls in notification shade"
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setShowBadge(false)
+                setSound(null, null)
+                enableVibration(false)
+            }
 
         // Alarm channel (high priority, bypasses DND)
-        val alarmChannel = NotificationChannel(
-            CHANNEL_ALARM,
-            "Timer Alarm",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Alerts when timer completes"
-            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            setBypassDnd(true)
-            enableVibration(false)
-            setShowBadge(true)
-            setSound(null, null)
-        }
+        val alarmChannel =
+            NotificationChannel(
+                CHANNEL_ALARM,
+                "Timer Alarm",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Alerts when timer completes"
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setBypassDnd(true)
+                enableVibration(false)
+                setShowBadge(true)
+                setSound(null, null)
+            }
 
-        // Silent media channel — only for lock screen widget via MediaStyle
-        val mediaChannel = NotificationChannel(
-            CHANNEL_MEDIA,
-            "Lock Screen Controls",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Shows timer on lock screen"
-            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            setBypassDnd(true)
-            setSound(null, null)
-            enableVibration(false)
-            setShowBadge(false)
-        }
+        notificationManager.createNotificationChannels(listOf(timerChannel, alarmChannel))
 
-        notificationManager.createNotificationChannels(listOf(timerChannel, alarmChannel, mediaChannel))
+        // Clean up old media channel if it exists from a previous version
+        notificationManager.deleteNotificationChannel(CHANNEL_MEDIA)
     }
 
     /**
@@ -462,62 +454,51 @@ class TimerForegroundService : Service() {
         val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
         val rangeText = "$minFormatted - $maxFormatted"
 
-        val builder = NotificationCompat.Builder(this, CHANNEL_TIMER)
-            .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle(if (isPaused) "Timer Paused" else "Timer Running")
-            .setContentText("Goes off between $rangeText")
-            .setSubText(if (state.config.hiddenMode) "Hidden Mode" else null)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
-            // Material Design 3 - Color accent for notification
-            .setColor(getColor(R.color.accent_primary))
+        val builder =
+            NotificationCompat
+                .Builder(this, CHANNEL_TIMER)
+                .setSmallIcon(R.drawable.ic_timer)
+                .setContentTitle(if (isPaused) "Timer Paused" else "Timer Running")
+                .setContentText("Goes off between $rangeText")
+                .setSubText(if (state.config.hiddenMode) "Hidden Mode" else null)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
+                // Material Design 3 - Color accent for notification
+                .setColor(getColor(R.color.accent_primary))
+                .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
-        // Only show full-screen intent when app is backgrounded (lock screen)
-        // Avoids heads-up banner popping over the app UI
-        if (!isAppInForeground) {
-            builder.setFullScreenIntent(pendingIntent, true)
-        }
-
-        // Show live countdown on lock screen for non-hidden mode
-        // Use stored timerEndTimeMs (set once at timer start) to avoid chronometer resets
-        if (!state.config.hiddenMode && !isPaused && timerEndTimeMs > 0L) {
-            builder.setWhen(timerEndTimeMs)
-                .setUsesChronometer(true)
-                .setChronometerCountDown(true)
-                .setShowWhen(true)
-        } else {
-            builder.setShowWhen(false)
-        }
+        // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
+        builder.setShowWhen(false)
 
         // Primary action: Pause/Resume
         builder.addAction(
             if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
             if (isPaused) "Resume" else "Pause",
-            if (isPaused) createResumeIntent() else createPauseIntent()
+            if (isPaused) createResumeIntent() else createPauseIntent(),
         )
 
         // Reset action (always available)
         builder.addAction(
             R.drawable.ic_refresh,
             "Reset",
-            createResetIntent()
+            createResetIntent(),
         )
 
         // Stop action (always available)
         builder.addAction(
             R.drawable.ic_stop,
             "Stop",
-            createStopIntent()
+            createStopIntent(),
         )
 
         return builder.build()
     }
 
-    private fun formatSecondsToReadable(seconds: Int): String {
-        return when {
+    private fun formatSecondsToReadable(seconds: Int): String =
+        when {
             seconds >= 60 -> {
                 val mins = seconds / 60
                 val secs = seconds % 60
@@ -525,12 +506,12 @@ class TimerForegroundService : Service() {
             }
             else -> "${seconds}s"
         }
-    }
 
     private fun createAlarmNotification(): Notification {
         val alarmTapIntent = createAlarmTapIntent()
 
-        return NotificationCompat.Builder(this, CHANNEL_ALARM)
+        return NotificationCompat
+            .Builder(this, CHANNEL_ALARM)
             .setSmallIcon(R.drawable.ic_alarm)
             .setContentTitle("Time's Up!")
             .setContentText("Your random timer has finished")
@@ -542,10 +523,13 @@ class TimerForegroundService : Service() {
             .setFullScreenIntent(alarmTapIntent, true)
             .addAction(
                 R.drawable.ic_stop,
+                "Silence",
+                createSilenceIntent(),
+            ).addAction(
+                R.drawable.ic_stop,
                 "Dismiss",
-                createDismissIntent()
-            )
-            .build()
+                createDismissIntent(),
+            ).build()
     }
 
     private fun updateNotification(state: TimerState) {
@@ -553,95 +537,108 @@ class TimerForegroundService : Service() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    /** Silent MediaStyle notification — triggers Samsung lock screen widget */
-    private fun postLockScreenNotification() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_MEDIA)
-            .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("Timer Running")
-            .setContentIntent(createMainActivityIntent())
-            .setOngoing(true)
-            .setSilent(true)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setStyle(
-                MediaStyle()
-                    .setMediaSession(mediaSession?.sessionToken)
-            )
-            .build()
-        notificationManager.notify(MEDIA_NOTIFICATION_ID, notification)
-    }
-
-    private fun cancelLockScreenNotification() {
-        notificationManager.cancel(MEDIA_NOTIFICATION_ID)
-    }
-
     private fun createMainActivityIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
         return PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createAlarmTapIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra(EXTRA_FROM_ALARM_NOTIFICATION, true)
-        }
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra(EXTRA_FROM_ALARM_NOTIFICATION, true)
+            }
         return PendingIntent.getActivity(
-            this, 6, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            6,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createStopIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_STOP
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_STOP
+            }
         return PendingIntent.getService(
-            this, 1, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            1,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createPauseIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_PAUSE
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_PAUSE
+            }
         return PendingIntent.getService(
-            this, 3, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            3,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createResumeIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_RESUME
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_RESUME
+            }
         return PendingIntent.getService(
-            this, 4, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            4,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createResetIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_RESET
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_RESET
+            }
         return PendingIntent.getService(
-            this, 5, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            5,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createSilenceIntent(): PendingIntent {
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_SILENCE_ALARM
+            }
+        return PendingIntent.getService(
+            this,
+            7,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
     private fun createDismissIntent(): PendingIntent {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = ACTION_DISMISS_ALARM
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_DISMISS_ALARM
+            }
         return PendingIntent.getService(
-            this, 2, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            2,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 
@@ -650,33 +647,56 @@ class TimerForegroundService : Service() {
 
     private fun playAlarmSound() {
         val state = _timerState.value ?: return
-        val resourceId = when (state.config.soundType) {
-            SoundType.INTENSE -> R.raw.alarm
-            SoundType.GENTLE -> R.raw.gentle_chime
-        }
+        val resourceId =
+            when (state.config.soundType) {
+                SoundType.INTENSE -> R.raw.alarm
+                SoundType.GENTLE -> R.raw.gentle_chime
+            }
+
+        // Request audio focus BEFORE playing alarm sound
+        requestAlarmAudioFocus()
 
         try {
             alarmPlayer?.release()
-            alarmPlayer = MediaPlayer.create(this, resourceId)?.apply {
-                isLooping = true
-                setVolume(state.config.volume, state.config.volume)
-                start()
-            }
+            val alarmAttributes =
+                AudioAttributes
+                    .Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            alarmPlayer =
+                MediaPlayer().apply {
+                    setAudioAttributes(alarmAttributes)
+                    val afd = resources.openRawResourceFd(resourceId) ?: return
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    afd.close()
+                    isLooping = true
+                    setVolume(state.config.volume, state.config.volume)
+                    prepare()
+                    start()
+                }
             fallbackRingtone?.stop()
             fallbackRingtone = null
             Log.d("TimerService", "Playing alarm sound: ${state.config.soundType} at volume ${state.config.volume}")
         } catch (e: Exception) {
             Log.e("TimerService", "Failed to play alarm sound", e)
-            // Fallback to system alarm
-            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val uri =
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             fallbackRingtone?.stop()
-            fallbackRingtone = RingtoneManager.getRingtone(this, uri)?.apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    isLooping = true
+            fallbackRingtone =
+                RingtoneManager.getRingtone(this, uri)?.apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        isLooping = true
+                    }
+                    audioAttributes =
+                        AudioAttributes
+                            .Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build()
+                    play()
                 }
-                play()
-            }
         }
     }
 
@@ -689,15 +709,9 @@ class TimerForegroundService : Service() {
     }
 
     private fun startVibration() {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            manager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
+        val vib = vibrator ?: return
 
-        if (!vibrator.hasVibrator()) {
+        if (!vib.hasVibrator()) {
             Log.w("TimerService", "Device does not have a vibrator")
             return
         }
@@ -706,127 +720,43 @@ class TimerForegroundService : Service() {
         // Repeating pattern: wait 0ms, vibrate 500ms, pause 250ms, vibrate 500ms, pause 250ms, vibrate 500ms
         // The repeat index of 0 means repeat from the beginning
         val pattern = longArrayOf(0, 500, 250, 500, 250, 500)
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0))
+        val alarmAttributes =
+            AudioAttributes
+                .Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+        vib.vibrate(VibrationEffect.createWaveform(pattern, 0), alarmAttributes)
     }
 
     private fun stopVibration() {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            manager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        vibrator.cancel()
+        vibrator?.cancel()
     }
 
-    // -- Media Session for Bluetooth / Android Auto alarm dismiss --
+    // -- Audio Focus --
 
-    private fun createMediaSession() {
-        mediaSession = MediaSessionCompat(this, "RandomTimer").apply {
-            setCallback(object : MediaSessionCompat.Callback() {
-                override fun onPlay() {
-                    when (_timerState.value?.status) {
-                        TimerStatus.PAUSED -> resumeTimer()
-                        TimerStatus.ALARM -> dismissAlarm()
-                        else -> {}
-                    }
-                }
-                override fun onPause() {
-                    when (_timerState.value?.status) {
-                        TimerStatus.RUNNING -> pauseTimer()
-                        TimerStatus.ALARM -> dismissAlarm()
-                        else -> {}
-                    }
-                }
-                override fun onStop() {
-                    when (_timerState.value?.status) {
-                        TimerStatus.ALARM -> dismissAlarm()
-                        else -> stopTimer()
-                    }
-                }
-            })
-        }
-    }
-
-    private fun updateMediaSessionForTimer(state: TimerState) {
-        val isPaused = state.status == TimerStatus.PAUSED
-        val minFormatted = formatSecondsToReadable(state.config.minSeconds)
-        val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
-
-        mediaSession?.isActive = true
-
-        // No duration/position — this is a random timer, don't reveal countdown
-        val metadata = MediaMetadataCompat.Builder()
-            .putString(MediaMetadataCompat.METADATA_KEY_TITLE,
-                if (isPaused) "Timer Paused" else "Timer Running")
-            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,
-                "Random Tactical Timer • $minFormatted - $maxFormatted")
-            .build()
-        mediaSession?.setMetadata(metadata)
-
-        val playbackState = PlaybackStateCompat.Builder()
-            .setActions(
-                PlaybackStateCompat.ACTION_PLAY or
-                PlaybackStateCompat.ACTION_PAUSE or
-                PlaybackStateCompat.ACTION_STOP
-            )
-            .setState(
-                if (isPaused) PlaybackStateCompat.STATE_PAUSED
-                else PlaybackStateCompat.STATE_PLAYING,
-                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                0f
-            )
-            .build()
-        mediaSession?.setPlaybackState(playbackState)
-    }
-
-    private fun activateMediaSession() {
-        mediaSession?.isActive = true
-
-        // Set playback state to PLAYING so Bluetooth devices show pause button
-        val playbackState = PlaybackStateCompat.Builder()
-            .setActions(
-                PlaybackStateCompat.ACTION_PLAY or
-                PlaybackStateCompat.ACTION_PAUSE or
-                PlaybackStateCompat.ACTION_STOP
-            )
-            .setState(PlaybackStateCompat.STATE_PLAYING, 0L, 1f)
-            .build()
-        mediaSession?.setPlaybackState(playbackState)
-
-        // Request audio focus to route Bluetooth controls to this app
+    private fun requestAlarmAudioFocus() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-            .build()
+        val focusRequest =
+            AudioFocusRequest
+                .Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                .setAudioAttributes(
+                    AudioAttributes
+                        .Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build(),
+                ).build()
         audioFocusRequest = focusRequest
         audioManager.requestAudioFocus(focusRequest)
-
-        Log.d("TimerService", "Media session activated for Bluetooth alarm dismiss")
     }
 
-    private fun deactivateMediaSession() {
-        mediaSession?.isActive = false
-
-        val stoppedState = PlaybackStateCompat.Builder()
-            .setState(PlaybackStateCompat.STATE_STOPPED, 0L, 0f)
-            .build()
-        mediaSession?.setPlaybackState(stoppedState)
-
-        // Abandon audio focus
+    private fun abandonAudioFocus() {
         audioFocusRequest?.let { request ->
             val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             audioManager.abandonAudioFocusRequest(request)
         }
         audioFocusRequest = null
-
-        Log.d("TimerService", "Media session deactivated")
     }
 
     companion object {
@@ -853,7 +783,6 @@ class TimerForegroundService : Service() {
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
 
         private const val NOTIFICATION_ID = 1
-        private const val MEDIA_NOTIFICATION_ID = 3
         private const val CHANNEL_TIMER = "timer_progress"
         private const val CHANNEL_ALARM = "timer_alarm"
         private const val CHANNEL_MEDIA = "timer_media"

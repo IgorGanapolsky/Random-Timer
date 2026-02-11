@@ -15,7 +15,7 @@ struct TimerSetupScreen: View {
                 // Time Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Text("⏱️ Goes Off In This Range")
+                        Label("Goes Off In This Range", systemImage: "timer")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
@@ -38,7 +38,7 @@ struct TimerSetupScreen: View {
                 // Alarm Settings Card
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Text("🔔 Alarm Sound Duration")
+                        Label("Alarm Sound Duration", systemImage: "bell.fill")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
@@ -68,7 +68,8 @@ struct TimerSetupScreen: View {
 
                         HStack(spacing: 12) {
                             SoundTypeButton(
-                                label: "💪 Intense",
+                                label: "Intense",
+                                systemImage: "flame.fill",
                                 selected: config.soundType == .intense,
                                 onTap: {
                                     updateConfig(soundType: .intense)
@@ -76,7 +77,8 @@ struct TimerSetupScreen: View {
                                 }
                             )
                             SoundTypeButton(
-                                label: "🌸 Gentle",
+                                label: "Gentle",
+                                systemImage: "leaf.fill",
                                 selected: config.soundType == .gentle,
                                 onTap: {
                                     updateConfig(soundType: .gentle)
@@ -97,20 +99,20 @@ struct TimerSetupScreen: View {
                                 updateConfig(volume: newVolume)
                                 timerManager.previewVolume()
                             },
-                            emoji: "🔊"
+                            systemImage: "speaker.wave.3.fill"
                         )
 
                         Spacer().frame(height: 16)
 
                         // Vibration Toggle
                         HStack {
-                            Text("📳 Vibration")
+                            Label("Vibration", systemImage: "iphone.radiowaves.left.and.right")
                                 .font(.subheadline)
                                 .foregroundColor(.textSecondary)
 
                             Spacer()
 
-                            Toggle("", isOn: Binding(
+                            Toggle("Vibration", isOn: Binding(
                                 get: { config.vibrationEnabled },
                                 set: { updateConfig(vibrationEnabled: $0) }
                             ))
@@ -134,7 +136,7 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
-        .navigationTitle("Random Timer")
+        .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -255,6 +257,8 @@ private struct DurationChip: View {
                         .stroke(selected ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
                 )
         }
+        .accessibilityLabel("\(duration) seconds")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -262,12 +266,13 @@ private struct DurationChip: View {
 
 private struct SoundTypeButton: View {
     let label: String
+    var systemImage: String = ""
     let selected: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            Text(label)
+            Label(label, systemImage: systemImage)
                 .font(.body)
                 .foregroundColor(selected ? .accentPrimary : .textPrimary)
                 .padding(.horizontal, 16)
@@ -282,6 +287,8 @@ private struct SoundTypeButton: View {
                         .stroke(selected ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
                 )
         }
+        .accessibilityLabel("\(label) sound")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -291,12 +298,12 @@ private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
     var onSliding: ((Float) -> Void)? = nil
-    var emoji: String = ""
+    var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {
         VStack {
             HStack {
-                Text("\(emoji) Volume")
+                Label("Volume", systemImage: systemImage)
                     .font(.subheadline)
                     .foregroundColor(.textSecondary)
 

@@ -4,13 +4,14 @@ import SwiftUI
 /// Uses TimelineView for frame-accurate Canvas redraw with animation timing
 /// matched to Android's Compose Animatable durations.
 struct CircularTimerView: View {
-    let remainingDuration: TimeInterval
     let progress: Double
     let status: TimerStatus
     var isHiddenMode: Bool = false
     var rangeText: String = "" // e.g., "30s - 2m"
 
     private let strokeWidth: CGFloat = 12
+    @ScaledMetric(relativeTo: .title) private var timerSize: CGFloat = 280
+    @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 32
 
     // Animation timing matched to Android CircularTimerAnimationConfig:
     // Android shimmer: tween(3000ms, LinearEasing, Restart) = 3.0s per orbit
@@ -170,27 +171,29 @@ struct CircularTimerView: View {
                 // Center display (text overlay)
                 if isComplete {
                     Text("Complete!")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
                         .foregroundColor(.timerComplete)
+                        .minimumScaleFactor(0.7)
                 } else if !rangeText.isEmpty {
                     VStack(spacing: 4) {
                         Text("Range")
                             .font(.subheadline)
                             .foregroundColor(.textMuted)
                         Text(rangeText)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
                             .foregroundColor(.textPrimary)
                             .opacity(pulseOpacity)
+                            .minimumScaleFactor(0.7)
                     }
                 } else {
                     Text("...")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
                         .foregroundColor(.textPrimary)
                         .opacity(pulseOpacity)
                 }
             }
         }
-        .frame(width: 280, height: 280)
+        .frame(width: min(timerSize, 340), height: min(timerSize, 340))
         .onAppear {
             animationStartDate = .now
             if isActivelyRunning {
@@ -269,33 +272,20 @@ struct CircularTimerView: View {
         Color.backgroundDark.ignoresSafeArea()
 
         CircularTimerView(
-            remainingDuration: 150,
-            progress: 0.5,
-            status: .running
+            progress: 0.0,
+            status: .running,
+            rangeText: "30s - 2m"
         )
     }
 }
 
-#Preview("Warning") {
+#Preview("Complete") {
     ZStack {
         Color.backgroundDark.ignoresSafeArea()
 
         CircularTimerView(
-            remainingDuration: 25,
-            progress: 0.9,
-            status: .warning
-        )
-    }
-}
-
-#Preview("Danger") {
-    ZStack {
-        Color.backgroundDark.ignoresSafeArea()
-
-        CircularTimerView(
-            remainingDuration: 5,
-            progress: 0.98,
-            status: .danger
+            progress: 1.0,
+            status: .complete
         )
     }
 }

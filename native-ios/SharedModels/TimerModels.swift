@@ -141,6 +141,18 @@ public struct TimerState: Codable, Sendable, Equatable {
     public var timeRemainingSeconds: Int {
         Int(max(0, remainingDuration))
     }
+
+    // MARK: - Sanitized Live Activity Properties
+    // These prevent the lock screen from leaking timing information
+
+    /// Remaining seconds for Live Activity — always 0 to prevent timing leak
+    public var liveActivityRemainingSeconds: Int { 0 }
+
+    /// End date for Live Activity — uses maxSeconds instead of actual targetDuration
+    /// so observers cannot deduce the random duration from the progress ring
+    public var liveActivityEndDate: Date {
+        startedAt.addingTimeInterval(Double(config.maxSeconds))
+    }
 }
 
 // MARK: - Live Activity Attributes
@@ -163,7 +175,7 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds
@@ -177,6 +189,21 @@ public struct TimerActivityAttributes: ActivityAttributes {
         return "\(minFormatted) - \(maxFormatted)"
     }
 }
+
+// MARK: - Live Activity Action Signaling
+
+/// Actions that can be triggered from Live Activity intents via shared App Group UserDefaults
+public enum TimerAction: String, Codable {
+    case stop
+    case pause
+    case resume
+}
+
+/// Shared App Group suite name for cross-process communication
+public let timerAppGroupSuite = "group.com.iganapolsky.randomtimer"
+
+/// UserDefaults key for the pending timer action
+public let timerPendingActionKey = "pendingTimerAction"
 
 // MARK: - Helpers
 

@@ -7,6 +7,7 @@ protocol TimerNotificationHandling {
     func cancelPendingNotifications() async
     func playAlarmSound(type: SoundType, volume: Float)
     func stopAlarmSound()
+    func silenceAlarm()
     func startVibration()
     func stopVibration()
     func playPreviewSound(type: SoundType, volume: Float)
