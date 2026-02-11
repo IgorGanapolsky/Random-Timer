@@ -1,0 +1,7 @@
+v1.1.0 — Random Tactical Timer
+- Lock screen countdown display
+- Loop mode for automatic timer restart
+- Hidden mode to conceal countdown
+- Bluetooth and Android Auto alarm dismiss
+- Firebase Crashlytics integration
+- Improved alarm reliability with foreground service

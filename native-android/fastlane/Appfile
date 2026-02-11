@@ -1,2 +1,2 @@
-json_key_file("/Users/ganapolsky_i/.config/gcloud/fastlane-deploy.json")
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "/tmp/play-service-account.json")
 package_name("com.iganapolsky.randomtimer")

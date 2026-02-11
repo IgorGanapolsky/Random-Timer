@@ -435,11 +435,21 @@ class TimerForegroundService : Service() {
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             // Material Design 3 - Color accent for notification
             .setColor(getColor(R.color.accent_primary))
-            // Never show countdown in notification for random timer
-            .setShowWhen(false)
+
+        // Show live countdown on lock screen for non-hidden mode
+        if (!state.config.hiddenMode && !isPaused) {
+            val futureTime = System.currentTimeMillis() + state.remainingDuration.inWholeMilliseconds
+            builder.setWhen(futureTime)
+                .setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setShowWhen(true)
+        } else {
+            builder.setShowWhen(false)
+        }
             // Primary action: Pause/Resume
             .addAction(
                 if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
@@ -484,6 +494,7 @@ class TimerForegroundService : Service() {
             .setContentText("Your random timer has finished")
             .setContentIntent(alarmTapIntent)
             .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setFullScreenIntent(alarmTapIntent, true)
