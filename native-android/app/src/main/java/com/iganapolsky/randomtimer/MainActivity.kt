@@ -30,6 +30,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Show timer UI over lock screen (like Samsung Clock)
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+
         enableEdgeToEdge()
         requestNotificationPermission()
         handleAlarmNotificationTap(intent)

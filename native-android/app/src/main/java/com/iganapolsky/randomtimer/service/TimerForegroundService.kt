@@ -20,9 +20,11 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.model.SoundType
@@ -192,7 +194,9 @@ class TimerForegroundService : Service() {
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
         timerEndTimeMs = System.currentTimeMillis() + initialState.remainingDuration.inWholeMilliseconds
+        updateMediaSessionForTimer(initialState)
         startForeground(NOTIFICATION_ID, createTimerNotification(initialState))
+        postLockScreenNotification()
 
         timerJob?.cancel()
         timerJob = serviceScope.launch {
@@ -231,6 +235,8 @@ class TimerForegroundService : Service() {
     private fun stopTimer() {
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
+        cancelLockScreenNotification()
+        deactivateMediaSession()
         stopAlarmSound()
         stopVibration()
         _timerState.value = null
@@ -242,8 +248,10 @@ class TimerForegroundService : Service() {
         timerJob?.cancel()
         _timerState.value?.let { state ->
             if (state.status != TimerStatus.PAUSED) {
-                _timerState.value = state.copy(status = TimerStatus.PAUSED)
-                updateNotification(_timerState.value!!)
+                val pausedState = state.copy(status = TimerStatus.PAUSED)
+                _timerState.value = pausedState
+                updateMediaSessionForTimer(pausedState)
+                updateNotification(pausedState)
             }
         }
     }
@@ -251,9 +259,9 @@ class TimerForegroundService : Service() {
     private fun resumeTimer() {
         _timerState.value?.let { state ->
             if (state.status == TimerStatus.PAUSED) {
-                // Random timer - resume to running state (no warning/danger)
                 val resumedState = state.copy(status = TimerStatus.RUNNING)
                 _timerState.value = resumedState
+                // startTimer() already calls updateMediaSessionForTimer()
                 startTimer(resumedState)
             }
         }
@@ -386,21 +394,23 @@ class TimerForegroundService : Service() {
         // (Android caches channel settings and won't update them)
         notificationManager.deleteNotificationChannel(CHANNEL_TIMER)
         notificationManager.deleteNotificationChannel(CHANNEL_ALARM)
+        notificationManager.deleteNotificationChannel(CHANNEL_MEDIA)
 
-        // Timer progress channel (lock screen visible)
+        // Timer progress channel — DEFAULT importance so no heads-up in foreground
         val timerChannel = NotificationChannel(
             CHANNEL_TIMER,
             "Active Timer",
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "Shows timer countdown on lock screen"
+            description = "Shows timer controls in notification shade"
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setBypassDnd(true)
             setShowBadge(true)
-            setSound(null, null) // No sound for progress updates
+            setSound(null, null)
             enableVibration(false)
         }
 
-        // Alarm channel (high priority, no sound - we handle sound via Ringtone for better control)
+        // Alarm channel (high priority, bypasses DND)
         val alarmChannel = NotificationChannel(
             CHANNEL_ALARM,
             "Timer Alarm",
@@ -408,12 +418,27 @@ class TimerForegroundService : Service() {
         ).apply {
             description = "Alerts when timer completes"
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            enableVibration(false) // We handle vibration separately
+            setBypassDnd(true)
+            enableVibration(false)
             setShowBadge(true)
-            setSound(null, null) // No channel sound - we control sound via Ringtone
+            setSound(null, null)
         }
 
-        notificationManager.createNotificationChannels(listOf(timerChannel, alarmChannel))
+        // Silent media channel — only for lock screen widget via MediaStyle
+        val mediaChannel = NotificationChannel(
+            CHANNEL_MEDIA,
+            "Lock Screen Controls",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shows timer on lock screen"
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setBypassDnd(true)
+            setSound(null, null)
+            enableVibration(false)
+            setShowBadge(false)
+        }
+
+        notificationManager.createNotificationChannels(listOf(timerChannel, alarmChannel, mediaChannel))
     }
 
     /**
@@ -450,6 +475,12 @@ class TimerForegroundService : Service() {
             // Material Design 3 - Color accent for notification
             .setColor(getColor(R.color.accent_primary))
 
+        // Only show full-screen intent when app is backgrounded (lock screen)
+        // Avoids heads-up banner popping over the app UI
+        if (!isAppInForeground) {
+            builder.setFullScreenIntent(pendingIntent, true)
+        }
+
         // Show live countdown on lock screen for non-hidden mode
         // Use stored timerEndTimeMs (set once at timer start) to avoid chronometer resets
         if (!state.config.hiddenMode && !isPaused && timerEndTimeMs > 0L) {
@@ -460,12 +491,13 @@ class TimerForegroundService : Service() {
         } else {
             builder.setShowWhen(false)
         }
-            // Primary action: Pause/Resume
-            .addAction(
-                if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
-                if (isPaused) "Resume" else "Pause",
-                if (isPaused) createResumeIntent() else createPauseIntent()
-            )
+
+        // Primary action: Pause/Resume
+        builder.addAction(
+            if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
+            if (isPaused) "Resume" else "Pause",
+            if (isPaused) createResumeIntent() else createPauseIntent()
+        )
 
         // Reset action (always available)
         builder.addAction(
@@ -519,6 +551,27 @@ class TimerForegroundService : Service() {
     private fun updateNotification(state: TimerState) {
         val notification = createTimerNotification(state)
         notificationManager.notify(NOTIFICATION_ID, notification)
+    }
+
+    /** Silent MediaStyle notification — triggers Samsung lock screen widget */
+    private fun postLockScreenNotification() {
+        val notification = NotificationCompat.Builder(this, CHANNEL_MEDIA)
+            .setSmallIcon(R.drawable.ic_timer)
+            .setContentTitle("Timer Running")
+            .setContentIntent(createMainActivityIntent())
+            .setOngoing(true)
+            .setSilent(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setStyle(
+                MediaStyle()
+                    .setMediaSession(mediaSession?.sessionToken)
+            )
+            .build()
+        notificationManager.notify(MEDIA_NOTIFICATION_ID, notification)
+    }
+
+    private fun cancelLockScreenNotification() {
+        notificationManager.cancel(MEDIA_NOTIFICATION_ID)
     }
 
     private fun createMainActivityIntent(): PendingIntent {
@@ -672,12 +725,60 @@ class TimerForegroundService : Service() {
     private fun createMediaSession() {
         mediaSession = MediaSessionCompat(this, "RandomTimer").apply {
             setCallback(object : MediaSessionCompat.Callback() {
-                override fun onPlay() { dismissAlarm() }
-                override fun onPause() { dismissAlarm() }
-                override fun onStop() { dismissAlarm() }
+                override fun onPlay() {
+                    when (_timerState.value?.status) {
+                        TimerStatus.PAUSED -> resumeTimer()
+                        TimerStatus.ALARM -> dismissAlarm()
+                        else -> {}
+                    }
+                }
+                override fun onPause() {
+                    when (_timerState.value?.status) {
+                        TimerStatus.RUNNING -> pauseTimer()
+                        TimerStatus.ALARM -> dismissAlarm()
+                        else -> {}
+                    }
+                }
+                override fun onStop() {
+                    when (_timerState.value?.status) {
+                        TimerStatus.ALARM -> dismissAlarm()
+                        else -> stopTimer()
+                    }
+                }
             })
-            // Don't activate yet — only activate when alarm is ringing
         }
+    }
+
+    private fun updateMediaSessionForTimer(state: TimerState) {
+        val isPaused = state.status == TimerStatus.PAUSED
+        val minFormatted = formatSecondsToReadable(state.config.minSeconds)
+        val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
+
+        mediaSession?.isActive = true
+
+        // No duration/position — this is a random timer, don't reveal countdown
+        val metadata = MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE,
+                if (isPaused) "Timer Paused" else "Timer Running")
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,
+                "Random Tactical Timer • $minFormatted - $maxFormatted")
+            .build()
+        mediaSession?.setMetadata(metadata)
+
+        val playbackState = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_STOP
+            )
+            .setState(
+                if (isPaused) PlaybackStateCompat.STATE_PAUSED
+                else PlaybackStateCompat.STATE_PLAYING,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                0f
+            )
+            .build()
+        mediaSession?.setPlaybackState(playbackState)
     }
 
     private fun activateMediaSession() {
@@ -752,7 +853,9 @@ class TimerForegroundService : Service() {
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
 
         private const val NOTIFICATION_ID = 1
+        private const val MEDIA_NOTIFICATION_ID = 3
         private const val CHANNEL_TIMER = "timer_progress"
         private const val CHANNEL_ALARM = "timer_alarm"
+        private const val CHANNEL_MEDIA = "timer_media"
     }
 }
