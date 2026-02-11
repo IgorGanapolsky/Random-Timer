@@ -1,0 +1,30 @@
+Random Tactical Timer adds unpredictability to your routines. Set a time range, and the timer will go off at a random moment within that window. You never know exactly when it will ring — keeping you sharp and engaged.
+
+PERFECT FOR:
+- Workout intervals that keep your muscles guessing
+- Games, drills, and team activities that need surprise timing
+- Breaking predictable patterns in training or practice
+- Meditation and mindfulness sessions with organic transitions
+- Cooking timers when you want approximate reminders
+
+KEY FEATURES:
+- Custom time ranges — set your minimum and maximum duration
+- Hidden mode — hides the countdown so you can't anticipate the alarm
+- Loop mode — automatically restarts with a new random duration
+- Lock screen countdown — see your timer right on the lock screen
+- Sound and vibration alerts with adjustable volume
+- Multiple alarm sounds (intense or gentle)
+- Dark mode support
+- Pause, resume, and reset controls
+- Works in background with reliable foreground service
+- Bluetooth and Android Auto alarm dismiss support
+
+HOW IT WORKS:
+1. Set your minimum and maximum time (e.g., 1-5 minutes)
+2. Press Start — the app picks a random time in that range
+3. Go about your activity — the timer runs in the background
+4. When time's up, you get a full-screen alarm with sound and vibration
+
+DESIGNED FOR ATHLETES, COACHES, AND ANYONE who needs unpredictable timing. Whether you're doing interval training, running reaction drills, or just want a timer that keeps you on your toes — Random Tactical Timer delivers.
+
+No ads. No tracking. No subscriptions. Just a timer that works.

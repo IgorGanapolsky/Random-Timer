@@ -1,0 +1,7 @@
+v1.1.0 — Random Tactical Timer
+- Live Activity countdown on lock screen
+- Loop mode for automatic timer restart
+- Hidden mode to conceal countdown
+- Multiple alarm sounds (intense and gentle)
+- Improved alarm reliability
+- Dark mode support

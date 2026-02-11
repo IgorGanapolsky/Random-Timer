@@ -1,61 +1,290 @@
 #!/usr/bin/env bash
-# Pre-commit hook: architecture ban checks + lint
+# Pre-commit hook: secrets + architecture bans + TIMING LEAK DETECTION + platform compliance
+# This hook enforces all rules discovered during the Feb 2026 cross-platform audit.
 set -euo pipefail
+
+ERRORS=0
+WARNINGS=0
+
+err() { echo "❌ $1"; ERRORS=$((ERRORS + 1)); }
+warn() { echo "⚠️  $1"; WARNINGS=$((WARNINGS + 1)); }
+
+# ── Secret scanning (gitleaks) ──────────────────────────────────────
+if command -v gitleaks > /dev/null 2>&1; then
+  if ! gitleaks git --pre-commit --staged --no-banner 2>/dev/null; then
+    echo ""
+    err "SECRETS DETECTED in staged files! Commit blocked."
+    echo "   Remove secrets and use environment variables or gitignored local files."
+    exit 1
+  fi
+else
+  STAGED_DIFF=$(git diff --cached --diff-filter=ACM)
+  if echo "$STAGED_DIFF" | grep -qEi '(ghp_|gho_|github_pat_|sk-[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}|password\s*=\s*["\x27][^"\x27]{8,})'; then
+    err "Possible secret detected in staged changes!"
+    echo "   Install gitleaks for better detection: brew install gitleaks"
+  fi
+fi
 
 STAGED_KT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.kt$' || true)
 STAGED_SWIFT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
+STAGED_XML=$(git diff --cached --name-only --diff-filter=ACM | grep '\.xml$' || true)
+STAGED_ALL=$(git diff --cached --name-only --diff-filter=ACM || true)
 
-ERRORS=0
+# ═══════════════════════════════════════════════════════════════════
+# TIMING LEAK DETECTION — Random timer must NEVER reveal countdown
+# ═══════════════════════════════════════════════════════════════════
 
-# ── Architecture ban checks (Kotlin) ────────────────────────────────
+# ── Android: Chronometer countdown in notifications ────────────────
 if [ -n "$STAGED_KT" ]; then
   while IFS= read -r file; do
-    # Ban AndroidViewModel (use ViewModel + DI instead)
+    [ -f "$file" ] || continue
+
+    # Ban setUsesChronometer / setChronometerCountDown — reveals countdown in notification
+    if grep -n 'setUsesChronometer\|setChronometerCountDown' "$file" > /dev/null 2>&1; then
+      err "$file: Uses chronometer countdown — reveals when timer fires"
+    fi
+
+    # Ban passing remainingDuration to UI composables (allowed in data models/services)
+    if echo "$file" | grep -q '/ui/'; then
+      if grep -n 'remainingDuration\s*=' "$file" | grep -v '//' > /dev/null 2>&1; then
+        # Allow data class assignments, block composable parameter passing
+        if grep -n 'remainingDuration\s*=\s*state\.' "$file" > /dev/null 2>&1; then
+          err "$file: Passes remainingDuration to UI — timing leak"
+        fi
+      fi
+    fi
+
+    # Ban formatDuration import in service/notification files
+    if echo "$file" | grep -qi 'service\|notification'; then
+      if grep -n 'import.*formatDuration' "$file" > /dev/null 2>&1; then
+        err "$file: Imports formatDuration in service — trap for timing leaks"
+      fi
+    fi
+
+    # Ban MediaSession (stripped in Feb 2026 audit — not for timer apps)
+    if grep -n 'MediaSession\|MediaMetadata\|PlaybackState\|MediaStyle' "$file" | grep -v '//' > /dev/null 2>&1; then
+      err "$file: Uses MediaSession — not appropriate for timer apps (use specialUse FGS)"
+    fi
+
+    # Ban WARNING_THRESHOLD / DANGER_THRESHOLD — leaks timing through status
+    if grep -n 'WARNING_THRESHOLD\|DANGER_THRESHOLD' "$file" > /dev/null 2>&1; then
+      err "$file: Uses WARNING/DANGER thresholds — status changes leak timing info"
+    fi
+
+    # Ban TimerStatus.WARNING / TimerStatus.DANGER in status determination logic
+    if grep -n 'TimerStatus\.WARNING\|TimerStatus\.DANGER' "$file" | grep -v 'import\|enum\|//' | grep -v 'WARNING,\|DANGER,' > /dev/null 2>&1; then
+      # Allow enum definition and imports, block usage in when/if
+      if grep -n '-> TimerStatus\.WARNING\|-> TimerStatus\.DANGER\|= TimerStatus\.WARNING\|= TimerStatus\.DANGER' "$file" > /dev/null 2>&1; then
+        err "$file: Sets timer status to WARNING/DANGER — leaks remaining time ranges"
+      fi
+    fi
+
+  done <<< "$STAGED_KT"
+fi
+
+# ── iOS: Timing data in Live Activities ────────────────────────────
+if [ -n "$STAGED_SWIFT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+
+    # Ban real endDate/remainingDuration going to Live Activity
+    if echo "$file" | grep -qi 'liveactivity\|activity'; then
+      # Must use liveActivityEndDate, not endDate
+      if grep -n 'state\.endDate' "$file" | grep -v 'staleDate\|liveActivity\|//' > /dev/null 2>&1; then
+        err "$file: Passes state.endDate to Live Activity — use liveActivityEndDate instead"
+      fi
+      # Must use liveActivityRemainingSeconds, not remainingDuration
+      if grep -n 'state\.remainingDuration' "$file" | grep -v 'liveActivity\|//' > /dev/null 2>&1; then
+        err "$file: Passes state.remainingDuration to Live Activity — use liveActivityRemainingSeconds"
+      fi
+    fi
+
+    # Ban remainingDuration as View parameter (allowed in data models)
+    if echo "$file" | grep -q '/UI/'; then
+      if grep -n 'let remainingDuration:' "$file" > /dev/null 2>&1; then
+        err "$file: View accepts remainingDuration parameter — timing leak vector"
+      fi
+    fi
+
+    # Ban LiveActivityManager.swift (dead code with timing leaks, superseded by LiveActivityService)
+    if echo "$file" | grep -q 'LiveActivityManager\.swift'; then
+      err "$file: LiveActivityManager is dead code — use LiveActivityService (sanitized)"
+    fi
+
+    # Ban calculateProgress based on real time
+    if grep -n 'calculateProgress\|targetDuration.*endDate' "$file" | grep -v '//' > /dev/null 2>&1; then
+      if echo "$file" | grep -qi 'widget\|liveactivity\|activity'; then
+        err "$file: Calculates real progress in widget — use decorative/random animation"
+      fi
+    fi
+
+  done <<< "$STAGED_SWIFT"
+fi
+
+# ── Both platforms: Dead countdown layouts ─────────────────────────
+if [ -n "$STAGED_XML" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if echo "$file" | grep -q 'notification.*timer\|timer.*notification'; then
+      if grep -q 'notification_time\|notification_progress\|android:text="00:00"' "$file" > /dev/null 2>&1; then
+        err "$file: Contains countdown display elements — delete this dead layout"
+      fi
+    fi
+  done <<< "$STAGED_XML"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
+# ARCHITECTURE BAN CHECKS
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Kotlin ─────────────────────────────────────────────────────────
+if [ -n "$STAGED_KT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+
+    # Ban AndroidViewModel
     if grep -n 'AndroidViewModel' "$file" | grep -v '// allow-android-viewmodel' > /dev/null 2>&1; then
-      echo "❌ $file: Uses AndroidViewModel — migrate to ViewModel with injected dependencies"
-      ERRORS=$((ERRORS + 1))
+      err "$file: Uses AndroidViewModel — migrate to ViewModel with injected dependencies"
     fi
 
-    # Ban collectAsState() (use collectAsStateWithLifecycle instead)
+    # Ban collectAsState()
     if grep -n '\.collectAsState()' "$file" > /dev/null 2>&1; then
-      echo "❌ $file: Uses .collectAsState() — use .collectAsStateWithLifecycle() instead"
-      ERRORS=$((ERRORS + 1))
+      err "$file: Uses .collectAsState() — use .collectAsStateWithLifecycle() instead"
     fi
 
-    # Ban Handler(Looper (use coroutines instead)
+    # Ban Handler(Looper
     if grep -n 'Handler(Looper' "$file" | grep -v '// allow-handler' > /dev/null 2>&1; then
-      echo "❌ $file: Uses Handler(Looper) — use coroutines with delay() instead"
-      ERRORS=$((ERRORS + 1))
+      err "$file: Uses Handler(Looper) — use coroutines with delay() instead"
     fi
+
+    # Ban MediaPlayer.create (must use AudioAttributes)
+    if grep -n 'MediaPlayer\.create(' "$file" > /dev/null 2>&1; then
+      err "$file: Uses MediaPlayer.create() — construct manually and set AudioAttributes USAGE_ALARM"
+    fi
+
+    # Ban wrong audio focus type
+    if grep -n 'AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK' "$file" > /dev/null 2>&1; then
+      err "$file: Uses AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — use AUDIOFOCUS_GAIN_TRANSIENT for alarms"
+    fi
+
   done <<< "$STAGED_KT"
 
-  # Run ktlint via trunk if available
   if command -v trunk > /dev/null 2>&1; then
     echo "$STAGED_KT" | xargs trunk check --no-progress --filter=ktlint 2>/dev/null || ERRORS=$((ERRORS + 1))
   fi
 fi
 
-# ── Architecture ban checks (Swift) ─────────────────────────────────
+# ── Swift ──────────────────────────────────────────────────────────
 if [ -n "$STAGED_SWIFT" ]; then
   while IFS= read -r file; do
-    # Ban print() in production code (use os.Logger instead)
-    # Allow in tests and previews
+    [ -f "$file" ] || continue
+
+    # Ban print() in production code
     if echo "$file" | grep -qvE '(Tests|Preview)'; then
       if grep -n 'print(' "$file" | grep -v '// allow-print' > /dev/null 2>&1; then
-        echo "⚠️  $file: Uses print() — prefer Logger from os.log"
+        warn "$file: Uses print() — prefer Logger from os.log"
       fi
     fi
+
+    # Ban deprecated vibration APIs
+    if grep -n 'AudioServicesPlaySystemSound' "$file" > /dev/null 2>&1; then
+      err "$file: Uses AudioServicesPlaySystemSound — use Core Haptics (CHHapticEngine)"
+    fi
+    if grep -n 'kSystemSoundID_Vibrate' "$file" > /dev/null 2>&1; then
+      err "$file: Uses kSystemSoundID_Vibrate — use UIFeedbackGenerator or Core Haptics"
+    fi
+
   done <<< "$STAGED_SWIFT"
 
-  # Run SwiftLint if available
   if command -v swiftlint > /dev/null 2>&1; then
     echo "$STAGED_SWIFT" | xargs swiftlint lint --strict --quiet 2>/dev/null || ERRORS=$((ERRORS + 1))
   fi
 fi
 
+# ═══════════════════════════════════════════════════════════════════
+# ACCESSIBILITY CHECKS
+# ═══════════════════════════════════════════════════════════════════
+
+# Android: CircularTimer must have clearAndSetSemantics
+if [ -n "$STAGED_KT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if echo "$file" | grep -q 'CircularTimer'; then
+      if grep -q 'fun CircularTimer' "$file" > /dev/null 2>&1; then
+        if ! grep -q 'clearAndSetSemantics' "$file" > /dev/null 2>&1; then
+          err "$file: CircularTimer missing clearAndSetSemantics — TalkBack may read timing data"
+        fi
+      fi
+    fi
+  done <<< "$STAGED_KT"
+fi
+
+# iOS: Files calling CircularTimerView must add accessibility overrides
+if [ -n "$STAGED_SWIFT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    # Only check callers (Screen files), not the component definition itself
+    if echo "$file" | grep -qi 'Screen\|View' && ! echo "$file" | grep -q 'CircularTimerView\.swift'; then
+      if grep -q 'CircularTimerView(' "$file" > /dev/null 2>&1; then
+        if ! grep -q 'accessibilityElement\|accessibilityLabel' "$file" > /dev/null 2>&1; then
+          warn "$file: CircularTimerView used without accessibility overrides — VoiceOver may read timing data"
+        fi
+      fi
+    fi
+  done <<< "$STAGED_SWIFT"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
+# BRANDING CONSISTENCY
+# ═══════════════════════════════════════════════════════════════════
+
+for file in $STAGED_SWIFT $STAGED_KT; do
+  if [ -n "$file" ] && [ -f "$file" ]; then
+    if grep -n '"Random Timer"' "$file" 2>/dev/null | grep -qv 'test\|Test'; then
+      warn "$file: Contains 'Random Timer' — should be 'Random Tactical Timer'"
+    fi
+  fi
+done
+
+# ═══════════════════════════════════════════════════════════════════
+# FEATURE PARITY CHECKS
+# ═══════════════════════════════════════════════════════════════════
+
+# If alarm notification is modified, ensure both Silence AND Dismiss actions exist
+if [ -n "$STAGED_KT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if grep -q 'createAlarmNotification' "$file" > /dev/null 2>&1; then
+      if ! grep -q 'ACTION_SILENCE_ALARM\|Silence\|createSilenceIntent' "$file" > /dev/null 2>&1; then
+        err "$file: Alarm notification missing Silence action — must match iOS parity"
+      fi
+    fi
+  done <<< "$STAGED_KT"
+fi
+
+# If iOS notification actions are modified, ensure Silence action exists
+if [ -n "$STAGED_SWIFT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if grep -q 'UNNotificationCategory' "$file" > /dev/null 2>&1; then
+      if ! grep -q 'SILENCE_ACTION\|silenceAction' "$file" > /dev/null 2>&1; then
+        err "$file: Notification category missing Silence action"
+      fi
+    fi
+  done <<< "$STAGED_SWIFT"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
+# RESULT
+# ═══════════════════════════════════════════════════════════════════
+
 if [ "$ERRORS" -gt 0 ]; then
   echo ""
-  echo "Pre-commit: $ERRORS error(s) found. Fix them before committing."
+  echo "Pre-commit: $ERRORS error(s), $WARNINGS warning(s). Fix errors before committing."
   echo "To bypass (emergency only): git commit --no-verify"
   exit 1
+fi
+
+if [ "$WARNINGS" -gt 0 ]; then
+  echo "Pre-commit: $WARNINGS warning(s) (non-blocking)."
 fi

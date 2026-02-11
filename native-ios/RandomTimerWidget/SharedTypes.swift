@@ -32,7 +32,7 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds
@@ -56,6 +56,21 @@ public struct TimerActivityAttributes: ActivityAttributes {
         }
     }
 }
+
+// MARK: - Live Activity Action Signaling
+
+/// Actions that can be triggered from Live Activity intents via shared App Group UserDefaults
+public enum TimerAction: String, Codable {
+    case stop
+    case pause
+    case resume
+}
+
+/// Shared App Group suite name for cross-process communication
+public let timerAppGroupSuite = "group.com.iganapolsky.randomtimer"
+
+/// UserDefaults key for the pending timer action
+public let timerPendingActionKey = "pendingTimerAction"
 
 // MARK: - Color Extension
 

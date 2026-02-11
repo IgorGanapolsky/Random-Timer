@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.data
 
 import android.content.Context
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
@@ -60,9 +61,19 @@ class SoundPreviewManagerImpl @Inject constructor(
             SoundType.GENTLE -> R.raw.gentle_chime
         }
 
-        player = MediaPlayer.create(context, resourceId)?.apply {
+        player = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
+            val afd = context.resources.openRawResourceFd(resourceId) ?: return
+            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
             isLooping = true
             setVolume(volume, volume)
+            prepare()
             start()
         }
         currentlyPreviewing = soundType

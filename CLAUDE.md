@@ -23,6 +23,15 @@ cd native-ios && pod deintegrate && pod install  # Fix pod failures
 - **Frontmatter stripping**: Before GitHub sync: `sed '1,/^---$/d; 1,/^---$/d'`
 - **Paths**: Always relative, never absolute. No usernames in paths.
 
+## Store Publishing Rule (MANDATORY)
+
+Every release MUST include complete store listing metadata before publishing:
+- **Android**: `native-android/fastlane/metadata/android/en-US/` must have `title.txt`, `short_description.txt`, `full_description.txt`, changelogs, and screenshots
+- **iOS**: `native-ios/fastlane/metadata/en-US/` must have `name.txt`, `subtitle.txt`, `description.txt`, `keywords.txt`, `release_notes.txt`, and screenshots
+- NEVER publish a build without verifying store listing content is present and up to date
+- Update changelogs for every new version code
+- Privacy policy MUST exist at `PRIVACY_POLICY.md` and be linked in store metadata
+
 ## TDD Protocol (MANDATORY)
 
 1. Write failing test FIRST
