@@ -382,15 +382,22 @@ class TimerForegroundService : Service() {
     }
 
     private fun createNotificationChannels() {
+        // Delete old channels to force recreation with updated settings
+        // (Android caches channel settings and won't update them)
+        notificationManager.deleteNotificationChannel(CHANNEL_TIMER)
+        notificationManager.deleteNotificationChannel(CHANNEL_ALARM)
+
         // Timer progress channel (lock screen visible)
         val timerChannel = NotificationChannel(
             CHANNEL_TIMER,
             "Active Timer",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Shows timer countdown on lock screen"
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             setShowBadge(true)
+            setSound(null, null) // No sound for progress updates
+            enableVibration(false)
         }
 
         // Alarm channel (high priority, no sound - we handle sound via Ringtone for better control)
@@ -400,6 +407,7 @@ class TimerForegroundService : Service() {
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Alerts when timer completes"
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             enableVibration(false) // We handle vibration separately
             setShowBadge(true)
             setSound(null, null) // No channel sound - we control sound via Ringtone
