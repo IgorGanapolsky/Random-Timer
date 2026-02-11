@@ -1,22 +1,31 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,12 +63,14 @@ fun ActiveTimerScreen(
     state: TimerState,
     onStop: () -> Unit,
     onDismissAlarm: () -> Unit,
+    onSilence: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onReset: () -> Unit,
     onLoopToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = LocalHapticFeedback.current
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
@@ -86,6 +100,7 @@ fun ActiveTimerScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -97,6 +112,7 @@ fun ActiveTimerScreen(
                 LoopBadge(
                     enabled = loopEnabled,
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         loopEnabled = !loopEnabled
                         onLoopToggle(loopEnabled)
                     },
@@ -138,11 +154,26 @@ fun ActiveTimerScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-            // Hide progress ring since we're not revealing time info
+            // Tap circle during alarm to silence (like iOS)
+            val isAlarming = state.status == TimerStatus.ALARM
             CircularTimer(
                 progress = if (isComplete) 1f else 0f, // Full progress ring when complete
                 status = state.status,
-                modifier = Modifier.size(280.dp),
+                modifier = Modifier
+                    .size(280.dp)
+                    .then(
+                        if (isAlarming) {
+                            Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSilence()
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
                 rangeText = rangeText, // ALWAYS show range, never countdown
             )
 
@@ -182,6 +213,7 @@ fun ActiveTimerScreen(
                 LoopBadge(
                     enabled = loopEnabled,
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         loopEnabled = !loopEnabled
                         onLoopToggle(loopEnabled)
                     },
@@ -251,9 +283,27 @@ private fun LoopBadge(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "loopPressScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "loopPressAlpha",
+    )
+
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+            this.alpha = alpha
+        },
+        interactionSource = interactionSource,
         shape = RoundedCornerShape(8.dp),
         color = TimerColors.GlassBackground,
         border =
@@ -321,6 +371,7 @@ private fun ActiveTimerScreenRunningPreview() {
                 ),
             onStop = {},
             onDismissAlarm = {},
+            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},
@@ -343,6 +394,7 @@ private fun ActiveTimerScreenPausedPreview() {
                 ),
             onStop = {},
             onDismissAlarm = {},
+            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},
@@ -365,6 +417,7 @@ private fun ActiveTimerScreenCompletePreview() {
                 ),
             onStop = {},
             onDismissAlarm = {},
+            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},

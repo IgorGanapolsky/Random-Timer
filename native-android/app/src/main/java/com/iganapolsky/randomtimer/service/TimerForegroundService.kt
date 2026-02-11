@@ -369,10 +369,13 @@ class TimerForegroundService : Service() {
                         // Auto-restart timer
                         restartTimerInternal()
                     } else {
-                        // Alarm duration finished — clean up service and notification
-                        _timerState.value = null
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
+                        // Alarm sound finished — keep state as COMPLETE (iOS parity)
+                        // User must manually Stop or Reset from the ActiveTimerScreen
+                        _timerState.value = currentState?.copy(
+                            status = TimerStatus.COMPLETE,
+                            alarmTimeRemaining = 0.seconds,
+                        )
+                        _timerState.value?.let { updateNotification(it) }
                     }
                 }
             }
@@ -448,18 +451,30 @@ class TimerForegroundService : Service() {
     private fun createTimerNotification(state: TimerState): Notification {
         val pendingIntent = createMainActivityIntent()
         val isPaused = state.status == TimerStatus.PAUSED
+        val isComplete = state.status == TimerStatus.COMPLETE
 
         // Show the configured range instead of countdown (since it's a random timer)
         val minFormatted = formatSecondsToReadable(state.config.minSeconds)
         val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
         val rangeText = "$minFormatted - $maxFormatted"
 
+        val title = when {
+            isComplete -> "Timer Complete!"
+            isPaused -> "Timer Paused"
+            else -> "Timer Running"
+        }
+        val text = if (isComplete) {
+            "Went off after ${formatSecondsToReadable(state.targetDuration.inWholeSeconds.toInt())}"
+        } else {
+            "Goes off between $rangeText"
+        }
+
         val builder =
             NotificationCompat
                 .Builder(this, CHANNEL_TIMER)
                 .setSmallIcon(R.drawable.ic_timer)
-                .setContentTitle(if (isPaused) "Timer Paused" else "Timer Running")
-                .setContentText("Goes off between $rangeText")
+                .setContentTitle(title)
+                .setContentText(text)
                 .setSubText(if (state.config.hiddenMode) "Hidden Mode" else null)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
@@ -473,26 +488,36 @@ class TimerForegroundService : Service() {
         // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
         builder.setShowWhen(false)
 
-        // Primary action: Pause/Resume
-        builder.addAction(
-            if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
-            if (isPaused) "Resume" else "Pause",
-            if (isPaused) createResumeIntent() else createPauseIntent(),
-        )
-
-        // Reset action (always available)
-        builder.addAction(
-            R.drawable.ic_refresh,
-            "Reset",
-            createResetIntent(),
-        )
-
-        // Stop action (always available)
-        builder.addAction(
-            R.drawable.ic_stop,
-            "Stop",
-            createStopIntent(),
-        )
+        if (isComplete) {
+            // Complete state: Stop and Reset only
+            builder.addAction(
+                R.drawable.ic_stop,
+                "Stop",
+                createStopIntent(),
+            )
+            builder.addAction(
+                R.drawable.ic_refresh,
+                "Reset",
+                createResetIntent(),
+            )
+        } else {
+            // Running/Paused: Pause/Resume, Reset, Stop
+            builder.addAction(
+                if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
+                if (isPaused) "Resume" else "Pause",
+                if (isPaused) createResumeIntent() else createPauseIntent(),
+            )
+            builder.addAction(
+                R.drawable.ic_refresh,
+                "Reset",
+                createResetIntent(),
+            )
+            builder.addAction(
+                R.drawable.ic_stop,
+                "Stop",
+                createStopIntent(),
+            )
+        }
 
         return builder.build()
     }

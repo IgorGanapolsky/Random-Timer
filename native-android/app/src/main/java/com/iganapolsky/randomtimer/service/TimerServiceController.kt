@@ -9,6 +9,7 @@ interface TimerServiceController {
     fun startTimer(state: TimerState)
     fun stopTimer()
     fun dismissAlarm()
+    fun silenceAlarm()
     fun pauseTimer()
     fun resumeTimer()
     fun resetTimer()
