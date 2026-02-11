@@ -60,6 +60,7 @@ class TimerForegroundService : Service() {
 
     private lateinit var notificationManager: NotificationManager
     private var isAppInForeground = false
+    private var timerEndTimeMs: Long = 0L
 
     // Media session for Bluetooth/Android Auto alarm dismiss
     private var mediaSession: MediaSessionCompat? = null
@@ -190,6 +191,7 @@ class TimerForegroundService : Service() {
 
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
+        timerEndTimeMs = System.currentTimeMillis() + initialState.remainingDuration.inWholeMilliseconds
         startForeground(NOTIFICATION_ID, createTimerNotification(initialState))
 
         timerJob?.cancel()
@@ -441,9 +443,9 @@ class TimerForegroundService : Service() {
             .setColor(getColor(R.color.accent_primary))
 
         // Show live countdown on lock screen for non-hidden mode
-        if (!state.config.hiddenMode && !isPaused) {
-            val futureTime = System.currentTimeMillis() + state.remainingDuration.inWholeMilliseconds
-            builder.setWhen(futureTime)
+        // Use stored timerEndTimeMs (set once at timer start) to avoid chronometer resets
+        if (!state.config.hiddenMode && !isPaused && timerEndTimeMs > 0L) {
+            builder.setWhen(timerEndTimeMs)
                 .setUsesChronometer(true)
                 .setChronometerCountDown(true)
                 .setShowWhen(true)
