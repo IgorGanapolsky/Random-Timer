@@ -48,26 +48,26 @@ class UpdateTimerUseCaseTest {
     }
 
     @Test
-    fun `transitions to WARNING under 30 seconds`() = runTest {
+    fun `stays RUNNING under 30 seconds - no warning threshold`() = runTest {
         val initialState = createRunningState(remaining = 31.seconds)
 
         val result = useCase(initialState, 2.seconds)
 
-        assertThat(result.status).isEqualTo(TimerStatus.WARNING)
+        assertThat(result.status).isEqualTo(TimerStatus.RUNNING)
     }
 
     @Test
-    fun `transitions to DANGER under 10 seconds`() = runTest {
-        val initialState = createRunningState(remaining = 11.seconds, status = TimerStatus.WARNING)
+    fun `stays RUNNING under 10 seconds - no danger threshold`() = runTest {
+        val initialState = createRunningState(remaining = 11.seconds)
 
         val result = useCase(initialState, 2.seconds)
 
-        assertThat(result.status).isEqualTo(TimerStatus.DANGER)
+        assertThat(result.status).isEqualTo(TimerStatus.RUNNING)
     }
 
     @Test
     fun `transitions to COMPLETE at zero`() = runTest {
-        val initialState = createRunningState(remaining = 1.seconds, status = TimerStatus.DANGER)
+        val initialState = createRunningState(remaining = 1.seconds)
 
         val result = useCase(initialState, 1.seconds)
 
@@ -91,17 +91,17 @@ class UpdateTimerUseCaseTest {
     }
 
     @Test
-    fun `determineStatus returns WARNING at exactly 30 seconds`() {
+    fun `determineStatus returns RUNNING at 30 seconds - no warning leak`() {
         val status = useCase.determineStatus(30.seconds, TimerStatus.RUNNING)
 
-        assertThat(status).isEqualTo(TimerStatus.WARNING)
+        assertThat(status).isEqualTo(TimerStatus.RUNNING)
     }
 
     @Test
-    fun `determineStatus returns DANGER at exactly 10 seconds`() {
-        val status = useCase.determineStatus(10.seconds, TimerStatus.WARNING)
+    fun `determineStatus returns RUNNING at 10 seconds - no danger leak`() {
+        val status = useCase.determineStatus(10.seconds, TimerStatus.RUNNING)
 
-        assertThat(status).isEqualTo(TimerStatus.DANGER)
+        assertThat(status).isEqualTo(TimerStatus.RUNNING)
     }
 
     @Test
