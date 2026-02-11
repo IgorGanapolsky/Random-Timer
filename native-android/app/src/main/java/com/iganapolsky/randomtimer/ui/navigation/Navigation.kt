@@ -1,6 +1,11 @@
 package com.iganapolsky.randomtimer.ui.navigation
 
 import android.app.Activity
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,7 +61,16 @@ fun RandomTimerNavHost(
         navController = navController,
         startDestination = Screen.Setup.route,
     ) {
-        composable(Screen.Setup.route) {
+        composable(
+            Screen.Setup.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                    slideOutVertically(animationSpec = tween(300)) { it / 4 }
+            },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+            popExitTransition = { fadeOut(animationSpec = tween(300)) },
+        ) {
             TimerSetupScreen(
                 config = config,
                 onConfigChange = viewModel::updateConfig,
@@ -66,7 +80,19 @@ fun RandomTimerNavHost(
             )
         }
 
-        composable(Screen.ActiveTimer.route) {
+        composable(
+            Screen.ActiveTimer.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(300)) +
+                    slideInVertically(animationSpec = tween(300)) { it / 4 }
+            },
+            exitTransition = { fadeOut(animationSpec = tween(300)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                    slideOutVertically(animationSpec = tween(300)) { it / 4 }
+            },
+        ) {
             timerState?.let { state ->
                 ActiveTimerScreen(
                     state = state,
@@ -78,6 +104,7 @@ fun RandomTimerNavHost(
                         viewModel.dismissAlarm()
                         navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
+                    onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
                     onResume = viewModel::resumeTimer,
                     onReset = {

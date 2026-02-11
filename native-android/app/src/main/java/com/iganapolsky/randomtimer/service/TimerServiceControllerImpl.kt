@@ -48,6 +48,10 @@ class TimerServiceControllerImpl @Inject constructor(
         sendAction(TimerForegroundService.ACTION_DISMISS_ALARM)
     }
 
+    override fun silenceAlarm() {
+        sendAction(TimerForegroundService.ACTION_SILENCE_ALARM)
+    }
+
     override fun pauseTimer() {
         sendAction(TimerForegroundService.ACTION_PAUSE)
     }

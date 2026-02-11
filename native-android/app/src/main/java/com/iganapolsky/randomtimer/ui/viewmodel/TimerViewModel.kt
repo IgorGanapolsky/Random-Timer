@@ -114,6 +114,10 @@ class TimerViewModel
             }
         }
 
+        fun silenceAlarm() {
+            serviceController.silenceAlarm()
+        }
+
         fun pauseTimer() {
             serviceController.pauseTimer()
         }

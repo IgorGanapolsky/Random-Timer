@@ -1,7 +1,11 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,8 +30,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,10 +56,10 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    // Read directly from config to avoid stale state issues
-    // Helper to update config with specific changes
+    val haptic = LocalHapticFeedback.current
+
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
         maxSeconds: Int = config.maxSeconds,
@@ -58,7 +67,7 @@ fun TimerSetupScreen(
         repeatEnabled: Boolean = config.repeatEnabled,
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
-        vibrationEnabled: Boolean = config.vibrationEnabled
+        vibrationEnabled: Boolean = config.vibrationEnabled,
     ) {
         onConfigChange(
             config.copy(
@@ -69,8 +78,8 @@ fun TimerSetupScreen(
                 repeatEnabled = repeatEnabled,
                 soundType = soundType,
                 volume = volume,
-                vibrationEnabled = vibrationEnabled
-            )
+                vibrationEnabled = vibrationEnabled,
+            ),
         )
     }
 
@@ -82,33 +91,33 @@ fun TimerSetupScreen(
                         text = "Random Tactical Timer",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TimerColors.TextPrimary
+                        color = TimerColors.TextPrimary,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TimerColors.BackgroundDark
-                )
+                    containerColor = TimerColors.BackgroundDark,
+                ),
             )
         },
         containerColor = TimerColors.BackgroundDark,
-        modifier = modifier
+        modifier = modifier,
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             // Time Range Card
             item {
                 GlassCard(modifier = Modifier.fillMaxWidth(), padding = 12.dp) {
                     Column {
                         Text(
-                            text = "⏱️ Goes Off In This Range",
+                            text = "\u23F1\uFE0F Goes Off In This Range",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TimerColors.TextPrimary
+                            color = TimerColors.TextPrimary,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -120,7 +129,7 @@ fun TimerSetupScreen(
                             },
                             onMaxChange = { newMax ->
                                 updateConfig(maxSeconds = newMax.coerceAtLeast(config.minSeconds + 30))
-                            }
+                            },
                         )
                     }
                 }
@@ -131,22 +140,23 @@ fun TimerSetupScreen(
                 GlassCard(modifier = Modifier.fillMaxWidth(), padding = 12.dp) {
                     Column {
                         Text(
-                            text = "🔔 Alarm Sound Duration",
+                            text = "\uD83D\uDD14 Alarm Sound Duration",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TimerColors.TextPrimary
+                            color = TimerColors.TextPrimary,
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
                         // Duration Chips - all in one row like iOS
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             TimerConfig.ALARM_DURATION_OPTIONS.forEach { duration ->
                                 FilterChip(
                                     selected = config.alarmDuration == duration,
                                     onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         updateConfig(alarmDuration = duration)
                                     },
                                     label = {
@@ -156,19 +166,19 @@ fun TimerSetupScreen(
                                             color = if (config.alarmDuration == duration)
                                                 TimerColors.AccentPrimary
                                             else
-                                                TimerColors.TextSecondary
+                                                TimerColors.TextSecondary,
                                         )
                                     },
                                     colors = FilterChipDefaults.filterChipColors(
                                         containerColor = TimerColors.GlassBackground,
-                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f)
+                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
                                     ),
                                     border = FilterChipDefaults.filterChipBorder(
                                         borderColor = TimerColors.GlassBorder,
                                         selectedBorderColor = TimerColors.AccentPrimary,
                                         enabled = true,
-                                        selected = config.alarmDuration == duration
-                                    )
+                                        selected = config.alarmDuration == duration,
+                                    ),
                                 )
                             }
                         }
@@ -179,30 +189,32 @@ fun TimerSetupScreen(
                         Text(
                             text = "SOUND",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TimerColors.TextMuted
+                            color = TimerColors.TextMuted,
                         )
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             SoundTypeButton(
-                                label = "💪 Intense",
+                                label = "\uD83D\uDCAA Intense",
                                 selected = config.soundType == SoundType.INTENSE,
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     updateConfig(soundType = SoundType.INTENSE)
                                     onSoundPreview(SoundType.INTENSE)
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             )
                             SoundTypeButton(
-                                label = "🌸 Gentle",
+                                label = "\uD83C\uDF38 Gentle",
                                 selected = config.soundType == SoundType.GENTLE,
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     updateConfig(soundType = SoundType.GENTLE)
                                     onSoundPreview(SoundType.GENTLE)
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             )
                         }
 
@@ -215,7 +227,7 @@ fun TimerSetupScreen(
                                 updateConfig(volume = it)
                                 onVolumePreview(it)
                             },
-                            onValueChangeFinished = { }
+                            onValueChangeFinished = { },
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -224,26 +236,27 @@ fun TimerSetupScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "📳 Vibration",
+                                text = "\uD83D\uDCF3 Vibration",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = TimerColors.TextSecondary
+                                color = TimerColors.TextSecondary,
                             )
                             Switch(
                                 checked = config.vibrationEnabled,
                                 onCheckedChange = { newValue ->
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onConfigChange(
-                                        config.copy(vibrationEnabled = newValue)
+                                        config.copy(vibrationEnabled = newValue),
                                     )
                                 },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = TimerColors.AccentPrimary,
                                     checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
                                     uncheckedThumbColor = TimerColors.TextMuted,
-                                    uncheckedTrackColor = TimerColors.SliderTrack
-                                )
+                                    uncheckedTrackColor = TimerColors.SliderTrack,
+                                ),
                             )
                         }
                     }
@@ -255,7 +268,7 @@ fun TimerSetupScreen(
                 PrimaryButton(
                     text = "Start Timer",
                     onClick = onStartTimer,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
                 )
             }
         }
@@ -267,31 +280,33 @@ private fun TimeRangeSliders(
     minValue: Int,
     maxValue: Int,
     onMinChange: (Int) -> Unit,
-    onMaxChange: (Int) -> Unit
+    onMaxChange: (Int) -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Column {
         // Display
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = formatTime(minValue),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TimerColors.TextPrimary
+                color = TimerColors.TextPrimary,
             )
             Text(
                 text = " - ",
                 style = MaterialTheme.typography.titleMedium,
-                color = TimerColors.TextSecondary
+                color = TimerColors.TextSecondary,
             )
             Text(
                 text = formatTime(maxValue),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TimerColors.TextPrimary
+                color = TimerColors.TextPrimary,
             )
         }
 
@@ -301,17 +316,23 @@ private fun TimeRangeSliders(
             style = MaterialTheme.typography.labelSmall,
             color = TimerColors.TextMuted,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Slider(
             value = minValue.toFloat(),
-            onValueChange = { onMinChange((it / 5).toInt() * 5) }, // Snap to 5-second intervals
+            onValueChange = { raw ->
+                val snapped = (raw / 5).toInt() * 5
+                if (snapped != minValue) {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+                onMinChange(snapped)
+            },
             valueRange = 0f..270f,
             colors = SliderDefaults.colors(
                 thumbColor = TimerColors.AccentPrimary,
                 activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack
-            )
+                inactiveTrackColor = TimerColors.SliderTrack,
+            ),
         )
 
         // Max slider - label centered above
@@ -320,17 +341,23 @@ private fun TimeRangeSliders(
             style = MaterialTheme.typography.labelSmall,
             color = TimerColors.TextMuted,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Slider(
             value = maxValue.toFloat(),
-            onValueChange = { onMaxChange((it / 5).toInt() * 5) }, // Snap to 5-second intervals
+            onValueChange = { raw ->
+                val snapped = (raw / 5).toInt() * 5
+                if (snapped != maxValue) {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+                onMaxChange(snapped)
+            },
             valueRange = 30f..300f,
             colors = SliderDefaults.colors(
                 thumbColor = TimerColors.AccentPrimary,
                 activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack
-            )
+                inactiveTrackColor = TimerColors.SliderTrack,
+            ),
         )
     }
 }
@@ -340,11 +367,29 @@ private fun SoundTypeButton(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "pressScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "pressAlpha",
+    )
+
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+            this.alpha = alpha
+        },
+        interactionSource = interactionSource,
         shape = RoundedCornerShape(12.dp),
         color = if (selected)
             TimerColors.AccentPrimary.copy(alpha = 0.15f)
@@ -352,14 +397,14 @@ private fun SoundTypeButton(
             TimerColors.GlassBackground,
         border = BorderStroke(
             width = 1.dp,
-            color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder
-        )
+            color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+        ),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
 }
@@ -368,22 +413,22 @@ private fun SoundTypeButton(
 private fun VolumeSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
-    onValueChangeFinished: () -> Unit
+    onValueChangeFinished: () -> Unit,
 ) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "🔊 Volume",
+                text = "\uD83D\uDD0A Volume",
                 style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextSecondary
+                color = TimerColors.TextSecondary,
             )
             Text(
                 text = "${(value * 100).toInt()}%",
                 style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextPrimary
+                color = TimerColors.TextPrimary,
             )
         }
         Slider(
@@ -393,8 +438,8 @@ private fun VolumeSlider(
             colors = SliderDefaults.colors(
                 thumbColor = TimerColors.AccentPrimary,
                 activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack
-            )
+                inactiveTrackColor = TimerColors.SliderTrack,
+            ),
         )
     }
 }
@@ -418,7 +463,7 @@ private fun TimerSetupScreenPreview() {
             onConfigChange = {},
             onStartTimer = {},
             onSoundPreview = { _ -> },
-            onVolumePreview = { _ -> }
+            onVolumePreview = { _ -> },
         )
     }
 }
