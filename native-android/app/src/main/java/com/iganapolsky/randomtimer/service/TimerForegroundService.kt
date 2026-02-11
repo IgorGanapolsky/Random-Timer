@@ -130,7 +130,7 @@ class TimerForegroundService : Service() {
             ACTION_DISMISS_ALARM -> dismissAlarm()
             ACTION_SILENCE_ALARM -> silenceAlarm()
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun updateLoopSetting(repeatEnabled: Boolean) {
@@ -667,7 +667,7 @@ class TimerForegroundService : Service() {
             alarmPlayer =
                 MediaPlayer().apply {
                     setAudioAttributes(alarmAttributes)
-                    val afd = resources.openRawResourceFd(resourceId) ?: return
+                    val afd = resources.openRawResourceFd(resourceId) ?: return@apply
                     setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                     afd.close()
                     isLooping = true
