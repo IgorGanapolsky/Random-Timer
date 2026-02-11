@@ -664,17 +664,17 @@ class TimerForegroundService : Service() {
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build()
-            alarmPlayer =
-                MediaPlayer().apply {
-                    setAudioAttributes(alarmAttributes)
-                    val afd = resources.openRawResourceFd(resourceId) ?: return@apply
-                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                    afd.close()
-                    isLooping = true
-                    setVolume(state.config.volume, state.config.volume)
-                    prepare()
-                    start()
-                }
+            val player = MediaPlayer()
+            player.setAudioAttributes(alarmAttributes)
+            val afd = resources.openRawResourceFd(resourceId)
+                ?: throw IllegalStateException("Could not open alarm sound resource")
+            player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
+            player.isLooping = true
+            player.setVolume(state.config.volume, state.config.volume)
+            player.prepare()
+            player.start()
+            alarmPlayer = player
             fallbackRingtone?.stop()
             fallbackRingtone = null
             Log.d("TimerService", "Playing alarm sound: ${state.config.soundType} at volume ${state.config.volume}")
