@@ -102,7 +102,7 @@ jobs:
         run: ./gradlew bundleRelease
         working-directory: native-android
 
-      - name: Upload to Google Play (internal track)
+      - name: Upload to Google Play (closed testing track)
         env:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
@@ -140,12 +140,12 @@ jobs:
               service.edits().tracks().update(
                   packageName=PACKAGE,
                   editId=edit_id,
-                  track='internal',
+                  track='alpha',
                   body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
               ).execute()
 
               service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-              print(f"✅ Uploaded version code {bundle['versionCode']} to internal track")
+              print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
           except Exception as e:
               print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
               sys.exit(1)

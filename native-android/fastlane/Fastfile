@@ -26,6 +26,18 @@ platform :android do
     )
   end
 
+  desc "Upload AAB to closed testing (alpha) track"
+  lane :closed do
+    upload_to_play_store(
+      package_name: "com.iganapolsky.randomtimer",
+      track: "alpha",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
   desc "Promote internal to production"
   lane :promote do
     upload_to_play_store(
