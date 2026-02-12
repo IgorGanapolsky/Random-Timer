@@ -31,8 +31,12 @@
 ## Commands
 
 ```bash
-npm run compile              # TypeScript check
-npm run lint                 # ESLint
-npm run test                 # Jest tests
-npm run quality              # Full: compile + lint + format + test
+# Android
+cd native-android && ./gradlew assembleDebug          # Build debug APK
+cd native-android && ./gradlew testDebugUnitTest       # Run unit tests
+cd native-android && ./gradlew lint                    # Lint check
+
+# iOS
+cd native-ios && xcodebuild -scheme RandomTimer build  # Build
+cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ```

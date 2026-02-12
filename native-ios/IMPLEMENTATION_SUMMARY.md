@@ -4,7 +4,7 @@
 
 ### 1. Beautiful SwiftUI Live Activity Views ✅
 
-**File**: `/Users/ganapolsky_i/workspace/git/igor/Random-Timer/native-ios/RandomTimerWidget/RandomTimerLiveActivity.swift`
+**File**: `native-ios/RandomTimerWidget/RandomTimerLiveActivity.swift`
 
 Implemented stunning, native iOS Live Activity UI with:
 
@@ -69,7 +69,7 @@ Leveraging iOS 17+ symbol effects:
 
 ### 5. Integration with Main App ✅
 
-**File**: `/Users/ganapolsky_i/workspace/git/igor/Random-Timer/native-ios/RandomTimer/Sources/Services/TimerManager.swift`
+**File**: `native-ios/RandomTimer/Sources/Services/TimerManager.swift`
 
 Added inline Live Activity handling:
 - `startLiveActivity(state:)` - Starts Live Activity when timer begins

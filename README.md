@@ -142,13 +142,15 @@ maestro test .maestro/smoke-test.yaml
 
 ## Color Palette
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Background | `#0F0A1A` | Deep purple-black |
-| Accent | `#8B5CF6` | Purple primary |
-| Timer Active | `#10B981` | Emerald — running |
-| Timer Complete | `#8B5CF6` | Purple — done |
-| Glass | `rgba(255,255,255,0.10)` | Card backgrounds |
+| Token | Preview | Value | Usage |
+|-------|---------|-------|-------|
+| Background | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-0F0A1A?style=flat-square&labelColor=0F0A1A) | `#0F0A1A` | Deep purple-black |
+| Accent | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-8B5CF6?style=flat-square&labelColor=8B5CF6) | `#8B5CF6` | Purple primary |
+| Timer Active | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-10B981?style=flat-square&labelColor=10B981) | `#10B981` | Emerald — running |
+| Warning | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-F59E0B?style=flat-square&labelColor=F59E0B) | `#F59E0B` | Amber — warning |
+| Alarm | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-F43F5E?style=flat-square&labelColor=F43F5E) | `#F43F5E` | Rose — alarm |
+| Timer Complete | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-8B5CF6?style=flat-square&labelColor=8B5CF6) | `#8B5CF6` | Purple — done |
+| Glass | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-CCCCCC?style=flat-square&labelColor=CCCCCC) | `rgba(255,255,255,0.10)` | Card backgrounds |
 
 ## Contributing
 
