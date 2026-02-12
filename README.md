@@ -4,10 +4,15 @@
 [![Platform: iOS](https://img.shields.io/badge/iOS-18%2B-blue?logo=apple)](native-ios/)
 [![Platform: Android](https://img.shields.io/badge/Android-8%2B-green?logo=android)](native-android/)
 [![CI](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml)
+[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](native-ios/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](native-android/)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-M3-4285F4?logo=jetpackcompose&logoColor=white)](native-android/)
 
-A timer that goes off at a **random** time within your chosen range. You set min/max — the app picks when. You never know exactly when it will ring.
+A native **iOS + Android** timer that goes off at a **random** time within your chosen range. Set min and max — the app picks a random moment to ring. You never know exactly when.
 
-**Perfect for** workout intervals, reaction drills, team activities, meditation, and anywhere predictable timing defeats the purpose.
+**Built for** athletes, coaches, trainers, and anyone who needs unpredictable timing — workout intervals, reaction drills, team activities, meditation, and anywhere predictable timing defeats the purpose.
+
+No ads. No tracking. No subscriptions. Just a timer that works.
 
 <!-- Store badges — uncomment when live
 [![Download on the App Store](https://img.shields.io/badge/App_Store-0D96F6?logo=app-store&logoColor=white)](https://apps.apple.com/app/random-tactical-timer/id...)
@@ -16,21 +21,22 @@ A timer that goes off at a **random** time within your chosen range. You set min
 
 ---
 
-## Demo
-
-<p align="center">
-  <img src="screenshots/android-demo.gif" width="300" alt="Random Tactical Timer Demo — Android" />
-</p>
-
 ## Screenshots
 
-<p align="center">
-  <img src="screenshots/ios-setup.png" width="260" alt="iOS — Timer Setup" />
-  &nbsp;&nbsp;
-  <img src="screenshots/ios-active.png" width="260" alt="iOS — Timer Active" />
-  &nbsp;&nbsp;
-  <img src="screenshots/android-setup.png" width="260" alt="Android — Timer Setup" />
-</p>
+<table>
+  <tr>
+    <th>iOS — Setup</th>
+    <th>iOS — Timer Running</th>
+    <th>Android — Setup</th>
+    <th>Android — Loop Mode</th>
+  </tr>
+  <tr>
+    <td><img src="screenshots/ios-setup.png" width="220" alt="iOS Timer Setup Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/ios-active.png" width="220" alt="iOS Active Timer Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/android-setup.png" width="220" alt="Android Timer Setup Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/android-active.png" width="220" alt="Android Loop Mode — Random Tactical Timer" /></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -39,16 +45,17 @@ A timer that goes off at a **random** time within your chosen range. You set min
 - **Loop Mode** — automatically restarts with a new random duration when the timer finishes
 - **Lock Screen Display** — iOS Live Activity + Android notification with pause/resume/stop controls
 - **Alarm Sounds** — choose Intense or Gentle, with adjustable volume and vibration
-- **Premium UI** — glassmorphism dark theme with Material Design 3 Expressive (Android) and SwiftUI (iOS)
+- **Premium Dark UI** — glassmorphism theme with Material Design 3 Expressive (Android) and SwiftUI (iOS)
 - **Background Operation** — reliable notifications even when the app isn't in the foreground
 - **Pause, Resume, Reset** — full timer controls on both platforms
+- **Tap to Silence** — tap the timer circle during alarm to silence immediately
 
 ## Platforms
 
 | Platform | Technology | Min Version |
 |----------|------------|-------------|
-| iOS | Swift 6 + SwiftUI | iOS 18+ |
-| Android | Kotlin 2.1 + Jetpack Compose (M3) | Android 8+ (API 26) |
+| iOS | Swift 6 + SwiftUI + Live Activities | iOS 18+ |
+| Android | Kotlin 2.1 + Jetpack Compose + Material Design 3 | Android 8+ (API 26) |
 
 ## Project Structure
 
