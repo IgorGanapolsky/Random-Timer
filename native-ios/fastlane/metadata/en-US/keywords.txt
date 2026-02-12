@@ -1,1 +1,1 @@
-random timer,interval timer,workout timer,tactical timer,unpredictable timer,training timer,countdown,drill timer,meditation timer,coach timer
+random timer,interval timer,workout timer,tactical timer,training timer,countdown,drill timer,HIIT
