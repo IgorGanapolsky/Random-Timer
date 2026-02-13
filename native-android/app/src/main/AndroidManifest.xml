@@ -27,6 +27,9 @@
     <!-- Allow timer notifications to bypass Do Not Disturb -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
+    <!-- Remove AD_ID permission added by dependencies (Firebase/PostHog) — app does not use advertising ID -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
     <application
         android:name=".RandomTimerApp"
         android:allowBackup="true"
