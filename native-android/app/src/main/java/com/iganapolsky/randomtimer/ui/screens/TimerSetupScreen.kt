@@ -41,8 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -125,10 +128,20 @@ fun TimerSetupScreen(
                             minValue = config.minSeconds,
                             maxValue = config.maxSeconds,
                             onMinChange = { newMin ->
-                                updateConfig(minSeconds = newMin.coerceAtMost(config.maxSeconds - 30))
+                                val (min, max) = TimeRangeAdjuster.adjustForMinChange(
+                                    currentMinSeconds = config.minSeconds,
+                                    currentMaxSeconds = config.maxSeconds,
+                                    newMinSeconds = newMin,
+                                )
+                                updateConfig(minSeconds = min, maxSeconds = max)
                             },
                             onMaxChange = { newMax ->
-                                updateConfig(maxSeconds = newMax.coerceAtLeast(config.minSeconds + 30))
+                                val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
+                                    currentMinSeconds = config.minSeconds,
+                                    currentMaxSeconds = config.maxSeconds,
+                                    newMaxSeconds = newMax,
+                                )
+                                updateConfig(minSeconds = min, maxSeconds = max)
                             },
                         )
                     }
@@ -328,6 +341,7 @@ private fun TimeRangeSliders(
                 onMinChange(snapped)
             },
             valueRange = 0f..270f,
+            modifier = Modifier.semantics { contentDescription = "Minimum time slider" },
             colors = SliderDefaults.colors(
                 thumbColor = TimerColors.AccentPrimary,
                 activeTrackColor = TimerColors.AccentPrimary,
@@ -353,6 +367,7 @@ private fun TimeRangeSliders(
                 onMaxChange(snapped)
             },
             valueRange = 30f..300f,
+            modifier = Modifier.semantics { contentDescription = "Maximum time slider" },
             colors = SliderDefaults.colors(
                 thumbColor = TimerColors.AccentPrimary,
                 activeTrackColor = TimerColors.AccentPrimary,

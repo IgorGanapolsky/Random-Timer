@@ -199,6 +199,79 @@ final class TimerStatusTests: XCTestCase {
     }
 }
 
+final class TimeRangeAdjusterTests: XCTestCase {
+
+    func testMinChangeWithinGapKeepsMaxUnchanged() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 0,
+            currentMaxSeconds: 300,
+            newMinSeconds: 120
+        )
+
+        XCTAssertEqual(adjusted.min, 120)
+        XCTAssertEqual(adjusted.max, 300)
+    }
+
+    func testMinChangeBeyondMaxMinusGapPushesMaxForward() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 0,
+            currentMaxSeconds: 60,
+            newMinSeconds: 50
+        )
+
+        XCTAssertEqual(adjusted.min, 50)
+        XCTAssertEqual(adjusted.max, 80)
+        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMinChangeThatWouldExceedMaxLimitClampsToMaxMinusGap() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 250,
+            currentMaxSeconds: 300,
+            newMinSeconds: 280
+        )
+
+        XCTAssertEqual(adjusted.min, 270)
+        XCTAssertEqual(adjusted.max, 300)
+        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMaxChangeWithinGapKeepsMinUnchanged() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 0,
+            currentMaxSeconds: 300,
+            newMaxSeconds: 200
+        )
+
+        XCTAssertEqual(adjusted.min, 0)
+        XCTAssertEqual(adjusted.max, 200)
+    }
+
+    func testMaxChangeBelowMinPlusGapPullsMinBack() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 100,
+            currentMaxSeconds: 200,
+            newMaxSeconds: 110
+        )
+
+        XCTAssertEqual(adjusted.min, 80)
+        XCTAssertEqual(adjusted.max, 110)
+        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMaxChangeThatWouldPullMinBelowLimitClampsToMinLimit() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 10,
+            currentMaxSeconds: 40,
+            newMaxSeconds: 25
+        )
+
+        XCTAssertEqual(adjusted.min, 0)
+        XCTAssertEqual(adjusted.max, 30)
+        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+}
+
 final class TimeIntervalExtensionTests: XCTestCase {
 
     func testFormattedMMSSMinutesAndSeconds() {
