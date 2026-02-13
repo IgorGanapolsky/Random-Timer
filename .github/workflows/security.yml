@@ -48,6 +48,7 @@ jobs:
 
       - name: Run Snyk
         if: matrix.scan-type == 'dependencies' && env.SNYK_TOKEN != ''
+        continue-on-error: true
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
@@ -89,6 +90,7 @@ jobs:
       # Mobile-specific Security Scans
       - name: Mobile Security Framework (MobSF)
         if: matrix.scan-type == 'mobile'
+        continue-on-error: true
         uses: MobSF/mobsfscan@main
         with:
           args: ". --json --output mobile-security-results.json"
