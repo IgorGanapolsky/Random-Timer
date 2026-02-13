@@ -1,6 +1,6 @@
 # Privacy Policy for Random Tactical Timer
 
-**Last updated: February 11, 2026**
+**Last updated: February 13, 2026**
 
 ## Overview
 
@@ -13,9 +13,18 @@ The App does **not** collect, store, or transmit any personal data. Specifically
 - **No account required** — the App works without sign-up or login
 - **No personal information collected** — no name, email, phone number, or address
 - **No location data** — the App does not access your location
-- **No usage analytics** — the App does not track how you use it
-- **No advertising** — the App contains no ads and no ad tracking
-- **No third-party data sharing** — nothing is shared with anyone
+- **No advertising** — the App contains no ads and no advertising ID usage
+
+## Analytics
+
+The App uses **PostHog** for anonymous usage analytics to help improve the user experience. This data includes:
+
+- Anonymous event data (e.g., timer started, timer completed)
+- Device type and OS version
+- App version
+- No personally identifiable information is collected
+
+Analytics data is processed by PostHog and is not sold or shared with third parties for advertising purposes.
 
 ## Firebase Crashlytics
 
