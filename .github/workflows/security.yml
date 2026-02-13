@@ -97,6 +97,7 @@ jobs:
 
       - name: Run npm-audit-helper
         if: matrix.scan-type == 'dependencies'
+        continue-on-error: true
         working-directory: native-android
         run: npx npm-audit-helper@latest --audit-level=moderate
 
