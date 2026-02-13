@@ -21,6 +21,8 @@ permissions:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -45,10 +47,10 @@ jobs:
         run: npm audit --json > npm-audit.json || true
 
       - name: Run Snyk
-        if: matrix.scan-type == 'dependencies' && secrets.SNYK_TOKEN != ''
+        if: matrix.scan-type == 'dependencies' && env.SNYK_TOKEN != ''
         uses: snyk/actions/node@master
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high --file=native-android/package-lock.json
 
@@ -102,7 +104,7 @@ jobs:
         with:
           name: security-results-${{ matrix.scan-type }}
           path: |
-            npm-audit.json
+            native-android/npm-audit.json
             dependency-check-report.html
             mobile-security-results.json
 
@@ -110,9 +112,11 @@ jobs:
     needs: security-scan
     if: always()
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Security Issues
-        if: always() && secrets.SLACK_WEBHOOK_URL != ''
+        if: always() && env.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -121,4 +125,4 @@ jobs:
             Security scan completed with status: ${{ job.status }}
             View detailed results in GitHub Actions artifacts
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
