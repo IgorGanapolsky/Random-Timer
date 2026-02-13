@@ -41,6 +41,9 @@ paths = [
   '''ios/Pods/''',
   '''android/build/''',
 ]
-
-# Commits to ignore (after purge, add old commit hashes here if needed)
-# commits = ["abc123", "def456"]
+commits = [
+  "f9f5b3c75532bd1bb5b7af1a05aacd48245a648e",
+  "8ea0f886c8a78a0d7fc19d4cb3dfd132904be654",
+  "d23d7a21c4c50f816a8208ad57f2b40a3b15b264",
+  "48ce122b473739e18352fdf5ce3e42b4a953c247",
+]
