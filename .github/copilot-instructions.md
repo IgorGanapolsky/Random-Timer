@@ -1,73 +1,58 @@
 # GitHub Copilot Instructions for Random Timer
 
-This is a React Native/Expo timer app using TypeScript strict mode, Redux Toolkit, and MMKV persistence.
+This repo is a **native** app:
 
-## Critical Rules (MUST follow)
+- Android: Kotlin + Jetpack Compose + Hilt in `native-android/`
+- iOS: SwiftUI + Swift Concurrency in `native-ios/`
 
-### Restricted Imports
+The app is a **random timer**: do not expose remaining time / countdown UI (only show the configured range).
 
-- NEVER use `SafeAreaView` from `react-native`. ALWAYS use `import { SafeAreaView } from 'react-native-safe-area-context'`
-- NEVER import `MMKV` directly from `react-native-mmkv`. ALWAYS use `import { storage } from '@shared/utils/storage'`
+## Non-Negotiables
 
-### Theme System
+### TDD + Test Gates
 
-- NEVER hardcode colors. Use `import { colors } from '@shared/theme'`
-- NEVER hardcode spacing values. Use `import { spacing } from '@shared/theme'` with values: xs (4), sm (8), md (16), lg (24), xl (32), 2xl (48)
+- Use TDD: write/adjust **failing tests first**, then implement.
+- Target **100% coverage** for new/changed business logic. If something can’t be covered (e.g., OS audio focus quirks), document the gap and add a follow-up task in `TASKS.md`.
+- Never claim something is fixed without running the relevant tests locally.
+- Default gate: run `make verify` before marking work done.
+- If UI/notifications/audio are touched:
+  - Add/adjust Android instrumentation tests (`native-android/app/src/androidTest/**`)
+  - Add/adjust iOS UI tests (`native-ios/RandomTimerUITests/**`)
+  - Add/adjust Maestro flows under `.maestro/`
 
-### TypeScript
+### Task Loop (Layered)
 
-- Strict mode is enabled. No implicit any, no implicit returns.
-- Use named exports, not default exports.
-- Define types near their usage, not in separate files.
+Maintain `TASKS.md` as the source of truth. Work in layers:
 
-## Code Patterns
+1. Make `make verify` green (build + unit tests)
+2. Fix store/compliance blockers (Play/App Store) if present
+3. Implement product enhancements
+4. Refactor only after 1-3 are stable
 
-### React Components
+Loop until `TASKS.md` has no remaining actionable items:
 
-- Functional components only with hooks
-- Use `useCallback` for functions passed to children
-- Use `useMemo` for expensive computations
-- Use named imports: `import { useState, useEffect } from 'react'`
+1. Pick the top unchecked task in `TASKS.md`
+2. Write the failing test(s)
+3. Implement the minimum to pass
+4. Run `make verify` (and UI/instrumentation where applicable)
+5. Update `TASKS.md` with what changed and which tests prove it
 
-### Styling
+If blocked, write the blocker and evidence into `TASKS.md` instead of guessing.
 
-- Use `StyleSheet.create()` at bottom of component files
-- Follow the glassmorphism dark theme (base: #0F0A1A)
+## Android Guidance (Kotlin/Compose)
 
-### Redux
+- Prefer pure, testable functions for business rules.
+- Keep Composables thin; push logic into helpers.
+- Use coroutines/Flow; avoid `Handler` and ad-hoc threading.
+- Alarm behavior is owned by `native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt`.
 
-- Store location: `src/shared/redux/store.ts`
-- Use typed hooks: `useAppDispatch`, `useAppSelector` from `@shared/redux`
-- New slices go in `src/shared/redux/slices/`
-- Add persistent slices to `persistConfig.whitelist`
+## iOS Guidance (SwiftUI/Swift Concurrency)
 
-## Path Aliases
+- UI is SwiftUI; timer logic is in `native-ios/RandomTimer/Sources/Services/TimerManager.swift`.
+- Notifications + alarm audio are in `native-ios/RandomTimer/Sources/Services/NotificationService.swift`.
+- Prefer `async/await` and `@MainActor` correctness; avoid force unwraps in production.
 
-```typescript
-import { Screen, Button } from '@shared/components';
-import { colors, spacing } from '@shared/theme';
-import { useAppDispatch } from '@shared/redux';
-import { TimerSetupScreen } from '@features/timer';
-import { AppNavigation } from '@navigation';
-```
+## Safety
 
-## Import Order
-
-1. React, React Native
-2. Expo packages
-3. External libraries
-4. @navigation/\*
-5. @shared/_, @features/_
-6. Relative imports
-
-## Screen Components
-
-- Wrap screens with `<Screen preset="fill">` or `<Screen preset="scroll">`
-- Handle loading and error states
-- Test on both iOS and Android
-
-## Testing
-
-- Jest + React Native Testing Library
-- Test files: `*.test.ts` / `*.test.tsx`
-- Run: `npm test`
+- Never commit secrets, API keys, keystores, or private credentials.
+- Avoid adding new permissions unless the feature truly requires it.
