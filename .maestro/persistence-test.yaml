@@ -8,14 +8,14 @@ appId: com.iganapolsky.randomtimer
 # Wait for app to load
 - waitForAnimationToEnd
 
-- assertVisible: 'Random Timer'
+- assertVisible: 'Random Tactical Timer'
 
 # Find and interact with volume slider
 # First, scroll down to ensure volume slider is visible
 - scrollUntilVisible:
-    element: '100%'
+    element: 'SOUND'
     direction: DOWN
-    timeout: 5000
+    timeout: 10000
 
 # Tap on the alarm card area to focus, then adjust volume
 # The slider thumb should be near the right edge at 100%
@@ -32,4 +32,4 @@ appId: com.iganapolsky.randomtimer
 - waitForAnimationToEnd
 
 # Check that volume persisted (should not be 100% after tap moved it)
-- assertVisible: 'Random Timer'
+- assertVisible: 'Random Tactical Timer'

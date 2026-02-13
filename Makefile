@@ -72,7 +72,7 @@ run-ios-device:
 
 # Run on iOS Simulator
 run-ios-sim:
-	@SIM=$$(xcrun simctl list devices available | grep "iPhone" | grep -v unavailable | head -1 | sed 's/.*(\(.*\)) .*/\1/'); \
+	@SIM=$$(xcrun simctl list devices available | grep "iPhone" | grep -v unavailable | head -1 | awk -F '[()]' '{print $$2}'); \
 	if [ -z "$$SIM" ]; then \
 		echo "ERROR: No iOS simulators available."; \
 		exit 1; \
@@ -82,13 +82,17 @@ run-ios-sim:
 	xcrun simctl boot $$SIM 2>/dev/null || true; \
 	open -a Simulator; \
 	echo "==> Building for simulator..."; \
+	set -e; set -o pipefail; \
 	xcodebuild -project $(IOS_PROJECT) \
 		-scheme $(IOS_SCHEME) \
 		-destination "id=$$SIM" \
 		-configuration Debug \
-		build 2>&1 | tail -5; \
+		build \
+		CODE_SIGNING_ALLOWED=NO \
+		2>&1 | tail -5; \
+	APP_PATH="$$(xcodebuild -project $(IOS_PROJECT) -scheme $(IOS_SCHEME) -destination "id=$$SIM" -configuration Debug -showBuildSettings 2>/dev/null | grep ' CONFIGURATION_BUILD_DIR' | grep -v EXCLUDED | head -1 | awk '{print $$3}')/$(IOS_SCHEME).app"; \
 	echo "==> Installing and launching on simulator..."; \
-	xcrun simctl install $$SIM build/Debug-iphonesimulator/$(IOS_SCHEME).app; \
+	xcrun simctl install $$SIM "$$APP_PATH"; \
 	xcrun simctl launch $$SIM com.igorganapolsky.randomtimer
 
 # Fix iOS device install hanging (CoreDevice sandbox exhaustion bug)

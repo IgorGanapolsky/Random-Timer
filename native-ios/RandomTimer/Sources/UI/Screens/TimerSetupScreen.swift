@@ -25,11 +25,8 @@ struct TimerSetupScreen: View {
                         TimeRangeSliders(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
-                            onMinChange: { newMin in
-                                updateConfig(minSeconds: newMin)
-                            },
-                            onMaxChange: { newMax in
-                                updateConfig(maxSeconds: newMax)
+                            onRangeChange: { newMin, newMax in
+                                updateConfig(minSeconds: newMin, maxSeconds: newMax)
                             }
                         )
                     }
@@ -168,8 +165,7 @@ struct TimerSetupScreen: View {
 private struct TimeRangeSliders: View {
     let minValue: Int
     let maxValue: Int
-    let onMinChange: (Int) -> Void
-    let onMaxChange: (Int) -> Void
+    let onRangeChange: (Int, Int) -> Void
 
     var body: some View {
         VStack {
@@ -198,37 +194,49 @@ private struct TimeRangeSliders: View {
             Text("Minimum: \(TimeInterval(minValue).formattedDuration)")
                 .font(.caption2)
                 .foregroundColor(.textMuted)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Slider(
                 value: Binding(
                     get: { Double(minValue) },
                     set: { newVal in
-                        let clamped = min(Int(newVal), maxValue - 30)
-                        onMinChange(clamped)
+                        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+                            currentMinSeconds: minValue,
+                            currentMaxSeconds: maxValue,
+                            newMinSeconds: Int(newVal)
+                        )
+                        onRangeChange(adjusted.min, adjusted.max)
                     }
                 ),
                 in: 0...270,
                 step: 5
             )
             .tint(.accentPrimary)
+            .accessibilityIdentifier("minimumTimeSlider")
 
             // Max slider
             Text("Maximum: \(TimeInterval(maxValue).formattedDuration)")
                 .font(.caption2)
                 .foregroundColor(.textMuted)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Slider(
                 value: Binding(
                     get: { Double(maxValue) },
                     set: { newVal in
-                        let clamped = max(Int(newVal), minValue + 30)
-                        onMaxChange(clamped)
+                        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+                            currentMinSeconds: minValue,
+                            currentMaxSeconds: maxValue,
+                            newMaxSeconds: Int(newVal)
+                        )
+                        onRangeChange(adjusted.min, adjusted.max)
                     }
                 ),
                 in: 30...300,
                 step: 5
             )
             .tint(.accentPrimary)
+            .accessibilityIdentifier("maximumTimeSlider")
         }
         .transaction { $0.animation = nil }
     }

@@ -77,6 +77,75 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 }
 
+// MARK: - Range Adjustment
+
+/// Shared business rules for the "Goes Off In This Range" sliders.
+///
+/// UX requirement:
+/// - Min/max must keep at least `minGapSeconds` between them.
+/// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
+enum TimeRangeAdjuster {
+    static let defaultMinSecondsLimit = 0
+    static let defaultMaxSecondsLimit = 300
+    static let defaultMinGapSeconds = 30
+
+    static func adjustForMinChange(
+        currentMinSeconds: Int,
+        currentMaxSeconds: Int,
+        newMinSeconds: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
+        minGapSeconds: Int = defaultMinGapSeconds
+    ) -> (min: Int, max: Int) {
+        precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
+        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(newMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(currentMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+
+        if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
+    }
+
+    static func adjustForMaxChange(
+        currentMinSeconds: Int,
+        currentMaxSeconds: Int,
+        newMaxSeconds: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
+        minGapSeconds: Int = defaultMinGapSeconds
+    ) -> (min: Int, max: Int) {
+        precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
+        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(newMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(currentMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+
+        if adjustedMaxSeconds < adjustedMinSeconds + minGapSeconds {
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
+    }
+}
+
 // MARK: - Timer Status
 
 public enum TimerStatus: String, Codable, Sendable {

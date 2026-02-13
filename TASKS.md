@@ -10,7 +10,7 @@ This file is the task source-of-truth for iterative agent work.
 
 ## Backlog (Next)
 
-- [ ] **Range Slider: Drag Min Pushes Max (>= 30s gap)**
+- [x] **Range Slider: Drag Min Pushes Max (>= 30s gap)**
   - Acceptance:
     - Dragging min beyond `max - 30s` pushes max forward to keep a 30s minimum gap (until max hits 300s).
     - Dragging max below `min + 30s` pulls min back to keep a 30s minimum gap (until min hits 0s).
@@ -19,6 +19,11 @@ This file is the task source-of-truth for iterative agent work.
     - Android unit tests for range adjustment helper.
     - iOS unit tests for range adjustment helper.
     - Maestro flow updated/added to exercise range updates.
+
+  - Evidence (local):
+    - `make verify` (Android unit + debug build, iOS unit tests)
+    - `make run-android-emulator` + `maestro test -p android --device emulator-5554 .maestro/smoke-test.yaml .maestro/persistence-test.yaml`
+    - `make run-ios-sim` + `maestro test -p ios --device <SIM_UDID> .maestro/ios-smoke-test.yaml`
 
 - [ ] **Bluetooth Headset Button Stops Alarm**
   - Acceptance:
@@ -57,4 +62,3 @@ This file is the task source-of-truth for iterative agent work.
   - Tests:
     - Android instrumentation test for notification action intent handling (as feasible).
     - iOS unit/UI test for action wiring (as feasible).
-

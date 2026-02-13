@@ -4,9 +4,9 @@ appId: com.igorganapolsky.randomtimer
 - launchApp
 
 # Verify main screen elements are visible
-- assertVisible: 'Random Timer'
+- assertVisible: 'Random Tactical Timer'
 - assertVisible:
-    text: '.*Timer Range.*'
+    text: '.*Goes Off In This Range.*'
 - assertVisible: 'Start Timer'
 
 # Start the timer
