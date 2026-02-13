@@ -1,6 +1,6 @@
 # GitHub Copilot Setup Checklist
 
-This document lists the manual GitHub settings you need to configure to fully enable all Copilot features.
+This document lists the manual GitHub settings you need to configure to fully enable Copilot features for this repo.
 
 ## Required Plan
 
@@ -72,10 +72,12 @@ This document lists the manual GitHub settings you need to configure to fully en
 2. Click **Spaces** → **New Space**
 3. Name it "Random Timer"
 4. Add context:
-   - `CLAUDE.md` (architecture)
-   - `src/shared/theme/colors.ts`
-   - `src/shared/redux/store.ts`
-   - `src/shared/utils/storage/index.ts`
+   - `CLAUDE.md` (architecture + workflow)
+   - `native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt` (alarm/notifications/audio)
+   - `native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt` (core UX)
+   - `native-ios/RandomTimer/Sources/Services/TimerManager.swift` (core logic)
+   - `native-ios/RandomTimer/Sources/Services/NotificationService.swift` (alarm + audio session)
+   - `TASKS.md` (agent task loop)
 5. Share with your organization if needed
 
 ---
@@ -85,9 +87,9 @@ This document lists the manual GitHub settings you need to configure to fully en
 | File                                                | Purpose                                           |
 | --------------------------------------------------- | ------------------------------------------------- |
 | `.github/copilot-instructions.md`                   | Main Copilot instructions (read on every request) |
-| `.github/instructions/react-native.instructions.md` | RN-specific patterns for `src/**/*.tsx`           |
-| `.github/instructions/redux.instructions.md`        | Redux patterns for `src/shared/redux/**/*.ts`     |
-| `.github/instructions/theme.instructions.md`        | Theme usage for all source files                  |
+| `.github/instructions/android.instructions.md`      | Android patterns for `native-android/**/*.kt`     |
+| `.github/instructions/ios.instructions.md`          | iOS patterns for `native-ios/**/*.swift`          |
+| `TASKS.md`                                          | Repo task loop + acceptance criteria              |
 
 ---
 
@@ -108,6 +110,7 @@ After enabling all settings, test:
 
 - Verify `.github/copilot-instructions.md` exists
 - Check that the file is on the default branch (develop)
+ - Ensure the deprecated React Native instructions have been removed (this repo is native)
 
 **Coding agent not working?**
 

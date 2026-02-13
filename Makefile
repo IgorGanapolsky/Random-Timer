@@ -1,4 +1,5 @@
 .PHONY: run-android-device run-android-emulator run-ios-device run-ios-sim fix-ios-device install-hooks
+.PHONY: verify verify-android verify-android-instrumentation verify-ios verify-ios-ui maestro-android maestro-ios
 
 ANDROID_DIR := native-android
 IOS_DIR := native-ios
@@ -107,3 +108,30 @@ install-hooks:
 	@cp scripts/pre-commit .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
 	@echo "✅ Pre-commit hook installed"
+
+# Verify (unit tests + builds)
+verify: verify-android verify-ios
+
+verify-android:
+	@echo "==> Android: unit tests + debug build"
+	@cd $(ANDROID_DIR) && ./gradlew testDebugUnitTest assembleDebug --no-daemon
+
+verify-android-instrumentation:
+	@echo "==> Android: instrumentation tests (requires emulator/device)"
+	@cd $(ANDROID_DIR) && ./gradlew connectedDebugAndroidTest --no-daemon
+
+verify-ios:
+	@echo "==> iOS: unit tests (simulator)"
+	@./scripts/ios_verify.sh
+
+verify-ios-ui:
+	@echo "==> iOS: UI tests (simulator)"
+	@./scripts/ios_verify.sh --ui
+
+maestro-android:
+	@echo "==> Maestro: Android flows (requires emulator/device + maestro CLI)"
+	@maestro test .maestro/smoke-test.yaml
+
+maestro-ios:
+	@echo "==> Maestro: iOS flows (requires simulator + maestro CLI)"
+	@maestro test .maestro/ios-smoke-test.yaml
