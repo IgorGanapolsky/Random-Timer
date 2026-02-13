@@ -8,16 +8,16 @@ Random Tactical Timer ("the App") is developed by Igor Ganapolsky. This privacy 
 
 ## Data Collection
 
-The App does **not** collect, store, or transmit any personal data. Specifically:
+The App does **not** collect personal information such as your name, email, phone number, or address.
+The App may send limited, anonymous diagnostics and usage data through the services listed below.
 
 - **No account required** — the App works without sign-up or login
-- **No personal information collected** — no name, email, phone number, or address
 - **No location data** — the App does not access your location
 - **No advertising** — the App contains no ads and no advertising ID usage
 
 ## Analytics
 
-The App uses **PostHog** for anonymous usage analytics to help improve the user experience. This data includes:
+The App may use **PostHog** for anonymous usage analytics to help improve the user experience when analytics is enabled. This data may include:
 
 - Anonymous event data (e.g., timer started, timer completed)
 - Device type and OS version
@@ -25,6 +25,16 @@ The App uses **PostHog** for anonymous usage analytics to help improve the user 
 - No personally identifiable information is collected
 
 Analytics data is processed by PostHog and is not sold or shared with third parties for advertising purposes.
+
+## Firebase Analytics
+
+The App uses **Firebase Analytics** to understand feature usage and improve the App. Firebase Analytics may automatically collect:
+
+- App interactions and usage events (e.g., session start, screen views)
+- Device and app information (device model, OS version, app version)
+- A Firebase-generated app instance identifier
+
+This data is used for product analytics and is not used for advertising.
 
 ## Firebase Crashlytics
 
@@ -35,11 +45,9 @@ The App uses Firebase Crashlytics to collect anonymous crash reports. This helps
 - Stack traces from crashes
 - No personally identifiable information
 
-You can opt out of crash reporting in your device settings.
-
 ## Data Storage
 
-All timer settings and preferences are stored locally on your device. Nothing is uploaded to any server.
+All timer settings and preferences are stored locally on your device. Crash reports and analytics events (if enabled) are sent to their respective providers as described above.
 
 ## Children's Privacy
 
