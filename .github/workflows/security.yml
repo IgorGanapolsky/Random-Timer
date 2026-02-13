@@ -22,6 +22,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         scan-type: [dependencies, code, mobile]
     steps:
@@ -35,19 +36,21 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: native-android/package-lock.json
 
       # Dependency Security Scans
       - name: Run npm audit
         if: matrix.scan-type == 'dependencies'
+        working-directory: native-android
         run: npm audit --json > npm-audit.json || true
 
       - name: Run Snyk
-        if: matrix.scan-type == 'dependencies'
+        if: matrix.scan-type == 'dependencies' && secrets.SNYK_TOKEN != ''
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: --severity-threshold=high --file=native-android/package-lock.json
 
       - name: OWASP Dependency Check
         if: matrix.scan-type == 'dependencies'
@@ -90,6 +93,7 @@ jobs:
 
       - name: Run npm-audit-helper
         if: matrix.scan-type == 'dependencies'
+        working-directory: native-android
         run: npx npm-audit-helper@latest --audit-level=moderate
 
       - name: Upload Security Results
@@ -108,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify Security Issues
-        if: always()
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
