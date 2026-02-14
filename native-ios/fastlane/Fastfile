@@ -35,7 +35,7 @@ platform :ios do
       app_identifier: "com.igorganapolsky.randomtimer",
       app_name: "Random Tactical Timer",
       language: "en-US",
-      app_version: "1.1.0",
+      app_version: "1.1.1",
       sku: "randomtimer001",
       team_id: ENV["FASTLANE_TEAM_ID"]
     )

@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Preflight release checks (iOS)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
         with:
@@ -60,6 +63,9 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+
+      - name: Preflight release checks (Android)
+        run: bash scripts/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
