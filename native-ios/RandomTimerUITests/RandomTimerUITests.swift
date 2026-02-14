@@ -31,4 +31,23 @@ final class RandomTimerUITests: XCTestCase {
         let restartedLabel = app.staticTexts["Timer restarted"]
         XCTAssertTrue(restartedLabel.waitForExistence(timeout: 2.0))
     }
+
+    func testTappingTimerCircleStopsWhenAlarmIsActive() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-state", "alarm"]
+        app.launch()
+
+        // CircularTimerView is labeled "Timer complete" for both ALARM and COMPLETE.
+        let circle = app.otherElements["Timer complete"]
+        if circle.waitForExistence(timeout: 2.0) {
+            circle.tap()
+        } else {
+            let circleFallback = app.staticTexts["Timer complete"]
+            XCTAssertTrue(circleFallback.waitForExistence(timeout: 2.0))
+            circleFallback.tap()
+        }
+
+        // After dismiss, we should be back on the setup screen.
+        XCTAssertTrue(app.buttons["Start Timer"].waitForExistence(timeout: 2.0))
+    }
 }

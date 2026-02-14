@@ -65,6 +65,12 @@ struct ActiveTimerScreen: View {
                         status: state.status,
                         rangeText: rangeText // ALWAYS show range, never countdown
                     )
+                    .onTapGesture {
+                        guard isComplete else { return }
+                        Task {
+                            await timerManager.dismissAlarm()
+                        }
+                    }
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
                     .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))

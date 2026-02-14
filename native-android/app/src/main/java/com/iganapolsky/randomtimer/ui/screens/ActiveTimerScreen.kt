@@ -154,21 +154,21 @@ fun ActiveTimerScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-            // Tap circle during alarm to silence (like iOS)
-            val isAlarming = state.status == TimerStatus.ALARM
+            // Tap circle during alarm/complete to stop (same as Stop button)
+            val isAlarmOrComplete = state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE
             CircularTimer(
                 progress = if (isComplete) 1f else 0f, // Full progress ring when complete
                 status = state.status,
                 modifier = Modifier
                     .size(280.dp)
                     .then(
-                        if (isAlarming) {
+                        if (isAlarmOrComplete) {
                             Modifier.clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onSilence()
+                                onDismissAlarm()
                             }
                         } else {
                             Modifier
