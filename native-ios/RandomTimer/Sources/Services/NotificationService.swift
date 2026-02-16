@@ -11,7 +11,6 @@ import os
 final class NotificationService: NSObject, TimerNotificationHandling {
 
     private var audioPlayer: AVAudioPlayer?
-    private let notificationCenter = UNUserNotificationCenter.current()
     /// Set to true when user taps the alarm notification
     private(set) var didTapAlarmNotification = false
 
@@ -33,7 +32,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
     override init() {
         super.init()
-        notificationCenter.delegate = self
+        UNUserNotificationCenter.current().delegate = self
         registerNotificationActions()
         prepareHapticEngine()
         // Notification permission deferred to first timer start (not on launch)
@@ -47,7 +46,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             return
         }
         do {
-            let granted = try await notificationCenter.requestAuthorization(
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(
                 options: [.alert, .sound]
             )
             Logger.notification.debug("Notification permission granted: \(granted)")
@@ -78,7 +77,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
             options: [.customDismissAction]
         )
 
-        notificationCenter.setNotificationCategories([alarmCategory])
+        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory])
     }
 
     // MARK: - Notifications
@@ -105,15 +104,15 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         )
 
         do {
-            try await notificationCenter.add(request)
+            try await UNUserNotificationCenter.current().add(request)
         } catch {
             Logger.notification.error("Failed to schedule notification: \(error)")
         }
     }
 
     func cancelPendingNotifications() async {
-        notificationCenter.removeAllPendingNotificationRequests()
-        notificationCenter.removeAllDeliveredNotifications()
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
     // MARK: - Audio
