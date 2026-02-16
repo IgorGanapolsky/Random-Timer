@@ -11,11 +11,11 @@ import android.view.KeyEvent
 object MediaButtonHandler {
 
     /**
-     * Returns true when the given key event should stop/dismiss the alarm.
+     * Returns true when the given key event should silence the alarm.
      *
      * We only handle ACTION_DOWN to avoid double-triggering on key up.
      */
-    fun shouldDismissAlarm(keyCode: Int, action: Int): Boolean {
+    fun shouldSilenceAlarm(keyCode: Int, action: Int): Boolean {
         if (action != KeyEvent.ACTION_DOWN) return false
 
         return when (keyCode) {
@@ -30,4 +30,3 @@ object MediaButtonHandler {
         }
     }
 }
-

@@ -60,6 +60,13 @@ platform :ios do
     )
   end
 
+  desc "Verify build processed on TestFlight"
+  lane :verify do |options|
+    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj")
+    sh("python3 #{File.expand_path('../../scripts/verify_release.py', __dir__)} " \
+       "--platform ios --version #{version}")
+  end
+
   desc "Setup certificates and profiles"
   lane :setup do
     if ENV["MATCH_GIT_URL"]

@@ -32,25 +32,38 @@ raise SystemExit("No available iPhone simulator found")
 
 echo "==> Using simulator id: ${SIM_ID}"
 
-SKIP_UI_ARGS=()
+echo "==> Build for testing..."
 if [[ "${include_ui_tests}" == "false" ]]; then
-  SKIP_UI_ARGS+=( -skip-testing:RandomTimerUITests )
+  xcodebuild build-for-testing \
+    -project RandomTimer.xcodeproj \
+    -scheme RandomTimer \
+    -destination "platform=iOS Simulator,id=${SIM_ID}" \
+    -skip-testing:RandomTimerUITests \
+    -quiet \
+    CODE_SIGNING_ALLOWED=NO
+else
+  xcodebuild build-for-testing \
+    -project RandomTimer.xcodeproj \
+    -scheme RandomTimer \
+    -destination "platform=iOS Simulator,id=${SIM_ID}" \
+    -quiet \
+    CODE_SIGNING_ALLOWED=NO
 fi
 
-echo "==> Build for testing..."
-xcodebuild build-for-testing \
-  -project RandomTimer.xcodeproj \
-  -scheme RandomTimer \
-  -destination "platform=iOS Simulator,id=${SIM_ID}" \
-  "${SKIP_UI_ARGS[@]}" \
-  -quiet \
-  CODE_SIGNING_ALLOWED=NO
-
 echo "==> Run tests..."
-xcodebuild test \
-  -project RandomTimer.xcodeproj \
-  -scheme RandomTimer \
-  -destination "platform=iOS Simulator,id=${SIM_ID}" \
-  "${SKIP_UI_ARGS[@]}" \
-  -quiet \
-  CODE_SIGNING_ALLOWED=NO
+if [[ "${include_ui_tests}" == "false" ]]; then
+  xcodebuild test \
+    -project RandomTimer.xcodeproj \
+    -scheme RandomTimer \
+    -destination "platform=iOS Simulator,id=${SIM_ID}" \
+    -skip-testing:RandomTimerUITests \
+    -quiet \
+    CODE_SIGNING_ALLOWED=NO
+else
+  xcodebuild test \
+    -project RandomTimer.xcodeproj \
+    -scheme RandomTimer \
+    -destination "platform=iOS Simulator,id=${SIM_ID}" \
+    -quiet \
+    CODE_SIGNING_ALLOWED=NO
+fi

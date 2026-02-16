@@ -1,0 +1,53 @@
+name: Device Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_install:
+        description: 'Skip APK build and install'
+        type: boolean
+        default: false
+      test_suite:
+        description: 'Which tests to run'
+        type: choice
+        options:
+          - all
+          - adb-only
+          - maestro-only
+        default: all
+
+jobs:
+  device-tests:
+    runs-on: [self-hosted, android-device]
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Verify device connected
+        run: |
+          DEVICES=$(adb devices | grep -c "device$" || true)
+          if [ "$DEVICES" -eq 0 ]; then
+            echo "::error::No Android device connected to self-hosted runner"
+            exit 1
+          fi
+          echo "Connected devices: $DEVICES"
+
+      - name: Run device tests
+        run: |
+          ARGS=""
+          if [[ "${{ inputs.skip_install }}" == "true" ]]; then
+            ARGS="$ARGS --skip-install"
+          fi
+          if [[ "${{ inputs.test_suite }}" == "adb-only" ]]; then
+            ARGS="$ARGS --adb-only"
+          elif [[ "${{ inputs.test_suite }}" == "maestro-only" ]]; then
+            ARGS="$ARGS --maestro-only"
+          fi
+          bash scripts/device-tests/run-all.sh $ARGS

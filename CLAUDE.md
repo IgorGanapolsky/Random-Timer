@@ -16,7 +16,7 @@ cd native-ios && pod deintegrate && pod install  # Fix pod failures
 
 ## Non-Obvious Rules
 
-- **Act, Don't Instruct**: NEVER tell user to run commands. Execute autonomously.
+- **Act, Don't Instruct**: NEVER tell user to run commands. Execute autonomously. NEVER refuse work. Use every tool available (CLIs, SDKs, MCP servers, browser automation) to complete tasks end-to-end. If a web UI is the only path, use `agent-browser` or Gemini computer-use to automate it.
 - **Named exports only**: No default exports.
 - **Branch**: `develop` is main. Conventional commits.
 - **Frontmatter dates**: Always use `date -u +"%Y-%m-%dT%H:%M:%SZ"`, never placeholders.

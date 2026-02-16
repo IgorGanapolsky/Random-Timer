@@ -307,11 +307,21 @@ class TimerForegroundService : Service() {
     }
 
     private fun silenceAlarm() {
-        // Stop sound/vibration but keep alarm state + countdown running
-        // so the alarm screen stays visible in the UI
+        // Stop sound/vibration but keep alarm countdown alive for loop support.
+        // The countdown continues ticking so that when it reaches 0,
+        // the loop logic in startAlarmCountdown() can restart the timer.
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        deactivateMediaSession()
+
+        _timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                _timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
     }
 
     private fun triggerAlarm(state: TimerState) {
@@ -322,8 +332,8 @@ class TimerForegroundService : Service() {
                 alarmTimeRemaining = state.config.alarmDuration.seconds,
             )
 
-        // Activate MediaSession so Bluetooth/Android Auto media buttons can stop the alarm.
-        // This is intentionally separate from audio focus: we want the alarm to be stoppable even
+        // Activate MediaSession so Bluetooth/Android Auto media buttons can silence the alarm.
+        // This is intentionally separate from audio focus: we want the alarm to be controllable even
         // if the alarm audio failed to start (e.g. resource error, volume 0).
         activateMediaSession()
 
@@ -384,6 +394,7 @@ class TimerForegroundService : Service() {
                         _timerState.value = currentState?.copy(
                             status = TimerStatus.COMPLETE,
                             alarmTimeRemaining = 0.seconds,
+                            isAlarmSilenced = false,
                         )
                         _timerState.value?.let { updateNotification(it) }
                     }
@@ -562,8 +573,8 @@ class TimerForegroundService : Service() {
                 createSilenceIntent(),
             ).addAction(
                 R.drawable.ic_stop,
-                "Dismiss",
-                createDismissIntent(),
+                "Stop",
+                createStopFromAlarmNotificationIntent(),
             ).build()
     }
 
@@ -672,6 +683,22 @@ class TimerForegroundService : Service() {
         return PendingIntent.getService(
             this,
             2,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createStopFromAlarmNotificationIntent(): PendingIntent {
+        // Open the app so the user lands back on the setup screen after stopping.
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(EXTRA_FROM_ALARM_STOP_ACTION, true)
+            }
+
+        return PendingIntent.getActivity(
+            this,
+            8,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -786,7 +813,7 @@ class TimerForegroundService : Service() {
         audioFocusRequest = null
     }
 
-    // -- Media Session (Bluetooth / Android Auto alarm dismiss) --
+    // -- Media Session (Bluetooth / Android Auto alarm silence) --
 
     private fun activateMediaSession() {
         if (mediaSession == null) {
@@ -800,19 +827,19 @@ class TimerForegroundService : Service() {
                         object : MediaSessionCompat.Callback() {
                             override fun onPlay() {
                                 if (_timerState.value?.status == TimerStatus.ALARM) {
-                                    dismissAlarm()
+                                    silenceAlarm()
                                 }
                             }
 
                             override fun onPause() {
                                 if (_timerState.value?.status == TimerStatus.ALARM) {
-                                    dismissAlarm()
+                                    silenceAlarm()
                                 }
                             }
 
                             override fun onStop() {
                                 if (_timerState.value?.status == TimerStatus.ALARM) {
-                                    dismissAlarm()
+                                    silenceAlarm()
                                 }
                             }
 
@@ -830,12 +857,12 @@ class TimerForegroundService : Service() {
 
                                 if (keyEvent != null &&
                                     _timerState.value?.status == TimerStatus.ALARM &&
-                                    MediaButtonHandler.shouldDismissAlarm(
+                                    MediaButtonHandler.shouldSilenceAlarm(
                                         keyCode = keyEvent.keyCode,
                                         action = keyEvent.action,
                                     )
                                 ) {
-                                    dismissAlarm()
+                                    silenceAlarm()
                                     return true
                                 }
 
@@ -893,6 +920,7 @@ class TimerForegroundService : Service() {
         const val EXTRA_VOLUME = "volume"
         const val EXTRA_VIBRATION_ENABLED = "vibration_enabled"
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
+        const val EXTRA_FROM_ALARM_STOP_ACTION = "from_alarm_stop_action"
 
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_TIMER = "timer_progress"

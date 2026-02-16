@@ -33,9 +33,15 @@ final class TimerManager: ObservableObject {
         // Load config synchronously from storage to avoid UI flicker
         self.config = storageService.loadConfigSync() ?? .default
 
-        // Wire Bluetooth/CarPlay media button and notification action callbacks
+        // Wire Bluetooth/CarPlay media button and notification action callbacks.
+        // Media button behavior must match timer-circle tap (silence + stay on timer screen).
         if let notificationService = notificationService as? NotificationService {
-            notificationService.onMediaButtonDismiss = { [weak self] in
+            notificationService.onMediaButtonSilence = { [weak self] in
+                Task { @MainActor in
+                    self?.silenceAlarm()
+                }
+            }
+            notificationService.onNotificationStop = { [weak self] in
                 Task { @MainActor in
                     await self?.dismissAlarm()
                 }

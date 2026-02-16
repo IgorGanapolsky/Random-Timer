@@ -7,39 +7,38 @@ import org.junit.Test
 class MediaButtonHandlerTest {
 
     @Test
-    fun `ACTION_DOWN on play-pause dismisses alarm`() {
-        val dismiss = MediaButtonHandler.shouldDismissAlarm(
+    fun `ACTION_DOWN on play-pause silences alarm`() {
+        val silence = MediaButtonHandler.shouldSilenceAlarm(
             keyCode = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
             action = KeyEvent.ACTION_DOWN
         )
-        assertThat(dismiss).isTrue()
+        assertThat(silence).isTrue()
     }
 
     @Test
     fun `ACTION_UP is ignored`() {
-        val dismiss = MediaButtonHandler.shouldDismissAlarm(
+        val silence = MediaButtonHandler.shouldSilenceAlarm(
             keyCode = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
             action = KeyEvent.ACTION_UP
         )
-        assertThat(dismiss).isFalse()
+        assertThat(silence).isFalse()
     }
 
     @Test
     fun `non-media key is ignored`() {
-        val dismiss = MediaButtonHandler.shouldDismissAlarm(
+        val silence = MediaButtonHandler.shouldSilenceAlarm(
             keyCode = KeyEvent.KEYCODE_VOLUME_UP,
             action = KeyEvent.ACTION_DOWN
         )
-        assertThat(dismiss).isFalse()
+        assertThat(silence).isFalse()
     }
 
     @Test
-    fun `headset hook dismisses alarm`() {
-        val dismiss = MediaButtonHandler.shouldDismissAlarm(
+    fun `headset hook silences alarm`() {
+        val silence = MediaButtonHandler.shouldSilenceAlarm(
             keyCode = KeyEvent.KEYCODE_HEADSETHOOK,
             action = KeyEvent.ACTION_DOWN
         )
-        assertThat(dismiss).isTrue()
+        assertThat(silence).isTrue()
     }
 }
-

@@ -32,7 +32,7 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(restartedLabel.waitForExistence(timeout: 2.0))
     }
 
-    func testTappingTimerCircleStopsWhenAlarmIsActive() {
+    func testTappingTimerCircleSilencesAlarmAndStaysOnScreen() {
         let app = XCUIApplication()
         app.launchArguments += ["-ui-test-state", "alarm"]
         app.launch()
@@ -47,7 +47,25 @@ final class RandomTimerUITests: XCTestCase {
             circleFallback.tap()
         }
 
-        // After dismiss, we should be back on the setup screen.
-        XCTAssertTrue(app.buttons["Start Timer"].waitForExistence(timeout: 2.0))
+        // After tap, alarm silenced — user stays on timer screen with Stop/Reset buttons.
+        XCTAssertTrue(app.buttons["Stop"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.buttons["Reset"].waitForExistence(timeout: 2.0))
+        // Should NOT navigate back to setup.
+        XCTAssertFalse(app.buttons["Start Timer"].exists)
+    }
+
+    func testLandscapeShowsActionButtons() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-state", "alarm"]
+        app.launch()
+
+        let originalOrientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = originalOrientation }
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+
+        let stopButton = app.buttons["Stop"]
+        XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(stopButton.isHittable)
     }
 }

@@ -1,5 +1,7 @@
 .PHONY: run-android-device run-android-emulator run-ios-device run-ios-sim fix-ios-device install-hooks
 .PHONY: verify verify-android verify-android-instrumentation verify-ios verify-ios-ui maestro-android maestro-ios
+.PHONY: playwright-install playwright-install-agent-browser playwright-verify-local playwright-verify-strict playwright-store-console playwright-store-console-agent playwright-sync-auth-secrets
+.PHONY: device-tests device-tests-adb phoneclaw-visual
 
 ANDROID_DIR := native-android
 IOS_DIR := native-ios
@@ -139,3 +141,42 @@ maestro-android:
 maestro-ios:
 	@echo "==> Maestro: iOS flows (requires simulator + maestro CLI)"
 	@maestro test .maestro/ios-smoke-test.yaml
+
+playwright-install:
+	@echo "==> Playwright: install dependencies + chromium"
+	@cd tests/playwright && npm ci && npm run install:browsers
+
+playwright-install-agent-browser:
+	@echo "==> Installing agent-browser CLI globally"
+	@npm install -g agent-browser@0.10.0
+
+playwright-verify-local:
+	@echo "==> Playwright: quality gate + local deterministic checks"
+	@cd tests/playwright && npm ci && npm run verify
+
+playwright-verify-strict:
+	@echo "==> Playwright: strict store-readiness gate"
+	@cd tests/playwright && npm ci && npm run verify:strict
+
+playwright-store-console:
+	@echo "==> Playwright: read-only authenticated store-console checks"
+	@cd tests/playwright && npm ci && npm run test:console
+
+playwright-store-console-agent:
+	@echo "==> agent-browser: read-only authenticated store-console checks"
+	@cd tests/playwright && npm ci && npm run test:console:agent-browser
+
+playwright-sync-auth-secrets:
+	@echo "==> Playwright: sync .auth storage states to GitHub Actions secrets"
+	@cd tests/playwright && npm ci && npm run auth:sync-secrets
+
+# Device tests (requires connected Android device/emulator)
+device-tests:
+	@bash scripts/device-tests/run-all.sh
+
+device-tests-adb:
+	@bash scripts/device-tests/run-all.sh --adb-only
+
+phoneclaw-visual:
+	@echo "==> PhoneClaw: pushing visual test scripts to device"
+	@bash scripts/device-tests/phoneclaw/setup-device.sh

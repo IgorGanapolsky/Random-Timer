@@ -346,6 +346,149 @@ class TimerStateFlowTest {
         assertThat(timerState.value).isNull()
     }
 
+    // -- silenceAlarm state transition tests --
+
+    @Test
+    fun `silenceAlarm keeps ALARM status and sets silenced flag`() {
+        val timerState = MutableStateFlow<TimerState?>(null)
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 2.minutes,
+            remainingDuration = kotlin.time.Duration.ZERO,
+            status = TimerStatus.ALARM,
+            alarmTimeRemaining = 8.seconds
+        )
+        timerState.value = state
+
+        // Simulate silenceAlarm() logic — keeps ALARM, sets isAlarmSilenced
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        assertThat(timerState.value?.status).isEqualTo(TimerStatus.ALARM)
+        assertThat(timerState.value?.isAlarmSilenced).isTrue()
+        // alarmTimeRemaining is NOT zeroed — countdown keeps ticking
+        assertThat(timerState.value?.alarmTimeRemaining).isEqualTo(8.seconds)
+    }
+
+    @Test
+    fun `silenceAlarm preserves state and alarm countdown`() {
+        val timerState = MutableStateFlow<TimerState?>(null)
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 2.minutes,
+            remainingDuration = kotlin.time.Duration.ZERO,
+            status = TimerStatus.ALARM,
+            alarmTimeRemaining = 5.seconds
+        )
+        timerState.value = state
+
+        // Simulate silenceAlarm()
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        // State is NOT null — user stays on timer screen
+        assertThat(timerState.value).isNotNull()
+        assertThat(timerState.value?.targetDuration).isEqualTo(2.minutes)
+        assertThat(timerState.value?.status).isEqualTo(TimerStatus.ALARM)
+    }
+
+    @Test
+    fun `silenceAlarm does nothing when state is RUNNING`() {
+        val timerState = MutableStateFlow<TimerState?>(null)
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 2.minutes,
+            remainingDuration = 1.minutes,
+            status = TimerStatus.RUNNING
+        )
+        timerState.value = state
+
+        // Simulate silenceAlarm() — should not modify RUNNING state
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        assertThat(timerState.value?.status).isEqualTo(TimerStatus.RUNNING)
+        assertThat(timerState.value?.isAlarmSilenced).isFalse()
+    }
+
+    @Test
+    fun `silenceAlarm does nothing when state is COMPLETE`() {
+        val timerState = MutableStateFlow<TimerState?>(null)
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 2.minutes,
+            remainingDuration = kotlin.time.Duration.ZERO,
+            status = TimerStatus.COMPLETE
+        )
+        timerState.value = state
+
+        // Simulate silenceAlarm() — should not modify COMPLETE state
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        assertThat(timerState.value?.status).isEqualTo(TimerStatus.COMPLETE)
+    }
+
+    @Test
+    fun `silenceAlarm does nothing when state is null`() {
+        val timerState = MutableStateFlow<TimerState?>(null)
+
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        assertThat(timerState.value).isNull()
+    }
+
+    @Test
+    fun `silenceAlarm preserves loop config`() {
+        val loopConfig = defaultConfig.copy(repeatEnabled = true)
+        val timerState = MutableStateFlow<TimerState?>(null)
+        val state = TimerState(
+            config = loopConfig,
+            targetDuration = 2.minutes,
+            remainingDuration = kotlin.time.Duration.ZERO,
+            status = TimerStatus.ALARM,
+            alarmTimeRemaining = 5.seconds
+        )
+        timerState.value = state
+
+        timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                timerState.value = current.copy(
+                    isAlarmSilenced = true,
+                )
+            }
+        }
+
+        assertThat(timerState.value?.status).isEqualTo(TimerStatus.ALARM)
+        assertThat(timerState.value?.config?.repeatEnabled).isTrue()
+    }
+
     @Test
     fun `media session should deactivate when alarm countdown completes`() {
         val timerState = MutableStateFlow<TimerState?>(null)

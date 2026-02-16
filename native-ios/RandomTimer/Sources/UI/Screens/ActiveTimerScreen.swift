@@ -3,6 +3,7 @@ import SwiftUI
 /// Screen shown when a timer is actively counting down
 struct ActiveTimerScreen: View {
     @EnvironmentObject var timerManager: TimerManager
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var loopEnabled: Bool = false // Default to LOOP OFF
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
@@ -24,6 +25,10 @@ struct ActiveTimerScreen: View {
         return formatRangeText(minSeconds: config.minSeconds, maxSeconds: config.maxSeconds)
     }
 
+    private var isLandscape: Bool {
+        verticalSizeClass == .compact
+    }
+
     private func formatRangeText(minSeconds: Int, maxSeconds: Int) -> String {
         func formatTime(_ seconds: Int) -> String {
             if seconds >= 60 {
@@ -42,75 +47,142 @@ struct ActiveTimerScreen: View {
             Color.backgroundDark.ignoresSafeArea()
 
             if let state = state {
-                VStack(spacing: 32) {
-                    // Loop badge at top - use fixed height placeholder to prevent layout shift
-                    Group {
-                        if isComplete {
-                            // Invisible placeholder with same height as badge
-                            Color.clear.frame(height: 36)
-                        } else {
-                            loopBadge
+                Group {
+                    if isLandscape {
+                        HStack(spacing: 24) {
+                            VStack(spacing: 16) {
+                                Group {
+                                    if isComplete {
+                                        Color.clear.frame(height: 36)
+                                    } else {
+                                        loopBadge
+                                    }
+                                }
+                                .frame(height: 36)
+
+                                statusText(for: state)
+                                    .frame(height: 28)
+
+                                CircularTimerView(
+                                    progress: isComplete ? 1.0 : 0,
+                                    status: state.status,
+                                    rangeText: rangeText
+                                )
+                                .onTapGesture {
+                                    guard state.status == .alarm else { return }
+                                    timerManager.silenceAlarm()
+                                }
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
+                                .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
+
+                                Group {
+                                    if showResetFeedback {
+                                        Text("Timer restarted")
+                                            .font(.subheadline)
+                                            .foregroundColor(.accentPrimary)
+                                    } else if isComplete {
+                                        Text("Went off after \(state.targetDuration.formattedDuration)")
+                                            .font(.subheadline)
+                                            .foregroundColor(.textSecondary)
+                                    } else {
+                                        Text("You don't know when it will go off...")
+                                            .font(.subheadline)
+                                            .foregroundColor(.textMuted)
+                                    }
+                                }
+                                .frame(height: 20)
+
+                                Group {
+                                    if state.status == .alarm {
+                                        loopBadge
+                                    } else {
+                                        Color.clear
+                                    }
+                                }
+                                .frame(height: 36)
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            VStack {
+                                Spacer()
+                                actionButtons(for: state)
+                                    .padding(.bottom, 8)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                         }
-                    }
-                    .frame(height: 36)
-
-                    // Status text - fixed height to prevent layout shift
-                    statusText(for: state)
-                        .frame(height: 28)
-
-                    // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-                    // Hide progress ring since we're not revealing time info
-                    CircularTimerView(
-                        progress: isComplete ? 1.0 : 0, // Full progress ring when complete
-                        status: state.status,
-                        rangeText: rangeText // ALWAYS show range, never countdown
-                    )
-                    .onTapGesture {
-                        guard isComplete else { return }
-                        Task {
-                            await timerManager.dismissAlarm()
-                        }
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
-                    .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
-
-                    // Info message - fixed height placeholder to prevent layout shift
-                    Group {
-                        if showResetFeedback {
-                            Text("Timer restarted")
-                                .font(.subheadline)
-                                .foregroundColor(.accentPrimary)
-                        } else if isComplete {
-                            Text("Went off after \(state.targetDuration.formattedDuration)")
-                                .font(.subheadline)
-                                .foregroundColor(.textSecondary)
-                        } else {
-                            Text("You don't know when it will go off...")
-                                .font(.subheadline)
-                                .foregroundColor(.textMuted)
-                        }
-                    }
-                    .frame(height: 20)
-
-                    // Alarm state: show loop toggle (fixed position)
-                    Group {
-                        if state.status == .alarm {
-                            loopBadge
-                        } else {
-                            Color.clear
-                        }
-                    }
-                    .frame(height: 36)
-
-                    Spacer()
-
-                    // Action buttons
-                    actionButtons(for: state)
                         .padding(.horizontal, 24)
-                        .padding(.bottom, 32)
+                        .padding(.vertical, 24)
+                    } else {
+                        VStack(spacing: 32) {
+                            // Loop badge at top - use fixed height placeholder to prevent layout shift
+                            Group {
+                                if isComplete {
+                                    // Invisible placeholder with same height as badge
+                                    Color.clear.frame(height: 36)
+                                } else {
+                                    loopBadge
+                                }
+                            }
+                            .frame(height: 36)
+
+                            // Status text - fixed height to prevent layout shift
+                            statusText(for: state)
+                                .frame(height: 28)
+
+                            // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
+                            // Hide progress ring since we're not revealing time info
+                            CircularTimerView(
+                                progress: isComplete ? 1.0 : 0, // Full progress ring when complete
+                                status: state.status,
+                                rangeText: rangeText // ALWAYS show range, never countdown
+                            )
+                            .onTapGesture {
+                                guard state.status == .alarm else { return }
+                                timerManager.silenceAlarm()
+                            }
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
+                            .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
+
+                            // Info message - fixed height placeholder to prevent layout shift
+                            Group {
+                                if showResetFeedback {
+                                    Text("Timer restarted")
+                                        .font(.subheadline)
+                                        .foregroundColor(.accentPrimary)
+                                } else if isComplete {
+                                    Text("Went off after \(state.targetDuration.formattedDuration)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.textSecondary)
+                                } else {
+                                    Text("You don't know when it will go off...")
+                                        .font(.subheadline)
+                                        .foregroundColor(.textMuted)
+                                }
+                            }
+                            .frame(height: 20)
+
+                            // Alarm state: show loop toggle (fixed position)
+                            Group {
+                                if state.status == .alarm {
+                                    loopBadge
+                                } else {
+                                    Color.clear
+                                }
+                            }
+                            .frame(height: 36)
+
+                            Spacer()
+
+                            // Action buttons
+                            actionButtons(for: state)
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 32)
+                        }
+                        .padding(.top, 48)
+                    }
                 }
-                .padding(.top, 48)
             }
         }
         .navigationBarBackButtonHidden(true)

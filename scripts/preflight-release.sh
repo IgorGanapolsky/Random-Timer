@@ -175,7 +175,7 @@ if [[ "$PLATFORM" == "android" || "$PLATFORM" == "both" ]]; then
   # Screenshots
   SCREENSHOTS_DIR="$ANDROID_META/images/phoneScreenshots"
   if [[ -d "$SCREENSHOTS_DIR" ]]; then
-    check_dir_has_files "$SCREENSHOTS_DIR" "*.png" "Android phone screenshots" 2
+    check_dir_has_files "$SCREENSHOTS_DIR" "*.png" "Android phone screenshots" 3
     SHOT_COUNT=$(find "$SCREENSHOTS_DIR" -name "*.png" -type f | wc -l | tr -d ' ')
     info "Phone screenshots: $SHOT_COUNT found"
   else
@@ -233,14 +233,55 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
   check_file_nonempty "$IOS_META/support_url.txt" "iOS support_url.txt"
 
   # Screenshots (fastlane stores these in screenshots/, not metadata/)
+  # Enforce release-grade App Store coverage:
+  # - at least 3 iPhone 6.9"/6.5" screenshots
+  # - at least 3 iPad 13" screenshots
   IOS_SCREENSHOTS_DIR="$PROJECT_ROOT/native-ios/fastlane/screenshots/en-US"
   if [[ -d "$IOS_SCREENSHOTS_DIR" ]]; then
-    IOS_SHOTS=$(find "$IOS_SCREENSHOTS_DIR" -maxdepth 1 -name "*.png" -type f 2>/dev/null | wc -l | tr -d ' ')
-    if (( IOS_SHOTS < 2 )); then
-      err "iOS screenshots: expected at least 2 PNG files in $IOS_SCREENSHOTS_DIR, found $IOS_SHOTS"
-    else
-      info "iOS screenshots: $IOS_SHOTS found"
+    mapfile -t IOS_SCREENSHOTS < <(find "$IOS_SCREENSHOTS_DIR" -maxdepth 1 -name "*.png" -type f 2>/dev/null | sort)
+    IOS_SHOTS="${#IOS_SCREENSHOTS[@]}"
+    if (( IOS_SHOTS < 6 )); then
+      err "iOS screenshots: expected at least 6 PNG files in $IOS_SCREENSHOTS_DIR, found $IOS_SHOTS"
     fi
+
+    IPHONE_CLASS=0
+    IPAD_CLASS=0
+    OTHER_CLASS=0
+
+    for shot in "${IOS_SCREENSHOTS[@]}"; do
+      if ! command -v sips >/dev/null 2>&1; then
+        err "sips is required to validate iOS screenshot dimensions"
+        break
+      fi
+
+      SIZE=$(sips -g pixelWidth -g pixelHeight "$shot" 2>/dev/null | awk '/pixelWidth/{w=$2}/pixelHeight/{h=$2}END{print w"x"h}')
+      case "$SIZE" in
+        1320x2868|2868x1320|1290x2796|2796x1290|1284x2778|2778x1284|1242x2688|2688x1242)
+          IPHONE_CLASS=$((IPHONE_CLASS + 1))
+          ;;
+        2064x2752|2752x2064|2048x2732|2732x2048)
+          IPAD_CLASS=$((IPAD_CLASS + 1))
+          ;;
+        *)
+          OTHER_CLASS=$((OTHER_CLASS + 1))
+          ;;
+      esac
+    done
+
+    info "iOS screenshots: $IOS_SHOTS total (iPhone 6.9/6.5: $IPHONE_CLASS, iPad 13\": $IPAD_CLASS, other: $OTHER_CLASS)"
+
+    if (( IPHONE_CLASS < 3 )); then
+      err "iOS screenshots: need >=3 iPhone 6.9\"/6.5\" screenshots (found $IPHONE_CLASS)"
+    fi
+    if (( IPAD_CLASS < 3 )); then
+      err "iOS screenshots: need >=3 iPad 13\" screenshots (found $IPAD_CLASS)"
+    fi
+
+    for required_ipad in 5_ipad_setup.png 6_ipad_running.png 7_ipad_stopped.png; do
+      if [[ ! -f "$IOS_SCREENSHOTS_DIR/$required_ipad" ]]; then
+        err "iOS screenshots: missing required iPad capture $required_ipad"
+      fi
+    done
   else
     err "iOS screenshots directory missing: $IOS_SCREENSHOTS_DIR"
   fi
