@@ -44,6 +44,7 @@ jobs:
         env:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
           if [ -z "$MATCH_GIT_URL" ]; then
             echo "❌ MATCH_GIT_URL secret is not set"
@@ -51,6 +52,10 @@ jobs:
           fi
           if [ -z "$MATCH_PASSWORD" ]; then
             echo "❌ MATCH_PASSWORD secret is not set"
+            exit 1
+          fi
+          if [ -z "$MATCH_GIT_BASIC_AUTHORIZATION" ]; then
+            echo "❌ MATCH_GIT_BASIC_AUTHORIZATION secret is not set"
             exit 1
           fi
 
@@ -68,6 +73,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: fastlane setup
         working-directory: native-ios
 
