@@ -16,10 +16,18 @@ platform :ios do
     end
 
     # Build with automatic signing
+    xc_args = "-allowProvisioningUpdates"
+    if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
+      key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+      xc_args += " -authenticationKeyPath '#{key_path}'"
+      xc_args += " -authenticationKeyID '#{ENV['APPSTORE_KEY_ID']}'"
+      xc_args += " -authenticationKeyIssuerID '#{ENV['APPSTORE_ISSUER_ID']}'"
+    end
+
     build_app(
       scheme: "RandomTimer",
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
+      xcargs: xc_args
     )
 
     # Upload to TestFlight
