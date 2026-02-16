@@ -238,7 +238,10 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
   # - at least 3 iPad 13" screenshots
   IOS_SCREENSHOTS_DIR="$PROJECT_ROOT/native-ios/fastlane/screenshots/en-US"
   if [[ -d "$IOS_SCREENSHOTS_DIR" ]]; then
-    mapfile -t IOS_SCREENSHOTS < <(find "$IOS_SCREENSHOTS_DIR" -maxdepth 1 -name "*.png" -type f 2>/dev/null | sort)
+    IOS_SCREENSHOTS=()
+    while IFS= read -r -d '' _f; do
+      IOS_SCREENSHOTS+=("$_f")
+    done < <(find "$IOS_SCREENSHOTS_DIR" -maxdepth 1 -name "*.png" -type f -print0 2>/dev/null | sort -z)
     IOS_SHOTS="${#IOS_SCREENSHOTS[@]}"
     if (( IOS_SHOTS < 6 )); then
       err "iOS screenshots: expected at least 6 PNG files in $IOS_SCREENSHOTS_DIR, found $IOS_SHOTS"
