@@ -1,0 +1,5 @@
+v1.1.1 — Random Tactical Timer
+- Removed AD_ID permission for improved privacy
+- PostHog anonymous analytics integration
+- Range slider drag now pushes/pulls to maintain 30s minimum gap
+- Stability improvements and bug fixes

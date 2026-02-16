@@ -78,6 +78,15 @@ class MainActivity : ComponentActivity() {
             startService(silenceIntent)
             intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION)
         }
+
+        if (intent?.getBooleanExtra(TimerForegroundService.EXTRA_FROM_ALARM_STOP_ACTION, false) == true) {
+            // User tapped the alarm notification Stop action — dismiss alarm and go home.
+            val dismissIntent = Intent(this, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_DISMISS_ALARM
+            }
+            startService(dismissIntent)
+            intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_STOP_ACTION)
+        }
     }
 
     private fun sendAppStateToService(isInForeground: Boolean) {

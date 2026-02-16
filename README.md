@@ -124,6 +124,31 @@ xcodebuild test -scheme RandomTimer -destination 'platform=iOS Simulator,name=iP
 maestro test .maestro/smoke-test.yaml
 ```
 
+### Agentic Web Verification (Playwright)
+
+```bash
+# Local deterministic checks (metadata + screenshot inventory)
+make playwright-verify-local
+
+# Strict release-readiness gate (enforces iPhone+iPad screenshot coverage)
+make playwright-verify-strict
+
+# Read-only App Store Connect / Play Console verification (requires auth state files)
+make playwright-store-console
+
+# Install agent-browser CLI used by the alternate verification engine
+make playwright-install-agent-browser
+
+# Read-only verification via agent-browser engine (same auth-state files)
+make playwright-store-console-agent
+
+# Sync local Playwright auth states to GitHub Actions secrets
+make playwright-sync-auth-secrets
+```
+
+See `tests/playwright/README.md` for environment variables and strict release-readiness mode.
+Platform tradeoff research is documented in `docs/agentic-browser-platform-evaluation-2026-02-16.md`.
+
 ## Architecture
 
 ### iOS

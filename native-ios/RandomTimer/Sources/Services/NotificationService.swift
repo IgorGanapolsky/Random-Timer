@@ -15,8 +15,12 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     /// Set to true when user taps the alarm notification
     private(set) var didTapAlarmNotification = false
 
-    /// Callback invoked when Bluetooth/CarPlay media button is pressed during alarm
-    var onMediaButtonDismiss: (() -> Void)?
+    /// Callback invoked when Bluetooth/CarPlay media button is pressed during alarm.
+    /// Must mirror tapping the timer circle: silence alarm and keep user on timer screen.
+    var onMediaButtonSilence: (() -> Void)?
+
+    /// Callback invoked when user taps "Stop" action on the notification.
+    var onNotificationStop: (() -> Void)?
 
     /// Callback invoked when user taps "Silence" action on the notification
     var onNotificationSilence: (() -> Void)?
@@ -55,9 +59,9 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     // MARK: - Notification Actions
 
     private func registerNotificationActions() {
-        let dismissAction = UNNotificationAction(
-            identifier: "DISMISS_ACTION",
-            title: "Dismiss",
+        let stopAction = UNNotificationAction(
+            identifier: "STOP_ACTION",
+            title: "Stop",
             options: [.destructive, .foreground]
         )
 
@@ -69,7 +73,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         let alarmCategory = UNNotificationCategory(
             identifier: "TIMER_ALARM",
-            actions: [silenceAction, dismissAction],
+            actions: [silenceAction, stopAction],
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
@@ -270,29 +274,43 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         }
     }
 
-    // MARK: - Media Session (Bluetooth / CarPlay alarm dismiss)
+    // MARK: - Media Session (Bluetooth / CarPlay alarm controls)
+
+    func handleMediaButtonSilenceAction() {
+        onMediaButtonSilence?()
+    }
+
+    func handleNotificationStopAction() {
+        didTapAlarmNotification = true
+        onNotificationStop?()
+    }
+
+    func handleNotificationSilenceAction() {
+        onNotificationSilence?()
+    }
 
     func activateMediaSession() {
         let commandCenter = MPRemoteCommandCenter.shared()
 
-        // Pause = silence alarm (stop sound but keep UI)
+        // Headset pause/play/stop should all behave like tapping the timer circle:
+        // silence alarm and keep the user on the timer screen.
         commandCenter.pauseCommand.isEnabled = true
         commandCenter.pauseCommand.addTarget { [weak self] _ in
-            self?.onNotificationSilence?()
+            self?.handleMediaButtonSilenceAction()
             return .success
         }
 
-        // Stop = dismiss alarm entirely
+        // Some headsets map their single button to stop.
         commandCenter.stopCommand.isEnabled = true
         commandCenter.stopCommand.addTarget { [weak self] _ in
-            self?.onMediaButtonDismiss?()
+            self?.handleMediaButtonSilenceAction()
             return .success
         }
 
-        // Play = also dismiss (most common Bluetooth button)
+        // Some headsets map their single button to play/pause.
         commandCenter.playCommand.isEnabled = true
         commandCenter.playCommand.addTarget { [weak self] _ in
-            self?.onMediaButtonDismiss?()
+            self?.handleMediaButtonSilenceAction()
             return .success
         }
 
@@ -441,13 +459,12 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         guard response.notification.request.identifier == "timer_alarm" else { return }
 
         switch response.actionIdentifier {
-        case "DISMISS_ACTION":
-            // User tapped "Dismiss" — flag for handleForeground
-            didTapAlarmNotification = true
-            onMediaButtonDismiss?()
+        case "STOP_ACTION":
+            // User tapped "Stop" — dismiss alarm and return to the app
+            handleNotificationStopAction()
         case "SILENCE_ACTION":
             // User tapped "Silence" — stop sound but keep alarm UI
-            onNotificationSilence?()
+            handleNotificationSilenceAction()
         case UNNotificationDefaultActionIdentifier:
             // User tapped the notification body
             didTapAlarmNotification = true

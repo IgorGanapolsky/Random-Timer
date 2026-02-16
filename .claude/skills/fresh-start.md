@@ -30,18 +30,18 @@ Document in archive file:
 
 ### 2. Consolidate Feedback
 
-Run the self-heal process to ensure learnings are captured:
+Run memory maintenance to consolidate learnings:
 
 ```bash
-# Trigger feedback consolidation
-python3 .claude/scripts/feedback/semantic-memory-v2.py --consolidate
+python3 .claude/scripts/memory/memory_manager.py --ingest
+python3 .claude/scripts/memory/memory_manager.py --maintain
 ```
 
 ### 3. Reset Working Context
 
 Clear transient state while preserving:
 
-- Persistent lessons in ChromaDB
+- Memory cells (.claude/memory/memory_cells.jsonl)
 - CLAUDE.md documentation
 - Feedback logs (for future learning)
 

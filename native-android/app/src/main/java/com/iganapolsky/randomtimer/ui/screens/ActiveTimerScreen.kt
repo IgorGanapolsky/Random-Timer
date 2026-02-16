@@ -15,11 +15,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -96,183 +98,228 @@ fun ActiveTimerScreen(
                 .fillMaxSize()
                 .background(TimerColors.BackgroundDark),
     ) {
-        Column(
+        BoxWithConstraints(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Top spacer to push content down
-            Spacer(modifier = Modifier.weight(0.15f))
+            val isLandscape = maxWidth > maxHeight
+            val isAlarmOrComplete = state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE
+            val circleSize = if (isLandscape) 220.dp else 280.dp
 
-            // Loop badge at top (when not in alarm state) - like iOS
-            if (!isComplete) {
-                LoopBadge(
-                    enabled = loopEnabled,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        loopEnabled = !loopEnabled
-                        onLoopToggle(loopEnabled)
-                    },
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Status text
-            AnimatedVisibility(
-                visible = !isComplete && !isPaused,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                Text(
-                    // Random timer - just show "Timer running..." (no warning/danger messages)
-                    text = "Timer running...",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TimerColors.TextSecondary,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            // Paused text
-            AnimatedVisibility(
-                visible = isPaused,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                Text(
-                    text = "Paused",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TimerColors.TextMuted,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            // Completion text is now shown inside the CircularTimer
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-            // Tap circle during alarm to silence (like iOS)
-            val isAlarming = state.status == TimerStatus.ALARM
-            CircularTimer(
-                progress = if (isComplete) 1f else 0f, // Full progress ring when complete
-                status = state.status,
-                modifier = Modifier
-                    .size(280.dp)
-                    .then(
-                        if (isAlarming) {
-                            Modifier.clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() },
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onSilence()
-                            }
-                        } else {
-                            Modifier
+            @Composable
+            fun ActionButtons(modifier: Modifier = Modifier) {
+                if (isComplete) {
+                    DangerButton(
+                        text = "Stop",
+                        onClick = onDismissAlarm,
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SecondaryButton(
+                        text = "Reset",
+                        onClick = {
+                            resetFeedbackCounter += 1
+                            onReset()
                         },
-                    ),
-                rangeText = rangeText, // ALWAYS show range, never countdown
-            )
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                } else {
+                    PrimaryButton(
+                        text = if (isPaused) "Resume" else "Pause",
+                        onClick = if (isPaused) onResume else onPause,
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SecondaryButton(
+                        text = "Reset",
+                        onClick = {
+                            resetFeedbackCounter += 1
+                            onReset()
+                        },
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SecondaryButton(
+                        text = "Stop",
+                        onClick = onStop,
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            @Composable
+            fun StatusText() {
+                AnimatedVisibility(
+                    visible = !isComplete && !isPaused,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Text(
+                        text = "Timer running...",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TimerColors.TextSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
 
-            // Info message
-            if (showResetFeedback) {
-                Text(
-                    text = "Timer restarted",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TimerColors.AccentPrimary,
-                    textAlign = TextAlign.Center,
+                AnimatedVisibility(
+                    visible = isPaused,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Text(
+                        text = "Paused",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TimerColors.TextMuted,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            @Composable
+            fun TimerCircle() {
+                CircularTimer(
+                    progress = if (isComplete) 1f else 0f,
+                    status = state.status,
+                    modifier =
+                        Modifier
+                            .size(circleSize)
+                            .then(
+                                if (state.status == TimerStatus.ALARM) {
+                                    Modifier.clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() },
+                                    ) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onSilence()
+                                    }
+                                } else {
+                                    Modifier
+                                },
+                            ),
+                    rangeText = rangeText,
                 )
-            } else if (isComplete) {
-                Text(
-                    text = "Went off after ${formatDurationReadable(state.targetDuration)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TimerColors.TextSecondary,
-                    textAlign = TextAlign.Center,
-                )
+            }
+
+            @Composable
+            fun InfoMessage() {
+                if (showResetFeedback) {
+                    Text(
+                        text = "Timer restarted",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TimerColors.AccentPrimary,
+                        textAlign = TextAlign.Center,
+                    )
+                } else if (isComplete) {
+                    Text(
+                        text = "Went off after ${formatDurationReadable(state.targetDuration)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TimerColors.TextSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                } else {
+                    Text(
+                        text = "You don't know when it will go off...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TimerColors.TextMuted,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            @Composable
+            fun AlarmLoopBadge() {
+                AnimatedVisibility(
+                    visible = state.status == TimerStatus.ALARM,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    LoopBadge(
+                        enabled = loopEnabled,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            loopEnabled = !loopEnabled
+                            onLoopToggle(loopEnabled)
+                        },
+                    )
+                }
+            }
+
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        if (!isComplete) {
+                            LoopBadge(
+                                enabled = loopEnabled,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    loopEnabled = !loopEnabled
+                                    onLoopToggle(loopEnabled)
+                                },
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        StatusText()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TimerCircle()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        InfoMessage()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        AlarmLoopBadge()
+                    }
+
+                    Column(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom,
+                    ) {
+                        ActionButtons()
+                    }
+                }
             } else {
-                Text(
-                    text = "You don't know when it will go off...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TimerColors.TextMuted,
-                    textAlign = TextAlign.Center,
-                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(0.15f))
+
+                    if (!isComplete) {
+                        LoopBadge(
+                            enabled = loopEnabled,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                loopEnabled = !loopEnabled
+                                onLoopToggle(loopEnabled)
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    StatusText()
+                    Spacer(modifier = Modifier.height(32.dp))
+                    TimerCircle()
+                    Spacer(modifier = Modifier.height(32.dp))
+                    InfoMessage()
+                    AlarmLoopBadge()
+                    Spacer(modifier = Modifier.weight(1f))
+                    ActionButtons()
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
-
-            // Alarm countdown with loop badge
-            AnimatedVisibility(
-                visible = state.status == TimerStatus.ALARM,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                // Just show loop badge (no countdown - random timer)
-                LoopBadge(
-                    enabled = loopEnabled,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        loopEnabled = !loopEnabled
-                        onLoopToggle(loopEnabled)
-                    },
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Action buttons
-            if (isComplete) {
-                // Stop - stops alarm and goes home
-                DangerButton(
-                    text = "Stop",
-                    onClick = onDismissAlarm,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Reset - restart with same duration
-                SecondaryButton(
-                    text = "Reset",
-                    onClick = {
-                        resetFeedbackCounter += 1
-                        onReset()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
-                // Pause / Resume
-                PrimaryButton(
-                    text = if (isPaused) "Resume" else "Pause",
-                    onClick = if (isPaused) onResume else onPause,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Reset (restart with same config)
-                SecondaryButton(
-                    text = "Reset",
-                    onClick = {
-                        resetFeedbackCounter += 1
-                        onReset()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Stop (go back to home screen)
-                SecondaryButton(
-                    text = "Stop",
-                    onClick = onStop,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

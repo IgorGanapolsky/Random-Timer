@@ -75,7 +75,8 @@ data class TimerState(
     val remainingDuration: Duration,
     val status: TimerStatus,
     val alarmTimeRemaining: Duration = Duration.ZERO,
-    val startedAt: Long = System.currentTimeMillis()
+    val startedAt: Long = System.currentTimeMillis(),
+    val isAlarmSilenced: Boolean = false
 ) {
     val progress: Float
         get() = if (targetDuration == Duration.ZERO) 0f
