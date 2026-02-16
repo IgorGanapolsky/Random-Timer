@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 import time
 from typing import Optional
 
@@ -76,7 +77,7 @@ class GooglePlayVerifier:
             return key_path
 
         # Fastlane default in this repo (native-android/fastlane/Appfile)
-        fallback = "/tmp/play-service-account.json"
+        fallback = os.path.join(tempfile.gettempdir(), "play-service-account.json")
         if os.path.isfile(fallback):
             return fallback
 

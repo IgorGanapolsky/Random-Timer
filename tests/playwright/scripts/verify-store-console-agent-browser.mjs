@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -8,16 +8,26 @@ const defaultPlayUrl =
   "https://play.google.com/console/u/0/developers/8239620436488925047/app/4974974102541773558/app-dashboard";
 const agentBrowserVersion = "0.10.0";
 
+/** Resolve absolute path to a CLI tool, falling back to the name itself. */
+function resolveExecutable(name) {
+  try {
+    return execFileSync("/usr/bin/which", [name], { encoding: "utf8" }).trim();
+  } catch {
+    return name;
+  }
+}
+
 function resolveAgentRunner() {
-  const direct = spawnSync("agent-browser", ["--version"], {
+  const resolvedPath = resolveExecutable("agent-browser");
+  const direct = spawnSync(resolvedPath, ["--version"], {
     encoding: "utf8",
     stdio: "pipe",
   });
   if (direct.status === 0) {
-    return { cmd: "agent-browser", prefix: [] };
+    return { cmd: resolvedPath, prefix: [] };
   }
   return {
-    cmd: "npx",
+    cmd: resolveExecutable("npx"),
     prefix: ["--yes", `agent-browser@${agentBrowserVersion}`],
   };
 }

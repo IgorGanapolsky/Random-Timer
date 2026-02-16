@@ -21,6 +21,7 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,7 +37,7 @@ def _resolve_google_play_key() -> str:
     value = (os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH") or "").strip()
     if value:
         return value
-    fallback = "/tmp/play-service-account.json"
+    fallback = os.path.join(tempfile.gettempdir(), "play-service-account.json")
     if os.path.isfile(fallback):
         return fallback
     return ""

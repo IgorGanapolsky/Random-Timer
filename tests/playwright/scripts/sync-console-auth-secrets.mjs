@@ -2,13 +2,24 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+/** Resolve absolute path to a CLI tool, falling back to the name itself. */
+function resolveExecutable(name) {
+  try {
+    return execFileSync("/usr/bin/which", [name], { encoding: "utf8" }).trim();
+  } catch {
+    return name;
+  }
+}
+
+const ghPath = resolveExecutable("gh");
+
 function repoFromGitHubCli() {
   if (process.env.GH_REPO && process.env.GH_REPO.trim().length > 0) {
     return process.env.GH_REPO.trim();
   }
 
   const value = execFileSync(
-    "gh",
+    ghPath,
     ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
     { encoding: "utf8" },
   ).trim();
@@ -34,7 +45,7 @@ function readFileRequired(filePath) {
 
 function setSecret(repo, name, value) {
   execFileSync(
-    "gh",
+    ghPath,
     ["secret", "set", name, "--repo", repo],
     {
       input: value,
