@@ -70,11 +70,22 @@ platform :ios do
   desc "Setup certificates and profiles"
   lane :setup do
     if ENV["MATCH_GIT_URL"]
+      api_key = nil
+      if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
+        api_key = app_store_connect_api_key(
+          key_id: ENV["APPSTORE_KEY_ID"],
+          issuer_id: ENV["APPSTORE_ISSUER_ID"],
+          key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+        )
+      end
+
+      running_in_ci = ENV["CI"] == "true"
       match(
         type: "appstore",
         app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-        readonly: false,
-        force_for_new_devices: true
+        readonly: running_in_ci,
+        force_for_new_devices: !running_in_ci,
+        api_key: api_key
       )
     else
       UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
