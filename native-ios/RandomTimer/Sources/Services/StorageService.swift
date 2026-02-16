@@ -1,14 +1,19 @@
 import Foundation
 
+/// Thread-safe wrapper for UserDefaults to satisfy Swift 6 Sendable requirements
+private struct SendableDefaults: @unchecked Sendable {
+    let value: UserDefaults
+}
+
 /// Service for persisting timer configuration and state
 actor StorageService: TimerStorage {
 
-    nonisolated(unsafe) private let defaults: UserDefaults
+    private let defaults: SendableDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
+        self.defaults = SendableDefaults(value: defaults)
     }
 
     // MARK: - Keys
@@ -22,11 +27,11 @@ actor StorageService: TimerStorage {
 
     func saveConfig(_ config: TimerConfig) {
         guard let data = try? encoder.encode(config) else { return }
-        defaults.set(data, forKey: Keys.config)
+        defaults.value.set(data, forKey: Keys.config)
     }
 
     func loadConfig() -> TimerConfig? {
-        guard let data = defaults.data(forKey: Keys.config),
+        guard let data = defaults.value.data(forKey: Keys.config),
               let config = try? decoder.decode(TimerConfig.self, from: data) else {
             return nil
         }
@@ -36,7 +41,7 @@ actor StorageService: TimerStorage {
     /// Synchronous config load for use in initializers (avoids async race condition)
     nonisolated func loadConfigSync() -> TimerConfig? {
         let defaults = self.defaults
-        guard let data = defaults.data(forKey: Keys.config),
+        guard let data = defaults.value.data(forKey: Keys.config),
               let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
             return nil
         }
@@ -47,11 +52,11 @@ actor StorageService: TimerStorage {
 
     func saveTimerState(_ state: TimerState) {
         guard let data = try? encoder.encode(state) else { return }
-        defaults.set(data, forKey: Keys.timerState)
+        defaults.value.set(data, forKey: Keys.timerState)
     }
 
     func loadTimerState() -> TimerState? {
-        guard let data = defaults.data(forKey: Keys.timerState),
+        guard let data = defaults.value.data(forKey: Keys.timerState),
               let state = try? decoder.decode(TimerState.self, from: data) else {
             return nil
         }
@@ -59,13 +64,13 @@ actor StorageService: TimerStorage {
     }
 
     func clearTimerState() {
-        defaults.removeObject(forKey: Keys.timerState)
+        defaults.value.removeObject(forKey: Keys.timerState)
     }
 
     /// Synchronous timer state load for use in initializers
     nonisolated func loadTimerStateSync() -> TimerState? {
         let defaults = self.defaults
-        guard let data = defaults.data(forKey: Keys.timerState),
+        guard let data = defaults.value.data(forKey: Keys.timerState),
               let state = try? JSONDecoder().decode(TimerState.self, from: data) else {
             return nil
         }
@@ -74,6 +79,6 @@ actor StorageService: TimerStorage {
 
     /// Synchronous clear for use in initializers
     nonisolated func clearTimerStateSync() {
-        defaults.removeObject(forKey: Keys.timerState)
+        defaults.value.removeObject(forKey: Keys.timerState)
     }
 }
