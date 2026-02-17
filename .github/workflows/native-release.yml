@@ -169,6 +169,16 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
           echo "✅ Keystore decoded"
 
+      - name: Inspect upload key certificate
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list -v \
+            -keystore /tmp/release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
+
       - name: Build release AAB
         env:
           KEYSTORE_PATH: /tmp/release.keystore
@@ -182,6 +192,8 @@ jobs:
       - name: Upload to Google Play (closed testing track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
+          PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
           if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
             echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
@@ -190,41 +202,71 @@ jobs:
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
           python3 - <<'PYEOF'
           import sys
+          import os
+          import time
+
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
+          from googleapiclient.errors import HttpError
           from googleapiclient.http import MediaFileUpload
 
           SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
+          RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
+          RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
+          RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
 
-          try:
-              credentials = service_account.Credentials.from_service_account_file(
-                  '/tmp/play-service-account.json', scopes=SCOPES
-              )
-              service = build('androidpublisher', 'v3', credentials=credentials)
+          credentials = service_account.Credentials.from_service_account_file(
+              '/tmp/play-service-account.json', scopes=SCOPES
+          )
+          service = build('androidpublisher', 'v3', credentials=credentials)
 
-              edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
-              edit_id = edit['id']
+          deadline = time.time() + RETRY_WINDOW
+          attempt = 0
 
-              bundle = service.edits().bundles().upload(
-                  packageName=PACKAGE,
-                  editId=edit_id,
-                  media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
-              ).execute()
+          while True:
+              attempt += 1
+              try:
+                  edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
+                  edit_id = edit['id']
 
-              service.edits().tracks().update(
-                  packageName=PACKAGE,
-                  editId=edit_id,
-                  track='alpha',
-                  body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
-              ).execute()
+                  bundle = service.edits().bundles().upload(
+                      packageName=PACKAGE,
+                      editId=edit_id,
+                      media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
+                  ).execute()
 
-              service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-              print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
-          except Exception as e:
-              print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
-              sys.exit(1)
+                  service.edits().tracks().update(
+                      packageName=PACKAGE,
+                      editId=edit_id,
+                      track='alpha',
+                      body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
+                  ).execute()
+
+                  service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
+                  print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
+                  break
+              except HttpError as e:
+                  message = str(e)
+                  is_recent_reset = RESET_ERROR_FRAGMENT in message.lower()
+                  remaining = int(deadline - time.time())
+
+                  if is_recent_reset and remaining > 0:
+                      sleep_for = min(RETRY_INTERVAL, remaining)
+                      print(
+                          f"⚠️ Play upload key reset still propagating (attempt {attempt}). "
+                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
+                          file=sys.stderr,
+                      )
+                      time.sleep(sleep_for)
+                      continue
+
+                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  sys.exit(1)
+              except Exception as e:
+                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  sys.exit(1)
           PYEOF
 
       - name: Upload AAB artifact
