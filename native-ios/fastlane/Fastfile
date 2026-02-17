@@ -92,14 +92,6 @@ platform :ios do
         )
       end
 
-      # Development profiles for archive build
-      match(
-        type: "development",
-        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-        readonly: false,
-        api_key: api_key
-      )
-
       # Distribution profiles for App Store export
       match(
         type: "appstore",
