@@ -62,9 +62,14 @@ jobs:
 
       - name: Resolve iOS version
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          INPUT_VERSION="${{ inputs.version }}"
           if [ -n "$INPUT_VERSION" ]; then
+            if ! echo "$INPUT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "❌ Invalid version input (expected X.Y.Z): $INPUT_VERSION"
+              exit 1
+            fi
             echo "ios_version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -99,12 +104,18 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          LOCALE: ${{ inputs.locale }}
+          WAIT_FOR_STATE: ${{ inputs.wait }}
         run: |
-          ARGS="--version ${{ steps.version.outputs.ios_version }} --locale ${{ inputs.locale }}"
-          if [ "${{ inputs.wait }}" = "true" ]; then
-            ARGS="$ARGS --wait --timeout 1800"
+          if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
+            echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
+            exit 1
           fi
-          python scripts/asc_submit_for_review.py $ARGS
+          ARGS=(--version "${{ steps.version.outputs.ios_version }}" --locale "$LOCALE")
+          if [ "$WAIT_FOR_STATE" = "true" ]; then
+            ARGS+=(--wait --timeout 1800)
+          fi
+          python scripts/asc_submit_for_review.py "${ARGS[@]}"
 
       - name: Cleanup key
         if: always()
