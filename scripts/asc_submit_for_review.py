@@ -434,7 +434,6 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
         data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
     except Exception:
         die("Pricing not set (no appPriceSchedule and legacy /prices not available).")
-
     prices = data.get("data") or []
     if not prices:
         die("Pricing not set (no prices returned for app).")
