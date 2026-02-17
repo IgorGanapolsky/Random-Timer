@@ -176,7 +176,7 @@ jobs:
       - name: Install gitleaks (OSS CLI)
         run: |
           mkdir -p "$HOME/.local/bin"
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b "$HOME/.local/bin" v8.30.0
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/main/install.sh | sh -s -- -b "$HOME/.local/bin" v8.30.0
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Secret Scan
