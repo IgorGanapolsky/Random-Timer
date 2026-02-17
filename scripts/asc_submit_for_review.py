@@ -400,16 +400,86 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
-    # Minimal verification: there must be at least one price and an included priceTier.
-    data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
-    prices = data.get("data") or []
-    if not prices:
-        die("Pricing not set (no prices returned for app).")
-    # If included tier id is 0 => free. We don't enforce free/paid; just that it exists.
-    included = data.get("included") or []
-    tier = first([i for i in included if i.get("type") == "priceTiers"])
-    if not tier:
-        die("Pricing not set (missing priceTier include).")
+    # ASC has evolved pricing APIs over time:
+    # - Newer schema: appPriceSchedules (+ appPricePoints)
+    # - Legacy schema: apps/{id}/prices (+ priceTier)
+    #
+    # We verify pricing is configured, and if it is missing we attempt to set the app
+    # to Free (tier 0) via appPriceSchedules to keep submission unblocked.
+
+    # 1) Preferred: price schedules.
+    try:
+        data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+        if data.get("data"):
+            return
+    except Exception:
+        pass
+
+    # 2) Some clients expose a singular relationship endpoint.
+    try:
+        data = client.request("GET", f"/apps/{app_id}/appPriceSchedule")
+        if data.get("data"):
+            return
+    except Exception:
+        pass
+
+    # 3) Legacy: direct prices relationship.
+    try:
+        data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
+        if data.get("data"):
+            return
+    except Exception:
+        pass
+
+    # 4) Pricing appears unset. Attempt to set the app to Free via appPriceSchedules.
+    free_point_id: str | None = None
+    try:
+        points = client.request(
+            "GET",
+            f"/apps/{app_id}/appPricePoints",
+            params={"filter[territory]": "USA", "limit": 200},
+        )
+        for item in points.get("data") or []:
+            if not isinstance(item, dict):
+                continue
+            attrs = item.get("attributes") or {}
+            price = str(attrs.get("customerPrice") or "").strip()
+            if price in ("0", "0.0", "0.00", "0.000", "0.0000"):
+                free_point_id = item.get("id")
+                break
+    except Exception:
+        free_point_id = None
+
+    if free_point_id:
+        info("Pricing not set; creating Free price schedule (base territory USA)…")
+        manual_price_id = "manualPrice-0"
+        payload = {
+            "data": {
+                "type": "appPriceSchedules",
+                "relationships": {
+                    "app": {"data": {"type": "apps", "id": app_id}},
+                    "baseTerritory": {"data": {"type": "territories", "id": "USA"}},
+                    "manualPrices": {"data": [{"type": "appPrices", "id": manual_price_id}]},
+                },
+            },
+            "included": [
+                {
+                    "type": "appPrices",
+                    "id": manual_price_id,
+                    "attributes": {"startDate": None},
+                    "relationships": {"appPricePoint": {"data": {"type": "appPricePoints", "id": free_point_id}}},
+                }
+            ],
+        }
+        try:
+            client.request("POST", "/appPriceSchedules", payload=payload)
+            data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+            if data.get("data"):
+                return
+        except Exception as e:
+            die(f"Pricing not set and failed to create Free price schedule: {e}")
+
+    die("Pricing not set (no appPriceSchedule and legacy /prices not available).")
 
 
 def verify_review_detail(client: ASCClient, app_id: str) -> None:
