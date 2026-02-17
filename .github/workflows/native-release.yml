@@ -391,7 +391,18 @@ jobs:
 
   ios-submit-review:
     needs: [verify-releases]
-    if: ${{ inputs.submit_review && (inputs.platform == 'ios' || inputs.platform == 'both') && needs.verify-releases.result == 'success' }}
+    # `workflow_dispatch` inputs can be booleans (newer UI) or strings (API/CLI).
+    # Treat this as enabled only when explicitly true.
+    if: >-
+      ${{
+        needs.verify-releases.result == 'success' &&
+        (inputs.platform == 'ios' || inputs.platform == 'both') &&
+        (
+          inputs.submit_review == true ||
+          inputs.submit_review == 'true' ||
+          github.event.inputs.submit_review == 'true'
+        )
+      }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -408,9 +419,9 @@ jobs:
       - name: Extract iOS version
         id: versions
         run: |
-          IOS_VERSION=$(python -c "import plistlib; from pathlib import Path; p=Path('native-ios/RandomTimer/Info.plist'); print(plistlib.load(p.open('rb')).get('CFBundleShortVersionString','') if p.exists() else '')" 2>/dev/null || echo "")
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
           if [ -z "$IOS_VERSION" ]; then
-            echo "❌ Could not read iOS version from native-ios/RandomTimer/Info.plist"
+            echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
             exit 1
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
@@ -420,23 +431,6 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
           echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
-
-      - name: Verify App Store submission readiness (hard gate)
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
-        run: |
-          python scripts/asc_verify_ready.py \
-            --version "${{ steps.versions.outputs.ios_version }}" \
-            --json /tmp/asc_ready.json
-
-      - name: Upload readiness report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: asc-ready-report
-          path: /tmp/asc_ready.json
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
@@ -456,6 +450,31 @@ jobs:
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+
+      - name: Upload App Store metadata/screenshots + attach build
+        env:
+          CI: "true"
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: fastlane metadata version:${{ steps.versions.outputs.ios_version }}
+        working-directory: native-ios
+
+      - name: Verify App Store submission readiness (hard gate)
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_verify_ready.py \
+            --version "${{ steps.versions.outputs.ios_version }}" \
+            --json /tmp/asc_ready.json
+
+      - name: Upload readiness report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: asc-ready-report
+          path: /tmp/asc_ready.json
 
       - name: Submit for App Review (App Store)
         env:
