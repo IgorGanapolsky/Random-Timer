@@ -335,20 +335,8 @@ jobs:
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
 
           # iOS version from app Info.plist (same source used by fastlane get_version_number)
-          # Use Python plistlib so this works on ubuntu-latest and macOS.
-          IOS_VERSION=$(python - <<'PY'
-import plistlib
-from pathlib import Path
-
-plist_path = Path("native-ios/RandomTimer/Info.plist")
-if not plist_path.exists():
-    print("")
-else:
-    with plist_path.open("rb") as f:
-        data = plistlib.load(f)
-    print(data.get("CFBundleShortVersionString", ""))
-PY
-)
+          # Use a one-liner so this stays valid YAML and works on ubuntu-latest and macOS.
+          IOS_VERSION=$(python -c "import plistlib; from pathlib import Path; p=Path('native-ios/RandomTimer/Info.plist'); print(plistlib.load(p.open('rb')).get('CFBundleShortVersionString','') if p.exists() else '')" 2>/dev/null || echo "")
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Determine platform flag
