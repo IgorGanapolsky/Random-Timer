@@ -57,6 +57,19 @@ def resolve_metadata_url(*, locale: str, kind: str) -> str:
     return _read_text_file(path)
 
 
+def _get_url(attrs: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        val = (attrs.get(key) or "").strip()
+        if val:
+            return val
+    return ""
+
+
+def _is_unknown_attr_error(exc: Exception, *, attr_key: str) -> bool:
+    msg = str(exc)
+    return ("ATTRIBUTE.UNKNOWN" in msg) and (f"/data/attributes/{attr_key}" in msg or f"'{attr_key}'" in msg)
+
+
 def patch_resource_attributes(client: "ASCClient", *, path: str, type_name: str, resource_id: str, attrs: dict) -> None:
     client.request(
         "PATCH",
@@ -71,6 +84,45 @@ def patch_resource_attributes(client: "ASCClient", *, path: str, type_name: str,
     )
 
 
+def _patch_first_supported_attr(
+    client: "ASCClient",
+    *,
+    path: str,
+    type_name: str,
+    resource_id: str,
+    attrs: dict[str, Any],
+    desired: dict[str, str],
+    candidates: list[str],
+) -> dict[str, Any]:
+    """Try to PATCH using the first attribute key supported by ASC's current schema.
+
+    We prefer keys present in the current attributes payload; otherwise we attempt each candidate
+    key and continue on ATTRIBUTE.UNKNOWN errors.
+    """
+    # Prefer keys that already exist in the schema payload.
+    for key in candidates:
+        if key in attrs and desired.get(key):
+            patch_resource_attributes(client, path=path, type_name=type_name, resource_id=resource_id, attrs={key: desired[key]})
+            refreshed = client.request("GET", path).get("data") or {}
+            return (refreshed.get("attributes") or {}) if isinstance(refreshed, dict) else attrs
+
+    # Otherwise, probe each candidate.
+    for key in candidates:
+        val = desired.get(key)
+        if not val:
+            continue
+        try:
+            patch_resource_attributes(client, path=path, type_name=type_name, resource_id=resource_id, attrs={key: val})
+            refreshed = client.request("GET", path).get("data") or {}
+            return (refreshed.get("attributes") or {}) if isinstance(refreshed, dict) else attrs
+        except Exception as e:
+            if _is_unknown_attr_error(e, attr_key=key):
+                continue
+            raise
+
+    return attrs
+
+
 def ensure_app_info_urls(client: "ASCClient", *, loc_id: str, locale: str, attrs: dict[str, Any]) -> dict[str, Any]:
     """Ensure support/privacy URLs are set on the App Info localization.
 
@@ -79,24 +131,41 @@ def ensure_app_info_urls(client: "ASCClient", *, loc_id: str, locale: str, attrs
     desired_support = resolve_metadata_url(locale=locale, kind="support_url")
     desired_privacy = resolve_metadata_url(locale=locale, kind="privacy_url")
 
-    to_set: dict[str, str] = {}
-    if not (attrs.get("supportUrl") or "").strip() and desired_support:
-        to_set["supportUrl"] = desired_support
-    if not (attrs.get("privacyPolicyUrl") or "").strip() and desired_privacy:
-        to_set["privacyPolicyUrl"] = desired_privacy
+    support_val = _get_url(attrs, "supportUrl", "supportURL")
+    privacy_val = _get_url(attrs, "privacyPolicyUrl", "privacyPolicyURL")
 
-    if to_set:
-        info(f"Filling missing App Info URL fields for {locale}: {', '.join(sorted(to_set.keys()))}")
+    desired: dict[str, str] = {}
+    if not support_val and desired_support:
+        desired["supportURL"] = desired_support
+        desired["supportUrl"] = desired_support
+    if not privacy_val and desired_privacy:
+        desired["privacyPolicyUrl"] = desired_privacy
+        desired["privacyPolicyURL"] = desired_privacy
+
+    keys = []
+    if not support_val and desired_support:
+        keys.append("support")
+    if not privacy_val and desired_privacy:
+        keys.append("privacy")
+
+    if keys:
+        info(f"Filling missing App Info URL fields for {locale}: {', '.join(keys)}")
         try:
-            patch_resource_attributes(
+            updated = _patch_first_supported_attr(
                 client,
                 path=f"/appInfoLocalizations/{loc_id}",
                 type_name="appInfoLocalizations",
                 resource_id=loc_id,
-                attrs=to_set,
+                attrs=attrs,
+                desired=desired,
+                candidates=["supportURL", "supportUrl", "privacyPolicyUrl", "privacyPolicyURL"],
             )
-            refreshed = client.request("GET", f"/appInfoLocalizations/{loc_id}").get("data") or {}
-            return (refreshed.get("attributes") or {}) if isinstance(refreshed, dict) else attrs
+            # Preserve the resolved values even if ASC uses different key casing.
+            if desired_support and not _get_url(updated, "supportUrl", "supportURL"):
+                updated["supportURL"] = desired_support
+            if desired_privacy and not _get_url(updated, "privacyPolicyUrl", "privacyPolicyURL"):
+                updated["privacyPolicyUrl"] = desired_privacy
+            return updated
         except Exception as e:
             die(f"Failed to update App Info URLs for locale {locale}: {e}")
 
@@ -466,8 +535,8 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
     loc_attrs = loc.get("attributes") or {}
     info_attrs = app_info.get("attributes") or {}
     loc_attrs = ensure_app_info_urls(client, loc_id=loc_id, locale=locale, attrs=loc_attrs)
-    privacy = (loc_attrs.get("privacyPolicyUrl") or info_attrs.get("privacyPolicyUrl") or "").strip()
-    support = (loc_attrs.get("supportUrl") or info_attrs.get("supportUrl") or "").strip()
+    privacy = _get_url(loc_attrs, "privacyPolicyUrl", "privacyPolicyURL") or _get_url(info_attrs, "privacyPolicyUrl", "privacyPolicyURL")
+    support = _get_url(loc_attrs, "supportUrl", "supportURL") or _get_url(info_attrs, "supportUrl", "supportURL")
     ensure_https(privacy, "Privacy Policy URL")
     ensure_https(support, "Support URL")
 
@@ -475,8 +544,8 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
     resolved = dict(loc_attrs)
     if privacy and not resolved.get("privacyPolicyUrl"):
         resolved["privacyPolicyUrl"] = privacy
-    if support and not resolved.get("supportUrl"):
-        resolved["supportUrl"] = support
+    if support and not _get_url(resolved, "supportUrl", "supportURL"):
+        resolved["supportURL"] = support
     return resolved
 
 
