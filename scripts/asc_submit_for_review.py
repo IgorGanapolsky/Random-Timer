@@ -392,18 +392,40 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
 
         # Confirm there is at least one price entry, either manual or automatic.
         # We fetch both relationships with limit=1 and accept either.
-        manual = client.request("GET", f"/appPriceSchedules/{schedule_id}/manualPrices", params={"limit": 1}).get(
-            "data"
-        )
+        manual = None
+        automatic = None
+        manual_err = None
+        automatic_err = None
+        try:
+            manual = client.request("GET", f"/appPriceSchedules/{schedule_id}/manualPrices", params={"limit": 1}).get(
+                "data"
+            )
+        except Exception as e:
+            manual_err = str(e)
+
         if manual:
             return
-        automatic = client.request(
-            "GET", f"/appPriceSchedules/{schedule_id}/automaticPrices", params={"limit": 1}
-        ).get("data")
+
+        try:
+            automatic = client.request(
+                "GET", f"/appPriceSchedules/{schedule_id}/automaticPrices", params={"limit": 1}
+            ).get("data")
+        except Exception as e:
+            automatic_err = str(e)
+
         if automatic:
             return
 
-        die("Pricing not set (appPriceSchedule has no manualPrices/automaticPrices).")
+        # If the schedule endpoints are reachable but empty, pricing isn't configured.
+        if manual_err is None and automatic_err is None:
+            die("Pricing not set (appPriceSchedule has no manualPrices/automaticPrices).")
+
+        # Otherwise, we couldn't verify schedule pricing; attempt legacy fallback before failing.
+        info(
+            "Could not verify pricing via appPriceSchedule endpoints; attempting legacy /prices fallback.\n"
+            f"  manualPrices error: {manual_err}\n"
+            f"  automaticPrices error: {automatic_err}"
+        )
 
     # Legacy API: prices relationship on app (older accounts).
     try:
