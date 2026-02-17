@@ -87,12 +87,10 @@ platform :ios do
         )
       end
 
-      running_in_ci = ENV["CI"] == "true"
       match(
         type: "appstore",
         app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-        readonly: running_in_ci,
-        force_for_new_devices: !running_in_ci,
+        readonly: false,
         api_key: api_key
       )
     else
