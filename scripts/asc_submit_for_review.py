@@ -256,31 +256,53 @@ def verify_screenshots(counts: dict[str, int]) -> None:
 
 
 def select_valid_build_id(client: ASCClient, app_id: str, marketing_version: str) -> str:
-    data = client.request(
-        "GET",
-        "/builds",
-        params={
-            "filter[app]": app_id,
-            "include": "preReleaseVersion",
-            "sort": "-uploadedDate",
-            "limit": 50,
-            "fields[builds]": "version,processingState,uploadedDate,preReleaseVersion",
-            "fields[preReleaseVersions]": "version",
-        },
-    )
-    pre = {}
-    for item in data.get("included", []):
-        if item.get("type") == "preReleaseVersions":
-            pre[item["id"]] = (item.get("attributes") or {}).get("version")
+    # /builds can be large; page until we find a VALID build for the desired marketing version.
+    # We cap the scan to a reasonable upper bound to avoid runaway API calls.
+    max_builds_to_scan = 500
+    scanned = 0
 
-    for b in data.get("data", []):
-        attrs = b.get("attributes") or {}
-        if attrs.get("processingState") != "VALID":
-            continue
-        rel = (b.get("relationships") or {}).get("preReleaseVersion", {}).get("data") or {}
-        pv = pre.get(rel.get("id"))
-        if pv == marketing_version:
-            return b["id"]
+    next_path = "/builds"
+    next_params: dict[str, Any] = {
+        "filter[app]": app_id,
+        "include": "preReleaseVersion",
+        "sort": "-uploadedDate",
+        "limit": 50,
+        "fields[builds]": "version,processingState,uploadedDate,preReleaseVersion",
+        "fields[preReleaseVersions]": "version",
+    }
+
+    while True:
+        data = client.request("GET", next_path, params=next_params)
+        pre = {}
+        for item in data.get("included", []):
+            if item.get("type") == "preReleaseVersions":
+                pre[item["id"]] = (item.get("attributes") or {}).get("version")
+
+        for b in data.get("data", []):
+            scanned += 1
+            attrs = b.get("attributes") or {}
+            rel = (b.get("relationships") or {}).get("preReleaseVersion", {}).get("data") or {}
+            pv = pre.get(rel.get("id"))
+            if pv != marketing_version:
+                continue
+            if attrs.get("processingState") == "VALID":
+                return b["id"]
+
+            if scanned >= max_builds_to_scan:
+                die(f"No VALID TestFlight build found for version {marketing_version} after scanning {scanned} builds.")
+
+        if scanned >= max_builds_to_scan:
+            die(f"No VALID TestFlight build found for version {marketing_version} after scanning {scanned} builds.")
+
+        next_url = (data.get("links") or {}).get("next")
+        if not next_url:
+            break
+
+        if next_url.startswith(APP_STORE_CONNECT_API):
+            next_url = next_url[len(APP_STORE_CONNECT_API) :]
+        # Embed ASC's next query params directly in the path for simplicity.
+        next_path = next_url
+        next_params = {}
 
     die(f"No VALID TestFlight build found for version {marketing_version}.")
     raise AssertionError("unreachable")
@@ -406,6 +428,8 @@ def wait_for_state(client: ASCClient, version_id: str, *, timeout: int, poll_int
         info(f"App Store version state: {state}")
         if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
             return state
+        if state in ("REJECTED", "DEVELOPER_REJECTED", "INVALID_BINARY", "METADATA_REJECTED", "REMOVED_FROM_SALE"):
+            die(f"Submission entered a terminal failure state: {state}")
         if time.time() >= deadline:
             die(f"Timed out waiting for submitted state; last state={state}")
         time.sleep(poll_interval)
