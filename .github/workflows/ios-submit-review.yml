@@ -1,0 +1,114 @@
+name: iOS Submit For Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "iOS marketing version to submit (defaults to Info.plist CFBundleShortVersionString)"
+        required: false
+        type: string
+      locale:
+        description: "App Store locale to validate/submit"
+        required: true
+        type: string
+        default: "en-US"
+      dry_run:
+        description: "Preflight + metadata upload only (do not submit)"
+        required: true
+        type: boolean
+        default: false
+      wait:
+        description: "Poll App Store version state after submission"
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  submit:
+    runs-on: macos-15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight release checks (iOS)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyjwt cryptography requests
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-ios
+
+      - name: Write App Store Connect key (Fastlane convention)
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+
+      - name: Resolve iOS version
+        id: version
+        run: |
+          INPUT_VERSION="${{ inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            echo "ios_version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          IOS_VERSION=$(python -c "import plistlib; from pathlib import Path; p=Path('native-ios/RandomTimer/Info.plist'); print(plistlib.load(p.open('rb')).get('CFBundleShortVersionString','') if p.exists() else '')" 2>/dev/null || echo "")
+          if [ -z "$IOS_VERSION" ]; then
+            echo "❌ Could not determine iOS version from Info.plist"
+            exit 1
+          fi
+          echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify TestFlight build is VALID
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: |
+          python scripts/verify_release.py \
+            --platform ios \
+            --version "${{ steps.version.outputs.ios_version }}" \
+            --wait \
+            --timeout 1200
+
+      - name: Upload App Store metadata + screenshots
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          fastlane metadata version:"${{ steps.version.outputs.ios_version }}"
+        working-directory: native-ios
+
+      - name: Submit for review
+        if: ${{ inputs.dry_run == false }}
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: |
+          ARGS="--version ${{ steps.version.outputs.ios_version }} --locale ${{ inputs.locale }}"
+          if [ "${{ inputs.wait }}" = "true" ]; then
+            ARGS="$ARGS --wait --timeout 1800"
+          fi
+          python scripts/asc_submit_for_review.py $ARGS
+
+      - name: Cleanup key
+        if: always()
+        run: rm -f ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+
