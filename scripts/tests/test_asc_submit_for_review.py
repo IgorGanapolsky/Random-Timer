@@ -61,7 +61,8 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
         self.assertEqual(params.get("include"), "appInfoLocalizations,primaryCategory")
 
     def test_verify_app_info_requires_support_and_privacy_urls(self):
-        from scripts.asc_submit_for_review import verify_app_info
+        import scripts.asc_submit_for_review as asc
+        verify_app_info = asc.verify_app_info
 
         client = _FakeClient(
             {
@@ -90,10 +91,15 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
             }
         )
 
-        with self.assertRaises(SystemExit):
-            with contextlib.redirect_stdout(io.StringIO()):
-                with contextlib.redirect_stderr(io.StringIO()):
-                    verify_app_info(client, "6758355312", "en-US")
+        prev_dir = asc.FASTLANE_METADATA_DIR
+        asc.FASTLANE_METADATA_DIR = "/__missing_fastlane_metadata__"
+        try:
+            with self.assertRaises(SystemExit):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    with contextlib.redirect_stderr(io.StringIO()):
+                        verify_app_info(client, "6758355312", "en-US")
+        finally:
+            asc.FASTLANE_METADATA_DIR = prev_dir
 
     def test_verify_app_info_autofills_support_url_when_missing(self):
         import os
@@ -127,12 +133,15 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
                                 "attributes": {
                                     "locale": "en-US",
                                     "privacyPolicyUrl": "https://example.com/privacy",
-                                    "supportUrl": "",
+                                    "supportURL": "",
                                 },
                             }
                         ],
                     }
                 if method == "PATCH" and path == "/appInfoLocalizations/loc1":
+                    # Newer schema uses supportURL.
+                    if "supportURL" not in (payload or {}).get("data", {}).get("attributes", {}):
+                        raise RuntimeError("expected supportURL patch")
                     return {}
                 if method == "GET" and path == "/appInfoLocalizations/loc1":
                     # Return the updated object
@@ -143,7 +152,7 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
                             "attributes": {
                                 "locale": "en-US",
                                 "privacyPolicyUrl": "https://example.com/privacy",
-                                "supportUrl": os.environ.get("ASC_SUPPORT_URL"),
+                                "supportURL": os.environ.get("ASC_SUPPORT_URL"),
                             },
                         }
                     }
