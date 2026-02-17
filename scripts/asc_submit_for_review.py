@@ -231,11 +231,28 @@ def screenshot_counts(client: ASCClient, version_localization_id: str) -> dict[s
 
 
 def verify_screenshots(counts: dict[str, int]) -> None:
-    # Require 3+ for at least one iPhone class and 3+ for at least one iPad class.
-    iphone_ok = any(k.startswith("APP_IPHONE_") and v >= 3 for k, v in counts.items())
-    ipad_ok = any(k.startswith("APP_IPAD_") and v >= 3 for k, v in counts.items())
+    # App Store Connect provides "screenshotDisplayType" keys (e.g. APP_IPHONE_65).
+    # We require large iPhone + large iPad coverage (>=3 each) to satisfy store requirements.
+    # Keep this check tolerant to Apple naming variations by matching common size hints.
+    iphone_hints = ("65", "6_5", "67", "6_7", "69", "6_9")
+    ipad_hints = ("13", "12_9", "129")
+
+    iphone_ok = any(
+        k.startswith("APP_IPHONE_") and any(h in k for h in iphone_hints) and v >= 3
+        for k, v in counts.items()
+    )
+    ipad_ok = any(
+        k.startswith("APP_IPAD_") and any(h in k for h in ipad_hints) and v >= 3
+        for k, v in counts.items()
+    )
+
     if not iphone_ok or not ipad_ok:
-        die(f"Screenshot coverage insufficient. Counts: {counts}")
+        die(
+            "Screenshot coverage insufficient for large device classes.\n"
+            f"  Counts: {counts}\n"
+            f"  Need: >=3 screenshots for one large iPhone set (hints: {iphone_hints}) AND "
+            f">=3 screenshots for one large iPad set (hints: {ipad_hints})."
+        )
 
 
 def select_valid_build_id(client: ASCClient, app_id: str, marketing_version: str) -> str:
@@ -453,4 +470,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
