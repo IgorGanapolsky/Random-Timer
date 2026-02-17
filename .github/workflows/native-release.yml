@@ -408,9 +408,9 @@ jobs:
       - name: Extract iOS version
         id: versions
         run: |
-          IOS_VERSION=$(python -c "import plistlib; from pathlib import Path; p=Path('native-ios/RandomTimer/Info.plist'); print(plistlib.load(p.open('rb')).get('CFBundleShortVersionString','') if p.exists() else '')" 2>/dev/null || echo "")
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
           if [ -z "$IOS_VERSION" ]; then
-            echo "❌ Could not read iOS version from native-ios/RandomTimer/Info.plist"
+            echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
             exit 1
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
