@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
@@ -35,11 +36,11 @@ fun RandomTimerNavHost(
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val activity = LocalContext.current as? Activity
 
     // Auto-navigate based on timer state
-    LaunchedEffect(timerState) {
-        val currentRoute = navController.currentDestination?.route
+    LaunchedEffect(timerState, currentRoute) {
         if (timerState != null) {
             // Timer is running - go to active timer screen
             if (currentRoute != Screen.ActiveTimer.route) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,17 @@ import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+
+private object SetupSpacing {
+    val OuterHorizontal = 16.dp
+    val ListItem = 16.dp
+    val ListTop = 8.dp
+    val ListBottom = 24.dp
+    val CardContent = 16.dp
+    val HeaderToContent = 8.dp
+    val ChipGap = 8.dp
+    val StartButtonTop = 8.dp
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,12 +121,16 @@ fun TimerSetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = SetupSpacing.OuterHorizontal),
+            verticalArrangement = Arrangement.spacedBy(SetupSpacing.ListItem),
+            contentPadding = PaddingValues(
+                top = SetupSpacing.ListTop,
+                bottom = SetupSpacing.ListBottom,
+            ),
         ) {
             // Time Range Card
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth(), padding = 12.dp) {
+                GlassCard(modifier = Modifier.fillMaxWidth(), padding = SetupSpacing.CardContent) {
                     Column {
                         Text(
                             text = "\u23F1\uFE0F Goes Off In This Range",
@@ -122,7 +138,7 @@ fun TimerSetupScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = TimerColors.TextPrimary,
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(SetupSpacing.HeaderToContent))
 
                         TimeRangeSliders(
                             minValue = config.minSeconds,
@@ -150,7 +166,7 @@ fun TimerSetupScreen(
 
             // Alarm Settings Card
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth(), padding = 12.dp) {
+                GlassCard(modifier = Modifier.fillMaxWidth(), padding = SetupSpacing.CardContent) {
                     Column {
                         Text(
                             text = "\uD83D\uDD14 Alarm Sound Duration",
@@ -158,12 +174,12 @@ fun TimerSetupScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = TimerColors.TextPrimary,
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(SetupSpacing.HeaderToContent))
 
                         // Duration Chips - all in one row like iOS
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(SetupSpacing.ChipGap),
                         ) {
                             TimerConfig.ALARM_DURATION_OPTIONS.forEach { duration ->
                                 FilterChip(
@@ -243,7 +259,7 @@ fun TimerSetupScreen(
                             onValueChangeFinished = { },
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(SetupSpacing.HeaderToContent))
 
                         // Vibration Toggle
                         Row(
@@ -281,7 +297,7 @@ fun TimerSetupScreen(
                 PrimaryButton(
                     text = "Start Timer",
                     onClick = onStartTimer,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
+                    modifier = Modifier.padding(top = SetupSpacing.StartButtonTop),
                 )
             }
         }

@@ -37,7 +37,9 @@ class TimerServiceControllerImpl @Inject constructor(
             putExtra(TimerForegroundService.EXTRA_VOLUME, state.config.volume)
             putExtra(TimerForegroundService.EXTRA_VIBRATION_ENABLED, state.config.vibrationEnabled)
         }
-        context.startForegroundService(intent)
+        // Timer starts from the foreground UI, so a regular service start avoids forcing
+        // an immediate foreground notification while the app is visible.
+        context.startService(intent)
     }
 
     override fun stopTimer() {
