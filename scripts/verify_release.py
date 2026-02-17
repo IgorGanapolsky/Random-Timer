@@ -518,6 +518,14 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_POLL_INTERVAL,
         help=f"Seconds between polls in --wait mode (default: {DEFAULT_POLL_INTERVAL})",
     )
+    parser.add_argument(
+        "--require-appstore-submission",
+        action="store_true",
+        help=(
+            "Fail verification if the App Store version is still NOT_SUBMITTED. "
+            "Use this after a submit-for-review automation step."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -579,8 +587,17 @@ def main():
             **result,
         })
 
-        # Also check App Store version state (non-blocking)
+        # Also check App Store version state
         asv = asc.verify_app_store_version(args.version)
+        if args.require_appstore_submission and asv.get("status") == "NOT_SUBMITTED":
+            asv = {
+                "passed": False,
+                "status": "NOT_SUBMITTED",
+                "details": (
+                    f"App Store version '{args.version}' is still NOT_SUBMITTED "
+                    "(expected a submitted state like WAITING_FOR_REVIEW)"
+                ),
+            }
         results.append({
             "platform": "iOS",
             "track": "App Store",
