@@ -400,44 +400,95 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
-    # ASC has evolved pricing APIs over time:
-    # - Newer schema: appPriceSchedules (+ appPricePoints)
-    # - Legacy schema: apps/{id}/prices (+ priceTier)
+    # ASC pricing endpoints have changed over time. Prefer appPriceSchedule/appPriceSchedules (current),
+    # but fall back to the legacy /apps/{id}/prices relationship if available.
     #
-    # We verify pricing is configured, and if it is missing we attempt to set the app
-    # to Free (tier 0) via appPriceSchedules to keep submission unblocked.
+    # If pricing is missing and the current pricing APIs are available, we attempt to
+    # set the app to Free (tier 0) so submission isn't blocked.
 
-    # 1) Preferred: price schedules.
+    schedule = None
+    schedule_id: str | None = None
+    base_territory_id: str | None = None
+
+    # Newer API (common): appPriceSchedule exists on the app (single schedule object).
     try:
-        data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
-        if data.get("data"):
-            return
+        schedule = client.request(
+            "GET",
+            f"/apps/{app_id}/appPriceSchedule",
+            params={"include": "baseTerritory", "limit": 10},
+        ).get("data")
     except Exception:
-        pass
+        schedule = None
 
-    # 2) Some clients expose a singular relationship endpoint.
-    try:
-        data = client.request("GET", f"/apps/{app_id}/appPriceSchedule")
-        if data.get("data"):
+    # Newer API variant: find schedule via the top-level collection.
+    if not schedule:
+        try:
+            schedules = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+            schedule_list = schedules.get("data") or []
+            if schedule_list:
+                schedule = schedule_list[0]
+        except Exception:
+            schedule = None
+
+    if schedule and isinstance(schedule, dict) and schedule.get("id"):
+        schedule_id = schedule["id"]
+        rel_base = (schedule.get("relationships") or {}).get("baseTerritory", {}).get("data")
+        if isinstance(rel_base, dict):
+            base_territory_id = rel_base.get("id")
+
+        # Confirm there is at least one price entry, either manual or automatic.
+        manual = None
+        automatic = None
+        manual_err = None
+        automatic_err = None
+        try:
+            manual = client.request("GET", f"/appPriceSchedules/{schedule_id}/manualPrices", params={"limit": 1}).get(
+                "data"
+            )
+        except Exception as e:
+            manual_err = str(e)
+
+        if manual:
             return
-    except Exception:
-        pass
 
-    # 3) Legacy: direct prices relationship.
+        try:
+            automatic = client.request(
+                "GET", f"/appPriceSchedules/{schedule_id}/automaticPrices", params={"limit": 1}
+            ).get("data")
+        except Exception as e:
+            automatic_err = str(e)
+
+        if automatic:
+            return
+
+        # If the schedule endpoints are reachable but empty, pricing isn't configured.
+        if manual_err is None and automatic_err is None:
+            # We'll attempt to set Free below if schedule-based APIs are supported.
+            pass
+        else:
+            # Otherwise, we couldn't verify schedule pricing; attempt legacy fallback before failing.
+            info(
+                "Could not verify pricing via appPriceSchedule endpoints; attempting legacy /prices fallback.\n"
+                f"  manualPrices error: {manual_err}\n"
+                f"  automaticPrices error: {automatic_err}"
+            )
+
+    # Legacy API: prices relationship on app (older accounts).
     try:
         data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
         if data.get("data"):
             return
     except Exception:
-        pass
+        data = None
 
-    # 4) Pricing appears unset. Attempt to set the app to Free via appPriceSchedules.
+    # If legacy is unavailable, try to set the app to Free using appPriceSchedules.
     free_point_id: str | None = None
+    territory = (base_territory_id or "USA").strip() or "USA"
     try:
         points = client.request(
             "GET",
             f"/apps/{app_id}/appPricePoints",
-            params={"filter[territory]": "USA", "limit": 200},
+            params={"filter[territory]": territory, "limit": 200},
         )
         for item in points.get("data") or []:
             if not isinstance(item, dict):
@@ -451,14 +502,14 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
         free_point_id = None
 
     if free_point_id:
-        info("Pricing not set; creating Free price schedule (base territory USA)…")
+        info(f"Pricing not set; creating Free price schedule (base territory {territory})…")
         manual_price_id = "manualPrice-0"
         payload = {
             "data": {
                 "type": "appPriceSchedules",
                 "relationships": {
                     "app": {"data": {"type": "apps", "id": app_id}},
-                    "baseTerritory": {"data": {"type": "territories", "id": "USA"}},
+                    "baseTerritory": {"data": {"type": "territories", "id": territory}},
                     "manualPrices": {"data": [{"type": "appPrices", "id": manual_price_id}]},
                 },
             },
@@ -473,6 +524,7 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
         }
         try:
             client.request("POST", "/appPriceSchedules", payload=payload)
+            # Read-back verification.
             data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
             if data.get("data"):
                 return
