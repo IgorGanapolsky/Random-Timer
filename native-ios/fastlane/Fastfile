@@ -15,13 +15,25 @@ platform :ios do
       )
     end
 
-    # Keep provisioning updates enabled for archive, but avoid auth-key xcargs
-    # that can hang export on CI.
-    build_app(
-      scheme: "RandomTimer",
-      export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
-    )
+    # In CI with match profiles, disable automatic signing and build with
+    # match-installed certificates. Without match, fall back to auto-signing.
+    if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "RandomTimer.xcodeproj"
+      )
+
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store"
+      )
+    else
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        xcargs: "-allowProvisioningUpdates"
+      )
+    end
 
     # Upload to TestFlight
     upload_to_testflight(
