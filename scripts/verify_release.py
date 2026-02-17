@@ -316,19 +316,22 @@ class AppStoreVerifier:
         try:
             app_id = self._get_app_id()
 
-            # Query builds filtered by version
+            # App Store Connect /builds does not consistently support filter[version].
+            # Query by app and filter by version client-side.
             data = self._request(
                 "/builds",
                 params={
                     "filter[app]": app_id,
-                    "filter[version]": version,
                     "sort": "-uploadedDate",
-                    "limit": 5,
+                    "limit": 50,
                     "fields[builds]": "version,processingState,uploadedDate,buildNumber",
                 },
             )
 
-            builds = data.get("data", [])
+            builds = [
+                b for b in data.get("data", [])
+                if (b.get("attributes", {}).get("version") == version)
+            ]
             if not builds:
                 return {
                     "passed": False,
