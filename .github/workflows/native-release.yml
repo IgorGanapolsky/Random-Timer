@@ -334,8 +334,21 @@ jobs:
           VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' native-android/app/build.gradle.kts || echo "")
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
 
-          # iOS version from project.pbxproj
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
+          # iOS version from app Info.plist (same source used by fastlane get_version_number)
+          # Use Python plistlib so this works on ubuntu-latest and macOS.
+          IOS_VERSION=$(python - <<'PY'
+import plistlib
+from pathlib import Path
+
+plist_path = Path("native-ios/RandomTimer/Info.plist")
+if not plist_path.exists():
+    print("")
+else:
+    with plist_path.open("rb") as f:
+        data = plistlib.load(f)
+    print(data.get("CFBundleShortVersionString", ""))
+PY
+)
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Determine platform flag
