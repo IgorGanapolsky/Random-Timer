@@ -3,7 +3,8 @@ appId: com.iganapolsky.randomtimer
 # Regression: when timer is paused, user must not stay on setup/home screen.
 # This prevents the "home screen visible + Timer Paused notification" mismatch.
 
-- launchApp
+- launchApp:
+    clearState: true
 
 # Start from setup/home.
 - assertVisible: "Random Tactical Timer"
