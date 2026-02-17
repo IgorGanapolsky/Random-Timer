@@ -15,12 +15,47 @@ platform :ios do
       )
     end
 
-    # Keep provisioning updates enabled, but do not pass auth-key xcargs.
-    build_app(
-      scheme: "RandomTimer",
-      export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
-    )
+    if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+      # CI runners do not have Apple ID accounts configured; force manual signing
+      # with match-managed App Store profiles for deterministic archives.
+      app_profile = "match AppStore com.igorganapolsky.randomtimer"
+      widget_profile = "match AppStore com.igorganapolsky.randomtimer.widget"
+
+      update_code_signing_settings(
+        path: "RandomTimer.xcodeproj",
+        use_automatic_signing: false,
+        targets: ["RandomTimer"],
+        code_sign_identity: "Apple Distribution",
+        profile_name: app_profile
+      )
+
+      update_code_signing_settings(
+        path: "RandomTimer.xcodeproj",
+        use_automatic_signing: false,
+        targets: ["RandomTimerWidgetExtension"],
+        code_sign_identity: "Apple Distribution",
+        profile_name: widget_profile
+      )
+
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        export_options: {
+          signingStyle: "manual",
+          provisioningProfiles: {
+            "com.igorganapolsky.randomtimer" => app_profile,
+            "com.igorganapolsky.randomtimer.widget" => widget_profile
+          }
+        }
+      )
+    else
+      # Local/dev fallback when match is not configured.
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        xcargs: "-allowProvisioningUpdates"
+      )
+    end
 
     # Upload to TestFlight
     upload_to_testflight(
