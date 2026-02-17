@@ -371,14 +371,73 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
-    # Minimal verification: there must be at least one price and an included priceTier.
-    data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
+    # ASC pricing endpoints have changed over time. Prefer appPriceSchedule (current),
+    # but fall back to the legacy /apps/{id}/prices relationship if available.
+
+    # Newer API: appPriceSchedule exists on the app (single schedule object).
+    try:
+        schedule = client.request(
+            "GET",
+            f"/apps/{app_id}/appPriceSchedule",
+            params={"include": "baseTerritory", "limit": 10},
+        ).get("data")
+    except Exception:
+        schedule = None
+
+    if schedule and isinstance(schedule, dict) and schedule.get("id"):
+        schedule_id = schedule["id"]
+        rel_base = (schedule.get("relationships") or {}).get("baseTerritory", {}).get("data")
+        if not rel_base:
+            die("Pricing not set (baseTerritory missing in appPriceSchedule).")
+
+        # Confirm there is at least one price entry, either manual or automatic.
+        # We fetch both relationships with limit=1 and accept either.
+        manual = None
+        automatic = None
+        manual_err = None
+        automatic_err = None
+        try:
+            manual = client.request("GET", f"/appPriceSchedules/{schedule_id}/manualPrices", params={"limit": 1}).get(
+                "data"
+            )
+        except Exception as e:
+            manual_err = str(e)
+
+        if manual:
+            return
+
+        try:
+            automatic = client.request(
+                "GET", f"/appPriceSchedules/{schedule_id}/automaticPrices", params={"limit": 1}
+            ).get("data")
+        except Exception as e:
+            automatic_err = str(e)
+
+        if automatic:
+            return
+
+        # If the schedule endpoints are reachable but empty, pricing isn't configured.
+        if manual_err is None and automatic_err is None:
+            die("Pricing not set (appPriceSchedule has no manualPrices/automaticPrices).")
+
+        # Otherwise, we couldn't verify schedule pricing; attempt legacy fallback before failing.
+        info(
+            "Could not verify pricing via appPriceSchedule endpoints; attempting legacy /prices fallback.\n"
+            f"  manualPrices error: {manual_err}\n"
+            f"  automaticPrices error: {automatic_err}"
+        )
+
+    # Legacy API: prices relationship on app (older accounts).
+    try:
+        data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
+    except Exception:
+        die("Pricing not set (no appPriceSchedule and legacy /prices not available).")
+
     prices = data.get("data") or []
     if not prices:
         die("Pricing not set (no prices returned for app).")
-    # If included tier id is 0 => free. We don't enforce free/paid; just that it exists.
     included = data.get("included") or []
-    tier = first([i for i in included if i.get("type") == "priceTiers"])
+    tier = first([i for i in included if i.get("type") in ("priceTiers", "appPriceTiers")])
     if not tier:
         die("Pricing not set (missing priceTier include).")
 
