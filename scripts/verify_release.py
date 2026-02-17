@@ -447,10 +447,11 @@ def print_results(results: list[dict]):
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int) -> dict:
+def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
+    terminal_statuses = terminal_statuses or {"ERROR"}
 
     while True:
         attempt += 1
@@ -459,7 +460,7 @@ def poll_until_done(verify_fn, poll_interval: int, timeout: int) -> dict:
         if result["passed"]:
             return result
 
-        if result["status"] == "ERROR":
+        if result["status"] in terminal_statuses:
             return result
 
         remaining = deadline - time.time()
@@ -555,6 +556,7 @@ def main():
                 lambda: gp.verify(args.track, args.version_code),
                 args.poll_interval,
                 args.timeout,
+                terminal_statuses={"ERROR"},
             )
         else:
             result = gp.verify(args.track, args.version_code)
@@ -576,6 +578,9 @@ def main():
                 lambda: asc.verify(args.version),
                 args.poll_interval,
                 args.timeout,
+                # For iOS, NOT_FOUND usually means the version is wrong or the build
+                # was never uploaded; fail fast instead of waiting out the timeout.
+                terminal_statuses={"ERROR", "NOT_FOUND"},
             )
         else:
             result = asc.verify(args.version)
