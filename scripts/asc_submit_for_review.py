@@ -661,7 +661,8 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
         die("Pricing not set (could not find Free price point and legacy /prices is unavailable).")
 
     info(f"Pricing not set; creating Free price schedule (base territory {territory})…")
-    manual_price_id = "manualPrice-0"
+    # Inline creation IDs must be local IDs in the form '${local-id}'.
+    manual_price_id = "${manualPrice0}"
     payload = {
         "data": {
             "type": "appPriceSchedules",
