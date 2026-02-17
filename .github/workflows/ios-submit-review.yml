@@ -75,7 +75,7 @@ jobs:
           fi
           # Info.plist commonly contains build-setting placeholders like $(MARKETING_VERSION).
           # Read MARKETING_VERSION directly from the Xcode project for a stable X.Y.Z value.
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | sed -n 's/.*= *\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' || true)
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | sed -n 's/.*= *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' || true)
           if [ -z "$IOS_VERSION" ]; then
             echo "❌ Could not determine iOS version (MARKETING_VERSION) from Xcode project"
             exit 1
