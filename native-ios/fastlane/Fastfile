@@ -15,10 +15,12 @@ platform :ios do
       )
     end
 
-    # Build with match-installed signing profiles (no auto-provisioning needed)
+    # Keep provisioning updates enabled for archive, but avoid auth-key xcargs
+    # that can hang export on CI.
     build_app(
       scheme: "RandomTimer",
-      export_method: "app-store"
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
     )
 
     # Upload to TestFlight
@@ -78,6 +80,15 @@ platform :ios do
         )
       end
 
+      # Development profiles for archive build
+      match(
+        type: "development",
+        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+        readonly: false,
+        api_key: api_key
+      )
+
+      # Distribution profiles for App Store export
       match(
         type: "appstore",
         app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
