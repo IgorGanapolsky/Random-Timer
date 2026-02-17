@@ -18,8 +18,17 @@ platform :ios do
     if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
       # CI runners do not have Apple ID accounts configured; force manual signing
       # with match-managed App Store profiles for deterministic archives.
-      app_profile = "match AppStore com.igorganapolsky.randomtimer"
-      widget_profile = "match AppStore com.igorganapolsky.randomtimer.widget"
+      match(
+        type: "appstore",
+        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+        readonly: true,
+        api_key: defined?(api_key) ? api_key : nil
+      )
+
+      app_profile = ENV["sigh_com.igorganapolsky.randomtimer_appstore_profile-name"] ||
+                    "match AppStore com.igorganapolsky.randomtimer"
+      widget_profile = ENV["sigh_com.igorganapolsky.randomtimer.widget_appstore_profile-name"] ||
+                       "match AppStore com.igorganapolsky.randomtimer.widget"
 
       update_code_signing_settings(
         path: "RandomTimer.xcodeproj",
