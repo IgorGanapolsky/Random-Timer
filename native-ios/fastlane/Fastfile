@@ -3,6 +3,8 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
+    setup_ci if ENV["CI"] == "true"
+
     # Increment build number
     increment_build_number(xcodeproj: "RandomTimer.xcodeproj")
 
@@ -113,6 +115,8 @@ platform :ios do
 
   desc "Setup certificates and profiles"
   lane :setup do
+    setup_ci if ENV["CI"] == "true"
+
     if ENV["MATCH_GIT_URL"]
       api_key = nil
       if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
