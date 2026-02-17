@@ -81,11 +81,41 @@ jobs:
         with:
           category: "/language:javascript"
 
+      - name: Install gitleaks (OSS CLI)
+        if: matrix.scan-type == 'code'
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          ARCH="$(uname -m)"
+          case "$ARCH" in
+            x86_64|amd64) ASSET="gitleaks_8.30.0_linux_x64.tar.gz" ;;
+            aarch64|arm64) ASSET="gitleaks_8.30.0_linux_arm64.tar.gz" ;;
+            *) echo "Unsupported arch: $ARCH" && exit 1 ;;
+          esac
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          install -m 0755 /tmp/gitleaks "$HOME/.local/bin/gitleaks"
+          "$HOME/.local/bin/gitleaks" version
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Run Secret Scan
         if: matrix.scan-type == 'code'
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+            echo "Scanning commit range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+          elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
+            RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
+            echo "Scanning fallback range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+          else
+            echo "Scanning full git history fallback"
+            gitleaks git --no-banner --redact --exit-code 1
+          fi
 
       # Mobile-specific Security Scans
       - name: Mobile Security Framework (MobSF)
