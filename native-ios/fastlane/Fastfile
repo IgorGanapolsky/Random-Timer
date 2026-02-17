@@ -102,19 +102,19 @@ platform :ios do
   end
 
   desc "Create app in App Store Connect"
-  lane :create_app do
+  lane :create_app do |options|
     produce(
       app_identifier: "com.igorganapolsky.randomtimer",
       app_name: "Random Tactical Timer",
       language: "en-US",
-      app_version: "1.1.1",
+      app_version: options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer"),
       sku: "randomtimer001",
       team_id: ENV["FASTLANE_TEAM_ID"]
     )
   end
 
   desc "Upload metadata (screenshots, descriptions) to App Store Connect"
-  lane :metadata do
+  lane :metadata do |options|
     if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
       api_key = app_store_connect_api_key(
         key_id: ENV["APPSTORE_KEY_ID"],
@@ -123,8 +123,56 @@ platform :ios do
       )
     end
 
+    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
     deliver(
       app_identifier: "com.igorganapolsky.randomtimer",
+      app_version: version,
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true,
+      api_key: defined?(api_key) ? api_key : nil
+    )
+  end
+
+  desc "Submit a given version for App Review (uploads metadata + attaches build)"
+  lane :submit_review do |options|
+    setup_ci if ENV["CI"] == "true"
+
+    if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APPSTORE_KEY_ID"],
+        issuer_id: ENV["APPSTORE_ISSUER_ID"],
+        key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+      )
+    end
+
+    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
+    build_number = options[:build_number]
+
+    if (build_number.nil? || build_number.to_s.strip.empty?) && defined?(api_key)
+      begin
+        build_number = latest_testflight_build_number(
+          api_key: api_key,
+          app_identifier: "com.igorganapolsky.randomtimer",
+          version: version
+        )
+      rescue => e
+        UI.user_error!("Could not determine latest TestFlight build number for v#{version}: #{e}")
+      end
+    end
+
+    if build_number.nil? || build_number.to_s.strip.empty?
+      UI.user_error!("Missing build_number. Provide build_number:<N> or ensure APPSTORE_* API key env vars are configured.")
+    end
+
+    UI.message("Submitting App Store version v#{version} with build #{build_number} for review")
+
+    deliver(
+      app_identifier: "com.igorganapolsky.randomtimer",
+      app_version: version,
+      build_number: build_number.to_s,
+      submit_for_review: true,
+      automatic_release: false,
       skip_binary_upload: true,
       skip_screenshots: false,
       force: true,
