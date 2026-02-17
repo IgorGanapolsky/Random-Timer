@@ -5,9 +5,6 @@ platform :ios do
   lane :beta do
     setup_ci if ENV["CI"] == "true"
 
-    # Increment build number
-    increment_build_number(xcodeproj: "RandomTimer.xcodeproj")
-
     # Use App Store Connect API key if available
     if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
       api_key = app_store_connect_api_key(
@@ -16,6 +13,30 @@ platform :ios do
         key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
       )
     end
+
+    marketing_version = get_version_number(xcodeproj: "RandomTimer.xcodeproj")
+    current_build_number = get_build_number(xcodeproj: "RandomTimer.xcodeproj").to_i
+    next_build_number = current_build_number + 1
+
+    if defined?(api_key)
+      begin
+        latest_remote_build_number = latest_testflight_build_number(
+          api_key: api_key,
+          app_identifier: "com.igorganapolsky.randomtimer",
+          version: marketing_version,
+          initial_build_number: current_build_number
+        ).to_i
+        next_build_number = [next_build_number, latest_remote_build_number + 1].max
+      rescue => e
+        UI.important("Could not read latest TestFlight build number: #{e}")
+      end
+    end
+
+    UI.message("Using build number #{next_build_number} for version #{marketing_version}")
+    increment_build_number(
+      xcodeproj: "RandomTimer.xcodeproj",
+      build_number: next_build_number
+    )
 
     if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
       # CI runners do not have Apple ID accounts configured; force manual signing
