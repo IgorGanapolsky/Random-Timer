@@ -327,14 +327,22 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> None:
         die("Missing app info. Complete App Information in App Store Connect.")
 
     included = data.get("included") or []
-    loc_by_id: dict[str, dict[str, Any]] = {
-        inc["id"]: inc for inc in included if inc.get("type") == "appInfoLocalizations" and inc.get("id")
-    }
+    loc_by_id: dict[str, dict[str, Any]] = {}
+    for inc in included:
+        if not isinstance(inc, dict):
+            continue
+        if inc.get("type") != "appInfoLocalizations":
+            continue
+        loc_id = inc.get("id")
+        if isinstance(loc_id, str) and loc_id:
+            loc_by_id[loc_id] = inc
 
     # Prefer an AppInfo that explicitly links to the requested locale.
     app_info: dict[str, Any] | None = None
     loc: dict[str, Any] | None = None
     for candidate in app_infos:
+        if not isinstance(candidate, dict):
+            continue
         rel_locs = (candidate.get("relationships") or {}).get("appInfoLocalizations", {}).get("data") or []
         for r in rel_locs:
             inc = loc_by_id.get((r or {}).get("id", ""))
@@ -351,11 +359,12 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> None:
             if inc.get("type") == "appInfoLocalizations" and (inc.get("attributes") or {}).get("locale") == locale:
                 loc = inc
                 break
-        app_info = app_infos[0]
+        app_info = app_infos[0] if isinstance(app_infos[0], dict) else None
     if not loc:
         die(f"Missing app info localization for {locale} (App Information).")
 
-    assert app_info is not None
+    if not app_info:
+        die("Missing app info object. Complete App Information in App Store Connect.")
     rel_primary = (app_info.get("relationships") or {}).get("primaryCategory", {}).get("data")
     if not rel_primary:
         die("Primary category is not set (App Information).")
