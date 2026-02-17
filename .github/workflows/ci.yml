@@ -196,17 +196,22 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+          RANGE=""
+          if [[ "$EVENT_NAME" == "pull_request" && -n "$PR_BASE_SHA" && -n "$PR_HEAD_SHA" ]]; then
             RANGE="${PR_BASE_SHA}..${PR_HEAD_SHA}"
-          else
-            if [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
-              RANGE="${BEFORE_SHA}..${HEAD_SHA}"
-            else
-              RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
-            fi
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+          elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
+            RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
           fi
-          echo "Scanning commit range: $RANGE"
-          gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+
+          if [[ -n "$RANGE" ]]; then
+            echo "Scanning commit range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+          else
+            echo "Scanning full git history fallback"
+            gitleaks git --no-banner --redact --exit-code 1
+          fi
 
   notify:
     name: Notify
