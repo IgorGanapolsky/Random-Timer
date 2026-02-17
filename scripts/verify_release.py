@@ -322,16 +322,32 @@ class AppStoreVerifier:
                 "/builds",
                 params={
                     "filter[app]": app_id,
+                    "include": "preReleaseVersion",
                     "sort": "-uploadedDate",
                     "limit": 50,
-                    "fields[builds]": "version,processingState,uploadedDate,buildNumber",
+                    "fields[builds]": "version,processingState,uploadedDate,preReleaseVersion",
+                    "fields[preReleaseVersions]": "version",
                 },
             )
 
-            builds = [
-                b for b in data.get("data", [])
-                if (b.get("attributes", {}).get("version") == version)
-            ]
+            pre_release_versions = {}
+            for item in data.get("included", []):
+                if item.get("type") == "preReleaseVersions":
+                    pre_release_versions[item.get("id")] = (
+                        item.get("attributes", {}).get("version")
+                    )
+
+            builds = []
+            for build in data.get("data", []):
+                pre_release_rel = (
+                    build.get("relationships", {})
+                    .get("preReleaseVersion", {})
+                    .get("data")
+                )
+                pre_release_id = pre_release_rel.get("id") if pre_release_rel else None
+                marketing_version = pre_release_versions.get(pre_release_id)
+                if marketing_version == version:
+                    builds.append(build)
             if not builds:
                 return {
                     "passed": False,
@@ -342,7 +358,7 @@ class AppStoreVerifier:
             latest = builds[0]
             attrs = latest.get("attributes", {})
             processing_state = attrs.get("processingState", "UNKNOWN")
-            build_number = attrs.get("buildNumber", "?")
+            build_number = attrs.get("version", "?")
 
             passed = processing_state == "VALID"
             return {
