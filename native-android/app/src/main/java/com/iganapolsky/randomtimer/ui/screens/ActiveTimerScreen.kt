@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -106,7 +107,6 @@ fun ActiveTimerScreen(
                     .padding(24.dp),
         ) {
             val isLandscape = maxWidth > maxHeight
-            val isAlarmOrComplete = state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE
             val circleSize = if (isLandscape) 220.dp else 280.dp
 
             @Composable
@@ -251,12 +251,13 @@ fun ActiveTimerScreen(
             if (isLandscape) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
                     ) {
                         if (!isComplete) {
                             LoopBadge(
@@ -268,6 +269,8 @@ fun ActiveTimerScreen(
                                 },
                             )
                             Spacer(modifier = Modifier.height(12.dp))
+                        } else {
+                            AlarmLoopBadge()
                         }
 
                         StatusText()
@@ -275,8 +278,6 @@ fun ActiveTimerScreen(
                         TimerCircle()
                         Spacer(modifier = Modifier.height(16.dp))
                         InfoMessage()
-                        Spacer(modifier = Modifier.height(12.dp))
-                        AlarmLoopBadge()
                     }
 
                     Column(
@@ -285,9 +286,9 @@ fun ActiveTimerScreen(
                                 .weight(1f)
                                 .fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom,
+                        verticalArrangement = Arrangement.Center,
                     ) {
-                        ActionButtons()
+                        ActionButtons(modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 520.dp))
                     }
                 }
             } else {
