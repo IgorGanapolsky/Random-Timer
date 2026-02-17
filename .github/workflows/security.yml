@@ -85,7 +85,16 @@ jobs:
         if: matrix.scan-type == 'code'
         run: |
           mkdir -p "$HOME/.local/bin"
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/main/install.sh | sh -s -- -b "$HOME/.local/bin" v8.30.0
+          ARCH="$(uname -m)"
+          case "$ARCH" in
+            x86_64|amd64) ASSET="gitleaks_8.30.0_linux_x64.tar.gz" ;;
+            aarch64|arm64) ASSET="gitleaks_8.30.0_linux_arm64.tar.gz" ;;
+            *) echo "Unsupported arch: $ARCH" && exit 1 ;;
+          esac
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          install -m 0755 /tmp/gitleaks "$HOME/.local/bin/gitleaks"
+          "$HOME/.local/bin/gitleaks" version
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run Secret Scan
