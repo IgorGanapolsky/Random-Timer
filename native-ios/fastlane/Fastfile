@@ -14,8 +14,14 @@ platform :ios do
       )
     end
 
-    marketing_version = get_version_number(xcodeproj: "RandomTimer.xcodeproj")
-    current_build_number = get_build_number(xcodeproj: "RandomTimer.xcodeproj").to_i
+    marketing_version = get_version_number(
+      xcodeproj: "RandomTimer.xcodeproj",
+      target: "RandomTimer"
+    )
+    current_build_number = get_build_number(
+      xcodeproj: "RandomTimer.xcodeproj",
+      target: "RandomTimer"
+    ).to_i
     next_build_number = current_build_number + 1
 
     if defined?(api_key)
