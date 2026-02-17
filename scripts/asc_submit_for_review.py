@@ -421,16 +421,35 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
     schedule_id: str | None = None
     base_territory_id: str | None = None
 
-    # Current API: AppPriceSchedule is a top-level resource.
+    # Current API: some accounts expose a singular schedule relationship off the app.
     try:
-        schedules = client.get_all(
-            "/appPriceSchedules",
-            params={"filter[app]": app_id, "include": "baseTerritory", "limit": 10},
+        data = client.request(
+            "GET",
+            f"/apps/{app_id}/appPriceSchedule",
+            params={"include": "baseTerritory", "limit": 10},
         )
+        candidate = data.get("data")
+        if isinstance(candidate, dict) and candidate.get("id"):
+            schedule = candidate
     except Exception:
-        schedules = []
+        schedule = None
 
-    schedule = first([s for s in schedules if isinstance(s, dict)])
+    # Common API: schedules are top-level resources filtered by app.
+    if not schedule:
+        try:
+            data = client.request(
+                "GET",
+                "/appPriceSchedules",
+                params={"filter[app]": app_id, "include": "baseTerritory", "limit": 10},
+            )
+            schedule_list = data.get("data") or []
+            for item in schedule_list:
+                if isinstance(item, dict) and item.get("id"):
+                    schedule = item
+                    break
+        except Exception:
+            schedule = None
+
     if schedule and schedule.get("id"):
         schedule_id = schedule["id"]
         rel_base = (schedule.get("relationships") or {}).get("baseTerritory", {}).get("data")
@@ -518,7 +537,8 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
 
     # Read-back verification.
     try:
-        schedules = client.get_all("/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+        data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+        schedules = data.get("data") or []
     except Exception:
         schedules = []
     if schedules:

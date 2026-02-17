@@ -28,6 +28,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
 
         client = _RouterClient(
             {
+                ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 ("GET", "/apps/app1/appPriceSchedule"): RuntimeError("404"),
                 ("GET", "/appPriceSchedules"): {"data": [{"id": "sched1", "type": "appPriceSchedules"}]},
                 ("GET", "/appPriceSchedules/sched1/manualPrices"): {"data": [{"id": "mp1", "type": "appPrices"}]},
@@ -36,7 +37,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         verify_pricing(client, "app1")
         self.assertEqual(
             [c["path"] for c in client.calls],
-            ["/apps/app1/appPriceSchedule", "/appPriceSchedules", "/appPriceSchedules/sched1/manualPrices"],
+            ["/apps/app1/prices", "/apps/app1/appPriceSchedule", "/appPriceSchedules", "/appPriceSchedules/sched1/manualPrices"],
         )
 
     def test_verify_pricing_falls_back_to_singular_schedule_endpoint(self):
@@ -44,6 +45,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
 
         client = _RouterClient(
             {
+                ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 ("GET", "/apps/app1/appPriceSchedule"): {"data": {"id": "sched1", "type": "appPriceSchedules"}},
                 ("GET", "/appPriceSchedules/sched1/manualPrices"): {"data": [{"id": "mp1", "type": "appPrices"}]},
             }
@@ -51,7 +53,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         verify_pricing(client, "app1")
         self.assertEqual(
             [c["path"] for c in client.calls],
-            ["/apps/app1/appPriceSchedule", "/appPriceSchedules/sched1/manualPrices"],
+            ["/apps/app1/prices", "/apps/app1/appPriceSchedule", "/appPriceSchedules/sched1/manualPrices"],
         )
 
     def test_verify_pricing_creates_free_schedule_when_missing(self):
