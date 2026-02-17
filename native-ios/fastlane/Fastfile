@@ -149,6 +149,9 @@ platform :ios do
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
       force: true,
+      # Fastlane precheck can't inspect IAP via App Store Connect API keys; avoid blocking CI uploads.
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
       api_key: defined?(api_key) ? api_key : nil
     )
   end
