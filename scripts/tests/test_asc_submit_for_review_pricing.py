@@ -91,7 +91,13 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         self.assertIn("/appPriceSchedules", paths)
         self.assertIn("/apps/app1/appPricePoints", paths)
         self.assertIn("/appPriceSchedules", paths)
-        self.assertTrue(any(c["method"] == "POST" and c["path"] == "/appPriceSchedules" for c in client.calls))
+        post = next((c for c in client.calls if c["method"] == "POST" and c["path"] == "/appPriceSchedules"), None)
+        self.assertIsNotNone(post)
+        payload = (post or {}).get("payload") or {}
+        included = payload.get("included") or []
+        self.assertTrue(included and isinstance(included[0], dict))
+        local_id = (included[0].get("id") or "")
+        self.assertTrue(isinstance(local_id, str) and local_id.startswith("$"))
 
 
 if __name__ == "__main__":
