@@ -374,16 +374,18 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
     # ASC pricing endpoints have changed over time. Prefer appPriceSchedule (current),
     # but fall back to the legacy /apps/{id}/prices relationship if available.
 
-    # Newer API: appPriceSchedule exists on the app (single schedule object).
+    # Current API (post "global pricing" update): AppPriceSchedule is its own resource.
+    # See WWDC23 "What's new in App Store pricing" for the resource model.
+    # We locate the schedule via /appPriceSchedules?filter[app]=<APP_ID>.
     try:
-        schedule = client.request(
-            "GET",
-            f"/apps/{app_id}/appPriceSchedule",
-            params={"include": "baseTerritory", "limit": 10},
-        ).get("data")
+        schedules = client.get_all(
+            "/appPriceSchedules",
+            params={"filter[app]": app_id, "include": "baseTerritory", "limit": 10},
+        )
     except Exception:
-        schedule = None
+        schedules = []
 
+    schedule = first(schedules)
     if schedule and isinstance(schedule, dict) and schedule.get("id"):
         schedule_id = schedule["id"]
         rel_base = (schedule.get("relationships") or {}).get("baseTerritory", {}).get("data")
