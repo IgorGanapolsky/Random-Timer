@@ -14,9 +14,15 @@ on:
         default: 'both'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
-        type: boolean
+        # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
+        # (we've observed the `ios-submit-review` job being skipped). Use a string choice so UI/CLI/API
+        # always pass consistent values.
+        type: choice
+        options:
+          - 'false'
+          - 'true'
         required: false
-        default: false
+        default: 'false'
 
 jobs:
   ios-testflight:
@@ -343,6 +349,15 @@ jobs:
           IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Debug workflow inputs (no secrets)
+        run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "inputs.platform=${{ inputs.platform }}"
+          echo "inputs.submit_review=${{ inputs.submit_review }}"
+          echo "github.event.inputs.platform=${{ github.event.inputs.platform }}"
+          echo "github.event.inputs.submit_review=${{ github.event.inputs.submit_review }}"
+          echo "github.event.inputs(json)=${{ toJSON(github.event.inputs) }}"
+
       - name: Determine platform flag
         id: platform
         run: |
@@ -398,7 +413,6 @@ jobs:
         needs.verify-releases.result == 'success' &&
         (inputs.platform == 'ios' || inputs.platform == 'both') &&
         (
-          inputs.submit_review == true ||
           inputs.submit_review == 'true' ||
           github.event.inputs.submit_review == 'true'
         )
