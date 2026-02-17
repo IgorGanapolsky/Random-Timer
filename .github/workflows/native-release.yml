@@ -408,15 +408,7 @@ jobs:
     needs: [verify-releases]
     # `workflow_dispatch` inputs can be booleans (newer UI) or strings (API/CLI).
     # Treat this as enabled only when explicitly true.
-    if: >-
-      ${{
-        needs.verify-releases.result == 'success' &&
-        (inputs.platform == 'ios' || inputs.platform == 'both') &&
-        (
-          inputs.submit_review == 'true' ||
-          github.event.inputs.submit_review == 'true'
-        )
-      }}
+    if: ${{ needs.verify-releases.result == 'success' && (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'both' || inputs.platform == 'ios' || inputs.platform == 'both') && (github.event.inputs.submit_review == true || github.event.inputs.submit_review == 'true' || inputs.submit_review == true || inputs.submit_review == 'true') }}
     runs-on: ubuntu-latest
     environment: production
     steps:
