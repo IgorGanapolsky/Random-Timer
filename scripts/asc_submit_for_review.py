@@ -318,38 +318,54 @@ def attach_build(client: ASCClient, version_id: str, build_id: str) -> None:
 
 
 def verify_app_info(client: ASCClient, app_id: str, locale: str) -> None:
-    # Category + URLs (support/privacy) are on app info localization.
-    data = client.request(
-        "GET",
-        f"/apps/{app_id}/appInfos",
-        params={
-            "filter[platform]": "IOS",
-            "include": "appInfoLocalizations,primaryCategory",
-            "limit": 10,
-            "fields[appInfos]": "primaryCategory",
-            "fields[appInfoLocalizations]": "locale,privacyPolicyUrl,supportUrl,marketingUrl,name,subtitle",
-        },
-    )
+    # NOTE: App Store Connect API query params and field names can change over time.
+    # Keep this request conservative: avoid optional filters/fields that can 400 and
+    # instead validate required values from the returned objects.
+    data = client.request("GET", f"/apps/{app_id}/appInfos", params={"include": "appInfoLocalizations", "limit": 10})
     app_infos = data.get("data") or []
     if not app_infos:
-        die("Missing app info (platform IOS). Complete App Information in App Store Connect.")
+        die("Missing app info. Complete App Information in App Store Connect.")
 
-    app_info = app_infos[0]
+    included = data.get("included") or []
+    loc_by_id: dict[str, dict[str, Any]] = {
+        inc["id"]: inc for inc in included if inc.get("type") == "appInfoLocalizations" and inc.get("id")
+    }
+
+    # Prefer an AppInfo that explicitly links to the requested locale.
+    app_info: dict[str, Any] | None = None
+    loc: dict[str, Any] | None = None
+    for candidate in app_infos:
+        rel_locs = (candidate.get("relationships") or {}).get("appInfoLocalizations", {}).get("data") or []
+        for r in rel_locs:
+            inc = loc_by_id.get((r or {}).get("id", ""))
+            if inc and (inc.get("attributes") or {}).get("locale") == locale:
+                app_info = candidate
+                loc = inc
+                break
+        if loc:
+            break
+
+    # Fallback: if relationships are missing, search included localizations directly.
+    if not loc:
+        for inc in included:
+            if inc.get("type") == "appInfoLocalizations" and (inc.get("attributes") or {}).get("locale") == locale:
+                loc = inc
+                break
+        app_info = app_infos[0]
+    if not loc:
+        die(f"Missing app info localization for {locale} (App Information).")
+
+    assert app_info is not None
     rel_primary = (app_info.get("relationships") or {}).get("primaryCategory", {}).get("data")
     if not rel_primary:
         die("Primary category is not set (App Information).")
 
-    included = data.get("included") or []
-    loc = None
-    for inc in included:
-        if inc.get("type") == "appInfoLocalizations" and (inc.get("attributes") or {}).get("locale") == locale:
-            loc = inc
-            break
-    if not loc:
-        die(f"Missing app info localization for {locale} (App Information).")
-    attrs = loc.get("attributes") or {}
-    ensure_https(attrs.get("privacyPolicyUrl", ""), "Privacy Policy URL")
-    ensure_https(attrs.get("supportUrl", ""), "Support URL")
+    # These fields are typically on the localization, but fall back to AppInfo attributes
+    # if ASC changes the schema.
+    loc_attrs = loc.get("attributes") or {}
+    info_attrs = (app_info.get("attributes") or {}) if isinstance(app_info, dict) else {}
+    ensure_https((loc_attrs.get("privacyPolicyUrl") or info_attrs.get("privacyPolicyUrl") or "").strip(), "Privacy Policy URL")
+    ensure_https((loc_attrs.get("supportUrl") or info_attrs.get("supportUrl") or "").strip(), "Support URL")
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
