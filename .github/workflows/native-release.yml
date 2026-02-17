@@ -408,7 +408,6 @@ jobs:
     needs: [verify-releases]
     # Run after verification. Gate privileged steps at runtime by reading the dispatch payload,
     # because job-level `if:` on workflow_dispatch inputs has been brittle in practice.
-    if: ${{ needs.verify-releases.result == 'success' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -416,13 +415,15 @@ jobs:
 
       - name: Gate submit-for-review (no secrets)
         id: gate
+        env:
+          VERIFY_RELEASES_RESULT: ${{ needs.verify-releases.result }}
         run: |
           set -euo pipefail
           PLATFORM=$(jq -r '.inputs.platform // ""' "$GITHUB_EVENT_PATH")
           SUBMIT_REVIEW=$(jq -r '.inputs.submit_review // ""' "$GITHUB_EVENT_PATH")
 
           ENABLED="false"
-          if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
+          if [[ "${VERIFY_RELEASES_RESULT}" == "success" && ( "$PLATFORM" == "ios" || "$PLATFORM" == "both" ) ]]; then
             if [[ "$SUBMIT_REVIEW" == "true" || "$SUBMIT_REVIEW" == "1" ]]; then
               ENABLED="true"
             fi
@@ -431,7 +432,7 @@ jobs:
           echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
           echo "submit_review=$SUBMIT_REVIEW" >> "$GITHUB_OUTPUT"
           echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
-          echo "gate: platform=$PLATFORM submit_review=$SUBMIT_REVIEW enabled=$ENABLED"
+          echo "gate: verify_releases_result=${VERIFY_RELEASES_RESULT} platform=$PLATFORM submit_review=$SUBMIT_REVIEW enabled=$ENABLED"
 
       - name: Setup Python
         if: steps.gate.outputs.enabled == 'true'
