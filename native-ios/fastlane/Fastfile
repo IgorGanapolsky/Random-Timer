@@ -15,11 +15,25 @@ platform :ios do
       )
     end
 
-    # Build with match-installed signing profiles (no auto-provisioning needed)
-    build_app(
-      scheme: "RandomTimer",
-      export_method: "app-store"
-    )
+    # In CI with match profiles, disable automatic signing and build with
+    # match-installed certificates. Without match, fall back to auto-signing.
+    if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "RandomTimer.xcodeproj"
+      )
+
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store"
+      )
+    else
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        xcargs: "-allowProvisioningUpdates"
+      )
+    end
 
     # Upload to TestFlight
     upload_to_testflight(
@@ -78,6 +92,7 @@ platform :ios do
         )
       end
 
+      # Distribution profiles for App Store export
       match(
         type: "appstore",
         app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
