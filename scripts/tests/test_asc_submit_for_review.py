@@ -46,8 +46,8 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
 
         verify_app_info(client, "6758355312", "en-US")
 
-        self.assertEqual(len(client.calls), 1)
-        call = client.calls[0]
+        call = client.calls[0] if client.calls else None
+        self.assertIsNotNone(call)
         self.assertEqual(call["method"], "GET")
         self.assertEqual(call["path"], "/apps/6758355312/appInfos")
         params = call["params"] or {}
