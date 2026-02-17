@@ -203,7 +203,6 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
         params={
             "filter[locale]": locale,
             "limit": 10,
-            "fields[appStoreVersionLocalizations]": "locale,description,keywords,whatsNew,promotionalText",
         },
     )
     loc = first(locs)
@@ -317,39 +316,58 @@ def attach_build(client: ASCClient, version_id: str, build_id: str) -> None:
     )
 
 
-def verify_app_info(client: ASCClient, app_id: str, locale: str) -> None:
-    # Category + URLs (support/privacy) are on app info localization.
+def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, Any]:
+    # App Info holds category + localized strings/URLs like privacy policy.
+    #
+    # ASC API fields have shifted over time; keep this query conservative and validate
+    # only what we can reliably read here.
     data = client.request(
         "GET",
         f"/apps/{app_id}/appInfos",
         params={
-            "filter[platform]": "IOS",
             "include": "appInfoLocalizations,primaryCategory",
-            "limit": 10,
-            "fields[appInfos]": "primaryCategory",
-            "fields[appInfoLocalizations]": "locale,privacyPolicyUrl,supportUrl,marketingUrl,name,subtitle",
+            "limit": 50,
         },
     )
     app_infos = data.get("data") or []
     if not app_infos:
-        die("Missing app info (platform IOS). Complete App Information in App Store Connect.")
+        die("Missing app info. Complete App Information in App Store Connect.")
 
-    app_info = app_infos[0]
+    # Prefer the iOS appInfo if multiple platforms exist; otherwise fall back to first.
+    app_info = None
+    for ai in app_infos:
+        if (ai.get("attributes") or {}).get("platform") == "IOS":
+            app_info = ai
+            break
+    if not app_info:
+        app_info = app_infos[0]
+
     rel_primary = (app_info.get("relationships") or {}).get("primaryCategory", {}).get("data")
     if not rel_primary:
         die("Primary category is not set (App Information).")
 
+    rel_loc_ids = set()
+    rel_locs = (app_info.get("relationships") or {}).get("appInfoLocalizations", {}).get("data") or []
+    for item in rel_locs:
+        if isinstance(item, dict) and item.get("id"):
+            rel_loc_ids.add(item["id"])
+
     included = data.get("included") or []
     loc = None
     for inc in included:
-        if inc.get("type") == "appInfoLocalizations" and (inc.get("attributes") or {}).get("locale") == locale:
+        if inc.get("type") != "appInfoLocalizations":
+            continue
+        if rel_loc_ids and inc.get("id") not in rel_loc_ids:
+            continue
+        if (inc.get("attributes") or {}).get("locale") == locale:
             loc = inc
             break
     if not loc:
         die(f"Missing app info localization for {locale} (App Information).")
+
     attrs = loc.get("attributes") or {}
     ensure_https(attrs.get("privacyPolicyUrl", ""), "Privacy Policy URL")
-    ensure_https(attrs.get("supportUrl", ""), "Support URL")
+    return attrs
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
@@ -457,7 +475,7 @@ def main() -> int:
     info(f"App: {args.bundle_id} (id={app_id})")
 
     # Hard preflight checks (fail fast if store listing is incomplete).
-    verify_app_info(client, app_id, args.locale)
+    app_info_loc_attrs = verify_app_info(client, app_id, args.locale)
     verify_pricing(client, app_id)
     verify_review_detail(client, app_id)
     verify_age_rating(client, app_id)
@@ -472,6 +490,17 @@ def main() -> int:
 
     loc = get_version_localization(client, version_id, args.locale)
     loc_id = loc["id"]
+    loc_attrs = loc.get("attributes") or {}
+
+    # Support URL may live on App Store version localization (newer ASC API) or on App Info localization
+    # (older ASC API). Accept either, but require a non-empty https:// URL.
+    support_url = (
+        (loc_attrs.get("supportUrl") or "").strip()
+        or (loc_attrs.get("supportURL") or "").strip()
+        or (app_info_loc_attrs.get("supportUrl") or "").strip()
+        or (app_info_loc_attrs.get("supportURL") or "").strip()
+    )
+    ensure_https(support_url, "Support URL")
 
     counts = screenshot_counts(client, loc_id)
     info(f"Screenshot counts: {counts}")
