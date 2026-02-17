@@ -220,6 +220,14 @@ jobs:
           RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
           RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
           RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
+          TRANSIENT_ERROR_FRAGMENTS = (
+              "eof occurred in violation of protocol",
+              "connection reset",
+              "connection aborted",
+              "timed out",
+              "temporary failure",
+              "service unavailable",
+          )
 
           credentials = service_account.Credentials.from_service_account_file(
               '/tmp/play-service-account.json', scopes=SCOPES
@@ -254,12 +262,15 @@ jobs:
               except HttpError as e:
                   message = str(e)
                   is_recent_reset = RESET_ERROR_FRAGMENT in message.lower()
+                  status = getattr(getattr(e, "resp", None), "status", None)
+                  is_transient_http = status in (429, 500, 502, 503, 504)
                   remaining = int(deadline - time.time())
 
-                  if is_recent_reset and remaining > 0:
+                  if (is_recent_reset or is_transient_http) and remaining > 0:
                       sleep_for = min(RETRY_INTERVAL, remaining)
+                      reason = "key reset propagation" if is_recent_reset else f"transient HTTP {status}"
                       print(
-                          f"⚠️ Play upload key reset still propagating (attempt {attempt}). "
+                          f"⚠️ Play upload retry due to {reason} (attempt {attempt}). "
                           f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
                           file=sys.stderr,
                       )
@@ -269,6 +280,21 @@ jobs:
                   print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
               except Exception as e:
+                  message = str(e).lower()
+                  remaining = int(deadline - time.time())
+                  is_transient_network = any(
+                      frag in message for frag in TRANSIENT_ERROR_FRAGMENTS
+                  )
+                  if is_transient_network and remaining > 0:
+                      sleep_for = min(RETRY_INTERVAL, remaining)
+                      print(
+                          f"⚠️ Play upload transient network error (attempt {attempt}): {e}. "
+                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
+                          file=sys.stderr,
+                      )
+                      time.sleep(sleep_for)
+                      continue
+
                   print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
           PYEOF
