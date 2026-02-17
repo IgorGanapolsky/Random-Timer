@@ -16,6 +16,8 @@ from typing import Any, Dict, Iterable, Optional
 
 APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
+FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
+
 
 def die(msg: str, code: int = 1) -> "None":
     print(f"❌ {msg}", file=sys.stderr)
@@ -25,6 +27,80 @@ def die(msg: str, code: int = 1) -> "None":
 def info(msg: str) -> None:
     print(f"▸ {msg}")
 
+
+def _read_text_file(path: str) -> str:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return ""
+
+
+def resolve_metadata_url(*, locale: str, kind: str) -> str:
+    """Resolve a URL from env override or fastlane metadata file.
+
+    kind: "support_url" | "privacy_url" | "marketing_url"
+    """
+    env_key = {
+        "support_url": "ASC_SUPPORT_URL",
+        "privacy_url": "ASC_PRIVACY_URL",
+        "marketing_url": "ASC_MARKETING_URL",
+    }.get(kind)
+    if not env_key:
+        return ""
+
+    env_val = (os.environ.get(env_key) or "").strip()
+    if env_val:
+        return env_val
+
+    path = os.path.join(FASTLANE_METADATA_DIR, locale, f"{kind}.txt")
+    return _read_text_file(path)
+
+
+def patch_resource_attributes(client: "ASCClient", *, path: str, type_name: str, resource_id: str, attrs: dict) -> None:
+    client.request(
+        "PATCH",
+        path,
+        payload={
+            "data": {
+                "type": type_name,
+                "id": resource_id,
+                "attributes": attrs,
+            }
+        },
+    )
+
+
+def ensure_app_info_urls(client: "ASCClient", *, loc_id: str, locale: str, attrs: dict[str, Any]) -> dict[str, Any]:
+    """Ensure support/privacy URLs are set on the App Info localization.
+
+    If missing, try to fill from env/fastlane metadata and read back.
+    """
+    desired_support = resolve_metadata_url(locale=locale, kind="support_url")
+    desired_privacy = resolve_metadata_url(locale=locale, kind="privacy_url")
+
+    to_set: dict[str, str] = {}
+    if not (attrs.get("supportUrl") or "").strip() and desired_support:
+        to_set["supportUrl"] = desired_support
+    if not (attrs.get("privacyPolicyUrl") or "").strip() and desired_privacy:
+        to_set["privacyPolicyUrl"] = desired_privacy
+
+    if to_set:
+        info(f"Filling missing App Info URL fields for {locale}: {', '.join(sorted(to_set.keys()))}")
+        try:
+            patch_resource_attributes(
+                client,
+                path=f"/appInfoLocalizations/{loc_id}",
+                type_name="appInfoLocalizations",
+                resource_id=loc_id,
+                attrs=to_set,
+            )
+            refreshed = client.request("GET", f"/appInfoLocalizations/{loc_id}").get("data") or {}
+            return (refreshed.get("attributes") or {}) if isinstance(refreshed, dict) else attrs
+        except Exception as e:
+            die(f"Failed to update App Info URLs for locale {locale}: {e}")
+
+    return attrs
 
 def _read_private_key_material(key_id: str) -> str:
     key = (os.environ.get("APPSTORE_PRIVATE_KEY") or "").strip()
@@ -383,8 +459,13 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
     if not loc:
         die(f"Missing app info localization for {locale} (App Information).")
 
+    loc_id = str(loc.get("id") or "").strip()
+    if not loc_id:
+        die(f"Missing app info localization id for {locale} (App Information).")
+
     loc_attrs = loc.get("attributes") or {}
     info_attrs = app_info.get("attributes") or {}
+    loc_attrs = ensure_app_info_urls(client, loc_id=loc_id, locale=locale, attrs=loc_attrs)
     privacy = (loc_attrs.get("privacyPolicyUrl") or info_attrs.get("privacyPolicyUrl") or "").strip()
     support = (loc_attrs.get("supportUrl") or info_attrs.get("supportUrl") or "").strip()
     ensure_https(privacy, "Privacy Policy URL")
