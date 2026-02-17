@@ -1,7 +1,6 @@
 import Foundation
 import Combine
-import ActivityKit
-import UserNotifications
+import os
 
 /// Main timer management class using Swift 6 concurrency
 @MainActor
@@ -9,29 +8,51 @@ final class TimerManager: ObservableObject {
 
     // MARK: - Published State
 
-    /// Load config synchronously at property initialization to avoid UI flicker
-    @Published private(set) var config: TimerConfig = TimerManager.loadInitialConfig()
+    @Published private(set) var config: TimerConfig = .default
     @Published private(set) var timerState: TimerState?
+    @Published private(set) var isAlarmSilenced: Bool = false
 
     // MARK: - Private Properties
 
     private var timerTask: Task<Void, Never>?
-    private var activity: Activity<TimerActivityAttributes>?
-    private let storageService = StorageService()
-    private let notificationService = NotificationService()
-
-    /// Load config directly from UserDefaults before any SwiftUI rendering
-    private nonisolated static func loadInitialConfig() -> TimerConfig {
-        guard let data = UserDefaults.standard.data(forKey: "timer_config"),
-              let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
-            return .default
-        }
-        return config
-    }
+    nonisolated private let storageService: TimerStorage
+    private let notificationService: TimerNotificationHandling
+    private let liveActivityService: TimerLiveActivityHandling
 
     // MARK: - Initialization
 
-    init() {
+    init(
+        storageService: TimerStorage = StorageService(),
+        notificationService: TimerNotificationHandling = NotificationService(),
+        liveActivityService: TimerLiveActivityHandling = LiveActivityService()
+    ) {
+        self.storageService = storageService
+        self.notificationService = notificationService
+        self.liveActivityService = liveActivityService
+
+        // Load config synchronously from storage to avoid UI flicker
+        self.config = storageService.loadConfigSync() ?? .default
+
+        // Wire Bluetooth/CarPlay media button and notification action callbacks.
+        // Media button behavior must match timer-circle tap (silence + stay on timer screen).
+        if let notificationService = notificationService as? NotificationService {
+            notificationService.onMediaButtonSilence = { [weak self] in
+                Task { @MainActor in
+                    self?.silenceAlarm()
+                }
+            }
+            notificationService.onNotificationStop = { [weak self] in
+                Task { @MainActor in
+                    await self?.dismissAlarm()
+                }
+            }
+            notificationService.onNotificationSilence = { [weak self] in
+                Task { @MainActor in
+                    self?.silenceAlarm()
+                }
+            }
+        }
+
         // Stop any alarm/vibration that might still be playing from a previous session
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
@@ -57,23 +78,26 @@ final class TimerManager: ObservableObject {
         }
     }
 
-    /// End all Live Activities (used on app start to clean up stale activities)
-    private func endAllLiveActivities() async {
-        for activity in Activity<TimerActivityAttributes>.activities {
-            await activity.end(nil, dismissalPolicy: .immediate)
-        }
-    }
-
     // MARK: - Public Methods
 
     func updateConfig(_ newConfig: TimerConfig) {
         config = newConfig
+
+        // Sync config into running timer state so alarmTick sees the change
+        if var state = timerState {
+            state.config = newConfig
+            timerState = state
+        }
+
         Task {
             await storageService.saveConfig(newConfig)
         }
     }
 
     func startTimer() async {
+        // Reset silence flag for new timer
+        isAlarmSilenced = false
+
         // Stop any preview sound
         notificationService.stopPreview()
 
@@ -96,8 +120,8 @@ final class TimerManager: ObservableObject {
         // Start Live Activity
         await startLiveActivity(state: state)
 
-        // Schedule notification
-        await notificationService.scheduleAlarmNotification(at: state.endDate)
+        // Schedule notification with the configured alarm sound
+        await notificationService.scheduleAlarmNotification(at: state.endDate, soundType: config.soundType)
 
         // Start countdown
         startCountdown()
@@ -116,6 +140,12 @@ final class TimerManager: ObservableObject {
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
         await cancelTimer()
+    }
+
+    /// Stops sound and vibration but keeps alarm state and countdown active
+    func silenceAlarm() {
+        notificationService.silenceAlarm()
+        isAlarmSilenced = true
     }
 
     func pauseTimer() {
@@ -142,12 +172,182 @@ final class TimerManager: ObservableObject {
         await startTimer()
     }
 
+    /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume
+    func handleBackground() {
+        guard let state = timerState, state.status == .alarm else { return }
+        // Deactivate audio session so iOS won't auto-resume playback on foreground
+        notificationService.stopAlarmSound()
+        notificationService.stopVibration()
+    }
+
+    /// Check for pending actions from Live Activity intents (via shared App Group UserDefaults)
+    func processPendingLiveActivityAction() async {
+        let defaults = UserDefaults(suiteName: timerAppGroupSuite)
+        guard let rawAction = defaults?.string(forKey: timerPendingActionKey),
+              let action = TimerAction(rawValue: rawAction) else { return }
+
+        // Clear the pending action immediately
+        defaults?.removeObject(forKey: timerPendingActionKey)
+
+        switch action {
+        case .stop:
+            if timerState?.status == .alarm {
+                await dismissAlarm()
+            } else {
+                await cancelTimer()
+            }
+        case .pause:
+            pauseTimer()
+        case .resume:
+            resumeTimer()
+        }
+    }
+
+    func handleForeground() async {
+        // Process any pending actions from Live Activity buttons
+        await processPendingLiveActivityAction()
+
+        // Handle returning to foreground while alarm is already active
+        // (alarm started in foreground, user backgrounded, then returned)
+        if var state = timerState, state.status == .alarm {
+            if let alarmStart = state.alarmStartedAt {
+                let elapsed = Date().timeIntervalSince(alarmStart)
+                let alarmDuration = TimeInterval(state.config.alarmDuration)
+                if elapsed >= alarmDuration {
+                    // Alarm should have finished while we were backgrounded
+                    stopCountdown()
+                    notificationService.stopAlarmSound()
+                    notificationService.stopVibration()
+                    await notificationService.cancelPendingNotifications()
+                    notificationService.clearNotificationTapFlag()
+                    isAlarmSilenced = true
+
+                    if state.config.repeatEnabled {
+                        await restartTimer()
+                    } else {
+                        state.status = .complete
+                        state.alarmTimeRemaining = 0
+                        timerState = state
+                    }
+                    return
+                } else {
+                    // Alarm is still within its duration
+                    let remaining = alarmDuration - elapsed
+                    state.alarmTimeRemaining = remaining
+
+                    if notificationService.didTapAlarmNotification {
+                        // User tapped notification — silence everything
+                        notificationService.stopAlarmSound()
+                        notificationService.stopVibration()
+                        notificationService.clearNotificationTapFlag()
+                        isAlarmSilenced = true
+                    } else if !isAlarmSilenced {
+                        // Returning via task switcher — restart sound + vibration
+                        // (handleBackground stopped them)
+                        notificationService.playAlarmSound(
+                            type: state.config.soundType,
+                            volume: state.config.volume
+                        )
+                        if state.config.vibrationEnabled {
+                            notificationService.startVibration()
+                        }
+                    }
+
+                    timerState = state
+                    return
+                }
+            }
+            return
+        }
+
+        guard var state = timerState,
+              state.status != .alarm && state.status != .complete && state.status != .paused else { return }
+
+        // Recalculate remaining time from the real clock
+        let elapsed = Date().timeIntervalSince(state.startedAt)
+        let remaining = state.targetDuration - elapsed
+
+        if remaining <= 0 {
+            // Timer expired while backgrounded
+            // The alarm would have started at endDate (wall clock)
+            let alarmStartDate = state.endDate
+            let alarmDuration = TimeInterval(state.config.alarmDuration)
+            let alarmElapsed = Date().timeIntervalSince(alarmStartDate)
+
+            if alarmElapsed >= alarmDuration {
+                // Alarm duration already passed while backgrounded — go straight to complete
+                stopCountdown()
+                notificationService.stopAlarmSound()
+                notificationService.stopVibration()
+                await notificationService.cancelPendingNotifications()
+                notificationService.clearNotificationTapFlag()
+                    endLiveActivity()
+
+                if state.config.repeatEnabled {
+                    await restartTimer()
+                } else {
+                    state.remainingDuration = 0
+                    state.status = .complete
+                    state.alarmTimeRemaining = 0
+                    state.alarmStartedAt = alarmStartDate
+                    timerState = state
+                }
+                return
+            }
+
+            // Alarm is still within its duration — show alarm with correct remaining time
+            state.remainingDuration = 0
+            state.status = .alarm
+            state.alarmStartedAt = alarmStartDate
+            state.alarmTimeRemaining = alarmDuration - alarmElapsed
+
+            // Check notification tap BEFORE setting timerState so both
+            // isAlarmSilenced and timerState update in the same UI frame
+            let wasNotificationTap = notificationService.didTapAlarmNotification
+            if wasNotificationTap {
+                isAlarmSilenced = true
+            }
+            timerState = state
+
+            stopCountdown()
+
+            if wasNotificationTap {
+                // User tapped the notification to get here — don't replay alarm sound
+                notificationService.stopAlarmSound()
+                notificationService.stopVibration()
+                await notificationService.cancelPendingNotifications()
+                notificationService.clearNotificationTapFlag()
+            } else {
+                // App came to foreground some other way (e.g. task switcher) — play alarm
+                notificationService.playAlarmSound(type: state.config.soundType, volume: state.config.volume)
+                if state.config.vibrationEnabled {
+                    notificationService.startVibration()
+                }
+            }
+            await storageService.saveTimerState(state)
+            endLiveActivity()
+            startAlarmCountdown()
+        } else {
+            // Update remaining time and restart countdown
+            state.remainingDuration = remaining
+            state.status = TimerStatus.from(remainingSeconds: remaining, currentStatus: .running)
+            timerState = state
+            startCountdown()
+        }
+    }
+
     func resetTimer() async {
         // Reset to the SAME duration (restart from beginning)
         guard let currentState = timerState else { return }
         let sameDuration = currentState.targetDuration
 
+        // Reset silence flag for new timer
+        isAlarmSilenced = false
+
+        // If an alarm is currently active, stop sound/vibration before restarting
         notificationService.stopAlarmSound()
+        notificationService.stopVibration()
+        notificationService.clearNotificationTapFlag()
         stopCountdown()
         endLiveActivity()
         await notificationService.cancelPendingNotifications()
@@ -166,8 +366,8 @@ final class TimerManager: ObservableObject {
         // Start Live Activity
         await startLiveActivity(state: newState)
 
-        // Schedule notification
-        await notificationService.scheduleAlarmNotification(at: newState.endDate)
+        // Schedule notification with the configured alarm sound
+        await notificationService.scheduleAlarmNotification(at: newState.endDate, soundType: currentState.config.soundType)
 
         // Start countdown
         startCountdown()
@@ -182,6 +382,25 @@ final class TimerManager: ObservableObject {
 
     func updatePreviewVolume() {
         notificationService.updatePreviewVolume(config.volume)
+    }
+
+    func previewVolume() {
+        notificationService.previewVolume(
+            type: config.soundType,
+            volume: config.volume
+        )
+    }
+
+    /// Test-only hook for setting timer state without waiting on async countdowns.
+    func _setTimerStateForTesting(_ state: TimerState?) {
+        timerState = state
+    }
+
+    /// Test-only hook for simulating notification tap.
+    func setNotificationTapFlagForTesting() {
+        if let ns = notificationService as? NotificationService {
+            ns.setDidTapAlarmNotificationForTesting(true)
+        }
     }
 
     // MARK: - Private Methods
@@ -236,6 +455,7 @@ final class TimerManager: ObservableObject {
 
                 guard !Task.isCancelled else { break }
 
+                await self?.processPendingLiveActivityAction()
                 await self?.tick()
             }
         }
@@ -248,17 +468,18 @@ final class TimerManager: ObservableObject {
 
     private func tick() async {
         guard var state = timerState else {
-            print("[TimerManager] tick: no timerState")
+            Logger.timer.debug("tick: no timerState")
             return
         }
 
         state.remainingDuration -= 1
-        print("[TimerManager] tick: remaining = \(state.remainingDuration)")
+        Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
         if state.remainingDuration <= 0 {
             state.remainingDuration = 0
             state.status = .alarm
             state.alarmTimeRemaining = TimeInterval(state.config.alarmDuration)
+            state.alarmStartedAt = Date()
             timerState = state
 
             // Save alarm state so we can detect it on app restart
@@ -266,13 +487,13 @@ final class TimerManager: ObservableObject {
 
             stopCountdown()
 
-            print("[TimerManager] ALARM! Playing sound type: \(state.config.soundType), volume: \(state.config.volume)")
+            Logger.timer.info("ALARM! Playing sound type: \(String(describing: state.config.soundType)), volume: \(state.config.volume)")
             notificationService.playAlarmSound(
                 type: state.config.soundType,
                 volume: state.config.volume
             )
             if state.config.vibrationEnabled {
-                print("[TimerManager] Starting vibration...")
+                Logger.timer.info("Starting vibration...")
                 notificationService.startVibration()
             }
             // End Live Activity when alarm triggers - we don't need it anymore
@@ -319,6 +540,7 @@ final class TimerManager: ObservableObject {
             stopCountdown()
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
+            StoreReviewManager.shared.recordCompletion()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {
@@ -329,59 +551,21 @@ final class TimerManager: ObservableObject {
         }
     }
 
-    // MARK: - Live Activity
+    // MARK: - Live Activity Handling
 
     private func startLiveActivity(state: TimerState) async {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-
-        let attributes = TimerActivityAttributes(
-            endDate: state.endDate,
-            minSeconds: state.config.minSeconds,
-            maxSeconds: state.config.maxSeconds
-        )
-        let contentState = TimerActivityAttributes.ContentState(
-            status: state.status,
-            remainingSeconds: Int(state.remainingDuration)
-        )
-
-        // Set staleDate 5 seconds in future - if app stops updating, iOS will mark as stale
-        let staleDate = Date().addingTimeInterval(5)
-
-        do {
-            activity = try Activity.request(
-                attributes: attributes,
-                content: .init(state: contentState, staleDate: staleDate),
-                pushType: nil
-            )
-        } catch {
-            print("Failed to start Live Activity: \(error)")
-        }
+        await liveActivityService.start(state: state)
     }
 
-    @MainActor
     private func updateLiveActivity(state: TimerState) {
-        let contentState = TimerActivityAttributes.ContentState(
-            status: state.status,
-            remainingSeconds: Int(state.remainingDuration)
-        )
-
-        // Set staleDate 5 seconds in future - keeps refreshing as long as app updates
-        let staleDate = Date().addingTimeInterval(5)
-
-        guard let currentActivity = activity else { return }
-        Task {
-            await currentActivity.update(
-                ActivityContent(state: contentState, staleDate: staleDate)
-            )
-        }
+        liveActivityService.update(state: state)
     }
 
-    @MainActor
     private func endLiveActivity() {
-        guard let currentActivity = activity else { return }
-        Task {
-            await currentActivity.end(nil, dismissalPolicy: .immediate)
-        }
-        activity = nil
+        liveActivityService.end()
+    }
+
+    private func endAllLiveActivities() async {
+        await liveActivityService.endAll()
     }
 }

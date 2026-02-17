@@ -6,6 +6,14 @@ import ActivityKit
 public enum SoundType: String, Codable, Sendable, CaseIterable {
     case intense
     case gentle
+
+    /// Filename for UNNotificationSound (must match bundle resource)
+    public var notificationSoundName: String {
+        switch self {
+        case .intense: return "alarm.mp3"
+        case .gentle: return "gentle-chime.mp3"
+        }
+    }
 }
 
 // MARK: - Timer Configuration
@@ -30,8 +38,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
 
     public init(
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120,
+        minSeconds: Int = 0,
+        maxSeconds: Int = 300,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -69,6 +77,75 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 }
 
+// MARK: - Range Adjustment
+
+/// Shared business rules for the "Goes Off In This Range" sliders.
+///
+/// UX requirement:
+/// - Min/max must keep at least `minGapSeconds` between them.
+/// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
+enum TimeRangeAdjuster {
+    static let defaultMinSecondsLimit = 0
+    static let defaultMaxSecondsLimit = 300
+    static let defaultMinGapSeconds = 30
+
+    static func adjustForMinChange(
+        currentMinSeconds: Int,
+        currentMaxSeconds: Int,
+        newMinSeconds: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
+        minGapSeconds: Int = defaultMinGapSeconds
+    ) -> (min: Int, max: Int) {
+        precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
+        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(newMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(currentMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+
+        if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
+    }
+
+    static func adjustForMaxChange(
+        currentMinSeconds: Int,
+        currentMaxSeconds: Int,
+        newMaxSeconds: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
+        minGapSeconds: Int = defaultMinGapSeconds
+    ) -> (min: Int, max: Int) {
+        precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
+        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(newMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(currentMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+
+        if adjustedMaxSeconds < adjustedMinSeconds + minGapSeconds {
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
+    }
+}
+
 // MARK: - Timer Status
 
 public enum TimerStatus: String, Codable, Sendable {
@@ -85,12 +162,13 @@ public enum TimerStatus: String, Codable, Sendable {
 
 /// Represents the current state of an active timer.
 public struct TimerState: Codable, Sendable, Equatable {
-    public let config: TimerConfig
+    public var config: TimerConfig
     public let targetDuration: TimeInterval
     public let startedAt: Date
     public var remainingDuration: TimeInterval
     public var status: TimerStatus
     public var alarmTimeRemaining: TimeInterval
+    public var alarmStartedAt: Date?
 
     public init(
         config: TimerConfig,
@@ -98,7 +176,8 @@ public struct TimerState: Codable, Sendable, Equatable {
         startedAt: Date = Date(),
         remainingDuration: TimeInterval? = nil,
         status: TimerStatus = .running,
-        alarmTimeRemaining: TimeInterval = 0
+        alarmTimeRemaining: TimeInterval = 0,
+        alarmStartedAt: Date? = nil
     ) {
         self.config = config
         self.targetDuration = targetDuration
@@ -106,6 +185,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         self.remainingDuration = remainingDuration ?? targetDuration
         self.status = status
         self.alarmTimeRemaining = alarmTimeRemaining
+        self.alarmStartedAt = alarmStartedAt
     }
 
     public var progress: Double {
@@ -130,6 +210,18 @@ public struct TimerState: Codable, Sendable, Equatable {
     public var timeRemainingSeconds: Int {
         Int(max(0, remainingDuration))
     }
+
+    // MARK: - Sanitized Live Activity Properties
+    // These prevent the lock screen from leaking timing information
+
+    /// Remaining seconds for Live Activity — always 0 to prevent timing leak
+    public var liveActivityRemainingSeconds: Int { 0 }
+
+    /// End date for Live Activity — uses maxSeconds instead of actual targetDuration
+    /// so observers cannot deduce the random duration from the progress ring
+    public var liveActivityEndDate: Date {
+        startedAt.addingTimeInterval(Double(config.maxSeconds))
+    }
 }
 
 // MARK: - Live Activity Attributes
@@ -152,7 +244,7 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds
@@ -166,6 +258,21 @@ public struct TimerActivityAttributes: ActivityAttributes {
         return "\(minFormatted) - \(maxFormatted)"
     }
 }
+
+// MARK: - Live Activity Action Signaling
+
+/// Actions that can be triggered from Live Activity intents via shared App Group UserDefaults
+public enum TimerAction: String, Codable {
+    case stop
+    case pause
+    case resume
+}
+
+/// Shared App Group suite name for cross-process communication
+public let timerAppGroupSuite = "group.com.iganapolsky.randomtimer"
+
+/// UserDefaults key for the pending timer action
+public let timerPendingActionKey = "pendingTimerAction"
 
 // MARK: - Helpers
 

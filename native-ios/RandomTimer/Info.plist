@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Random Timer</string>
+    <string>Random Tactical Timer</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -17,9 +17,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.1.0</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>11</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSSupportsLiveActivities</key>
@@ -44,10 +44,14 @@
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    	<string>UIInterfaceOrientationPortrait</string>
+    	<string>UIInterfaceOrientationPortraitUpsideDown</string>
+    	<string>UIInterfaceOrientationLandscapeLeft</string>
+    	<string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>UIUserInterfaceStyle</key>
     <string>Dark</string>
-</dict>
+    </dict>
 </plist>

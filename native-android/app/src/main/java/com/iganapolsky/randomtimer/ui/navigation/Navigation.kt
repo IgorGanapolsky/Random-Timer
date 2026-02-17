@@ -1,10 +1,17 @@
 package com.iganapolsky.randomtimer.ui.navigation
 
+import android.app.Activity
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,18 +20,22 @@ import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
 
-sealed class Screen(val route: String) {
+sealed class Screen(
+    val route: String,
+) {
     data object Setup : Screen("setup")
+
     data object ActiveTimer : Screen("active_timer")
 }
 
 @Composable
 fun RandomTimerNavHost(
     navController: NavHostController = rememberNavController(),
-    viewModel: TimerViewModel = hiltViewModel()
+    viewModel: TimerViewModel = hiltViewModel(),
 ) {
-    val config by viewModel.config.collectAsState()
-    val timerState by viewModel.timerState.collectAsState()
+    val config by viewModel.config.collectAsStateWithLifecycle()
+    val timerState by viewModel.timerState.collectAsStateWithLifecycle()
+    val activity = LocalContext.current as? Activity
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState) {
@@ -40,29 +51,48 @@ fun RandomTimerNavHost(
             // Timer stopped - go back to setup screen
             if (currentRoute == Screen.ActiveTimer.route) {
                 navController.popBackStack(Screen.Setup.route, inclusive = false)
+                // Prompt for review after timer completion (if eligible)
+                activity?.let { viewModel.storeReviewManager.requestReview(it) }
             }
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Setup.route
+        startDestination = Screen.Setup.route,
     ) {
-        composable(Screen.Setup.route) {
+        composable(
+            Screen.Setup.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                    slideOutVertically(animationSpec = tween(300)) { it / 4 }
+            },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+            popExitTransition = { fadeOut(animationSpec = tween(300)) },
+        ) {
             TimerSetupScreen(
                 config = config,
                 onConfigChange = viewModel::updateConfig,
-                onStartTimer = {
-                    viewModel.startTimer()
-                    navController.navigate(Screen.ActiveTimer.route) {
-                        launchSingleTop = true
-                    }
-                },
-                onSoundPreview = viewModel::previewSound
+                onStartTimer = viewModel::startTimer,
+                onSoundPreview = viewModel::previewSound,
+                onVolumePreview = viewModel::previewVolume,
             )
         }
 
-        composable(Screen.ActiveTimer.route) {
+        composable(
+            Screen.ActiveTimer.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(300)) +
+                    slideInVertically(animationSpec = tween(300)) { it / 4 }
+            },
+            exitTransition = { fadeOut(animationSpec = tween(300)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                    slideOutVertically(animationSpec = tween(300)) { it / 4 }
+            },
+        ) {
             timerState?.let { state ->
                 ActiveTimerScreen(
                     state = state,
@@ -74,6 +104,7 @@ fun RandomTimerNavHost(
                         viewModel.dismissAlarm()
                         navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
+                    onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
                     onResume = viewModel::resumeTimer,
                     onReset = {
@@ -81,7 +112,7 @@ fun RandomTimerNavHost(
                     },
                     onLoopToggle = { enabled ->
                         viewModel.updateLoopSetting(enabled)
-                    }
+                    },
                 )
             }
         }

@@ -4,14 +4,15 @@ appId: com.iganapolsky.randomtimer
 - launchApp
 
 # Verify main screen elements are visible
-- assertVisible: 'Random Timer'
+- assertVisible: 'Random Tactical Timer'
 - assertVisible:
-    text: '.*Timer Range.*'
-- assertVisible: '5s'
+    text: '.*Goes Off In This Range.*'
 - assertVisible:
-    text: '.*2M.*'
+    text: '.*Minimum:.*'
 - assertVisible:
-    text: '.*Alarm.*'
+    text: '.*Maximum:.*'
+- assertVisible:
+    text: '.*Alarm Sound Duration.*'
 - assertVisible: 'Start Timer'
 
 # Start the timer
@@ -19,5 +20,5 @@ appId: com.iganapolsky.randomtimer
 
 # Verify timer screen is shown (pause button should be visible)
 - assertVisible:
-    text: 'Pause timer'
+    text: 'Pause'
     optional: true

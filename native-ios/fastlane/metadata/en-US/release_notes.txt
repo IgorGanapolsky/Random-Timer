@@ -1,0 +1,5 @@
+v1.1.1 — Random Tactical Timer
+- Removed AD_ID permission for improved privacy
+- Range slider drag now pushes/pulls to maintain 30s minimum gap
+- Anonymous analytics integration
+- Stability improvements and bug fixes

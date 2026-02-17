@@ -15,6 +15,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Architecture Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Architecture ban checks (Kotlin)
+        run: |
+          ERRORS=0
+          for f in $(find native-android -name '*.kt' -not -path '*/build/*'); do
+            if grep -n 'AndroidViewModel' "$f" | grep -v '// allow-android-viewmodel' > /dev/null 2>&1; then
+              echo "❌ $f: Uses AndroidViewModel"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if grep -n '\.collectAsState()' "$f" > /dev/null 2>&1; then
+              echo "❌ $f: Uses .collectAsState() instead of .collectAsStateWithLifecycle()"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if grep -n 'Handler(Looper' "$f" | grep -v '// allow-handler' > /dev/null 2>&1; then
+              echo "❌ $f: Uses Handler(Looper) instead of coroutines"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "Found $ERRORS architecture violation(s)"
+            exit 1
+          fi
+          echo "✅ No architecture violations found"
+
   android:
     name: Android Tests
     runs-on: ubuntu-latest
@@ -33,6 +62,16 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
+      - name: Create dummy google-services.json for CI
+        run: |
+          cat > app/google-services.json << 'GSEOF'
+          {
+            "project_info": { "project_number": "000000000000", "project_id": "random-timer-ci", "storage_bucket": "random-timer-ci.appspot.com" },
+            "client": [{ "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": { "package_name": "com.iganapolsky.randomtimer" } }, "api_key": [{ "current_key": "CI_PLACEHOLDER" }] }],
+            "configuration_version": "1"
+          }
+          GSEOF
+
       - name: Run unit tests
         run: ./gradlew test --no-daemon
 
@@ -41,7 +80,7 @@ jobs:
 
   ios:
     name: iOS Build Check
-    runs-on: macos-latest
+    runs-on: macos-15
     defaults:
       run:
         working-directory: native-ios
@@ -49,46 +88,135 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "${XCODE_PATH}/Contents/Developer"
+          xcodebuild -version
+
+      - name: Find simulator
+        id: sim
+        run: |
+          # Get the UUID of first available iPhone simulator
+          SIM_ID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for runtime, devices in data['devices'].items():
+              if 'iOS' in runtime:
+                  for d in devices:
+                      if 'iPhone' in d['name'] and d['isAvailable']:
+                          print(d['udid'])
+                          sys.exit(0)
+          " 2>/dev/null)
+          echo "sim_id=${SIM_ID}" >> "$GITHUB_OUTPUT"
+          echo "Using simulator ID: ${SIM_ID}"
 
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -skip-testing:RandomTimerUITests \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
           xcodebuild test \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -skip-testing:RandomTimerUITests \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
+
+  playwright-local:
+    name: Playwright Local Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/playwright
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tests/playwright/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Playwright strict local verification
+        run: npm run verify:strict
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-local-artifacts
+          path: |
+            tests/playwright/playwright-report
+            tests/playwright/test-results
 
   security:
     name: Security
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
       security-events: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Install gitleaks (OSS CLI)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          ARCH="$(uname -m)"
+          case "$ARCH" in
+            x86_64|amd64) ASSET="gitleaks_8.30.0_linux_x64.tar.gz" ;;
+            aarch64|arm64) ASSET="gitleaks_8.30.0_linux_arm64.tar.gz" ;;
+            *) echo "Unsupported arch: $ARCH" && exit 1 ;;
+          esac
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          install -m 0755 /tmp/gitleaks "$HOME/.local/bin/gitleaks"
+          "$HOME/.local/bin/gitleaks" version
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Secret Scan
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          RANGE=""
+          if [[ "$EVENT_NAME" == "pull_request" && -n "$PR_BASE_SHA" && -n "$PR_HEAD_SHA" ]]; then
+            RANGE="${PR_BASE_SHA}..${PR_HEAD_SHA}"
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+          elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
+            RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
+          fi
+
+          if [[ -n "$RANGE" ]]; then
+            echo "Scanning commit range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+          else
+            echo "Scanning full git history fallback"
+            gitleaks git --no-banner --redact --exit-code 1
+          fi
 
   notify:
     name: Notify
     runs-on: ubuntu-latest
-    needs: [android, ios, security]
+    needs: [android, ios, playwright-local, security]
     if: always() && github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -99,11 +227,20 @@ jobs:
           script: |
             const androidResult = '${{ needs.android.result }}';
             const iosResult = '${{ needs.ios.result }}';
+            const playwrightResult = '${{ needs.playwright-local.result }}';
             const securityResult = '${{ needs.security.result }}';
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
-            const allPassed = androidResult === 'success' && iosResult === 'success' && securityResult === 'success';
-            const anyFailed = androidResult === 'failure' || iosResult === 'failure' || securityResult === 'failure';
+            const allPassed =
+              androidResult === 'success' &&
+              iosResult === 'success' &&
+              playwrightResult === 'success' &&
+              securityResult === 'success';
+            const anyFailed =
+              androidResult === 'failure' ||
+              iosResult === 'failure' ||
+              playwrightResult === 'failure' ||
+              securityResult === 'failure';
 
             let emoji, status;
             if (allPassed) { emoji = '✅'; status = 'All checks passed'; }
@@ -114,5 +251,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
+              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Playwright Local Checks | ${playwrightResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
             });

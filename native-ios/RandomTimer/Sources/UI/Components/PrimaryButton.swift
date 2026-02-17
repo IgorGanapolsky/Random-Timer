@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Primary action button with customizable colors
+/// Primary action button with customizable colors and press-state feedback
 struct PrimaryButton: View {
     let title: String
     let action: () -> Void
@@ -17,10 +17,12 @@ struct PrimaryButton: View {
                 .background(backgroundColor)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(title)
     }
 }
 
-/// Secondary (outline/glass) button
+/// Secondary (outline/glass) button with press-state feedback
 struct SecondaryButton: View {
     let title: String
     let action: () -> Void
@@ -39,6 +41,8 @@ struct SecondaryButton: View {
                         .stroke(Color.glassBorder, lineWidth: 1)
                 )
         }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(title)
     }
 }
 
@@ -53,6 +57,18 @@ struct DangerButton: View {
             action: action,
             backgroundColor: .timerDanger
         )
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// Button style that provides visual press feedback (scale + opacity)
+struct PressableButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .opacity(configuration.isPressed ? 0.85 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 

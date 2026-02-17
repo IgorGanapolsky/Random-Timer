@@ -52,8 +52,8 @@ data class TimerConfig(
 
     companion object {
         val DEFAULT = TimerConfig(
-            minSeconds = 30,
-            maxSeconds = 120,
+            minSeconds = 0,
+            maxSeconds = 300,
             alarmDuration = 10,
             hiddenMode = false,
             repeatEnabled = false, // Default to LOOP OFF
@@ -75,7 +75,8 @@ data class TimerState(
     val remainingDuration: Duration,
     val status: TimerStatus,
     val alarmTimeRemaining: Duration = Duration.ZERO,
-    val startedAt: Long = System.currentTimeMillis()
+    val startedAt: Long = System.currentTimeMillis(),
+    val isAlarmSilenced: Boolean = false
 ) {
     val progress: Float
         get() = if (targetDuration == Duration.ZERO) 0f

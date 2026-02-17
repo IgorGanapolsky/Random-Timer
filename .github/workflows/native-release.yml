@@ -1,0 +1,385 @@
+name: Native App Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to release'
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+        required: true
+        default: 'both'
+
+jobs:
+  ios-testflight:
+    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    runs-on: macos-15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight release checks (iOS)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-ios
+
+      - name: Validate iOS signing secrets
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          if [ -z "$MATCH_GIT_URL" ]; then
+            echo "❌ MATCH_GIT_URL secret is not set"
+            exit 1
+          fi
+          if [ -z "$MATCH_PASSWORD" ]; then
+            echo "❌ MATCH_PASSWORD secret is not set"
+            exit 1
+          fi
+          if [ -z "$MATCH_GIT_BASIC_AUTHORIZATION" ]; then
+            echo "❌ MATCH_GIT_BASIC_AUTHORIZATION secret is not set"
+            exit 1
+          fi
+
+      - name: Write API key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+
+      - name: Configure git credentials for match
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          git config --global url."https://x-access-token:${GIT_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Setup signing certificates and profiles (match)
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: fastlane setup
+        working-directory: native-ios
+
+      - name: Verify App Store Connect API access
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: |
+          python -m pip install pyjwt cryptography requests
+          python scripts/check_store_access.py --platform ios
+
+      - name: Build and upload to TestFlight
+        env:
+          CI: "true"
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: fastlane beta
+        working-directory: native-ios
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-ipa
+          path: native-ios/RandomTimer.ipa
+
+  android-release:
+    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight release checks (Android)
+        run: bash scripts/preflight-release.sh --platform android --layer 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      - name: Create google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+          else
+            echo '{"project_info":{"project_number":"","project_id":"","storage_bucket":""},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.iganapolsky.randomtimer"}},"api_key":[{"current_key":""}]}]}' > app/google-services.json
+          fi
+        working-directory: native-android
+
+      - name: Write Google Play service account key
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ GOOGLE_PLAY_JSON_KEY secret is not set"
+            exit 1
+          fi
+          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+
+      - name: Verify Google Play API access
+        env:
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+        run: |
+          python -m pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib requests
+          python scripts/check_store_access.py --platform android
+
+      - name: Decode keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 secret is not set"
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
+          echo "✅ Keystore decoded"
+
+      - name: Inspect upload key certificate
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list -v \
+            -keystore /tmp/release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
+
+      - name: Build release AAB
+        env:
+          KEYSTORE_PATH: /tmp/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+        run: ./gradlew bundleRelease
+        working-directory: native-android
+
+      - name: Upload to Google Play (closed testing track)
+        env:
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
+          PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
+        run: |
+          if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
+            exit 1
+          fi
+          pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+          python3 - <<'PYEOF'
+          import sys
+          import os
+          import time
+
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          from googleapiclient.errors import HttpError
+          from googleapiclient.http import MediaFileUpload
+
+          SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
+          PACKAGE = 'com.iganapolsky.randomtimer'
+          AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
+          RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
+          RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
+          RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
+          TRANSIENT_ERROR_FRAGMENTS = (
+              "eof occurred in violation of protocol",
+              "connection reset",
+              "connection aborted",
+              "timed out",
+              "temporary failure",
+              "service unavailable",
+          )
+
+          credentials = service_account.Credentials.from_service_account_file(
+              '/tmp/play-service-account.json', scopes=SCOPES
+          )
+          service = build('androidpublisher', 'v3', credentials=credentials)
+
+          deadline = time.time() + RETRY_WINDOW
+          attempt = 0
+
+          while True:
+              attempt += 1
+              try:
+                  edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
+                  edit_id = edit['id']
+
+                  bundle = service.edits().bundles().upload(
+                      packageName=PACKAGE,
+                      editId=edit_id,
+                      media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
+                  ).execute()
+
+                  service.edits().tracks().update(
+                      packageName=PACKAGE,
+                      editId=edit_id,
+                      track='alpha',
+                      body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
+                  ).execute()
+
+                  service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
+                  print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
+                  break
+              except HttpError as e:
+                  message = str(e)
+                  is_recent_reset = RESET_ERROR_FRAGMENT in message.lower()
+                  status = getattr(getattr(e, "resp", None), "status", None)
+                  is_transient_http = status in (429, 500, 502, 503, 504)
+                  remaining = int(deadline - time.time())
+
+                  if (is_recent_reset or is_transient_http) and remaining > 0:
+                      sleep_for = min(RETRY_INTERVAL, remaining)
+                      reason = "key reset propagation" if is_recent_reset else f"transient HTTP {status}"
+                      print(
+                          f"⚠️ Play upload retry due to {reason} (attempt {attempt}). "
+                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
+                          file=sys.stderr,
+                      )
+                      time.sleep(sleep_for)
+                      continue
+
+                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  sys.exit(1)
+              except Exception as e:
+                  message = str(e).lower()
+                  remaining = int(deadline - time.time())
+                  is_transient_network = any(
+                      frag in message for frag in TRANSIENT_ERROR_FRAGMENTS
+                  )
+                  if is_transient_network and remaining > 0:
+                      sleep_for = min(RETRY_INTERVAL, remaining)
+                      print(
+                          f"⚠️ Play upload transient network error (attempt {attempt}): {e}. "
+                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
+                          file=sys.stderr,
+                      )
+                      time.sleep(sleep_for)
+                      continue
+
+                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  sys.exit(1)
+          PYEOF
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-aab
+          path: native-android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f /tmp/release.keystore /tmp/play-service-account.json
+
+  verify-releases:
+    needs: [ios-testflight, android-release]
+    if: always() && (needs.ios-testflight.result == 'success' || needs.android-release.result == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install google-api-python-client google-auth pyjwt cryptography requests
+
+      - name: Extract version info
+        id: versions
+        run: |
+          # Android versionCode from build.gradle.kts
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' native-android/app/build.gradle.kts || echo "")
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+          # iOS version from project.pbxproj
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
+          echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Determine platform flag
+        id: platform
+        run: |
+          if [[ "${{ needs.ios-testflight.result }}" == "success" && "${{ needs.android-release.result }}" == "success" ]]; then
+            echo "flag=both" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ needs.ios-testflight.result }}" == "success" ]]; then
+            echo "flag=ios" >> "$GITHUB_OUTPUT"
+          else
+            echo "flag=android" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write App Store Connect key
+        if: needs.ios-testflight.result == 'success'
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
+
+      - name: Write Google Play key
+        if: needs.android-release.result == 'success'
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+
+      - name: Verify releases
+        env:
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
+          if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
+            ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
+          fi
+          if [ -n "${{ steps.versions.outputs.ios_version }}" ]; then
+            ARGS="$ARGS --version ${{ steps.versions.outputs.ios_version }}"
+          fi
+          python scripts/verify_release.py $ARGS
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f /tmp/play-service-account.json /tmp/appstore_key.p8

@@ -14,107 +14,66 @@ triggers:
 
 # RLHF Feedback Capture Skill
 
-**AUTONOMOUS** - Claude captures feedback without user running commands.
+**AUTONOMOUS** - Feedback is captured automatically via hooks. Memory cells are self-organizing.
 
-## When to Capture Feedback
+## How It Works
 
-### Capture (Thumbs Down) When:
+1. `user-prompt-submit.sh` hook detects feedback signals (thumbs up/down, implicit)
+2. Records to `.claude/memory/feedback/feedback-log.jsonl`
+3. Ingests into self-organizing memory system (`memory_manager.py`)
+4. On session start, recalls high-salience scene-relevant memories
 
-- User says "that's wrong", "no", "incorrect", "that broke something"
-- User corrects my answer
-- User has to repeat themselves
-- I made an assumption that was wrong
-- Code I wrote caused errors
-- I gave instructions instead of acting (violated ACT DON'T INSTRUCT)
+## Memory Cell Types
 
-### Capture (Thumbs Up) When:
+- **risk** - Things that caused user frustration (lying, false claims)
+- **pattern** - Repeated behaviors (good or bad)
+- **decision** - Architecture/approach choices made
+- **preference** - User preferences and mandates
+- **fact** - Verified facts about the codebase
 
-- User says "good", "thanks", "that worked", "perfect"
-- Task completed successfully on first try
-- User doesn't need to correct me
-- Code works without errors
+## Scene Categories
 
-## How to Capture (Claude Executes This)
+Memories are auto-classified into scenes:
+`store-publishing`, `code-editing`, `git-operations`, `testing`,
+`debugging`, `automation`, `animation-parity`, `credentials`, `general`
+
+## Manual Feedback Capture
+
+When Claude detects a mistake or success mid-session:
 
 ```bash
-# After detecting negative feedback signal:
-node "$CLAUDE_PROJECT_DIR/.claude/scripts/feedback/capture-feedback.js" \
-  --feedback=down \
-  --context="[What went wrong]" \
-  --tags="[relevant-tags]"
+# Capture negative feedback
+echo '{"feedback":"negative","context":"What went wrong","id":"manual_1"}' | \
+  python3 .claude/scripts/memory/memory_manager.py --ingest
 
-# After detecting positive feedback signal:
-node "$CLAUDE_PROJECT_DIR/.claude/scripts/feedback/capture-feedback.js" \
-  --feedback=up \
-  --context="[What went right]" \
-  --tags="[relevant-tags]"
+# Capture positive feedback
+echo '{"feedback":"positive","context":"What went right","id":"manual_2"}' | \
+  python3 .claude/scripts/memory/memory_manager.py --ingest
 ```
 
-## Domain Tags for Random Timer
-
-Use these tags to categorize feedback:
-
-- `timer-logic` - Timer countdown, random time generation
-- `redux-state` - State management, slices, persistence
-- `ui-components` - Buttons, sliders, screens
-- `navigation` - React Navigation, screen transitions
-- `sound-haptics` - Audio playback, vibration
-- `storage` - MMKV, persistence
-- `testing` - Jest, Maestro tests
-- `styling` - Theme, colors, glassmorphism
-- `performance` - Speed, memory, optimization
-
-## Action Tags
-
-- `fix` - Bug fix
-- `implementation` - New feature
-- `refactor` - Code restructure
-- `regression` - Broke something that worked
-- `assumption` - Made incorrect assumption
-- `shallow-answer` - Didn't read code, gave surface answer
-
-## Examples
-
-### User says "that broke the slider"
+## Memory Operations
 
 ```bash
-node .claude/scripts/feedback/capture-feedback.js \
-  --feedback=down \
-  --context="Broke range slider while implementing timer fix" \
-  --tags="ui-components,regression"
-```
+# Recall all high-salience memories
+python3 .claude/scripts/memory/memory_manager.py --recall
 
-### User says "perfect, timer works now"
+# Recall for a specific scene
+python3 .claude/scripts/memory/memory_manager.py --recall --scene store-publishing
 
-```bash
-node .claude/scripts/feedback/capture-feedback.js \
-  --feedback=up \
-  --context="Fixed timer countdown logic correctly" \
-  --tags="timer-logic,fix"
-```
+# Run maintenance (decay stale + consolidate duplicates)
+python3 .claude/scripts/memory/memory_manager.py --maintain
 
-### User has to repeat themselves
-
-```bash
-node .claude/scripts/feedback/capture-feedback.js \
-  --feedback=down \
-  --context="User had to repeat request - didn't understand first time" \
-  --tags="assumption,shallow-answer"
+# View stats
+python3 .claude/scripts/memory/memory_manager.py --stats
 ```
 
 ## Data Storage
 
-All feedback is LOCAL ONLY (excluded from git):
+All feedback is LOCAL ONLY:
+- `.claude/memory/feedback/feedback-log.jsonl` (raw feedback)
+- `.claude/memory/memory_cells.jsonl` (self-organized memory cells)
 
-- `.claude/memory/feedback/feedback-log.jsonl`
-- `.claude/memory/feedback/feedback-summary.json`
+## Learning Loop
 
-## Session Start Integration
-
-At session start, the hook queries past failures to remind Claude what to avoid.
-This creates a learning loop: Mistake → Capture → Warning → Avoid repeat.
-
-## IMPORTANT: Act Don't Instruct
-
-**Claude EXECUTES the capture command directly.**
-Never tell the user to run it - just run it.
+Mistake -> Hook captures -> Memory cell created/consolidated ->
+Session start recalls -> Claude avoids repeat -> Salience decays if fixed

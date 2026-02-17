@@ -1,0 +1,18 @@
+{
+  "name": "project-management",
+  "version": "2.0.0",
+  "description": "Filesystem-native PM: PRDs in .claude/prds/, epics in .claude/epics/. No custom scripts — model navigates directly.",
+  "portable": true,
+  "architecture": "filesystem-native",
+  "components": {
+    "commands": "commands/pm/*.md",
+    "artifacts": {
+      "prds": ".claude/prds/",
+      "epics": ".claude/epics/"
+    }
+  },
+  "dependencies": {
+    "gh": "GitHub CLI for issue sync (optional)"
+  },
+  "install": "Copy commands/pm/ directory. Run /pm:init to create artifact directories."
+}

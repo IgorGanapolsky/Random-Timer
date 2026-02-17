@@ -1,0 +1,25 @@
+{
+  "name": "dev-quality",
+  "version": "1.0.0",
+  "description": "Code quality pipeline: blind review, context discipline, path-scoped platform rules",
+  "portable": true,
+  "components": {
+    "skills": [
+      "skills/blind-review/SKILL.md"
+    ],
+    "agents": [
+      "agents/code-analyzer.md",
+      "agents/code-reviewer.md",
+      "agents/test-runner.md",
+      "agents/parallel-worker.md"
+    ],
+    "rules": [
+      "rules/context-discipline.md",
+      "rules/test-execution.md",
+      "rules/agent-coordination.md",
+      "rules/standard-patterns.md"
+    ]
+  },
+  "dependencies": {},
+  "install": "To use in another repo: copy this plugin directory + referenced agents, skills, and rules."
+}

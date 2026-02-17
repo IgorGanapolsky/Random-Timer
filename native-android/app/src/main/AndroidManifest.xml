@@ -18,8 +18,17 @@
     <!-- Vibration -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Full screen intent for lock screen timer display -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <!-- Boot completed to reschedule alarms -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Allow timer notifications to bypass Do Not Disturb -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
+    <!-- Remove AD_ID permission added by dependencies (Firebase/PostHog) — app does not use advertising ID -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 
     <application
         android:name=".RandomTimerApp"
@@ -36,9 +45,10 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:label="@string/launcher_label"
             android:theme="@style/Theme.RandomTimer"
             android:launchMode="singleTop"
-            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
             android:turnScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

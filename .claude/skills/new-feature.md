@@ -1,136 +1,56 @@
 # Skill: New Feature
 
-Scaffold a complete feature module following the project's architecture conventions.
+Scaffold a feature module following project architecture. Uses progressive disclosure — only loads the phase you're in.
 
 ## Trigger
 
 User invokes `/new-feature` or asks to create/add a new feature.
 
-## Workflow
-
-### 1. Gather Requirements
+## Phase 1: Requirements (load this first)
 
 Ask the user:
-
 - **Feature name** (e.g., "notifications", "history", "presets")
-- **Needs screens?** (yes/no)
-- **Needs Redux state?** (yes/no)
-- **Needs services?** (yes/no)
+- **Platform**: Android, iOS, or both?
+- **Needs navigation?** (yes/no)
+- **Needs persistent state?** (yes/no)
 
-### 2. Create Directory Structure
+Stop here. Do NOT load Phase 2 until requirements are confirmed.
 
+## Phase 2: Scaffold (load after Phase 1 confirmed)
+
+### Android (`native-android/`)
 ```bash
-mkdir -p src/features/{feature-name}/components
-mkdir -p src/features/{feature-name}/screens
-mkdir -p src/features/{feature-name}/hooks
-mkdir -p src/features/{feature-name}/services
+mkdir -p native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/{featureName}
+mkdir -p native-android/app/src/main/java/com/iganapolsky/randomtimer/domain/{featureName}
 ```
 
-### 3. Generate Feature Index
+Create screen composable, ViewModel, and add to Navigation.kt.
 
-Create `src/features/{feature-name}/index.ts`:
-
-```typescript
-// {FeatureName} Feature
-// Public exports
-
-export * from './screens';
-// export * from './components';
-// export * from './hooks';
+### iOS (`native-ios/`)
+```bash
+mkdir -p native-ios/RandomTimer/Sources/UI/{FeatureName}
 ```
 
-### 4. Generate Screen (if needed)
+Create SwiftUI View, ViewModel using @Observable, and add to navigation.
 
-Create `src/features/{feature-name}/screens/{FeatureName}Screen.tsx`:
+Stop here. Do NOT load Phase 3 until scaffold compiles.
 
-```typescript
-/**
- * {FeatureName}Screen
- * [Brief description]
- */
+## Phase 3: Integration (load after Phase 2 compiles)
 
-import { StyleSheet, View } from 'react-native';
+- Wire navigation entry points
+- Add DI bindings (Hilt for Android, direct init for iOS)
+- Add persistent state if needed (DataStore for Android, UserDefaults/SwiftData for iOS)
+- Write initial test (TDD: failing test first)
 
-import { Screen, Text } from '@shared/components';
-import { colors, spacing } from '@shared/theme';
+## Phase 4: Verify (load after Phase 3)
 
-export function {FeatureName}Screen() {
-  return (
-    <Screen preset="fill">
-      <View style={styles.container}>
-        <Text preset="h1">{FeatureName}</Text>
-      </View>
-    </Screen>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
-```
-
-Create `src/features/{feature-name}/screens/index.ts`:
-
-```typescript
-export * from './{FeatureName}Screen';
-```
-
-### 5. Generate Redux Slice (if needed)
-
-Create `src/shared/redux/slices/{featureName}Slice.ts`:
-
-```typescript
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface {FeatureName}State {
-  // Define state shape
-}
-
-const initialState: {FeatureName}State = {
-  // Initial values
-};
-
-const {featureName}Slice = createSlice({
-  name: '{featureName}',
-  initialState,
-  reducers: {
-    // Add reducers
-  },
-});
-
-export const { } = {featureName}Slice.actions;
-export const {featureName}Reducer = {featureName}Slice.reducer;
-```
-
-Then update `src/shared/redux/store.ts`:
-
-- Import the new reducer
-- Add to `rootReducer`
-- Add to `persistConfig.whitelist` if persistence needed
-
-### 6. Add to Navigation
-
-Update `src/navigation/AppNavigation.tsx`:
-
-- Import the new screen
-- Add to stack navigator
-- Add TypeScript types to `RootStackParamList`
-
-### 7. Update CLAUDE.md
-
-Invoke `/update-claude-md` to document the new feature.
+- Run tests on both platforms
+- Verify navigation flow works
+- Confirm state persistence survives app restart
 
 ## Success Criteria
 
-- Feature directory created with proper structure
-- Screen renders without errors
-- Navigation works
-- Redux state (if any) persists correctly
-
-## Output
-
-List all created files and provide next steps for implementation.
+- Feature compiles on target platform(s)
+- Navigation works end-to-end
+- At least one test per platform
+- No hardcoded strings (use strings.xml / Localizable)

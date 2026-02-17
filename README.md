@@ -1,6 +1,42 @@
-# Random Timer
+# Random Tactical Timer
 
-Native iOS and Android apps that go off at a random time within a user-defined range.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform: iOS](https://img.shields.io/badge/iOS-18%2B-blue?logo=apple)](native-ios/)
+[![Platform: Android](https://img.shields.io/badge/Android-8%2B-green?logo=android)](native-android/)
+[![CI](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml)
+[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](native-ios/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](native-android/)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-M3-4285F4?logo=jetpackcompose&logoColor=white)](native-android/)
+
+A native **iOS + Android** timer that goes off at a **random** time within your chosen range. Set min and max — the app picks a random moment to ring. You never know exactly when.
+
+**Built for** athletes, coaches, trainers, and anyone who needs unpredictable timing — workout intervals, reaction drills, team activities, meditation, and anywhere predictable timing defeats the purpose.
+
+No ads. No tracking. No subscriptions. Just a timer that works.
+
+<!-- Store badges — uncomment when live
+[![Download on the App Store](https://img.shields.io/badge/App_Store-0D96F6?logo=app-store&logoColor=white)](https://apps.apple.com/app/random-tactical-timer/id...)
+[![Get it on Google Play](https://img.shields.io/badge/Google_Play-414141?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer)
+-->
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <th>iOS — Setup</th>
+    <th>iOS — Timer Running</th>
+    <th>Android — Setup</th>
+    <th>Android — Loop Mode</th>
+  </tr>
+  <tr>
+    <td><img src="screenshots/ios-setup.png" width="220" alt="iOS Timer Setup Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/ios-active.png" width="220" alt="iOS Active Timer Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/android-setup.png" width="220" alt="Android Timer Setup Screen — Random Tactical Timer" /></td>
+    <td><img src="screenshots/android-active.png" width="220" alt="Android Loop Mode — Random Tactical Timer" /></td>
+  </tr>
+</table>
 
 ## Demo
 
@@ -17,18 +53,22 @@ Native iOS and Android apps that go off at a random time within a user-defined r
 
 ## Features
 
-- **Random Timer Range**: Set min/max time range (0-5 minutes), timer picks a random duration
-- **Alarm Sound**: Choose Intense or Gentle alarm with volume control
-- **Vibration**: Optional haptic feedback during alarm
-- **Persistent Settings**: Preferences saved between sessions
-- **Premium UI**: Glassmorphism design with dark theme
+- **Random Timer Range** — set min/max time (e.g. 1–5 minutes), the app picks a random duration
+- **Hidden Mode** — conceals the countdown so you can't anticipate the alarm
+- **Loop Mode** — automatically restarts with a new random duration when the timer finishes
+- **Lock Screen Display** — iOS Live Activity + Android notification with pause/resume/stop controls
+- **Alarm Sounds** — choose Intense or Gentle, with adjustable volume and vibration
+- **Premium Dark UI** — glassmorphism theme with Material Design 3 Expressive (Android) and SwiftUI (iOS)
+- **Background Operation** — reliable notifications even when the app isn't in the foreground
+- **Pause, Resume, Reset** — full timer controls on both platforms
+- **Tap to Silence** — tap the timer circle during alarm to silence immediately
 
 ## Platforms
 
 | Platform | Technology | Min Version |
 |----------|------------|-------------|
-| iOS | Swift 6 + SwiftUI | iOS 18+ |
-| Android | Kotlin 2.1 + Jetpack Compose | Android 8+ (API 26) |
+| iOS | Swift 6 + SwiftUI + Live Activities | iOS 18+ |
+| Android | Kotlin 2.1 + Jetpack Compose + Material Design 3 | Android 8+ (API 26) |
 
 ## Project Structure
 
@@ -97,11 +137,36 @@ xcodebuild test -scheme RandomTimer -destination 'platform=iOS Simulator,name=iP
 maestro test .maestro/smoke-test.yaml
 ```
 
+### Agentic Web Verification (Playwright)
+
+```bash
+# Local deterministic checks (metadata + screenshot inventory)
+make playwright-verify-local
+
+# Strict release-readiness gate (enforces iPhone+iPad screenshot coverage)
+make playwright-verify-strict
+
+# Read-only App Store Connect / Play Console verification (requires auth state files)
+make playwright-store-console
+
+# Install agent-browser CLI used by the alternate verification engine
+make playwright-install-agent-browser
+
+# Read-only verification via agent-browser engine (same auth-state files)
+make playwright-store-console-agent
+
+# Sync local Playwright auth states to GitHub Actions secrets
+make playwright-sync-auth-secrets
+```
+
+See `tests/playwright/README.md` for environment variables and strict release-readiness mode.
+Platform tradeoff research is documented in `docs/agentic-browser-platform-evaluation-2026-02-16.md`.
+
 ## Architecture
 
 ### iOS
 - **MVVM** with `@Observable` TimerManager
-- **Live Activities** for Lock Screen/Dynamic Island
+- **Live Activities** for Lock Screen / Dynamic Island
 - **UserDefaults** for persistence
 - **AVAudioPlayer** for alarm sounds
 
@@ -111,17 +176,32 @@ maestro test .maestro/smoke-test.yaml
 - **DataStore** for persistence
 - **Foreground Service** for reliable countdown
 - **MediaPlayer** for alarm sounds
+- **Material Design 3 Expressive** with spring-based animations and haptic feedback
 
 ## Color Palette
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Background | `#0F0A1A` | Deep purple-black |
-| Accent | `#8B5CF6` | Purple primary |
-| Timer Active | `#10B981` | Emerald - running |
-| Timer Complete | `#8B5CF6` | Purple - done |
-| Glass | `rgba(255,255,255,0.10)` | Card backgrounds |
+| Token | Preview | Value | Usage |
+|-------|---------|-------|-------|
+| Background | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-0F0A1A?style=flat-square&labelColor=0F0A1A) | `#0F0A1A` | Deep purple-black |
+| Accent | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-8B5CF6?style=flat-square&labelColor=8B5CF6) | `#8B5CF6` | Purple primary |
+| Timer Active | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-10B981?style=flat-square&labelColor=10B981) | `#10B981` | Emerald — running |
+| Warning | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-F59E0B?style=flat-square&labelColor=F59E0B) | `#F59E0B` | Amber — warning |
+| Alarm | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-F43F5E?style=flat-square&labelColor=F43F5E) | `#F43F5E` | Rose — alarm |
+| Timer Complete | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-8B5CF6?style=flat-square&labelColor=8B5CF6) | `#8B5CF6` | Purple — done |
+| Glass | ![](https://img.shields.io/badge/-%E2%A0%80%E2%A0%80%E2%A0%80-CCCCCC?style=flat-square&labelColor=CCCCCC) | `rgba(255,255,255,0.10)` | Card backgrounds |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+## Privacy
+
+Random Tactical Timer collects **no personal data**. See [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 
 ## License
 
-MIT
+[MIT](LICENSE) — Igor Ganapolsky

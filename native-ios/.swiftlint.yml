@@ -1,0 +1,47 @@
+excluded:
+  - build
+  - .build
+  - Pods
+  - DerivedData
+
+disabled_rules:
+  - trailing_comma
+  - identifier_name
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - fatal_error_message
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - overridden_super_call
+  - unneeded_parentheses_in_closure_argument
+
+custom_rules:
+  no_print_statements:
+    name: "No print() in production code"
+    regex: '^\s*print\('
+    match_kinds:
+      - identifier
+    message: "Use Logger from os.log instead of print()"
+    severity: warning
+    excluded: ".*Tests.*|.*Preview.*"
+
+  no_observable_object:
+    name: "Prefer @Observable over ObservableObject"
+    regex: ':\s*ObservableObject\b'
+    message: "Use @Observable macro (iOS 17+) instead of ObservableObject protocol"
+    severity: warning
+
+  no_state_object:
+    name: "Prefer @State with @Observable"
+    regex: '@StateObject'
+    message: "Use @State with @Observable instead of @StateObject"
+    severity: warning
+
+  no_environment_object:
+    name: "Prefer @Environment with @Observable"
+    regex: '@EnvironmentObject'
+    message: "Use @Environment with @Observable instead of @EnvironmentObject"
+    severity: warning

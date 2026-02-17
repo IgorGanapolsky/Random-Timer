@@ -36,8 +36,8 @@ lint:
 actions:
   disabled:
     - trunk-announce
-    - trunk-check-pre-commit # Disabled - Husky manages pre-commit hooks
-    - trunk-fmt-pre-commit # Disabled - Husky calls trunk directly
-    - trunk-check-pre-push # Disabled - Husky manages git hooks
+    - trunk-check-pre-commit # Disabled - custom scripts/pre-commit handles this
+    - trunk-fmt-pre-commit # Disabled - custom pre-commit calls trunk directly
+    - trunk-check-pre-push # Disabled - not needed with pre-commit enforcement
   enabled:
     - trunk-upgrade-available

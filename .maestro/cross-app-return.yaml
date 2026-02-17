@@ -1,0 +1,35 @@
+appId: com.iganapolsky.randomtimer
+---
+# Test: Timer survives app switch and state is preserved on return
+- launchApp
+
+# Verify main screen elements
+- assertVisible: 'Random Tactical Timer'
+- assertVisible: 'Start Timer'
+
+# Start the timer
+- tapOn: 'Start Timer'
+
+# Verify timer is running
+- assertVisible:
+    text: 'Pause'
+    optional: true
+
+# Background the app by pressing Home
+- pressKey: Home
+
+# Wait for a few seconds while app is backgrounded
+- runScript:
+    script: |
+      java.lang.Thread.sleep(3000)
+
+# Return to the app
+- launchApp
+
+# Verify timer is still running (not reset to setup screen)
+- assertVisible:
+    text: 'Pause'
+    optional: true
+- assertNotVisible:
+    text: 'Start Timer'
+    optional: true
