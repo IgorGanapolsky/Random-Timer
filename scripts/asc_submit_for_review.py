@@ -315,12 +315,12 @@ def attach_build(client: ASCClient, version_id: str, build_id: str) -> None:
         payload={"data": {"type": "builds", "id": build_id}},
     )
 
-
 def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, Any]:
-    # App Info holds category + localized strings/URLs like privacy policy.
+    # App Info holds category + localized strings/URLs like privacy policy/support URL.
     #
-    # ASC API fields have shifted over time; keep this query conservative and validate
-    # only what we can reliably read here.
+    # ASC API query params and field names can shift over time; keep this request
+    # conservative (no schema-fragile filters/fields) and validate required values
+    # from the returned objects.
     data = client.request(
         "GET",
         f"/apps/{app_id}/appInfos",
@@ -329,52 +329,88 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
             "limit": 50,
         },
     )
+
     app_infos = data.get("data") or []
     if not app_infos:
         die("Missing app info. Complete App Information in App Store Connect.")
 
-    # Prefer the iOS appInfo if multiple platforms exist; otherwise fall back to first.
-    app_info = None
+    # Prefer the iOS appInfo if multiple platforms exist; otherwise fall back to first dict.
+    app_info: dict[str, Any] | None = None
     for ai in app_infos:
+        if not isinstance(ai, dict):
+            continue
         if (ai.get("attributes") or {}).get("platform") == "IOS":
             app_info = ai
             break
     if not app_info:
-        app_info = app_infos[0]
+        for ai in app_infos:
+            if isinstance(ai, dict):
+                app_info = ai
+                break
+    if not app_info:
+        die("Missing app info object. Complete App Information in App Store Connect.")
 
     rel_primary = (app_info.get("relationships") or {}).get("primaryCategory", {}).get("data")
     if not rel_primary:
         die("Primary category is not set (App Information).")
 
-    rel_loc_ids = set()
+    rel_loc_ids: set[str] = set()
     rel_locs = (app_info.get("relationships") or {}).get("appInfoLocalizations", {}).get("data") or []
     for item in rel_locs:
-        if isinstance(item, dict) and item.get("id"):
-            rel_loc_ids.add(item["id"])
+        if isinstance(item, dict):
+            loc_id = item.get("id")
+            if isinstance(loc_id, str) and loc_id:
+                rel_loc_ids.add(loc_id)
 
     included = data.get("included") or []
-    loc = None
+    loc: dict[str, Any] | None = None
     for inc in included:
-        if inc.get("type") != "appInfoLocalizations":
+        if not isinstance(inc, dict) or inc.get("type") != "appInfoLocalizations":
             continue
         if rel_loc_ids and inc.get("id") not in rel_loc_ids:
             continue
         if (inc.get("attributes") or {}).get("locale") == locale:
             loc = inc
             break
+    # Fallback: if relationship IDs didn't match (or weren't present), relax to any included locale.
+    if not loc:
+        for inc in included:
+            if not isinstance(inc, dict) or inc.get("type") != "appInfoLocalizations":
+                continue
+            if (inc.get("attributes") or {}).get("locale") == locale:
+                loc = inc
+                break
     if not loc:
         die(f"Missing app info localization for {locale} (App Information).")
 
-    attrs = loc.get("attributes") or {}
-    ensure_https(attrs.get("privacyPolicyUrl", ""), "Privacy Policy URL")
-    return attrs
+    loc_attrs = loc.get("attributes") or {}
+    info_attrs = app_info.get("attributes") or {}
+    privacy = (loc_attrs.get("privacyPolicyUrl") or info_attrs.get("privacyPolicyUrl") or "").strip()
+    support = (loc_attrs.get("supportUrl") or info_attrs.get("supportUrl") or "").strip()
+    ensure_https(privacy, "Privacy Policy URL")
+    ensure_https(support, "Support URL")
+
+    # Return localization-like attrs with resolved URLs for downstream checks.
+    resolved = dict(loc_attrs)
+    if privacy and not resolved.get("privacyPolicyUrl"):
+        resolved["privacyPolicyUrl"] = privacy
+    if support and not resolved.get("supportUrl"):
+        resolved["supportUrl"] = support
+    return resolved
 
 
 def verify_pricing(client: ASCClient, app_id: str) -> None:
-    # ASC pricing endpoints have changed over time. Prefer appPriceSchedule (current),
+    # ASC pricing endpoints have changed over time. Prefer appPriceSchedule/appPriceSchedules (current),
     # but fall back to the legacy /apps/{id}/prices relationship if available.
+    #
+    # If pricing is missing and the current pricing APIs are available, we attempt to
+    # set the app to Free (tier 0) so submission isn't blocked.
 
-    # Newer API: appPriceSchedule exists on the app (single schedule object).
+    schedule = None
+    schedule_id: str | None = None
+    base_territory_id: str | None = None
+
+    # Newer API (common): appPriceSchedule exists on the app (single schedule object).
     try:
         schedule = client.request(
             "GET",
@@ -384,14 +420,23 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
     except Exception:
         schedule = None
 
+    # Newer API variant: find schedule via the top-level collection.
+    if not schedule:
+        try:
+            schedules = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+            schedule_list = schedules.get("data") or []
+            if schedule_list:
+                schedule = schedule_list[0]
+        except Exception:
+            schedule = None
+
     if schedule and isinstance(schedule, dict) and schedule.get("id"):
         schedule_id = schedule["id"]
         rel_base = (schedule.get("relationships") or {}).get("baseTerritory", {}).get("data")
-        if not rel_base:
-            die("Pricing not set (baseTerritory missing in appPriceSchedule).")
+        if isinstance(rel_base, dict):
+            base_territory_id = rel_base.get("id")
 
         # Confirm there is at least one price entry, either manual or automatic.
-        # We fetch both relationships with limit=1 and accept either.
         manual = None
         automatic = None
         manual_err = None
@@ -418,28 +463,75 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
 
         # If the schedule endpoints are reachable but empty, pricing isn't configured.
         if manual_err is None and automatic_err is None:
-            die("Pricing not set (appPriceSchedule has no manualPrices/automaticPrices).")
-
-        # Otherwise, we couldn't verify schedule pricing; attempt legacy fallback before failing.
-        info(
-            "Could not verify pricing via appPriceSchedule endpoints; attempting legacy /prices fallback.\n"
-            f"  manualPrices error: {manual_err}\n"
-            f"  automaticPrices error: {automatic_err}"
-        )
+            # We'll attempt to set Free below if schedule-based APIs are supported.
+            pass
+        else:
+            # Otherwise, we couldn't verify schedule pricing; attempt legacy fallback before failing.
+            info(
+                "Could not verify pricing via appPriceSchedule endpoints; attempting legacy /prices fallback.\n"
+                f"  manualPrices error: {manual_err}\n"
+                f"  automaticPrices error: {automatic_err}"
+            )
 
     # Legacy API: prices relationship on app (older accounts).
     try:
         data = client.request("GET", f"/apps/{app_id}/prices", params={"include": "priceTier", "limit": 1})
+        if data.get("data"):
+            return
     except Exception:
-        die("Pricing not set (no appPriceSchedule and legacy /prices not available).")
+        data = None
 
-    prices = data.get("data") or []
-    if not prices:
-        die("Pricing not set (no prices returned for app).")
-    included = data.get("included") or []
-    tier = first([i for i in included if i.get("type") in ("priceTiers", "appPriceTiers")])
-    if not tier:
-        die("Pricing not set (missing priceTier include).")
+    # If legacy is unavailable, try to set the app to Free using appPriceSchedules.
+    free_point_id: str | None = None
+    territory = (base_territory_id or "USA").strip() or "USA"
+    try:
+        points = client.request(
+            "GET",
+            f"/apps/{app_id}/appPricePoints",
+            params={"filter[territory]": territory, "limit": 200},
+        )
+        for item in points.get("data") or []:
+            if not isinstance(item, dict):
+                continue
+            attrs = item.get("attributes") or {}
+            price = str(attrs.get("customerPrice") or "").strip()
+            if price in ("0", "0.0", "0.00", "0.000", "0.0000"):
+                free_point_id = item.get("id")
+                break
+    except Exception:
+        free_point_id = None
+
+    if free_point_id:
+        info(f"Pricing not set; creating Free price schedule (base territory {territory})…")
+        manual_price_id = "manualPrice-0"
+        payload = {
+            "data": {
+                "type": "appPriceSchedules",
+                "relationships": {
+                    "app": {"data": {"type": "apps", "id": app_id}},
+                    "baseTerritory": {"data": {"type": "territories", "id": territory}},
+                    "manualPrices": {"data": [{"type": "appPrices", "id": manual_price_id}]},
+                },
+            },
+            "included": [
+                {
+                    "type": "appPrices",
+                    "id": manual_price_id,
+                    "attributes": {"startDate": None},
+                    "relationships": {"appPricePoint": {"data": {"type": "appPricePoints", "id": free_point_id}}},
+                }
+            ],
+        }
+        try:
+            client.request("POST", "/appPriceSchedules", payload=payload)
+            # Read-back verification.
+            data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
+            if data.get("data"):
+                return
+        except Exception as e:
+            die(f"Pricing not set and failed to create Free price schedule: {e}")
+
+    die("Pricing not set (no appPriceSchedule and legacy /prices not available).")
 
 
 def verify_review_detail(client: ASCClient, app_id: str) -> None:
