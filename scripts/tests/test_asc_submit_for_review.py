@@ -55,8 +55,8 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
         self.assertNotIn("filter[platform]", params)
         self.assertNotIn("fields[appInfoLocalizations]", params)
         self.assertNotIn("fields[appInfos]", params)
-        # Still request localizations to validate required URLs.
-        self.assertEqual(params.get("include"), "appInfoLocalizations")
+        # Still request localizations (and category relationship) to validate required fields.
+        self.assertEqual(params.get("include"), "appInfoLocalizations,primaryCategory")
 
     def test_verify_app_info_requires_support_and_privacy_urls(self):
         from scripts.asc_submit_for_review import verify_app_info
