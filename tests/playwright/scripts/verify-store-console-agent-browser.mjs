@@ -8,6 +8,34 @@ const defaultPlayUrl =
   "https://play.google.com/console/u/0/developers/8239620436488925047/app/4974974102541773558/app-dashboard";
 const agentBrowserVersion = "0.10.0";
 
+function tryParseUrl(rawUrl) {
+  try {
+    return new URL(rawUrl);
+  } catch {
+    return null;
+  }
+}
+
+function isAscLoginUrl(rawUrl) {
+  const parsed = tryParseUrl(rawUrl);
+  if (!parsed) {
+    return false;
+  }
+  if (parsed.hostname.toLowerCase() !== "appstoreconnect.apple.com") {
+    return false;
+  }
+  const pathName = parsed.pathname.toLowerCase();
+  return pathName.startsWith("/login") || pathName.startsWith("/signin");
+}
+
+function isPlayLoginUrl(rawUrl) {
+  const parsed = tryParseUrl(rawUrl);
+  if (!parsed) {
+    return false;
+  }
+  return parsed.hostname.toLowerCase() === "accounts.google.com";
+}
+
 /** Resolve absolute path to a CLI tool, falling back to the name itself. */
 function resolveExecutable(name) {
   try {
@@ -112,9 +140,7 @@ function openAndVerifyAsc({
       runAgent(["--session", session, "--json", "get", "url"], { expectJson: true })?.data?.url ||
         "",
     );
-    const normalizedUrl = currentUrl.toLowerCase();
-
-    if (normalizedUrl.includes("/login") || normalizedUrl.includes("signin")) {
+    if (isAscLoginUrl(currentUrl)) {
       fail(
         "ASC auth state is not authenticated. Re-capture with `TARGET=asc npm run auth:save`.",
       );
@@ -154,12 +180,7 @@ function openAndVerifyPlay({
       runAgent(["--session", session, "--json", "get", "url"], { expectJson: true })?.data?.url ||
         "",
     );
-    const normalizedUrl = currentUrl.toLowerCase();
-
-    if (
-      normalizedUrl.includes("accounts.google.com") ||
-      normalizedUrl.includes("servicelogin")
-    ) {
+    if (isPlayLoginUrl(currentUrl)) {
       fail(
         "Play auth state is not authenticated. Re-capture with `TARGET=play npm run auth:save`.",
       );

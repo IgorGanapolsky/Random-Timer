@@ -6,6 +6,37 @@ const defaultAscUrl =
 const defaultPlayUrl =
   "https://play.google.com/console/u/0/developers/8239620436488925047/app/4974974102541773558/app-dashboard";
 
+function tryParseUrl(rawUrl: string): URL | null {
+  try {
+    return new URL(rawUrl);
+  } catch {
+    return null;
+  }
+}
+
+function isAscLoginUrl(rawUrl: string): boolean {
+  const parsed = tryParseUrl(rawUrl);
+  if (!parsed) {
+    return false;
+  }
+
+  if (parsed.hostname.toLowerCase() !== "appstoreconnect.apple.com") {
+    return false;
+  }
+
+  const path = parsed.pathname.toLowerCase();
+  return path.startsWith("/login") || path.startsWith("/signin");
+}
+
+function isPlayLoginUrl(rawUrl: string): boolean {
+  const parsed = tryParseUrl(rawUrl);
+  if (!parsed) {
+    return false;
+  }
+
+  return parsed.hostname.toLowerCase() === "accounts.google.com";
+}
+
 test.describe("Store Console Read-Only Verification", () => {
   test("App Store Connect: version page exposes expected state", async ({ browser }, testInfo) => {
     const storageStatePath = process.env.ASC_STORAGE_STATE_PATH;
@@ -26,16 +57,16 @@ test.describe("Store Console Read-Only Verification", () => {
     const page = await context.newPage();
     await page.goto(ascUrl, { waitUntil: "domcontentloaded" });
 
-    await expect(page).toHaveURL(/appstoreconnect\.apple\.com/i);
-    const currentUrl = page.url().toLowerCase();
-    const isAscLoginUrl = currentUrl.includes("/login");
+    await expect(page).toHaveURL(/^https:\/\/appstoreconnect\.apple\.com(?:\/.*)?$/i);
+    const currentUrl = page.url();
+    const isAscLogin = isAscLoginUrl(currentUrl);
     const hasAscLoginField = await page
       .getByPlaceholder(/email or phone number/i)
       .first()
       .isVisible()
       .catch(() => false);
 
-    if (isAscLoginUrl || hasAscLoginField) {
+    if (isAscLogin || hasAscLoginField) {
       throw new Error(
         "ASC auth state is not authenticated. Refresh with `cd tests/playwright && TARGET=asc npm run auth:save` and sync secrets.",
       );
@@ -74,22 +105,21 @@ test.describe("Store Console Read-Only Verification", () => {
     const page = await context.newPage();
     await page.goto(playUrl, { waitUntil: "domcontentloaded" });
 
-    const currentUrl = page.url().toLowerCase();
-    const isPlayLoginUrl =
-      currentUrl.includes("accounts.google.com") || currentUrl.includes("servicelogin");
+    const currentUrl = page.url();
+    const isPlayLogin = isPlayLoginUrl(currentUrl);
     const hasPlayLoginField = await page
       .locator('input[type="email"]')
       .first()
       .isVisible()
       .catch(() => false);
 
-    if (isPlayLoginUrl || hasPlayLoginField) {
+    if (isPlayLogin || hasPlayLoginField) {
       throw new Error(
         "Play auth state is not authenticated. Refresh with `cd tests/playwright && TARGET=play npm run auth:save` and sync secrets.",
       );
     }
 
-    await expect(page).toHaveURL(/play\.google\.com\/console/i);
+    await expect(page).toHaveURL(/^https:\/\/play\.google\.com\/console(?:\/.*)?$/i);
     await expect(page.getByText(new RegExp(expectedAppName, "i")).first()).toBeVisible({
       timeout: 30_000,
     });
