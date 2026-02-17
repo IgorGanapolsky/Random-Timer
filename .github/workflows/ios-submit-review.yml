@@ -84,10 +84,15 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
         run: |
+          if ! echo "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
+            exit 1
+          fi
           python scripts/verify_release.py \
             --platform ios \
-            --version "${{ steps.version.outputs.ios_version }}" \
+            --version "$IOS_VERSION" \
             --wait \
             --timeout 1200
 
@@ -95,8 +100,13 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
         run: |
-          fastlane metadata version:"${{ steps.version.outputs.ios_version }}"
+          if ! echo "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
+            exit 1
+          fi
+          fastlane metadata version:"$IOS_VERSION"
         working-directory: native-ios
 
       - name: Submit for review
@@ -106,12 +116,17 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           LOCALE: ${{ inputs.locale }}
           WAIT_FOR_STATE: ${{ inputs.wait }}
+          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
         run: |
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
             echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
             exit 1
           fi
-          ARGS=(--version "${{ steps.version.outputs.ios_version }}" --locale "$LOCALE")
+          if ! echo "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
+            exit 1
+          fi
+          ARGS=(--version "$IOS_VERSION" --locale "$LOCALE")
           if [ "$WAIT_FOR_STATE" = "true" ]; then
             ARGS+=(--wait --timeout 1800)
           fi
