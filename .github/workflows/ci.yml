@@ -173,10 +173,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install gitleaks (OSS CLI)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b "$HOME/.local/bin" v8.30.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Secret Scan
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            RANGE="${PR_BASE_SHA}..${PR_HEAD_SHA}"
+          else
+            if [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+              RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+            else
+              RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
+            fi
+          fi
+          echo "Scanning commit range: $RANGE"
+          gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
 
   notify:
     name: Notify

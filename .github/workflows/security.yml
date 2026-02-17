@@ -81,11 +81,32 @@ jobs:
         with:
           category: "/language:javascript"
 
+      - name: Install gitleaks (OSS CLI)
+        if: matrix.scan-type == 'code'
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b "$HOME/.local/bin" v8.30.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Run Secret Scan
         if: matrix.scan-type == 'code'
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+            echo "Scanning commit range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+          elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
+            RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
+            echo "Scanning fallback range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+          else
+            echo "Scanning full git history fallback"
+            gitleaks git --no-banner --redact --exit-code 1
+          fi
 
       # Mobile-specific Security Scans
       - name: Mobile Security Framework (MobSF)
