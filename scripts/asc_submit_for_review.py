@@ -661,7 +661,9 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
         die("Pricing not set (could not find Free price point and legacy /prices is unavailable).")
 
     info(f"Pricing not set; creating Free price schedule (base territory {territory})…")
-    manual_price_id = "manualPrice-0"
+    # App Store Connect requires JSON:API "local ids" for inline-created included resources.
+    # The API validates local ids using the "${local-id}" format (i.e. ids must start with "$").
+    manual_price_id = "$manualPrice0"
     payload = {
         "data": {
             "type": "appPriceSchedules",
@@ -675,7 +677,6 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
             {
                 "type": "appPrices",
                 "id": manual_price_id,
-                "attributes": {"startDate": None},
                 "relationships": {"appPricePoint": {"data": {"type": "appPricePoints", "id": free_point_id}}},
             }
         ],

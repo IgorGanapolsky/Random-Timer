@@ -93,7 +93,11 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         self.assertIn("/appPriceSchedules", paths)
         self.assertIn("/apps/app1/appPricePoints", paths)
         self.assertIn("/appPriceSchedules", paths)
-        self.assertTrue(any(c["method"] == "POST" and c["path"] == "/appPriceSchedules" for c in client.calls))
+        post = next((c for c in client.calls if c["method"] == "POST" and c["path"] == "/appPriceSchedules"), None)
+        self.assertIsNotNone(post, "expected verify_pricing() to POST /appPriceSchedules")
+        # ASC enforces inline-created included entities to use a JSON:API local id with the '$' prefix.
+        self.assertEqual(post["payload"]["included"][0]["id"], "$manualPrice0")
+        self.assertEqual(post["payload"]["data"]["relationships"]["manualPrices"]["data"][0]["id"], "$manualPrice0")
 
 
 if __name__ == "__main__":
