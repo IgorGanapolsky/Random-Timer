@@ -731,17 +731,34 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
         die("App Review contactPhone is missing.")
 
 
-def verify_age_rating(client: ASCClient, app_id: str) -> None:
-    # Try both known endpoints; pass if either returns a declaration object.
+def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
+    # Age rating declarations have moved across resources over time (apps vs versions).
+    # Try multiple known relationship endpoints; pass if any returns a declaration object.
+    attempts: list[tuple[str, str]] = []
+
     for path in (f"/apps/{app_id}/appInfoAgeRatingDeclaration", f"/apps/{app_id}/appStoreAgeRatingDeclaration"):
+        attempts.append(("app", path))
+
+    if version_id:
+        for path in (
+            f"/appStoreVersions/{version_id}/appInfoAgeRatingDeclaration",
+            f"/appStoreVersions/{version_id}/appStoreAgeRatingDeclaration",
+        ):
+            attempts.append(("version", path))
+
+    errors: list[str] = []
+    for scope, path in attempts:
         try:
             data = client.request("GET", path)
-        except Exception:
+        except Exception as e:
+            errors.append(f"{scope} {path}: {e}")
             continue
         decl = data.get("data")
         if decl:
             return
-    die("Age Rating declaration not found. Complete Age Rating in App Store Connect.")
+
+    detail = "\n  ".join(errors) if errors else "(no endpoints attempted)"
+    die("Age Rating declaration not found. Complete Age Rating in App Store Connect.\n  " + detail)
 
 
 def submit_for_review(client: ASCClient, version_id: str) -> None:
@@ -806,11 +823,11 @@ def main() -> int:
     # Hard preflight checks (fail fast if store listing is incomplete).
     app_info_loc_attrs = verify_app_info(client, app_id, args.locale)
     verify_pricing(client, app_id)
-    verify_age_rating(client, app_id)
 
     version_id, state = find_or_create_app_store_version(client, app_id, args.version)
     info(f"App Store version id={version_id} state={state}")
     verify_review_detail(client, version_id)
+    verify_age_rating(client, app_id, version_id)
 
     # If already in a submitted/in-review state, do nothing.
     if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
