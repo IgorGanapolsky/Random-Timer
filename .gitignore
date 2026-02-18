@@ -83,5 +83,8 @@ venv/
 .claude/epics/
 .claude/prds/
 .claude/context/
-scripts/__pycache__/
-*.pyc
+
+# Local auth + agent automation artifacts (never commit)
+.auth/
+.agent-device/
+.rag/
