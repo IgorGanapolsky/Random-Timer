@@ -73,6 +73,10 @@ temp/
 .venv/
 venv/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Claude Code memory/cache (session-specific, not project config)
 .claude/memory/
 .claude/hooks/
