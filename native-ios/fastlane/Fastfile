@@ -138,12 +138,14 @@ platform :ios do
       end
     end
 
-	    deliver(
-	      app_identifier: "com.igorganapolsky.randomtimer",
-	      app_version: version,
-	      build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
-	      skip_binary_upload: true,
-	      skip_screenshots: false,
+		    deliver(
+		      app_identifier: "com.igorganapolsky.randomtimer",
+		      app_version: version,
+		      build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
+		      edit_live: true,
+		      skip_app_version_update: true,
+		      skip_binary_upload: true,
+		      skip_screenshots: false,
 	      # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
 	      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
 	      run_precheck_before_submit: false,
