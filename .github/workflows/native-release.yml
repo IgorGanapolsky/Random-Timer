@@ -239,7 +239,7 @@ jobs:
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
           TRACK = (os.getenv("PLAY_TRACK", "") or "production").strip()
-          DEFAULT_STATUS = "inProgress" if TRACK == "production" else "completed"
+          DEFAULT_STATUS = "completed"
           RELEASE_STATUS = (os.getenv("PLAY_RELEASE_STATUS", "") or DEFAULT_STATUS).strip() or DEFAULT_STATUS
           RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
           RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
@@ -299,8 +299,17 @@ jobs:
                   if release_notes:
                       release["releaseNotes"] = [{"language": "en-US", "text": release_notes}]
                   if RELEASE_STATUS == "inProgress":
-                      # Full rollout. Some endpoints require userFraction when using inProgress.
-                      release["userFraction"] = 1.0
+                      # Staged rollout only. For full rollout use status=completed.
+                      # If not provided, default to 0.1 so we never send the invalid 1.0 value.
+                      user_fraction_raw = (os.getenv("PLAY_USER_FRACTION", "") or "0.1").strip()
+                      try:
+                          user_fraction = float(user_fraction_raw)
+                      except Exception:
+                          user_fraction = 0.1
+                      user_fraction = max(0.0, min(1.0, user_fraction))
+                      if user_fraction >= 1.0:
+                          user_fraction = 0.1
+                      release["userFraction"] = user_fraction
 
                   service.edits().tracks().update(
                       packageName=PACKAGE,
