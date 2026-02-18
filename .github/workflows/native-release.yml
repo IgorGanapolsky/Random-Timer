@@ -12,6 +12,15 @@ on:
           - both
         required: true
         default: 'both'
+      android_track:
+        description: 'Android only: Google Play track to publish to'
+        type: choice
+        options:
+          - production
+          - beta
+          - alpha
+        required: false
+        default: 'production'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
@@ -204,9 +213,10 @@ jobs:
         run: ./gradlew bundleRelease
         working-directory: native-android
 
-      - name: Upload to Google Play (closed testing track)
+      - name: Upload to Google Play (track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          PLAY_TRACK: ${{ inputs.android_track }}
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
@@ -228,6 +238,7 @@ jobs:
           SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
+          TRACK = (os.getenv("PLAY_TRACK", "") or "production").strip()
           RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
           RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
           RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
@@ -263,12 +274,12 @@ jobs:
                   service.edits().tracks().update(
                       packageName=PACKAGE,
                       editId=edit_id,
-                      track='alpha',
+                      track=TRACK,
                       body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
                   ).execute()
 
                   service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-                  print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
+                  print(f"✅ Uploaded version code {bundle['versionCode']} to '{TRACK}' track")
                   break
               except HttpError as e:
                   message = str(e)
@@ -353,8 +364,10 @@ jobs:
         run: |
           echo "event_name=${{ github.event_name }}"
           echo "inputs.platform=${{ inputs.platform }}"
+          echo "inputs.android_track=${{ inputs.android_track }}"
           echo "inputs.submit_review=${{ inputs.submit_review }}"
           echo "github.event.inputs.platform=${{ github.event.inputs.platform }}"
+          echo "github.event.inputs.android_track=${{ github.event.inputs.android_track }}"
           echo "github.event.inputs.submit_review=${{ github.event.inputs.submit_review }}"
           echo "github.event.inputs(json)=${{ toJSON(github.event.inputs) }}"
 
@@ -368,6 +381,19 @@ jobs:
           else
             echo "flag=android" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Determine Android track (no secrets)
+        id: android_track
+        run: |
+          TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
+          if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
+            TRACK="${{ inputs.android_track }}"
+          fi
+          if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
+            TRACK="production"
+          fi
+          echo "track=$TRACK" >> "$GITHUB_OUTPUT"
+          echo "android_track=$TRACK"
 
       - name: Write App Store Connect key
         if: needs.ios-testflight.result == 'success'
@@ -391,6 +417,9 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
           ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
+          if [ "${{ needs.android-release.result }}" = "success" ]; then
+            ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
+          fi
           if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
             ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
           fi
