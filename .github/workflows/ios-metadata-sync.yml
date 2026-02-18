@@ -25,8 +25,11 @@ jobs:
           bundler-cache: true
           working-directory: native-ios
 
-      - name: Verify Fastlane availability
-        run: fastlane --version
+      - name: Install Fastlane (Homebrew)
+        run: |
+          brew update
+          brew install fastlane
+          fastlane --version
 
       - name: Setup Python
         uses: actions/setup-python@v5
