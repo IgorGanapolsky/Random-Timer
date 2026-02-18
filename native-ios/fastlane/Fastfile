@@ -191,7 +191,8 @@ platform :ios do
 	      app_version: version,
 	      build_number: build_number.to_s,
 	      submit_for_review: true,
-	      automatic_release: false,
+	      # Auto-release once Apple approves the submission (no manual "Release This Version" step).
+	      automatic_release: true,
 	      skip_binary_upload: true,
 	      # Upload screenshots/metadata in `metadata` lane first for deterministic gating.
 	      skip_screenshots: options.key?(:skip_screenshots) ? options[:skip_screenshots] : true,
