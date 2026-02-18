@@ -811,16 +811,17 @@ def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = N
 
 
 def submit_for_review(client: ASCClient, version_id: str) -> None:
-    info("Creating App Store version submission…")
-    client.request(
-        "POST",
-        "/appStoreVersionSubmissions",
-        payload={
-            "data": {
-                "type": "appStoreVersionSubmissions",
-                "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}},
-            }
-        },
+    # Apple’s public App Store Connect OpenAPI currently exposes:
+    # - GET /v1/appStoreVersions/{id}/appStoreVersionSubmission
+    # - DELETE /v1/appStoreVersionSubmissions/{id}
+    # but does not expose a CREATE operation for submissions.
+    #
+    # Attempting to POST will fail with FORBIDDEN_ERROR ("does not allow CREATE").
+    # Use Fastlane `deliver` (see native-ios/fastlane/Fastfile lane `submit_review`)
+    # or submit via the App Store Connect UI.
+    die(
+        "App Store Connect API does not support creating an appStoreVersionSubmission via POST. "
+        "Use fastlane `submit_review` (deliver submit_for_review) or submit in App Store Connect UI."
     )
 
 

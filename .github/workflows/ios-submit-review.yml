@@ -128,11 +128,12 @@ jobs:
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
             exit 1
           fi
-          ARGS=(--version "$IOS_VERSION" --locale "$LOCALE")
-          if [ "$WAIT_FOR_STATE" = "true" ]; then
-            ARGS+=(--wait --timeout 1800)
-          fi
-          python scripts/asc_submit_for_review.py "${ARGS[@]}"
+          # App Store Connect API does not support creating submissions via POST.
+          # Use our ASC preflight script for hard validation, then submit via Fastlane deliver.
+          python scripts/asc_submit_for_review.py --version "$IOS_VERSION" --locale "$LOCALE" --dry-run
+
+          cd native-ios
+          fastlane submit_review version:"$IOS_VERSION"
 
       - name: Cleanup key
         if: always()
