@@ -150,7 +150,6 @@ platform :ios do
       # a fastlane queue_worker crash in CI ("Enqueue Array instead of NilClass").
       skip_metadata: true,
       overwrite_screenshots: true,
-      sync_screenshots: true,
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
       run_precheck_before_submit: false,
