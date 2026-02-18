@@ -25,15 +25,8 @@ jobs:
           bundler-cache: true
           working-directory: native-ios
 
-      - name: Configure isolated RubyGems path
-        run: |
-          echo "GEM_HOME=${RUNNER_TEMP}/gems" >> "$GITHUB_ENV"
-          echo "GEM_PATH=${RUNNER_TEMP}/gems" >> "$GITHUB_ENV"
-          echo "${RUNNER_TEMP}/gems/bin" >> "$GITHUB_PATH"
-
-      - name: Install Fastlane
-        run: gem install fastlane --no-document
-        working-directory: native-ios
+      - name: Verify Fastlane availability
+        run: fastlane --version
 
       - name: Setup Python
         uses: actions/setup-python@v5
