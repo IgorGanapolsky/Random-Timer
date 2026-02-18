@@ -138,23 +138,20 @@ platform :ios do
       end
     end
 
-    deliver(
-      app_identifier: "com.igorganapolsky.randomtimer",
-      app_version: version,
-      build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
-      skip_binary_upload: true,
-      skip_screenshots: false,
-      # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
-      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
-      run_precheck_before_submit: false,
-      precheck_include_in_app_purchases: false,
-      force: true,
-      # Fastlane precheck can't inspect IAP via App Store Connect API keys; avoid blocking CI uploads.
-      run_precheck_before_submit: false,
-      precheck_include_in_app_purchases: false,
-      api_key: defined?(api_key) ? api_key : nil
-    )
-  end
+	    deliver(
+	      app_identifier: "com.igorganapolsky.randomtimer",
+	      app_version: version,
+	      build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
+	      skip_binary_upload: true,
+	      skip_screenshots: false,
+	      # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
+	      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
+	      run_precheck_before_submit: false,
+	      precheck_include_in_app_purchases: false,
+	      force: true,
+	      api_key: defined?(api_key) ? api_key : nil
+	    )
+	  end
 
   desc "Submit a given version for App Review (attach build + submit)"
   lane :submit_review do |options|
@@ -189,21 +186,25 @@ platform :ios do
 
     UI.message("Submitting App Store version v#{version} with build #{build_number} for review")
 
-    deliver(
-      app_identifier: "com.igorganapolsky.randomtimer",
-      app_version: version,
-      build_number: build_number.to_s,
-      submit_for_review: true,
-      automatic_release: false,
-      skip_binary_upload: true,
-      # Upload screenshots/metadata in `metadata` lane first for deterministic gating.
-      skip_screenshots: options.key?(:skip_screenshots) ? options[:skip_screenshots] : true,
-      skip_metadata: options.key?(:skip_metadata) ? options[:skip_metadata] : true,
-      run_precheck_before_submit: false,
-      precheck_include_in_app_purchases: false,
-      force: true,
-      api_key: defined?(api_key) ? api_key : nil
-    )
+	    deliver(
+	      app_identifier: "com.igorganapolsky.randomtimer",
+	      app_version: version,
+	      build_number: build_number.to_s,
+	      submit_for_review: true,
+	      automatic_release: false,
+	      skip_binary_upload: true,
+	      # Upload screenshots/metadata in `metadata` lane first for deterministic gating.
+	      skip_screenshots: options.key?(:skip_screenshots) ? options[:skip_screenshots] : true,
+	      skip_metadata: options.key?(:skip_metadata) ? options[:skip_metadata] : true,
+	      # Required for App Store submission (prevents deliver from prompting/failing in CI).
+	      submission_information: {
+	        export_compliance_uses_encryption: false
+	      },
+	      run_precheck_before_submit: false,
+	      precheck_include_in_app_purchases: false,
+	      force: true,
+	      api_key: defined?(api_key) ? api_key : nil
+	    )
   end
 
   desc "Verify build processed on TestFlight"
