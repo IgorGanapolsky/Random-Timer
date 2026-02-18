@@ -1,0 +1,19 @@
+appId: com.iganapolsky.randomtimer
+---
+# Verification helper: paused timer in background should show notification.
+
+- launchApp:
+    clearState: true
+- assertVisible: "Random Tactical Timer"
+- assertVisible: "Start Timer"
+
+- tapOn: "Start Timer"
+- assertVisible:
+    text: "Pause"
+
+- tapOn: "Pause"
+- assertVisible:
+    text: "Resume"
+
+# Send app to background.
+- pressKey: Home

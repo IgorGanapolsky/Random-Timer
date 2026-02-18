@@ -107,11 +107,11 @@ jobs:
           if [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
             RANGE="${BEFORE_SHA}..${HEAD_SHA}"
             echo "Scanning commit range: $RANGE"
-            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
           elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
             RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
             echo "Scanning fallback range: $RANGE"
-            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
           else
             echo "Scanning full git history fallback"
             gitleaks git --no-banner --redact --exit-code 1

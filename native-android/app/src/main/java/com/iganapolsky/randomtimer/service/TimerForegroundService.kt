@@ -59,6 +59,7 @@ class TimerForegroundService : Service() {
 
     private lateinit var notificationManager: NotificationManager
     private var isAppInForeground = false
+    private var isForegroundNotificationActive = false
 
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
@@ -95,6 +96,7 @@ class TimerForegroundService : Service() {
         when (intent?.action) {
             ACTION_APP_STATE_CHANGED -> {
                 isAppInForeground = intent.getBooleanExtra(EXTRA_APP_IN_FOREGROUND, false)
+                _timerState.value?.let { updateNotification(it) } ?: removeForegroundNotification()
             }
             ACTION_UPDATE_LOOP -> {
                 val repeatEnabled = intent.getBooleanExtra(EXTRA_REPEAT_ENABLED, false)
@@ -146,6 +148,7 @@ class TimerForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        removeForegroundNotification()
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
@@ -160,7 +163,7 @@ class TimerForegroundService : Service() {
         stopVibration()
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        removeForegroundNotification()
         stopSelf()
     }
 
@@ -206,7 +209,7 @@ class TimerForegroundService : Service() {
 
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
-        startForeground(NOTIFICATION_ID, createTimerNotification(initialState))
+        updateNotification(initialState)
 
         timerJob?.cancel()
         timerJob =
@@ -253,7 +256,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         _timerState.value = null
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        removeForegroundNotification()
         stopSelf()
     }
 
@@ -282,7 +285,7 @@ class TimerForegroundService : Service() {
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
         alarmCountdownJob = null
-        notificationManager.cancel(NOTIFICATION_ID)
+        removeForegroundNotification()
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
@@ -336,12 +339,7 @@ class TimerForegroundService : Service() {
         // This is intentionally separate from audio focus: we want the alarm to be controllable even
         // if the alarm audio failed to start (e.g. resource error, volume 0).
         activateMediaSession()
-
-        // Only show alarm notification if app is NOT in foreground
-        if (!isAppInForeground) {
-            val alarmNotification = createAlarmNotification()
-            notificationManager.notify(NOTIFICATION_ID, alarmNotification)
-        }
+        _timerState.value?.let { updateNotification(it) }
 
         // Play sound (always enabled, controlled by volume)
         if (state.config.volume > 0f) {
@@ -579,8 +577,36 @@ class TimerForegroundService : Service() {
     }
 
     private fun updateNotification(state: TimerState) {
-        val notification = createTimerNotification(state)
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        if (isAppInForeground) {
+            removeForegroundNotification()
+            return
+        }
+
+        val notification =
+            if (state.status == TimerStatus.ALARM) {
+                createAlarmNotification()
+            } else {
+                createTimerNotification(state)
+            }
+        showOrUpdateForegroundNotification(notification)
+    }
+
+    private fun showOrUpdateForegroundNotification(notification: Notification) {
+        if (isForegroundNotificationActive) {
+            notificationManager.notify(NOTIFICATION_ID, notification)
+            return
+        }
+
+        startForeground(NOTIFICATION_ID, notification)
+        isForegroundNotificationActive = true
+    }
+
+    private fun removeForegroundNotification() {
+        notificationManager.cancel(NOTIFICATION_ID)
+        if (isForegroundNotificationActive) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            isForegroundNotificationActive = false
+        }
     }
 
     private fun createMainActivityIntent(): PendingIntent {

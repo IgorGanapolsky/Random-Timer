@@ -44,6 +44,30 @@ jobs:
           fi
           echo "✅ No architecture violations found"
 
+  python:
+    name: Python Script Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest lancedb pyarrow
+
+      - name: Compile Python sources
+        run: |
+          python -m py_compile scripts/rag_memory.py tools/rag/*.py
+
+      - name: Run tests
+        run: |
+          pytest -q tests/python
+
   android:
     name: Android Tests
     runs-on: ubuntu-latest
@@ -161,6 +185,20 @@ jobs:
             tests/playwright/playwright-report
             tests/playwright/test-results
 
+  python-scripts:
+    name: Python Script Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s scripts/tests -p 'test_*.py'
+
   security:
     name: Security
     runs-on: ubuntu-latest
@@ -196,22 +234,27 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+          RANGE=""
+          if [[ "$EVENT_NAME" == "pull_request" && -n "$PR_BASE_SHA" && -n "$PR_HEAD_SHA" ]]; then
             RANGE="${PR_BASE_SHA}..${PR_HEAD_SHA}"
-          else
-            if [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
-              RANGE="${BEFORE_SHA}..${HEAD_SHA}"
-            else
-              RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
-            fi
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            RANGE="${BEFORE_SHA}..${HEAD_SHA}"
+          elif git rev-parse "${HEAD_SHA}~1" >/dev/null 2>&1; then
+            RANGE="${HEAD_SHA}~1..${HEAD_SHA}"
           fi
-          echo "Scanning commit range: $RANGE"
-          gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
+
+          if [[ -n "$RANGE" ]]; then
+            echo "Scanning commit range: $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+          else
+            echo "Scanning full git history fallback"
+            gitleaks git --no-banner --redact --exit-code 1
+          fi
 
   notify:
     name: Notify
     runs-on: ubuntu-latest
-    needs: [android, ios, playwright-local, security]
+    needs: [android, ios, playwright-local, python-scripts, security]
     if: always() && github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -222,6 +265,7 @@ jobs:
           script: |
             const androidResult = '${{ needs.android.result }}';
             const iosResult = '${{ needs.ios.result }}';
+            const pythonResult = '${{ needs.python.result }}';
             const playwrightResult = '${{ needs.playwright-local.result }}';
             const securityResult = '${{ needs.security.result }}';
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -229,11 +273,13 @@ jobs:
             const allPassed =
               androidResult === 'success' &&
               iosResult === 'success' &&
+              pythonResult === 'success' &&
               playwrightResult === 'success' &&
               securityResult === 'success';
             const anyFailed =
               androidResult === 'failure' ||
               iosResult === 'failure' ||
+              pythonResult === 'failure' ||
               playwrightResult === 'failure' ||
               securityResult === 'failure';
 
@@ -246,5 +292,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Playwright Local Checks | ${playwrightResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
+              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Python Script Tests | ${pythonResult} |\n| Playwright Local Checks | ${playwrightResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
             });

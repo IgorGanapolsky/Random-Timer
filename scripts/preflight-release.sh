@@ -252,12 +252,11 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
     OTHER_CLASS=0
 
     for shot in "${IOS_SCREENSHOTS[@]}"; do
-      if ! command -v sips >/dev/null 2>&1; then
-        err "sips is required to validate iOS screenshot dimensions"
-        break
+      SIZE=$(python3 "$PROJECT_ROOT/scripts/png_dimensions.py" "$shot" 2>/dev/null || echo "")
+      if [[ -z "$SIZE" ]]; then
+        err "iOS screenshots: could not read dimensions for $shot"
+        continue
       fi
-
-      SIZE=$(sips -g pixelWidth -g pixelHeight "$shot" 2>/dev/null | awk '/pixelWidth/{w=$2}/pixelHeight/{h=$2}END{print w"x"h}')
       case "$SIZE" in
         1320x2868|2868x1320|1290x2796|2796x1290|1284x2778|2778x1284|1242x2688|2688x1242)
           IPHONE_CLASS=$((IPHONE_CLASS + 1))
