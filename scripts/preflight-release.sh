@@ -280,6 +280,20 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
       err "iOS screenshots: need >=3 iPad 13\" screenshots (found $IPAD_CLASS)"
     fi
 
+    # Guard against accidental duplicate uploads (same image bytes under different names).
+    if command -v shasum >/dev/null 2>&1; then
+      DUP_HASHES=$(shasum -a 256 "${IOS_SCREENSHOTS[@]}" | awk '{print $1}' | sort | uniq -d)
+      if [[ -n "$DUP_HASHES" ]]; then
+        while IFS= read -r dup_hash; do
+          [[ -z "$dup_hash" ]] && continue
+          DUP_FILES=$(shasum -a 256 "${IOS_SCREENSHOTS[@]}" | awk -v h="$dup_hash" '$1==h {print $2}' | xargs -n1 basename | paste -sd ', ' -)
+          err "iOS screenshots: duplicate image bytes detected ($DUP_FILES)"
+        done <<< "$DUP_HASHES"
+      fi
+    else
+      err "shasum is required to detect duplicate iOS screenshots"
+    fi
+
     for required_ipad in 5_ipad_setup.png 6_ipad_running.png 7_ipad_stopped.png; do
       if [[ ! -f "$IOS_SCREENSHOTS_DIR/$required_ipad" ]]; then
         err "iOS screenshots: missing required iPad capture $required_ipad"
