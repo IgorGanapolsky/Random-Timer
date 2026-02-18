@@ -351,6 +351,25 @@ jobs:
                           content = str(raw).strip()
                   except Exception:
                       content = ""
+                  try:
+                      import json
+                      with open("/tmp/play-upload-error.json", "w", encoding="utf-8") as f:
+                          json.dump(
+                              {
+                                  "kind": "HttpError",
+                                  "track": TRACK,
+                                  "release_status": RELEASE_STATUS,
+                                  "http_status": status,
+                                  "error": str(e),
+                                  "response": content,
+                              },
+                              f,
+                              indent=2,
+                              ensure_ascii=True,
+                          )
+                      print("Wrote /tmp/play-upload-error.json", file=sys.stderr)
+                  except Exception:
+                      pass
                   if content:
                       print(f"❌ Google Play upload failed: {e}\n\nResponse:\n{content}", file=sys.stderr)
                   else:
@@ -373,6 +392,23 @@ jobs:
                       continue
 
                   print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  try:
+                      import json
+                      with open("/tmp/play-upload-error.json", "w", encoding="utf-8") as f:
+                          json.dump(
+                              {
+                                  "kind": "Exception",
+                                  "track": TRACK,
+                                  "release_status": RELEASE_STATUS,
+                                  "error": str(e),
+                              },
+                              f,
+                              indent=2,
+                              ensure_ascii=True,
+                          )
+                      print("Wrote /tmp/play-upload-error.json", file=sys.stderr)
+                  except Exception:
+                      pass
                   sys.exit(1)
           PYEOF
 
@@ -382,6 +418,13 @@ jobs:
         with:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload Play upload error artifact
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: play-upload-error
+          path: /tmp/play-upload-error.json
 
       - name: Cleanup secrets
         if: always()
