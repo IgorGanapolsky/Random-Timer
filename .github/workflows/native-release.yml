@@ -239,6 +239,8 @@ jobs:
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
           TRACK = (os.getenv("PLAY_TRACK", "") or "production").strip()
+          DEFAULT_STATUS = "completed"
+          RELEASE_STATUS = (os.getenv("PLAY_RELEASE_STATUS", "") or DEFAULT_STATUS).strip() or DEFAULT_STATUS
           RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
           RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
           RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
@@ -271,15 +273,56 @@ jobs:
                       media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
                   ).execute()
 
+                  # Play Console can require release notes for first-time production submissions.
+                  notes_path = os.path.join(
+                      "native-android",
+                      "fastlane",
+                      "metadata",
+                      "android",
+                      "en-US",
+                      "changelogs",
+                      f"{bundle['versionCode']}.txt",
+                  )
+                  release_notes = ""
+                  try:
+                      if os.path.isfile(notes_path):
+                          with open(notes_path, "r", encoding="utf-8") as f:
+                              release_notes = f.read().strip()
+                  except Exception:
+                      release_notes = ""
+
+                  release = {
+                      "versionCodes": [bundle["versionCode"]],
+                      "status": RELEASE_STATUS,
+                      "name": f"v{bundle['versionCode']}",
+                  }
+                  if release_notes:
+                      release["releaseNotes"] = [{"language": "en-US", "text": release_notes}]
+                  if RELEASE_STATUS == "inProgress":
+                      # Staged rollout only. For full rollout use status=completed.
+                      # If not provided, default to 0.1 so we never send the invalid 1.0 value.
+                      user_fraction_raw = (os.getenv("PLAY_USER_FRACTION", "") or "0.1").strip()
+                      try:
+                          user_fraction = float(user_fraction_raw)
+                      except Exception:
+                          user_fraction = 0.1
+                      user_fraction = max(0.0, min(1.0, user_fraction))
+                      if user_fraction >= 1.0:
+                          user_fraction = 0.1
+                      release["userFraction"] = user_fraction
+
                   service.edits().tracks().update(
                       packageName=PACKAGE,
                       editId=edit_id,
                       track=TRACK,
-                      body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
+                      body={"releases": [release]},
                   ).execute()
 
                   service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-                  print(f"✅ Uploaded version code {bundle['versionCode']} to '{TRACK}' track")
+                  print(
+                      f"✅ Uploaded version code {bundle['versionCode']} to '{TRACK}' track "
+                      f"(status={RELEASE_STATUS})"
+                  )
                   break
               except HttpError as e:
                   message = str(e)
@@ -299,7 +342,19 @@ jobs:
                       time.sleep(sleep_for)
                       continue
 
-                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  content = ""
+                  try:
+                      raw = getattr(e, "content", b"") or b""
+                      if isinstance(raw, (bytes, bytearray)):
+                          content = raw.decode("utf-8", errors="ignore").strip()
+                      else:
+                          content = str(raw).strip()
+                  except Exception:
+                      content = ""
+                  if content:
+                      print(f"❌ Google Play upload failed: {e}\n\nResponse:\n{content}", file=sys.stderr)
+                  else:
+                      print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
               except Exception as e:
                   message = str(e).lower()
