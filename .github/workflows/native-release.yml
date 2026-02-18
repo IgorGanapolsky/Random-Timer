@@ -228,6 +228,7 @@ jobs:
           python3 - <<'PYEOF'
           import sys
           import os
+          import json
           import time
 
           from google.oauth2 import service_account
@@ -351,6 +352,25 @@ jobs:
                           content = str(raw).strip()
                   except Exception:
                       content = ""
+
+                  # Persist the raw response to an artifact-backed file so we can debug
+                  # FAILED_PRECONDITION even when GitHub masks the log output.
+                  try:
+                      payload = {
+                          "package": PACKAGE,
+                          "track": TRACK,
+                          "release_status": RELEASE_STATUS,
+                          "attempt": attempt,
+                          "http_status": status,
+                          "error": str(e),
+                          "response": content,
+                      }
+                      with open("/tmp/play-upload-error.json", "w", encoding="utf-8") as f:
+                          json.dump(payload, f, indent=2, ensure_ascii=True)
+                      print("📦 Wrote /tmp/play-upload-error.json", file=sys.stderr)
+                  except Exception as write_err:
+                      print(f"⚠️ Failed to write /tmp/play-upload-error.json: {write_err}", file=sys.stderr)
+
                   if content:
                       print(f"❌ Google Play upload failed: {e}\n\nResponse:\n{content}", file=sys.stderr)
                   else:
@@ -375,6 +395,14 @@ jobs:
                   print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
           PYEOF
+
+      - name: Upload Play upload error (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: play-upload-error
+          path: /tmp/play-upload-error.json
+          if-no-files-found: ignore
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
