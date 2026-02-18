@@ -69,6 +69,17 @@ def _is_unknown_attr_error(exc: Exception, *, attr_key: str) -> bool:
     msg = str(exc)
     return ("ATTRIBUTE.UNKNOWN" in msg) and (f"/data/attributes/{attr_key}" in msg or f"'{attr_key}'" in msg)
 
+def _is_state_error_for_attr(exc: Exception, *, attr_key: str) -> bool:
+    """Best-effort match for App Store Connect "STATE_ERROR" on a specific attribute.
+
+    ASC error payloads are embedded in our RuntimeError string; keep this resilient
+    to minor formatting changes by matching on the code + attribute name.
+    """
+    msg = str(exc)
+    if "STATE_ERROR" not in msg:
+        return False
+    return (f"/data/attributes/{attr_key}" in msg) or (f"'{attr_key}'" in msg) or (f"Attribute '{attr_key}'" in msg)
+
 
 def patch_resource_attributes(client: "ASCClient", *, path: str, type_name: str, resource_id: str, attrs: dict) -> None:
     client.request(
@@ -371,19 +382,39 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
 
     if patch and loc_id:
         info(f"Filling missing App Store version localization fields for {locale}: {', '.join(sorted(patch.keys()))}")
-        patch_resource_attributes(
-            client,
-            path=f"/appStoreVersionLocalizations/{loc_id}",
-            type_name="appStoreVersionLocalizations",
-            resource_id=loc_id,
-            attrs=patch,
-        )
+        try:
+            patch_resource_attributes(
+                client,
+                path=f"/appStoreVersionLocalizations/{loc_id}",
+                type_name="appStoreVersionLocalizations",
+                resource_id=loc_id,
+                attrs=patch,
+            )
+        except Exception as e:
+            # Some App Store version states (notably DEVELOPER_REJECTED) can lock release notes edits.
+            # Treat release notes (whatsNew) as best-effort: retry patching other fields, or skip.
+            if "whatsNew" in patch and _is_state_error_for_attr(e, attr_key="whatsNew"):
+                rest = {k: v for k, v in patch.items() if k != "whatsNew"}
+                if rest:
+                    info(f"Skipping whatsNew patch due to STATE_ERROR; retrying fields: {', '.join(sorted(rest.keys()))}")
+                    patch_resource_attributes(
+                        client,
+                        path=f"/appStoreVersionLocalizations/{loc_id}",
+                        type_name="appStoreVersionLocalizations",
+                        resource_id=loc_id,
+                        attrs=rest,
+                    )
+                else:
+                    info("Skipping whatsNew patch due to STATE_ERROR (not editable in current App Store version state).")
+            else:
+                raise
         refreshed = client.request("GET", f"/appStoreVersionLocalizations/{loc_id}").get("data") or {}
         if isinstance(refreshed, dict):
             loc = refreshed
             attrs = loc.get("attributes") or {}
 
-    for field in ("description", "keywords", "whatsNew"):
+    # whatsNew ("Release Notes") is not always editable, and is not required for all submissions.
+    for field in ("description", "keywords"):
         if not (attrs.get(field) or "").strip():
             die(f"App Store version localization {locale} missing required field: {field}")
     return loc
