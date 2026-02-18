@@ -245,17 +245,16 @@ def _get_app_info_privacy_policy_url(
     return (url or None), {"locale": (picked or {}).get("attributes", {}).get("locale")}
 
 
-def _get_app_review_details(client: AscClient, app_id: str) -> Dict[str, Any]:
-    # Resource name is plural in ASC API: appStoreReviewDetails
+def _get_app_review_details(client: AscClient, app_store_version_id: str) -> Dict[str, Any]:
+    # Review details are attached to the version.
     payload = client.get(
-        f"/apps/{app_id}/appStoreReviewDetails",
+        f"/appStoreVersions/{app_store_version_id}/appStoreReviewDetail",
         params={
-            "limit": "1",
             "fields[appStoreReviewDetails]": "contactFirstName,contactLastName,contactPhone,contactEmail",
         },
     )
-    items = payload.get("data", []) or []
-    return items[0] if items else {}
+    data = payload.get("data")
+    return data if isinstance(data, dict) else {}
 
 
 def _get_app_price_schedules(client: AscClient, app_id: str) -> List[Dict[str, Any]]:
@@ -417,7 +416,7 @@ def verify_ready(
 
     # App review contact info
     try:
-        review = _get_app_review_details(client, app_id)
+        review = _get_app_review_details(client, str(app_store_version.get("id")))
         attrs = review.get("attributes", {}) if review else {}
         first = _normalize(attrs.get("contactFirstName"))
         last = _normalize(attrs.get("contactLastName"))
