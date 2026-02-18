@@ -125,24 +125,29 @@ def add_memory(
 
     append_event(item, events_path=events_path)
 
-    db = _connect(db_dir)
-    tbl = _open_or_create_table(db, dim=dim)
-    tbl.add(
-        [
-            {
-                "id": item.id,
-                "ts": item.ts,
-                "kind": item.kind,
-                "text": item.text,
-                "text_redacted": item.text_redacted,
-                "tags": item.tags,
-                "importance": float(item.importance),
-                "issues": json.dumps(item.issues, ensure_ascii=True),
-                "vector": [float(v) for v in item.vector],
-                "meta": json.dumps(item.meta, ensure_ascii=True),
-            }
-        ]
-    )
+    # Indexing is best-effort. The jsonl log is the source of truth.
+    try:
+        db = _connect(db_dir)
+        tbl = _open_or_create_table(db, dim=dim)
+        tbl.add(
+            [
+                {
+                    "id": item.id,
+                    "ts": item.ts,
+                    "kind": item.kind,
+                    "text": item.text,
+                    "text_redacted": item.text_redacted,
+                    "tags": item.tags,
+                    "importance": float(item.importance),
+                    "issues": json.dumps(item.issues, ensure_ascii=True),
+                    "vector": [float(v) for v in item.vector],
+                    "meta": json.dumps(item.meta, ensure_ascii=True),
+                }
+            ]
+        )
+    except Exception:
+        # No LanceDB available (or indexing failure). Retrieval can fall back to jsonl scan.
+        pass
     return item
 
 
@@ -203,11 +208,54 @@ def query_memories(
     limit: int = 8,
     dim: int = 256,
     db_dir: Path = DEFAULT_DB_DIR,
+    events_path: Path = DEFAULT_EVENTS_PATH,
 ) -> List[Dict[str, Any]]:
-    db = _connect(db_dir)
-    tbl = _open_or_create_table(db, dim=dim)
-
     qv = hashed_embedding(query, dim=dim)
+
+    # Prefer LanceDB; fall back to jsonl scanning if it isn't available.
+    try:
+        db = _connect(db_dir)
+        tbl = _open_or_create_table(db, dim=dim)
+    except Exception:
+        if not events_path.exists():
+            return []
+        results: List[Dict[str, Any]] = []
+        with events_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                ts = float(rec.get("ts", 0.0) or 0.0)
+                vec = rec.get("vector") or [0.0] * dim
+                # Simple fts proxy: substring match gets a small boost.
+                text = rec.get("text_redacted") or rec.get("text") or ""
+                fts = 1.0 if query.lower() in str(text).lower() else 0.0
+                # Cosine sim via pre-normalized hashed embeddings.
+                dot = 0.0
+                for a, b in zip(qv, vec):
+                    dot += float(a) * float(b)
+                vector_sim = max(0.0, min(1.0, dot))
+                res = score_record(
+                    vector_sim=vector_sim,
+                    fts_rank=fts,
+                    importance=float(rec.get("importance", 0.5) or 0.5),
+                    recency_days=_days_since(ts) if ts else None,
+                )
+                results.append(
+                    {
+                        "id": str(rec.get("id", "")),
+                        "score": res.score,
+                        "reasons": res.reasons,
+                        "kind": rec.get("kind", ""),
+                        "ts": ts,
+                        "tags": rec.get("tags", []),
+                        "text": text,
+                        "meta": json.dumps(rec.get("meta", {}), ensure_ascii=True),
+                    }
+                )
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return results[:limit]
 
     # Vector search
     vec_rows: List[Dict[str, Any]] = []

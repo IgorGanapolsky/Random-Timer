@@ -172,8 +172,18 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Run unit tests
-        run: python -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest lancedb pyarrow
+
+      - name: Compile Python sources
+        run: |
+          python -m py_compile scripts/rag_memory.py tools/rag/*.py
+
+      - name: Run tests
+        run: |
+          pytest -q tests/python
 
   security:
     name: Security
@@ -241,6 +251,7 @@ jobs:
           script: |
             const androidResult = '${{ needs.android.result }}';
             const iosResult = '${{ needs.ios.result }}';
+            const pythonResult = '${{ needs.python-scripts.result }}';
             const playwrightResult = '${{ needs.playwright-local.result }}';
             const securityResult = '${{ needs.security.result }}';
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -248,11 +259,13 @@ jobs:
             const allPassed =
               androidResult === 'success' &&
               iosResult === 'success' &&
+              pythonResult === 'success' &&
               playwrightResult === 'success' &&
               securityResult === 'success';
             const anyFailed =
               androidResult === 'failure' ||
               iosResult === 'failure' ||
+              pythonResult === 'failure' ||
               playwrightResult === 'failure' ||
               securityResult === 'failure';
 
@@ -265,5 +278,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Playwright Local Checks | ${playwrightResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
+              body: `${emoji} **CI ${status}**\n\n| Check | Result |\n|-------|--------|\n| Android Tests | ${androidResult} |\n| iOS Build & Tests | ${iosResult} |\n| Python Script Tests | ${pythonResult} |\n| Playwright Local Checks | ${playwrightResult} |\n| Security | ${securityResult} |\n\n[View details](${runUrl})`
             });
