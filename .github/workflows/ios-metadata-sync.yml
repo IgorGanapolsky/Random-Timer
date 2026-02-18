@@ -26,7 +26,7 @@ jobs:
           working-directory: native-ios
 
       - name: Install Fastlane
-        run: gem install fastlane
+        run: gem install fastlane --force --no-document
         working-directory: native-ios
 
       - name: Setup Python
