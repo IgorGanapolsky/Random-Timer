@@ -732,49 +732,21 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
 
 
 def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
-    # Age rating declarations have moved across resources over time (apps vs versions).
-    # Try multiple known relationship endpoints; pass if any returns a declaration object.
-    attempts: list[tuple[str, str]] = []
-
-    for path in (f"/apps/{app_id}/appInfoAgeRatingDeclaration", f"/apps/{app_id}/appStoreAgeRatingDeclaration"):
-        attempts.append(("app", path))
-
-    if version_id:
-        for path in (
-            f"/appStoreVersions/{version_id}/appInfoAgeRatingDeclaration",
-            f"/appStoreVersions/{version_id}/appStoreAgeRatingDeclaration",
-        ):
-            attempts.append(("version", path))
-
-    # Some accounts expose age rating declarations off AppInfo.
-    app_info_id: str | None = None
+    # Current ASC API exposes a unified AgeRatingDeclaration relationship on the App Store Version:
+    #   GET /v1/appStoreVersions/{id}/ageRatingDeclaration
+    # Some older code paths used app/appInfo relationships which may not exist on newer APIs.
     errors: list[str] = []
-    try:
-        payload = client.request("GET", f"/apps/{app_id}/appInfos", params={"limit": 1})
-        info_obj = first(payload.get("data") or [])
-        if isinstance(info_obj, dict) and info_obj.get("id"):
-            app_info_id = info_obj["id"]
-    except Exception as e:
-        errors.append(f"app /apps/{app_id}/appInfos: {e}")
-
-    if app_info_id:
-        for path in (
-            f"/appInfos/{app_info_id}/appInfoAgeRatingDeclaration",
-            f"/appInfos/{app_info_id}/appStoreAgeRatingDeclaration",
-        ):
-            attempts.append(("appInfo", path))
-
-    for scope, path in attempts:
+    if version_id:
         try:
-            data = client.request("GET", path)
+            data = client.request("GET", f"/appStoreVersions/{version_id}/ageRatingDeclaration")
+            if data.get("data"):
+                return
         except Exception as e:
-            errors.append(f"{scope} {path}: {e}")
-            continue
-        decl = data.get("data")
-        if decl:
-            return
+            errors.append(f"version /appStoreVersions/{version_id}/ageRatingDeclaration: {e}")
+    else:
+        errors.append("version_id missing (cannot verify ageRatingDeclaration).")
 
-    detail = "\n  ".join(errors) if errors else "(no endpoints attempted)"
+    detail = "\n  ".join(errors)
     die("Age Rating declaration not found. Complete Age Rating in App Store Connect.\n  " + detail)
 
 
