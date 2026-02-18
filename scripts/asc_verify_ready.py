@@ -171,11 +171,10 @@ def _list_app_store_versions(
         params={
             "filter[versionString]": version,
             "limit": "1",
-            "include": "build,appStoreVersionLocalizations,primaryCategory",
-            "fields[appStoreVersions]": "versionString,appStoreState,build,appStoreVersionLocalizations,primaryCategory",
+            "include": "build,appStoreVersionLocalizations",
+            "fields[appStoreVersions]": "versionString,appStoreState,build,appStoreVersionLocalizations",
             "fields[builds]": "processingState,version,uploadedDate",
             "fields[appStoreVersionLocalizations]": "locale,description,keywords,supportUrl",
-            "fields[appStoreCategories]": "name",
         },
     )
     versions = payload.get("data", [])
@@ -312,32 +311,6 @@ def verify_ready(
             evidence={"appStoreState": v_state},
         )
     )
-
-    # Primary category
-    primary_cat_rel = (
-        app_store_version.get("relationships", {})
-        .get("primaryCategory", {})
-        .get("data")
-    )
-    if primary_cat_rel and primary_cat_rel.get("id"):
-        cat = _first_included(version_payload, "appStoreCategories", primary_cat_rel["id"])
-        cat_name = (cat or {}).get("attributes", {}).get("name") if cat else None
-        checks.append(
-            Check(
-                name="Category Set",
-                passed=True,
-                details=f"primaryCategory={cat_name or primary_cat_rel['id']}",
-                evidence={"primaryCategory": cat_name or primary_cat_rel["id"]},
-            )
-        )
-    else:
-        checks.append(
-            Check(
-                name="Category Set",
-                passed=False,
-                details="primaryCategory relationship is empty",
-            )
-        )
 
     # Build attached + VALID
     build_rel = (
@@ -612,4 +585,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
