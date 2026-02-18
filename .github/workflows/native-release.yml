@@ -259,6 +259,8 @@ jobs:
           import sys
           import os
           import json
+          import glob
+          import mimetypes
           import time
 
           from google.oauth2 import service_account
@@ -303,6 +305,112 @@ jobs:
                       editId=edit_id,
                       media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
                   ).execute()
+
+                  # Update store listing + images from fastlane metadata.
+                  # Play can block production submissions if the listing is incomplete.
+                  metadata_dir = os.path.join(
+                      "native-android",
+                      "fastlane",
+                      "metadata",
+                      "android",
+                      "en-US",
+                  )
+
+                  def read_text(rel_path: str) -> str:
+                      p = os.path.join(metadata_dir, rel_path)
+                      try:
+                          if os.path.isfile(p):
+                              with open(p, "r", encoding="utf-8") as f:
+                                  return f.read().strip()
+                      except Exception:
+                          return ""
+                      return ""
+
+                  title = read_text("title.txt")
+                  short_desc = read_text("short_description.txt")
+                  full_desc = read_text("full_description.txt")
+                  video = read_text("video.txt")
+
+                  listing = {}
+                  if title:
+                      listing["title"] = title
+                  if short_desc:
+                      listing["shortDescription"] = short_desc
+                  if full_desc:
+                      listing["fullDescription"] = full_desc
+                  if video:
+                      listing["video"] = video
+
+                  if listing:
+                      service.edits().listings().update(
+                          packageName=PACKAGE,
+                          editId=edit_id,
+                          language="en-US",
+                          body=listing,
+                      ).execute()
+
+                  # Best-effort: set details (contact + default language) if missing.
+                  details = {"defaultLanguage": "en-US"}
+                  support_url = ""
+                  try:
+                      support_path = os.path.join(
+                          "native-ios", "fastlane", "metadata", "en-US", "support_url.txt"
+                      )
+                      if os.path.isfile(support_path):
+                          with open(support_path, "r", encoding="utf-8") as f:
+                              support_url = f.read().strip()
+                  except Exception:
+                      support_url = ""
+                  if support_url:
+                      details["contactWebsite"] = support_url
+                  try:
+                      service.edits().details().patch(
+                          packageName=PACKAGE,
+                          editId=edit_id,
+                          body=details,
+                      ).execute()
+                  except Exception:
+                      # Non-fatal: some accounts/apps restrict patching details via API.
+                      pass
+
+                  def mime_for(path: str) -> str:
+                      mt, _ = mimetypes.guess_type(path)
+                      return mt or "application/octet-stream"
+
+                  def upload_images(image_type: str, pattern: str) -> None:
+                      files = sorted(glob.glob(pattern))
+                      if not files:
+                          return
+                      try:
+                          service.edits().images().deleteall(
+                              packageName=PACKAGE,
+                              editId=edit_id,
+                              language="en-US",
+                              imageType=image_type,
+                          ).execute()
+                      except Exception:
+                          pass
+                      for fp in files:
+                          service.edits().images().upload(
+                              packageName=PACKAGE,
+                              editId=edit_id,
+                              language="en-US",
+                              imageType=image_type,
+                              media_body=MediaFileUpload(fp, mimetype=mime_for(fp)),
+                          ).execute()
+
+                  upload_images(
+                      "icon",
+                      os.path.join(metadata_dir, "images", "icon.*"),
+                  )
+                  upload_images(
+                      "featureGraphic",
+                      os.path.join(metadata_dir, "images", "featureGraphic", "*.*"),
+                  )
+                  upload_images(
+                      "phoneScreenshots",
+                      os.path.join(metadata_dir, "images", "phoneScreenshots", "*.*"),
+                  )
 
                   # Play Console can require release notes for first-time production submissions.
                   notes_path = os.path.join(
