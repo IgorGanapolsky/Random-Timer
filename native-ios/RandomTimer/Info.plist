@@ -17,9 +17,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.1.0</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
-    <string>11</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSSupportsLiveActivities</key>
@@ -53,5 +53,7 @@
     <string>AppIcon</string>
     <key>UIUserInterfaceStyle</key>
     <string>Dark</string>
+    <key>POSTHOG_API_KEY</key>
+    <string>$(POSTHOG_API_KEY)</string>
     </dict>
 </plist>
