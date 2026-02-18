@@ -746,7 +746,24 @@ def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = N
         ):
             attempts.append(("version", path))
 
+    # Some accounts expose age rating declarations off AppInfo.
+    app_info_id: str | None = None
     errors: list[str] = []
+    try:
+        payload = client.request("GET", f"/apps/{app_id}/appInfos", params={"limit": 1})
+        info_obj = first(payload.get("data") or [])
+        if isinstance(info_obj, dict) and info_obj.get("id"):
+            app_info_id = info_obj["id"]
+    except Exception as e:
+        errors.append(f"app /apps/{app_id}/appInfos: {e}")
+
+    if app_info_id:
+        for path in (
+            f"/appInfos/{app_info_id}/appInfoAgeRatingDeclaration",
+            f"/appInfos/{app_info_id}/appStoreAgeRatingDeclaration",
+        ):
+            attempts.append(("appInfo", path))
+
     for scope, path in attempts:
         try:
             data = client.request("GET", path)
