@@ -1,0 +1,69 @@
+name: Release PR Checks (develop -> main)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify SemVer + monotonic build numbers vs main
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [ "${HEAD_REF}" != "develop" ]; then
+            echo "This check expects release PRs to be develop -> main. HEAD=${HEAD_REF}"
+            exit 1
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from scripts.versioning import read_repo_versions, SEMVER_RE
+          
+          def read_at(ref: str):
+            # Read target files from a different ref without checking out.
+            def show(path: str) -> str:
+              return subprocess.check_output(["git", "show", f"{ref}:{path}"], text=True)
+            tmp = Path(".tmp-version-check")
+            tmp.mkdir(exist_ok=True)
+            (tmp / "native-android/app").mkdir(parents=True, exist_ok=True)
+            (tmp / "native-ios/RandomTimer.xcodeproj").mkdir(parents=True, exist_ok=True)
+            (tmp / "native-android/app/build.gradle.kts").write_text(show("native-android/app/build.gradle.kts"), encoding="utf-8")
+            (tmp / "native-ios/RandomTimer.xcodeproj/project.pbxproj").write_text(show("native-ios/RandomTimer.xcodeproj/project.pbxproj"), encoding="utf-8")
+            v = read_repo_versions(tmp)
+            return v
+          
+          head = read_repo_versions(Path("."))
+          base = read_at("origin/main")
+          
+          if not SEMVER_RE.match(head.version):
+            raise SystemExit(f"Invalid SemVer on PR: {head.version}")
+          if head.version == base.version:
+            raise SystemExit(f"Version did not change vs main (still {head.version})")
+          
+          if head.android_version_code <= base.android_version_code:
+            raise SystemExit(
+              f"Android versionCode must increase: {head.android_version_code} <= {base.android_version_code}"
+            )
+          if head.ios_build_number <= base.ios_build_number:
+            raise SystemExit(
+              f"iOS build number must increase: {head.ios_build_number} <= {base.ios_build_number}"
+            )
+          
+          print(f"OK: version {base.version} -> {head.version}")
+          print(f"OK: android versionCode {base.android_version_code} -> {head.android_version_code}")
+          print(f"OK: ios build {base.ios_build_number} -> {head.ios_build_number}")
+          PY

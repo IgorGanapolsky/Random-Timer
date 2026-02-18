@@ -1,0 +1,121 @@
+name: Tag Release On Main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: tag-release-on-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve repo version
+        id: v
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from scripts.versioning import read_repo_versions
+          v = read_repo_versions(Path("."))
+          tag = f"v{v.version}"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+            f.write(f"version={v.version}\n")
+            f.write(f"tag={tag}\n")
+          PY
+
+      - name: Check if tag exists
+        id: tagcheck
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            echo "Tag already exists: ${TAG}"
+          else
+            echo "create=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag if missing
+        if: steps.tagcheck.outputs.create == 'true'
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"
+
+      - name: Generate release notes
+        id: notes
+        if: steps.tagcheck.outputs.create == 'true'
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          set -euo pipefail
+          prev_tag="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          if [ -n "$prev_tag" ]; then
+            git log --pretty=format:"* %s" "${prev_tag}..HEAD" > RELEASE_NOTES.md
+            echo "title=Changes since ${prev_tag}" >> "$GITHUB_OUTPUT"
+          else
+            git log --pretty=format:"* %s" > RELEASE_NOTES.md
+            echo "title=Initial release" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release (if missing)
+        uses: softprops/action-gh-release@v2
+        if: steps.tagcheck.outputs.create == 'true'
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: ${{ steps.v.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
+
+      - name: Open sync PR main -> develop (if needed)
+        uses: actions/github-script@v7
+        if: steps.tagcheck.outputs.create == 'true'
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const base = "develop";
+            const head = "main";
+
+            // Only create a PR if main is ahead of develop.
+            const cmp = await github.rest.repos.compareCommits({ owner, repo, base, head });
+            if ((cmp.data?.ahead_by || 0) === 0) {
+              core.info("No sync needed: main is not ahead of develop.");
+              return;
+            }
+
+            // Avoid duplicates.
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: "open", base,
+              per_page: 100,
+            });
+            if (existing.data.some(pr => pr.head.ref === head)) {
+              core.info("Sync PR already exists (main -> develop).");
+              return;
+            }
+
+            const title = `sync: main -> develop (v${process.env.VERSION})`;
+            const body = [
+              "Automated sync PR created after tagging a release on `main`.",
+              "",
+              "If this PR is empty, it can be closed safely.",
+            ].join("\\n");
+            await github.rest.pulls.create({ owner, repo, head, base, title, body });

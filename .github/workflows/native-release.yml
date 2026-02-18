@@ -1,6 +1,9 @@
 name: Native App Release
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       platform:
@@ -34,8 +37,34 @@ on:
         default: 'false'
 
 jobs:
+  resolve-inputs:
+    name: Resolve Inputs
+    runs-on: ubuntu-latest
+    outputs:
+      platform: ${{ steps.out.outputs.platform }}
+      android_track: ${{ steps.out.outputs.android_track }}
+      submit_review: ${{ steps.out.outputs.submit_review }}
+    steps:
+      - id: out
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PLATFORM: ${{ github.event.inputs.platform }}
+          INPUT_ANDROID_TRACK: ${{ github.event.inputs.android_track }}
+          INPUT_SUBMIT_REVIEW: ${{ github.event.inputs.submit_review }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            echo "platform=both" >> "$GITHUB_OUTPUT"
+            echo "android_track=production" >> "$GITHUB_OUTPUT"
+            echo "submit_review=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "platform=${INPUT_PLATFORM:-both}" >> "$GITHUB_OUTPUT"
+            echo "android_track=${INPUT_ANDROID_TRACK:-production}" >> "$GITHUB_OUTPUT"
+            echo "submit_review=${INPUT_SUBMIT_REVIEW:-false}" >> "$GITHUB_OUTPUT"
+          fi
+
   ios-testflight:
-    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    needs: [resolve-inputs]
+    if: ${{ needs.resolve-inputs.outputs.platform == 'ios' || needs.resolve-inputs.outputs.platform == 'both' }}
     runs-on: macos-15
     environment: production
     steps:
@@ -131,7 +160,8 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
-    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    needs: [resolve-inputs]
+    if: ${{ needs.resolve-inputs.outputs.platform == 'android' || needs.resolve-inputs.outputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -216,7 +246,7 @@ jobs:
       - name: Upload to Google Play (track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
-          PLAY_TRACK: ${{ inputs.android_track }}
+          PLAY_TRACK: ${{ needs.resolve-inputs.outputs.android_track }}
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
@@ -517,46 +547,22 @@ jobs:
           rm -f /tmp/play-service-account.json /tmp/appstore_key.p8
 
   ios-submit-review:
-    needs: [verify-releases]
-    # Run after verification. Gate privileged steps at runtime by reading the dispatch payload,
-    # because job-level `if:` on workflow_dispatch inputs has been brittle in practice.
-    if: ${{ needs.verify-releases.result == 'success' }}
+    needs: [resolve-inputs, verify-releases]
+    if: ${{ needs.verify-releases.result == 'success' && needs.resolve-inputs.outputs.submit_review == 'true' && (needs.resolve-inputs.outputs.platform == 'ios' || needs.resolve-inputs.outputs.platform == 'both') }}
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Gate submit-for-review (no secrets)
-        id: gate
-        run: |
-          set -euo pipefail
-          PLATFORM=$(jq -r '.inputs.platform // ""' "$GITHUB_EVENT_PATH")
-          SUBMIT_REVIEW=$(jq -r '.inputs.submit_review // ""' "$GITHUB_EVENT_PATH")
-
-          ENABLED="false"
-          if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
-            if [[ "$SUBMIT_REVIEW" == "true" || "$SUBMIT_REVIEW" == "1" ]]; then
-              ENABLED="true"
-            fi
-          fi
-
-          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
-          echo "submit_review=$SUBMIT_REVIEW" >> "$GITHUB_OUTPUT"
-          echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
-          echo "gate: platform=$PLATFORM submit_review=$SUBMIT_REVIEW enabled=$ENABLED"
-
       - name: Setup Python
-        if: steps.gate.outputs.enabled == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies (ASC)
-        if: steps.gate.outputs.enabled == 'true'
         run: pip install pyjwt cryptography requests
 
       - name: Extract iOS version
-        if: steps.gate.outputs.enabled == 'true'
         id: versions
         run: |
           IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
@@ -567,14 +573,12 @@ jobs:
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Write App Store Connect key (for API)
-        if: steps.gate.outputs.enabled == 'true'
         env:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
           echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
 
       - name: Setup Ruby
-        if: steps.gate.outputs.enabled == 'true'
         uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
         with:
           ruby-version: '3.2'
@@ -582,12 +586,10 @@ jobs:
           working-directory: native-ios
 
       - name: Install Fastlane
-        if: steps.gate.outputs.enabled == 'true'
         run: gem install fastlane
         working-directory: native-ios
 
       - name: Write App Store Connect key (Fastlane convention)
-        if: steps.gate.outputs.enabled == 'true'
         env:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -596,7 +598,6 @@ jobs:
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
 
       - name: Upload App Store metadata/screenshots + attach build
-        if: steps.gate.outputs.enabled == 'true'
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -605,7 +606,6 @@ jobs:
         working-directory: native-ios
 
       - name: Verify App Store submission readiness (hard gate)
-        if: steps.gate.outputs.enabled == 'true'
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
@@ -617,13 +617,12 @@ jobs:
 
       - name: Upload readiness report
         uses: actions/upload-artifact@v4
-        if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
+        if: always()
         with:
           name: asc-ready-report
           path: /tmp/asc_ready.json
 
       - name: Submit for App Review (App Store)
-        if: steps.gate.outputs.enabled == 'true'
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -632,7 +631,6 @@ jobs:
         working-directory: native-ios
 
       - name: Verify App Store submission state
-        if: steps.gate.outputs.enabled == 'true'
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}

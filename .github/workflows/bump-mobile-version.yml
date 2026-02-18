@@ -1,0 +1,74 @@
+name: Bump Mobile Version (develop)
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "SemVer bump"
+        type: choice
+        options: [patch, minor, major]
+        required: true
+        default: patch
+      version:
+        description: "Explicit SemVer (overrides bump), e.g. 1.2.3"
+        type: string
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bump versions
+        id: v
+        env:
+          BUMP: ${{ github.event.inputs.bump }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${VERSION}" ]; then
+            python3 scripts/bump_mobile_versions.py --version "${VERSION}"
+          else
+            python3 scripts/bump_mobile_versions.py --bump "${BUMP}"
+          fi
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from scripts.versioning import read_repo_versions
+          v = read_repo_versions(Path("."))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+            f.write(f"version={v.version}\n")
+            f.write(f"android_version_code={v.android_version_code}\n")
+            f.write(f"ios_build_number={v.ios_build_number}\n")
+          PY
+
+      - name: Create PR to develop
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: develop
+          branch: chore/bump-v${{ steps.v.outputs.version }}
+          commit-message: "chore(release): bump version to v${{ steps.v.outputs.version }}"
+          title: "chore(release): bump version to v${{ steps.v.outputs.version }}"
+          body: |
+            Automated version bump:
+            - SemVer: v${{ steps.v.outputs.version }}
+            - Android versionCode: ${{ steps.v.outputs.android_version_code }}
+            - iOS build: ${{ steps.v.outputs.ios_build_number }}
+          labels: |
+            release
+
