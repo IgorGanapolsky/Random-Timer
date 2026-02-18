@@ -681,19 +681,37 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
             }
         ],
     }
+    created_schedule_id: str | None = None
     try:
-        client.request("POST", "/appPriceSchedules", payload=payload)
+        created = client.request("POST", "/appPriceSchedules", payload=payload)
+        if isinstance(created, dict):
+            data = created.get("data")
+            if isinstance(data, dict):
+                created_schedule_id = data.get("id")
     except Exception as e:
         die(f"Pricing not set and failed to create Free price schedule: {e}")
 
-    # Read-back verification.
-    try:
-        data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 1})
-        schedules = data.get("data") or []
-    except Exception:
-        schedules = []
-    if schedules:
-        return
+    # Read-back verification: prefer direct GET by id (list filtering can be eventually consistent).
+    if created_schedule_id:
+        for _ in range(6):
+            try:
+                created_obj = client.request("GET", f"/appPriceSchedules/{created_schedule_id}")
+                if (created_obj.get("data") or {}).get("id") == created_schedule_id:
+                    return
+            except Exception:
+                pass
+            time.sleep(2)
+
+    # Fallback: poll list until the new schedule appears.
+    for _ in range(6):
+        try:
+            data = client.request("GET", "/appPriceSchedules", params={"filter[app]": app_id, "limit": 10})
+            schedules = data.get("data") or []
+        except Exception:
+            schedules = []
+        if schedules:
+            return
+        time.sleep(2)
 
     die("Pricing not set (Free schedule creation did not appear in read-back).")
 
