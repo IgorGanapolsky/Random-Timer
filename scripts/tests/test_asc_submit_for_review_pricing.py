@@ -2,31 +2,14 @@ import unittest
 import contextlib
 import io
 
-
-class _RouterClient:
-    def __init__(self, routes):
-        self._routes = routes
-        self.calls = []
-
-    def request(self, method, path, *, params=None, payload=None):
-        self.calls.append({"method": method, "path": path, "params": params, "payload": payload})
-        key = (method, path)
-        if key not in self._routes:
-            raise RuntimeError(f"unhandled route {method} {path}")
-        value = self._routes[key]
-        if isinstance(value, Exception):
-            raise value
-        # Allow dynamic responses by call count.
-        if callable(value):
-            return value()
-        return value
+from scripts.tests.router_client import RouterClient
 
 
 class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
     def test_verify_pricing_accepts_app_price_schedules(self):
         from scripts.asc_submit_for_review import verify_pricing
 
-        client = _RouterClient(
+        client = RouterClient(
             {
                 ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 ("GET", "/apps/app1/appPriceSchedule"): RuntimeError("404"),
@@ -43,7 +26,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
     def test_verify_pricing_falls_back_to_singular_schedule_endpoint(self):
         from scripts.asc_submit_for_review import verify_pricing
 
-        client = _RouterClient(
+        client = RouterClient(
             {
                 ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 ("GET", "/apps/app1/appPriceSchedule"): {"data": {"id": "sched1", "type": "appPriceSchedules"}},
@@ -59,7 +42,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
     def test_verify_pricing_creates_free_schedule_when_missing(self):
         from scripts.asc_submit_for_review import verify_pricing
 
-        client = _RouterClient(
+        client = RouterClient(
             {
                 ("GET", "/appPriceSchedules"): {"data": []},
                 ("GET", "/apps/app1/appPriceSchedule"): RuntimeError("404"),

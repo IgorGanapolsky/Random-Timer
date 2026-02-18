@@ -716,19 +716,15 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
     die("Pricing not set (Free schedule creation did not appear in read-back).")
 
 
-def verify_review_detail(client: ASCClient, app_id: str) -> None:
-    # Endpoint is singular in ASC: /apps/{id}/appStoreReviewDetail
+def verify_review_detail(client: ASCClient, version_id: str) -> None:
+    # App Store Connect models the review contact info as an AppStoreReviewDetail
+    # resource associated with the App Store Version.
     try:
-        data = client.request("GET", f"/apps/{app_id}/appStoreReviewDetail")
-    except Exception:
-        # Fallback (some clients expose plural)
-        data = client.request("GET", f"/apps/{app_id}/appStoreReviewDetails")
-    detail = first(data.get("data") or [])
-    if not detail and isinstance(data.get("data"), dict):
-        detail = data["data"]
-    if not detail:
-        die("App Review contact info missing (appStoreReviewDetail not found).")
-    attrs = detail.get("attributes") or {}
+        data = client.request("GET", f"/appStoreVersions/{version_id}/appStoreReviewDetail")
+    except Exception as e:
+        die(f"App Review contact info missing (appStoreReviewDetail not found): {e}")
+    detail = data.get("data") or {}
+    attrs = (detail.get("attributes") or {}) if isinstance(detail, dict) else {}
     if not (attrs.get("contactEmail") or "").strip():
         die("App Review contactEmail is missing.")
     if not (attrs.get("contactPhone") or "").strip():
@@ -810,11 +806,11 @@ def main() -> int:
     # Hard preflight checks (fail fast if store listing is incomplete).
     app_info_loc_attrs = verify_app_info(client, app_id, args.locale)
     verify_pricing(client, app_id)
-    verify_review_detail(client, app_id)
     verify_age_rating(client, app_id)
 
     version_id, state = find_or_create_app_store_version(client, app_id, args.version)
     info(f"App Store version id={version_id} state={state}")
+    verify_review_detail(client, version_id)
 
     # If already in a submitted/in-review state, do nothing.
     if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
