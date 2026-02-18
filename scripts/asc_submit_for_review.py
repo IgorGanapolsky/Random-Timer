@@ -353,7 +353,36 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
     loc = first(locs)
     if not loc:
         die(f"Missing App Store version localization for {locale}. Run fastlane metadata upload first.")
+    loc_id = loc.get("id") or ""
     attrs = loc.get("attributes") or {}
+
+    # Autocomplete missing fields from fastlane metadata if present.
+    fastlane_files = {
+        "description": "description.txt",
+        "keywords": "keywords.txt",
+        "whatsNew": "release_notes.txt",
+    }
+    patch: dict[str, str] = {}
+    for field, filename in fastlane_files.items():
+        if not (attrs.get(field) or "").strip():
+            val = _read_text_file(os.path.join(FASTLANE_METADATA_DIR, locale, filename))
+            if val:
+                patch[field] = val
+
+    if patch and loc_id:
+        info(f"Filling missing App Store version localization fields for {locale}: {', '.join(sorted(patch.keys()))}")
+        patch_resource_attributes(
+            client,
+            path=f"/appStoreVersionLocalizations/{loc_id}",
+            type_name="appStoreVersionLocalizations",
+            resource_id=loc_id,
+            attrs=patch,
+        )
+        refreshed = client.request("GET", f"/appStoreVersionLocalizations/{loc_id}").get("data") or {}
+        if isinstance(refreshed, dict):
+            loc = refreshed
+            attrs = loc.get("attributes") or {}
+
     for field in ("description", "keywords", "whatsNew"):
         if not (attrs.get(field) or "").strip():
             die(f"App Store version localization {locale} missing required field: {field}")
