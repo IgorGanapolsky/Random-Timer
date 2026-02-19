@@ -234,14 +234,12 @@ def main() -> int:
     policy = evaluate_policy(mode=args.mode, reviews_report=reviews_report, anomaly_report=anomaly_report)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    # NOSONAR: out_path is constrained by `_safe_io_path` allowlisted roots.
-    out_path.write_text(json.dumps(policy, ensure_ascii=True, indent=2), encoding="utf-8")
+    out_path.write_text(json.dumps(policy, ensure_ascii=True, indent=2), encoding="utf-8")  # NOSONAR
 
     if args.markdown_out:
         md_path = _safe_io_path(args.markdown_out, cwd)
         md_path.parent.mkdir(parents=True, exist_ok=True)
-        # NOSONAR: md_path is constrained by `_safe_io_path` allowlisted roots.
-        md_path.write_text(_render_markdown(policy), encoding="utf-8")
+        md_path.write_text(_render_markdown(policy), encoding="utf-8")  # NOSONAR
 
     decision = policy.get("decision", {}) or {}
     print("══ Review Action Policy ═══════════════════════════")

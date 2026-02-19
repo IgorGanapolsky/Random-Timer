@@ -408,8 +408,7 @@ def main() -> int:
 
     out_path = _safe_output_path(args.json_out, repo_root)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    # NOSONAR: out_path is constrained by `_safe_output_path` allowlisted roots.
-    out_path.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
+    out_path.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")  # NOSONAR
 
     print("══ Release Context Snapshot ═══════════════════════")
     print(f"Output:            {out_path}")

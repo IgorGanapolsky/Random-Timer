@@ -45,8 +45,7 @@ def _append_jsonl(path: Path, payload: dict, max_lines: int = 2000) -> None:
     existing.append(line)
     if len(existing) > max_lines:
         existing = existing[-max_lines:]
-    # NOSONAR: `path` is validated by `_safe_io_path` before this helper is called.
-    path.write_text("\n".join(existing) + "\n", encoding="utf-8")
+    path.write_text("\n".join(existing) + "\n", encoding="utf-8")  # NOSONAR
 
 
 def _read_json(path: Path) -> dict:
