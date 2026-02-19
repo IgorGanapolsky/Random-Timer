@@ -109,7 +109,7 @@ class GrowthContentPipelineTests(unittest.TestCase):
 
     def test_resolve_blog_base_url_defaults_for_marketing_output(self):
         with patch.dict("os.environ", {}, clear=False):
-            resolved = pipeline.resolve_blog_base_url(Path("/tmp/marketing"))
+            resolved = pipeline.resolve_blog_base_url(Path("marketing"))
         self.assertEqual(
             resolved,
             "https://igorganapolsky.github.io/Random-Timer/marketing/site",
@@ -117,7 +117,7 @@ class GrowthContentPipelineTests(unittest.TestCase):
 
     def test_resolve_blog_base_url_respects_env_override(self):
         with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog/"}, clear=False):
-            resolved = pipeline.resolve_blog_base_url(Path("/tmp/marketing"))
+            resolved = pipeline.resolve_blog_base_url(Path("marketing"))
         self.assertEqual(resolved, "https://example.com/blog")
 
     def test_prepare_devto_markdown_rewrites_diagram_to_absolute_url(self):
