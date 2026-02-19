@@ -90,6 +90,9 @@ class GrowthContentPipelineTests(unittest.TestCase):
             index_text = (root / "site" / "index.html").read_text(encoding="utf-8")
             self.assertEqual(summary["post_count"], 1)
             self.assertIn("Sample", index_text)
+            self.assertTrue((root / "site" / "llms.txt").is_file())
+            self.assertTrue((root / "site" / "agents.md").is_file())
+            self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
 
 
 if __name__ == "__main__":

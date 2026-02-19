@@ -211,10 +211,12 @@ GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
 Automated daily blog + social distribution pipeline:
 
 - Generates a short SEO-friendly engineering post
+- Generates and scores keyword backlog using BID + AI-trap filtering
 - Builds a PaperBanana-style tech-flow diagram (SVG + Mermaid)
 - Publishes to DEV.to, LinkedIn, and X (when secrets are present)
 - Deploys blog pages to GitHub Pages
-- Collects engagement metrics and app-download CTA tracking data
+- Collects engagement metrics, AI-bot traffic summaries, and app-download CTA tracking data
+- Emits AI-agent friendly outputs: `llms.txt`, `agents.md`, and markdown post endpoints
 
 Workflow: `.github/workflows/daily-growth-publishing.yml`  
 Script: `scripts/growth_content_pipeline.py`  

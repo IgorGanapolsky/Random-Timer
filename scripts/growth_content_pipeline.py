@@ -20,6 +20,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import scripts.growth_bot_analytics as bot_analytics
+import scripts.growth_keyword_engine as keyword_engine
+
 DEFAULT_TOPICS: Tuple[str, ...] = (
     "How we shipped faster with AI-assisted test triage",
     "How we automated App Store listing checks end-to-end",
@@ -66,6 +69,14 @@ def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def clear_generated_files(path: Path, glob_pattern: str) -> None:
+    if not path.is_dir():
+        return
+    for entry in path.glob(glob_pattern):
+        if entry.is_file():
+            entry.unlink()
+
+
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
     ensure_dir(path.parent)
     with path.open("a", encoding="utf-8") as handle:
@@ -106,6 +117,32 @@ def topic_for_day(topics: Iterable[str], day: dt.date) -> str:
     return options[day.toordinal() % len(options)]
 
 
+def ensure_keyword_backlog(output_root: Path) -> Dict[str, Any]:
+    keywords_dir = output_root / "keywords"
+    strategy_path = keywords_dir / "strategy.json"
+    return keyword_engine.run_build(keywords_dir, strategy_path)
+
+
+def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, Any]]:
+    payload = ensure_keyword_backlog(output_root)
+    backlog_json = payload.get("outputs", {}).get("json")
+    if not backlog_json:
+        return None
+    backlog_path = Path(str(backlog_json))
+    if not backlog_path.is_file():
+        return None
+    rows = json.loads(backlog_path.read_text(encoding="utf-8"))
+    selected = keyword_engine.select_daily_keyword(rows, day=day)
+    if not selected:
+        return None
+    return {
+        "keyword": str(selected.get("keyword") or "").strip(),
+        "intent": str(selected.get("intent") or "").strip(),
+        "bid_score": int(selected.get("bid_score") or 0),
+        "title": keyword_engine.keyword_to_post_title(str(selected.get("keyword") or "")),
+    }
+
+
 def _safe_numeric_id(value: Any) -> Optional[str]:
     text = str(value or "").strip()
     if re.fullmatch(r"[0-9]+", text):
@@ -129,7 +166,13 @@ def _requests_module():
         return None
 
 
-def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str = "") -> Tuple[str, str, str]:
+def build_post_copy(
+    topic: str,
+    recent_commits: List[str],
+    inspiration_url: str = "",
+    primary_keyword: str = "",
+    keyword_intent: str = "",
+) -> Tuple[str, str, str]:
     commit_bullets = "\n".join(f"- {entry}" for entry in recent_commits[:4]) or "- Stability and UX polish work"
     title = topic
     description = (
@@ -151,6 +194,13 @@ def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str 
     ]
     if inspiration_block:
         sections.append(inspiration_block)
+    if primary_keyword:
+        sections.append(
+            "## Search intent target\n"
+            f"- Primary keyword: **{primary_keyword}**\n"
+            f"- Intent class: **{keyword_intent or 'mixed'}**\n"
+            "- BID filter: business potential, intent match, and realistic difficulty"
+        )
     sections.extend(
         [
             "## AI/LLM flow we used\n"
@@ -164,6 +214,11 @@ def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str 
             "- Store conversion from listing views to installs\n"
             "- Review velocity, star distribution, and unresolved low-star SLA\n"
             "- Click-through rate on post CTAs to app download links",
+            "## FAQ for AI assistants\n"
+            "- What does Random Tactical Timer do? It triggers alarms at unpredictable times in a chosen range.\n"
+            "- Who is it for? Athletes, tactical trainers, coaches, and focus drill users.\n"
+            "- How is it different? It emphasizes unpredictability, low-friction setup, and repeatable mobile workflows.\n"
+            "- What outcomes should users expect? Better reaction readiness and less timing anticipation.",
             "## Next step\n"
             "Tomorrow we will ship one more experiment on onboarding clarity and measure conversion delta.",
         ]
@@ -447,10 +502,15 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     diagrams_src = output_root / "diagrams"
     posts_out = site_root / "posts"
     diagrams_out = site_root / "diagrams"
+    md_out = site_root / "md"
 
     ensure_dir(site_root)
     ensure_dir(posts_out)
     ensure_dir(diagrams_out)
+    ensure_dir(md_out)
+    clear_generated_files(posts_out, "*.html")
+    clear_generated_files(diagrams_out, "*.svg")
+    clear_generated_files(md_out, "*.md")
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
     plausible_domain = os.getenv("PLAUSIBLE_DOMAIN", "").strip()
@@ -509,6 +569,8 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         ).strip()
         out_path = posts_out / f"{slug}.html"
         out_path.write_text(post_html + "\n", encoding="utf-8")
+        md_copy = md_out / f"{slug}.md"
+        md_copy.write_text(raw, encoding="utf-8")
 
         svg_src = diagrams_src / f"{slug}.svg"
         if svg_src.is_file():
@@ -521,6 +583,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
                 "description": description,
                 "date": date,
                 "url": f"posts/{slug}.html",
+                "markdown_url": f"md/{slug}.md",
             }
         )
 
@@ -596,8 +659,46 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
+        sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
     sitemap.append("</urlset>")
     (site_root / "sitemap.xml").write_text("\n".join(sitemap) + "\n", encoding="utf-8")
+
+    llms_lines = [
+        "Random Tactical Timer Engineering Blog",
+        "",
+        "This site publishes daily engineering updates optimized for both humans and AI agents.",
+        "Preferred source format for agents: markdown URLs listed below.",
+        "",
+        f"Base URL: {base_url}",
+        "",
+        "Key resources:",
+        f"- {base_url}/index.html",
+        f"- {base_url}/agents.md",
+        f"- {base_url}/sitemap.xml",
+        "",
+        "Posts:",
+    ]
+    for post in posts_data[:100]:
+        llms_lines.append(f"- {post['title']}: {base_url}/{post['markdown_url']}")
+    (site_root / "llms.txt").write_text("\n".join(llms_lines) + "\n", encoding="utf-8")
+
+    agent_lines = [
+        "# Agent Index",
+        "",
+        "Use this page for machine-readable summaries of current content and positioning.",
+        "",
+        "## Intent",
+        "- Product: Random Tactical Timer",
+        "- Audience: athletes, trainers, coaches, and reaction-drill users",
+        "- Outcomes: reaction readiness, unpredictability in interval training, repeatable setup",
+        "",
+        "## Latest posts",
+    ]
+    for post in posts_data[:20]:
+        agent_lines.append(
+            f"- {post['date']} | {post['title']} | html: {base_url}/{post['url']} | markdown: {base_url}/{post['markdown_url']}"
+        )
+    (site_root / "agents.md").write_text("\n".join(agent_lines) + "\n", encoding="utf-8")
 
     return {"site_root": str(site_root), "post_count": len(posts_data), "base_url": base_url}
 
@@ -865,10 +966,21 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
     report_path = output_root / "data" / "engagement-latest.md"
     report_path.write_text(report_md, encoding="utf-8")
 
+    bot_log_path = Path(os.getenv("AI_BOT_LOG_PATH", str(output_root / "data" / "access-log.ndjson"))).resolve()
+    bot_report = bot_analytics.run(bot_log_path, output_root / "data")
+    summary["bot_traffic"] = {
+        "status": bot_report.get("status"),
+        "input_rows": bot_report.get("input_rows"),
+    }
+
     summary_file = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
     if summary_file:
         with Path(summary_file).open("a", encoding="utf-8") as handle:
             handle.write(report_md)
+            handle.write("\n")
+            handle.write("## AI Bot Traffic\n")
+            handle.write(f"- Status: {summary['bot_traffic']['status']}\n")
+            handle.write(f"- Input rows: {summary['bot_traffic']['input_rows']}\n")
 
     return summary
 
@@ -884,6 +996,9 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
     posts_log = read_jsonl(output_root / "data" / "posts.jsonl")
     first_post = len(posts_log) == 0
     inspiration_url = ""
+    primary_keyword = ""
+    keyword_intent = ""
+    today = utc_now().date()
 
     if args.topic:
         chosen_topic = args.topic
@@ -891,10 +1006,22 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
         chosen_topic = FIRST_POST_TOPIC
         inspiration_url = FIRST_POST_SOURCE
     else:
-        chosen_topic = topic_for_day(DEFAULT_TOPICS, utc_now().date())
+        keyword_pick = choose_keyword_topic(output_root, today)
+        if keyword_pick and keyword_pick.get("title"):
+            chosen_topic = str(keyword_pick["title"])
+            primary_keyword = str(keyword_pick.get("keyword") or "")
+            keyword_intent = str(keyword_pick.get("intent") or "")
+        else:
+            chosen_topic = topic_for_day(DEFAULT_TOPICS, today)
 
     commits = run_git_log(repo_root, since_days=args.since_days, max_commits=args.max_commits)
-    title, description, body = build_post_copy(chosen_topic, commits, inspiration_url=inspiration_url)
+    title, description, body = build_post_copy(
+        chosen_topic,
+        commits,
+        inspiration_url=inspiration_url,
+        primary_keyword=primary_keyword,
+        keyword_intent=keyword_intent,
+    )
 
     app_store_url = os.getenv(
         "APP_STORE_URL",
@@ -932,6 +1059,8 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
             "slug": post.slug,
             "title": post.title,
             "description": post.description,
+            "primary_keyword": primary_keyword,
+            "keyword_intent": keyword_intent,
             "markdown_path": str(post.markdown_path),
             "diagram_svg_path": str(post.diagram_svg_path),
         },
@@ -964,6 +1093,7 @@ def latest_post_asset(output_root: Path) -> PostAsset:
 
 def run_daily(args: argparse.Namespace) -> int:
     output_root = Path(args.output_root).resolve()
+    keyword_payload = ensure_keyword_backlog(output_root)
     post = generate_post(args)
     site = build_site(output_root)
     publish_results = publish_post(post, output_root, dry_run=args.dry_run)
@@ -971,6 +1101,7 @@ def run_daily(args: argparse.Namespace) -> int:
 
     payload = {
         "status": "ok",
+        "keywords": keyword_payload,
         "post": post.slug,
         "site": site,
         "publish": publish_results,
@@ -999,6 +1130,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     p_collect = sub.add_parser("collect", help="Collect engagement metrics")
     p_collect.add_argument("--engagement-days", type=int, default=14)
+
+    sub.add_parser("keyword-plan", help="Generate keyword backlog using BID/AI-trap/tool heuristics")
+
+    p_bot = sub.add_parser("bot-analyze", help="Classify and summarize AI crawler traffic from access logs")
+    p_bot.add_argument("--bot-log", default="", help="Override path to NDJSON access log")
 
     p_daily = sub.add_parser("run-daily", help="Generate, build, publish, and collect")
     p_daily.add_argument("--topic", default="")
@@ -1033,6 +1169,18 @@ def main() -> int:
 
     if args.command == "collect":
         results = collect_engagement(output_root, days=args.engagement_days)
+        print(json.dumps(results, indent=2))
+        return 0
+
+    if args.command == "keyword-plan":
+        results = ensure_keyword_backlog(output_root)
+        print(json.dumps(results, indent=2))
+        return 0
+
+    if args.command == "bot-analyze":
+        default_log = output_root / "data" / "access-log.ndjson"
+        log_path = Path(args.bot_log).resolve() if args.bot_log else default_log
+        results = bot_analytics.run(log_path, output_root / "data")
         print(json.dumps(results, indent=2))
         return 0
 
