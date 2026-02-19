@@ -1,42 +1,31 @@
-Random Tactical Timer picks a random moment within your chosen time range to fire an alarm. Set a minimum and maximum duration, press start, and go about your activity. You never know exactly when it will go off — keeping you sharp, alert, and engaged.
+Random Tactical Timer is an interval timer that fires at an unpredictable moment inside your chosen range.
 
-Whether you need a random interval timer for HIIT training, a surprise countdown for party games like Musical Chairs or Hot Potato, or an unpredictable break timer for study sessions — this app delivers.
+You set the minimum and maximum duration.
+The app picks a random point between them.
+You react when the alarm hits.
 
-WHO IT'S FOR:
-- Athletes & coaches doing interval training, Tabata, or reaction drills
-- Gamers & party hosts running games that need surprise timing
-- Students & professionals using randomized focus/break cycles
-- Meditators wanting organic, non-predictable session transitions
-- Anyone who needs a timer that doesn't let them anticipate the alarm
+Built for people who want to train reaction and focus instead of memorizing fixed countdowns.
+
+BEST FOR:
+- HIIT and conditioning sessions
+- Boxing, martial arts, and reaction drills
+- Team practices and surprise whistle moments
+- Focus sprints and break timers
+- Party and classroom games
 
 KEY FEATURES:
-- Custom time ranges — set your minimum and maximum duration
-- Hidden countdown — hides the timer so you can't anticipate the alarm
-- Loop mode — automatically restarts with a new random duration each time
-- Live Activity — see your countdown right on the iPhone lock screen
-- Multiple alarm sounds — choose between intense and gentle alerts
-- Adjustable volume and vibration controls
-- Pause, resume, and reset at any time
-- Runs reliably in the background with push notifications
-- Works with Bluetooth headphones and CarPlay
+- Randomized interval alarm within your min/max range
+- Hidden countdown mode to reduce anticipation
+- Loop mode for continuous random rounds
+- Live Activity support on iPhone lock screen
+- Multiple alarm sounds with vibration controls
+- Pause, resume, reset, and reliable background behavior
 
 HOW IT WORKS:
-1. Set your minimum and maximum time (e.g., 30 seconds to 5 minutes)
-2. Tap Start — the app picks a random duration in that range
-3. Go about your activity — the timer counts down in the background
-4. When time's up, a full-screen alarm fires with sound and vibration
-5. Optionally loop to automatically start a new random interval
+1. Choose a range (for example 30 seconds to 5 minutes)
+2. Tap Start
+3. Train or work normally
+4. React when the alarm fires
+5. Repeat with loop mode if needed
 
-USE CASES:
-- HIIT & Tabata workouts with unpredictable rest periods
-- Reaction time training for martial arts, boxing, and sports
-- Musical Chairs, Hot Potato, and other party games
-- Pomodoro-style study sessions with randomized breaks
-- Meditation with natural, non-rhythmic interval bells
-- Cooking timers when approximate timing is fine
-- Military and tactical training drills
-
-DESIGNED FOR SIMPLICITY:
-Dark interface. No clutter. No ads. No tracking. No subscriptions. Just set your range and go.
-
-Built for athletes, coaches, gamers, students, and anyone who needs a timer that keeps them on their toes.
+No ads. No subscriptions. Fast to set up and easy to run every day.
