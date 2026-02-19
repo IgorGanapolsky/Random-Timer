@@ -95,7 +95,9 @@ class AscClient:
         except ImportError:
             _die("Missing dependency: requests (pip install requests)")
 
-        if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
+        if path_or_url.startswith("http://"):
+            _die(f"Insecure URL scheme rejected: {path_or_url}")
+        if path_or_url.startswith("https://"):
             url = path_or_url
         else:
             url = f"{APP_STORE_CONNECT_API}{path_or_url}"

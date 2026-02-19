@@ -64,7 +64,6 @@ def _safe_io_path(raw_path: str, repo_root: Path) -> Path:
     candidate = Path(raw_path).expanduser().resolve()
     allowed_roots = {
         repo_root.resolve(),
-        Path("/tmp").resolve(),
         Path(tempfile.gettempdir()).resolve(),
     }
     if any(_is_within(candidate, root) for root in allowed_roots):
@@ -347,12 +346,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_auto.add_argument("--unresolved-spike-threshold", type=float, default=3.0)
     p_auto.add_argument("--sla-breach-spike-threshold", type=float, default=1.0)
     p_auto.add_argument("--mode", choices=["observe", "enforce"], default="observe")
-    p_auto.add_argument("--reviews-json-out", default="/tmp/asc-reviews-ops.json")
-    p_auto.add_argument("--reviews-markdown-out", default="/tmp/asc-reviews-ops.md")
-    p_auto.add_argument("--anomaly-json-out", default="/tmp/asc-reviews-anomaly.json")
-    p_auto.add_argument("--anomaly-markdown-out", default="/tmp/asc-reviews-anomaly.md")
-    p_auto.add_argument("--policy-json-out", default="/tmp/asc-reviews-policy.json")
-    p_auto.add_argument("--policy-markdown-out", default="/tmp/asc-reviews-policy.md")
+    p_auto.add_argument("--reviews-json-out", default=".artifacts/asc-reviews-ops.json")
+    p_auto.add_argument("--reviews-markdown-out", default=".artifacts/asc-reviews-ops.md")
+    p_auto.add_argument("--anomaly-json-out", default=".artifacts/asc-reviews-anomaly.json")
+    p_auto.add_argument("--anomaly-markdown-out", default=".artifacts/asc-reviews-anomaly.md")
+    p_auto.add_argument("--policy-json-out", default=".artifacts/asc-reviews-policy.json")
+    p_auto.add_argument("--policy-markdown-out", default=".artifacts/asc-reviews-policy.md")
     p_auto.add_argument("--fail-on-sla", action="store_true")
     p_auto.add_argument("--fail-on-blocking", action="store_true")
 

@@ -88,7 +88,6 @@ def _safe_output_path(raw_path: str, repo_root: Path) -> Path:
     out = Path(raw_path).expanduser().resolve()
     allowed_roots = {
         repo_root.resolve(),
-        Path("/tmp").resolve(),
         Path(tempfile.gettempdir()).resolve(),
     }
     if any(_is_within(out, root) for root in allowed_roots):

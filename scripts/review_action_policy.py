@@ -56,7 +56,6 @@ def _safe_io_path(raw_path: str, cwd: Path) -> Path:
     candidate = Path(raw_path).expanduser().resolve()
     allowed_roots = {
         cwd.resolve(),
-        Path("/tmp").resolve(),
         Path(tempfile.gettempdir()).resolve(),
     }
     if any(_is_within(candidate, root) for root in allowed_roots):
