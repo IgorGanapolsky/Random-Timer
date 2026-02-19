@@ -13,7 +13,6 @@ import datetime as dt
 import html
 import json
 import os
-import random
 import re
 import subprocess
 import textwrap
@@ -110,8 +109,21 @@ def topic_for_day(topics: Iterable[str], day: dt.date) -> str:
     options = list(topics)
     if not options:
         options = list(DEFAULT_TOPICS)
-    random.seed(day.toordinal())
-    return options[random.randrange(len(options))]
+    return options[day.toordinal() % len(options)]
+
+
+def _safe_numeric_id(value: Any) -> Optional[str]:
+    text = str(value or "").strip()
+    if re.fullmatch(r"[0-9]+", text):
+        return text
+    return None
+
+
+def _safe_tweet_id(value: Any) -> Optional[str]:
+    text = str(value or "").strip()
+    if re.fullmatch(r"[0-9A-Za-z_\\-]+", text):
+        return text
+    return None
 
 
 def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str = "") -> Tuple[str, str, str]:
@@ -777,7 +789,9 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
 
     for row in recent:
         if row.get("channel") == "devto" and row.get("status") == "published" and row.get("id") and devto_key:
-            rid = row["id"]
+            rid = _safe_numeric_id(row["id"])
+            if not rid:
+                continue
             response = requests.get(
                 f"https://dev.to/api/articles/{rid}",
                 headers={"api-key": devto_key},
@@ -789,7 +803,9 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
                 summary["channels"].setdefault("devto", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 
         if row.get("channel") == "x" and row.get("status") == "published" and row.get("id") and x_bearer:
-            rid = row["id"]
+            rid = _safe_tweet_id(row["id"])
+            if not rid:
+                continue
             response = requests.get(
                 f"https://api.twitter.com/2/tweets/{rid}",
                 params={"tweet.fields": "public_metrics"},
@@ -951,7 +967,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p_publish = sub.add_parser("publish", help="Publish latest post to channels")
     p_publish.add_argument("--dry-run", action="store_true")
 
-    p_site = sub.add_parser("build-site", help="Build GitHub Pages site")
+    sub.add_parser("build-site", help="Build GitHub Pages site")
 
     p_collect = sub.add_parser("collect", help="Collect engagement metrics")
     p_collect.add_argument("--engagement-days", type=int, default=14)

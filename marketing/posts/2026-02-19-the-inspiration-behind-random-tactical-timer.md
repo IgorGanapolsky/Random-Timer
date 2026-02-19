@@ -6,10 +6,10 @@ tags: [ai, mobile, devops, github, testing]
 ---
 
 ## What changed today
+- feat(growth): automate daily multi-channel blog publishing and analytics
 - Harden ASC screenshot readiness verification (#395)
 - Fix iOS metadata sync on reused live version (#394)
 - Improve iOS App Store creatives and ASO copy (#393)
-- Store listing optimization + PostHog integration (#392)
 
 ## Inspiration
 The core idea for Random Tactical Timer came from training principles in **Hard Target**:
