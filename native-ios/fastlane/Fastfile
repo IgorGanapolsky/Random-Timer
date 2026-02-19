@@ -152,10 +152,14 @@ platform :ios do
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
+      # Screenshot-only sync for already-used/live versions must not mutate versionString.
+      skip_app_version_update: true,
+      edit_live: true,
+      use_live_version: true,
       force: true,
       api_key: defined?(api_key) ? api_key : nil
     )
-	  end
+		  end
 
   desc "Submit a given version for App Review (uploads metadata + attaches build)"
   lane :submit_review do |options|
