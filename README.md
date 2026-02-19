@@ -206,13 +206,35 @@ python scripts/release_context.py \
 
 GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
 
+## Daily Growth Publishing
+
+Automated daily blog + social distribution pipeline:
+
+- Generates a short SEO-friendly engineering post
+- Builds a PaperBanana-style tech-flow diagram (SVG + Mermaid)
+- Publishes to DEV.to, LinkedIn, and X (when secrets are present)
+- Deploys blog pages to GitHub Pages
+- Collects engagement metrics and app-download CTA tracking data
+
+Workflow: `.github/workflows/daily-growth-publishing.yml`  
+Script: `scripts/growth_content_pipeline.py`  
+Guide: `docs/DAILY_GROWTH_AUTOMATION.md`
+
+Local dry-run:
+
+```bash
+python3 scripts/growth_content_pipeline.py \
+  --repo-root . \
+  --output-root marketing \
+  run-daily \
+  --dry-run
+```
 ## App Store Version Automation
 
 To avoid uploading metadata/screenshots to non-editable live versions, release tooling now resolves
 an editable target App Store version before sync/submit steps.
 
 Details and usage: `docs/APP_STORE_VERSION_AUTOMATION.md`
-
 ## Architecture
 
 ### iOS
