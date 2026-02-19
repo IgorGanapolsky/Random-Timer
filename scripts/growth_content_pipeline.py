@@ -462,6 +462,14 @@ def strip_frontmatter(markdown_text: str) -> str:
     return body.lstrip()
 
 
+def prepare_devto_markdown(markdown_text: str, slug: str, base_url: str) -> str:
+    body = strip_frontmatter(markdown_text)
+    relative_svg = f"../diagrams/{slug}.svg"
+    absolute_svg = f"{base_url}/diagrams/{slug}.svg"
+    body = body.replace(f"]({relative_svg})", f"]({absolute_svg})")
+    return body
+
+
 def markdown_to_html(markdown_text: str) -> str:
     try:
         import markdown as md  # type: ignore
@@ -856,9 +864,9 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
 
 def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> List[Dict[str, Any]]:
     markdown = post.markdown_path.read_text(encoding="utf-8")
-    devto_markdown = strip_frontmatter(markdown)
     base_url = resolve_blog_base_url(output_root)
     canonical_url = f"{base_url}/posts/{post.slug}.html"
+    devto_markdown = prepare_devto_markdown(markdown, post.slug, base_url)
 
     short_text = (
         f"New build log: {post.title}. We share how AI + automation improved release quality and review outcomes."

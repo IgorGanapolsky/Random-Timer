@@ -120,6 +120,26 @@ class GrowthContentPipelineTests(unittest.TestCase):
             resolved = pipeline.resolve_blog_base_url(Path("/tmp/marketing"))
         self.assertEqual(resolved, "https://example.com/blog")
 
+    def test_prepare_devto_markdown_rewrites_diagram_to_absolute_url(self):
+        raw = (
+            "---\n"
+            "title: Sample\n"
+            "---\n\n"
+            "## Diagram\n"
+            "![PaperBanana technology flow](../diagrams/2026-02-19-sample.svg)\n"
+        )
+        rendered = pipeline.prepare_devto_markdown(
+            raw,
+            "2026-02-19-sample",
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site",
+        )
+        self.assertIn(
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site/diagrams/2026-02-19-sample.svg",
+            rendered,
+        )
+        self.assertNotIn("../diagrams/2026-02-19-sample.svg", rendered)
+        self.assertNotIn("title: Sample", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()
