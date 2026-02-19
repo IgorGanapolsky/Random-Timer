@@ -11,7 +11,8 @@ What it verifies (fail-fast):
   - Required metadata fields are non-empty (description, keywords, support URL)
   - Privacy Policy URL is set (from appInfoLocalizations)
   - App Review contact info exists (from appStoreReviewDetails)
-  - Screenshots: at least N for iPhone (6.5/6.7/6.9) and iPad (12.9/13) display types
+  - Screenshots: at least N delivered screenshots (assetDeliveryState=COMPLETE)
+    for iPhone (6.5/6.7/6.9) and iPad (12.9/13) display types
 
 Outputs:
   - Prints a human readable report to stdout
@@ -194,12 +195,38 @@ def _get_screenshot_sets(
     return payload.get("data", []) or []
 
 
-def _count_screenshots_in_set(client: AscClient, set_id: str) -> int:
+def _summarize_screenshot_set(client: AscClient, set_id: str) -> Dict[str, Any]:
     payload = client.get(
         f"/appScreenshotSets/{set_id}/appScreenshots",
-        params={"limit": "200", "fields[appScreenshots]": "assetDeliveryState"},
+        params={"limit": "200", "fields[appScreenshots]": "assetDeliveryState,fileName"},
     )
-    return len(payload.get("data", []) or [])
+    items = payload.get("data", []) or []
+    total = len(items)
+    complete = 0
+    state_counts: Dict[str, int] = {}
+    incomplete: List[Dict[str, str]] = []
+
+    for item in items:
+        attrs = item.get("attributes", {}) or {}
+        state = str((attrs.get("assetDeliveryState") or {}).get("state") or "UNKNOWN")
+        state_counts[state] = state_counts.get(state, 0) + 1
+        if state == "COMPLETE":
+            complete += 1
+        else:
+            incomplete.append(
+                {
+                    "id": str(item.get("id") or ""),
+                    "state": state,
+                    "fileName": str(attrs.get("fileName") or ""),
+                }
+            )
+
+    return {
+        "total": total,
+        "complete": complete,
+        "state_counts": state_counts,
+        "incomplete": incomplete,
+    }
 
 
 def _is_iphone_large(display_type: str) -> bool:
@@ -515,30 +542,49 @@ def verify_ready(
 
     # Screenshots
     screenshot_counts: Dict[str, int] = {}
+    screenshot_total_counts: Dict[str, int] = {}
+    screenshot_asset_states: Dict[str, Dict[str, int]] = {}
+    screenshot_incomplete_assets: Dict[str, List[Dict[str, str]]] = {}
     if picked_loc_id:
         sets = _get_screenshot_sets(client, picked_loc_id)
         for s in sets:
             dt = str(s.get("attributes", {}).get("screenshotDisplayType") or "UNKNOWN")
-            count = _count_screenshots_in_set(client, str(s.get("id")))
-            screenshot_counts[dt] = count
+            summary = _summarize_screenshot_set(client, str(s.get("id")))
+            screenshot_counts[dt] = int(summary.get("complete", 0))
+            screenshot_total_counts[dt] = int(summary.get("total", 0))
+            screenshot_asset_states[dt] = dict(summary.get("state_counts", {}) or {})
+            if summary.get("incomplete"):
+                screenshot_incomplete_assets[dt] = list(summary.get("incomplete") or [])
 
         iphone_ok = any(_is_iphone_large(dt) and c >= min_iphone for dt, c in screenshot_counts.items())
         ipad_ok = any(_is_ipad_large(dt) and c >= min_ipad for dt, c in screenshot_counts.items())
 
+        screenshot_evidence = {
+            "complete_counts": screenshot_counts,
+            "total_counts": screenshot_total_counts,
+            "state_counts": screenshot_asset_states,
+            "incomplete_assets": screenshot_incomplete_assets,
+        }
         checks.append(
             Check(
                 name="Screenshots (iPhone)",
                 passed=iphone_ok,
-                details=f"need >= {min_iphone} in a large iPhone set; found: {screenshot_counts}",
-                evidence={"counts": screenshot_counts},
+                details=(
+                    f"need >= {min_iphone} COMPLETE in a large iPhone set; "
+                    f"complete={screenshot_counts} total={screenshot_total_counts}"
+                ),
+                evidence=screenshot_evidence,
             )
         )
         checks.append(
             Check(
                 name="Screenshots (iPad)",
                 passed=ipad_ok,
-                details=f"need >= {min_ipad} in a large iPad set; found: {screenshot_counts}",
-                evidence={"counts": screenshot_counts},
+                details=(
+                    f"need >= {min_ipad} COMPLETE in a large iPad set; "
+                    f"complete={screenshot_counts} total={screenshot_total_counts}"
+                ),
+                evidence=screenshot_evidence,
             )
         )
     else:
@@ -557,6 +603,9 @@ def verify_ready(
         "app_id": app_id,
         "app_store_state": v_state,
         "screenshot_counts": screenshot_counts,
+        "screenshot_total_counts": screenshot_total_counts,
+        "screenshot_asset_states": screenshot_asset_states,
+        "screenshot_incomplete_assets": screenshot_incomplete_assets,
         "checks": [c.__dict__ for c in checks],
     }
     passed = all(c.passed for c in checks)
