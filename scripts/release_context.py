@@ -76,6 +76,29 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _safe_output_path(raw_path: str, repo_root: Path) -> Path:
+    out = Path(raw_path).expanduser().resolve()
+    allowed_roots = {
+        repo_root.resolve(),
+        Path("/tmp").resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    }
+    if any(_is_within(out, root) for root in allowed_roots):
+        return out
+    allowed_str = ", ".join(sorted(str(r) for r in allowed_roots))
+    raise ContextError(
+        f"Refusing to write outside allowed roots ({allowed_str}): {out}"
+    )
+
+
 def detect_ios_version(repo_root: Path) -> str:
     pbxproj = repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj"
     if not pbxproj.is_file():
@@ -383,7 +406,7 @@ def main() -> int:
         "summary": summary,
     }
 
-    out_path = Path(args.json_out)
+    out_path = _safe_output_path(args.json_out, repo_root)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
 

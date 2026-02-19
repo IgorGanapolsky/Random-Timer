@@ -16,6 +16,7 @@ import os
 import shlex
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import List, Sequence
 
@@ -51,6 +52,27 @@ def _read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _safe_io_path(raw_path: str, repo_root: Path) -> Path:
+    candidate = Path(raw_path).expanduser().resolve()
+    allowed_roots = {
+        repo_root.resolve(),
+        Path("/tmp").resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    }
+    if any(_is_within(candidate, root) for root in allowed_roots):
+        return candidate
+    allowed_str = ", ".join(sorted(str(r) for r in allowed_roots))
+    raise ReleaseOpsError(f"Path outside allowed roots ({allowed_str}): {candidate}")
+
+
 def _has_asc_credentials(env: dict) -> bool:
     key_id = (env.get("APPSTORE_KEY_ID") or "").strip()
     issuer_id = (env.get("APPSTORE_ISSUER_ID") or "").strip()
@@ -63,7 +85,7 @@ def _has_asc_credentials(env: dict) -> bool:
 
 def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
     env = os.environ.copy()
-    context_out = Path(args.context_out).resolve()
+    context_out = _safe_io_path(args.context_out, repo_root)
 
     preflight_cmd = [
         "bash",
@@ -180,10 +202,10 @@ def review_ops(args: argparse.Namespace, repo_root: Path) -> int:
 
 def review_autopilot(args: argparse.Namespace, repo_root: Path) -> int:
     env = os.environ.copy()
-    history_jsonl = Path(args.history_jsonl).resolve()
-    reviews_json = Path(args.reviews_json_out).resolve()
-    anomaly_json = Path(args.anomaly_json_out).resolve()
-    policy_json = Path(args.policy_json_out).resolve()
+    history_jsonl = _safe_io_path(args.history_jsonl, repo_root)
+    reviews_json = _safe_io_path(args.reviews_json_out, repo_root)
+    anomaly_json = _safe_io_path(args.anomaly_json_out, repo_root)
+    policy_json = _safe_io_path(args.policy_json_out, repo_root)
 
     review_cmd: List[str] = [
         sys.executable,
@@ -198,7 +220,7 @@ def review_autopilot(args: argparse.Namespace, repo_root: Path) -> int:
         str(reviews_json),
     ]
     if args.reviews_markdown_out:
-        review_cmd.extend(["--markdown-out", str(Path(args.reviews_markdown_out).resolve())])
+        review_cmd.extend(["--markdown-out", str(_safe_io_path(args.reviews_markdown_out, repo_root))])
     if args.fail_on_sla:
         review_cmd.append("--fail-on-sla")
     _print_cmd(review_cmd, repo_root)
@@ -229,7 +251,7 @@ def review_autopilot(args: argparse.Namespace, repo_root: Path) -> int:
         str(args.sla_breach_spike_threshold),
     ]
     if args.anomaly_markdown_out:
-        anomaly_cmd.extend(["--markdown-out", str(Path(args.anomaly_markdown_out).resolve())])
+        anomaly_cmd.extend(["--markdown-out", str(_safe_io_path(args.anomaly_markdown_out, repo_root))])
     _print_cmd(anomaly_cmd, repo_root)
     anomaly_rc = _run(anomaly_cmd, repo_root, env=env).returncode
     if anomaly_rc != 0:
@@ -248,7 +270,7 @@ def review_autopilot(args: argparse.Namespace, repo_root: Path) -> int:
         str(args.mode),
     ]
     if args.policy_markdown_out:
-        policy_cmd.extend(["--markdown-out", str(Path(args.policy_markdown_out).resolve())])
+        policy_cmd.extend(["--markdown-out", str(_safe_io_path(args.policy_markdown_out, repo_root))])
     if args.fail_on_blocking:
         policy_cmd.append("--fail-on-blocking")
     _print_cmd(policy_cmd, repo_root)

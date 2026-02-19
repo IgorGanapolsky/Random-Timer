@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -41,6 +42,27 @@ def _as_float(value: Any, default: float = 0.0) -> float:
 def _severity_rank(value: str) -> int:
     order = {"none": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
     return order.get(str(value), 0)
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _safe_io_path(raw_path: str, cwd: Path) -> Path:
+    candidate = Path(raw_path).expanduser().resolve()
+    allowed_roots = {
+        cwd.resolve(),
+        Path("/tmp").resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    }
+    if any(_is_within(candidate, root) for root in allowed_roots):
+        return candidate
+    allowed_str = ", ".join(sorted(str(r) for r in allowed_roots))
+    raise ValueError(f"Path outside allowed roots ({allowed_str}): {candidate}")
 
 
 def _top_breaches(reviews_report: Dict[str, Any], max_items: int = 10) -> List[Dict[str, Any]]:
@@ -201,9 +223,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    reviews_path = Path(args.reviews_json).resolve()
-    anomaly_path = Path(args.anomaly_json).resolve()
-    out_path = Path(args.json_out).resolve()
+    cwd = Path.cwd().resolve()
+    reviews_path = _safe_io_path(args.reviews_json, cwd)
+    anomaly_path = _safe_io_path(args.anomaly_json, cwd)
+    out_path = _safe_io_path(args.json_out, cwd)
 
     reviews_report = json.loads(reviews_path.read_text(encoding="utf-8"))
     anomaly_report = json.loads(anomaly_path.read_text(encoding="utf-8"))
@@ -214,7 +237,7 @@ def main() -> int:
     out_path.write_text(json.dumps(policy, ensure_ascii=True, indent=2), encoding="utf-8")
 
     if args.markdown_out:
-        md_path = Path(args.markdown_out).resolve()
+        md_path = _safe_io_path(args.markdown_out, cwd)
         md_path.parent.mkdir(parents=True, exist_ok=True)
         md_path.write_text(_render_markdown(policy), encoding="utf-8")
 
