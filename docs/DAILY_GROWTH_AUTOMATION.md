@@ -6,12 +6,17 @@
 
 1. Generates one short engineering post (SEO-friendly, AI/LLM-focused)
 2. Creates a PaperBanana-style technology flow diagram (`SVG` + `Mermaid`)
-3. Builds and deploys static blog pages to GitHub Pages
-4. Publishes post distribution updates to DEV.to, LinkedIn, and X
-5. Collects engagement metrics and stores historical snapshots
+3. Builds BID-ranked keyword backlog (Business potential, Intent, Difficulty)
+4. Flags AI-trap keywords and prioritizes tool keywords (calculator/checker/generator/template)
+5. Builds and deploys static blog pages to GitHub Pages
+6. Publishes post distribution updates to DEV.to, LinkedIn, and X
+7. Collects engagement metrics and stores historical snapshots
+8. Classifies AI-bot crawl logs (when available) into training/retrieval/search groups
 
 Workflow file: `.github/workflows/daily-growth-publishing.yml`
 Script entrypoint: `scripts/growth_content_pipeline.py`
+Keyword engine: `scripts/growth_keyword_engine.py`
+Bot analytics: `scripts/growth_bot_analytics.py`
 
 ## First post rule
 
@@ -60,6 +65,46 @@ python3 scripts/growth_content_pipeline.py \
   --dry-run
 ```
 
+## Keyword playbook execution
+
+```bash
+python3 scripts/growth_content_pipeline.py \
+  --output-root marketing \
+  keyword-plan
+```
+
+This writes:
+- `marketing/keywords/keyword_backlog.json`
+- `marketing/keywords/keyword_backlog.csv`
+- `marketing/keywords/keyword_backlog.md`
+
+## AI-friendly surfaces for agents
+
+Generated in `marketing/site/`:
+- `llms.txt`: index of markdown resources for LLM crawlers/agents
+- `agents.md`: intent-rich summary and latest post map
+- `md/*.md`: per-post markdown endpoints
+
+## Bot classification and analytics
+
+If you export edge/CDN traffic to NDJSON, set:
+
+- `AI_BOT_LOG_PATH` (secret or env var), default: `marketing/data/access-log.ndjson`
+
+Expected fields per line:
+- `user_agent` (or `ua`)
+- `path` (or `url`)
+- optional: `timestamp`, `status`
+
+The pipeline classifies known crawler families into:
+- `ai_training`
+- `ai_retrieval`
+- `search_crawler`
+
+Outputs:
+- `marketing/data/bot_traffic_summary.json`
+- `marketing/data/bot_traffic_summary.md`
+
 This generates content and metrics locally without posting to external APIs.
 
 ## Output evidence
@@ -68,6 +113,8 @@ This generates content and metrics locally without posting to external APIs.
 - `marketing/data/publications.jsonl`
 - `marketing/data/engagement.jsonl`
 - `marketing/data/engagement-latest.md`
+- `marketing/data/bot_traffic_summary.json`
+- `marketing/data/bot_traffic_summary.md`
 - `marketing/site/` (deployed pages artifact)
 
 ## Notes

@@ -1,31 +1,26 @@
-Random Tactical Timer is an interval timer that fires at an unpredictable moment inside your chosen range.
+Random Tactical Timer is an unpredictable interval timer for reaction training.
 
-You set the minimum and maximum duration.
-The app picks a random point between them.
-You react when the alarm hits.
-
-Built for people who want to train reaction and focus instead of memorizing fixed countdowns.
+Set a minimum and maximum time window, then the alarm fires at a random point inside that range. You stop training for countdown patterns and train real reaction.
 
 BEST FOR:
-- HIIT and conditioning sessions
-- Boxing, martial arts, and reaction drills
-- Team practices and surprise whistle moments
-- Focus sprints and break timers
-- Party and classroom games
+- HIIT and conditioning intervals
+- Boxing, martial arts, and tactical drills
+- Team practices and coach-led sessions
+- Focus sprints and break routines
 
 KEY FEATURES:
-- Randomized interval alarm within your min/max range
+- True random trigger inside your chosen range
 - Hidden countdown mode to reduce anticipation
 - Loop mode for continuous random rounds
+- Multiple alarm sounds, vibration, and volume controls
+- Pause, resume, reset, and stable background behavior
 - Live Activity support on iPhone lock screen
-- Multiple alarm sounds with vibration controls
-- Pause, resume, reset, and reliable background behavior
 
 HOW IT WORKS:
-1. Choose a range (for example 30 seconds to 5 minutes)
+1. Pick your range (for example 30 seconds to 5 minutes)
 2. Tap Start
-3. Train or work normally
-4. React when the alarm fires
-5. Repeat with loop mode if needed
+3. Move, drill, or work normally
+4. React when the alarm hits
+5. Repeat single rounds or run loop mode
 
-No ads. No subscriptions. Fast to set up and easy to run every day.
+No ads. No subscriptions. Fast setup, daily use.

@@ -20,6 +20,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import scripts.growth_bot_analytics as bot_analytics
+import scripts.growth_keyword_engine as keyword_engine
+
 DEFAULT_TOPICS: Tuple[str, ...] = (
     "How we shipped faster with AI-assisted test triage",
     "How we automated App Store listing checks end-to-end",
@@ -32,6 +35,8 @@ FIRST_POST_TOPIC = "The inspiration behind Random Tactical Timer"
 FIRST_POST_SOURCE = "https://www.amazon.com/Hard-Target-Become-Person-Predators/dp/B0F78ZL7ML"
 
 DEFAULT_TAGS: Tuple[str, ...] = ("ai", "mobile", "devops", "github", "testing")
+DEFAULT_BLOG_BASE_URL = "https://igorganapolsky.github.io/Random-Timer"
+LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 
 
 @dataclass
@@ -64,6 +69,14 @@ def slugify(value: str) -> str:
 
 def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
+
+
+def clear_generated_files(path: Path, glob_pattern: str) -> None:
+    if not path.is_dir():
+        return
+    for entry in path.glob(glob_pattern):
+        if entry.is_file():
+            entry.unlink()
 
 
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
@@ -106,6 +119,42 @@ def topic_for_day(topics: Iterable[str], day: dt.date) -> str:
     return options[day.toordinal() % len(options)]
 
 
+def ensure_keyword_backlog(output_root: Path) -> Dict[str, Any]:
+    keywords_dir = output_root / "keywords"
+    strategy_path = keywords_dir / "strategy.json"
+    return keyword_engine.run_build(keywords_dir, strategy_path)
+
+
+def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, Any]]:
+    payload = ensure_keyword_backlog(output_root)
+    backlog_json = payload.get("outputs", {}).get("json")
+    if not backlog_json:
+        return None
+    backlog_path = Path(str(backlog_json))
+    if not backlog_path.is_file():
+        return None
+    rows = json.loads(backlog_path.read_text(encoding="utf-8"))
+    selected = keyword_engine.select_daily_keyword(rows, day=day)
+    if not selected:
+        return None
+    return {
+        "keyword": str(selected.get("keyword") or "").strip(),
+        "intent": str(selected.get("intent") or "").strip(),
+        "bid_score": int(selected.get("bid_score") or 0),
+        "title": keyword_engine.keyword_to_post_title(str(selected.get("keyword") or "")),
+    }
+
+
+def resolve_blog_base_url(output_root: Path) -> str:
+    configured = os.getenv("BLOG_BASE_URL", "").strip()
+    if configured:
+        return configured.rstrip("/")
+    base = DEFAULT_BLOG_BASE_URL.rstrip("/")
+    if output_root.name == "marketing":
+        return f"{base}{LEGACY_MARKETING_SITE_SEGMENT}"
+    return base
+
+
 def _safe_numeric_id(value: Any) -> Optional[str]:
     text = str(value or "").strip()
     if re.fullmatch(r"[0-9]+", text):
@@ -129,7 +178,13 @@ def _requests_module():
         return None
 
 
-def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str = "") -> Tuple[str, str, str]:
+def build_post_copy(
+    topic: str,
+    recent_commits: List[str],
+    inspiration_url: str = "",
+    primary_keyword: str = "",
+    keyword_intent: str = "",
+) -> Tuple[str, str, str]:
     commit_bullets = "\n".join(f"- {entry}" for entry in recent_commits[:4]) or "- Stability and UX polish work"
     title = topic
     description = (
@@ -151,6 +206,13 @@ def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str 
     ]
     if inspiration_block:
         sections.append(inspiration_block)
+    if primary_keyword:
+        sections.append(
+            "## Search intent target\n"
+            f"- Primary keyword: **{primary_keyword}**\n"
+            f"- Intent class: **{keyword_intent or 'mixed'}**\n"
+            "- BID filter: business potential, intent match, and realistic difficulty"
+        )
     sections.extend(
         [
             "## AI/LLM flow we used\n"
@@ -164,6 +226,11 @@ def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str 
             "- Store conversion from listing views to installs\n"
             "- Review velocity, star distribution, and unresolved low-star SLA\n"
             "- Click-through rate on post CTAs to app download links",
+            "## FAQ for AI assistants\n"
+            "- What does Random Tactical Timer do? It triggers alarms at unpredictable times in a chosen range.\n"
+            "- Who is it for? Athletes, tactical trainers, coaches, and focus drill users.\n"
+            "- How is it different? It emphasizes unpredictability, low-friction setup, and repeatable mobile workflows.\n"
+            "- What outcomes should users expect? Better reaction readiness and less timing anticipation.",
             "## Next step\n"
             "Tomorrow we will ship one more experiment on onboarding clarity and measure conversion delta.",
         ]
@@ -198,59 +265,166 @@ def render_paperbanana_svg(spec: Dict[str, Any], output_path: Path) -> None:
     nodes = spec["nodes"]
     edges = spec["edges"]
 
-    width = 1240
-    height = 250
-    node_w = 170
-    node_h = 68
-    x_gap = 26
-    start_x = 28
-    y = 84
+    width = 1440
+    height = 760
+    node_w = 360
+    node_h = 128
 
+    preferred_layout: Dict[str, Tuple[int, int]] = {
+        "idea": (80, 180),
+        "prompt": (540, 180),
+        "code": (1000, 180),
+        "ci": (80, 420),
+        "release": (540, 420),
+        "learn": (1000, 420),
+    }
     pos: Dict[str, Tuple[int, int]] = {}
+    fallback_start_x = 80
+    fallback_start_y = 180
+    fallback_col_gap = 460
+    fallback_row_gap = 240
     for idx, node in enumerate(nodes):
-        x = start_x + idx * (node_w + x_gap)
-        pos[node["id"]] = (x, y)
+        node_id = node["id"]
+        if node_id in preferred_layout:
+            pos[node_id] = preferred_layout[node_id]
+            continue
+        col = idx % 3
+        row = idx // 3
+        pos[node_id] = (
+            fallback_start_x + col * fallback_col_gap,
+            fallback_start_y + row * fallback_row_gap,
+        )
+
+    palette = [
+        ("#0E223A", "#163B63", "#64C9FF"),
+        ("#1A2345", "#25366A", "#8FB2FF"),
+        ("#1F2140", "#3A2E6C", "#B99CFF"),
+        ("#22203B", "#43316B", "#A7A0FF"),
+        ("#1A2A35", "#22495A", "#6EDAD8"),
+        ("#1E2330", "#364456", "#9CB3CF"),
+    ]
 
     lines: List[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         "<defs>",
         "<linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">",
-        "<stop offset=\"0%\" stop-color=\"#0A1A2F\"/>",
-        "<stop offset=\"100%\" stop-color=\"#13284A\"/>",
+        "<stop offset=\"0%\" stop-color=\"#070D1A\"/>",
+        "<stop offset=\"60%\" stop-color=\"#101A31\"/>",
+        "<stop offset=\"100%\" stop-color=\"#0A2235\"/>",
         "</linearGradient>",
-        "<linearGradient id=\"node\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">",
-        "<stop offset=\"0%\" stop-color=\"#F2F7FF\"/>",
-        "<stop offset=\"100%\" stop-color=\"#DCEAFF\"/>",
-        "</linearGradient>",
-        "<marker id=\"arrow\" markerWidth=\"10\" markerHeight=\"7\" refX=\"9\" refY=\"3.5\" orient=\"auto\">",
-        "<polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#8EC5FF\"/>",
+        "<radialGradient id=\"halo\" cx=\"50%\" cy=\"10%\" r=\"75%\">",
+        "<stop offset=\"0%\" stop-color=\"#2A4C80\" stop-opacity=\"0.45\"/>",
+        "<stop offset=\"100%\" stop-color=\"#2A4C80\" stop-opacity=\"0\"/>",
+        "</radialGradient>",
+        "<filter id=\"cardShadow\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"160%\">",
+        "<feDropShadow dx=\"0\" dy=\"10\" stdDeviation=\"9\" flood-color=\"#030812\" flood-opacity=\"0.55\"/>",
+        "</filter>",
+        "<marker id=\"arrow\" markerWidth=\"14\" markerHeight=\"10\" refX=\"11\" refY=\"5\" orient=\"auto\">",
+        "<polygon points=\"0 0, 14 5, 0 10\" fill=\"#74D0FF\"/>",
         "</marker>",
+        "<pattern id=\"grid\" width=\"32\" height=\"32\" patternUnits=\"userSpaceOnUse\">",
+        "<path d=\"M 32 0 L 0 0 0 32\" fill=\"none\" stroke=\"#1E2E49\" stroke-opacity=\"0.28\" stroke-width=\"1\"/>",
+        "</pattern>",
+        "<linearGradient id=\"edge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">",
+        "<stop offset=\"0%\" stop-color=\"#4DA8D6\"/>",
+        "<stop offset=\"100%\" stop-color=\"#83E2FF\"/>",
+        "</linearGradient>",
         "</defs>",
-        "<rect x=\"0\" y=\"0\" width=\"1240\" height=\"250\" fill=\"url(#bg)\" rx=\"16\"/>",
-        "<text x=\"28\" y=\"38\" font-family=\"-apple-system,BlinkMacSystemFont,Segoe UI,Arial\" font-size=\"24\" font-weight=\"700\" fill=\"#ffffff\">PaperBanana Tech Flow</text>",
-        "<text x=\"28\" y=\"60\" font-family=\"-apple-system,BlinkMacSystemFont,Segoe UI,Arial\" font-size=\"13\" fill=\"#CFE5FF\">Daily content automation: from idea to publish to measurable feedback</text>",
+        f"<rect x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" fill=\"url(#bg)\" rx=\"24\"/>",
+        f"<rect x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" fill=\"url(#grid)\" rx=\"24\"/>",
+        f"<ellipse cx=\"{width // 2}\" cy=\"70\" rx=\"520\" ry=\"170\" fill=\"url(#halo)\"/>",
+        "<text x=\"74\" y=\"88\" font-family=\"Avenir Next,Segoe UI,Arial,sans-serif\" font-size=\"52\" font-weight=\"800\" fill=\"#F2F8FF\">PaperBanana Tech Flow</text>",
+        "<text x=\"74\" y=\"128\" font-family=\"Avenir Next,Segoe UI,Arial,sans-serif\" font-size=\"24\" fill=\"#AED8F7\">Idea -> AI assist -> build -> ship -> telemetry -> learning loop</text>",
     ]
 
+    def _card_anchor(node_id: str) -> Tuple[float, float]:
+        x, y = pos[node_id]
+        return float(x + node_w / 2), float(y + node_h / 2)
+
+    drawn_edges = set()
     for src, dst in edges:
-        sx, sy = pos[src]
-        dx, dy = pos[dst]
-        x1 = sx + node_w
-        y1 = sy + node_h // 2
-        x2 = dx
-        y2 = dy + node_h // 2
+        if src not in pos or dst not in pos:
+            continue
+        key = f"{src}->{dst}"
+        if key in drawn_edges:
+            continue
+        drawn_edges.add(key)
+        sx, sy = _card_anchor(src)
+        dx, dy = _card_anchor(dst)
+
+        from_x = sx + node_w / 2 - 24
+        from_y = sy
+        to_x = dx - node_w / 2 + 24
+        to_y = dy
+        c1x = from_x + (to_x - from_x) * 0.38
+        c1y = from_y
+        c2x = from_x + (to_x - from_x) * 0.62
+        c2y = to_y
+
+        if src == "learn" and dst == "idea":
+            from_x = sx
+            from_y = sy - node_h / 2 + 10
+            to_x = dx
+            to_y = dy - node_h / 2 + 10
+            c1x = from_x
+            c1y = 70
+            c2x = to_x
+            c2y = 70
+
         lines.append(
-            f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#8EC5FF" stroke-width="3" marker-end="url(#arrow)"/>'
+            "<path "
+            f"d=\"M {from_x:.1f} {from_y:.1f} C {c1x:.1f} {c1y:.1f}, {c2x:.1f} {c2y:.1f}, {to_x:.1f} {to_y:.1f}\" "
+            "fill=\"none\" stroke=\"url(#edge)\" stroke-width=\"6\" stroke-linecap=\"round\" "
+            "marker-end=\"url(#arrow)\" opacity=\"0.92\"/>"
         )
 
-    for node in nodes:
+    def _label_lines(label: str) -> List[str]:
+        if " + " in label:
+            return [part.strip() for part in label.split(" + ", 1)]
+        words = label.split()
+        if len(words) <= 2:
+            return [label]
+        mid = len(words) // 2
+        return [" ".join(words[:mid]), " ".join(words[mid:])]
+
+    for idx, node in enumerate(nodes):
         x, y = pos[node["id"]]
+        fill_left, fill_right, stroke = palette[idx % len(palette)]
         label = html.escape(node["label"])
+        grad_id = f"node{idx}"
         lines.extend(
             [
-                f'<rect x="{x}" y="{y}" width="{node_w}" height="{node_h}" rx="12" fill="url(#node)" stroke="#8EC5FF" stroke-width="2"/>',
-                f'<text x="{x + node_w / 2}" y="{y + 40}" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial" font-size="16" font-weight="600" fill="#0E2746">{label}</text>',
+                f"<defs><linearGradient id=\"{grad_id}\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">",
+                f"<stop offset=\"0%\" stop-color=\"{fill_left}\"/>",
+                f"<stop offset=\"100%\" stop-color=\"{fill_right}\"/>",
+                "</linearGradient></defs>",
             ]
         )
+        lines.append(
+            f'<rect x="{x}" y="{y}" width="{node_w}" height="{node_h}" rx="18" fill="url(#{grad_id})" stroke="{stroke}" stroke-width="2.5" filter="url(#cardShadow)"/>'
+        )
+        lines.append(
+            f'<circle cx="{x + 34}" cy="{y + 34}" r="18" fill="{stroke}" fill-opacity="0.2" stroke="{stroke}" stroke-width="1.5"/>'
+        )
+        lines.append(
+            f'<text x="{x + 34}" y="{y + 40}" text-anchor="middle" font-family="Avenir Next,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#EAF6FF">{idx + 1}</text>'
+        )
+        lines.append(
+            f'<text x="{x + 70}" y="{y + 44}" font-family="Avenir Next,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700" fill="#DCEFFF">{html.escape(node["id"]).upper()}</text>'
+        )
+        label_lines = _label_lines(label)
+        base_y = y + 86 if len(label_lines) == 1 else y + 76
+        line_gap = 32
+        for line_idx, line in enumerate(label_lines):
+            safe = html.escape(line)
+            lines.append(
+                f'<text x="{x + 70}" y="{base_y + line_idx * line_gap}" font-family="Avenir Next,Segoe UI,Arial,sans-serif" '
+                f'font-size="28" font-weight="700" fill="#F5FAFF">{safe}</text>'
+            )
+
+    lines.append(
+        "<text x=\"74\" y=\"710\" font-family=\"Avenir Next,Segoe UI,Arial,sans-serif\" font-size=\"21\" fill=\"#C4E4F9\">Random Tactical Timer growth system: measurable, testable, automated.</text>"
+    )
 
     lines.append("</svg>")
     output_path.write_text("\n".join(lines), encoding="utf-8")
@@ -390,6 +564,19 @@ def parse_frontmatter(markdown_text: str) -> Tuple[Dict[str, str], str]:
     return data, body
 
 
+def strip_frontmatter(markdown_text: str) -> str:
+    _, body = parse_frontmatter(markdown_text)
+    return body.lstrip()
+
+
+def prepare_devto_markdown(markdown_text: str, slug: str, base_url: str) -> str:
+    body = strip_frontmatter(markdown_text)
+    relative_svg = f"../diagrams/{slug}.svg"
+    absolute_svg = f"{base_url}/diagrams/{slug}.svg"
+    body = body.replace(f"]({relative_svg})", f"]({absolute_svg})")
+    return body
+
+
 def markdown_to_html(markdown_text: str) -> str:
     try:
         import markdown as md  # type: ignore
@@ -447,10 +634,15 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     diagrams_src = output_root / "diagrams"
     posts_out = site_root / "posts"
     diagrams_out = site_root / "diagrams"
+    md_out = site_root / "md"
 
     ensure_dir(site_root)
     ensure_dir(posts_out)
     ensure_dir(diagrams_out)
+    ensure_dir(md_out)
+    clear_generated_files(posts_out, "*.html")
+    clear_generated_files(diagrams_out, "*.svg")
+    clear_generated_files(md_out, "*.md")
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
     plausible_domain = os.getenv("PLAUSIBLE_DOMAIN", "").strip()
@@ -509,6 +701,8 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         ).strip()
         out_path = posts_out / f"{slug}.html"
         out_path.write_text(post_html + "\n", encoding="utf-8")
+        md_copy = md_out / f"{slug}.md"
+        md_copy.write_text(raw, encoding="utf-8")
 
         svg_src = diagrams_src / f"{slug}.svg"
         if svg_src.is_file():
@@ -521,6 +715,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
                 "description": description,
                 "date": date,
                 "url": f"posts/{slug}.html",
+                "markdown_url": f"md/{slug}.md",
             }
         )
 
@@ -592,12 +787,50 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     (site_root / "index.html").write_text(index_html + "\n", encoding="utf-8")
 
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
-    base_url = os.getenv("BLOG_BASE_URL", "https://igorganapolsky.github.io/Random-Timer/").rstrip("/")
+    base_url = resolve_blog_base_url(output_root)
     sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
+        sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
     sitemap.append("</urlset>")
     (site_root / "sitemap.xml").write_text("\n".join(sitemap) + "\n", encoding="utf-8")
+
+    llms_lines = [
+        "Random Tactical Timer Engineering Blog",
+        "",
+        "This site publishes daily engineering updates optimized for both humans and AI agents.",
+        "Preferred source format for agents: markdown URLs listed below.",
+        "",
+        f"Base URL: {base_url}",
+        "",
+        "Key resources:",
+        f"- {base_url}/index.html",
+        f"- {base_url}/agents.md",
+        f"- {base_url}/sitemap.xml",
+        "",
+        "Posts:",
+    ]
+    for post in posts_data[:100]:
+        llms_lines.append(f"- {post['title']}: {base_url}/{post['markdown_url']}")
+    (site_root / "llms.txt").write_text("\n".join(llms_lines) + "\n", encoding="utf-8")
+
+    agent_lines = [
+        "# Agent Index",
+        "",
+        "Use this page for machine-readable summaries of current content and positioning.",
+        "",
+        "## Intent",
+        "- Product: Random Tactical Timer",
+        "- Audience: athletes, trainers, coaches, and reaction-drill users",
+        "- Outcomes: reaction readiness, unpredictability in interval training, repeatable setup",
+        "",
+        "## Latest posts",
+    ]
+    for post in posts_data[:20]:
+        agent_lines.append(
+            f"- {post['date']} | {post['title']} | html: {base_url}/{post['url']} | markdown: {base_url}/{post['markdown_url']}"
+        )
+    (site_root / "agents.md").write_text("\n".join(agent_lines) + "\n", encoding="utf-8")
 
     return {"site_root": str(site_root), "post_count": len(posts_data), "base_url": base_url}
 
@@ -738,8 +971,9 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
 
 def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> List[Dict[str, Any]]:
     markdown = post.markdown_path.read_text(encoding="utf-8")
-    base_url = os.getenv("BLOG_BASE_URL", "https://igorganapolsky.github.io/Random-Timer/").rstrip("/")
+    base_url = resolve_blog_base_url(output_root)
     canonical_url = f"{base_url}/posts/{post.slug}.html"
+    devto_markdown = prepare_devto_markdown(markdown, post.slug, base_url)
 
     short_text = (
         f"New build log: {post.title}. We share how AI + automation improved release quality and review outcomes."
@@ -753,7 +987,7 @@ def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> L
         ]
     else:
         results = [
-            _post_devto(markdown, post.title, post.tags, canonical_url),
+            _post_devto(devto_markdown, post.title, post.tags, canonical_url),
             _post_linkedin(short_text, canonical_url),
             _post_x(short_text, canonical_url),
         ]
@@ -865,10 +1099,21 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
     report_path = output_root / "data" / "engagement-latest.md"
     report_path.write_text(report_md, encoding="utf-8")
 
+    bot_log_path = Path(os.getenv("AI_BOT_LOG_PATH", str(output_root / "data" / "access-log.ndjson"))).resolve()
+    bot_report = bot_analytics.run(bot_log_path, output_root / "data")
+    summary["bot_traffic"] = {
+        "status": bot_report.get("status"),
+        "input_rows": bot_report.get("input_rows"),
+    }
+
     summary_file = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
     if summary_file:
         with Path(summary_file).open("a", encoding="utf-8") as handle:
             handle.write(report_md)
+            handle.write("\n")
+            handle.write("## AI Bot Traffic\n")
+            handle.write(f"- Status: {summary['bot_traffic']['status']}\n")
+            handle.write(f"- Input rows: {summary['bot_traffic']['input_rows']}\n")
 
     return summary
 
@@ -884,6 +1129,9 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
     posts_log = read_jsonl(output_root / "data" / "posts.jsonl")
     first_post = len(posts_log) == 0
     inspiration_url = ""
+    primary_keyword = ""
+    keyword_intent = ""
+    today = utc_now().date()
 
     if args.topic:
         chosen_topic = args.topic
@@ -891,10 +1139,22 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
         chosen_topic = FIRST_POST_TOPIC
         inspiration_url = FIRST_POST_SOURCE
     else:
-        chosen_topic = topic_for_day(DEFAULT_TOPICS, utc_now().date())
+        keyword_pick = choose_keyword_topic(output_root, today)
+        if keyword_pick and keyword_pick.get("title"):
+            chosen_topic = str(keyword_pick["title"])
+            primary_keyword = str(keyword_pick.get("keyword") or "")
+            keyword_intent = str(keyword_pick.get("intent") or "")
+        else:
+            chosen_topic = topic_for_day(DEFAULT_TOPICS, today)
 
     commits = run_git_log(repo_root, since_days=args.since_days, max_commits=args.max_commits)
-    title, description, body = build_post_copy(chosen_topic, commits, inspiration_url=inspiration_url)
+    title, description, body = build_post_copy(
+        chosen_topic,
+        commits,
+        inspiration_url=inspiration_url,
+        primary_keyword=primary_keyword,
+        keyword_intent=keyword_intent,
+    )
 
     app_store_url = os.getenv(
         "APP_STORE_URL",
@@ -932,6 +1192,8 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
             "slug": post.slug,
             "title": post.title,
             "description": post.description,
+            "primary_keyword": primary_keyword,
+            "keyword_intent": keyword_intent,
             "markdown_path": str(post.markdown_path),
             "diagram_svg_path": str(post.diagram_svg_path),
         },
@@ -964,6 +1226,7 @@ def latest_post_asset(output_root: Path) -> PostAsset:
 
 def run_daily(args: argparse.Namespace) -> int:
     output_root = Path(args.output_root).resolve()
+    keyword_payload = ensure_keyword_backlog(output_root)
     post = generate_post(args)
     site = build_site(output_root)
     publish_results = publish_post(post, output_root, dry_run=args.dry_run)
@@ -971,6 +1234,7 @@ def run_daily(args: argparse.Namespace) -> int:
 
     payload = {
         "status": "ok",
+        "keywords": keyword_payload,
         "post": post.slug,
         "site": site,
         "publish": publish_results,
@@ -999,6 +1263,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     p_collect = sub.add_parser("collect", help="Collect engagement metrics")
     p_collect.add_argument("--engagement-days", type=int, default=14)
+
+    sub.add_parser("keyword-plan", help="Generate keyword backlog using BID/AI-trap/tool heuristics")
+
+    p_bot = sub.add_parser("bot-analyze", help="Classify and summarize AI crawler traffic from access logs")
+    p_bot.add_argument("--bot-log", default="", help="Override path to NDJSON access log")
 
     p_daily = sub.add_parser("run-daily", help="Generate, build, publish, and collect")
     p_daily.add_argument("--topic", default="")
@@ -1033,6 +1302,18 @@ def main() -> int:
 
     if args.command == "collect":
         results = collect_engagement(output_root, days=args.engagement_days)
+        print(json.dumps(results, indent=2))
+        return 0
+
+    if args.command == "keyword-plan":
+        results = ensure_keyword_backlog(output_root)
+        print(json.dumps(results, indent=2))
+        return 0
+
+    if args.command == "bot-analyze":
+        default_log = output_root / "data" / "access-log.ndjson"
+        log_path = Path(args.bot_log).resolve() if args.bot_log else default_log
+        results = bot_analytics.run(log_path, output_root / "data")
         print(json.dumps(results, indent=2))
         return 0
 

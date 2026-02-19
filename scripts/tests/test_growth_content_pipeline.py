@@ -90,6 +90,55 @@ class GrowthContentPipelineTests(unittest.TestCase):
             index_text = (root / "site" / "index.html").read_text(encoding="utf-8")
             self.assertEqual(summary["post_count"], 1)
             self.assertIn("Sample", index_text)
+            self.assertTrue((root / "site" / "llms.txt").is_file())
+            self.assertTrue((root / "site" / "agents.md").is_file())
+            self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
+
+    def test_strip_frontmatter_returns_body_only(self):
+        raw = (
+            "---\n"
+            "title: Sample Post\n"
+            "description: Sample Desc\n"
+            "---\n\n"
+            "## Body\n"
+            "- point\n"
+        )
+        body = pipeline.strip_frontmatter(raw)
+        self.assertTrue(body.startswith("## Body"))
+        self.assertNotIn("title: Sample Post", body)
+
+    def test_resolve_blog_base_url_defaults_for_marketing_output(self):
+        with patch.dict("os.environ", {}, clear=False):
+            resolved = pipeline.resolve_blog_base_url(Path("marketing"))
+        self.assertEqual(
+            resolved,
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site",
+        )
+
+    def test_resolve_blog_base_url_respects_env_override(self):
+        with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog/"}, clear=False):
+            resolved = pipeline.resolve_blog_base_url(Path("marketing"))
+        self.assertEqual(resolved, "https://example.com/blog")
+
+    def test_prepare_devto_markdown_rewrites_diagram_to_absolute_url(self):
+        raw = (
+            "---\n"
+            "title: Sample\n"
+            "---\n\n"
+            "## Diagram\n"
+            "![PaperBanana technology flow](../diagrams/2026-02-19-sample.svg)\n"
+        )
+        rendered = pipeline.prepare_devto_markdown(
+            raw,
+            "2026-02-19-sample",
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site",
+        )
+        self.assertIn(
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site/diagrams/2026-02-19-sample.svg",
+            rendered,
+        )
+        self.assertNotIn("../diagrams/2026-02-19-sample.svg", rendered)
+        self.assertNotIn("title: Sample", rendered)
 
 
 if __name__ == "__main__":
