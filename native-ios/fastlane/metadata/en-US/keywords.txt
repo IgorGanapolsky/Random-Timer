@@ -1,1 +1,1 @@
-hiit,interval,tabata,drills,reaction,boxing,martial arts,focus,pomodoro,countdown,stopwatch
+reaction,interval,hiit,tabata,boxing,martial arts,drills,focus,sparring,workout,coach
