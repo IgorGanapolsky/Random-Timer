@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -61,7 +62,8 @@ def _is_within(path: Path, root: Path) -> bool:
 
 
 def _safe_io_path(raw_path: str, repo_root: Path) -> Path:
-    candidate = Path(raw_path).expanduser().resolve()
+    raw = Path(raw_path).expanduser()
+    candidate = (repo_root / raw).resolve() if not raw.is_absolute() else raw.resolve()
     allowed_roots = {
         repo_root.resolve(),
         Path(tempfile.gettempdir()).resolve(),
@@ -80,6 +82,17 @@ def _has_asc_credentials(env: dict) -> bool:
         default_key = Path.home() / ".appstoreconnect" / "private_keys" / f"AuthKey_{key_id}.p8"
         key_material = str(default_key) if default_key.is_file() else ""
     return bool(key_id and issuer_id and key_material)
+
+
+def _detect_ios_marketing_version(repo_root: Path) -> str:
+    pbxproj = repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj"
+    if not pbxproj.is_file():
+        raise ReleaseOpsError(f"Could not find iOS project file: {pbxproj}")
+    text = pbxproj.read_text(encoding="utf-8")
+    m = re.search(r"MARKETING_VERSION\s*=\s*(\d+\.\d+\.\d+)\s*;", text)
+    if not m:
+        raise ReleaseOpsError("Could not parse MARKETING_VERSION from iOS project file.")
+    return m.group(1)
 
 
 def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
@@ -161,9 +174,47 @@ def sync_listing(args: argparse.Namespace, repo_root: Path) -> int:
         print("❌ Missing APPSTORE_KEY_ID / APPSTORE_ISSUER_ID for sync_listing", file=sys.stderr)
         return 2
 
-    cmd: List[str] = ["fastlane", "metadata"]
-    if args.version:
-        cmd.append(f"version:{args.version}")
+    preferred_version = args.version or _detect_ios_marketing_version(repo_root)
+    asc_json_raw = getattr(args, "asc_json_out", ".artifacts/asc-version-resolution.json")
+    asc_json_out = _safe_io_path(asc_json_raw, repo_root)
+    resolve_cmd: List[str] = [
+        sys.executable,
+        str(repo_root / "scripts" / "asc_resolve_version.py"),
+        "--preferred-version",
+        preferred_version,
+        "--json-out",
+        str(asc_json_out),
+    ]
+    if getattr(args, "create_if_needed", True):
+        resolve_cmd.append("--create-if-needed")
+    if getattr(args, "auto_next_patch", True):
+        resolve_cmd.append("--auto-next-patch")
+    _print_cmd(resolve_cmd, repo_root)
+    if not args.dry_run:
+        rc = _run(resolve_cmd, repo_root, env=env).returncode
+        if rc != 0:
+            return rc
+    else:
+        # Keep dry-runs deterministic for callers without ASC auth.
+        asc_json_out.parent.mkdir(parents=True, exist_ok=True)
+        asc_json_out.write_text(
+            json.dumps(
+                {
+                    "preferred_version": preferred_version,
+                    "selected_version": preferred_version,
+                    "created": False,
+                    "reason": "dry_run_no_remote_resolution",
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+
+    selected_payload = _read_json(asc_json_out)
+    selected_version = str(selected_payload.get("selected_version") or preferred_version)
+
+    cmd: List[str] = ["fastlane", "metadata", f"version:{selected_version}"]
     cmd.append(f"upload_metadata:{str(args.upload_metadata).lower()}")
 
     ios_dir = repo_root / "native-ios"
@@ -321,6 +372,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync = sub.add_parser("sync_listing", help="Upload listing metadata/screenshots via fastlane")
     p_sync.add_argument("--version", help="iOS marketing version")
     p_sync.add_argument("--upload-metadata", action=argparse.BooleanOptionalAction, default=True)
+    p_sync.add_argument("--create-if-needed", action=argparse.BooleanOptionalAction, default=True)
+    p_sync.add_argument("--auto-next-patch", action=argparse.BooleanOptionalAction, default=True)
+    p_sync.add_argument(
+        "--asc-json-out",
+        default=".artifacts/asc-version-resolution.json",
+        help="Path for App Store version resolution JSON",
+    )
     p_sync.add_argument("--dry-run", action="store_true")
 
     p_reviews = sub.add_parser("review_ops", help="Run App Store review SLA monitor")
