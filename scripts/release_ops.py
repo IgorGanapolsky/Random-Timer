@@ -30,11 +30,25 @@ def _repo_root(value: str) -> Path:
     return Path(value).resolve()
 
 
+def _validate_subprocess_cmd(cmd: Sequence[str]) -> None:
+    if not cmd:
+        raise ReleaseOpsError("Refusing to run empty command.")
+    if any(not isinstance(token, str) for token in cmd):
+        raise ReleaseOpsError(f"Command contains non-string token: {cmd!r}")
+    # Keep commands shell-safe and deterministic (we always use shell=False).
+    # Reject control characters that can alter terminal/script semantics.
+    for token in cmd:
+        if any(ch in token for ch in ("\n", "\r", "\x00")):
+            raise ReleaseOpsError(f"Command token contains forbidden control chars: {token!r}")
+
+
 def _run(cmd: Sequence[str], cwd: Path, env: dict | None = None) -> subprocess.CompletedProcess:
+    _validate_subprocess_cmd(cmd)
     return subprocess.run(cmd, cwd=str(cwd), env=env)
 
 
 def _print_cmd(cmd: Sequence[str], cwd: Path) -> None:
+    _validate_subprocess_cmd(cmd)
     rendered = " ".join(shlex.quote(x) for x in cmd)
     print(f"$ (cd {cwd} && {rendered})")
 
