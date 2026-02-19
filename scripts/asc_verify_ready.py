@@ -559,6 +559,12 @@ def verify_ready(
         iphone_ok = any(_is_iphone_large(dt) and c >= min_iphone for dt, c in screenshot_counts.items())
         ipad_ok = any(_is_ipad_large(dt) and c >= min_ipad for dt, c in screenshot_counts.items())
 
+        screenshot_evidence = {
+            "complete_counts": screenshot_counts,
+            "total_counts": screenshot_total_counts,
+            "state_counts": screenshot_asset_states,
+            "incomplete_assets": screenshot_incomplete_assets,
+        }
         checks.append(
             Check(
                 name="Screenshots (iPhone)",
@@ -567,12 +573,7 @@ def verify_ready(
                     f"need >= {min_iphone} COMPLETE in a large iPhone set; "
                     f"complete={screenshot_counts} total={screenshot_total_counts}"
                 ),
-                evidence={
-                    "complete_counts": screenshot_counts,
-                    "total_counts": screenshot_total_counts,
-                    "state_counts": screenshot_asset_states,
-                    "incomplete_assets": screenshot_incomplete_assets,
-                },
+                evidence=screenshot_evidence,
             )
         )
         checks.append(
@@ -583,12 +584,7 @@ def verify_ready(
                     f"need >= {min_ipad} COMPLETE in a large iPad set; "
                     f"complete={screenshot_counts} total={screenshot_total_counts}"
                 ),
-                evidence={
-                    "complete_counts": screenshot_counts,
-                    "total_counts": screenshot_total_counts,
-                    "state_counts": screenshot_asset_states,
-                    "incomplete_assets": screenshot_incomplete_assets,
-                },
+                evidence=screenshot_evidence,
             )
         )
     else:

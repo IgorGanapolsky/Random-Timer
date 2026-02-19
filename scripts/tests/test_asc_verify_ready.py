@@ -103,50 +103,28 @@ class _FakeAscClient:
 
 
 class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
-    def test_verify_ready_fails_when_screenshots_are_not_complete(self):
+    @staticmethod
+    def _shots(states, prefix):
+        return [
+            {
+                "id": f"{prefix}{i}",
+                "type": "appScreenshots",
+                "attributes": {"fileName": f"{prefix}{i}.png", "assetDeliveryState": {"state": state}},
+            }
+            for i, state in enumerate(states, start=1)
+        ]
+
+    def _run_verify(self, iphone_states, ipad_states):
         from scripts import asc_verify_ready
 
         fake = _FakeAscClient(
             app_screenshots_by_set={
-                "set_iphone": [
-                    {
-                        "id": "ph1",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "1.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
-                    },
-                    {
-                        "id": "ph2",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "2.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
-                    },
-                    {
-                        "id": "ph3",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "3.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
-                    },
-                ],
-                "set_ipad": [
-                    {
-                        "id": "pd1",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "a.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "pd2",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "b.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "pd3",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "c.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                ],
+                "set_iphone": self._shots(iphone_states, "ph"),
+                "set_ipad": self._shots(ipad_states, "pd"),
             }
         )
-
         with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
-            passed, report = asc_verify_ready.verify_ready(
+            return asc_verify_ready.verify_ready(
                 bundle_id="com.igorganapolsky.randomtimer",
                 version="1.1.1",
                 locale="en-US",
@@ -154,62 +132,21 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
                 min_ipad=3,
             )
 
+    def test_verify_ready_fails_when_screenshots_are_not_complete(self):
+        passed, report = self._run_verify(
+            iphone_states=["AWAITING_UPLOAD", "AWAITING_UPLOAD", "AWAITING_UPLOAD"],
+            ipad_states=["COMPLETE", "COMPLETE", "COMPLETE"],
+        )
         self.assertFalse(passed)
         self.assertEqual(report["screenshot_counts"]["APP_IPHONE_67"], 0)
         self.assertEqual(report["screenshot_total_counts"]["APP_IPHONE_67"], 3)
         self.assertEqual(report["screenshot_asset_states"]["APP_IPHONE_67"]["AWAITING_UPLOAD"], 3)
 
     def test_verify_ready_passes_when_required_complete_counts_exist(self):
-        from scripts import asc_verify_ready
-
-        fake = _FakeAscClient(
-            app_screenshots_by_set={
-                "set_iphone": [
-                    {
-                        "id": "ph1",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "1.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "ph2",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "2.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "ph3",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "3.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                ],
-                "set_ipad": [
-                    {
-                        "id": "pd1",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "a.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "pd2",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "b.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                    {
-                        "id": "pd3",
-                        "type": "appScreenshots",
-                        "attributes": {"fileName": "c.png", "assetDeliveryState": {"state": "COMPLETE"}},
-                    },
-                ],
-            }
+        passed, report = self._run_verify(
+            iphone_states=["COMPLETE", "COMPLETE", "COMPLETE"],
+            ipad_states=["COMPLETE", "COMPLETE", "COMPLETE"],
         )
-
-        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
-            passed, report = asc_verify_ready.verify_ready(
-                bundle_id="com.igorganapolsky.randomtimer",
-                version="1.1.1",
-                locale="en-US",
-                min_iphone=3,
-                min_ipad=3,
-            )
-
         self.assertTrue(passed)
         self.assertEqual(report["screenshot_counts"]["APP_IPHONE_67"], 3)
         self.assertEqual(report["screenshot_counts"]["APP_IPAD_PRO_3GEN_129"], 3)
