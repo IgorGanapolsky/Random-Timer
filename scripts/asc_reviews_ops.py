@@ -20,6 +20,7 @@ import sys
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 DEFAULT_BUNDLE_ID = "com.igorganapolsky.randomtimer"
@@ -95,9 +96,10 @@ class AscClient:
         except ImportError:
             _die("Missing dependency: requests (pip install requests)")
 
-        if path_or_url.startswith("http://"):
-            _die(f"Insecure URL scheme rejected: {path_or_url}")
-        if path_or_url.startswith("https://"):
+        parsed = urlparse(path_or_url)
+        if parsed.scheme:
+            if parsed.scheme.lower() != "https":
+                _die(f"Only HTTPS absolute URLs are allowed: {path_or_url}")
             url = path_or_url
         else:
             url = f"{APP_STORE_CONNECT_API}{path_or_url}"
