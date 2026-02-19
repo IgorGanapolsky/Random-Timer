@@ -1,1 +1,1 @@
-drill,tabata,stopwatch,countdown,meditation,focus,reaction,party,game,training,exercise,fitness,bell
+hiit,interval,tabata,drills,reaction,boxing,martial arts,focus,pomodoro,countdown,stopwatch
