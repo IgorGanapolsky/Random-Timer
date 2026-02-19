@@ -206,6 +206,13 @@ python scripts/release_context.py \
 
 GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
 
+## App Store Version Automation
+
+To avoid uploading metadata/screenshots to non-editable live versions, release tooling now resolves
+an editable target App Store version before sync/submit steps.
+
+Details and usage: `docs/APP_STORE_VERSION_AUTOMATION.md`
+
 ## Architecture
 
 ### iOS

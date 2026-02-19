@@ -310,6 +310,7 @@ def verify_ready(
     locale: str,
     min_iphone: int,
     min_ipad: int,
+    require_build: bool,
 ) -> Tuple[bool, Dict[str, Any]]:
     client = AscClient()
     checks: List[Check] = []
@@ -348,21 +349,30 @@ def verify_ready(
         checks.append(
             Check(
                 name="Build Attached",
-                passed=False,
-                details="No build attached to this App Store version",
+                passed=not require_build,
+                details=(
+                    "No build attached to this App Store version"
+                    if require_build
+                    else "Skipped (metadata-only mode): no build attached"
+                ),
+                evidence={"skipped": not require_build},
             )
         )
     else:
         build = _first_included(version_payload, "builds", build_rel.get("id"))
         processing = (build or {}).get("attributes", {}).get("processingState", "UNKNOWN")
         build_num = (build or {}).get("attributes", {}).get("version", "?")
-        passed = processing == "VALID"
+        passed = (processing == "VALID") or (not require_build)
         checks.append(
             Check(
                 name="Build Attached",
                 passed=passed,
-                details=f"build={build_num} processingState={processing}",
-                evidence={"buildNumber": build_num, "processingState": processing},
+                details=(
+                    f"build={build_num} processingState={processing}"
+                    if require_build
+                    else f"Skipped (metadata-only mode): build={build_num} processingState={processing}"
+                ),
+                evidence={"buildNumber": build_num, "processingState": processing, "skipped": not require_build},
             )
         )
 
@@ -636,6 +646,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--locale", default=DEFAULT_LOCALE, help=f"Localization locale to check (default: {DEFAULT_LOCALE})")
     p.add_argument("--min-iphone", type=int, default=3, help="Minimum screenshots required for large iPhone set (default: 3)")
     p.add_argument("--min-ipad", type=int, default=3, help="Minimum screenshots required for large iPad set (default: 3)")
+    p.add_argument("--skip-build-check", action="store_true", help="Skip strict build attached/VALID check (metadata-only workflows).")
     p.add_argument("--json", dest="json_path", help="Write full JSON report to this path")
     return p.parse_args()
 
@@ -648,6 +659,7 @@ def main() -> None:
         locale=args.locale,
         min_iphone=args.min_iphone,
         min_ipad=args.min_ipad,
+        require_build=not args.skip_build_check,
     )
     _print_report(passed, report)
 
