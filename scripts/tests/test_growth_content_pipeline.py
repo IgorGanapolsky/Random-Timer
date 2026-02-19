@@ -94,6 +94,32 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertTrue((root / "site" / "agents.md").is_file())
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
 
+    def test_strip_frontmatter_returns_body_only(self):
+        raw = (
+            "---\n"
+            "title: Sample Post\n"
+            "description: Sample Desc\n"
+            "---\n\n"
+            "## Body\n"
+            "- point\n"
+        )
+        body = pipeline.strip_frontmatter(raw)
+        self.assertTrue(body.startswith("## Body"))
+        self.assertNotIn("title: Sample Post", body)
+
+    def test_resolve_blog_base_url_defaults_for_marketing_output(self):
+        with patch.dict("os.environ", {}, clear=False):
+            resolved = pipeline.resolve_blog_base_url(Path("/tmp/marketing"))
+        self.assertEqual(
+            resolved,
+            "https://igorganapolsky.github.io/Random-Timer/marketing/site",
+        )
+
+    def test_resolve_blog_base_url_respects_env_override(self):
+        with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog/"}, clear=False):
+            resolved = pipeline.resolve_blog_base_url(Path("/tmp/marketing"))
+        self.assertEqual(resolved, "https://example.com/blog")
+
 
 if __name__ == "__main__":
     unittest.main()

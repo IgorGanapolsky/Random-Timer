@@ -35,6 +35,8 @@ FIRST_POST_TOPIC = "The inspiration behind Random Tactical Timer"
 FIRST_POST_SOURCE = "https://www.amazon.com/Hard-Target-Become-Person-Predators/dp/B0F78ZL7ML"
 
 DEFAULT_TAGS: Tuple[str, ...] = ("ai", "mobile", "devops", "github", "testing")
+DEFAULT_BLOG_BASE_URL = "https://igorganapolsky.github.io/Random-Timer"
+LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 
 
 @dataclass
@@ -141,6 +143,16 @@ def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, 
         "bid_score": int(selected.get("bid_score") or 0),
         "title": keyword_engine.keyword_to_post_title(str(selected.get("keyword") or "")),
     }
+
+
+def resolve_blog_base_url(output_root: Path) -> str:
+    configured = os.getenv("BLOG_BASE_URL", "").strip()
+    if configured:
+        return configured.rstrip("/")
+    base = DEFAULT_BLOG_BASE_URL.rstrip("/")
+    if output_root.name == "marketing":
+        return f"{base}{LEGACY_MARKETING_SITE_SEGMENT}"
+    return base
 
 
 def _safe_numeric_id(value: Any) -> Optional[str]:
@@ -445,6 +457,11 @@ def parse_frontmatter(markdown_text: str) -> Tuple[Dict[str, str], str]:
     return data, body
 
 
+def strip_frontmatter(markdown_text: str) -> str:
+    _, body = parse_frontmatter(markdown_text)
+    return body.lstrip()
+
+
 def markdown_to_html(markdown_text: str) -> str:
     try:
         import markdown as md  # type: ignore
@@ -655,7 +672,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     (site_root / "index.html").write_text(index_html + "\n", encoding="utf-8")
 
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
-    base_url = os.getenv("BLOG_BASE_URL", "https://igorganapolsky.github.io/Random-Timer/").rstrip("/")
+    base_url = resolve_blog_base_url(output_root)
     sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
@@ -839,7 +856,8 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
 
 def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> List[Dict[str, Any]]:
     markdown = post.markdown_path.read_text(encoding="utf-8")
-    base_url = os.getenv("BLOG_BASE_URL", "https://igorganapolsky.github.io/Random-Timer/").rstrip("/")
+    devto_markdown = strip_frontmatter(markdown)
+    base_url = resolve_blog_base_url(output_root)
     canonical_url = f"{base_url}/posts/{post.slug}.html"
 
     short_text = (
@@ -854,7 +872,7 @@ def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> L
         ]
     else:
         results = [
-            _post_devto(markdown, post.title, post.tags, canonical_url),
+            _post_devto(devto_markdown, post.title, post.tags, canonical_url),
             _post_linkedin(short_text, canonical_url),
             _post_x(short_text, canonical_url),
         ]
