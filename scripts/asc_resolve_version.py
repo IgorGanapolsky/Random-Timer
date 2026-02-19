@@ -71,7 +71,6 @@ def _list_ios_versions(client: ASCClient, app_id: str) -> List[Dict[str, Any]]:
             "filter[platform]": "IOS",
             "limit": 200,
             "fields[appStoreVersions]": "versionString,appStoreState,platform,createdDate",
-            "sort": "-createdDate",
         },
     )
 
@@ -81,6 +80,34 @@ def _find_version(versions: List[Dict[str, Any]], version: str) -> Optional[Dict
         attrs = v.get("attributes") or {}
         if str(attrs.get("versionString") or "") == version:
             return v
+    return None
+
+
+def _semver_or_none(value: str) -> Optional[Tuple[int, int, int]]:
+    try:
+        return _parse_semver(value)
+    except ValueError:
+        return None
+
+
+def _pick_highest_editable_version(versions: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    editable: List[Tuple[Tuple[int, int, int], Dict[str, Any]]] = []
+    fallback: List[Dict[str, Any]] = []
+    for item in versions:
+        attrs = item.get("attributes") or {}
+        state = str(attrs.get("appStoreState") or "UNKNOWN")
+        if not _is_editable_state(state):
+            continue
+        fallback.append(item)
+        parsed = _semver_or_none(str(attrs.get("versionString") or ""))
+        if parsed is not None:
+            editable.append((parsed, item))
+
+    if editable:
+        editable.sort(key=lambda x: x[0], reverse=True)
+        return editable[0][1]
+    if fallback:
+        return fallback[0]
     return None
 
 
@@ -121,6 +148,7 @@ def resolve_version(
     auto_next_patch: bool,
 ) -> Resolution:
     versions = _list_ios_versions(client, app_id)
+    highest_editable = _pick_highest_editable_version(versions)
     current = _find_version(versions, preferred_version)
     if current:
         attrs = current.get("attributes") or {}
@@ -140,6 +168,19 @@ def resolve_version(
                 f"Preferred App Store version {preferred_version} exists but is not editable (state={state}). "
                 "Provide an editable version or enable --auto-next-patch.",
                 code=1,
+            )
+
+        if highest_editable:
+            editable_attrs = highest_editable.get("attributes") or {}
+            editable_version = str(editable_attrs.get("versionString") or "")
+            editable_state = str(editable_attrs.get("appStoreState") or "UNKNOWN")
+            return Resolution(
+                selected_version=editable_version,
+                selected_state=editable_state,
+                created=False,
+                reason=f"preferred_non_editable_{state}_reused_highest_editable",
+                selected_id=str(highest_editable.get("id") or ""),
+                preferred_version=preferred_version,
             )
 
         candidate = _bump_patch(preferred_version)
@@ -173,6 +214,19 @@ def resolve_version(
                     preferred_version=preferred_version,
                 )
             candidate = _bump_patch(candidate)
+
+    if auto_next_patch and highest_editable:
+        editable_attrs = highest_editable.get("attributes") or {}
+        editable_version = str(editable_attrs.get("versionString") or "")
+        editable_state = str(editable_attrs.get("appStoreState") or "UNKNOWN")
+        return Resolution(
+            selected_version=editable_version,
+            selected_state=editable_state,
+            created=False,
+            reason="preferred_missing_reused_highest_editable",
+            selected_id=str(highest_editable.get("id") or ""),
+            preferred_version=preferred_version,
+        )
 
     if not create_if_needed:
         die(f"Preferred App Store version {preferred_version} does not exist and create_if_needed is disabled.", code=1)
