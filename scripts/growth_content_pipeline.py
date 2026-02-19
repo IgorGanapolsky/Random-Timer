@@ -20,12 +20,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-try:
-    import requests
-except ImportError as exc:  # pragma: no cover
-    raise SystemExit("Missing dependency: requests. Install with `pip install requests`.") from exc
-
-
 DEFAULT_TOPICS: Tuple[str, ...] = (
     "How we shipped faster with AI-assisted test triage",
     "How we automated App Store listing checks end-to-end",
@@ -124,6 +118,15 @@ def _safe_tweet_id(value: Any) -> Optional[str]:
     if re.fullmatch(r"[0-9A-Za-z_\\-]+", text):
         return text
     return None
+
+
+def _requests_module():
+    try:
+        import requests  # type: ignore
+
+        return requests
+    except Exception:
+        return None
 
 
 def build_post_copy(topic: str, recent_commits: List[str], inspiration_url: str = "") -> Tuple[str, str, str]:
@@ -600,6 +603,10 @@ def build_site(output_root: Path) -> Dict[str, Any]:
 
 
 def _post_devto(markdown: str, title: str, tags: List[str], canonical_url: str) -> Dict[str, Any]:
+    requests = _requests_module()
+    if requests is None:
+        return {"channel": "devto", "status": "error", "reason": "missing requests dependency"}
+
     api_key = os.getenv("DEVTO_API_KEY", "").strip()
     if not api_key:
         return {"channel": "devto", "status": "skipped", "reason": "missing DEVTO_API_KEY"}
@@ -636,6 +643,10 @@ def _post_devto(markdown: str, title: str, tags: List[str], canonical_url: str) 
 
 
 def _post_linkedin(text: str, canonical_url: str) -> Dict[str, Any]:
+    requests = _requests_module()
+    if requests is None:
+        return {"channel": "linkedin", "status": "error", "reason": "missing requests dependency"}
+
     token = os.getenv("LINKEDIN_ACCESS_TOKEN", "").strip()
     author_urn = os.getenv("LINKEDIN_AUTHOR_URN", "").strip()
     if not token or not author_urn:
@@ -678,6 +689,10 @@ def _post_linkedin(text: str, canonical_url: str) -> Dict[str, Any]:
 
 
 def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
+    requests = _requests_module()
+    if requests is None:
+        return {"channel": "x", "status": "error", "reason": "missing requests dependency"}
+
     api_key = os.getenv("X_API_KEY", "").strip()
     api_secret = os.getenv("X_API_SECRET", "").strip()
     access_token = os.getenv("X_ACCESS_TOKEN", "").strip()
@@ -757,6 +772,7 @@ def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> L
 
 
 def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
+    requests = _requests_module()
     publications = read_jsonl(output_root / "data" / "publications.jsonl")
     cutoff = utc_now() - dt.timedelta(days=days)
 
@@ -788,7 +804,13 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
             channel_bucket["published"] += 1
 
     for row in recent:
-        if row.get("channel") == "devto" and row.get("status") == "published" and row.get("id") and devto_key:
+        if (
+            requests is not None
+            and row.get("channel") == "devto"
+            and row.get("status") == "published"
+            and row.get("id")
+            and devto_key
+        ):
             rid = _safe_numeric_id(row["id"])
             if not rid:
                 continue
@@ -802,7 +824,13 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
                 score = int(data.get("positive_reactions_count") or 0) + int(data.get("comments_count") or 0)
                 summary["channels"].setdefault("devto", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 
-        if row.get("channel") == "x" and row.get("status") == "published" and row.get("id") and x_bearer:
+        if (
+            requests is not None
+            and row.get("channel") == "x"
+            and row.get("status") == "published"
+            and row.get("id")
+            and x_bearer
+        ):
             rid = _safe_tweet_id(row["id"])
             if not rid:
                 continue
