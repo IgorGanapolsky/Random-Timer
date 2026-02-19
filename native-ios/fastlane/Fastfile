@@ -123,25 +123,13 @@ platform :ios do
       )
     end
 
+    # Keep option parsing for workflow compatibility, but screenshot-only sync
+    # should target the live version and avoid mutating version/build fields.
     version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
-    build_number = options[:build_number]
-
-    if (build_number.nil? || build_number.to_s.strip.empty?) && defined?(api_key)
-      begin
-        build_number = latest_testflight_build_number(
-          api_key: api_key,
-          app_identifier: "com.igorganapolsky.randomtimer",
-          version: version
-        )
-      rescue => e
-        UI.important("Could not determine latest TestFlight build number for v#{version}: #{e}")
-      end
-    end
+    UI.message("Running screenshot-only sync for requested version hint v#{version} using live App Store version")
 
     deliver(
       app_identifier: "com.igorganapolsky.randomtimer",
-      app_version: version,
-      build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
       skip_binary_upload: true,
       skip_screenshots: false,
       # Keep this lane screenshot-only. Metadata updates on live versions can trigger
@@ -154,7 +142,6 @@ platform :ios do
       precheck_include_in_app_purchases: false,
       # Screenshot-only sync for already-used/live versions must not mutate versionString.
       skip_app_version_update: true,
-      edit_live: true,
       use_live_version: true,
       force: true,
       api_key: defined?(api_key) ? api_key : nil
