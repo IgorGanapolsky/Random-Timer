@@ -80,6 +80,16 @@ jobs:
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "Using editable App Store version: $SELECTED_VERSION"
 
+      - name: Reset existing screenshots for locale
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_reset_screenshots.py \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --locale "en-US"
+
       - name: Upload iOS metadata + screenshots
         env:
           CI: "true"
