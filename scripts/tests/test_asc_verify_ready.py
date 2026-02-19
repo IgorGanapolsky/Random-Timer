@@ -1,0 +1,219 @@
+import unittest
+from unittest import mock
+
+
+class _FakeAscClient:
+    def __init__(self, app_screenshots_by_set):
+        self.app_screenshots_by_set = app_screenshots_by_set
+        self.calls = []
+
+    def get(self, path, params=None):
+        self.calls.append({"path": path, "params": params or {}})
+
+        if path == "/apps":
+            return {"data": [{"id": "app1", "type": "apps"}]}
+
+        if path == "/apps/app1/appStoreVersions":
+            return {
+                "data": [
+                    {
+                        "id": "v1",
+                        "type": "appStoreVersions",
+                        "attributes": {"versionString": "1.1.1", "appStoreState": "READY_FOR_SALE"},
+                        "relationships": {
+                            "build": {"data": {"id": "b1", "type": "builds"}},
+                            "appStoreVersionLocalizations": {
+                                "data": [{"id": "loc1", "type": "appStoreVersionLocalizations"}]
+                            },
+                        },
+                    }
+                ],
+                "included": [
+                    {
+                        "id": "b1",
+                        "type": "builds",
+                        "attributes": {"processingState": "VALID", "version": "19"},
+                    },
+                    {
+                        "id": "loc1",
+                        "type": "appStoreVersionLocalizations",
+                        "attributes": {
+                            "locale": "en-US",
+                            "description": "desc",
+                            "keywords": "a,b",
+                            "supportUrl": "https://example.com/support",
+                        },
+                    },
+                ],
+            }
+
+        if path == "/apps/app1/appInfos":
+            return {
+                "data": [{"id": "info1", "type": "appInfos"}],
+                "included": [
+                    {
+                        "id": "infoLoc1",
+                        "type": "appInfoLocalizations",
+                        "attributes": {"locale": "en-US", "privacyPolicyUrl": "https://example.com/privacy"},
+                    }
+                ],
+            }
+
+        if path == "/appStoreVersions/v1/appStoreReviewDetail":
+            return {
+                "data": {
+                    "id": "rd1",
+                    "type": "appStoreReviewDetails",
+                    "attributes": {
+                        "contactFirstName": "Igor",
+                        "contactLastName": "G",
+                        "contactEmail": "igor@example.com",
+                        "contactPhone": "+10000000000",
+                    },
+                }
+            }
+
+        if path == "/apps/app1/appPriceSchedules":
+            return {"data": [{"id": "price1", "type": "appPriceSchedules"}]}
+
+        if path == "/apps/app1/appStoreAgeRatingDeclaration":
+            return {"data": {"id": "age1", "type": "appStoreAgeRatingDeclarations"}}
+
+        if path == "/appStoreVersionLocalizations/loc1/appScreenshotSets":
+            return {
+                "data": [
+                    {
+                        "id": "set_iphone",
+                        "type": "appScreenshotSets",
+                        "attributes": {"screenshotDisplayType": "APP_IPHONE_67"},
+                    },
+                    {
+                        "id": "set_ipad",
+                        "type": "appScreenshotSets",
+                        "attributes": {"screenshotDisplayType": "APP_IPAD_PRO_3GEN_129"},
+                    },
+                ]
+            }
+
+        if path.startswith("/appScreenshotSets/") and path.endswith("/appScreenshots"):
+            set_id = path.split("/")[2]
+            return {"data": self.app_screenshots_by_set.get(set_id, [])}
+
+        raise AssertionError(f"Unhandled path: {path}")
+
+
+class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
+    def test_verify_ready_fails_when_screenshots_are_not_complete(self):
+        from scripts import asc_verify_ready
+
+        fake = _FakeAscClient(
+            app_screenshots_by_set={
+                "set_iphone": [
+                    {
+                        "id": "ph1",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "1.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
+                    },
+                    {
+                        "id": "ph2",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "2.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
+                    },
+                    {
+                        "id": "ph3",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "3.png", "assetDeliveryState": {"state": "AWAITING_UPLOAD"}},
+                    },
+                ],
+                "set_ipad": [
+                    {
+                        "id": "pd1",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "a.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "pd2",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "b.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "pd3",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "c.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                ],
+            }
+        )
+
+        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+            passed, report = asc_verify_ready.verify_ready(
+                bundle_id="com.igorganapolsky.randomtimer",
+                version="1.1.1",
+                locale="en-US",
+                min_iphone=3,
+                min_ipad=3,
+            )
+
+        self.assertFalse(passed)
+        self.assertEqual(report["screenshot_counts"]["APP_IPHONE_67"], 0)
+        self.assertEqual(report["screenshot_total_counts"]["APP_IPHONE_67"], 3)
+        self.assertEqual(report["screenshot_asset_states"]["APP_IPHONE_67"]["AWAITING_UPLOAD"], 3)
+
+    def test_verify_ready_passes_when_required_complete_counts_exist(self):
+        from scripts import asc_verify_ready
+
+        fake = _FakeAscClient(
+            app_screenshots_by_set={
+                "set_iphone": [
+                    {
+                        "id": "ph1",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "1.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "ph2",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "2.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "ph3",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "3.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                ],
+                "set_ipad": [
+                    {
+                        "id": "pd1",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "a.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "pd2",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "b.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                    {
+                        "id": "pd3",
+                        "type": "appScreenshots",
+                        "attributes": {"fileName": "c.png", "assetDeliveryState": {"state": "COMPLETE"}},
+                    },
+                ],
+            }
+        )
+
+        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+            passed, report = asc_verify_ready.verify_ready(
+                bundle_id="com.igorganapolsky.randomtimer",
+                version="1.1.1",
+                locale="en-US",
+                min_iphone=3,
+                min_ipad=3,
+            )
+
+        self.assertTrue(passed)
+        self.assertEqual(report["screenshot_counts"]["APP_IPHONE_67"], 3)
+        self.assertEqual(report["screenshot_counts"]["APP_IPAD_PRO_3GEN_129"], 3)
+
+
+if __name__ == "__main__":
+    unittest.main()
