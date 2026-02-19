@@ -89,6 +89,13 @@ final class TimerManager: ObservableObject {
             timerState = state
         }
 
+        AnalyticsService.shared.track(AnalyticsEvents.settingsChanged, properties: [
+            "min_duration": newConfig.minDuration,
+            "max_duration": newConfig.maxDuration,
+            "sound_type": String(describing: newConfig.soundType),
+            "repeat_enabled": newConfig.repeatEnabled,
+        ])
+
         Task {
             await storageService.saveConfig(newConfig)
         }
@@ -114,6 +121,12 @@ final class TimerManager: ObservableObject {
 
         timerState = state
 
+        AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
+            "min_duration": config.minDuration,
+            "max_duration": config.maxDuration,
+            "target_duration": randomDuration,
+        ])
+
         // Save state for recovery
         await storageService.saveTimerState(state)
 
@@ -128,6 +141,7 @@ final class TimerManager: ObservableObject {
     }
 
     func cancelTimer() async {
+        AnalyticsService.shared.track(AnalyticsEvents.timerStopped)
         stopCountdown()
         timerState = nil
 
@@ -137,6 +151,7 @@ final class TimerManager: ObservableObject {
     }
 
     func dismissAlarm() async {
+        AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
         await cancelTimer()
@@ -150,6 +165,7 @@ final class TimerManager: ObservableObject {
 
     func pauseTimer() {
         guard var state = timerState, state.status != .paused else { return }
+        AnalyticsService.shared.track(AnalyticsEvents.timerPaused)
         stopCountdown()
         state.status = .paused
         timerState = state
@@ -157,6 +173,7 @@ final class TimerManager: ObservableObject {
 
     func resumeTimer() {
         guard var state = timerState, state.status == .paused else { return }
+        AnalyticsService.shared.track(AnalyticsEvents.timerResumed)
         state.status = TimerStatus.from(
             remainingSeconds: state.remainingDuration,
             currentStatus: .running
@@ -337,6 +354,7 @@ final class TimerManager: ObservableObject {
     }
 
     func resetTimer() async {
+        AnalyticsService.shared.track(AnalyticsEvents.timerReset)
         // Reset to the SAME duration (restart from beginning)
         guard let currentState = timerState else { return }
         let sameDuration = currentState.targetDuration
@@ -487,6 +505,10 @@ final class TimerManager: ObservableObject {
 
             stopCountdown()
 
+            AnalyticsService.shared.track(AnalyticsEvents.alarmTriggered, properties: [
+                "target_duration": state.targetDuration,
+            ])
+
             Logger.timer.info("ALARM! Playing sound type: \(String(describing: state.config.soundType)), volume: \(state.config.volume)")
             notificationService.playAlarmSound(
                 type: state.config.soundType,
@@ -541,6 +563,7 @@ final class TimerManager: ObservableObject {
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted)
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {

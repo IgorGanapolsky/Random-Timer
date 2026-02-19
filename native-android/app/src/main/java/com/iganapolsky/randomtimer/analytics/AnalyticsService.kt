@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.analytics
 
 import android.app.Application
+import com.iganapolsky.randomtimer.BuildConfig
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
@@ -15,9 +16,8 @@ class AnalyticsService @Inject constructor() {
     fun initialize(application: Application) {
         if (initialized) return
 
-        val apiKey = "phc_REPLACE_WITH_YOUR_KEY" // TODO: Replace with actual PostHog API key
-        if (apiKey.startsWith("phc_REPLACE")) {
-            // Skip initialization if no real API key
+        val apiKey = BuildConfig.POSTHOG_API_KEY
+        if (apiKey.isBlank()) {
             return
         }
 

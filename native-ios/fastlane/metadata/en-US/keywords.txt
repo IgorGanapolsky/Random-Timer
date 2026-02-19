@@ -1,1 +1,1 @@
-random timer,interval timer,workout timer,tactical timer,training timer,countdown,drill timer,HIIT
+drill,tabata,stopwatch,countdown,meditation,focus,reaction,party,game,training,exercise,fitness,bell

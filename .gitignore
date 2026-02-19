@@ -73,6 +73,10 @@ temp/
 .venv/
 venv/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Claude Code memory/cache (session-specific, not project config)
 .claude/memory/
 .claude/hooks/
@@ -85,3 +89,8 @@ venv/
 .claude/context/
 scripts/__pycache__/
 *.pyc
+
+# Local auth + agent automation artifacts (never commit)
+.auth/
+.agent-device/
+.rag/

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		064BAA16EA4D4830B29F2D9C /* RandomTimerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFBE5D59081407DA7F38ED6 /* RandomTimerUITests.swift */; };
+		A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */; };
+		PH00112233445566778899AA /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = PH00112233445566778899BB /* PostHog */; };
 		PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */; };
 		0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */; };
 		0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */; };
@@ -76,8 +78,20 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		PH00112233445566778899CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				PH00112233445566778899AA /* PostHog in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXFileReference section */
 		05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RandomTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerLiveActivity.swift; sourceTree = "<group>"; };
 		1D15E4584476AB7D519E638B /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		1FEB9292178DAA002E1375B9 /* RandomTimerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RandomTimerWidgetExtension.entitlements; sourceTree = "<group>"; };
@@ -170,6 +184,7 @@
 		A7465B81D29C7680F842A4F4 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
 				A1B2C3D400000002DEADBEEF /* Logger.swift */,
 				3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */,
 				8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */,
@@ -306,6 +321,7 @@
 			buildConfigurationList = 1FC5C4B604AB7C83642F1A28 /* Build configuration list for PBXNativeTarget "RandomTimer" */;
 			buildPhases = (
 				4B3649502FCACD78DF51B7D7 /* Sources */,
+				PH00112233445566778899CC /* Frameworks */,
 				C860582E5E34407E753D7F99 /* Resources */,
 				C1D86135661BEED30B3D6574 /* Embed Foundation Extensions */,
 			);
@@ -315,6 +331,9 @@
 				B309A62F166A0C885742BA28 /* PBXTargetDependency */,
 			);
 			name = RandomTimer;
+			packageProductDependencies = (
+				PH00112233445566778899BB /* PostHog */,
+			);
 			productName = RandomTimer;
 			productReference = 5897E50AB48E9FBF061E29B4 /* RandomTimer.app */;
 			productType = "com.apple.product-type.application";
@@ -387,6 +406,9 @@
 			);
 			mainGroup = F8289CF182E2C94C3F449A81;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				PH00112233445566778899DD /* XCRemoteSwiftPackageReference "posthog-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1F45D7F5254FAD17E047D6A3 /* Products */;
 			projectDirPath = "";
@@ -427,6 +449,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */,
 				0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */,
 				0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */,
 				4F4A683B236AE94216503707 /* Colors.swift in Sources */,
@@ -521,6 +544,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1.1;
+				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
@@ -630,6 +654,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1.1;
+				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
@@ -812,6 +837,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		PH00112233445566778899DD /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.41.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		PH00112233445566778899BB /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = PH00112233445566778899DD /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0EDC84FE4BE7EB4ACDD83C02 /* Project object */;
 }
