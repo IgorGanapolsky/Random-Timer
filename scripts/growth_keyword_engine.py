@@ -10,9 +10,9 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
-import hashlib
 import json
 import re
+import zlib
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -129,8 +129,8 @@ def business_potential(keyword: str) -> int:
 
 
 def deterministic_kd(keyword: str) -> int:
-    digest = hashlib.sha1(normalize_keyword(keyword).encode("utf-8")).hexdigest()
-    return int(digest[:6], 16) % 51
+    digest = zlib.crc32(normalize_keyword(keyword).encode("utf-8"))
+    return int(digest) % 51
 
 
 def ai_trap(keyword: str, intent: str) -> bool:
@@ -140,7 +140,7 @@ def ai_trap(keyword: str, intent: str) -> bool:
     return any(h in k for h in INFORMATIONAL_HINTS)
 
 
-def bid_score(keyword: str, intent: str, business: int, kd: int, trap: bool, is_tool: bool) -> int:
+def bid_score(intent: str, business: int, kd: int, trap: bool, is_tool: bool) -> int:
     score = business * 30
     if intent == "tool":
         score += 25
@@ -180,7 +180,7 @@ def build_backlog(blueprint: Dict[str, Any], max_keywords: int = 240) -> List[Di
         kd = deterministic_kd(kw)
         trap = ai_trap(kw, intent)
         is_tool = any(m in kw for m in TOOL_MODIFIERS)
-        score = bid_score(kw, intent, business, kd, trap, is_tool)
+        score = bid_score(intent, business, kd, trap, is_tool)
 
         rows.append(
             {
