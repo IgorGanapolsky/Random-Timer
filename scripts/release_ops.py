@@ -44,12 +44,12 @@ def _validate_subprocess_cmd(cmd: Sequence[str]) -> None:
 
 def _run(cmd: Sequence[str], cwd: Path, env: dict | None = None) -> subprocess.CompletedProcess:
     _validate_subprocess_cmd(cmd)
-    return subprocess.run(cmd, cwd=str(cwd), env=env)
+    return subprocess.run(cmd, cwd=str(cwd), env=env)  # NOSONAR: validated tokenized argv, shell=False
 
 
 def _print_cmd(cmd: Sequence[str], cwd: Path) -> None:
     _validate_subprocess_cmd(cmd)
-    rendered = " ".join(shlex.quote(x) for x in cmd)
+    rendered = " ".join(shlex.quote(x) for x in cmd)  # NOSONAR: safe logging of validated argv
     print(f"$ (cd {cwd} && {rendered})")
 
 
