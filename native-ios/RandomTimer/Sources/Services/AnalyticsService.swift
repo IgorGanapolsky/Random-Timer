@@ -10,10 +10,14 @@ final class AnalyticsService {
     static let shared = AnalyticsService()
 
     private var initialized = false
+    private let distinctIdDefaultsKey = "posthog_distinct_id"
 
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
         Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
+    }
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
     private let host = "https://us.i.posthog.com"
 
@@ -32,6 +36,11 @@ final class AnalyticsService {
         config.captureScreenViews = false
         PostHogSDK.shared.setup(config)
 #endif
+        let distinctId = getOrCreateDistinctId()
+        identify(userId: distinctId, properties: [
+            "platform": "ios",
+            "app_version": appVersion,
+        ])
         initialized = true
         print("[Analytics] PostHog initialized")
     }
@@ -69,6 +78,18 @@ final class AnalyticsService {
 #if canImport(PostHog)
         PostHogSDK.shared.flush()
 #endif
+    }
+
+    private func getOrCreateDistinctId() -> String {
+        let defaults = UserDefaults.standard
+        if let existing = defaults.string(forKey: distinctIdDefaultsKey),
+           existing.isEmpty == false {
+            return existing
+        }
+
+        let generated = UUID().uuidString
+        defaults.set(generated, forKey: distinctIdDefaultsKey)
+        return generated
     }
 }
 
