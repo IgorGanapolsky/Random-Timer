@@ -5,6 +5,8 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -31,6 +33,7 @@ class TimerViewModel
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
         private val serviceController: TimerServiceController,
+        private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
     ) : ViewModel() {
         val config: StateFlow<TimerConfig> =
@@ -95,10 +98,19 @@ class TimerViewModel
                 val state = startTimerUseCase(config.value)
                 _timerState.value = state
                 serviceController.startTimer(state)
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_STARTED,
+                    mapOf(
+                        "min_duration" to config.value.minDuration,
+                        "max_duration" to config.value.maxDuration,
+                        "target_duration" to state.targetDuration,
+                    ),
+                )
             }
         }
 
         fun cancelTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_STOPPED)
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -107,6 +119,7 @@ class TimerViewModel
         }
 
         fun dismissAlarm() {
+            analyticsService.track(AnalyticsEvents.ALARM_DISMISSED)
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -119,10 +132,12 @@ class TimerViewModel
         }
 
         fun pauseTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_PAUSED)
             serviceController.pauseTimer()
         }
 
         fun resumeTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_RESUMED)
             serviceController.resumeTimer()
         }
 
@@ -132,6 +147,7 @@ class TimerViewModel
         }
 
         fun resetTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_RESET)
             _timerState.value?.let { current ->
                 _timerState.value =
                     current.copy(

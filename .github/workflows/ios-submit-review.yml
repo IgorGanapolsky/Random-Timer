@@ -82,11 +82,27 @@ jobs:
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve editable App Store version
+        id: asc_version
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          PREFERRED_VERSION: ${{ steps.version.outputs.ios_version }}
+        run: |
+          python scripts/asc_resolve_version.py \
+            --preferred-version "$PREFERRED_VERSION" \
+            --create-if-needed \
+            --json-out /tmp/asc_version.json
+          SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
+          echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using editable App Store version: $SELECTED_VERSION"
+
       - name: Verify TestFlight build is VALID
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           if ! echo "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
@@ -102,7 +118,7 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           if ! echo "$IOS_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
@@ -118,7 +134,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           LOCALE: ${{ inputs.locale }}
           WAIT_FOR_STATE: ${{ inputs.wait }}
-          IOS_VERSION: ${{ steps.version.outputs.ios_version }}
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
             echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
@@ -150,6 +166,13 @@ jobs:
             python scripts/asc_poll_version_state.py --version "$IOS_VERSION"
           fi
 
+      - name: Upload version resolution report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-version-resolution
+          path: /tmp/asc_version.json
+
       - name: Cleanup key
         if: always()
-        run: rm -f ~/.appstoreconnect/private_keys/AuthKey_*.p8
+        run: rm -f ~/.appstoreconnect/private_keys/AuthKey_*.p8 /tmp/asc_version.json

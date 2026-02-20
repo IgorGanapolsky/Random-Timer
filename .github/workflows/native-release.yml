@@ -12,6 +12,15 @@ on:
           - both
         required: true
         default: 'both'
+      android_track:
+        description: 'Android only: Google Play track to publish to'
+        type: choice
+        options:
+          - production
+          - beta
+          - alpha
+        required: false
+        default: 'production'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
@@ -111,6 +120,7 @@ jobs:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: fastlane beta
         working-directory: native-ios
 
@@ -204,9 +214,10 @@ jobs:
         run: ./gradlew bundleRelease
         working-directory: native-android
 
-      - name: Upload to Google Play (closed testing track)
+      - name: Upload to Google Play (track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          PLAY_TRACK: ${{ inputs.android_track }}
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
@@ -218,6 +229,9 @@ jobs:
           python3 - <<'PYEOF'
           import sys
           import os
+          import json
+          import glob
+          import mimetypes
           import time
 
           from google.oauth2 import service_account
@@ -228,6 +242,9 @@ jobs:
           SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
           PACKAGE = 'com.iganapolsky.randomtimer'
           AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
+          TRACK = (os.getenv("PLAY_TRACK", "") or "production").strip()
+          DEFAULT_STATUS = "completed"
+          RELEASE_STATUS = (os.getenv("PLAY_RELEASE_STATUS", "") or DEFAULT_STATUS).strip() or DEFAULT_STATUS
           RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
           RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
           RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
@@ -260,15 +277,162 @@ jobs:
                       media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
                   ).execute()
 
+                  # Update store listing + images from fastlane metadata.
+                  # Play can block production submissions if the listing is incomplete.
+                  metadata_dir = os.path.join(
+                      "native-android",
+                      "fastlane",
+                      "metadata",
+                      "android",
+                      "en-US",
+                  )
+
+                  def read_text(rel_path: str) -> str:
+                      p = os.path.join(metadata_dir, rel_path)
+                      try:
+                          if os.path.isfile(p):
+                              with open(p, "r", encoding="utf-8") as f:
+                                  return f.read().strip()
+                      except Exception:
+                          return ""
+                      return ""
+
+                  title = read_text("title.txt")
+                  short_desc = read_text("short_description.txt")
+                  full_desc = read_text("full_description.txt")
+                  video = read_text("video.txt")
+
+                  listing = {}
+                  if title:
+                      listing["title"] = title
+                  if short_desc:
+                      listing["shortDescription"] = short_desc
+                  if full_desc:
+                      listing["fullDescription"] = full_desc
+                  if video:
+                      listing["video"] = video
+
+                  if listing:
+                      service.edits().listings().update(
+                          packageName=PACKAGE,
+                          editId=edit_id,
+                          language="en-US",
+                          body=listing,
+                      ).execute()
+
+                  # Best-effort: set details (contact + default language) if missing.
+                  details = {"defaultLanguage": "en-US"}
+                  support_url = ""
+                  try:
+                      support_path = os.path.join(
+                          "native-ios", "fastlane", "metadata", "en-US", "support_url.txt"
+                      )
+                      if os.path.isfile(support_path):
+                          with open(support_path, "r", encoding="utf-8") as f:
+                              support_url = f.read().strip()
+                  except Exception:
+                      support_url = ""
+                  if support_url:
+                      details["contactWebsite"] = support_url
+                  try:
+                      service.edits().details().patch(
+                          packageName=PACKAGE,
+                          editId=edit_id,
+                          body=details,
+                      ).execute()
+                  except Exception:
+                      # Non-fatal: some accounts/apps restrict patching details via API.
+                      pass
+
+                  def mime_for(path: str) -> str:
+                      mt, _ = mimetypes.guess_type(path)
+                      return mt or "application/octet-stream"
+
+                  def upload_images(image_type: str, pattern: str) -> None:
+                      files = sorted(glob.glob(pattern))
+                      if not files:
+                          return
+                      try:
+                          service.edits().images().deleteall(
+                              packageName=PACKAGE,
+                              editId=edit_id,
+                              language="en-US",
+                              imageType=image_type,
+                          ).execute()
+                      except Exception:
+                          pass
+                      for fp in files:
+                          service.edits().images().upload(
+                              packageName=PACKAGE,
+                              editId=edit_id,
+                              language="en-US",
+                              imageType=image_type,
+                              media_body=MediaFileUpload(fp, mimetype=mime_for(fp)),
+                          ).execute()
+
+                  upload_images(
+                      "icon",
+                      os.path.join(metadata_dir, "images", "icon.*"),
+                  )
+                  upload_images(
+                      "featureGraphic",
+                      os.path.join(metadata_dir, "images", "featureGraphic", "*.*"),
+                  )
+                  upload_images(
+                      "phoneScreenshots",
+                      os.path.join(metadata_dir, "images", "phoneScreenshots", "*.*"),
+                  )
+
+                  # Play Console can require release notes for first-time production submissions.
+                  notes_path = os.path.join(
+                      "native-android",
+                      "fastlane",
+                      "metadata",
+                      "android",
+                      "en-US",
+                      "changelogs",
+                      f"{bundle['versionCode']}.txt",
+                  )
+                  release_notes = ""
+                  try:
+                      if os.path.isfile(notes_path):
+                          with open(notes_path, "r", encoding="utf-8") as f:
+                              release_notes = f.read().strip()
+                  except Exception:
+                      release_notes = ""
+
+                  release = {
+                      "versionCodes": [bundle["versionCode"]],
+                      "status": RELEASE_STATUS,
+                      "name": f"v{bundle['versionCode']}",
+                  }
+                  if release_notes:
+                      release["releaseNotes"] = [{"language": "en-US", "text": release_notes}]
+                  if RELEASE_STATUS == "inProgress":
+                      # Staged rollout only. For full rollout use status=completed.
+                      # If not provided, default to 0.1 so we never send the invalid 1.0 value.
+                      user_fraction_raw = (os.getenv("PLAY_USER_FRACTION", "") or "0.1").strip()
+                      try:
+                          user_fraction = float(user_fraction_raw)
+                      except Exception:
+                          user_fraction = 0.1
+                      user_fraction = max(0.0, min(1.0, user_fraction))
+                      if user_fraction >= 1.0:
+                          user_fraction = 0.1
+                      release["userFraction"] = user_fraction
+
                   service.edits().tracks().update(
                       packageName=PACKAGE,
                       editId=edit_id,
-                      track='alpha',
-                      body={'releases': [{'versionCodes': [bundle['versionCode']], 'status': 'completed'}]}
+                      track=TRACK,
+                      body={"releases": [release]},
                   ).execute()
 
                   service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-                  print(f"✅ Uploaded version code {bundle['versionCode']} to closed testing (alpha) track")
+                  print(
+                      f"✅ Uploaded version code {bundle['versionCode']} to '{TRACK}' track "
+                      f"(status={RELEASE_STATUS})"
+                  )
                   break
               except HttpError as e:
                   message = str(e)
@@ -288,7 +452,38 @@ jobs:
                       time.sleep(sleep_for)
                       continue
 
-                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
+                  content = ""
+                  try:
+                      raw = getattr(e, "content", b"") or b""
+                      if isinstance(raw, (bytes, bytearray)):
+                          content = raw.decode("utf-8", errors="ignore").strip()
+                      else:
+                          content = str(raw).strip()
+                  except Exception:
+                      content = ""
+
+                  # Persist the raw response to an artifact-backed file so we can debug
+                  # FAILED_PRECONDITION even when GitHub masks the log output.
+                  try:
+                      payload = {
+                          "package": PACKAGE,
+                          "track": TRACK,
+                          "release_status": RELEASE_STATUS,
+                          "attempt": attempt,
+                          "http_status": status,
+                          "error": str(e),
+                          "response": content,
+                      }
+                      with open("/tmp/play-upload-error.json", "w", encoding="utf-8") as f:
+                          json.dump(payload, f, indent=2, ensure_ascii=True)
+                      print("📦 Wrote /tmp/play-upload-error.json", file=sys.stderr)
+                  except Exception as write_err:
+                      print(f"⚠️ Failed to write /tmp/play-upload-error.json: {write_err}", file=sys.stderr)
+
+                  if content:
+                      print(f"❌ Google Play upload failed: {e}\n\nResponse:\n{content}", file=sys.stderr)
+                  else:
+                      print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
               except Exception as e:
                   message = str(e).lower()
@@ -309,6 +504,14 @@ jobs:
                   print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
                   sys.exit(1)
           PYEOF
+
+      - name: Upload Play upload error (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: play-upload-error
+          path: /tmp/play-upload-error.json
+          if-no-files-found: ignore
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
@@ -353,8 +556,10 @@ jobs:
         run: |
           echo "event_name=${{ github.event_name }}"
           echo "inputs.platform=${{ inputs.platform }}"
+          echo "inputs.android_track=${{ inputs.android_track }}"
           echo "inputs.submit_review=${{ inputs.submit_review }}"
           echo "github.event.inputs.platform=${{ github.event.inputs.platform }}"
+          echo "github.event.inputs.android_track=${{ github.event.inputs.android_track }}"
           echo "github.event.inputs.submit_review=${{ github.event.inputs.submit_review }}"
           echo "github.event.inputs(json)=${{ toJSON(github.event.inputs) }}"
 
@@ -368,6 +573,19 @@ jobs:
           else
             echo "flag=android" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Determine Android track (no secrets)
+        id: android_track
+        run: |
+          TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
+          if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
+            TRACK="${{ inputs.android_track }}"
+          fi
+          if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
+            TRACK="production"
+          fi
+          echo "track=$TRACK" >> "$GITHUB_OUTPUT"
+          echo "android_track=$TRACK"
 
       - name: Write App Store Connect key
         if: needs.ios-testflight.result == 'success'
@@ -391,6 +609,9 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
           ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
+          if [ "${{ needs.android-release.result }}" = "success" ]; then
+            ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
+          fi
           if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
             ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
           fi
@@ -454,6 +675,23 @@ jobs:
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve editable App Store version
+        if: steps.gate.outputs.enabled == 'true'
+        id: asc_version
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PREFERRED_VERSION: ${{ steps.versions.outputs.ios_version }}
+        run: |
+          python scripts/asc_resolve_version.py \
+            --preferred-version "$PREFERRED_VERSION" \
+            --create-if-needed \
+            --json-out /tmp/asc_version.json
+          SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
+          echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using editable App Store version: $SELECTED_VERSION"
+
       - name: Write App Store Connect key (for API)
         if: steps.gate.outputs.enabled == 'true'
         env:
@@ -489,7 +727,7 @@ jobs:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: fastlane metadata version:${{ steps.versions.outputs.ios_version }}
+        run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
         working-directory: native-ios
 
       - name: Verify App Store submission readiness (hard gate)
@@ -500,7 +738,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
           python scripts/asc_verify_ready.py \
-            --version "${{ steps.versions.outputs.ios_version }}" \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
             --json /tmp/asc_ready.json
 
       - name: Upload readiness report
@@ -516,7 +754,7 @@ jobs:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: fastlane submit_review version:${{ steps.versions.outputs.ios_version }}
+        run: fastlane submit_review version:${{ steps.asc_version.outputs.selected_version }}
         working-directory: native-ios
 
       - name: Verify App Store submission state
@@ -528,12 +766,94 @@ jobs:
         run: |
           python scripts/verify_release.py \
             --platform ios \
-            --version "${{ steps.versions.outputs.ios_version }}" \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
             --wait \
             --timeout 600 \
             --require-appstore-submission
 
+      - name: Upload version resolution report
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
+        with:
+          name: asc-version-resolution
+          path: /tmp/asc_version.json
+
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json
+          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json
+
+  tag-release:
+    needs: [verify-releases]
+    if: always() && needs.verify-releases.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from source
+        id: version
+        run: |
+          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
+          VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' native-android/app/build.gradle.kts | head -1)
+          TAG="v${VERSION_NAME}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved: $TAG (Android code=$VERSION_CODE)"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.version.outputs.tag }} already exists, skipping"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create git tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" \
+            -m "Release ${{ steps.version.outputs.tag }} (Android code=${{ steps.version.outputs.version_code }})"
+          git push origin "${{ steps.version.outputs.tag }}"
+          echo "✅ Created and pushed tag ${{ steps.version.outputs.tag }}"
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Read Android changelog if it exists
+          CHANGELOG_FILE="native-android/fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt"
+          NOTES=""
+          if [ -f "$CHANGELOG_FILE" ]; then
+            NOTES=$(cat "$CHANGELOG_FILE")
+          fi
+
+          # Read iOS release notes if available
+          IOS_NOTES_FILE="native-ios/fastlane/metadata/en-US/release_notes.txt"
+          if [ -f "$IOS_NOTES_FILE" ]; then
+            IOS_NOTES=$(cat "$IOS_NOTES_FILE")
+            if [ -n "$IOS_NOTES" ]; then
+              NOTES="${NOTES}
+
+          ### iOS
+          ${IOS_NOTES}"
+            fi
+          fi
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${{ steps.version.outputs.tag }}"
+          fi
+
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes "$NOTES"
+          echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"

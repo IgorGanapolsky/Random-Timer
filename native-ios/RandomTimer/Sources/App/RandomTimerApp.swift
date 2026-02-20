@@ -5,6 +5,10 @@ struct RandomTimerApp: App {
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        AnalyticsService.shared.initialize()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

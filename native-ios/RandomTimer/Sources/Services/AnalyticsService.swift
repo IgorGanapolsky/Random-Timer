@@ -1,7 +1,10 @@
 import Foundation
+#if canImport(PostHog)
+import PostHog
+#endif
 
 /// Analytics Service for PostHog integration
-/// To enable: Add PostHog Swift SDK via SPM and set your API key below
+/// To enable: Add PostHog Swift SDK via SPM (https://github.com/PostHog/posthog-ios)
 @MainActor
 final class AnalyticsService {
     static let shared = AnalyticsService()
@@ -23,37 +26,49 @@ final class AnalyticsService {
             return
         }
 
-        // TODO: Initialize PostHog when SDK is added
-        // PostHogSDK.shared.setup(PostHogConfig(apiKey: apiKey, host: host))
+#if canImport(PostHog)
+        let config = PostHogConfig(apiKey: apiKey, host: host)
+        config.captureApplicationLifecycleEvents = true
+        config.captureScreenViews = false
+        PostHogSDK.shared.setup(config)
+#endif
         initialized = true
         print("[Analytics] PostHog initialized")
     }
 
     func track(_ event: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.capture(event, properties: properties)
-        print("[Analytics] Track: \(event)")
+#if canImport(PostHog)
+        PostHogSDK.shared.capture(event, properties: properties)
+#endif
     }
 
     func screen(_ screenName: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.screen(screenName, properties: properties)
-        print("[Analytics] Screen: \(screenName)")
+#if canImport(PostHog)
+        PostHogSDK.shared.screen(screenName, properties: properties)
+#endif
     }
 
     func identify(userId: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.identify(userId, userProperties: properties)
+#if canImport(PostHog)
+        PostHogSDK.shared.identify(userId, userProperties: properties)
+#endif
     }
 
     func reset() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.reset()
+#if canImport(PostHog)
+        PostHogSDK.shared.reset()
+#endif
     }
 
     func flush() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.flush()
+#if canImport(PostHog)
+        PostHogSDK.shared.flush()
+#endif
     }
 }
 

@@ -1,8 +1,5 @@
 name: Release Pipeline
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       environment:

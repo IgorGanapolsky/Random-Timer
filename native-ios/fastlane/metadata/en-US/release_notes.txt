@@ -1,5 +1,4 @@
-v1.1.1 — Random Tactical Timer
-- Removed AD_ID permission for improved privacy
-- Range slider drag now pushes/pulls to maintain 30s minimum gap
-- Anonymous analytics integration
-- Stability improvements and bug fixes
+v1.2.0 — Random Tactical Timer
+- Refreshed App Store screenshots and listing metadata for clearer onboarding
+- Improved timer setup and alarm flow copy for faster first-session use
+- Stability fixes and performance improvements
