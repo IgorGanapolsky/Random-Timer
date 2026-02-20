@@ -106,15 +106,27 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
+# ── Portable sed -i (works on both GNU and BSD/macOS) ────────────────────────
+
+sed_inplace() {
+  if sed --version >/dev/null 2>&1; then
+    # GNU sed
+    sed -i "$@"
+  else
+    # BSD sed (macOS) — requires '' as backup extension
+    sed -i '' "$@"
+  fi
+}
+
 # ── Android: update build.gradle.kts ─────────────────────────────────────────
 
-sed -i "s/versionCode *= *[0-9]*/versionCode = ${NEW_VERSION_CODE}/" "$GRADLE_FILE"
-sed -i "s/versionName *= *\"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
+sed_inplace "s/versionCode *= *[0-9]*/versionCode = ${NEW_VERSION_CODE}/" "$GRADLE_FILE"
+sed_inplace "s/versionName *= *\"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
 echo -e "${GREEN}✓${RESET} Android build.gradle.kts updated"
 
 # ── iOS: update project.pbxproj (all build configurations) ──────────────────
 
-sed -i "s/MARKETING_VERSION = [0-9]*\.[0-9]*\.[0-9]*/MARKETING_VERSION = ${NEW_VERSION}/" "$PBXPROJ"
+sed_inplace "s/MARKETING_VERSION = [0-9]*\.[0-9]*\.[0-9]*/MARKETING_VERSION = ${NEW_VERSION}/" "$PBXPROJ"
 echo -e "${GREEN}✓${RESET} iOS project.pbxproj MARKETING_VERSION updated"
 
 # ── Android changelog placeholder ────────────────────────────────────────────
