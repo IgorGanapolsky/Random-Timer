@@ -206,29 +206,37 @@ python scripts/release_context.py \
 
 GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
 
-## Daily Blog Automation
+## Daily Growth Publishing
 
-Generate and publish one daily build-in-public post (DEV.to, LinkedIn, X, GitHub Pages) with a PaperBanana diagram and UTM-tracked install links:
+Automated daily blog + social distribution pipeline:
+
+- Generates a short SEO-friendly engineering post
+- Generates and scores keyword backlog using BID + AI-trap filtering
+- Builds a PaperBanana-style tech-flow diagram (SVG + Mermaid)
+- Publishes to DEV.to, LinkedIn, and X (when secrets are present)
+- Deploys blog pages to GitHub Pages
+- Collects engagement metrics, AI-bot traffic summaries, and app-download CTA tracking data
+- Emits AI-agent friendly outputs: `llms.txt`, `agents.md`, and markdown post endpoints
+
+Workflow: `.github/workflows/daily-growth-publishing.yml`  
+Script: `scripts/growth_content_pipeline.py`  
+Guide: `docs/DAILY_GROWTH_AUTOMATION.md`
+
+Local dry-run:
 
 ```bash
-python3 scripts/blog_ops.py --repo-root . daily \
-  --date "$(date -u +%Y-%m-%d)" \
-  --channels "github_pages,devto,linkedin,x" \
-  --publish-now
-```
-
-Dry run:
-
-```bash
-python3 scripts/blog_ops.py --repo-root . daily \
-  --date "$(date -u +%Y-%m-%d)" \
-  --channels "github_pages,devto,linkedin,x" \
+python3 scripts/growth_content_pipeline.py \
+  --repo-root . \
+  --output-root marketing \
+  run-daily \
   --dry-run
 ```
+## App Store Version Automation
 
-Workflow: `.github/workflows/daily-blog-publish.yml`  
-Runbook: `docs/marketing/blog-automation.md`
+To avoid uploading metadata/screenshots to non-editable live versions, release tooling now resolves
+an editable target App Store version before sync/submit steps.
 
+Details and usage: `docs/APP_STORE_VERSION_AUTOMATION.md`
 ## Architecture
 
 ### iOS

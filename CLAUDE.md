@@ -51,6 +51,31 @@ When comparing animations across platforms (iOS/Android):
 4. Compare ALL visual elements between platforms before editing
 5. Present timing comparison table BEFORE making edits
 
+## CI APK Artifact (MANDATORY)
+
+The CI workflow (`.github/workflows/ci.yml`) builds and uploads a debug APK on every PR and push to `develop`/`main`.
+
+- **Artifact name:** `app-debug` (~15 MB, contains `app-debug.apk`)
+- **Available as soon as the android job completes** — no merge needed
+- **Direct link format:** `https://github.com/IgorGanapolsky/Random-Timer/actions/runs/<RUN_ID>/artifacts/<ARTIFACT_ID>`
+
+**After creating any PR or pushing to develop/main, ALWAYS:**
+1. Poll the CI run via GitHub API for the `app-debug` artifact
+2. Provide the user with the direct download link
+3. NEVER tell the user to find the artifact themselves
+
+## PR Management & System Hygiene
+
+Use `/pr-management` skill for the full process. At minimum:
+1. Audit all open PRs with CI status
+2. Identify orphan branches
+3. Merge green PRs, delete stale branches
+4. Verify CI on `develop` and `main`
+5. Provide APK download link
+
+All GitHub API operations use `requests` + PAT when `gh` CLI is unavailable.
+See `.claude/memory/` for detailed process docs and lessons learned.
+
 ## PM Filesystem Convention
 
 PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `cat`, `grep` — no custom scripts needed. All `/pm:*` commands read the filesystem directly.

@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -27,6 +28,7 @@ import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -64,6 +66,7 @@ class TimerForegroundService : Service() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
     private var mediaSession: MediaSessionCompat? = null
+    private var screenOffReceiver: ScreenOffReceiver? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -153,6 +156,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         deactivateMediaSession()
+        unregisterScreenOffReceiver()
         serviceScope.cancel()
     }
 
@@ -161,6 +165,7 @@ class TimerForegroundService : Service() {
         // User swiped app away from recents - stop everything
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
         removeForegroundNotification()
@@ -255,6 +260,7 @@ class TimerForegroundService : Service() {
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -306,6 +312,7 @@ class TimerForegroundService : Service() {
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         stopTimer()
     }
 
@@ -317,12 +324,16 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         deactivateMediaSession()
+        unregisterScreenOffReceiver()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
-                _timerState.value = current.copy(
-                    isAlarmSilenced = true,
-                )
+                val silenced = current.copy(isAlarmSilenced = true)
+                _timerState.value = silenced
+                // Downgrade from alarm notification (fullScreenIntent, HIGH channel)
+                // to regular timer notification so the screen stays off after
+                // power-button press.
+                updateNotification(silenced)
             }
         }
     }
@@ -339,6 +350,7 @@ class TimerForegroundService : Service() {
         // This is intentionally separate from audio focus: we want the alarm to be controllable even
         // if the alarm audio failed to start (e.g. resource error, volume 0).
         activateMediaSession()
+        registerScreenOffReceiver()
         _timerState.value?.let { updateNotification(it) }
 
         // Play sound (always enabled, controlled by volume)
@@ -380,6 +392,7 @@ class TimerForegroundService : Service() {
                     abandonAudioFocus()
                     stopAlarmSound()
                     stopVibration()
+                    unregisterScreenOffReceiver()
                     storeReviewManager.recordCompletion()
 
                     val currentState = _timerState.value
@@ -471,6 +484,7 @@ class TimerForegroundService : Service() {
         val pendingIntent = createMainActivityIntent()
         val isPaused = state.status == TimerStatus.PAUSED
         val isComplete = state.status == TimerStatus.COMPLETE
+        val isSilencedAlarm = state.status == TimerStatus.ALARM && state.isAlarmSilenced
 
         // Show the configured range instead of countdown (since it's a random timer)
         val minFormatted = formatSecondsToReadable(state.config.minSeconds)
@@ -478,11 +492,12 @@ class TimerForegroundService : Service() {
         val rangeText = "$minFormatted - $maxFormatted"
 
         val title = when {
+            isSilencedAlarm -> "Alarm Silenced"
             isComplete -> "Timer Complete!"
             isPaused -> "Timer Paused"
             else -> "Timer Running"
         }
-        val text = if (isComplete) {
+        val text = if (isComplete || isSilencedAlarm) {
             "Went off after ${formatSecondsToReadable(state.targetDuration.inWholeSeconds.toInt())}"
         } else {
             "Goes off between $rangeText"
@@ -507,8 +522,8 @@ class TimerForegroundService : Service() {
         // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
         builder.setShowWhen(false)
 
-        if (isComplete) {
-            // Complete state: Stop and Reset only
+        if (isComplete || isSilencedAlarm) {
+            // Complete or silenced alarm: Stop and Reset only
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
@@ -583,7 +598,7 @@ class TimerForegroundService : Service() {
         }
 
         val notification =
-            if (state.status == TimerStatus.ALARM) {
+            if (state.shouldShowAlarmNotification) {
                 createAlarmNotification()
             } else {
                 createTimerNotification(state)
@@ -922,6 +937,26 @@ class TimerForegroundService : Service() {
         mediaSession?.isActive = false
         mediaSession?.release()
         mediaSession = null
+    }
+
+    // -- Screen Off (power button silence) --
+
+    private fun registerScreenOffReceiver() {
+        if (screenOffReceiver != null) return
+        val receiver = ScreenOffReceiver { silenceAlarm() }
+        registerReceiver(receiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        screenOffReceiver = receiver
+    }
+
+    private fun unregisterScreenOffReceiver() {
+        screenOffReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: IllegalArgumentException) {
+                // Already unregistered
+            }
+        }
+        screenOffReceiver = null
     }
 
     companion object {

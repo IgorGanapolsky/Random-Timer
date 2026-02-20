@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
@@ -72,6 +73,9 @@ fun RandomTimerNavHost(
             popEnterTransition = { fadeIn(animationSpec = tween(300)) },
             popExitTransition = { fadeOut(animationSpec = tween(300)) },
         ) {
+            LaunchedEffect(Unit) {
+                viewModel.trackScreen(AnalyticsScreens.TIMER_SETUP)
+            }
             TimerSetupScreen(
                 config = config,
                 onConfigChange = viewModel::updateConfig,
@@ -94,6 +98,9 @@ fun RandomTimerNavHost(
                     slideOutVertically(animationSpec = tween(300)) { it / 4 }
             },
         ) {
+            LaunchedEffect(Unit) {
+                viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)
+            }
             timerState?.let { state ->
                 ActiveTimerScreen(
                     state = state,

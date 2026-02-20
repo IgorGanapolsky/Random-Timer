@@ -148,6 +148,9 @@ struct TimerSetupScreen: View {
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
+        }
     }
 
     // Helper to update config with specific field changes
