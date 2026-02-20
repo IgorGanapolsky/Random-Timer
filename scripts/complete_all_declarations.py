@@ -3,14 +3,12 @@
 Uses JavaScript injection for textarea fields that aren't directly interactable."""
 
 import time
-from pathlib import Path
 from playwright.sync_api import sync_playwright
+from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
 DEV = "8239620436488925047"
 APP = "4976249162120849673"
 BASE = f"https://play.google.com/console/u/0/developers/{DEV}/app/{APP}"
-ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / ".artifacts" / "play_console"
-ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 FGS_JUSTIFICATION = (
     "Random Timer uses a foreground service to run countdown timers that must "
@@ -30,7 +28,7 @@ ALARM_JUSTIFICATION = (
 
 
 def screenshot(page, name):
-    path = ARTIFACTS_DIR / f"play_{name}.png"
+    path = screenshot_path(f"play_{name}.png")
     page.screenshot(path=path, full_page=True)
     print(f"  Screenshot: {path}")
 
