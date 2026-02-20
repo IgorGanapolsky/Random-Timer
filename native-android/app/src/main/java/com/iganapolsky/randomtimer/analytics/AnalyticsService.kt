@@ -95,6 +95,8 @@ object AnalyticsEvents {
     const val ALARM_TRIGGERED = "alarm_triggered"
     const val ALARM_DISMISSED = "alarm_dismissed"
     const val SETTINGS_CHANGED = "settings_changed"
+    const val REVIEW_PROMPT_REQUESTED = "review_prompt_requested"
+    const val WRITE_REVIEW_TAPPED = "write_review_tapped"
 }
 
 object AnalyticsScreens {
