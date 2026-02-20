@@ -14,6 +14,9 @@ struct RandomTimerApp: App {
             ContentView()
                 .environmentObject(timerManager)
                 .preferredColorScheme(.dark)
+                .onOpenURL { url in
+                    AnalyticsService.shared.trackDeepLink(url)
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {

@@ -126,6 +126,7 @@ final class TimerManager: ObservableObject {
             "max_duration": config.maxDuration,
             "target_duration": randomDuration,
         ])
+        AnalyticsService.shared.trackFirstTimerConfiguredIfNeeded()
 
         // Save state for recovery
         await storageService.saveTimerState(state)
@@ -566,6 +567,7 @@ final class TimerManager: ObservableObject {
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted)
+            AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {
