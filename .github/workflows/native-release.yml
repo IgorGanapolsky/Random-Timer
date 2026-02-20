@@ -782,3 +782,78 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json
+
+  tag-release:
+    needs: [verify-releases]
+    if: always() && needs.verify-releases.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from source
+        id: version
+        run: |
+          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
+          VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' native-android/app/build.gradle.kts | head -1)
+          TAG="v${VERSION_NAME}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved: $TAG (Android code=$VERSION_CODE)"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.version.outputs.tag }} already exists, skipping"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create git tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" \
+            -m "Release ${{ steps.version.outputs.tag }} (Android code=${{ steps.version.outputs.version_code }})"
+          git push origin "${{ steps.version.outputs.tag }}"
+          echo "✅ Created and pushed tag ${{ steps.version.outputs.tag }}"
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Read Android changelog if it exists
+          CHANGELOG_FILE="native-android/fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt"
+          NOTES=""
+          if [ -f "$CHANGELOG_FILE" ]; then
+            NOTES=$(cat "$CHANGELOG_FILE")
+          fi
+
+          # Read iOS release notes if available
+          IOS_NOTES_FILE="native-ios/fastlane/metadata/en-US/release_notes.txt"
+          if [ -f "$IOS_NOTES_FILE" ]; then
+            IOS_NOTES=$(cat "$IOS_NOTES_FILE")
+            if [ -n "$IOS_NOTES" ]; then
+              NOTES="${NOTES}
+
+          ### iOS
+          ${IOS_NOTES}"
+            fi
+          fi
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${{ steps.version.outputs.tag }}"
+          fi
+
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes "$NOTES"
+          echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
