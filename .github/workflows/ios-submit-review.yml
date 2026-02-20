@@ -144,12 +144,27 @@ jobs:
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
             exit 1
           fi
-          # App Store Connect API does not support creating submissions via POST.
-          # Use our ASC preflight script for hard validation, then submit via Fastlane deliver.
-          python scripts/asc_submit_for_review.py --version "$IOS_VERSION" --locale "$LOCALE" --dry-run
+          # Read current ASC state first so reruns are safe/idempotent.
+          STATE_JSON="$(python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --json)"
+          echo "ASC state (pre-submit): $STATE_JSON"
+          STATE="$(python - <<'PY'\nimport json,sys\nprint(json.loads(sys.argv[1])[\"state\"])\nPY\n\"$STATE_JSON\")"
 
-          cd native-ios
-          fastlane submit_review version:"$IOS_VERSION"
+          if [[ "$STATE" == "WAITING_FOR_REVIEW" || "$STATE" == "IN_REVIEW" || "$STATE" == "PENDING_DEVELOPER_RELEASE" || "$STATE" == "READY_FOR_SALE" ]]; then
+            echo "Already submitted ($STATE); skipping submit_review."
+          else
+            # Use our ASC preflight script for hard validation, then submit via Fastlane deliver.
+            python scripts/asc_submit_for_review.py --version "$IOS_VERSION" --locale "$LOCALE" --dry-run
+
+            cd native-ios
+            fastlane submit_review version:"$IOS_VERSION"
+            cd ..
+          fi
+
+          if [[ "$WAIT_FOR_STATE" == "true" ]]; then
+            python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --wait --timeout 1800 --poll-interval 20
+          else
+            python scripts/asc_poll_version_state.py --version "$IOS_VERSION"
+          fi
 
       - name: Upload version resolution report
         if: always()
