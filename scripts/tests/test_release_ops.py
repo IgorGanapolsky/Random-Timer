@@ -102,7 +102,7 @@ class ReleaseOpsTests(unittest.TestCase):
             repo = Path(td)
             (repo / "native-ios").mkdir(parents=True, exist_ok=True)
 
-            args = SimpleNamespace(version="1.1.1", upload_metadata=True, dry_run=True)
+            args = SimpleNamespace(version="1.1.1", upload_metadata=True, edit_live=False, dry_run=True)
             env = {
                 "APPSTORE_KEY_ID": "KEY",
                 "APPSTORE_ISSUER_ID": "ISSUER",
@@ -119,7 +119,7 @@ class ReleaseOpsTests(unittest.TestCase):
             repo = Path(td)
             (repo / "native-ios").mkdir(parents=True, exist_ok=True)
 
-            args = SimpleNamespace(version="1.1.1", upload_metadata=True, dry_run=True)
+            args = SimpleNamespace(version="1.1.1", upload_metadata=True, edit_live=False, dry_run=True)
             env = {
                 "APPSTORE_KEY_ID": "KEY",
                 "APPSTORE_ISSUER_ID": "ISSUER",
@@ -129,6 +129,30 @@ class ReleaseOpsTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True):
                 rc = release_ops.sync_listing(args, repo)
             self.assertEqual(rc, 2)
+
+    def test_sync_listing_passes_edit_live_flag_to_fastlane(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            (repo / "native-ios").mkdir(parents=True, exist_ok=True)
+
+            args = SimpleNamespace(version=None, upload_metadata=True, edit_live=True, dry_run=False)
+            env = {
+                "APPSTORE_KEY_ID": "KEY",
+                "APPSTORE_ISSUER_ID": "ISSUER",
+                "APPSTORE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+            }
+            called = {}
+
+            def fake_run(cmd, cwd, env=None):
+                called["cmd"] = list(cmd)
+                called["cwd"] = cwd
+                return subprocess.CompletedProcess(cmd, 0)
+
+            with patch.dict(os.environ, env, clear=False):
+                with patch.object(release_ops, "_run", side_effect=fake_run):
+                    rc = release_ops.sync_listing(args, repo)
+            self.assertEqual(rc, 0)
+            self.assertIn("edit_live:true", called["cmd"])
 
     def test_review_autopilot_runs_pipeline_and_appends_history(self):
         with tempfile.TemporaryDirectory() as td:

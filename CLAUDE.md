@@ -54,3 +54,25 @@ When comparing animations across platforms (iOS/Android):
 ## PM Filesystem Convention
 
 PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `cat`, `grep` — no custom scripts needed. All `/pm:*` commands read the filesystem directly.
+
+## PR Management & System Hygiene (Session Directive)
+
+- Role protocol: agent operates as CTO-level autonomous executor; do not hand off manual steps when automation is possible.
+- Session start checklist:
+  1. Read `CLAUDE.md` + `AGENTS.md`
+  2. Query available RAG/memory sources for relevant lessons
+  3. Review open PRs and branches
+  4. Check CI status
+- PR workflow:
+  1. Inspect all open PRs and classify merge readiness
+  2. Identify orphan branches (no associated PR) and classify merge/delete/stale
+  3. Merge all truly ready PRs only after explicit verification
+  4. Clean stale branches/files/log artifacts where safe
+  5. Verify CI health on `main` and run available dry-run readiness checks
+- Evidence standard:
+  - Never claim done without verification read-back
+  - Include concrete evidence (PR numbers, merge SHAs, branch counts, CI run URLs/statuses)
+  - If blocked, report exact blocker (e.g., conflicts, required review, failing/pending checks)
+- Honesty + learning:
+  - Report failures immediately
+  - Record mistakes/lessons in available project memory/RAG surfaces when integrated

@@ -206,6 +206,29 @@ python scripts/release_context.py \
 
 GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
 
+## Daily Blog Automation
+
+Generate and publish one daily build-in-public post (DEV.to, LinkedIn, X, GitHub Pages) with a PaperBanana diagram and UTM-tracked install links:
+
+```bash
+python3 scripts/blog_ops.py --repo-root . daily \
+  --date "$(date -u +%Y-%m-%d)" \
+  --channels "github_pages,devto,linkedin,x" \
+  --publish-now
+```
+
+Dry run:
+
+```bash
+python3 scripts/blog_ops.py --repo-root . daily \
+  --date "$(date -u +%Y-%m-%d)" \
+  --channels "github_pages,devto,linkedin,x" \
+  --dry-run
+```
+
+Workflow: `.github/workflows/daily-blog-publish.yml`  
+Runbook: `docs/marketing/blog-automation.md`
+
 ## Architecture
 
 ### iOS

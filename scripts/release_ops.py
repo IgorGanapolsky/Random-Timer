@@ -165,6 +165,7 @@ def sync_listing(args: argparse.Namespace, repo_root: Path) -> int:
     if args.version:
         cmd.append(f"version:{args.version}")
     cmd.append(f"upload_metadata:{str(args.upload_metadata).lower()}")
+    cmd.append(f"edit_live:{str(args.edit_live).lower()}")
 
     ios_dir = repo_root / "native-ios"
     _print_cmd(cmd, ios_dir)
@@ -321,6 +322,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync = sub.add_parser("sync_listing", help="Upload listing metadata/screenshots via fastlane")
     p_sync.add_argument("--version", help="iOS marketing version")
     p_sync.add_argument("--upload-metadata", action=argparse.BooleanOptionalAction, default=True)
+    p_sync.add_argument("--edit-live", action=argparse.BooleanOptionalAction, default=False)
     p_sync.add_argument("--dry-run", action="store_true")
 
     p_reviews = sub.add_parser("review_ops", help="Run App Store review SLA monitor")
