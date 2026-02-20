@@ -3,13 +3,14 @@
 
 import time
 from playwright.sync_api import sync_playwright
+from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
 DEV = "8239620436488925047"
 APP = "4976249162120849673"
 BASE = f"https://play.google.com/console/u/0/developers/{DEV}/app/{APP}"
 
 def screenshot(page, name):
-    path = f"/tmp/play_{name}.png"
+    path = screenshot_path(f"play_{name}.png")
     page.screenshot(path=path, full_page=True)
     print(f"  Screenshot: {path}")
 
@@ -125,7 +126,7 @@ def main():
         # Take a full page screenshot for analysis
         screenshot(page, "02_full_content")
         
-        print("\nDone with reconnaissance. Check /tmp/play_*.png")
+        print(f"\nDone with reconnaissance. Check {ARTIFACTS_DIR}")
 
 if __name__ == "__main__":
     main()

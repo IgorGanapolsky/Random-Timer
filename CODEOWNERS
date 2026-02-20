@@ -1,0 +1,11 @@
+# Default owner for everything
+* @IgorGanapolsky
+
+# Android
+native-android/ @IgorGanapolsky
+
+# iOS
+native-ios/ @IgorGanapolsky
+
+# CI/CD
+.github/ @IgorGanapolsky

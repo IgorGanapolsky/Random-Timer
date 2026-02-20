@@ -1,11 +1,13 @@
 package com.iganapolsky.randomtimer.analytics
 
 import android.app.Application
+import com.iganapolsky.randomtimer.BuildConfig
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.UUID
 
 @Singleton
 class AnalyticsService @Inject constructor() {
@@ -15,9 +17,8 @@ class AnalyticsService @Inject constructor() {
     fun initialize(application: Application) {
         if (initialized) return
 
-        val apiKey = "phc_REPLACE_WITH_YOUR_KEY" // TODO: Replace with actual PostHog API key
-        if (apiKey.startsWith("phc_REPLACE")) {
-            // Skip initialization if no real API key
+        val apiKey = BuildConfig.POSTHOG_API_KEY
+        if (apiKey.isBlank()) {
             return
         }
 
@@ -31,6 +32,13 @@ class AnalyticsService @Inject constructor() {
         }
 
         PostHogAndroid.setup(application, config)
+        identify(
+            userId = getOrCreateDistinctId(application),
+            properties = mapOf(
+                "platform" to "android",
+                "app_version" to BuildConfig.VERSION_NAME,
+            ),
+        )
         initialized = true
     }
 
@@ -58,6 +66,22 @@ class AnalyticsService @Inject constructor() {
         if (!initialized) return
         PostHog.flush()
     }
+
+    private fun getOrCreateDistinctId(application: Application): String {
+        val prefs = application.getSharedPreferences(PREFS_NAME, Application.MODE_PRIVATE)
+        val existing = prefs.getString(KEY_DISTINCT_ID, null)
+        if (!existing.isNullOrBlank()) {
+            return existing
+        }
+        val generated = UUID.randomUUID().toString()
+        prefs.edit().putString(KEY_DISTINCT_ID, generated).apply()
+        return generated
+    }
+
+    companion object {
+        private const val PREFS_NAME = "random_timer_analytics"
+        private const val KEY_DISTINCT_ID = "posthog_distinct_id"
+    }
 }
 
 // Event names for consistency
@@ -71,6 +95,8 @@ object AnalyticsEvents {
     const val ALARM_TRIGGERED = "alarm_triggered"
     const val ALARM_DISMISSED = "alarm_dismissed"
     const val SETTINGS_CHANGED = "settings_changed"
+    const val REVIEW_PROMPT_REQUESTED = "review_prompt_requested"
+    const val WRITE_REVIEW_TAPPED = "write_review_tapped"
 }
 
 object AnalyticsScreens {

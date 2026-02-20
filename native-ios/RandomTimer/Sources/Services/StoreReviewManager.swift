@@ -24,7 +24,9 @@ final class StoreReviewManager {
     }
 
     private func requestReview() {
+        AnalyticsService.shared.track(AnalyticsEvents.reviewPromptRequested)
         try? AppStore.requestReview(in: currentWindowScene)
+        AnalyticsService.shared.track(AnalyticsEvents.writeReviewTapped)
 
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastReviewTimestampKey)
         UserDefaults.standard.set(appVersion, forKey: lastReviewVersionKey)

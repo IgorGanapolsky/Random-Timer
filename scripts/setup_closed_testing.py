@@ -3,6 +3,7 @@
 
 import time
 from playwright.sync_api import sync_playwright
+from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
 DEV = "8239620436488925047"
 APP = "4976249162120849673"
@@ -14,7 +15,7 @@ AAB_PATH = "/Users/ganapolsky_i/workspace/git/igor/Random-Timer/native-android/a
 
 
 def screenshot(page, name):
-    path = f"/tmp/play_{name}.png"
+    path = screenshot_path(f"play_{name}.png")
     page.screenshot(path=path, full_page=True)
     print(f"  Screenshot: {path}")
 
@@ -275,7 +276,7 @@ def main():
             print("  Closed testing track is set up")
 
         print("\n=== DONE ===")
-        print("Check /tmp/play_closed_*.png for screenshots of each step.")
+        print(f"Check {ARTIFACTS_DIR} for screenshots of each step.")
         print("Browser left open for manual verification.")
 
 

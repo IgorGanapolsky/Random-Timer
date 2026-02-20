@@ -15,7 +15,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
@@ -35,11 +37,11 @@ fun RandomTimerNavHost(
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val activity = LocalContext.current as? Activity
 
     // Auto-navigate based on timer state
-    LaunchedEffect(timerState) {
-        val currentRoute = navController.currentDestination?.route
+    LaunchedEffect(timerState, currentRoute) {
         if (timerState != null) {
             // Timer is running - go to active timer screen
             if (currentRoute != Screen.ActiveTimer.route) {
@@ -71,6 +73,9 @@ fun RandomTimerNavHost(
             popEnterTransition = { fadeIn(animationSpec = tween(300)) },
             popExitTransition = { fadeOut(animationSpec = tween(300)) },
         ) {
+            LaunchedEffect(Unit) {
+                viewModel.trackScreen(AnalyticsScreens.TIMER_SETUP)
+            }
             TimerSetupScreen(
                 config = config,
                 onConfigChange = viewModel::updateConfig,
@@ -93,6 +98,9 @@ fun RandomTimerNavHost(
                     slideOutVertically(animationSpec = tween(300)) { it / 4 }
             },
         ) {
+            LaunchedEffect(Unit) {
+                viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)
+            }
             timerState?.let { state ->
                 ActiveTimerScreen(
                     state = state,

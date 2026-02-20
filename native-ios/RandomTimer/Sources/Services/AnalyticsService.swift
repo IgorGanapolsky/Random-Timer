@@ -1,16 +1,23 @@
 import Foundation
+#if canImport(PostHog)
+import PostHog
+#endif
 
 /// Analytics Service for PostHog integration
-/// To enable: Add PostHog Swift SDK via SPM and set your API key below
+/// To enable: Add PostHog Swift SDK via SPM (https://github.com/PostHog/posthog-ios)
 @MainActor
 final class AnalyticsService {
     static let shared = AnalyticsService()
 
     private var initialized = false
+    private let distinctIdDefaultsKey = "posthog_distinct_id"
 
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
         Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
+    }
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
     private let host = "https://us.i.posthog.com"
 
@@ -23,37 +30,66 @@ final class AnalyticsService {
             return
         }
 
-        // TODO: Initialize PostHog when SDK is added
-        // PostHogSDK.shared.setup(PostHogConfig(apiKey: apiKey, host: host))
+#if canImport(PostHog)
+        let config = PostHogConfig(apiKey: apiKey, host: host)
+        config.captureApplicationLifecycleEvents = true
+        config.captureScreenViews = false
+        PostHogSDK.shared.setup(config)
+#endif
+        let distinctId = getOrCreateDistinctId()
+        identify(userId: distinctId, properties: [
+            "platform": "ios",
+            "app_version": appVersion,
+        ])
         initialized = true
         print("[Analytics] PostHog initialized")
     }
 
     func track(_ event: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.capture(event, properties: properties)
-        print("[Analytics] Track: \(event)")
+#if canImport(PostHog)
+        PostHogSDK.shared.capture(event, properties: properties)
+#endif
     }
 
     func screen(_ screenName: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.screen(screenName, properties: properties)
-        print("[Analytics] Screen: \(screenName)")
+#if canImport(PostHog)
+        PostHogSDK.shared.screen(screenName, properties: properties)
+#endif
     }
 
     func identify(userId: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.identify(userId, userProperties: properties)
+#if canImport(PostHog)
+        PostHogSDK.shared.identify(userId, userProperties: properties)
+#endif
     }
 
     func reset() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.reset()
+#if canImport(PostHog)
+        PostHogSDK.shared.reset()
+#endif
     }
 
     func flush() {
         guard initialized else { return }
-        // TODO: PostHogSDK.shared.flush()
+#if canImport(PostHog)
+        PostHogSDK.shared.flush()
+#endif
+    }
+
+    private func getOrCreateDistinctId() -> String {
+        let defaults = UserDefaults.standard
+        if let existing = defaults.string(forKey: distinctIdDefaultsKey),
+           existing.isEmpty == false {
+            return existing
+        }
+
+        let generated = UUID().uuidString
+        defaults.set(generated, forKey: distinctIdDefaultsKey)
+        return generated
     }
 }
 
@@ -68,6 +104,8 @@ enum AnalyticsEvents {
     static let alarmTriggered = "alarm_triggered"
     static let alarmDismissed = "alarm_dismissed"
     static let settingsChanged = "settings_changed"
+    static let reviewPromptRequested = "review_prompt_requested"
+    static let writeReviewTapped = "write_review_tapped"
 }
 
 enum AnalyticsScreens {

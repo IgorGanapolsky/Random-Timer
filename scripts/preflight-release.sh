@@ -252,12 +252,11 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
     OTHER_CLASS=0
 
     for shot in "${IOS_SCREENSHOTS[@]}"; do
-      if ! command -v sips >/dev/null 2>&1; then
-        err "sips is required to validate iOS screenshot dimensions"
-        break
+      SIZE=$(python3 "$PROJECT_ROOT/scripts/png_dimensions.py" "$shot" 2>/dev/null || echo "")
+      if [[ -z "$SIZE" ]]; then
+        err "iOS screenshots: could not read dimensions for $shot"
+        continue
       fi
-
-      SIZE=$(sips -g pixelWidth -g pixelHeight "$shot" 2>/dev/null | awk '/pixelWidth/{w=$2}/pixelHeight/{h=$2}END{print w"x"h}')
       case "$SIZE" in
         1320x2868|2868x1320|1290x2796|2796x1290|1284x2778|2778x1284|1242x2688|2688x1242)
           IPHONE_CLASS=$((IPHONE_CLASS + 1))
@@ -278,6 +277,20 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
     fi
     if (( IPAD_CLASS < 3 )); then
       err "iOS screenshots: need >=3 iPad 13\" screenshots (found $IPAD_CLASS)"
+    fi
+
+    # Guard against accidental duplicate uploads (same image bytes under different names).
+    if command -v shasum >/dev/null 2>&1; then
+      DUP_HASHES=$(shasum -a 256 "${IOS_SCREENSHOTS[@]}" | awk '{print $1}' | sort | uniq -d)
+      if [[ -n "$DUP_HASHES" ]]; then
+        while IFS= read -r dup_hash; do
+          [[ -z "$dup_hash" ]] && continue
+          DUP_FILES=$(shasum -a 256 "${IOS_SCREENSHOTS[@]}" | awk -v h="$dup_hash" '$1==h {print $2}' | xargs -n1 basename | paste -sd ', ' -)
+          err "iOS screenshots: duplicate image bytes detected ($DUP_FILES)"
+        done <<< "$DUP_HASHES"
+      fi
+    else
+      err "shasum is required to detect duplicate iOS screenshots"
     fi
 
     for required_ipad in 5_ipad_setup.png 6_ipad_running.png 7_ipad_stopped.png; do

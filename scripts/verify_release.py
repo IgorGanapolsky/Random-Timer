@@ -447,10 +447,11 @@ def print_results(results: list[dict]):
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int) -> dict:
+def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
+    terminal_statuses = terminal_statuses or {"ERROR"}
 
     while True:
         attempt += 1
@@ -459,7 +460,7 @@ def poll_until_done(verify_fn, poll_interval: int, timeout: int) -> dict:
         if result["passed"]:
             return result
 
-        if result["status"] == "ERROR":
+        if result["status"] in terminal_statuses:
             return result
 
         remaining = deadline - time.time()
@@ -518,6 +519,14 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_POLL_INTERVAL,
         help=f"Seconds between polls in --wait mode (default: {DEFAULT_POLL_INTERVAL})",
     )
+    parser.add_argument(
+        "--require-appstore-submission",
+        action="store_true",
+        help=(
+            "Fail verification if the App Store version is still NOT_SUBMITTED. "
+            "Use this after a submit-for-review automation step."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -547,6 +556,7 @@ def main():
                 lambda: gp.verify(args.track, args.version_code),
                 args.poll_interval,
                 args.timeout,
+                terminal_statuses={"ERROR"},
             )
         else:
             result = gp.verify(args.track, args.version_code)
@@ -568,6 +578,9 @@ def main():
                 lambda: asc.verify(args.version),
                 args.poll_interval,
                 args.timeout,
+                # For iOS, NOT_FOUND usually means the version is wrong or the build
+                # was never uploaded; fail fast instead of waiting out the timeout.
+                terminal_statuses={"ERROR", "NOT_FOUND"},
             )
         else:
             result = asc.verify(args.version)
@@ -579,8 +592,17 @@ def main():
             **result,
         })
 
-        # Also check App Store version state (non-blocking)
+        # Also check App Store version state
         asv = asc.verify_app_store_version(args.version)
+        if args.require_appstore_submission and asv.get("status") == "NOT_SUBMITTED":
+            asv = {
+                "passed": False,
+                "status": "NOT_SUBMITTED",
+                "details": (
+                    f"App Store version '{args.version}' is still NOT_SUBMITTED "
+                    "(expected a submitted state like WAITING_FOR_REVIEW)"
+                ),
+            }
         results.append({
             "platform": "iOS",
             "track": "App Store",

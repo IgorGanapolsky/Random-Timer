@@ -1,8 +1,8 @@
 repository:
-  name: RandomTimer-Native
-  description: Secure password management app built with React Native and Expo
-  homepage: https://github.com/IgorGanapolsky/RandomTimer-Native
-  topics: react-native, expo, password-manager, security, mobile-app
+  name: Random-Timer
+  description: Native Android (Kotlin/Compose) + iOS (Swift/SwiftUI) timer app
+  homepage: https://github.com/IgorGanapolsky/Random-Timer
+  topics: android, ios, kotlin, swift, jetpack-compose, swiftui, timer, mobile-app
   private: false
   has_issues: true
   has_projects: true
@@ -22,20 +22,15 @@ branches:
       required_status_checks:
         strict: true
         contexts:
-          - "validate"
-          - "security"
-          - "build"
-          - "release"
+          - "SonarCloud Code Analysis"
+          - "GitGuardian Security Checks"
       enforce_admins: true
       required_pull_request_reviews:
-        required_approving_review_count: 2
+        required_approving_review_count: 1
         dismiss_stale_reviews: true
-        require_code_owner_reviews: true
-      restrictions:
-        apps: []
-        users: []
-        teams: []
-      required_linear_history: true
+        require_code_owner_reviews: false
+        require_last_push_approval: true
+      restrictions: null
       allow_force_pushes: false
       allow_deletions: false
 
@@ -44,13 +39,13 @@ branches:
       required_status_checks:
         strict: true
         contexts:
-          - "validate"
-          - "security"
-          - "build"
+          - "SonarCloud Code Analysis"
+          - "GitGuardian Security Checks"
       enforce_admins: true
       required_pull_request_reviews:
         required_approving_review_count: 1
         dismiss_stale_reviews: true
+        require_code_owner_reviews: false
       restrictions: null
 
 labels:
@@ -72,12 +67,6 @@ labels:
   - name: "help wanted"
     color: "008672"
     description: "Extra attention is needed"
-  - name: "invalid"
-    color: "e4e669"
-    description: "This doesn't seem right"
-  - name: "question"
-    color: "d876e3"
-    description: "Further information is requested"
   - name: "security"
     color: "d73a4a"
     description: "Security related issue or update"

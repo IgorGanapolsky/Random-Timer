@@ -1,0 +1,130 @@
+name: iOS Metadata Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "iOS marketing version to update (e.g. 1.1.1). Leave blank to auto-detect."
+        required: false
+        type: string
+
+jobs:
+  sync-metadata:
+    runs-on: macos-15
+    environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight release checks (iOS listing assets)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane (Homebrew)
+        run: |
+          brew update
+          brew install fastlane
+          fastlane --version
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyjwt cryptography requests
+
+      - name: Resolve iOS version
+        id: version
+        run: |
+          VERSION_INPUT="${{ github.event.inputs.version }}"
+          if [ -n "$VERSION_INPUT" ]; then
+            VERSION="$VERSION_INPUT"
+          else
+            VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oE '[0-9]+(\.[0-9]+){1,2}')
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "Failed to resolve iOS version" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using iOS version: $VERSION"
+
+      - name: Write App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
+
+      - name: Resolve editable App Store version
+        id: asc_version
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_resolve_version.py \
+            --preferred-version "${{ steps.version.outputs.version }}" \
+            --create-if-needed \
+            --auto-next-patch \
+            --json-out /tmp/asc_version.json
+          SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
+          echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using editable App Store version: $SELECTED_VERSION"
+
+      - name: Reset existing screenshots for locale
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_reset_screenshots.py \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --locale "en-US"
+
+      - name: Upload iOS metadata + screenshots
+        env:
+          CI: "true"
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
+        working-directory: native-ios
+
+      - name: Verify App Store listing readiness
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_verify_ready.py \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --skip-build-check \
+            --json /tmp/asc_ready.json
+
+      - name: Upload readiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-ready-report
+          path: /tmp/asc_ready.json
+
+      - name: Upload version resolution report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-version-resolution
+          path: /tmp/asc_version.json
+
+      - name: Cleanup secrets
+        if: always()
+        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json
