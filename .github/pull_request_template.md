@@ -15,5 +15,6 @@
 - [ ] Manual testing on device/simulator
 - [ ] No regressions in existing functionality
 
-## Screenshots
-<!-- Before/after if UI changes -->
+## AI Review
+This PR will be automatically reviewed and approved by Claude AI.
+Auto-merge is enabled when all CI checks pass.

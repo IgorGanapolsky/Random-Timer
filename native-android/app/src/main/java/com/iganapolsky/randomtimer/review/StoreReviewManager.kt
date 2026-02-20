@@ -4,13 +4,16 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class StoreReviewManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val analyticsService: AnalyticsService
 ) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("review_prefs", Context.MODE_PRIVATE)
@@ -40,11 +43,13 @@ class StoreReviewManager @Inject constructor(
         if (!hasPendingReview()) return
 
         prefs.edit().putBoolean(KEY_PENDING_REVIEW, false).apply()
+        analyticsService.track(AnalyticsEvents.REVIEW_PROMPT_REQUESTED)
 
         val reviewManager = ReviewManagerFactory.create(context)
         val request = reviewManager.requestReviewFlow()
         request.addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                analyticsService.track(AnalyticsEvents.WRITE_REVIEW_TAPPED)
                 reviewManager.launchReviewFlow(activity, task.result)
                 prefs.edit()
                     .putLong(KEY_LAST_REVIEW_TIMESTAMP, System.currentTimeMillis())
