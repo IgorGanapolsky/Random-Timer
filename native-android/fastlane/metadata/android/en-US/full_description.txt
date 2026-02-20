@@ -1,13 +1,26 @@
-Random Tactical Timer picks a random moment within your chosen time range to fire an alarm. Set a minimum and maximum duration, press start, and go about your activity. You never know exactly when it will go off — keeping you sharp, alert, and engaged.
+Stop training in predictable patterns.
 
-Whether you need a random interval timer for HIIT training, a surprise countdown for party games like Musical Chairs or Hot Potato, or an unpredictable break timer for study sessions — this app delivers.
+Real fights aren't timed in neat 3-minute rounds. They explode without warning.
 
-WHO IT'S FOR:
-- Athletes & coaches doing interval training, Tabata, or reaction drills
-- Gamers & party hosts running games that need surprise timing
-- Students & professionals using randomized focus/break cycles
-- Meditators wanting organic, non-predictable session transitions
-- Anyone who needs a timer that doesn't let them anticipate the alarm
+Random Tactical Timer fires at a random moment within your chosen time range — eliminating anticipation so you train reaction under real stress. This is stress inoculation: the same method used by military, law enforcement, and combat athletes to build composure under fire.
+
+Set your range. Press start. React when it hits. You never know when.
+
+PERFECT FOR:
+- Boxing reaction drills
+- BJJ scramble rounds and pattern interrupts
+- Wall work and clinch training
+- Self-defense scenario drills
+- Law enforcement defensive tactics
+- Stress inoculation workouts
+- HIIT and combat conditioning
+
+WHY RANDOM TIMING?
+Predictable timers create predictable brains. This app forces you to:
+- React without anticipation
+- Stay mentally present
+- Adapt under uncertainty
+- Build composure under stress
 
 KEY FEATURES:
 - Custom time ranges — set your minimum and maximum duration
@@ -27,16 +40,4 @@ HOW IT WORKS:
 4. When time's up, a full-screen alarm fires with sound and vibration
 5. Optionally loop to automatically start a new random interval
 
-USE CASES:
-- HIIT & Tabata workouts with unpredictable rest periods
-- Reaction time training for martial arts, boxing, and sports
-- Musical Chairs, Hot Potato, and other party games
-- Pomodoro-style study sessions with randomized breaks
-- Meditation with natural, non-rhythmic interval bells
-- Cooking timers when approximate timing is fine
-- Military and tactical training drills
-
-DESIGNED FOR SIMPLICITY:
-Dark interface. No clutter. No ads. No tracking. No subscriptions. Just set your range and go.
-
-Built for athletes, coaches, gamers, students, and anyone who needs a timer that keeps them on their toes.
+Train for chaos. Not comfort.

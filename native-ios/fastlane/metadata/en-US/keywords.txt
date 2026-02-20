@@ -1,1 +1,1 @@
-drill,tabata,stopwatch,countdown,meditation,focus,reaction,party,game,training,exercise,fitness,bell
+combat timer,reaction drill,boxing,bjj,mma,stress training,tactical,military,self defense,sparring
