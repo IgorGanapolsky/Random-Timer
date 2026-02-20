@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: review-velocity
@@ -51,7 +52,10 @@ jobs:
           fi
 
           git commit -m "chore(reviews): weekly velocity snapshot"
-          git push
+          BRANCH="auto/review-velocity-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(reviews): weekly review velocity snapshot" --body "Automated weekly review velocity tracking snapshot" --label "automation" || true
 
       - name: Upload velocity report
         if: always()
