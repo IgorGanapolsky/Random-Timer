@@ -328,9 +328,12 @@ class TimerForegroundService : Service() {
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
-                _timerState.value = current.copy(
-                    isAlarmSilenced = true,
-                )
+                val silenced = current.copy(isAlarmSilenced = true)
+                _timerState.value = silenced
+                // Downgrade from alarm notification (fullScreenIntent, HIGH channel)
+                // to regular timer notification so the screen stays off after
+                // power-button press.
+                updateNotification(silenced)
             }
         }
     }
@@ -481,6 +484,7 @@ class TimerForegroundService : Service() {
         val pendingIntent = createMainActivityIntent()
         val isPaused = state.status == TimerStatus.PAUSED
         val isComplete = state.status == TimerStatus.COMPLETE
+        val isSilencedAlarm = state.status == TimerStatus.ALARM && state.isAlarmSilenced
 
         // Show the configured range instead of countdown (since it's a random timer)
         val minFormatted = formatSecondsToReadable(state.config.minSeconds)
@@ -488,11 +492,12 @@ class TimerForegroundService : Service() {
         val rangeText = "$minFormatted - $maxFormatted"
 
         val title = when {
+            isSilencedAlarm -> "Alarm Silenced"
             isComplete -> "Timer Complete!"
             isPaused -> "Timer Paused"
             else -> "Timer Running"
         }
-        val text = if (isComplete) {
+        val text = if (isComplete || isSilencedAlarm) {
             "Went off after ${formatSecondsToReadable(state.targetDuration.inWholeSeconds.toInt())}"
         } else {
             "Goes off between $rangeText"
@@ -517,8 +522,8 @@ class TimerForegroundService : Service() {
         // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
         builder.setShowWhen(false)
 
-        if (isComplete) {
-            // Complete state: Stop and Reset only
+        if (isComplete || isSilencedAlarm) {
+            // Complete or silenced alarm: Stop and Reset only
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
@@ -593,7 +598,7 @@ class TimerForegroundService : Service() {
         }
 
         val notification =
-            if (state.status == TimerStatus.ALARM) {
+            if (state.shouldShowAlarmNotification) {
                 createAlarmNotification()
             } else {
                 createTimerNotification(state)
