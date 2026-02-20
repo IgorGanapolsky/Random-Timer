@@ -132,9 +132,7 @@ platform :ios do
       app_identifier: "com.igorganapolsky.randomtimer",
       skip_binary_upload: true,
       skip_screenshots: false,
-      # Keep this lane screenshot-only. Metadata updates on live versions can trigger
-      # a fastlane queue_worker crash in CI ("Enqueue Array instead of NilClass").
-      skip_metadata: true,
+      skip_metadata: false,
       overwrite_screenshots: true,
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
