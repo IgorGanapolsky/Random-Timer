@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -27,6 +28,7 @@ import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -64,6 +66,7 @@ class TimerForegroundService : Service() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
     private var mediaSession: MediaSessionCompat? = null
+    private var screenOffReceiver: ScreenOffReceiver? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -153,6 +156,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         deactivateMediaSession()
+        unregisterScreenOffReceiver()
         serviceScope.cancel()
     }
 
@@ -161,6 +165,7 @@ class TimerForegroundService : Service() {
         // User swiped app away from recents - stop everything
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
         removeForegroundNotification()
@@ -255,6 +260,7 @@ class TimerForegroundService : Service() {
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -306,6 +312,7 @@ class TimerForegroundService : Service() {
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
         stopTimer()
     }
 
@@ -317,6 +324,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         deactivateMediaSession()
+        unregisterScreenOffReceiver()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
@@ -339,6 +347,7 @@ class TimerForegroundService : Service() {
         // This is intentionally separate from audio focus: we want the alarm to be controllable even
         // if the alarm audio failed to start (e.g. resource error, volume 0).
         activateMediaSession()
+        registerScreenOffReceiver()
         _timerState.value?.let { updateNotification(it) }
 
         // Play sound (always enabled, controlled by volume)
@@ -380,6 +389,7 @@ class TimerForegroundService : Service() {
                     abandonAudioFocus()
                     stopAlarmSound()
                     stopVibration()
+                    unregisterScreenOffReceiver()
                     storeReviewManager.recordCompletion()
 
                     val currentState = _timerState.value
@@ -922,6 +932,26 @@ class TimerForegroundService : Service() {
         mediaSession?.isActive = false
         mediaSession?.release()
         mediaSession = null
+    }
+
+    // -- Screen Off (power button silence) --
+
+    private fun registerScreenOffReceiver() {
+        if (screenOffReceiver != null) return
+        val receiver = ScreenOffReceiver { silenceAlarm() }
+        registerReceiver(receiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        screenOffReceiver = receiver
+    }
+
+    private fun unregisterScreenOffReceiver() {
+        screenOffReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: IllegalArgumentException) {
+                // Already unregistered
+            }
+        }
+        screenOffReceiver = null
     }
 
     companion object {
