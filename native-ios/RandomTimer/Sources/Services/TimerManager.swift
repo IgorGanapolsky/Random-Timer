@@ -189,12 +189,14 @@ final class TimerManager: ObservableObject {
         await startTimer()
     }
 
-    /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume
+    /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
+    /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
+    /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
         guard let state = timerState, state.status == .alarm else { return }
-        // Deactivate audio session so iOS won't auto-resume playback on foreground
-        notificationService.stopAlarmSound()
-        notificationService.stopVibration()
+        // Silence alarm — stops sound/vibration AND marks as silenced so
+        // handleForeground() won't restart the alarm when the user returns.
+        silenceAlarm()
     }
 
     /// Check for pending actions from Live Activity intents (via shared App Group UserDefaults)
