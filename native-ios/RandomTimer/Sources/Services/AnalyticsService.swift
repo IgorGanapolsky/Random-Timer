@@ -83,6 +83,8 @@ enum AnalyticsEvents {
     static let alarmTriggered = "alarm_triggered"
     static let alarmDismissed = "alarm_dismissed"
     static let settingsChanged = "settings_changed"
+    static let reviewPromptRequested = "review_prompt_requested"
+    static let writeReviewTapped = "write_review_tapped"
 }
 
 enum AnalyticsScreens {

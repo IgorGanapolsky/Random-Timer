@@ -562,7 +562,11 @@ final class TimerManager: ObservableObject {
             stopCountdown()
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
-            StoreReviewManager.shared.recordCompletion()
+            StoreReviewManager.shared.recordCompletion(
+                sessionDuration: state.targetDuration,
+                repeatEnabled: state.config.repeatEnabled,
+                alarmSilenced: isAlarmSilenced
+            )
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted)
 
             // Auto-repeat if enabled

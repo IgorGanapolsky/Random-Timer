@@ -127,4 +127,28 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
         XCTAssertTrue(stopButton.isHittable)
     }
+
+    func testStopReturnsToInteractiveSetupScreen() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let startButton = app.buttons["Start Timer"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(startButton.isHittable)
+        startButton.tap()
+
+        let stopButton = app.buttons["Stop"]
+        XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(stopButton.isHittable)
+        stopButton.tap()
+
+        let returnedStartButton = app.buttons["Start Timer"]
+        XCTAssertTrue(returnedStartButton.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(returnedStartButton.isHittable)
+        XCTAssertFalse(app.staticTexts["Timer running..."].exists)
+
+        // Validate setup screen is fully interactive by starting again.
+        returnedStartButton.tap()
+        XCTAssertTrue(app.buttons["Stop"].waitForExistence(timeout: 2.0))
+    }
 }

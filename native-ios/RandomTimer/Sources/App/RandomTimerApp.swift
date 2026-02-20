@@ -43,7 +43,10 @@ struct ContentView: View {
                     TimerSetupScreen()
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: timerManager.timerState != nil)
+            // Avoid cross-fade artifacts when rapidly toggling active/setup states.
+            // We intentionally disable implicit animation here so the setup screen
+            // is always restored at full opacity after Stop.
+            .id(timerManager.timerState != nil ? "active-screen" : "setup-screen")
         }
         .onAppear {
 #if DEBUG

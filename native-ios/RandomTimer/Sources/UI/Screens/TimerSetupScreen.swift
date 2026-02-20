@@ -3,6 +3,7 @@ import SwiftUI
 /// Initial screen for configuring and starting a timer
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
+    @Environment(\.openURL) private var openURL
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
@@ -128,6 +129,18 @@ struct TimerSetupScreen: View {
                         await timerManager.startTimer()
                     }
                 }
+                SecondaryButton(title: "Write a Review") {
+                    guard let reviewURL = StoreReviewManager.writeReviewURL else { return }
+                    AnalyticsService.shared.track(AnalyticsEvents.writeReviewTapped)
+                    openURL(reviewURL)
+                }
+                .padding(.top, 8)
+
+                Text("Enjoying the app? A review helps us improve and reach more users.")
+                    .font(.footnote)
+                    .foregroundColor(.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .multilineTextAlignment(.center)
                 .padding(.bottom, 32)
             }
             .padding(.horizontal, 24)

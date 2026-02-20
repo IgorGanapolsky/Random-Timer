@@ -123,10 +123,11 @@ platform :ios do
       )
     end
 
-    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
+    edit_live = options[:edit_live] == true
+    version = edit_live ? nil : (options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer"))
     build_number = options[:build_number]
 
-    if (build_number.nil? || build_number.to_s.strip.empty?) && defined?(api_key)
+    if !edit_live && (build_number.nil? || build_number.to_s.strip.empty?) && defined?(api_key)
       begin
         build_number = latest_testflight_build_number(
           api_key: api_key,
@@ -138,21 +139,28 @@ platform :ios do
       end
     end
 
+    upload_metadata = options.key?(:upload_metadata) ? options[:upload_metadata] : true
+
     deliver(
       app_identifier: "com.igorganapolsky.randomtimer",
       app_version: version,
       build_number: (build_number.to_s.strip.empty? ? nil : build_number.to_s),
       skip_binary_upload: true,
       skip_screenshots: false,
-      # Keep this lane screenshot-only. Metadata updates on live versions can trigger
-      # a fastlane queue_worker crash in CI ("Enqueue Array instead of NilClass").
-      skip_metadata: true,
+      # Keep metadata enabled by default so listings stay complete.
+      # Call with upload_metadata:false only when deliberately syncing screenshots-only.
+      skip_metadata: !upload_metadata,
       overwrite_screenshots: true,
+      # Use canonical Connect API category IDs to avoid deprecated mappings.
+      primary_category: "HEALTH_AND_FITNESS",
+      secondary_category: "UTILITIES",
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
       force: true,
+      edit_live: edit_live,
+      use_live_version: edit_live,
       api_key: defined?(api_key) ? api_key : nil
     )
 	  end
