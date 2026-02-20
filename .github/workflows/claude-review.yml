@@ -65,7 +65,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Auto-approve PR
-        uses: hmarr/auto-approve-action@v4
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
         with:
           review-message: "Auto-approved: Claude AI review passed, all CI checks green."
 

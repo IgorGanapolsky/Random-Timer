@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import datetime as dt
-import hashlib
+import zlib
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -132,7 +132,7 @@ Would love feedback from this community!""",
         "body": template["body"],
         "status": "draft",
         "created": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "id": hashlib.md5(f"{target['subreddit']}-{dt.date.today()}".encode()).hexdigest()[:8],
+        "id": format(zlib.crc32(f"{target['subreddit']}-{dt.date.today()}".encode()) & 0xFFFFFFFF, "08x"),
     }
 
 

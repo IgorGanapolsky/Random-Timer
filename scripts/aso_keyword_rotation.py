@@ -13,8 +13,8 @@ from __future__ import annotations
 import argparse
 import json
 import datetime as dt
-import random
 import shutil
+import zlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -60,15 +60,20 @@ def simulate_ranking(keyword: str, bid_score: int) -> Dict[str, Any]:
     """Simulate keyword ranking based on BID score.
 
     In production, replace with AppFollow/Sensor Tower/AppTweak API call.
+    Uses deterministic CRC32 hashing (not crypto) for reproducible simulation.
     """
-    random.seed(hash(keyword + str(dt.date.today().toordinal())))
+    seed_bytes = (keyword + str(dt.date.today().toordinal())).encode("utf-8")
+    digest = zlib.crc32(seed_bytes) & 0xFFFFFFFF
     # Higher BID score = better simulated rank
-    base_rank = max(1, 150 - bid_score * 2 + random.randint(-20, 20))
+    jitter = (digest % 41) - 20  # -20 to +20
+    base_rank = max(1, 150 - bid_score * 2 + jitter)
+    jitter2 = ((digest >> 8) % 101) - 50  # -50 to +50
+    jitter3 = ((digest >> 16) % 51) + 10  # 10 to 60
     return {
         "keyword": keyword,
         "rank": base_rank,
-        "impressions_estimate": max(10, 500 - base_rank * 3 + random.randint(-50, 50)),
-        "difficulty": random.randint(10, 60),
+        "impressions_estimate": max(10, 500 - base_rank * 3 + jitter2),
+        "difficulty": jitter3,
     }
 
 

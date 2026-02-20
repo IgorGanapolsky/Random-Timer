@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import datetime as dt
-import hashlib
+import zlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -71,7 +71,7 @@ def create_title_experiment(repo_root: Path) -> Dict[str, Any]:
     ]
 
     experiment = {
-        "id": hashlib.md5(f"title-{dt.date.today().isoformat()}".encode()).hexdigest()[:8],
+        "id": format(zlib.crc32(f"title-{dt.date.today().isoformat()}".encode()) & 0xFFFFFFFF, "08x"),
         "type": "title_ab_test",
         "platform": "android",
         "created": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -93,7 +93,7 @@ def create_short_description_experiment(repo_root: Path) -> Dict[str, Any]:
     ]
 
     experiment = {
-        "id": hashlib.md5(f"desc-{dt.date.today().isoformat()}".encode()).hexdigest()[:8],
+        "id": format(zlib.crc32(f"desc-{dt.date.today().isoformat()}".encode()) & 0xFFFFFFFF, "08x"),
         "type": "short_description_ab_test",
         "platform": "android",
         "created": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -126,7 +126,7 @@ def create_screenshot_experiment(repo_root: Path) -> Dict[str, Any]:
     ]
 
     experiment = {
-        "id": hashlib.md5(f"screenshot-{dt.date.today().isoformat()}".encode()).hexdigest()[:8],
+        "id": format(zlib.crc32(f"screenshot-{dt.date.today().isoformat()}".encode()) & 0xFFFFFFFF, "08x"),
         "type": "screenshot_ab_test",
         "platform": "both",
         "created": dt.datetime.now(dt.timezone.utc).isoformat(),
