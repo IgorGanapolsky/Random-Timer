@@ -96,6 +96,7 @@ jobs:
           python scripts/asc_resolve_version.py \
             --preferred-version "$PREFERRED_VERSION" \
             --create-if-needed \
+            --auto-next-patch \
             --json-out /tmp/asc_version.json
           SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
