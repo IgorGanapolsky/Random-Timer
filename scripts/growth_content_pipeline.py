@@ -20,8 +20,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-import scripts.growth_bot_analytics as bot_analytics
-import scripts.growth_keyword_engine as keyword_engine
+import importlib
+import sys
+
+# Support both `python scripts/growth_content_pipeline.py` and `python -m scripts.growth_content_pipeline`
+_scripts_dir = Path(__file__).resolve().parent
+if str(_scripts_dir) not in sys.path:
+    sys.path.insert(0, str(_scripts_dir))
+
+import growth_bot_analytics as bot_analytics  # noqa: E402
+import growth_keyword_engine as keyword_engine  # noqa: E402
 
 DEFAULT_TOPICS: Tuple[str, ...] = (
     "How we shipped faster with AI-assisted test triage",
