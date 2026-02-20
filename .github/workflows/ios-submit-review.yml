@@ -27,6 +27,8 @@ jobs:
   submit:
     runs-on: macos-15
     environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
 
