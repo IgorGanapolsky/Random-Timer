@@ -1,0 +1,3 @@
+v1.2.0
+- Improved timer setup flow and listing clarity
+- Stability and performance improvements

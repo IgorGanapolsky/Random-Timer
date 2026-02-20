@@ -1,1 +1,1 @@
-random timer,interval timer,workout timer,tactical timer,training timer,countdown,drill timer,HIIT
+reaction,interval,hiit,tabata,boxing,martial arts,drills,focus,sparring,workout,coach

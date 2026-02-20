@@ -1,1 +1,1 @@
-A timer that goes off at a random time within your chosen range
+Random timer for HIIT, drills & party games. Set a range — boom.

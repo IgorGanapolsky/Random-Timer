@@ -162,6 +162,81 @@ make playwright-sync-auth-secrets
 See `tests/playwright/README.md` for environment variables and strict release-readiness mode.
 Platform tradeoff research is documented in `docs/agentic-browser-platform-evaluation-2026-02-16.md`.
 
+## Review Ops Automation
+
+Use the autonomous App Store review monitor to track ratings health, detect anomalies, and route actions:
+
+```bash
+python scripts/release_ops.py --repo-root . review_autopilot \
+  --limit 200 \
+  --sla-hours 24 \
+  --mode observe \
+  --history-jsonl /tmp/asc-reviews-history.jsonl \
+  --reviews-json-out /tmp/asc-reviews-ops.json \
+  --reviews-markdown-out /tmp/asc-reviews-ops.md \
+  --anomaly-json-out /tmp/asc-reviews-anomaly.json \
+  --anomaly-markdown-out /tmp/asc-reviews-anomaly.md \
+  --policy-json-out /tmp/asc-reviews-policy.json \
+  --policy-markdown-out /tmp/asc-reviews-policy.md
+```
+
+GitHub Actions workflow: `.github/workflows/ios-reviews-ops.yml`
+
+- Runs every 6 hours and on manual dispatch
+- Uploads review, anomaly, policy, and history artifacts
+- Optional Slack notification via `ASC_REVIEWS_SLACK_WEBHOOK` secret
+- Optional hard-fail on unresolved low-star SLA breaches (`fail_on_sla`)
+- Optional hard-fail on policy blocking decisions (`fail_on_blocking`)
+
+Generate a single release context snapshot (screenshots + metadata + optional ASC checks):
+
+```bash
+python scripts/release_ops.py check_readiness \
+  --platform ios \
+  --context-out /tmp/release-context.json \
+  --strict-remote
+```
+
+Direct context script (without orchestration wrapper):
+
+```bash
+python scripts/release_context.py \
+  --json-out /tmp/release-context.json
+```
+
+GitHub Actions workflow: `.github/workflows/ios-release-context.yml`
+
+## Daily Growth Publishing
+
+Automated daily blog + social distribution pipeline:
+
+- Generates a short SEO-friendly engineering post
+- Generates and scores keyword backlog using BID + AI-trap filtering
+- Builds a PaperBanana-style tech-flow diagram (SVG + Mermaid)
+- Publishes to DEV.to, LinkedIn, and X (when secrets are present)
+- Deploys blog pages to GitHub Pages
+- Collects engagement metrics, AI-bot traffic summaries, and app-download CTA tracking data
+- Emits AI-agent friendly outputs: `llms.txt`, `agents.md`, and markdown post endpoints
+
+Workflow: `.github/workflows/daily-growth-publishing.yml`  
+Script: `scripts/growth_content_pipeline.py`  
+Guide: `docs/DAILY_GROWTH_AUTOMATION.md`
+
+Local dry-run:
+
+```bash
+python3 scripts/growth_content_pipeline.py \
+  --repo-root . \
+  --output-root marketing \
+  run-daily \
+  --dry-run
+```
+## App Store Version Automation
+
+To avoid uploading metadata/screenshots to non-editable live versions, release tooling now resolves
+an editable target App Store version before sync/submit steps.
+
+Details and usage: `docs/APP_STORE_VERSION_AUTOMATION.md`
 ## Architecture
 
 ### iOS
