@@ -4,6 +4,7 @@ Uses JavaScript injection for textarea fields that aren't directly interactable.
 
 import time
 from playwright.sync_api import sync_playwright
+from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
 DEV = "8239620436488925047"
 APP = "4976249162120849673"
@@ -27,7 +28,7 @@ ALARM_JUSTIFICATION = (
 
 
 def screenshot(page, name):
-    path = f"/tmp/play_{name}.png"
+    path = screenshot_path(f"play_{name}.png")
     page.screenshot(path=path, full_page=True)
     print(f"  Screenshot: {path}")
 
@@ -420,7 +421,7 @@ def main():
         verify_completion(page)
 
         print("\n=== ALL DECLARATIONS PROCESSED ===")
-        print("Check /tmp/play_*.png for screenshots of each step.")
+        print(f"Check {ARTIFACTS_DIR} for screenshots of each step.")
         print("Browser left open for manual review.")
 
 
