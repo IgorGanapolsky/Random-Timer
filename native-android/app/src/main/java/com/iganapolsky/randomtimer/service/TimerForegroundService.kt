@@ -68,10 +68,6 @@ class TimerForegroundService : Service() {
     private var mediaSession: MediaSessionCompat? = null
     private var screenOffReceiver: ScreenOffReceiver? = null
 
-    private var audioFocusRequest: AudioFocusRequest? = null
-    private var vibrator: Vibrator? = null
-    private var mediaSession: MediaSessionCompat? = null
-
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
     }
