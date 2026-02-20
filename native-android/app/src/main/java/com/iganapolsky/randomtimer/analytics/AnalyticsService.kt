@@ -7,6 +7,7 @@ import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.UUID
 
 @Singleton
 class AnalyticsService @Inject constructor() {
@@ -31,6 +32,13 @@ class AnalyticsService @Inject constructor() {
         }
 
         PostHogAndroid.setup(application, config)
+        identify(
+            userId = getOrCreateDistinctId(application),
+            properties = mapOf(
+                "platform" to "android",
+                "app_version" to BuildConfig.VERSION_NAME,
+            ),
+        )
         initialized = true
     }
 
@@ -57,6 +65,22 @@ class AnalyticsService @Inject constructor() {
     fun flush() {
         if (!initialized) return
         PostHog.flush()
+    }
+
+    private fun getOrCreateDistinctId(application: Application): String {
+        val prefs = application.getSharedPreferences(PREFS_NAME, Application.MODE_PRIVATE)
+        val existing = prefs.getString(KEY_DISTINCT_ID, null)
+        if (!existing.isNullOrBlank()) {
+            return existing
+        }
+        val generated = UUID.randomUUID().toString()
+        prefs.edit().putString(KEY_DISTINCT_ID, generated).apply()
+        return generated
+    }
+
+    companion object {
+        private const val PREFS_NAME = "random_timer_analytics"
+        private const val KEY_DISTINCT_ID = "posthog_distinct_id"
     }
 }
 

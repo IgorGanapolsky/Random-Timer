@@ -68,6 +68,7 @@ struct ActiveTimerScreen: View {
                                     status: state.status,
                                     rangeText: rangeText
                                 )
+                                .accessibilityIdentifier("activeTimerCircle")
                                 .onTapGesture {
                                     guard state.status == .alarm else { return }
                                     timerManager.silenceAlarm()
@@ -137,6 +138,7 @@ struct ActiveTimerScreen: View {
                                 status: state.status,
                                 rangeText: rangeText // ALWAYS show range, never countdown
                             )
+                            .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {
                                 guard state.status == .alarm else { return }
                                 timerManager.silenceAlarm()
@@ -187,6 +189,7 @@ struct ActiveTimerScreen: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
+            AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
             // Initialize loop state from config (only on first appear)
             if let state = state {
                 loopEnabled = state.config.repeatEnabled
