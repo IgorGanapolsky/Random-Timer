@@ -2,11 +2,18 @@
 """Automate completing Google Play Console App Content declarations via Playwright."""
 
 import time
+from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 DEVELOPER_ID = "8239620436488925047"
 PACKAGE = "com.iganapolsky.randomtimer"
 BASE_URL = f"https://play.google.com/console/u/0/developers/{DEVELOPER_ID}/app"
+ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / ".artifacts" / "play_console"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def screenshot_path(name: str) -> str:
+    return str(ARTIFACTS_DIR / name)
 
 def wait_and_click(page, selector, timeout=10000):
     """Wait for element and click it."""
@@ -46,7 +53,7 @@ def main():
         print("Navigating to Play Console...")
         page.goto(f"{BASE_URL}/list", wait_until="networkidle", timeout=60000)
         time.sleep(3)
-        page.screenshot(path="/tmp/play_console_01_home.png")
+        page.screenshot(path=screenshot_path("play_console_01_home.png"))
 
         # Click on Random Timer app
         print("Clicking Random Timer app...")
@@ -55,11 +62,11 @@ def main():
             time.sleep(3)
         except Exception as e:
             print(f"Could not find app: {e}")
-            page.screenshot(path="/tmp/play_console_error.png")
+            page.screenshot(path=screenshot_path("play_console_error.png"))
             browser.close()
             return
 
-        page.screenshot(path="/tmp/play_console_02_app.png")
+        page.screenshot(path=screenshot_path("play_console_02_app.png"))
         print("On app dashboard")
 
         # Navigate to App content / Policy
@@ -80,12 +87,12 @@ def main():
             except Exception as e2:
                 print(f"Navigation failed: {e2}")
 
-        page.screenshot(path="/tmp/play_console_03_content.png")
-        print("Screenshot saved. Check /tmp/play_console_03_content.png")
+        page.screenshot(path=screenshot_path("play_console_03_content.png"))
+        print(f"Screenshot saved. Check {screenshot_path('play_console_03_content.png')}")
 
         # Take final screenshot and close
         browser.close()
-        print("Done. Check screenshots in /tmp/play_console_*.png")
+        print(f"Done. Check screenshots in {ARTIFACTS_DIR}")
 
 if __name__ == "__main__":
     main()

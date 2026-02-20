@@ -2,6 +2,7 @@
 """Set up Closed Testing track with 20 testers in Google Play Console."""
 
 import time
+from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 DEV = "8239620436488925047"
@@ -11,10 +12,12 @@ BASE = f"https://play.google.com/console/u/0/developers/{DEV}/app/{APP}"
 TESTERS = "\n".join([f"ig5973700+tester{i}@gmail.com" for i in range(1, 21)])
 
 AAB_PATH = "/Users/ganapolsky_i/workspace/git/igor/Random-Timer/native-android/app/build/outputs/bundle/release/app-release.aab"
+ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / ".artifacts" / "play_console"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def screenshot(page, name):
-    path = f"/tmp/play_{name}.png"
+    path = ARTIFACTS_DIR / f"play_{name}.png"
     page.screenshot(path=path, full_page=True)
     print(f"  Screenshot: {path}")
 
@@ -275,7 +278,7 @@ def main():
             print("  Closed testing track is set up")
 
         print("\n=== DONE ===")
-        print("Check /tmp/play_closed_*.png for screenshots of each step.")
+        print(f"Check {ARTIFACTS_DIR} for screenshots of each step.")
         print("Browser left open for manual verification.")
 
 

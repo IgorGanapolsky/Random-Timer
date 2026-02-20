@@ -3,10 +3,13 @@
 
 import time
 import json
+from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 DEVELOPER_ID = "8239620436488925047"
 BASE = f"https://play.google.com/console/u/0/developers/{DEVELOPER_ID}"
+ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / ".artifacts" / "play_console"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 def safe_click(page, selector, timeout=5000):
     try:
@@ -38,7 +41,7 @@ def save_page(page):
     return False
 
 def screenshot(page, name):
-    path = f"/tmp/play_{name}.png"
+    path = ARTIFACTS_DIR / f"play_{name}.png"
     page.screenshot(path=path)
     print(f"  Screenshot: {path}")
 
@@ -129,7 +132,7 @@ def main():
             time.sleep(2)
 
         screenshot(page, "99_final")
-        print("\nDone! Check screenshots in /tmp/play_*.png")
+        print(f"\nDone! Check screenshots in {ARTIFACTS_DIR}")
         print("Browser left open for manual completion if needed.")
 
 if __name__ == "__main__":
