@@ -97,14 +97,8 @@ fun RandomTimerNavHost(
             timerState?.let { state ->
                 ActiveTimerScreen(
                     state = state,
-                    onStop = {
-                        viewModel.cancelTimer()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
-                    },
-                    onDismissAlarm = {
-                        viewModel.dismissAlarm()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
-                    },
+                    onStop = viewModel::cancelTimer,
+                    onDismissAlarm = viewModel::dismissAlarm,
                     onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
                     onResume = viewModel::resumeTimer,
