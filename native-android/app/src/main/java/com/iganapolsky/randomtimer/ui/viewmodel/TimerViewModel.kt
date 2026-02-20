@@ -5,6 +5,8 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -31,6 +33,7 @@ class TimerViewModel
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
         private val serviceController: TimerServiceController,
+        private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
     ) : ViewModel() {
         val config: StateFlow<TimerConfig> =
@@ -47,6 +50,7 @@ class TimerViewModel
 
         private var service: TimerForegroundService? = null
         private var bound = false
+        private var previousTimerStatus: TimerStatus? = null
 
         private val serviceConnection =
             object : ServiceConnection {
@@ -59,6 +63,8 @@ class TimerViewModel
                     bound = true
                     viewModelScope.launch {
                         service?.timerState?.collect { state ->
+                            onTimerStateObservedForAnalytics(previousTimerStatus, state)
+                            previousTimerStatus = state?.status
                             _timerState.value = state
                         }
                     }
@@ -83,6 +89,15 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                mapOf(
+                    "min_duration" to newConfig.minSeconds,
+                    "max_duration" to newConfig.maxSeconds,
+                    "sound_type" to newConfig.soundType.name,
+                    "repeat_enabled" to newConfig.repeatEnabled,
+                ),
+            )
             viewModelScope.launch {
                 repository.saveTimerConfig(newConfig)
             }
@@ -95,10 +110,19 @@ class TimerViewModel
                 val state = startTimerUseCase(config.value)
                 _timerState.value = state
                 serviceController.startTimer(state)
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_STARTED,
+                    mapOf(
+                        "min_duration" to config.value.minSeconds,
+                        "max_duration" to config.value.maxSeconds,
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                    ),
+                )
             }
         }
 
         fun cancelTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_STOPPED)
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -107,6 +131,7 @@ class TimerViewModel
         }
 
         fun dismissAlarm() {
+            analyticsService.track(AnalyticsEvents.ALARM_DISMISSED)
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -119,10 +144,12 @@ class TimerViewModel
         }
 
         fun pauseTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_PAUSED)
             serviceController.pauseTimer()
         }
 
         fun resumeTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_RESUMED)
             serviceController.resumeTimer()
         }
 
@@ -132,6 +159,7 @@ class TimerViewModel
         }
 
         fun resetTimer() {
+            analyticsService.track(AnalyticsEvents.TIMER_RESET)
             _timerState.value?.let { current ->
                 _timerState.value =
                     current.copy(
@@ -145,9 +173,41 @@ class TimerViewModel
         }
 
         fun updateLoopSetting(enabled: Boolean) {
+            val updatedConfig = config.value.copy(repeatEnabled = enabled)
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                mapOf(
+                    "min_duration" to updatedConfig.minSeconds,
+                    "max_duration" to updatedConfig.maxSeconds,
+                    "sound_type" to updatedConfig.soundType.name,
+                    "repeat_enabled" to updatedConfig.repeatEnabled,
+                ),
+            )
             viewModelScope.launch {
-                repository.saveTimerConfig(config.value.copy(repeatEnabled = enabled))
+                repository.saveTimerConfig(updatedConfig)
                 serviceController.updateLoop(enabled)
+            }
+        }
+
+        fun trackScreen(screen: String) {
+            analyticsService.screen(screen)
+        }
+
+        internal fun onTimerStateObservedForAnalytics(previousStatus: TimerStatus?, state: TimerState?) {
+            val currentStatus = state?.status ?: return
+
+            if (previousStatus != null && previousStatus != TimerStatus.ALARM && currentStatus == TimerStatus.ALARM) {
+                analyticsService.track(
+                    AnalyticsEvents.ALARM_TRIGGERED,
+                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                )
+            }
+
+            if (previousStatus == TimerStatus.ALARM && currentStatus == TimerStatus.COMPLETE) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_COMPLETED,
+                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                )
             }
         }
 

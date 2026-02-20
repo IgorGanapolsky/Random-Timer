@@ -1,0 +1,253 @@
+{
+  "campaigns": [
+    {
+      "platform": "apple_search_ads",
+      "created": "2026-02-20T21:08:11.809568+00:00",
+      "status": "draft",
+      "daily_budget_usd": 10.0,
+      "ad_groups": [
+        {
+          "name": "Exact Match - High Intent",
+          "match_type": "exact",
+          "max_cpt_usd": 1.5,
+          "keywords": [
+            {
+              "text": "app sparring prep",
+              "bid_score": 128
+            },
+            {
+              "text": "app boxing drills",
+              "bid_score": 128
+            },
+            {
+              "text": "app focus drills",
+              "bid_score": 128
+            },
+            {
+              "text": "app reaction training",
+              "bid_score": 128
+            },
+            {
+              "text": "app home workout timer",
+              "bid_score": 128
+            },
+            {
+              "text": "app tactical timer",
+              "bid_score": 120
+            },
+            {
+              "text": "app random timer",
+              "bid_score": 120
+            },
+            {
+              "text": "checker interval timer",
+              "bid_score": 115
+            },
+            {
+              "text": "generator interval timer",
+              "bid_score": 115
+            },
+            {
+              "text": "checker reaction training",
+              "bid_score": 115
+            },
+            {
+              "text": "checker tactical timer",
+              "bid_score": 115
+            },
+            {
+              "text": "calculator mental readiness",
+              "bid_score": 115
+            },
+            {
+              "text": "generator sparring prep",
+              "bid_score": 115
+            },
+            {
+              "text": "generator random timer",
+              "bid_score": 115
+            },
+            {
+              "text": "generator tactical timer",
+              "bid_score": 115
+            }
+          ]
+        },
+        {
+          "name": "Search Match - Discovery",
+          "match_type": "search",
+          "max_cpt_usd": 1.0499999999999998,
+          "keywords": [
+            {
+              "text": "home workout timer",
+              "bid_score": 52
+            },
+            {
+              "text": "mental readiness for beginners",
+              "bid_score": 52
+            },
+            {
+              "text": "focus drills for beginners",
+              "bid_score": 52
+            },
+            {
+              "text": "mental readiness",
+              "bid_score": 44
+            },
+            {
+              "text": "random timer for beginners",
+              "bid_score": 44
+            },
+            {
+              "text": "reaction training for beginners",
+              "bid_score": 44
+            },
+            {
+              "text": "interval timer",
+              "bid_score": 44
+            },
+            {
+              "text": "interval timer for beginners",
+              "bid_score": 44
+            },
+            {
+              "text": "sparring prep",
+              "bid_score": 44
+            },
+            {
+              "text": "combat conditioning",
+              "bid_score": 44
+            },
+            {
+              "text": "boxing drills for beginners",
+              "bid_score": 44
+            },
+            {
+              "text": "boxing drills",
+              "bid_score": 44
+            }
+          ]
+        },
+        {
+          "name": "Competitor - Brand",
+          "match_type": "exact",
+          "max_cpt_usd": 1.7999999999999998,
+          "keywords": [
+            {
+              "text": "app sparring prep",
+              "bid_score": 128
+            },
+            {
+              "text": "app boxing drills",
+              "bid_score": 128
+            },
+            {
+              "text": "app focus drills",
+              "bid_score": 128
+            },
+            {
+              "text": "app reaction training",
+              "bid_score": 128
+            },
+            {
+              "text": "app home workout timer",
+              "bid_score": 128
+            },
+            {
+              "text": "app tactical timer",
+              "bid_score": 120
+            },
+            {
+              "text": "app random timer",
+              "bid_score": 120
+            },
+            {
+              "text": "checker interval timer",
+              "bid_score": 115
+            },
+            {
+              "text": "generator interval timer",
+              "bid_score": 115
+            },
+            {
+              "text": "checker reaction training",
+              "bid_score": 115
+            }
+          ]
+        }
+      ],
+      "negative_keywords": [
+        "free timer online",
+        "timer website",
+        "countdown website",
+        "clock widget"
+      ],
+      "target_cpa_usd": 3.0
+    },
+    {
+      "platform": "google_uac",
+      "created": "2026-02-20T21:08:11.809607+00:00",
+      "status": "draft",
+      "daily_budget_usd": 10.0,
+      "campaign_type": "installs",
+      "target_cpa_usd": 3.0,
+      "ad_assets": {
+        "headlines": [
+          "Random Timer for HIIT & Drills",
+          "Surprise Interval Timer App",
+          "Tactical Timer - Train Smarter",
+          "Random Countdown Timer"
+        ],
+        "descriptions": [
+          "Set a range, press start. You never know when it fires. Perfect for HIIT.",
+          "Unpredictable timer for workouts, drills & party games. No ads, no tracking.",
+          "Keep sharp with random intervals. Used by athletes, coaches & gamers."
+        ]
+      },
+      "targeting": {
+        "locations": [
+          "US",
+          "GB",
+          "CA",
+          "AU",
+          "DE"
+        ],
+        "languages": [
+          "en",
+          "de"
+        ],
+        "keyword_themes": [
+          "app sparring prep",
+          "app boxing drills",
+          "app focus drills",
+          "app reaction training",
+          "app home workout timer",
+          "app tactical timer",
+          "app random timer",
+          "checker interval timer",
+          "generator interval timer",
+          "checker reaction training"
+        ]
+      },
+      "optimization_goal": "installs"
+    }
+  ],
+  "budget_config": {
+    "daily_budget_usd": 10.0,
+    "launch_week_multiplier": 1.5,
+    "max_cpt_usd": 1.5,
+    "target_cpa_usd": 3.0
+  },
+  "history": [
+    {
+      "timestamp": "2026-02-20T21:08:11.809617+00:00",
+      "action": "campaign_refresh",
+      "apple_keywords": 15,
+      "google_themes": 10
+    }
+  ],
+  "budget_allocation": {
+    "apple_search_ads": 6.0,
+    "google_uac": 4.0
+  }
+}

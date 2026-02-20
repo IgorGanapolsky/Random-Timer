@@ -88,6 +88,11 @@ data class TimerState(
     val isAlarmActive: Boolean
         get() = status == TimerStatus.ALARM && alarmTimeRemaining > Duration.ZERO
 
+    /** True when the alarm notification (with fullScreenIntent) should be shown.
+     *  Returns false once the alarm has been silenced — prevents screen wake-up. */
+    val shouldShowAlarmNotification: Boolean
+        get() = status == TimerStatus.ALARM && !isAlarmSilenced
+
     /** Time remaining in seconds (for display) */
     val timeRemainingSeconds: Int
         get() = remainingDuration.inWholeSeconds.toInt()

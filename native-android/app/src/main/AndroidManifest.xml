@@ -39,6 +39,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="false"
         android:theme="@style/Theme.RandomTimer"
         tools:targetApi="35">
 
@@ -78,7 +79,7 @@
         <!-- Boot Receiver to reschedule alarms -->
         <receiver
             android:name=".receiver.BootReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
