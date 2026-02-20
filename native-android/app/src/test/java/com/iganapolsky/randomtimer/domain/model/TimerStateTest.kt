@@ -96,6 +96,46 @@ class TimerStateTest {
     }
 
     @Test
+    fun `shouldShowAlarmNotification true when alarm active and not silenced`() {
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 5.minutes,
+            remainingDuration = Duration.ZERO,
+            status = TimerStatus.ALARM,
+            alarmTimeRemaining = 10.seconds,
+            isAlarmSilenced = false
+        )
+
+        assertThat(state.shouldShowAlarmNotification).isTrue()
+    }
+
+    @Test
+    fun `shouldShowAlarmNotification false when alarm is silenced`() {
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 5.minutes,
+            remainingDuration = Duration.ZERO,
+            status = TimerStatus.ALARM,
+            alarmTimeRemaining = 8.seconds,
+            isAlarmSilenced = true
+        )
+
+        assertThat(state.shouldShowAlarmNotification).isFalse()
+    }
+
+    @Test
+    fun `shouldShowAlarmNotification false when status is not ALARM`() {
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 5.minutes,
+            remainingDuration = 2.minutes,
+            status = TimerStatus.RUNNING
+        )
+
+        assertThat(state.shouldShowAlarmNotification).isFalse()
+    }
+
+    @Test
     fun `progress handles zero target duration`() {
         val state = TimerState(
             config = defaultConfig,
