@@ -192,7 +192,22 @@ def resolve_version(
                         f"Next patch version {candidate} does not exist and create_if_needed is disabled.",
                         code=1,
                     )
-                created = _create_ios_version(client, app_id, candidate)
+                try:
+                    created = _create_ios_version(client, app_id, candidate)
+                except RuntimeError as exc:
+                    if "409" in str(exc):
+                        # ASC won't allow creating new versions while another is in review.
+                        # Return the preferred version as-is so downstream steps can check its state.
+                        info(f"Cannot create {candidate} (HTTP 409). Returning preferred {preferred_version} (state={state}).")
+                        return Resolution(
+                            selected_version=preferred_version,
+                            selected_state=state,
+                            created=False,
+                            reason=f"preferred_non_editable_{state}_create_blocked_409",
+                            selected_id=str(current.get("id") or ""),
+                            preferred_version=preferred_version,
+                        )
+                    raise
                 created_state = str((created.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
                 return Resolution(
                     selected_version=candidate,
