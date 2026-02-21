@@ -42,7 +42,7 @@ def read_metadata(lang_dir: str, filename: str) -> str:
 
 
 def main():
-    key_path = os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH", "/tmp/play-service-account.json")
+    key_path = os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH", os.path.join(os.environ.get("RUNNER_TEMP", os.getcwd()), "play-service-account.json"))
     if not os.path.exists(key_path):
         print(f"Service account key not found at {key_path}", file=sys.stderr)
         sys.exit(1)
