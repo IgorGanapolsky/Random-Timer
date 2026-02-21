@@ -10,13 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          ruby-version: "3.2"
+          python-version: "3.12"
 
-      - name: Install Fastlane
-        run: gem install fastlane
+      - name: Install dependencies
+        run: pip install google-api-python-client google-auth
 
       - name: Write Google Play key
         env:
@@ -26,14 +26,13 @@ jobs:
             echo "GOOGLE_PLAY_JSON_KEY secret is not set" >&2
             exit 1
           fi
-          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+          echo "$GOOGLE_PLAY_JSON_KEY" > "$RUNNER_TEMP/play-service-account.json"
 
       - name: Upload Android metadata
         env:
-          SUPPLY_JSON_KEY: /tmp/play-service-account.json
-        run: fastlane metadata
-        working-directory: native-android
+          GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
+        run: python3 scripts/sync_android_metadata.py
 
       - name: Cleanup secrets
         if: always()
-        run: rm -f /tmp/play-service-account.json
+        run: rm -f "$RUNNER_TEMP/play-service-account.json"
