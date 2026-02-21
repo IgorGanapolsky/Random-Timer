@@ -1,13 +1,14 @@
-Random Tactical Timer picks a random moment within your chosen time range to fire an alarm. Set a minimum and maximum duration, press start, and go about your activity. You never know exactly when it will go off — keeping you sharp, alert, and engaged.
+Random Tactical Timer fires an alarm at an unpredictable moment within your chosen time range. Set a minimum and maximum duration, press start, and train. You never know when it hits — keeping you sharp, reactive, and combat-ready.
 
-Whether you need a random interval timer for HIIT training, a surprise countdown for party games like Musical Chairs or Hot Potato, or an unpredictable break timer for study sessions — this app delivers.
+Built for fighters, coaches, and tactical athletes who need to train reaction under real pressure — not predictable countdown patterns.
 
 WHO IT'S FOR:
-- Athletes & coaches doing interval training, Tabata, or reaction drills
-- Gamers & party hosts running games that need surprise timing
-- Students & professionals using randomized focus/break cycles
-- Meditators wanting organic, non-predictable session transitions
-- Anyone who needs a timer that doesn't let them anticipate the alarm
+- Boxers, MMA fighters, and BJJ practitioners drilling reaction speed
+- Self-defense practitioners training stress inoculation
+- Coaches running unpredictable interval sessions
+- CrossFit and HIIT athletes breaking predictable rest patterns
+- Military and law enforcement doing tactical drill timing
+- Anyone who needs a timer that eliminates anticipation
 
 KEY FEATURES:
 - Custom time ranges — set your minimum and maximum duration
@@ -23,20 +24,18 @@ KEY FEATURES:
 HOW IT WORKS:
 1. Set your minimum and maximum time (e.g., 30 seconds to 5 minutes)
 2. Tap Start — the app picks a random duration in that range
-3. Go about your activity — the timer counts down in the background
-4. When time's up, a full-screen alarm fires with sound and vibration
-5. Optionally loop to automatically start a new random interval
+3. Move, drill, spar, or work normally
+4. React when the alarm fires with full-screen alert, sound, and vibration
+5. Loop to automatically start a new random interval
 
 USE CASES:
-- HIIT & Tabata workouts with unpredictable rest periods
-- Reaction time training for martial arts, boxing, and sports
-- Musical Chairs, Hot Potato, and other party games
-- Pomodoro-style study sessions with randomized breaks
-- Meditation with natural, non-rhythmic interval bells
-- Cooking timers when approximate timing is fine
-- Military and tactical training drills
+- Reaction drills for boxing, kickboxing, Muay Thai, and MMA
+- BJJ position change timing and scramble training
+- Stress inoculation for self-defense and combatives
+- HIIT and conditioning with unpredictable intervals
+- CrossFit EMOM and AMRAP with surprise transitions
+- Military and tactical training scenarios
+- Coach-led team practices with random whistle timing
 
 DESIGNED FOR SIMPLICITY:
-Dark interface. No clutter. No ads. No tracking. No subscriptions. Just set your range and go.
-
-Built for athletes, coaches, gamers, students, and anyone who needs a timer that keeps them on their toes.
+Dark interface. No clutter. No ads. No tracking. No subscriptions. Set your range. Train for chaos.
