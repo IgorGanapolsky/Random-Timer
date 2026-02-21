@@ -4,13 +4,18 @@ Welcome to the Random Timer project wiki. These pages are **auto-updated daily**
 
 ## Navigation
 
+### Marketing Metrics (Start Here)
+- [[Daily Metrics Dashboard]] — **Live dashboard**: downloads, leads, usage, campaigns, content
+- [[Marketing Leads & Acquisition]] — All lead channels, acquisition funnel, measurement infrastructure
+- [[Usage Analytics]] — DAU/WAU/MAU, core events, funnels, PostHog config
+
 ### Analytics & Measurement
 - [[Analytics Events Reference]] — Every PostHog event tracked across Android & iOS
 - [[Attribution & UTM Pipeline]] — How marketing spend maps to installs and activation
 - [[Onboarding Funnel]] — First Open → First Configure → First Complete conversion rates
 
 ### Growth Systems
-- [[Growth Systems Overview]] — All automated growth pipelines and their schedules
+- [[Growth Systems Overview]] — All 10 automated pipelines and their schedules
 - [[ASO Keyword Rotation]] — Weekly keyword performance and rotation history
 - [[Review Velocity]] — App store review rates and prompt tuning
 - [[CRO Experiments]] — A/B test proposals and results for store listings
@@ -19,9 +24,6 @@ Welcome to the Random Timer project wiki. These pages are **auto-updated daily**
 - [[Paid Acquisition]] — Apple Search Ads & Google UAC campaign configs and spend
 - [[Referral & Content]] — Reddit, Product Hunt, blog outreach campaign status
 - [[Content Pipeline]] — Daily blog publishing metrics and engagement
-
-### Daily Dashboard
-- [[Daily Metrics Dashboard]] — Auto-generated summary with live data from PostHog + marketing JSON
 
 ---
 
