@@ -13,14 +13,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var analyticsService: AnalyticsService
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -38,6 +42,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         requestNotificationPermission()
         handleAlarmNotificationTap(intent)
+        handleDeepLink(intent)
 
         setContent {
             RandomTimerTheme {
@@ -54,6 +59,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleAlarmNotificationTap(intent)
+        handleDeepLink(intent)
     }
 
     override fun onResume() {
@@ -95,6 +101,11 @@ class MainActivity : ComponentActivity() {
             putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, isInForeground)
         }
         startService(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val uri = intent?.data ?: return
+        analyticsService.trackDeepLink(uri)
     }
 
     private fun requestNotificationPermission() {

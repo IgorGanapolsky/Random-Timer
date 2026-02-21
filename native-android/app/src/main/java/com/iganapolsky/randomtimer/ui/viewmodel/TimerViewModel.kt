@@ -118,6 +118,7 @@ class TimerViewModel
                         "target_duration" to state.targetDuration.inWholeSeconds,
                     ),
                 )
+                analyticsService.trackFirstTimerConfiguredIfNeeded()
             }
         }
 
@@ -208,6 +209,7 @@ class TimerViewModel
                     AnalyticsEvents.TIMER_COMPLETED,
                     mapOf("target_duration" to state.targetDuration.inWholeSeconds),
                 )
+                analyticsService.trackFirstTimerCompletedIfNeeded()
             }
         }
 

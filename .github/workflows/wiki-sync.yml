@@ -1,0 +1,70 @@
+name: Wiki Sync
+
+on:
+  schedule:
+    - cron: '30 14 * * *' # Daily at 14:30 UTC (after growth publishing at 13:15)
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - 'wiki/**'
+      - 'marketing/data/**'
+      - 'scripts/wiki_sync.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Inject live data into dashboard
+        run: python scripts/wiki_sync.py
+
+      - name: Clone wiki repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WIKI_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          git clone --depth 1 "${WIKI_URL}" /tmp/wiki-clone || {
+            mkdir -p /tmp/wiki-clone
+            cd /tmp/wiki-clone
+            git init
+            git remote add origin "${WIKI_URL}"
+          }
+
+      - name: Copy wiki pages and push
+        run: |
+          cp wiki/*.md /tmp/wiki-clone/
+          cd /tmp/wiki-clone
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No wiki changes to push"
+            exit 0
+          fi
+          git commit -m "chore: sync wiki pages ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git push origin master || git push origin main
+
+      - name: Upload dashboard snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-dashboard
+          path: wiki/Daily-Metrics-Dashboard.md
+          retention-days: 7

@@ -133,6 +133,17 @@ def ensure_keyword_backlog(output_root: Path) -> Dict[str, Any]:
     return keyword_engine.run_build(keywords_dir, strategy_path)
 
 
+def load_content_feedback(output_root: Path) -> Optional[Dict[str, Any]]:
+    """Load content performance feedback from attribution pipeline."""
+    feedback_path = output_root / "data" / "content_feedback.json"
+    if not feedback_path.is_file():
+        return None
+    try:
+        return json.loads(feedback_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, KeyError):
+        return None
+
+
 def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, Any]]:
     payload = ensure_keyword_backlog(output_root)
     backlog_json = payload.get("outputs", {}).get("json")
@@ -142,6 +153,26 @@ def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, 
     if not backlog_path.is_file():
         return None
     rows = json.loads(backlog_path.read_text(encoding="utf-8"))
+
+    # Boost keywords that drove real installs (feedback loop)
+    feedback = load_content_feedback(output_root)
+    if feedback:
+        top_campaigns = feedback.get("top_campaigns_by_activation", [])
+        boosted_sources = {
+            str(c.get("source", "")).strip().lower()
+            for c in top_campaigns
+            if (c.get("activation_rate") or 0) > 0.1
+        }
+        # If content from certain sources drives activation,
+        # prefer keywords aligned with those sources
+        if boosted_sources:
+            for row in rows:
+                kw = str(row.get("keyword") or "")
+                for source in boosted_sources:
+                    if source in kw:
+                        row["bid_score"] = row.get("bid_score", 0) + 15
+            rows.sort(key=lambda r: (r.get("ai_trap", False), -r.get("bid_score", 0)))
+
     selected = keyword_engine.select_daily_keyword(rows, day=day)
     if not selected:
         return None

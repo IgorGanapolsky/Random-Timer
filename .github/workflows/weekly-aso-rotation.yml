@@ -38,6 +38,16 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Fetch latest attribution feedback
+        run: |
+          # Pull latest feedback data committed by Sunday's attribution workflow
+          git pull --ff-only origin "${GITHUB_REF_NAME}" || true
+          if [ -f marketing/keywords/posthog_feedback.json ]; then
+            echo "PostHog attribution feedback found — using real install data"
+          else
+            echo "No PostHog feedback — falling back to simulated rankings"
+          fi
+
       - name: Run ASO keyword rotation
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
