@@ -56,6 +56,9 @@ jobs:
           ANDROID_REVIEW_URL: ${{ secrets.ANDROID_REVIEW_URL }}
           BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
           AI_BOT_LOG_PATH: ${{ secrets.AI_BOT_LOG_PATH }}
+          AB_PILOT_MAX_COST_USD: "10"
+          AB_CONTROL_COST_USD: "0.00"
+          AB_CANDIDATE_COST_USD: "0.25"
         run: |
           python scripts/growth_content_pipeline.py \
             --repo-root . \
@@ -65,7 +68,8 @@ jobs:
           python scripts/growth_content_pipeline.py \
             --repo-root . \
             --output-root marketing \
-            run-daily
+            run-daily \
+            --ab-pilot
 
       - name: Commit generated assets
         run: |
@@ -105,6 +109,9 @@ jobs:
             marketing/data/publications.jsonl
             marketing/data/engagement.jsonl
             marketing/data/engagement-latest.md
+            marketing/data/publish_ab_pilot_runs.jsonl
+            marketing/data/publish_ab_pilot_summary.json
+            marketing/data/publish_ab_pilot_report.md
             marketing/data/bot_traffic_summary.json
             marketing/data/bot_traffic_summary.md
             marketing/keywords/keyword_backlog.json
