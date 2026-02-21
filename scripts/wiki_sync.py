@@ -61,10 +61,138 @@ def _fmt_num(val: Any) -> str:
     return str(val)
 
 
+def _mermaid_budget_pie(pc: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid pie chart for budget allocation."""
+    if not pc:
+        return ""
+    alloc = pc.get("budget_allocation", {})
+    if not alloc or all(v == 0 for v in alloc.values()):
+        return ""
+    slices = "\n".join(
+        f'    "{k.replace("_", " ").title()}" : {v}'
+        for k, v in alloc.items()
+        if v > 0
+    )
+    return f'```mermaid\npie title Daily Ad Budget Allocation ($)\n{slices}\n```'
+
+
+def _mermaid_keywords_bar(pc: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid bar chart for keywords per ad group."""
+    if not pc:
+        return ""
+    campaigns = pc.get("campaigns", [])
+    groups: list[tuple[str, int]] = []
+    for c in campaigns:
+        for ag in c.get("ad_groups", []):
+            name = ag.get("name", "Unknown")
+            count = len(ag.get("keywords", []))
+            if count > 0:
+                groups.append((name, count))
+        # Google UAC keyword themes
+        themes = c.get("targeting", {}).get("keyword_themes", [])
+        if themes:
+            groups.append(("UAC Themes", len(themes)))
+    if not groups:
+        return ""
+    cats = " , ".join(f'"{g[0]}"' for g in groups)
+    vals = " , ".join(str(g[1]) for g in groups)
+    return (
+        f"```mermaid\n"
+        f"xychart-beta\n"
+        f'    title "Keywords by Ad Group"\n'
+        f"    x-axis [{cats}]\n"
+        f'    y-axis "Count" 0 --> {max(g[1] for g in groups) + 5}\n'
+        f'    bar [{vals}]\n'
+        f"```"
+    )
+
+
+def _mermaid_referral_bar(ref: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid bar chart for referral channels."""
+    if not ref:
+        return ""
+    channels = {
+        "Reddit": len(ref.get("reddit_posts", [])),
+        "Product Hunt": 1 if ref.get("product_hunt") else 0,
+        "Blog Outreach": len(ref.get("blog_outreach", [])),
+    }
+    if all(v == 0 for v in channels.values()):
+        return ""
+    cats = " , ".join(f'"{k}"' for k in channels)
+    vals = " , ".join(str(v) for v in channels.values())
+    return (
+        f"```mermaid\n"
+        f"xychart-beta\n"
+        f'    title "Referral Content Pieces"\n'
+        f"    x-axis [{cats}]\n"
+        f'    y-axis "Items" 0 --> {max(channels.values()) + 2}\n'
+        f'    bar [{vals}]\n'
+        f"```"
+    )
+
+
+def _mermaid_downloads_trend(dl: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid line chart for download snapshots over time."""
+    if not dl:
+        return ""
+    snapshots = dl.get("snapshots", [])
+    if len(snapshots) < 2:
+        return ""  # Need at least 2 points for a trend line
+    # Take last 14 snapshots
+    recent = snapshots[-14:]
+    dates = []
+    ios_vals = []
+    android_vals = []
+    for s in recent:
+        ts = s.get("timestamp", "")[:10]
+        dates.append(f'"{ts}"')
+        ios_vals.append(str(s.get("ios_downloads_30d", 0)))
+        android_vals.append(str(s.get("android_downloads_30d", 0)))
+    return (
+        f"```mermaid\n"
+        f"xychart-beta\n"
+        f'    title "Downloads (30d rolling)"\n'
+        f"    x-axis [{' , '.join(dates)}]\n"
+        f'    y-axis "Downloads"\n'
+        f'    line [{" , ".join(ios_vals)}]\n'
+        f'    line [{" , ".join(android_vals)}]\n'
+        f"```"
+    )
+
+
 def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     """Replace placeholder sections in the dashboard with live data."""
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     dashboard = dashboard.replace("<!-- TIMESTAMP -->", now)
+
+    # --- Downloads & Active Users ---
+    dl = load_json(data_dir / "store_downloads.json")
+    if dl:
+        ios = dl.get("ios", {})
+        android = dl.get("android", {})
+        combined = dl.get("combined", {})
+        users = dl.get("active_users", {})
+        ios_30 = _fmt_num(ios.get("downloads_30d"))
+        and_30 = _fmt_num(android.get("downloads_30d"))
+        comb_30 = _fmt_num(combined.get("downloads_30d"))
+        and_active = _fmt_num(android.get("active_installs"))
+        downloads_block = (
+            "| Metric | iOS | Android | Combined |\n"
+            "|--------|:---:|:-------:|:--------:|\n"
+            f"| Downloads (30d) | {ios_30} | {and_30} | {comb_30} |\n"
+            f"| Active Installs | — | {and_active} | — |\n\n"
+            "| Active Users | Count |\n"
+            "|-------------|:-----:|\n"
+            f"| DAU | {_fmt_num(users.get('dau'))} |\n"
+            f"| WAU | {_fmt_num(users.get('wau'))} |\n"
+            f"| MAU | {_fmt_num(users.get('mau'))} |"
+        )
+        dashboard = re.sub(
+            r"<!-- DOWNLOADS_START -->.*?<!-- DOWNLOADS_END -->",
+            f"<!-- DOWNLOADS_START -->\n{downloads_block}\n<!-- DOWNLOADS_END -->",
+            dashboard,
+            flags=re.DOTALL,
+        )
 
     # --- Review Velocity ---
     rv = load_json(data_dir / "review_velocity.json")
@@ -93,9 +221,13 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
 
     # --- CRO Experiments ---
     cro = load_json(data_dir / "cro_experiments.json")
-    if cro and isinstance(cro, list):
+    if cro:
+        # Support both {"experiments": [...]} and bare list formats
+        experiments = cro.get("experiments", cro) if isinstance(cro, dict) else cro
+        if not isinstance(experiments, list):
+            experiments = []
         rows = []
-        for exp in cro:
+        for exp in experiments:
             rows.append(
                 f"| {exp.get('type', '—')} | {exp.get('platform', '—')} "
                 f"| {exp.get('status', '—')} | {exp.get('duration_days', '—')} days |"
@@ -246,6 +378,35 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     dashboard = re.sub(
         r"<!-- ASO_START -->.*?<!-- ASO_END -->",
         f"<!-- ASO_START -->\n{aso_block}\n<!-- ASO_END -->",
+        dashboard,
+        flags=re.DOTALL,
+    )
+
+    # --- Charts ---
+    charts: list[str] = []
+    dl_data = load_json(data_dir / "store_downloads.json")
+    dl_trend = _mermaid_downloads_trend(dl_data)
+    if dl_trend:
+        charts.append(dl_trend)
+
+    pc_data = load_json(data_dir / "paid_campaigns.json")
+    budget_pie = _mermaid_budget_pie(pc_data)
+    if budget_pie:
+        charts.append(budget_pie)
+
+    kw_bar = _mermaid_keywords_bar(pc_data)
+    if kw_bar:
+        charts.append(kw_bar)
+
+    ref_data = load_json(data_dir / "referral_campaigns.json")
+    ref_bar = _mermaid_referral_bar(ref_data)
+    if ref_bar:
+        charts.append(ref_bar)
+
+    charts_block = "\n\n".join(charts) if charts else "_No chart data available yet._"
+    dashboard = re.sub(
+        r"<!-- CHARTS_START -->.*?<!-- CHARTS_END -->",
+        f"<!-- CHARTS_START -->\n{charts_block}\n<!-- CHARTS_END -->",
         dashboard,
         flags=re.DOTALL,
     )
