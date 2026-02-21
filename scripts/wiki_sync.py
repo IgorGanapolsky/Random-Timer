@@ -262,13 +262,16 @@ def sync_to_wiki(repo_root: Path, wiki_dir: Path) -> bool:
         owner_repo = os.getenv("GITHUB_REPOSITORY", "IgorGanapolsky/Random-Timer")
         repo_url = f"https://github.com/{owner_repo}.wiki.git"
 
-    # Configure auth for GitHub Actions
+    # Configure auth for GitHub Actions via GIT_ASKPASS (avoids credentials in URL)
     token = os.getenv("GITHUB_TOKEN", "").strip()
+    env = os.environ.copy()
     if token:
-        repo_url = repo_url.replace(
-            "https://github.com/",
-            f"https://x-access-token:{token}@github.com/",
-        )
+        askpass_script = Path("/tmp/git-askpass.sh")
+        askpass_script.write_text("#!/bin/sh\necho \"${GIT_PASSWORD}\"\n", encoding="utf-8")
+        askpass_script.chmod(0o700)
+        env["GIT_ASKPASS"] = str(askpass_script)
+        env["GIT_PASSWORD"] = token  # noqa: S105 — CI token, not hardcoded
+        env["GIT_TERMINAL_PROMPT"] = "0"
 
     wiki_clone = Path("/tmp/wiki-clone")
     if wiki_clone.exists():
@@ -280,6 +283,7 @@ def sync_to_wiki(repo_root: Path, wiki_dir: Path) -> bool:
         capture_output=True,
         text=True,
         timeout=30,
+        env=env,
     )
 
     if result.returncode != 0:
@@ -324,13 +328,13 @@ def sync_to_wiki(repo_root: Path, wiki_dir: Path) -> bool:
 
     push_result = subprocess.run(
         ["git", "push", "origin", "master"],
-        cwd=wiki_clone, capture_output=True, text=True, timeout=30,
+        cwd=wiki_clone, capture_output=True, text=True, timeout=30, env=env,
     )
     if push_result.returncode != 0:
         # Try main branch
         push_result = subprocess.run(
             ["git", "push", "origin", "main"],
-            cwd=wiki_clone, capture_output=True, text=True, timeout=30,
+            cwd=wiki_clone, capture_output=True, text=True, timeout=30, env=env,
         )
 
     if push_result.returncode != 0:
