@@ -66,6 +66,35 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     dashboard = dashboard.replace("<!-- TIMESTAMP -->", now)
 
+    # --- Downloads & Active Users ---
+    dl = load_json(data_dir / "store_downloads.json")
+    if dl:
+        ios = dl.get("ios", {})
+        android = dl.get("android", {})
+        combined = dl.get("combined", {})
+        users = dl.get("active_users", {})
+        ios_30 = _fmt_num(ios.get("downloads_30d"))
+        and_30 = _fmt_num(android.get("downloads_30d"))
+        comb_30 = _fmt_num(combined.get("downloads_30d"))
+        and_active = _fmt_num(android.get("active_installs"))
+        downloads_block = (
+            "| Metric | iOS | Android | Combined |\n"
+            "|--------|:---:|:-------:|:--------:|\n"
+            f"| Downloads (30d) | {ios_30} | {and_30} | {comb_30} |\n"
+            f"| Active Installs | — | {and_active} | — |\n\n"
+            "| Active Users | Count |\n"
+            "|-------------|:-----:|\n"
+            f"| DAU | {_fmt_num(users.get('dau'))} |\n"
+            f"| WAU | {_fmt_num(users.get('wau'))} |\n"
+            f"| MAU | {_fmt_num(users.get('mau'))} |"
+        )
+        dashboard = re.sub(
+            r"<!-- DOWNLOADS_START -->.*?<!-- DOWNLOADS_END -->",
+            f"<!-- DOWNLOADS_START -->\n{downloads_block}\n<!-- DOWNLOADS_END -->",
+            dashboard,
+            flags=re.DOTALL,
+        )
+
     # --- Review Velocity ---
     rv = load_json(data_dir / "review_velocity.json")
     if rv:
@@ -93,9 +122,13 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
 
     # --- CRO Experiments ---
     cro = load_json(data_dir / "cro_experiments.json")
-    if cro and isinstance(cro, list):
+    if cro:
+        # Support both {"experiments": [...]} and bare list formats
+        experiments = cro.get("experiments", cro) if isinstance(cro, dict) else cro
+        if not isinstance(experiments, list):
+            experiments = []
         rows = []
-        for exp in cro:
+        for exp in experiments:
             rows.append(
                 f"| {exp.get('type', '—')} | {exp.get('platform', '—')} "
                 f"| {exp.get('status', '—')} | {exp.get('duration_days', '—')} days |"

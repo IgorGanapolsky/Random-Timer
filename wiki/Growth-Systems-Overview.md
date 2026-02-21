@@ -7,6 +7,7 @@ Automated growth infrastructure running via GitHub Actions on fixed schedules.
 | Day | Time (UTC) | Workflow | Script | Purpose |
 |-----|-----------|---------|--------|---------|
 | **Sunday** | 00:00 | `analytics.yml` | — | CI/CD health report (success rates, build times, security) |
+| **Sunday** | 07:00 | `weekly-downloads-tracker.yml` | `store_downloads_tracker.py` | Track downloads + active users from stores + PostHog |
 | **Sunday** | 08:00 | `weekly-attribution-feedback.yml` | `attribution_feedback.py` | PostHog → keyword feedback + content feedback |
 | **Monday** | 10:00 | `weekly-aso-rotation.yml` | `aso_keyword_rotation.py` | Rotate underperforming iOS keywords |
 | **Tuesday** | 11:00 | `weekly-cro-optimization.yml` | `cro_optimization.py` | Propose/track A/B experiments for store listings |
@@ -18,12 +19,19 @@ Automated growth infrastructure running via GitHub Actions on fixed schedules.
 ## System Architecture
 
 ```
-                        ┌─────────────────────┐
-                        │   PostHog Analytics  │
-                        │  (us.i.posthog.com)  │
-                        └──────────┬──────────┘
-                                   │ HogQL queries
-                                   ▼
+┌──────────────────┐    ┌─────────────────────┐    ┌──────────────────┐
+│ Google Play      │    │   PostHog Analytics  │    │ App Store        │
+│ Console API      │    │  (us.i.posthog.com)  │    │ Connect API      │
+└────────┬─────────┘    └──────────┬──────────┘    └────────┬─────────┘
+         │                         │ HogQL queries           │
+         └─────────┐               │               ┌────────┘
+                   ▼               ▼               ▼
+          ┌────────────────────────────────────────────────┐
+          │        Downloads Tracker (Sunday 07:00)         │
+          │   store_downloads.json → DAU/WAU/MAU + installs │
+          └──────────────────────┬─────────────────────────┘
+                                 │
+                                 ▼
 ┌──────────────────┐    ┌──────────────────────┐    ┌──────────────────┐
 │ Content Pipeline │◄───│ Attribution Feedback  │───►│  ASO Keyword     │
 │ (daily blog)     │    │ (Sunday pipeline)     │    │  Rotation        │
@@ -41,12 +49,20 @@ Automated growth infrastructure running via GitHub Actions on fixed schedules.
 │ Review Velocity  │    │  Paid Acquisition    │    │ Referral Content │
 │ Tracker          │    │  (ASA + UAC)         │    │ (Reddit, PH)     │
 └──────────────────┘    └──────────────────────┘    └──────────────────┘
+         │                         │                         │
+         └─────────────────────────┼─────────────────────────┘
+                                   ▼
+                     ┌──────────────────────────┐
+                     │ Daily Metrics Dashboard  │
+                     │ (wiki-sync at 14:30 UTC) │
+                     └──────────────────────────┘
 ```
 
 ## Data Files (marketing/data/)
 
 | File | Updated By | Contents |
 |------|-----------|---------|
+| `store_downloads.json` | `store_downloads_tracker.py` | Download counts, active installs, DAU/WAU/MAU |
 | `cro_experiments.json` | `cro_optimization.py` | A/B test definitions and status |
 | `review_velocity.json` | `review_velocity_tracker.py` | Review snapshots, velocity, prompt config |
 | `paid_campaigns.json` | `paid_acquisition_seed.py` | ASA + UAC campaign configs |

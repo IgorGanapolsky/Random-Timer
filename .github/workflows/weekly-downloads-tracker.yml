@@ -1,0 +1,63 @@
+name: Weekly Downloads Tracker
+
+on:
+  schedule:
+    - cron: '0 7 * * 0' # Every Sunday at 07:00 UTC (before attribution feedback)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: downloads-tracker
+  cancel-in-progress: false
+
+jobs:
+  track-downloads:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests PyJWT
+
+      - name: Run downloads tracker
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_PLAY_BUCKET_NAME: ${{ secrets.GOOGLE_PLAY_BUCKET_NAME }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_VENDOR_NUMBER: ${{ secrets.APPSTORE_VENDOR_NUMBER }}
+        run: python scripts/store_downloads_tracker.py --repo-root .
+
+      - name: Commit download data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add marketing/data/store_downloads.json
+          if git diff --cached --quiet; then
+            echo "No download data changes to commit"
+            exit 0
+          fi
+
+          git commit -m "chore(analytics): weekly store downloads snapshot"
+          git push
+
+      - name: Upload downloads report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-downloads
+          path: marketing/data/store_downloads.json

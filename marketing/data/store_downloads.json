@@ -1,0 +1,31 @@
+{
+  "snapshots": [
+    {
+      "timestamp": "2026-02-21T16:29:33.607981+00:00",
+      "ios_downloads_30d": 0,
+      "android_downloads_30d": 0,
+      "android_active_installs": 0,
+      "dau": 0,
+      "wau": 0,
+      "mau": 0
+    }
+  ],
+  "ios": {
+    "total_downloads": 0,
+    "downloads_30d": 0
+  },
+  "android": {
+    "total_downloads": 0,
+    "downloads_30d": 0,
+    "active_installs": 0
+  },
+  "combined": {
+    "total_downloads": 0,
+    "downloads_30d": 0
+  },
+  "active_users": {
+    "dau": 0,
+    "wau": 0,
+    "mau": 0
+  }
+}
