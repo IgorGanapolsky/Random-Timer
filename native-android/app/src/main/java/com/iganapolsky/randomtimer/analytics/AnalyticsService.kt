@@ -82,7 +82,7 @@ class AnalyticsService @Inject constructor() {
         if (utmParams.isNotEmpty()) {
             // Persist attribution for this user
             prefs?.edit()?.apply {
-                utmParams.forEach { (key, value) -> putString(key, value) }
+                utmParams.forEach { (key, value) -> putString(key, value.toString()) }
                 apply()
             }
             // Set as person properties so all future events carry attribution
