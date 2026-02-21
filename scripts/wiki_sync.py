@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Sync wiki pages to GitHub Wiki with live data from marketing/data/ JSON files.
+"""Inject live data from marketing/data/ JSON files into wiki dashboard template.
 
 Reads the static wiki templates from wiki/, injects live metrics from
-marketing/data/ JSON files into the Daily Metrics Dashboard, then pushes
-all pages to the GitHub Wiki repository.
+marketing/data/ JSON files into the Daily Metrics Dashboard. Git
+operations (clone wiki repo, commit, push) are handled by the GitHub
+Actions workflow YAML, not this script.
 
 Designed to run daily via GitHub Actions.
 """
@@ -14,9 +15,6 @@ import datetime as dt
 import json
 import os
 import re
-import shutil
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -255,97 +253,12 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     return dashboard
 
 
-def sync_to_wiki(repo_root: Path, wiki_dir: Path) -> bool:
-    """Clone wiki repo, copy pages, push."""
-    repo_url = os.getenv("WIKI_REPO_URL", "").strip()
-    if not repo_url:
-        owner_repo = os.getenv("GITHUB_REPOSITORY", "IgorGanapolsky/Random-Timer")
-        repo_url = f"https://github.com/{owner_repo}.wiki.git"
-
-    # Configure auth for GitHub Actions via GIT_ASKPASS (avoids credentials in URL)
-    token = os.getenv("GITHUB_TOKEN", "").strip()
-    env = os.environ.copy()
-    if token:
-        askpass_script = Path("/tmp/git-askpass.sh")
-        askpass_script.write_text("#!/bin/sh\necho \"${GIT_PASSWORD}\"\n", encoding="utf-8")
-        askpass_script.chmod(0o700)
-        env["GIT_ASKPASS"] = str(askpass_script)
-        env["GIT_PASSWORD"] = token  # noqa: S105 — CI token, not hardcoded
-        env["GIT_TERMINAL_PROMPT"] = "0"
-
-    wiki_clone = Path("/tmp/wiki-clone")
-    if wiki_clone.exists():
-        shutil.rmtree(wiki_clone)
-
-    # Try cloning existing wiki
-    result = subprocess.run(
-        ["git", "clone", "--depth", "1", repo_url, str(wiki_clone)],
-        capture_output=True,
-        text=True,
-        timeout=30,
-        env=env,
-    )
-
-    if result.returncode != 0:
-        # Wiki doesn't exist yet — initialize it
-        wiki_clone.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["git", "init"], cwd=wiki_clone, check=True, capture_output=True)
-        subprocess.run(
-            ["git", "remote", "add", "origin", repo_url],
-            cwd=wiki_clone,
-            check=True,
-            capture_output=True,
-        )
-
-    # Copy all wiki pages
-    for md_file in wiki_dir.glob("*.md"):
-        shutil.copy2(md_file, wiki_clone / md_file.name)
-
-    # Commit and push
-    subprocess.run(
-        ["git", "config", "user.name", "github-actions[bot]"],
-        cwd=wiki_clone, check=True, capture_output=True,
-    )
-    subprocess.run(
-        ["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"],
-        cwd=wiki_clone, check=True, capture_output=True,
-    )
-    subprocess.run(["git", "add", "-A"], cwd=wiki_clone, check=True, capture_output=True)
-
-    diff = subprocess.run(
-        ["git", "diff", "--cached", "--quiet"],
-        cwd=wiki_clone, capture_output=True,
-    )
-    if diff.returncode == 0:
-        print("[wiki-sync] No changes to push")
-        return True
-
-    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
-    subprocess.run(
-        ["git", "commit", "-m", f"chore: sync wiki pages ({now})"],
-        cwd=wiki_clone, check=True, capture_output=True,
-    )
-
-    push_result = subprocess.run(
-        ["git", "push", "origin", "master"],
-        cwd=wiki_clone, capture_output=True, text=True, timeout=30, env=env,
-    )
-    if push_result.returncode != 0:
-        # Try main branch
-        push_result = subprocess.run(
-            ["git", "push", "origin", "main"],
-            cwd=wiki_clone, capture_output=True, text=True, timeout=30, env=env,
-        )
-
-    if push_result.returncode != 0:
-        print(f"[wiki-sync] Push failed: {push_result.stderr}")
-        return False
-
-    print("[wiki-sync] Wiki updated successfully")
-    return True
-
-
 def main() -> int:
+    """Inject live data into wiki dashboard template.
+
+    Git operations (clone wiki, push) are handled by the GitHub Actions
+    workflow, not by this script, to avoid credential handling in Python.
+    """
     repo_root = Path(os.getenv("GITHUB_WORKSPACE", ".")).resolve()
     wiki_dir = repo_root / "wiki"
     data_dir = repo_root / "marketing" / "data"
@@ -362,12 +275,7 @@ def main() -> int:
         dashboard_path.write_text(updated, encoding="utf-8")
         print("[wiki-sync] Dashboard updated with live data")
 
-    # Sync to wiki repo
-    if os.getenv("GITHUB_ACTIONS"):
-        success = sync_to_wiki(repo_root, wiki_dir)
-        return 0 if success else 1
-
-    print("[wiki-sync] Not in GitHub Actions — skipping push. Dashboard updated locally.")
+    print(f"[wiki-sync] {len(list(wiki_dir.glob('*.md')))} wiki pages ready in {wiki_dir}")
     return 0
 
 
