@@ -65,7 +65,13 @@ def _mermaid_budget_pie(pc: Optional[Dict[str, Any]]) -> str:
     """Generate a Mermaid pie chart for budget allocation."""
     if not pc:
         return ""
-    alloc = pc.get("budget_allocation", {})
+    raw_alloc = pc.get("budget_allocation", {})
+    alloc = {}
+    for k, v in raw_alloc.items():
+        if isinstance(v, dict):
+            alloc[k] = v.get("daily_budget_usd", 0)
+        else:
+            alloc[k] = v
     if not alloc or all(v == 0 for v in alloc.values()):
         return ""
     slices = "\n".join(
