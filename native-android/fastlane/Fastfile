@@ -2,10 +2,12 @@ default_platform(:android)
 
 platform :android do
   desc "Upload metadata (screenshots, descriptions) to Google Play"
-  lane :metadata do
+  lane :metadata do |options|
+    version_code = options[:version_code] || sh("grep -oP 'versionCode\\s*=\\s*\\K\\d+' ../app/build.gradle.kts").strip
     upload_to_play_store(
       package_name: "com.iganapolsky.randomtimer",
       track: "internal",
+      version_code: version_code.to_i,
       skip_upload_apk: true,
       skip_upload_aab: true,
       skip_upload_changelogs: false,
