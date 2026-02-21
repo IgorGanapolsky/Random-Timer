@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   pages: write
   id-token: write
 
@@ -78,7 +79,10 @@ jobs:
           fi
 
           git commit -m "chore(growth): daily content, publishing logs, and pages build"
-          git push
+          BRANCH="auto/growth-publishing-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(growth): daily content and publishing update" --body "Automated daily growth content, publishing logs, and pages build" --label "automation" || true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
