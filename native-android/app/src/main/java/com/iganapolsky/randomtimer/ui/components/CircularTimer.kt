@@ -274,6 +274,8 @@ fun CircularTimer(
                 textAlign = TextAlign.Center,
             )
         } else if (rangeText.isNotEmpty()) {
+            // Split "1m 10s - 3m 35s" into two lines so it fits inside the circle
+            val rangeParts = rangeText.split(" - ", limit = 2)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -283,12 +285,28 @@ fun CircularTimer(
                     color = if (status == TimerStatus.PAUSED) TimerColors.TextSecondary else TimerColors.TextMuted,
                     textAlign = TextAlign.Center,
                 )
-                Text(
-                    text = rangeText,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
-                    textAlign = TextAlign.Center,
-                )
+                if (rangeParts.size == 2) {
+                    Text(
+                        text = rangeParts[0],
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = "to ${rangeParts[1]}",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
+                        textAlign = TextAlign.Center,
+                    )
+                } else {
+                    Text(
+                        text = rangeText,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                }
             }
         } else {
             // Fallback - should not happen for random timer

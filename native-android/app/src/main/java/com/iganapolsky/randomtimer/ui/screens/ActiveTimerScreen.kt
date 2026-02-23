@@ -182,7 +182,7 @@ fun ActiveTimerScreen(
             @Composable
             fun TimerCircle() {
                 CircularTimer(
-                    progress = if (isComplete) 1f else 0f,
+                    progress = state.progress,
                     status = state.status,
                     modifier =
                         Modifier

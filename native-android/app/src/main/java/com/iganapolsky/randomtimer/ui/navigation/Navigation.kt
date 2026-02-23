@@ -9,6 +9,9 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
+import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
@@ -101,23 +105,21 @@ fun RandomTimerNavHost(
             LaunchedEffect(Unit) {
                 viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)
             }
-            timerState?.let { state ->
+            // Cache last non-null state so the screen doesn't flash black
+            // during the exit animation when timerState becomes null
+            var cachedState by remember { mutableStateOf<TimerState?>(null) }
+            timerState?.let { cachedState = it }
+            val displayState = timerState ?: cachedState
+
+            displayState?.let { state ->
                 ActiveTimerScreen(
                     state = state,
-                    onStop = {
-                        viewModel.cancelTimer()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
-                    },
-                    onDismissAlarm = {
-                        viewModel.dismissAlarm()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
-                    },
+                    onStop = viewModel::cancelTimer,
+                    onDismissAlarm = viewModel::dismissAlarm,
                     onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
                     onResume = viewModel::resumeTimer,
-                    onReset = {
-                        viewModel.resetTimer()
-                    },
+                    onReset = viewModel::resetTimer,
                     onLoopToggle = { enabled ->
                         viewModel.updateLoopSetting(enabled)
                     },
