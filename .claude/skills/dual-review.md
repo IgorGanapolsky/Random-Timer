@@ -57,6 +57,15 @@ Trigger both Claude and Copilot to review a PR, then synthesize their feedback.
    - [Copilot] Add JSDoc comments
    ```
 
+6. **Contract Validation Gate**
+   - Convert synthesized output into strict JSON matching:
+     `.claude/contracts/review-contract.schema.json`
+   - Validate before final recommendation:
+
+   ```bash
+   python scripts/review_contract_check.py --input <review-artifact.json>
+   ```
+
 ## Checks Performed
 
 | Reviewer    | Focus Area                                                                              |

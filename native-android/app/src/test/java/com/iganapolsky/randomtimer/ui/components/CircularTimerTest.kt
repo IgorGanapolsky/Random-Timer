@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.ui.components
 
 import com.google.common.truth.Truth.assertThat
+import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import org.junit.Test
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -40,6 +41,21 @@ class CircularTimerTest {
     fun `text breathing opacity range is 1_0 to 0_85`() {
         assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX).isEqualTo(1.0f)
         assertThat(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MIN).isEqualTo(0.85f)
+    }
+
+    @Test
+    fun `paused status does not breathe text`() {
+        assertThat(shouldBreatheText(TimerStatus.PAUSED)).isFalse()
+    }
+
+    @Test
+    fun `running status breathes text`() {
+        assertThat(shouldBreatheText(TimerStatus.RUNNING)).isTrue()
+    }
+
+    @Test
+    fun `paused status uses higher track alpha for readability`() {
+        assertThat(effectiveTrackAlpha(TimerStatus.PAUSED, 0.3f)).isEqualTo(0.45f)
     }
 
     // -- formatDuration tests --

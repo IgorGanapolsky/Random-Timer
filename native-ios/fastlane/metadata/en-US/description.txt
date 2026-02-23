@@ -1,26 +1,32 @@
-Random Tactical Timer is an unpredictable interval timer for reaction training.
+TRAIN FOR CHAOS. NOT RHYTHM.
 
-Set a minimum and maximum time window, then the alarm fires at a random point inside that range. You stop training for countdown patterns and train real reaction.
+Most timers teach your brain to anticipate the bell. That's comfort training — and it makes you slower when it counts. Random Tactical Timer fires at an unpredictable moment inside your chosen time window, forcing genuine reaction under stress. This is pattern-interrupt training for serious fighters and operators.
 
-BEST FOR:
-- HIIT and conditioning intervals
-- Boxing, martial arts, and tactical drills
-- Team practices and coach-led sessions
-- Focus sprints and break routines
+BUILT FOR:
+- Boxing pad rounds, bag intervals, and shadowboxing flurries
+- BJJ scramble and positional transition drills
+- MMA, Muay Thai, and Combatives pattern-interrupt work
+- Law enforcement and Military defensive tactics training
+- HIIT and CrossFit sessions that punish predictability
+
+WHY UNPREDICTABILITY WORKS:
+- Pattern Interrupt: Force your nervous system to stay present, not wait for a buzzer.
+- Stress Inoculation: Build composure by training against uncertain triggers—the same method used in tactical and military stress-conditioning.
+- Eliminate Anticipation: Stop "cruising" through rounds. React when the stimulus hits, not when you expect it.
 
 KEY FEATURES:
-- True random trigger inside your chosen range
-- Hidden countdown mode to reduce anticipation
-- Loop mode for continuous random rounds
-- Multiple alarm sounds, vibration, and volume controls
+- True random trigger within your selected min/max range
+- Hidden countdown mode — no timer watching allowed
+- Loop mode for continuous random chaos rounds
+- High-intensity alarm + haptic vibration + volume precision
 - Pause, resume, reset, and stable background behavior
-- Live Activity support on iPhone lock screen
+- Live Activity support: See the active chaos on your iPhone lock screen
 
 HOW IT WORKS:
-1. Pick your range (for example 30 seconds to 5 minutes)
-2. Tap Start
-3. Move, drill, or work normally
-4. React when the alarm hits
-5. Repeat single rounds or run loop mode
+1. Set your range (e.g. 15 seconds to 3 minutes)
+2. Press Start
+3. Train normally — move, drill, spar, or hold position
+4. React with explosive intensity when the cue hits
+5. Loop for continuous stress rounds
 
-No ads. No subscriptions. Fast setup, daily use.
+Zero ads. No subscriptions. No tracking. Just a tool for those who train for reality.

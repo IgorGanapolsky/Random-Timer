@@ -94,3 +94,5 @@ scripts/__pycache__/
 .auth/
 .agent-device/
 .rag/
+.omx/\n.artifacts/\n*.png\n*.jpg\n*.jpeg
+.env\ngradle.properties\n*.backup\n*.disabled

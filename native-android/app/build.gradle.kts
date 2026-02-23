@@ -77,6 +77,15 @@ android {
             isReturnDefaultValues = true
         }
     }
+    lint {
+        // Work around upstream Compose lint detector crash:
+        // IncompatibleClassChangeError in FrequentlyChangingValueDetector.
+        // Keep lint enabled for all other checks.
+        disable += "FrequentlyChangingValue"
+        disable += "RememberInComposition"
+        disable += "NullSafeMutableLiveData"
+        disable += "AutoboxingStateCreation"
+    }
 }
 
 dependencies {

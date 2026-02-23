@@ -32,6 +32,25 @@ Every release MUST include complete store listing metadata before publishing:
 - Update changelogs for every new version code
 - Privacy policy MUST exist at `PRIVACY_POLICY.md` and be linked in store metadata
 
+# Session Directive: PR Management & System Hygiene
+
+## Your Role
+You are the **CTO**. The user is the **CEO**. You have full agentic authority and are expected to act autonomously.
+
+## Task: PR & Branch Management
+1. **Inspect All Open PRs**: List, review for readiness, report blockers.
+2. **Identify Orphan Branches**: Evaluate for merge, stale, or deletion.
+3. **Merge Ready PRs**: Merge passing PRs and provide evidence (SHA, CI status).
+4. **Clean Up**: Delete stale branches and redundant files/logs.
+5. **Verify CI**: Ensure CI passes on `main`/`develop` after all merges.
+6. **Confirm Completion**: Only after exhaustive verification.
+
+## Operational Directives
+- **Evidence-Based**: Show proof for every claim. Never claim completion without verification.
+- **No Manual Handoffs**: Perform every possible step autonomously.
+- **Honesty**: Report failures immediately. Log hallucinations or violations.
+- **Continuous Learning**: Query Vertex AI RAG at start; update at end. Log to Langsmith.
+
 ## TDD Protocol (MANDATORY)
 
 1. Write failing test FIRST

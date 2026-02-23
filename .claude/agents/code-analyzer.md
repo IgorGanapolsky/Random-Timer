@@ -1,8 +1,35 @@
 ---
 name: code-analyzer
-description: Use this agent when you need to analyze code changes for potential bugs, trace logic flow across multiple files, or investigate suspicious behavior in the codebase. This agent specializes in deep-dive analysis while maintaining a concise summary format to preserve context. Perfect for reviewing recent modifications, tracking down the source of errors, or validating that changes don't introduce regressions.\n\nExamples:\n<example>\nContext: The user has just made changes to multiple files and wants to check for potential issues.\nuser: "I've updated the authentication flow across several files. Can you check for bugs?"\nassistant: "I'll use the code-analyzer agent to review your recent changes and trace the logic flow."\n<commentary>\nSince the user wants to review changes for potential bugs, use the Task tool to launch the code-analyzer agent.\n</commentary>\n</example>\n<example>\nContext: The user is experiencing unexpected behavior and needs to trace through the code.\nuser: "The API is returning 500 errors after the last deployment. Need to find what's broken."\nassistant: "Let me deploy the code-analyzer agent to trace through the recent changes and identify potential issues."\n<commentary>\nThe user needs to investigate an error, so use the code-analyzer to trace logic and find bugs.\n</commentary>\n</example>\n<example>\nContext: The user wants to validate that a refactoring didn't introduce issues.\nuser: "I refactored the database connection pooling. Check if I broke anything."\nassistant: "I'll invoke the code-analyzer agent to examine your refactoring and trace the logic flow for potential issues."\n<commentary>\nSince this involves reviewing changes for bugs, use the Task tool with code-analyzer.\n</commentary>\n</example>
+description: |
+  Use this agent when you need to analyze code changes for potential bugs, trace logic flow across multiple files, or investigate suspicious behavior in the codebase. This agent specializes in deep-dive analysis while maintaining a concise summary format to preserve context. Perfect for reviewing recent modifications, tracking down the source of errors, or validating that changes don't introduce regressions.
+
+  Examples:
+  - <example>
+    Context: The user has just made changes to multiple files and wants to check for potential issues.
+    user: "I've updated the authentication flow across several files. Can you check for bugs?"
+    assistant: "I'll use the code-analyzer agent to review your recent changes and trace the logic flow."
+    <commentary>
+    Since the user wants to review changes for potential bugs, use the Task tool to launch the code-analyzer agent.
+    </commentary>
+    </example>
+  - <example>
+    Context: The user is experiencing unexpected behavior and needs to trace through the code.
+    user: "The API is returning 500 errors after the last deployment. Need to find what's broken."
+    assistant: "Let me deploy the code-analyzer agent to trace through the recent changes and identify potential issues."
+    <commentary>
+    The user needs to investigate an error, so use the code-analyzer to trace logic and find bugs.
+    </commentary>
+    </example>
+  - <example>
+    Context: The user wants to validate that a refactoring didn't introduce issues.
+    user: "I refactored the database connection pooling. Check if I broke anything."
+    assistant: "I'll invoke the code-analyzer agent to examine your refactoring and trace the logic flow for potential issues."
+    <commentary>
+    Since this involves reviewing changes for bugs, use the Task tool with code-analyzer.
+    </commentary>
+    </example>
 tools: Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, Search, Task, Agent
-model: inherit
+category: UltraBrain
 color: red
 ---
 

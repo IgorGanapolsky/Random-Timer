@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for CircularTimerView animation math functions.
 /// Must match Android CircularTimerTest animation parity assertions.
+@MainActor
 final class CircularTimerViewTests: XCTestCase {
 
     // -- fastOutSlowIn easing curve tests --
@@ -95,5 +96,15 @@ final class CircularTimerViewTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(result, 0.0, "Pulse out of range at cycle=\(cycle)")
             XCTAssertLessThanOrEqual(result, 1.0, "Pulse out of range at cycle=\(cycle)")
         }
+    }
+
+    func testPausedStatusDoesNotBreatheText() {
+        XCTAssertFalse(CircularTimerView.shouldBreatheText(for: .paused))
+        XCTAssertTrue(CircularTimerView.shouldResetTextBreathing(for: .paused))
+    }
+
+    func testRunningStatusBreathesText() {
+        XCTAssertTrue(CircularTimerView.shouldBreatheText(for: .running))
+        XCTAssertFalse(CircularTimerView.shouldResetTextBreathing(for: .running))
     }
 }

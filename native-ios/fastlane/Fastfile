@@ -123,12 +123,17 @@ platform :ios do
       )
     end
 
-    # Keep option parsing for workflow compatibility, but screenshot-only sync
-    # should target the live version and avoid mutating version/build fields.
-    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
-    UI.message("Running screenshot-only sync for requested version hint v#{version} using live App Store version")
+    use_live_raw = options.key?(:use_live_version) ? options[:use_live_version] : false
+    use_live_version = [true, "true", "1", 1, "yes", "on"].include?(use_live_raw)
 
-    deliver(
+    version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
+    if use_live_version
+      UI.message("Running metadata sync against live App Store version (version hint v#{version})")
+    else
+      UI.message("Running metadata sync for App Store version v#{version}")
+    end
+
+    deliver_args = {
       app_identifier: "com.igorganapolsky.randomtimer",
       skip_binary_upload: true,
       skip_screenshots: false,
@@ -138,12 +143,14 @@ platform :ios do
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
-      # Screenshot-only sync for already-used/live versions must not mutate versionString.
-      skip_app_version_update: true,
-      use_live_version: true,
+      # When targeting live version, avoid mutating versionString.
+      skip_app_version_update: use_live_version,
+      use_live_version: use_live_version,
       force: true,
       api_key: defined?(api_key) ? api_key : nil
-    )
+    }
+    deliver_args[:app_version] = version unless use_live_version
+    deliver(deliver_args)
 		  end
 
   desc "Submit a given version for App Review (uploads metadata + attaches build)"
@@ -186,12 +193,20 @@ platform :ios do
       submit_for_review: true,
       automatic_release: false,
       skip_binary_upload: true,
+      # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
+      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
       # Prefer uploading screenshots/metadata in the separate `metadata` lane,
       # then submit with a minimal, deterministic step.
       skip_screenshots: options.key?(:skip_screenshots) ? options[:skip_screenshots] : true,
       skip_metadata: options.key?(:skip_metadata) ? options[:skip_metadata] : true,
       force: true,
-      api_key: defined?(api_key) ? api_key : nil
+      api_key: defined?(api_key) ? api_key : nil,
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
     )
   end
 

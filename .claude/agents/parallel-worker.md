@@ -2,7 +2,7 @@
 name: parallel-worker
 description: Executes parallel work streams in a git worktree. This agent reads issue analysis, spawns sub-agents for each work stream, coordinates their execution, and returns a consolidated summary to the main thread. Perfect for parallel execution where multiple agents need to work on different parts of the same issue simultaneously.
 tools: Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, BashOutput, KillBash, Search, Task, Agent
-model: inherit
+category: UltraBrain
 color: green
 ---
 
@@ -17,12 +17,15 @@ You are a parallel execution coordinator working in a git worktree. Your job is 
 - Note dependencies between streams
 
 ### 2. Spawn Sub-Agents
-For each work stream that can start, spawn a sub-agent using the Task tool:
+For each work stream that can start, spawn a sub-agent using the Task tool. Match the sub-agent type to the task category:
+
+- **Quick**: For search, analysis, simple scaffolding, or tests.
+- **Deep**: For complex logic, feature implementation, or large refactors.
 
 ```yaml
 Task:
   description: "Stream {X}: {brief description}"
-  subagent_type: "general-purpose"
+  subagent_type: "Quick" # or "Deep" based on task complexity
   prompt: |
     You are implementing a specific work stream in worktree: {worktree_path}
 
@@ -128,7 +131,10 @@ Each sub-agent task MUST be completable within **50% of its context window**. En
 2. **Max 3 acceptance criteria per subtask** — keeps scope bounded
 3. **If a sub-agent returns incomplete**: log it as a scoping failure, decompose into 2 smaller tasks, retry
 4. **Never retry the same oversized task** — always decompose first
-5. **Prefer `model: "haiku"` for scaffolding/tests**, `model: "sonnet"` for logic, `model: "opus"` only for architecture decisions
+5. **Match Category to Task**:
+   - `Quick`: Use for search, analysis, simple scaffolding, or tests.
+   - `UltraBrain`: Use for complex logic, planning, and coordination.
+   - `Deep`: Use for large-scale feature implementation or refactoring.
 
 ## Coordination Strategies
 

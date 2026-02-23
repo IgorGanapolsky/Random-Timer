@@ -173,7 +173,7 @@ fun ActiveTimerScreen(
                     Text(
                         text = "Paused",
                         style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextMuted,
+                        color = TimerColors.TextSecondary,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -224,7 +224,7 @@ fun ActiveTimerScreen(
                     Text(
                         text = "You don't know when it will go off...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TimerColors.TextMuted,
+                        color = if (isPaused) TimerColors.TextSecondary else TimerColors.TextMuted,
                         textAlign = TextAlign.Center,
                     )
                 }

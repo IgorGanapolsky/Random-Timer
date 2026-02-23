@@ -60,6 +60,30 @@ struct ContentView: View {
             let stateArg = args[index + 1].lowercased()
 
             switch stateArg {
+            case "running":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 195,
+                    remainingDuration: 135,
+                    status: .running,
+                    alarmTimeRemaining: 0,
+                    alarmStartedAt: nil
+                )
+                timerManager._setTimerStateForTesting(seededState)
+
+            case "paused":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 195,
+                    remainingDuration: 135,
+                    status: .paused,
+                    alarmTimeRemaining: 0,
+                    alarmStartedAt: nil
+                )
+                timerManager._setTimerStateForTesting(seededState)
+
             case "alarm":
                 let config = TimerConfig()
                 let seededState = TimerState(
