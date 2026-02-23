@@ -89,15 +89,20 @@ def _mermaid_keywords_bar(pc: Optional[Dict[str, Any]]) -> str:
     campaigns = pc.get("campaigns", [])
     groups: list[tuple[str, int]] = []
     for c in campaigns:
-        for ag in c.get("ad_groups", []):
-            name = ag.get("name", "Unknown")
-            count = len(ag.get("keywords", []))
-            if count > 0:
-                groups.append((name, count))
+        ad_groups = c.get("ad_groups", [])
+        if isinstance(ad_groups, list):
+            for ag in ad_groups:
+                name = ag.get("name", "Unknown")
+                keywords = ag.get("keywords", [])
+                count = len(keywords) if isinstance(keywords, list) else 0
+                if count > 0:
+                    groups.append((name, count))
         # Google UAC keyword themes
         themes = c.get("targeting", {}).get("keyword_themes", [])
-        if themes:
+        if isinstance(themes, list) and themes:
             groups.append(("UAC Themes", len(themes)))
+        elif isinstance(themes, int) and themes > 0:
+            groups.append(("UAC Themes", themes))
     if not groups:
         return ""
     cats = " , ".join(f'"{g[0]}"' for g in groups)
@@ -262,9 +267,20 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
             alloc_val = alloc.get(platform, 0)
             budget = alloc_val.get("daily_budget_usd", 0) if isinstance(alloc_val, dict) else (alloc_val if isinstance(alloc_val, (int, float)) else 0)
             status = c.get("status", "draft")
-            kw_count = sum(len(ag.get("keywords", [])) for ag in c.get("ad_groups", []))
+            kw_count = 0
+            ad_groups = c.get("ad_groups", [])
+            if isinstance(ad_groups, list):
+                for ag in ad_groups:
+                    keywords = ag.get("keywords", [])
+                    if isinstance(keywords, list):
+                        kw_count += len(keywords)
+            
             if not kw_count:
-                kw_count = len(c.get("targeting", {}).get("keyword_themes", []))
+                themes = c.get("targeting", {}).get("keyword_themes", [])
+                if isinstance(themes, list):
+                    kw_count = len(themes)
+                elif isinstance(themes, int):
+                    kw_count = themes
             total_kw += kw_count
             campaign_rows.append(f"| {platform} | ${budget:.2f} | {status} | {kw_count} |")
         total_budget = sum(

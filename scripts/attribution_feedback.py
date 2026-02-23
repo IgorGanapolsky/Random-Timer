@@ -34,19 +34,38 @@ def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[st
     if requests is None:
         return None
 
-    response = requests.post(
-        f"https://us.posthog.com/api/projects/{project_id}/query/",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={"query": {"kind": "HogQLQuery", "query": query}},
-        timeout=30,
-    )
+    try:
+        response = requests.post(
+            f"https://us.posthog.com/api/projects/{project_id}/query/",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={"query": {"kind": "HogQLQuery", "query": query}},
+            timeout=60,
+        )
+    except requests.RequestException as exc:
+        print(f"[Attribution] PostHog query request error: {exc}")
+        return None
+
     if response.status_code >= 300:
         print(f"[Attribution] PostHog query failed: {response.status_code} {response.text[:200]}")
         return None
     return response.json()
+
+
+def query_scalar(query: str, api_key: str, project_id: str) -> int:
+    """Return first scalar result for a HogQL query, defaulting to 0."""
+    result = posthog_query(query, api_key, project_id)
+    if not result or "results" not in result or not result["results"]:
+        return 0
+    row = result["results"][0]
+    if not row:
+        return 0
+    try:
+        return int(row[0] or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def fetch_utm_attribution(api_key: str, project_id: str, days: int = 30) -> List[Dict[str, Any]]:
@@ -67,6 +86,24 @@ def fetch_utm_attribution(api_key: str, project_id: str, days: int = 30) -> List
     LIMIT 100
     """
     result = posthog_query(query, api_key, project_id)
+    if not result or "results" not in result or not result["results"]:
+        # Fallback: capture any events carrying UTM params when deep_link_opened is absent.
+        fallback_query = f"""
+        SELECT
+            properties.utm_source AS source,
+            properties.utm_medium AS medium,
+            properties.utm_campaign AS campaign,
+            properties.utm_content AS content,
+            count() AS installs,
+            count(DISTINCT person_id) AS unique_users
+        FROM events
+        WHERE properties.utm_source IS NOT NULL
+          AND timestamp > now() - interval {days} day
+        GROUP BY source, medium, campaign, content
+        ORDER BY installs DESC
+        LIMIT 100
+        """
+        result = posthog_query(fallback_query, api_key, project_id)
     if not result or "results" not in result:
         return []
 
@@ -80,20 +117,78 @@ def fetch_utm_attribution(api_key: str, project_id: str, days: int = 30) -> List
 
 def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Dict[str, Any]:
     """Fetch onboarding funnel metrics from PostHog."""
-    funnel_events = ["first_open", "first_timer_configured", "first_timer_completed"]
     funnel = {}
-    for event in funnel_events:
-        query = f"""
-        SELECT count(DISTINCT person_id) AS users
+
+    # Preferred lifecycle events.
+    first_open = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id)
         FROM events
-        WHERE event = '{event}'
+        WHERE event = 'first_open'
           AND timestamp > now() - interval {days} day
-        """
-        result = posthog_query(query, api_key, project_id)
-        if result and result.get("results"):
-            funnel[event] = result["results"][0][0]
-        else:
-            funnel[event] = 0
+        """,
+        api_key,
+        project_id,
+    )
+    first_configured = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id)
+        FROM events
+        WHERE event = 'first_timer_configured'
+          AND timestamp > now() - interval {days} day
+        """,
+        api_key,
+        project_id,
+    )
+    first_completed = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id)
+        FROM events
+        WHERE event = 'first_timer_completed'
+          AND timestamp > now() - interval {days} day
+        """,
+        api_key,
+        project_id,
+    )
+
+    # Fallback to currently observed production events if lifecycle aliases are absent.
+    if first_open == 0:
+        first_open = query_scalar(
+            f"""
+            SELECT count(DISTINCT person_id)
+            FROM events
+            WHERE event IN ('Application Opened', 'Application Installed')
+              AND timestamp > now() - interval {days} day
+            """,
+            api_key,
+            project_id,
+        )
+    if first_configured == 0:
+        first_configured = query_scalar(
+            f"""
+            SELECT count(DISTINCT person_id)
+            FROM events
+            WHERE event IN ('timer_started', 'settings_changed')
+              AND timestamp > now() - interval {days} day
+            """,
+            api_key,
+            project_id,
+        )
+    if first_completed == 0:
+        first_completed = query_scalar(
+            f"""
+            SELECT count(DISTINCT person_id)
+            FROM events
+            WHERE event = 'timer_completed'
+              AND timestamp > now() - interval {days} day
+            """,
+            api_key,
+            project_id,
+        )
+
+    funnel["first_open"] = first_open
+    funnel["first_timer_configured"] = first_configured
+    funnel["first_timer_completed"] = first_completed
 
     # Compute conversion rates
     first_open = funnel.get("first_open", 0)
@@ -132,6 +227,26 @@ def fetch_campaign_installs(api_key: str, project_id: str, days: int = 30) -> Li
     LIMIT 50
     """
     result = posthog_query(query, api_key, project_id)
+    if not result or "results" not in result or not result["results"]:
+        # Fallback: use any events with utm_campaign populated.
+        fallback_query = f"""
+        SELECT
+            properties.utm_campaign AS campaign,
+            properties.utm_source AS source,
+            count(DISTINCT person_id) AS attributed_users,
+            countIf(person_id IN (
+                SELECT DISTINCT person_id FROM events
+                WHERE event IN ('first_timer_completed', 'timer_completed')
+                  AND timestamp > now() - interval {days} day
+            )) AS activated_users
+        FROM events
+        WHERE properties.utm_campaign IS NOT NULL
+          AND timestamp > now() - interval {days} day
+        GROUP BY campaign, source
+        ORDER BY attributed_users DESC
+        LIMIT 50
+        """
+        result = posthog_query(fallback_query, api_key, project_id)
     if not result or "results" not in result:
         return []
 

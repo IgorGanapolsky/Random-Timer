@@ -20,14 +20,23 @@
 ## Attribution Summary
 
 <!-- ATTRIBUTION_START -->
-_Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets configured._
+# Attribution Feedback Report
 
-| Metric | Value |
-|--------|-------|
-| Total Attributed Installs (30d) | — |
-| Unique Attributed Users (30d) | — |
-| Top Source | — |
-| Top Campaign | — |
+**Generated:** 2026-02-23T13:54:02+00:00
+
+## Onboarding Funnel
+- First Open: **0**
+- First Timer Configured: **0** (0.0% of opens)
+- First Timer Completed: **0** (0.0% of opens)
+
+## UTM Attribution (Top Sources)
+| Source | Medium | Campaign | Installs | Unique Users |
+|--------|--------|----------|----------|-------------|
+
+## Campaign Performance
+| Campaign | Source | Attributed | Activated | Rate |
+|----------|--------|-----------|-----------|------|
+
 <!-- ATTRIBUTION_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -66,9 +75,10 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 <!-- CAMPAIGNS_START -->
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
-| apple_search_ads | $6.00 | draft | 37 |
-| google_uac | $4.00 | draft | 10 |
-| **Total** | **$10.00** | — | 47 |
+| apple_search_ads | $10.00 | draft | 37 |
+| google_uac | $10.00 | draft | 10 |
+| reddit_ads | $10.00 | ready_to_launch | 0 |
+| **Total** | **$30.00** | — | 47 |
 <!-- CAMPAIGNS_END -->
 
 ## ASO Keywords
@@ -105,8 +115,9 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 <!-- CHARTS_START -->
 ```mermaid
 pie title Daily Ad Budget Allocation ($)
-    "Apple Search Ads" : 6.0
-    "Google Uac" : 4.0
+    "Apple Search Ads" : 10.0
+    "Google Uac" : 10.0
+    "Reddit Ads" : 10.0
 ```
 
 ```mermaid
