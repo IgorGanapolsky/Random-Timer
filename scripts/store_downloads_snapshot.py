@@ -47,7 +47,7 @@ def posthog_query(query: str, api_key: str, project_id: str, errors: List[str]) 
         return None
 
     if response.status_code >= 300:
-        errors.append(f"http_{response.status_code}: {response.text[:200]}")
+        errors.append(f"http_{response.status_code}")
         return None
     return response.json()
 
