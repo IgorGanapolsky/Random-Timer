@@ -19,6 +19,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+QUERY_ERRORS: List[str] = []
+
 
 def _requests_module():
     try:
@@ -45,10 +47,14 @@ def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[st
             timeout=60,
         )
     except requests.RequestException as exc:
+        msg = f"request_error: {exc}"
+        QUERY_ERRORS.append(msg)
         print(f"[Attribution] PostHog query request error: {exc}")
         return None
 
     if response.status_code >= 300:
+        msg = f"http_{response.status_code}: {response.text[:200]}"
+        QUERY_ERRORS.append(msg)
         print(f"[Attribution] PostHog query failed: {response.status_code} {response.text[:200]}")
         return None
     return response.json()
@@ -378,6 +384,14 @@ def build_report(
         for kw, count in sorted(keyword_performance.items(), key=lambda x: -x[1])[:20]:
             lines.append(f"| {kw} | {count} |")
 
+    if QUERY_ERRORS:
+        lines.extend([
+            "",
+            "## Query Diagnostics",
+            f"- Query errors observed: **{len(QUERY_ERRORS)}**",
+            f"- Last error: `{QUERY_ERRORS[-1]}`",
+        ])
+
     return "\n".join(lines) + "\n"
 
 
@@ -387,17 +401,30 @@ def run(
     dry_run: bool = False,
 ) -> Dict[str, Any]:
     """Main attribution feedback pipeline."""
-    api_key = os.getenv("POSTHOG_PERSONAL_API_KEY", "").strip()
+    QUERY_ERRORS.clear()
+
+    api_key = (
+        os.getenv("POSTHOG_PERSONAL_API_KEY", "").strip()
+        or os.getenv("POSTHOG_API_KEY", "").strip()
+        or os.getenv("posthog_api_key", "").strip()
+    )
     project_id = os.getenv("POSTHOG_PROJECT_ID", "").strip()
+    report_path = repo_root / "marketing" / "data" / "attribution-report.md"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not api_key or not project_id:
         # Generate empty feedback files so downstream scripts don't break
         empty_kw: Dict[str, int] = {}
         write_aso_feedback(repo_root, empty_kw)
         write_content_feedback(repo_root, [], {"window_days": days})
+        report_path.write_text(
+            "# Attribution Feedback Report\n\nNo PostHog query data available: missing API key and/or project id.\n",
+            encoding="utf-8",
+        )
         return {
             "status": "skipped",
-            "reason": "missing POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID",
+            "reason": "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID",
+            "report": str(report_path),
         }
 
     attribution = fetch_utm_attribution(api_key, project_id, days)
@@ -414,8 +441,6 @@ def run(
 
     report = build_report(attribution, funnel, campaign_installs, keyword_performance)
 
-    report_path = repo_root / "marketing" / "data" / "attribution-report.md"
-    report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(report, encoding="utf-8")
 
     # Write to GitHub Actions step summary if available
@@ -425,7 +450,7 @@ def run(
             handle.write(report)
 
     return {
-        "status": "ok",
+        "status": "ok" if not QUERY_ERRORS else "degraded",
         "attribution_rows": len(attribution),
         "funnel": funnel,
         "campaign_rows": len(campaign_installs),
@@ -433,6 +458,8 @@ def run(
         "aso_feedback": str(aso_path),
         "content_feedback": str(content_path),
         "report": str(report_path),
+        "query_errors_count": len(QUERY_ERRORS),
+        "last_query_error": QUERY_ERRORS[-1] if QUERY_ERRORS else "",
     }
 
 
