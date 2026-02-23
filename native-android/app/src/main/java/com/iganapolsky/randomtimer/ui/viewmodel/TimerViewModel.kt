@@ -123,7 +123,18 @@ class TimerViewModel
         }
 
         fun cancelTimer() {
+            val state = _timerState.value
             analyticsService.track(AnalyticsEvents.TIMER_STOPPED)
+            if (state != null && state.status != TimerStatus.ALARM && state.status != TimerStatus.COMPLETE) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_ABANDONED,
+                    mapOf(
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                        "remaining_duration" to state.remainingDuration.inWholeSeconds,
+                        "status" to state.status.name,
+                    ),
+                )
+            }
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -198,6 +209,10 @@ class TimerViewModel
             val currentStatus = state?.status ?: return
 
             if (previousStatus != null && previousStatus != TimerStatus.ALARM && currentStatus == TimerStatus.ALARM) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_COUNTDOWN_FINISHED,
+                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                )
                 analyticsService.track(
                     AnalyticsEvents.ALARM_TRIGGERED,
                     mapOf("target_duration" to state.targetDuration.inWholeSeconds),

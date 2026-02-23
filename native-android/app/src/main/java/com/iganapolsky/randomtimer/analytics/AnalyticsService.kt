@@ -180,6 +180,8 @@ object AnalyticsEvents {
     const val TIMER_STOPPED = "timer_stopped"
     const val ALARM_TRIGGERED = "alarm_triggered"
     const val ALARM_DISMISSED = "alarm_dismissed"
+    const val TIMER_ABANDONED = "timer_abandoned"
+    const val TIMER_COUNTDOWN_FINISHED = "timer_countdown_finished"
     const val SETTINGS_CHANGED = "settings_changed"
     const val REVIEW_PROMPT_REQUESTED = "review_prompt_requested"
     const val WRITE_REVIEW_TAPPED = "write_review_tapped"
