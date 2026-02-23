@@ -44,6 +44,35 @@ jobs:
           fi
           echo "✅ No architecture violations found"
 
+      - name: UI state binding audit
+        run: |
+          ERRORS=0
+          SCREENS_DIR="native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens"
+
+          # Ban hardcoded progress values in CircularTimer calls
+          for f in $(find "$SCREENS_DIR" -name '*.kt'); do
+            if grep -Pn 'progress\s*=\s*(if\s*\(|0f|1f)' "$f" | grep -v '// allow-hardcoded-progress' > /dev/null 2>&1; then
+              echo "❌ $f: Hardcoded progress value — use state.progress instead"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          # Ban ignoring state fields when passing to UI components
+          for f in $(find "$SCREENS_DIR" -name '*.kt'); do
+            if grep -Pn 'CircularTimer\(' "$f" > /dev/null 2>&1; then
+              # Verify state.progress is used (not a ternary or literal)
+              if ! grep -P 'progress\s*=\s*state\.progress' "$f" > /dev/null 2>&1; then
+                echo "⚠️  $f: CircularTimer may not be using state.progress — verify manually"
+              fi
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "Found $ERRORS UI state binding violation(s)"
+            exit 1
+          fi
+          echo "✅ UI state binding audit passed"
+
   python:
     name: Python Script Tests
     runs-on: ubuntu-latest
