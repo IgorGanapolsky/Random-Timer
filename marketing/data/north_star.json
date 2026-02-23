@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-02-23T17:05:10+00:00",
+  "source": "posthog",
+  "status": "ok",
+  "status_reason": "",
+  "lookback_days": 30,
+  "wqtu_window_days": 7,
+  "north_star": {
+    "name": "Weekly Qualified Training Users",
+    "key": "WQTU",
+    "definition": "distinct users with >=3 timer_completed events in trailing 7 days",
+    "wqtu_7d": 0,
+    "timer_completed_7d": 2,
+    "completed_users_7d": 1,
+    "sessions_per_completed_user_7d": 2.0,
+    "targets": {
+      "checkpoint_2026_03_31": 8,
+      "quarter_2026_06_30": 25
+    },
+    "on_track_checkpoint": false,
+    "on_track_quarter": false
+  },
+  "paid": {
+    "paid_distinct_users_30d": 0,
+    "paid_events_by_source_30d": [],
+    "active_campaigns": [],
+    "active_campaign_count": 0,
+    "active_statuses": [
+      "active",
+      "enabled",
+      "live",
+      "on",
+      "running",
+      "serving"
+    ],
+    "guardrail_violated": false,
+    "guardrail_reason": ""
+  },
+  "query_diagnostics": {
+    "errors": []
+  },
+  "snapshots": [
+    {
+      "timestamp": "2026-02-23T17:04:01+00:00",
+      "wqtu_7d": 0,
+      "timer_completed_7d": 2,
+      "completed_users_7d": 1,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-02-23T17:04:14+00:00",
+      "wqtu_7d": 0,
+      "timer_completed_7d": 2,
+      "completed_users_7d": 1,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-02-23T17:04:56+00:00",
+      "wqtu_7d": 0,
+      "timer_completed_7d": 2,
+      "completed_users_7d": 1,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 2,
+      "guardrail_violated": true
+    },
+    {
+      "timestamp": "2026-02-23T17:04:56+00:00",
+      "wqtu_7d": 0,
+      "timer_completed_7d": 2,
+      "completed_users_7d": 1,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-02-23T17:05:10+00:00",
+      "wqtu_7d": 0,
+      "timer_completed_7d": 2,
+      "completed_users_7d": 1,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    }
+  ]
+}

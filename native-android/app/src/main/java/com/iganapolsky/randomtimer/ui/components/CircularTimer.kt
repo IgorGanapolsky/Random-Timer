@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -170,7 +172,7 @@ fun CircularTimer(
         modifier =
             modifier
                 .aspectRatio(1f)
-                .padding(16.dp)
+                .padding(12.dp)
                 .clearAndSetSemantics { contentDescription = accessibilityText },
         contentAlignment = Alignment.Center,
     ) {
@@ -274,39 +276,33 @@ fun CircularTimer(
                 textAlign = TextAlign.Center,
             )
         } else if (rangeText.isNotEmpty()) {
-            // Split "1m 10s - 3m 35s" into two lines so it fits inside the circle
-            val rangeParts = rangeText.split(" - ", limit = 2)
+            val rangeTextStyle =
+                if (rangeText.length >= 14) {
+                    MaterialTheme.typography.titleLarge
+                } else {
+                    MaterialTheme.typography.headlineLarge
+                }
+
             Column(
+                modifier = Modifier.fillMaxWidth(0.82f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = "Range",
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (status == TimerStatus.PAUSED) TimerColors.TextSecondary else TimerColors.TextMuted,
                     textAlign = TextAlign.Center,
                 )
-                if (rangeParts.size == 2) {
-                    Text(
-                        text = rangeParts[0],
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        text = "to ${rangeParts[1]}",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
-                        textAlign = TextAlign.Center,
-                    )
-                } else {
-                    Text(
-                        text = rangeText,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                    )
-                }
+                Text(
+                    text = rangeText,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = rangeTextStyle,
+                    color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         } else {
             // Fallback - should not happen for random timer
