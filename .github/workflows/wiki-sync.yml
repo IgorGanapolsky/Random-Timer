@@ -10,6 +10,7 @@ on:
       - 'wiki/**'
       - 'marketing/data/**'
       - 'scripts/wiki_sync.py'
+      - 'scripts/north_star_guardrail.py'
 
 permissions:
   contents: write
@@ -35,6 +36,16 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Build north star snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7
+
       - name: Build downloads snapshot from PostHog
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
@@ -56,5 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wiki-dashboard
-          path: wiki/Daily-Metrics-Dashboard.md
+          path: |
+            wiki/Daily-Metrics-Dashboard.md
+            marketing/data/north_star.json
           retention-days: 7

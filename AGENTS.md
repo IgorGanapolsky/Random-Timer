@@ -41,6 +41,58 @@ When a task depends on credentials, the agent must verify local and CI credentia
 4. **Prove access with a real authenticated read/write test** (status code + endpoint + sanitized response).
 5. **Never claim “no access” or ask the user to re-provide credentials** until steps 1–4 are completed and reported with evidence.
 
+## Growth North Star (Effective February 23, 2026)
+
+### Primary North Star Metric (NSM)
+
+**Weekly Qualified Training Users (WQTU)**: number of distinct users with **3 or more `timer_completed` events** in the trailing 7 days.
+
+This is the product-value metric for Random Tactical Timer (repeat stress/reaction training), not a vanity install metric.
+
+### Canonical Query (PostHog HogQL)
+
+```sql
+SELECT count(*)
+FROM (
+  SELECT person_id
+  FROM events
+  WHERE event = 'timer_completed'
+    AND timestamp > now() - interval 7 day
+  GROUP BY person_id
+  HAVING count() >= 3
+)
+```
+
+### Guardrails (must be tracked with NSM)
+
+1. **Paid efficiency**: blended paid CPI <= `$3.00` (target), with Apple Ads benchmark context checked monthly.
+2. **Activation quality**: `open_to_completed_rate` >= `25%`.
+3. **Retention floor**: D30 retention >= `6%` (target above broad-market baselines).
+4. **Attribution hygiene**: `paid_distinct_users_30d` and campaign-level UTM rows must be non-empty before claiming paid impact.
+
+### Baseline Snapshot (2026-02-23 UTC)
+
+- `WQTU`: `0` (no user reached >=3 `timer_completed` in trailing 7d).
+- `timer_completed` last 7d: `2` events by `1` user.
+- `open_to_completed_rate` (30d): `24.62%` (32/130).
+- Paid attribution last 30d: `0` distinct users, `0` campaign rows.
+- Downloads (30d): iOS `6`, Android `0`, combined `6`.
+
+### Targets
+
+- **Checkpoint target (2026-03-31):** `WQTU >= 8`
+- **Quarter target (2026-06-30):** `WQTU >= 25`
+
+### Execution Rule
+
+When asked “are we on track to our North Star?”, answer only from:
+
+- live PostHog query results,
+- latest campaign serving + spend evidence,
+- and current WQTU versus target.
+
+Do not infer progress from draft campaign configs.
+
 ## Act Like the World's Top iOS App Publisher
 
 - Research before acting. Read Apple's current documentation, not cached assumptions.
