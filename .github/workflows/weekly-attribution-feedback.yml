@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: attribution-feedback
@@ -58,20 +59,28 @@ jobs:
 
           "${CMD[@]}"
 
-      - name: Commit feedback data
+      - name: Create PR with feedback data
         if: inputs.dry_run != true
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore(analytics): weekly attribution feedback from PostHog"
+          title: "chore(analytics): weekly attribution feedback update"
+          body: |
+            Automated weekly attribution feedback refresh from PostHog.
 
-          git add marketing/keywords/posthog_feedback.json marketing/data/content_feedback.json marketing/data/attribution-report.md
-          if git diff --cached --quiet; then
-            echo "No attribution data changes to commit"
-            exit 0
-          fi
-
-          git commit -m "chore(analytics): weekly attribution feedback from PostHog"
-          git push
+            Updated files:
+            - `marketing/keywords/posthog_feedback.json`
+            - `marketing/data/content_feedback.json`
+            - `marketing/data/attribution-report.md`
+          branch: auto/weekly-attribution-feedback
+          base: develop
+          add-paths: |
+            marketing/keywords/posthog_feedback.json
+            marketing/data/content_feedback.json
+            marketing/data/attribution-report.md
+          labels: |
+            automation
 
       - name: Upload attribution report
         if: always()
