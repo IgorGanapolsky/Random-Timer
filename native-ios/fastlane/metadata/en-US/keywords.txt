@@ -1,1 +1,1 @@
-boxing,bjj,mma,combatives,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata
+boxing,bjj,mma,combatives,drills,sparring,interval,coach,crossfit,rounds,fighter,workout,tabata
