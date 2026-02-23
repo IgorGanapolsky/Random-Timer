@@ -35,10 +35,10 @@ PaperBanana render: https://igorganapolsky.github.io/Random-Timer/blog/diagrams/
 
 ## Try the App
 
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260220&utm_content=blog_post
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260220&utm_content=blog_post
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260220&utm_content=blog_post
 
 ## Help Us Improve
 
-- Leave an iOS review: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?action=write-review
+- Leave an iOS review: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review
 - Leave an Android review: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0

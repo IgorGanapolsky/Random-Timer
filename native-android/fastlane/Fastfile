@@ -3,6 +3,11 @@ default_platform(:android)
 platform :android do
   desc "Upload metadata (screenshots, descriptions) to Google Play"
   lane :metadata do |options|
+    sh("python3 #{File.expand_path('../../scripts/sync_android_metadata.py', __dir__)}")
+  end
+
+  desc "Legacy metadata upload via supply (kept for troubleshooting only)"
+  lane :metadata_legacy do |options|
     upload_to_play_store(
       package_name: "com.iganapolsky.randomtimer",
       track: "internal",
