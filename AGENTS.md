@@ -51,3 +51,13 @@ cd native-android && ./gradlew lint                    # Lint check
 cd native-ios && xcodebuild -scheme RandomTimer build  # Build
 cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ```
+
+## Operator Mandate: Env + Secrets Verification
+
+When a task depends on external services (analytics, ads, store consoles, CI pipelines), the agent must:
+
+1. Read local `.env` key names first and map them to script/workflow expectations before concluding credentials are missing.
+2. Check GitHub repository secret **names** and workflow env wiring (`gh secret list`, workflow YAML) before reporting blockers.
+3. Attempt service access with explicit evidence (HTTP status, endpoint response, redirected URL, or tool output).
+4. Never claim a service is unavailable without showing the exact check performed and its result.
+5. If credentials exist but are wrong type/scope (for example project key vs personal API key), report the mismatch explicitly and provide the exact required key type.
