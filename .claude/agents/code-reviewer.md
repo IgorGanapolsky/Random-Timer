@@ -1,3 +1,11 @@
+---
+name: code-reviewer
+description: Strict read-only review agent for superior intelligence review.
+tools: Glob, Grep, LS, Read, Bash
+category: UltraBrain
+color: purple
+---
+
 # Code Reviewer Agent
 
 Read-only review agent for Ralph Mode's superior intelligence review step.

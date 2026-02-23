@@ -75,7 +75,7 @@ extension TimerStatus {
         case .complete, .alarm:
             return .timerComplete
         case .paused:
-            return .textMuted
+            return .textSecondary
         }
     }
 }

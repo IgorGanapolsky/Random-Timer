@@ -1,5 +1,16 @@
 # AGENTS.md — Random Timer
 
+## Agent-Model Matching Standard
+
+To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
+
+- **Orchestration**: `claude-3-5-sonnet` (UltraBrain) for planning and coordination.
+- **Deep Specialist**: `claude-3-opus` or `gpt-4o` (Deep) for complex refactoring.
+- **Utility Runner**: `gemini-1.5-flash` or `claude-3-haiku` (Quick) for search, analysis, and scaffolding.
+- **UI/UX Specialist**: `gemini-1.5-pro` (Visual) for multimodal and layout tasks.
+
+When delegating work via the `Task` tool, agents should specify the category (e.g., `subagent_type: "Quick"`) to ensure the correct model is selected from the fallback chain.
+
 ## Mandate: Never Claim Readiness Without Verification
 
 **This is the highest-priority rule. Violations are treated as critical failures.**

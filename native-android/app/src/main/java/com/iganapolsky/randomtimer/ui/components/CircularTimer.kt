@@ -68,6 +68,12 @@ object CircularTimerAnimationConfig {
     const val TEXT_BREATHING_OPACITY_MIN = 0.85f
 }
 
+internal fun shouldBreatheText(status: TimerStatus): Boolean =
+    status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
+
+internal fun effectiveTrackAlpha(status: TimerStatus, pulseAlpha: Float): Float =
+    if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
+
 @Composable
 fun CircularTimer(
     progress: Float,
@@ -98,7 +104,7 @@ fun CircularTimer(
     )
 
     // Whether animations should be running (not paused, not complete)
-    val isActivelyRunning = status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
+    val isActivelyRunning = shouldBreatheText(status)
 
     // Subtle breathing animation for timer display (adds suspense)
     val pulseAlphaAnim = remember { Animatable(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX) }
@@ -174,7 +180,7 @@ fun CircularTimer(
             val strokePx = strokeWidth.toPx()
 
             // Background track (glass effect) - full circle with pulse animation
-            val effectiveTrackAlpha = if (status == TimerStatus.PAUSED) 0.3f else circlePulseAlpha
+            val effectiveTrackAlpha = effectiveTrackAlpha(status, circlePulseAlpha)
             drawCircle(
                 color = TimerColors.GlassBackground.copy(alpha = effectiveTrackAlpha),
                 radius = radius - strokePx / 2,
@@ -274,7 +280,7 @@ fun CircularTimer(
                 Text(
                     text = "Range",
                     style = MaterialTheme.typography.labelMedium,
-                    color = TimerColors.TextMuted,
+                    color = if (status == TimerStatus.PAUSED) TimerColors.TextSecondary else TimerColors.TextMuted,
                     textAlign = TextAlign.Center,
                 )
                 Text(

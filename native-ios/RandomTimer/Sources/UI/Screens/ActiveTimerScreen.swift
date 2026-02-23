@@ -89,7 +89,7 @@ struct ActiveTimerScreen: View {
                                     } else {
                                         Text("You don't know when it will go off...")
                                             .font(.subheadline)
-                                            .foregroundColor(.textMuted)
+                                            .foregroundColor(isPaused ? .textSecondary : .textMuted)
                                     }
                                 }
                                 .frame(height: 20)
@@ -160,7 +160,7 @@ struct ActiveTimerScreen: View {
                                 } else {
                                     Text("You don't know when it will go off...")
                                         .font(.subheadline)
-                                        .foregroundColor(.textMuted)
+                                        .foregroundColor(isPaused ? .textSecondary : .textMuted)
                                 }
                             }
                             .frame(height: 20)
@@ -257,7 +257,7 @@ struct ActiveTimerScreen: View {
             } else if isPaused {
                 Text("Paused")
                     .font(.title3)
-                    .foregroundColor(.textMuted)
+                    .foregroundColor(.textSecondary)
                     .transition(.opacity)
             } else {
                 Text(statusMessage(for: state.status))
@@ -315,8 +315,7 @@ struct ActiveTimerScreen: View {
                         } else {
                             timerManager.pauseTimer()
                         }
-                    },
-                    backgroundColor: isPaused ? .timerActive : .accentPrimary
+                    }
                 )
 
                 // Reset (restart with same duration)
