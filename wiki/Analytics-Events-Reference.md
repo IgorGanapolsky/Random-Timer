@@ -14,6 +14,8 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `timer_stopped` | `TIMER_STOPPED` | `timerStopped` | User cancels running timer | — |
 | `alarm_triggered` | `ALARM_TRIGGERED` | `alarmTriggered` | Timer reaches zero, alarm fires | `target_duration` |
 | `alarm_dismissed` | `ALARM_DISMISSED` | `alarmDismissed` | User dismisses alarm (tap or power button on iOS) | — |
+| `timer_abandoned` | `TIMER_ABANDONED` | `timerAbandoned` | User cancels before countdown finishes | `target_duration`, `remaining_duration`, `status` |
+| `timer_countdown_finished` | `TIMER_COUNTDOWN_FINISHED` | `timerCountdownFinished` | Countdown reaches zero (before alarm phase) | `target_duration` |
 | `settings_changed` | `SETTINGS_CHANGED` | `settingsChanged` | User modifies timer config | `min_duration`, `max_duration`, `sound_type`, `repeat_enabled` |
 | `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown | — |
 | `write_review_tapped` | `WRITE_REVIEW_TAPPED` | `writeReviewTapped` | User taps "Write Review" | — |

@@ -16,10 +16,6 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: attribution-feedback
   cancel-in-progress: false
@@ -27,6 +23,9 @@ concurrency:
 jobs:
   attribution-feedback:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,7 +60,7 @@ jobs:
 
       - name: Create PR with feedback data
         if: inputs.dry_run != true
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6
         with:
           token: ${{ github.token }}
           commit-message: "chore(analytics): weekly attribution feedback from PostHog"
@@ -89,3 +88,4 @@ jobs:
         with:
           name: attribution-report
           path: marketing/data/attribution-report.md
+          if-no-files-found: ignore

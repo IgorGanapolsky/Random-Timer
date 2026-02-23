@@ -53,7 +53,7 @@ data class TimerConfig(
     companion object {
         val DEFAULT = TimerConfig(
             minSeconds = 0,
-            maxSeconds = 300,
+            maxSeconds = 60,
             alarmDuration = 10,
             hiddenMode = false,
             repeatEnabled = false, // Default to LOOP OFF

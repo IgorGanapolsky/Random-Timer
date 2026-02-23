@@ -39,7 +39,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        maxSeconds: Int = 60,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF

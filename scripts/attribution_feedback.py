@@ -53,9 +53,9 @@ def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[st
         return None
 
     if response.status_code >= 300:
-        msg = f"http_{response.status_code}: {response.text[:200]}"
+        msg = f"http_{response.status_code}"
         QUERY_ERRORS.append(msg)
-        print(f"[Attribution] PostHog query failed: {response.status_code} {response.text[:200]}")
+        print(f"[Attribution] PostHog query failed: {response.status_code}")
         return None
     return response.json()
 

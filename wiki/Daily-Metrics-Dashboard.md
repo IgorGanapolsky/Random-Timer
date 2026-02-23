@@ -7,27 +7,43 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | — | — | — |
+| Downloads (30d) | 5 | — | 5 |
 | Active Installs | — | — | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | — |
-| WAU | — |
-| MAU | — |
+| DAU | 4 |
+| WAU | 5 |
+| MAU | 129 |
 <!-- DOWNLOADS_END -->
+
+## North Star (WQTU)
+
+<!-- NORTH_STAR_START -->
+| Metric | Value |
+|--------|-------|
+| WQTU (7d) | 0 |
+| Timer Completed (7d) | 2 |
+| Completed Users (7d) | 1 |
+| Sessions/Completed User (7d) | 2.0 |
+| Checkpoint Target (2026-03-31) | 8 |
+| Quarter Target (2026-06-30) | 25 |
+| Paid Attributed Users (30d) | 0 |
+| Active Campaign Count | 2 |
+| Guardrail Violated | YES |
+<!-- NORTH_STAR_END -->
 
 ## Attribution Summary
 
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-02-23T15:14:56+00:00
+**Generated:** 2026-02-23T16:28:52+00:00
 
 ## Onboarding Funnel
-- First Open: **129**
-- First Timer Configured: **60** (46.5% of opens)
-- First Timer Completed: **32** (24.8% of opens)
+- First Open: **130**
+- First Timer Configured: **61** (46.9% of opens)
+- First Timer Completed: **32** (24.6% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -44,9 +60,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 129 | — |
-| First Timer Configured | 60 | 46.5% of opens |
-| First Timer Completed | 32 | 24.8% of opens |
+| First Open | 130 | — |
+| First Timer Configured | 61 | 46.9% of opens |
+| First Timer Completed | 32 | 24.6% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -75,16 +91,15 @@
 <!-- CAMPAIGNS_START -->
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
-| apple_search_ads | $10.00 | draft | 37 |
-| google_uac | $10.00 | draft | 10 |
-| reddit_ads | $10.00 | ready_to_launch | 0 |
-| **Total** | **$30.00** | — | 47 |
+| apple_search_ads | $6.00 | draft | 37 |
+| google_uac | $4.00 | draft | 10 |
+| **Total** | **$10.00** | — | 47 |
 <!-- CAMPAIGNS_END -->
 
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `boxing,bjj,mma,combatives,drills,sparring,interval,coach,crossfit,rounds,fighter,workout,tabata`
+**iOS (current):** `boxing,bjj,mma,combat,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —
@@ -114,10 +129,17 @@
 
 <!-- CHARTS_START -->
 ```mermaid
+xychart-beta
+    title "WQTU (7d)"
+    x-axis ["2026-02-23" , "2026-02-23" , "2026-02-23"]
+    y-axis "Users"
+    line [0 , 0 , 0]
+```
+
+```mermaid
 pie title Daily Ad Budget Allocation ($)
-    "Apple Search Ads" : 10.0
-    "Google Uac" : 10.0
-    "Reddit Ads" : 10.0
+    "Apple Search Ads" : 6.0
+    "Google Uac" : 4.0
 ```
 
 ```mermaid

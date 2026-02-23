@@ -61,6 +61,14 @@ def _fmt_num(val: Any) -> str:
     return str(val)
 
 
+def _fmt_num_allow_zero(val: Any) -> str:
+    if val is None:
+        return "—"
+    if isinstance(val, int):
+        return f"{val:,}"
+    return str(val)
+
+
 def _mermaid_budget_pie(pc: Optional[Dict[str, Any]]) -> str:
     """Generate a Mermaid pie chart for budget allocation."""
     if not pc:
@@ -170,6 +178,30 @@ def _mermaid_downloads_trend(dl: Optional[Dict[str, Any]]) -> str:
         f"```"
     )
 
+def _mermaid_wqtu_trend(ns: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid line chart for WQTU snapshots over time."""
+    if not ns:
+        return ""
+    snapshots = ns.get("snapshots", [])
+    if len(snapshots) < 2:
+        return ""
+    recent = snapshots[-14:]
+    dates = []
+    wqtu_vals = []
+    for s in recent:
+        ts = str(s.get("timestamp", ""))[:10]
+        dates.append(f'"{ts}"')
+        wqtu_vals.append(str(s.get("wqtu_7d", 0)))
+    return (
+        f"```mermaid\n"
+        f"xychart-beta\n"
+        f'    title "WQTU (7d)"\n'
+        f"    x-axis [{' , '.join(dates)}]\n"
+        f'    y-axis "Users"\n'
+        f'    line [{" , ".join(wqtu_vals)}]\n'
+        f"```"
+    )
+
 
 def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     """Replace placeholder sections in the dashboard with live data."""
@@ -201,6 +233,32 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
         dashboard = re.sub(
             r"<!-- DOWNLOADS_START -->.*?<!-- DOWNLOADS_END -->",
             f"<!-- DOWNLOADS_START -->\n{downloads_block}\n<!-- DOWNLOADS_END -->",
+            dashboard,
+            flags=re.DOTALL,
+        )
+
+    # --- North Star ---
+    ns = load_json(data_dir / "north_star.json")
+    if ns:
+        nsm = ns.get("north_star", {})
+        paid = ns.get("paid", {})
+        targets = nsm.get("targets", {})
+        north_star_block = (
+            "| Metric | Value |\n"
+            "|--------|-------|\n"
+            f"| WQTU (7d) | {_fmt_num_allow_zero(nsm.get('wqtu_7d'))} |\n"
+            f"| Timer Completed (7d) | {_fmt_num_allow_zero(nsm.get('timer_completed_7d'))} |\n"
+            f"| Completed Users (7d) | {_fmt_num_allow_zero(nsm.get('completed_users_7d'))} |\n"
+            f"| Sessions/Completed User (7d) | {nsm.get('sessions_per_completed_user_7d', 0.0)} |\n"
+            f"| Checkpoint Target (2026-03-31) | {_fmt_num_allow_zero(targets.get('checkpoint_2026_03_31'))} |\n"
+            f"| Quarter Target (2026-06-30) | {_fmt_num_allow_zero(targets.get('quarter_2026_06_30'))} |\n"
+            f"| Paid Attributed Users (30d) | {_fmt_num_allow_zero(paid.get('paid_distinct_users_30d'))} |\n"
+            f"| Active Campaign Count | {_fmt_num_allow_zero(paid.get('active_campaign_count'))} |\n"
+            f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
+        )
+        dashboard = re.sub(
+            r"<!-- NORTH_STAR_START -->.*?<!-- NORTH_STAR_END -->",
+            f"<!-- NORTH_STAR_START -->\n{north_star_block}\n<!-- NORTH_STAR_END -->",
             dashboard,
             flags=re.DOTALL,
         )
@@ -410,6 +468,11 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     dl_trend = _mermaid_downloads_trend(dl_data)
     if dl_trend:
         charts.append(dl_trend)
+
+    ns_data = load_json(data_dir / "north_star.json")
+    wqtu_trend = _mermaid_wqtu_trend(ns_data)
+    if wqtu_trend:
+        charts.append(wqtu_trend)
 
     pc_data = load_json(data_dir / "paid_campaigns.json")
     budget_pie = _mermaid_budget_pie(pc_data)
