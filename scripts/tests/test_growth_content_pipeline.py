@@ -140,6 +140,82 @@ class GrowthContentPipelineTests(unittest.TestCase):
         self.assertNotIn("../diagrams/2026-02-19-sample.svg", rendered)
         self.assertNotIn("title: Sample", rendered)
 
+    def test_choose_ab_arm_balances_runs(self):
+        self.assertEqual(pipeline.choose_ab_arm([]), "control")
+        self.assertEqual(pipeline.choose_ab_arm([{"arm": "control"}]), "candidate")
+        self.assertEqual(
+            pipeline.choose_ab_arm([{"arm": "control"}, {"arm": "candidate"}]),
+            "control",
+        )
+
+    def test_summarize_ab_pilot_requires_all_three_metrics_to_win(self):
+        rows = []
+        for i in range(7):
+            rows.append(
+                {
+                    "timestamp": f"2026-02-0{i+1}T00:00:00+00:00",
+                    "arm": "control",
+                    "success": i < 5,
+                    "duration_ms": 1000,
+                    "estimated_cost_usd": 1.0,
+                }
+            )
+            rows.append(
+                {
+                    "timestamp": f"2026-02-1{i+1}T00:00:00+00:00",
+                    "arm": "candidate",
+                    "success": i < 6,
+                    "duration_ms": 800,
+                    "estimated_cost_usd": 0.6,
+                }
+            )
+
+        summary = pipeline.summarize_ab_pilot(rows, window_days=14)
+        self.assertTrue(summary["complete"])
+        self.assertEqual(summary["decision"], "candidate_keep")
+
+    def test_run_publish_ab_pilot_respects_budget_cap(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            md = root / "posts" / "2026-02-21-sample.md"
+            md.write_text("---\ntitle: Sample\ndescription: Desc\ndate: 2026-02-21\n---\nbody\n", encoding="utf-8")
+            (root / "diagrams" / "2026-02-21-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+            (root / "diagrams" / "2026-02-21-sample.mmd").write_text("graph TD;A-->B", encoding="utf-8")
+
+            post = pipeline.PostAsset(
+                slug="2026-02-21-sample",
+                title="Sample",
+                description="Desc",
+                created_at="2026-02-21T00:00:00+00:00",
+                markdown_path=md,
+                diagram_svg_path=root / "diagrams" / "2026-02-21-sample.svg",
+                diagram_mermaid_path=root / "diagrams" / "2026-02-21-sample.mmd",
+                html_path=root / "site" / "posts" / "2026-02-21-sample.html",
+                tags=["ai", "testing"],
+            )
+
+            with patch.dict(
+                "os.environ",
+                {
+                    "AB_PILOT_MAX_COST_USD": "0.1",
+                    "AB_CONTROL_COST_USD": "0.2",
+                    "AB_CANDIDATE_COST_USD": "0.3",
+                },
+                clear=False,
+            ):
+                with patch.object(pipeline, "publish_post") as mocked_publish:
+                    payload = pipeline.run_publish_ab_pilot(post, root, dry_run=False)
+                    mocked_publish.assert_not_called()
+
+            self.assertEqual(payload["run"]["budget_adjustment"], "cap_exhausted")
+            self.assertEqual(payload["run"]["status"], "skipped")
+            self.assertEqual(payload["summary"]["budget_cap_usd"], 0.1)
+            self.assertEqual(payload["summary"]["budget_spent_usd"], 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()
