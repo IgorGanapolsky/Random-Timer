@@ -31,6 +31,16 @@ When delegating work via the `Task` tool, agents should specify the category (e.
    - App Review contact info: filled
 5. **Show evidence, not assertions.** When reporting status, include actual counts, actual field values, actual HTTP responses — not summaries or assumptions.
 
+## Operator Mandate: Env + Secrets Verification Before Blockers
+
+When a task depends on credentials, the agent must verify local and CI credential wiring before reporting any blocker.
+
+1. **Always check `.env` key names first** (without exposing secret values).
+2. **Always check GitHub Actions secret names second** (`gh secret list`) and confirm required names exist.
+3. **If a key is provided by the user, update both `.env` and GitHub secrets immediately** when requested.
+4. **Prove access with a real authenticated read/write test** (status code + endpoint + sanitized response).
+5. **Never claim “no access” or ask the user to re-provide credentials** until steps 1–4 are completed and reported with evidence.
+
 ## Act Like the World's Top iOS App Publisher
 
 - Research before acting. Read Apple's current documentation, not cached assumptions.
