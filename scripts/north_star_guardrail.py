@@ -19,63 +19,10 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set
 
-
-def _requests_module():
-    try:
-        import requests
-
-        return requests
-    except ImportError:
-        return None
-
-
-def posthog_query(query: str, api_key: str, project_id: str, errors: List[str]) -> Optional[Dict[str, Any]]:
-    requests = _requests_module()
-    if requests is None:
-        errors.append("missing_dependency: requests")
-        return None
-
-    try:
-        response = requests.post(
-            f"https://us.posthog.com/api/projects/{project_id}/query/",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={"query": {"kind": "HogQLQuery", "query": query}},
-            timeout=60,
-        )
-    except requests.RequestException as exc:
-        errors.append(f"request_error: {exc}")
-        return None
-
-    if response.status_code >= 300:
-        errors.append(f"http_{response.status_code}: {response.text[:200]}")
-        return None
-    return response.json()
-
-
-def query_scalar(query: str, api_key: str, project_id: str, errors: List[str]) -> int:
-    result = posthog_query(query, api_key, project_id, errors)
-    if not result or not result.get("results"):
-        return 0
-    row = result["results"][0]
-    if not row:
-        return 0
-    try:
-        return int(row[0] or 0)
-    except (TypeError, ValueError):
-        return 0
-
-
-def query_rows(query: str, api_key: str, project_id: str, errors: List[str]) -> List[List[Any]]:
-    result = posthog_query(query, api_key, project_id, errors)
-    if not result:
-        return []
-    rows = result.get("results")
-    if not isinstance(rows, list):
-        return []
-    return rows
+try:
+    from scripts.store_downloads_snapshot import query_rows, query_scalar
+except ModuleNotFoundError:
+    from store_downloads_snapshot import query_rows, query_scalar
 
 
 def _load_paid_campaigns(path: Path) -> Dict[str, Any]:
