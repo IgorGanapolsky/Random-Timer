@@ -1,26 +1,32 @@
-Random Tactical Timer is an unpredictable interval timer for reaction training.
+Train for chaos. Not rhythm.
 
-Set a minimum and maximum time window, then the alarm fires at a random point inside that range. You stop training for countdown patterns and train real reaction.
+Most timers teach your brain to anticipate the bell. That's comfort training — and it makes you slower when it counts. Random Tactical Timer fires at an unpredictable moment inside your chosen time window, forcing genuine reaction under stress.
 
-BEST FOR:
-- HIIT and conditioning intervals
-- Boxing, martial arts, and tactical drills
-- Team practices and coach-led sessions
-- Focus sprints and break routines
+BUILT FOR:
+- Boxing pad rounds and bag intervals
+- BJJ scramble and positional reaction drills
+- MMA and striking pattern-interrupt work
+- Law enforcement and defensive tactics training
+- HIIT and CrossFit sessions that punish predictability
+
+WHY UNPREDICTABILITY WORKS:
+- Trains reaction speed and decision-making under real pressure
+- Eliminates anticipation bias from fixed intervals
+- Builds composure through stress inoculation — the same method used in tactical and military training
 
 KEY FEATURES:
-- True random trigger inside your chosen range
-- Hidden countdown mode to reduce anticipation
+- True random trigger within your selected min/max range
+- Hidden countdown mode — no timer watching
 - Loop mode for continuous random rounds
-- Multiple alarm sounds, vibration, and volume controls
+- Alarm sound + vibration + volume control
 - Pause, resume, reset, and stable background behavior
 - Live Activity support on iPhone lock screen
 
 HOW IT WORKS:
-1. Pick your range (for example 30 seconds to 5 minutes)
-2. Tap Start
-3. Move, drill, or work normally
-4. React when the alarm hits
-5. Repeat single rounds or run loop mode
+1. Set your range (e.g. 30 seconds to 5 minutes)
+2. Press Start
+3. Train normally — move, drill, spar
+4. React when the cue hits
+5. Loop for continuous chaos rounds
 
-No ads. No subscriptions. Fast setup, daily use.
+No ads. No subscriptions. No tracking. Built for fighters who train serious.

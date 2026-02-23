@@ -1,1 +1,1 @@
-reaction,interval,hiit,tabata,boxing,martial arts,drills,focus,sparring,workout,coach,random,timer
+boxing,bjj,mma,combatives,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata
