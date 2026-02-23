@@ -7,27 +7,36 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | — | — | — |
+| Downloads (30d) | 5 | — | 5 |
 | Active Installs | — | — | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | — |
-| WAU | — |
-| MAU | — |
+| DAU | 4 |
+| WAU | 5 |
+| MAU | 129 |
 <!-- DOWNLOADS_END -->
 
 ## Attribution Summary
 
 <!-- ATTRIBUTION_START -->
-_Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets configured._
+# Attribution Feedback Report
 
-| Metric | Value |
-|--------|-------|
-| Total Attributed Installs (30d) | — |
-| Unique Attributed Users (30d) | — |
-| Top Source | — |
-| Top Campaign | — |
+**Generated:** 2026-02-23T15:32:27+00:00
+
+## Onboarding Funnel
+- First Open: **129**
+- First Timer Configured: **60** (46.5% of opens)
+- First Timer Completed: **32** (24.8% of opens)
+
+## UTM Attribution (Top Sources)
+| Source | Medium | Campaign | Installs | Unique Users |
+|--------|--------|----------|----------|-------------|
+
+## Campaign Performance
+| Campaign | Source | Attributed | Activated | Rate |
+|----------|--------|-----------|-----------|------|
+
 <!-- ATTRIBUTION_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -35,9 +44,9 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | — | — |
-| First Timer Configured | — | — of opens |
-| First Timer Completed | — | — of opens |
+| First Open | 129 | — |
+| First Timer Configured | 60 | 46.5% of opens |
+| First Timer Completed | 32 | 24.8% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -74,7 +83,7 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `boxing,bjj,mma,combatives,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
+**iOS (current):** `boxing,bjj,mma,combat,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —

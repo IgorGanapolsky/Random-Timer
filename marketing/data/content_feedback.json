@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-23T13:54:02+00:00",
+  "generated_at": "2026-02-23T15:32:27+00:00",
   "onboarding_funnel": {
-    "first_open": 0,
-    "first_timer_configured": 0,
-    "first_timer_completed": 0,
-    "open_to_configured_rate": 0,
-    "configured_to_completed_rate": 0,
-    "open_to_completed_rate": 0,
+    "first_open": 129,
+    "first_timer_configured": 60,
+    "first_timer_completed": 32,
+    "open_to_configured_rate": 0.4651,
+    "configured_to_completed_rate": 0.5333,
+    "open_to_completed_rate": 0.2481,
     "window_days": 30
   },
   "top_campaigns_by_activation": []

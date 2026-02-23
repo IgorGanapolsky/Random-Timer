@@ -32,6 +32,15 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Build downloads snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/store_downloads_snapshot.py --repo-root . --days 30
+
       - name: Inject live data into dashboard
         run: python scripts/wiki_sync.py
 
