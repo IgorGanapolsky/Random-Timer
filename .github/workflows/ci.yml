@@ -60,29 +60,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest lancedb pyarrow
 
-      - name: Compile Python sources
+      - name: Run Python script tests
         run: |
           set -euo pipefail
-          TARGETS=()
-          [[ -f scripts/rag_memory.py ]] && TARGETS+=("scripts/rag_memory.py")
-          if [[ -d tools/rag ]]; then
-            while IFS= read -r -d '' f; do
-              TARGETS+=("$f")
-            done < <(find tools/rag -type f -name '*.py' -print0 | sort -z)
-          fi
-          if [[ ${#TARGETS[@]} -eq 0 ]]; then
-            echo "No legacy Python targets found for compile step; skipping."
-            exit 0
-          fi
-          python -m py_compile "${TARGETS[@]}"
-
-      - name: Run tests
-        run: |
-          set -euo pipefail
-          if [[ -d tests/python ]]; then
-            pytest -q tests/python
+          if [[ -d scripts/tests ]]; then
+            python -m pytest -q scripts/tests
           else
-            echo "No tests/python directory found; skipping legacy pytest suite."
+            echo "No scripts/tests directory found; skipping pytest suite."
           fi
 
   android:

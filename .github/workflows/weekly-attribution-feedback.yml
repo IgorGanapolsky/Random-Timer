@@ -42,7 +42,7 @@ jobs:
 
       - name: Run attribution feedback pipeline
         env:
-          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY || secrets.POSTHOG_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           DAYS: ${{ inputs.days || '30' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
@@ -64,7 +64,24 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add marketing/keywords/posthog_feedback.json marketing/data/content_feedback.json marketing/data/attribution-report.md
+          FILES=(
+            marketing/keywords/posthog_feedback.json
+            marketing/data/content_feedback.json
+            marketing/data/attribution-report.md
+          )
+          EXISTING=()
+          for f in "${FILES[@]}"; do
+            if [[ -f "$f" ]]; then
+              EXISTING+=("$f")
+            fi
+          done
+
+          if [[ ${#EXISTING[@]} -eq 0 ]]; then
+            echo "No attribution files produced"
+            exit 0
+          fi
+
+          git add "${EXISTING[@]}"
           if git diff --cached --quiet; then
             echo "No attribution data changes to commit"
             exit 0
@@ -79,3 +96,4 @@ jobs:
         with:
           name: attribution-report
           path: marketing/data/attribution-report.md
+          if-no-files-found: warn
