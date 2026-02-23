@@ -89,13 +89,29 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest lancedb pyarrow
 
-      - name: Run Python script tests
+      - name: Compile Python sources
         run: |
           set -euo pipefail
-          if [[ -d scripts/tests ]]; then
-            python -m pytest -q scripts/tests
+          TARGETS=()
+          [[ -f scripts/rag_memory.py ]] && TARGETS+=("scripts/rag_memory.py")
+          if [[ -d tools/rag ]]; then
+            while IFS= read -r -d '' f; do
+              TARGETS+=("$f")
+            done < <(find tools/rag -type f -name '*.py' -print0 | sort -z)
+          fi
+          if [[ ${#TARGETS[@]} -eq 0 ]]; then
+            echo "No legacy Python targets found for compile step; skipping."
+            exit 0
+          fi
+          python -m py_compile "${TARGETS[@]}"
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          if [[ -d tests/python ]]; then
+            pytest -q tests/python
           else
-            echo "No scripts/tests directory found; skipping pytest suite."
+            echo "No tests/python directory found; skipping legacy pytest suite."
           fi
 
   android:
@@ -244,6 +260,41 @@ jobs:
             --platform ios \
             --context-out /tmp/release-context-ci.json \
             --no-remote
+
+  north-star-guardrail:
+    name: North Star Guardrail
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip requests
+
+      - name: Enforce paid attribution guardrail
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7 \
+            --enforce-guardrail \
+            --require-posthog
+
+      - name: Upload north star artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: north-star-guardrail
+          path: marketing/data/north_star.json
+          retention-days: 7
 
   security:
     name: Security
