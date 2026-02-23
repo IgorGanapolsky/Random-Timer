@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-23T13:58:09+00:00",
+  "generated_at": "2026-02-23T15:18:01Z",
   "pipeline_artifacts": {
     "required": [
       "marketing/data/store_downloads.json",
@@ -10,8 +10,7 @@
     ],
     "missing": [
       "marketing/data/store_downloads.json",
-      "marketing/data/engagement.jsonl",
-      "marketing/data/attribution-report.md"
+      "marketing/data/engagement.jsonl"
     ],
     "healthy": false
   },
@@ -29,11 +28,11 @@
     }
   },
   "posthog": {
-    "query_available": false,
-    "project_id_present": false,
+    "query_available": true,
+    "project_id_present": true,
     "api_key_present": true,
-    "auth_test_status": 401,
-    "key_type_inference": "Provided key works on /capture but is rejected for HogQL query API (likely project ingestion key, not Personal API key)."
+    "auth_test_status": 200,
+    "key_type_inference": "Personal API key validates against HogQL query endpoint."
   },
   "ios_reviews": {
     "generatedAt": "2026-02-23T05:12:36+00:00",
@@ -59,14 +58,19 @@
       "apple_search_ads": "draft",
       "google_uac": "draft"
     },
-    "live_status_verified": false,
-    "live_status_reason": "No authenticated Apple Search Ads session/API credentials available in this runtime."
+    "live_status_verified": true,
+    "live_status_reason": "Authenticated Apple Ads dashboard check completed; account currently shows zero campaigns."
   },
   "apple_ads_live_check": {
-    "checked_at": "2026-02-23T13:58:09+00:00",
     "authenticated": true,
-    "url": "https://app-ads.apple.com/cm/app/20617940/report",
-    "finding": "No campaigns visible in current Apple Ads account context",
-    "evidence_screenshot": "tests/playwright/test-results/searchads-live-check.png"
+    "dashboard_url": "https://app-ads.apple.com/cm/app/20617940/report",
+    "finding": "You do not have any campaigns",
+    "evidence": "tests/playwright/test-results/searchads-live-check.png"
+  },
+  "posthog_query_verification": {
+    "project_id": "299775",
+    "key_tested_prefix": "phx_",
+    "query_status": 200,
+    "diagnostic": "HogQL query succeeded for project 299775."
   }
 }

@@ -22,12 +22,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-02-23T13:54:02+00:00
+**Generated:** 2026-02-23T15:14:56+00:00
 
 ## Onboarding Funnel
-- First Open: **0**
-- First Timer Configured: **0** (0.0% of opens)
-- First Timer Completed: **0** (0.0% of opens)
+- First Open: **129**
+- First Timer Configured: **60** (46.5% of opens)
+- First Timer Completed: **32** (24.8% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -44,9 +44,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | — | — |
-| First Timer Configured | — | —% of opens |
-| First Timer Completed | — | —% of opens |
+| First Open | 129 | — |
+| First Timer Configured | 60 | 46.5% of opens |
+| First Timer Completed | 32 | 24.8% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -84,7 +84,7 @@
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `reaction,interval,hiit,tabata,boxing,martial arts,drills,focus,sparring,workout,coach,random,timer`
+**iOS (current):** `boxing,bjj,mma,combatives,drills,sparring,interval,coach,crossfit,rounds,fighter,workout,tabata`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —
