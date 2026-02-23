@@ -8,7 +8,7 @@ final class TimerConfigTests: XCTestCase {
         let config = TimerConfig.default
 
         XCTAssertEqual(config.minSeconds, 0)
-        XCTAssertEqual(config.maxSeconds, 300)
+        XCTAssertEqual(config.maxSeconds, 60)
         XCTAssertEqual(config.volume, 0.5)
         XCTAssertFalse(config.vibrationEnabled)
     }

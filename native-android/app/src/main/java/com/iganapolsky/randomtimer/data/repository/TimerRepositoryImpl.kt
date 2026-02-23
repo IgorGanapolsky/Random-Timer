@@ -28,7 +28,7 @@ class TimerRepositoryImpl @Inject constructor(
         return dataStore.data.map { preferences ->
             TimerConfig(
                 minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
                 alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -63,7 +63,7 @@ class TimerRepositoryImpl @Inject constructor(
 
             val config = TimerConfig(
                 minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
                 alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,

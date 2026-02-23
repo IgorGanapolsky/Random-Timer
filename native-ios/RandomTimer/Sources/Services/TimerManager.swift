@@ -143,6 +143,13 @@ final class TimerManager: ObservableObject {
 
     func cancelTimer() async {
         AnalyticsService.shared.track(AnalyticsEvents.timerStopped)
+        if let state = timerState, state.status != .alarm, state.status != .complete {
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": state.targetDuration,
+                "remaining_duration": state.remainingDuration,
+                "status": state.status.rawValue,
+            ])
+        }
         stopCountdown()
         timerState = nil
 
@@ -508,6 +515,9 @@ final class TimerManager: ObservableObject {
 
             stopCountdown()
 
+            AnalyticsService.shared.track(AnalyticsEvents.timerCountdownFinished, properties: [
+                "target_duration": state.targetDuration,
+            ])
             AnalyticsService.shared.track(AnalyticsEvents.alarmTriggered, properties: [
                 "target_duration": state.targetDuration,
             ])
@@ -566,7 +576,9 @@ final class TimerManager: ObservableObject {
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
-            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted)
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                "target_duration": state.targetDuration,
+            ])
             AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
 
             // Auto-repeat if enabled

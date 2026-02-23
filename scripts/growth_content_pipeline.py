@@ -487,6 +487,11 @@ def add_utm(url: str, source: str, campaign: str, medium: str = "organic") -> st
     )
 
 
+# Deep link base URL — routes through the app's verified domain so UTM params
+# are captured by the PostHog deep_link_opened handler before redirecting to stores.
+DEEP_LINK_BASE = "https://igorganapolsky.github.io/Random-Timer/download"
+
+
 def compose_markdown(
     *,
     title: str,
@@ -501,8 +506,8 @@ def compose_markdown(
     android_review_url: str,
     campaign: str,
 ) -> str:
-    blog_ios = add_utm(app_store_url, "github_pages", campaign)
-    blog_android = add_utm(play_store_url, "github_pages", campaign)
+    blog_ios = add_utm(DEEP_LINK_BASE + "?platform=ios", "github_pages", campaign)
+    blog_android = add_utm(DEEP_LINK_BASE + "?platform=android", "github_pages", campaign)
     frontmatter = (
         "---\n"
         f"title: {title}\n"
