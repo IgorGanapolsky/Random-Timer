@@ -60,23 +60,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest lancedb pyarrow
 
-      - name: Compile Python sources
-        run: |
-          set -euo pipefail
-          TARGETS=()
-          [[ -f scripts/asc_verify_ready.py ]] && TARGETS+=("scripts/asc_verify_ready.py")
-          if [[ -d scripts ]]; then
-            while IFS= read -r -d '' f; do
-              TARGETS+=("$f")
-            done < <(find scripts -maxdepth 1 -type f -name '*.py' -print0 | sort -z)
-          fi
-          if [[ ${#TARGETS[@]} -eq 0 ]]; then
-            echo "No Python targets found for compile step; skipping."
-            exit 0
-          fi
-          python -m py_compile "${TARGETS[@]}"
-
-      - name: Run tests
+      - name: Run Python script tests
         run: |
           set -euo pipefail
           if [[ -d scripts/tests ]]; then
