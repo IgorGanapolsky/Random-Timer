@@ -18,9 +18,6 @@ concurrency:
 jobs:
   publish-and-build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,14 +86,17 @@ jobs:
           gh pr create --base develop --head "$BRANCH" --title "chore(growth): daily content and publishing update" --body "Automated daily growth content, publishing logs, and pages build" --label "automation" || true
 
       - name: Setup Pages
+        if: github.ref == 'refs/heads/develop'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/develop'
         uses: actions/upload-pages-artifact@v3
         with:
           path: marketing/site
 
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/develop'
         id: deployment
         uses: actions/deploy-pages@v4
 
