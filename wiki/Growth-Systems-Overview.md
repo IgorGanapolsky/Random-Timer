@@ -17,30 +17,27 @@ Automated growth infrastructure running via GitHub Actions on fixed schedules.
 
 ## System Architecture
 
-```
-                        ┌─────────────────────┐
-                        │   PostHog Analytics  │
-                        │  (us.i.posthog.com)  │
-                        └──────────┬──────────┘
-                                   │ HogQL queries
-                                   ▼
-┌──────────────────┐    ┌──────────────────────┐    ┌──────────────────┐
-│ Content Pipeline │◄───│ Attribution Feedback  │───►│  ASO Keyword     │
-│ (daily blog)     │    │ (Sunday pipeline)     │    │  Rotation        │
-└────────┬─────────┘    └──────────────────────┘    └────────┬─────────┘
-         │                                                    │
-         ▼                                                    ▼
-┌──────────────────┐    ┌──────────────────────┐    ┌──────────────────┐
-│ GitHub Pages     │    │  CRO Experiments     │    │ iOS keywords.txt │
-│ Site + llms.txt  │    │  (store A/B tests)   │    │ Play Store title │
-└──────────────────┘    └──────────────────────┘    └──────────────────┘
-                                   │
-         ┌─────────────────────────┼────────────────────────┐
-         ▼                         ▼                         ▼
-┌──────────────────┐    ┌──────────────────────┐    ┌──────────────────┐
-│ Review Velocity  │    │  Paid Acquisition    │    │ Referral Content │
-│ Tracker          │    │  (ASA + UAC)         │    │ (Reddit, PH)     │
-└──────────────────┘    └──────────────────────┘    └──────────────────┘
+```mermaid
+graph TD
+    PH[PostHog Analytics<br/>us.i.posthog.com] -->|HogQL queries| ATT[Attribution Feedback<br/>Sunday pipeline]
+
+    ATT -->|content feedback| CP[Content Pipeline<br/>daily blog]
+    ATT -->|keyword feedback| ASO[ASO Keyword Rotation]
+
+    CP --> GP[GitHub Pages<br/>Site + llms.txt]
+    ASO --> KW[iOS keywords.txt<br/>Play Store title]
+
+    ATT --> CRO[CRO Experiments<br/>store A/B tests]
+
+    CRO --> RV[Review Velocity Tracker]
+    CRO --> PA[Paid Acquisition<br/>ASA + UAC]
+    CRO --> REF[Referral Content<br/>Reddit, PH]
+
+    style PH fill:#4a9eff,color:#fff
+    style ATT fill:#ff6b6b,color:#fff
+    style CP fill:#51cf66,color:#fff
+    style ASO fill:#ffd43b,color:#000
+    style CRO fill:#cc5de8,color:#fff
 ```
 
 ## Data Files (marketing/data/)
