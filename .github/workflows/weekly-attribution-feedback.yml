@@ -74,6 +74,7 @@ jobs:
             - `marketing/data/content_feedback.json`
             - `marketing/data/attribution-report.md`
           branch: auto/weekly-attribution-feedback
+          branch-suffix: timestamp
           base: develop
           add-paths: |
             marketing/keywords/posthog_feedback.json
