@@ -36,8 +36,8 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
 | First Open | — | — |
-| First Timer Configured | — | —% of opens |
-| First Timer Completed | — | —% of opens |
+| First Timer Configured | — | — of opens |
+| First Timer Completed | — | — of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -74,7 +74,7 @@ _Waiting for first `weekly-attribution-feedback.yml` run with PostHog secrets co
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `reaction,interval,hiit,tabata,boxing,martial arts,drills,focus,sparring,workout,coach,random,timer`
+**iOS (current):** `boxing,bjj,mma,combatives,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —
