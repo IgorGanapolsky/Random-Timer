@@ -1492,7 +1492,7 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
 
     app_store_url = os.getenv(
         "APP_STORE_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6742267714",
+        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312",
     )
     play_store_url = os.getenv(
         "PLAY_STORE_URL",
@@ -1500,7 +1500,7 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
     )
     ios_review_url = os.getenv(
         "IOS_REVIEW_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6742267714?action=write-review",
+        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review",
     )
     android_review_url = os.getenv(
         "ANDROID_REVIEW_URL",

@@ -10,7 +10,7 @@
 
 | Platform | Tracked URL |
 |----------|-------------|
-| iOS | `https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026` |
+| iOS | `https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026` |
 | Android | `https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026` |
 | GitHub | `https://github.com/IgorGanapolsky/Random-Timer?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026` |
 
@@ -61,7 +61,7 @@ Been using it for 6 months for my own HIIT sessions and the difference is real -
 Free, no ads, no tracking. Would love feedback from this community.
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_hiit
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_hiit
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_hiit
 
 ### Subreddit Rules Compliance
@@ -91,7 +91,7 @@ Set 2-3 minute rounds and the bell goes off randomly within that range. Way bett
 Free, no ads. Would love to hear from other fighters/trainers.
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_boxing
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_boxing
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_boxing
 
 ### Subreddit Rules Compliance
@@ -121,7 +121,7 @@ No ads, no tracking, no subscriptions. Available on iOS and Android.
 Would love feedback from this community!
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_bodyweightfitness
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_bodyweightfitness
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_bodyweightfitness
 
 ### Subreddit Rules Compliance
@@ -151,7 +151,7 @@ Set 45s-90s and you never know when the next round starts. Forces you to stay re
 Free app, no ads. Been using it for WODs and it's a game changer for mental toughness.
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_crossfit
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_crossfit
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_crossfit
 
 ### Subreddit Rules Compliance
@@ -211,7 +211,7 @@ No ads, no tracking, no subscriptions. Available on iOS and Android.
 Would love feedback from this community!
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_tacticaltraining
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_tacticaltraining
 - Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_tacticaltraining
 
 ### Subreddit Rules Compliance
@@ -241,7 +241,7 @@ No ads, no tracking, no subscriptions. Available on iOS and Android.
 Would love feedback from this community!
 
 **Download links:**
-- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_iosprogramming
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_iosprogramming
 - Source: https://github.com/IgorGanapolsky/Random-Timer?utm_source=reddit&utm_medium=organic&utm_campaign=launch_2026&utm_content=r_iosprogramming
 
 ### Subreddit Rules Compliance
