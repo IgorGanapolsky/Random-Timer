@@ -79,10 +79,10 @@ jobs:
       - name: Run tests
         run: |
           set -euo pipefail
-          if [[ -d tests/python ]]; then
-            pytest -q tests/python
+          if [[ -d scripts/tests ]]; then
+            python -m pytest -q scripts/tests
           else
-            echo "No tests/python directory found; skipping legacy pytest suite."
+            echo "No scripts/tests directory found; skipping pytest suite."
           fi
 
   android:
