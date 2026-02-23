@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: attribution-feedback
@@ -42,7 +43,7 @@ jobs:
 
       - name: Run attribution feedback pipeline
         env:
-          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY || secrets.POSTHOG_API_KEY }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           DAYS: ${{ inputs.days || '30' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
@@ -58,37 +59,29 @@ jobs:
 
           "${CMD[@]}"
 
-      - name: Commit feedback data
+      - name: Create PR with feedback data
         if: inputs.dry_run != true
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore(analytics): weekly attribution feedback from PostHog"
+          title: "chore(analytics): weekly attribution feedback update"
+          body: |
+            Automated weekly attribution feedback refresh from PostHog.
 
-          FILES=(
+            Updated files:
+            - `marketing/keywords/posthog_feedback.json`
+            - `marketing/data/content_feedback.json`
+            - `marketing/data/attribution-report.md`
+          branch: auto/weekly-attribution-feedback
+          branch-suffix: timestamp
+          base: develop
+          add-paths: |
             marketing/keywords/posthog_feedback.json
             marketing/data/content_feedback.json
             marketing/data/attribution-report.md
-          )
-          EXISTING=()
-          for f in "${FILES[@]}"; do
-            if [[ -f "$f" ]]; then
-              EXISTING+=("$f")
-            fi
-          done
-
-          if [[ ${#EXISTING[@]} -eq 0 ]]; then
-            echo "No attribution files produced"
-            exit 0
-          fi
-
-          git add "${EXISTING[@]}"
-          if git diff --cached --quiet; then
-            echo "No attribution data changes to commit"
-            exit 0
-          fi
-
-          git commit -m "chore(analytics): weekly attribution feedback from PostHog"
-          git push
+          labels: |
+            automation
 
       - name: Upload attribution report
         if: always()
@@ -96,4 +89,4 @@ jobs:
         with:
           name: attribution-report
           path: marketing/data/attribution-report.md
-          if-no-files-found: warn
+          if-no-files-found: ignore
