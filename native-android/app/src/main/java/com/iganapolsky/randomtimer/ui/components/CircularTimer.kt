@@ -288,20 +288,20 @@ fun CircularTimer(
                 if (rangeParts.size == 2) {
                     Text(
                         text = rangeParts[0],
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
                         textAlign = TextAlign.Center,
                     )
                     Text(
                         text = "to ${rangeParts[1]}",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
                         textAlign = TextAlign.Center,
                     )
                 } else {
                     Text(
                         text = rangeText,
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
