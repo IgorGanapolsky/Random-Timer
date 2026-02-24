@@ -8,18 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		064BAA16EA4D4830B29F2D9C /* RandomTimerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFBE5D59081407DA7F38ED6 /* RandomTimerUITests.swift */; };
-		A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */; };
-		PH00112233445566778899AA /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = PH00112233445566778899BB /* PostHog */; };
-		PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */; };
 		0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */; };
-		A1B2C3D400000004SHARE01 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004SHARE02 /* ShareSheet.swift */; };
 		0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */; };
 		0DDD8A9A4BBA38ABE292B47F /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */; };
 		1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */; };
 		17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
 		1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */; };
-		B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */; };
-		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
 		1EF5792885AFE606EACC05F9 /* TimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */; };
 		49B707298D8B919D28D01A71 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */; };
 		4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */; };
@@ -27,19 +21,27 @@
 		4ED9D921707F80E1AC5501F3 /* RandomTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368C8F93B37D3B244F271919 /* RandomTimerApp.swift */; };
 		4F4A683B236AE94216503707 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A84792F8E1380EF1A87461 /* Colors.swift */; };
 		56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3063864498ABB31478972EDD /* alarm.mp3 */; };
+		5817A12E9686AD21EAFE028A /* PaywallSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808390B0F0B9EE36AC342E7A /* PaywallSheet.swift */; };
 		69A55EE7F47BF51A55C13896 /* RandomTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */; };
 		840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
+		85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
 		96771424C44C551B73F7732B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15E4584476AB7D519E638B /* GlassCard.swift */; };
+		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
+		A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */; };
+		A1B2C3D400000004SHARE01 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004SHARE02 /* ShareSheet.swift */; };
 		A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */; };
-		C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */; };
 		AABB001122334455DEADBEE0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AABB001122334455DEADBEEF /* Assets.xcassets */; };
+		B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */; };
 		BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */; };
 		D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */; };
 		D8BFD3BC04A1001EE7329508 /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4045FE32D7D1E2F9D4C423C /* StorageService.swift */; };
 		D91C11A4CCFA99B1AF1AEA34 /* RandomTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */; };
 		DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
 		E1DD7FFA2F3044B7A5F461C1 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */; };
 		E479E3D609A46B2F93C1BD2C /* RangeSliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */; };
+		PH00112233445566778899AA /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = PH00112233445566778899BB /* PostHog */; };
+		PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +82,47 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXFileReference section */
+		05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RandomTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerLiveActivity.swift; sourceTree = "<group>"; };
+		1D15E4584476AB7D519E638B /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		1FEB9292178DAA002E1375B9 /* RandomTimerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RandomTimerWidgetExtension.entitlements; sourceTree = "<group>"; };
+		25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3063864498ABB31478972EDD /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
+		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
+		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreReviewManager.swift; sourceTree = "<group>"; };
+		4C626B57059C6BDF97711A5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
+		50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerWidgetBundle.swift; sourceTree = "<group>"; };
+		5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModels.swift; sourceTree = "<group>"; };
+		5897E50AB48E9FBF061E29B4 /* RandomTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RandomTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
+		7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerView.swift; sourceTree = "<group>"; };
+		7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModelsTests.swift; sourceTree = "<group>"; };
+		7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSliderView.swift; sourceTree = "<group>"; };
+		808390B0F0B9EE36AC342E7A /* PaywallSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PaywallSheet.swift; sourceTree = "<group>"; };
+		8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
+		91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "gentle-chime.mp3"; sourceTree = "<group>"; };
+		965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTimerScreen.swift; sourceTree = "<group>"; };
+		A1B2C3D400000002DEADBEEF /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		A1B2C3D400000004SHARE02 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerViewTests.swift; sourceTree = "<group>"; };
+		A5A3DD46F85A68522E1B0902 /* ProManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProManager.swift; sourceTree = "<group>"; };
+		AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSetupScreen.swift; sourceTree = "<group>"; };
+		AABB001122334455DEADBEEF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = RandomTimer/Resources/Assets.xcassets; sourceTree = "<group>"; };
+		B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingStatsService.swift; sourceTree = "<group>"; };
+		B9A84792F8E1380EF1A87461 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		BDB556957D054D23B9D4D664 /* RandomTimerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceAndStopAlarmTests.swift; sourceTree = "<group>"; };
+		CCFBE5D59081407DA7F38ED6 /* RandomTimerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerUITests.swift; sourceTree = "<group>"; };
+		CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerManager.swift; sourceTree = "<group>"; };
+		D4045FE32D7D1E2F9D4C423C /* StorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageService.swift; sourceTree = "<group>"; };
+		ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
+		PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = RandomTimer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		PH00112233445566778899CC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -90,45 +133,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
-
-/* Begin PBXFileReference section */
-		05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RandomTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
-		1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerLiveActivity.swift; sourceTree = "<group>"; };
-		1D15E4584476AB7D519E638B /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
-		1FEB9292178DAA002E1375B9 /* RandomTimerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RandomTimerWidgetExtension.entitlements; sourceTree = "<group>"; };
-		25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		3063864498ABB31478972EDD /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
-		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
-		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreReviewManager.swift; sourceTree = "<group>"; };
-		B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingStatsService.swift; sourceTree = "<group>"; };
-		4C626B57059C6BDF97711A5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
-		50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerWidgetBundle.swift; sourceTree = "<group>"; };
-		5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModels.swift; sourceTree = "<group>"; };
-		5897E50AB48E9FBF061E29B4 /* RandomTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RandomTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
-		7810CC4BC51B69F8B2799FF7 /* CircularTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerView.swift; sourceTree = "<group>"; };
-		A1B2C3D400000004SHARE02 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
-		7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModelsTests.swift; sourceTree = "<group>"; };
-		7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSliderView.swift; sourceTree = "<group>"; };
-		8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
-		A1B2C3D400000002DEADBEEF /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "gentle-chime.mp3"; sourceTree = "<group>"; };
-		965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTimerScreen.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerViewTests.swift; sourceTree = "<group>"; };
-		C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceAndStopAlarmTests.swift; sourceTree = "<group>"; };
-		AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSetupScreen.swift; sourceTree = "<group>"; };
-		AABB001122334455DEADBEEF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = RandomTimer/Resources/Assets.xcassets; sourceTree = "<group>"; };
-		B9A84792F8E1380EF1A87461 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		BDB556957D054D23B9D4D664 /* RandomTimerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CCFBE5D59081407DA7F38ED6 /* RandomTimerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerUITests.swift; sourceTree = "<group>"; };
-		CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerManager.swift; sourceTree = "<group>"; };
-		D4045FE32D7D1E2F9D4C423C /* StorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageService.swift; sourceTree = "<group>"; };
-		ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
-		PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = RandomTimer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-/* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		1F45D7F5254FAD17E047D6A3 /* Products */ = {
@@ -198,6 +202,7 @@
 				4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */,
 				48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */,
 				B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */,
+				A5A3DD46F85A68522E1B0902 /* ProManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -225,6 +230,7 @@
 			children = (
 				965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */,
 				AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */,
+				808390B0F0B9EE36AC342E7A /* PaywallSheet.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -474,6 +480,8 @@
 				1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */,
 				B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */,
 				A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */,
+				85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */,
+				5817A12E9686AD21EAFE028A /* PaywallSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

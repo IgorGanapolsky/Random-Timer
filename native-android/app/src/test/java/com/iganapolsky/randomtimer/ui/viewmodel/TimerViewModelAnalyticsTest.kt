@@ -1,7 +1,10 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -38,6 +41,10 @@ class TimerViewModelAnalyticsTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
+        val appContext = mockk<Context>()
+        val mockPrefs = mockk<SharedPreferences>(relaxed = true)
+        every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
+
         val repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
@@ -45,20 +52,24 @@ class TimerViewModelAnalyticsTest {
         analyticsService = mockk(relaxed = true)
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
+        val proManager = mockk<ProManager>(relaxed = true)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
 
-        viewModel = TimerViewModel(
-            repository = repository,
-            startTimerUseCase = startTimerUseCase,
-            soundPreviewManager = soundPreviewManager,
-            serviceController = serviceController,
-            analyticsService = analyticsService,
-            storeReviewManager = storeReviewManager,
-            trainingStatsService = trainingStatsService,
-        )
+        viewModel =
+            TimerViewModel(
+                appContext = appContext,
+                repository = repository,
+                startTimerUseCase = startTimerUseCase,
+                soundPreviewManager = soundPreviewManager,
+                serviceController = serviceController,
+                analyticsService = analyticsService,
+                storeReviewManager = storeReviewManager,
+                trainingStatsService = trainingStatsService,
+                proManager = proManager,
+            )
     }
 
     @After

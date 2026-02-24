@@ -270,6 +270,8 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         switch type {
         case .intense: return "alarm"
         case .gentle: return "gentle-chime"
+        case .klaxon, .buzzer, .airhorn, .siren: return "alarm"
+        case .whistle, .gong, .drumRoll, .bell: return "gentle-chime"
         }
     }
 

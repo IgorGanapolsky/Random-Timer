@@ -582,6 +582,7 @@ final class TimerManager: ObservableObject {
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
             ])
