@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -23,14 +24,14 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject lateinit var analyticsService: AnalyticsService
 
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // Handle permission result if needed
-    }
+    private val notificationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { isGranted ->
+            // Handle permission result if needed
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +45,14 @@ class MainActivity : ComponentActivity() {
         handleAlarmNotificationTap(intent)
         handleDeepLink(intent)
 
+        // User is back — cancel any pending re-engagement reminders
+        ReengagementScheduler.cancel(this)
+
         setContent {
             RandomTimerTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = TimerColors.BackgroundDark
+                    color = TimerColors.BackgroundDark,
                 ) {
                     RandomTimerNavHost()
                 }
@@ -78,28 +82,31 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION, false) == true) {
             // User tapped the alarm notification — stop sound/vibration but keep alarm screen.
             // The alarm screen shows because timerState.status == ALARM.
-            val silenceIntent = Intent(this, TimerForegroundService::class.java).apply {
-                action = TimerForegroundService.ACTION_SILENCE_ALARM
-            }
+            val silenceIntent =
+                Intent(this, TimerForegroundService::class.java).apply {
+                    action = TimerForegroundService.ACTION_SILENCE_ALARM
+                }
             startService(silenceIntent)
             intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION)
         }
 
         if (intent?.getBooleanExtra(TimerForegroundService.EXTRA_FROM_ALARM_STOP_ACTION, false) == true) {
             // User tapped the alarm notification Stop action — dismiss alarm and go home.
-            val dismissIntent = Intent(this, TimerForegroundService::class.java).apply {
-                action = TimerForegroundService.ACTION_DISMISS_ALARM
-            }
+            val dismissIntent =
+                Intent(this, TimerForegroundService::class.java).apply {
+                    action = TimerForegroundService.ACTION_DISMISS_ALARM
+                }
             startService(dismissIntent)
             intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_STOP_ACTION)
         }
     }
 
     private fun sendAppStateToService(isInForeground: Boolean) {
-        val intent = Intent(this, TimerForegroundService::class.java).apply {
-            action = TimerForegroundService.ACTION_APP_STATE_CHANGED
-            putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, isInForeground)
-        }
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_APP_STATE_CHANGED
+                putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, isInForeground)
+            }
         startService(intent)
     }
 
@@ -112,7 +119,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

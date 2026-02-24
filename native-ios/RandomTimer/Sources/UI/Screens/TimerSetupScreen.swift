@@ -20,6 +20,19 @@ struct TimerSetupScreen: View {
             VStack(alignment: .leading, spacing: 20) {
                 Spacer().frame(height: 8)
 
+                // Training Stats
+                HStack {
+                    Text("Session #\(TrainingStatsService.shared.totalSessions + 1)")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+                    Spacer()
+                    if TrainingStatsService.shared.currentStreak > 1 {
+                        Label("\(TrainingStatsService.shared.currentStreak) day streak", systemImage: "flame.fill")
+                            .font(.caption)
+                            .foregroundColor(.accentPrimary)
+                    }
+                }
+
                 // Time Range Card
                 GlassCard {
                     VStack(alignment: .leading) {

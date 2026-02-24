@@ -38,18 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
+import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -74,6 +74,8 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
+    totalSessions: Int = 0,
+    currentStreak: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -133,25 +135,50 @@ fun TimerSetupScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TimerColors.BackgroundDark,
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = TimerColors.BackgroundDark,
+                    ),
             )
         },
         containerColor = TimerColors.BackgroundDark,
         modifier = modifier,
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = SetupSpacing.OuterHorizontal),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = SetupSpacing.OuterHorizontal),
             verticalArrangement = Arrangement.spacedBy(SetupSpacing.ListItem),
-            contentPadding = PaddingValues(
-                top = SetupSpacing.ListTop,
-                bottom = SetupSpacing.ListBottom,
-            ),
+            contentPadding =
+                PaddingValues(
+                    top = SetupSpacing.ListTop,
+                    bottom = SetupSpacing.ListBottom,
+                ),
         ) {
+            // Training Stats
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Session #${totalSessions + 1}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TimerColors.TextSecondary,
+                    )
+                    if (currentStreak > 1) {
+                        Text(
+                            text = "\uD83D\uDD25 $currentStreak day streak",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.AccentPrimary,
+                        )
+                    }
+                }
+            }
+
             // Time Range Card
             item {
                 GlassCard(modifier = Modifier.fillMaxWidth(), padding = SetupSpacing.CardContent) {
@@ -168,19 +195,21 @@ fun TimerSetupScreen(
                             minValue = config.minSeconds,
                             maxValue = config.maxSeconds,
                             onMinChange = { newMin ->
-                                val (min, max) = TimeRangeAdjuster.adjustForMinChange(
-                                    currentMinSeconds = config.minSeconds,
-                                    currentMaxSeconds = config.maxSeconds,
-                                    newMinSeconds = newMin,
-                                )
+                                val (min, max) =
+                                    TimeRangeAdjuster.adjustForMinChange(
+                                        currentMinSeconds = config.minSeconds,
+                                        currentMaxSeconds = config.maxSeconds,
+                                        newMinSeconds = newMin,
+                                    )
                                 updateConfig(minSeconds = min, maxSeconds = max)
                             },
                             onMaxChange = { newMax ->
-                                val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
-                                    currentMinSeconds = config.minSeconds,
-                                    currentMaxSeconds = config.maxSeconds,
-                                    newMaxSeconds = newMax,
-                                )
+                                val (min, max) =
+                                    TimeRangeAdjuster.adjustForMaxChange(
+                                        currentMinSeconds = config.minSeconds,
+                                        currentMaxSeconds = config.maxSeconds,
+                                        newMaxSeconds = newMax,
+                                    )
                                 updateConfig(minSeconds = min, maxSeconds = max)
                             },
                         )
@@ -216,22 +245,26 @@ fun TimerSetupScreen(
                                         Text(
                                             text = "${duration}s",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (config.alarmDuration == duration)
-                                                TimerColors.AccentPrimary
-                                            else
-                                                TimerColors.TextSecondary,
+                                            color =
+                                                if (config.alarmDuration == duration) {
+                                                    TimerColors.AccentPrimary
+                                                } else {
+                                                    TimerColors.TextSecondary
+                                                },
                                         )
                                     },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = TimerColors.GlassBackground,
-                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                    ),
-                                    border = FilterChipDefaults.filterChipBorder(
-                                        borderColor = TimerColors.GlassBorder,
-                                        selectedBorderColor = TimerColors.AccentPrimary,
-                                        enabled = true,
-                                        selected = config.alarmDuration == duration,
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = TimerColors.GlassBackground,
+                                            selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                        ),
+                                    border =
+                                        FilterChipDefaults.filterChipBorder(
+                                            borderColor = TimerColors.GlassBorder,
+                                            selectedBorderColor = TimerColors.AccentPrimary,
+                                            enabled = true,
+                                            selected = config.alarmDuration == duration,
+                                        ),
                                 )
                             }
                         }
@@ -304,12 +337,13 @@ fun TimerSetupScreen(
                                         config.copy(vibrationEnabled = newValue),
                                     )
                                 },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = TimerColors.AccentPrimary,
-                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
-                                    uncheckedThumbColor = TimerColors.TextMuted,
-                                    uncheckedTrackColor = TimerColors.SliderTrack,
-                                ),
+                                colors =
+                                    SwitchDefaults.colors(
+                                        checkedThumbColor = TimerColors.AccentPrimary,
+                                        checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                        uncheckedThumbColor = TimerColors.TextMuted,
+                                        uncheckedTrackColor = TimerColors.SliderTrack,
+                                    ),
                             )
                         }
                     }
@@ -382,11 +416,12 @@ private fun TimeRangeSliders(
             },
             valueRange = 0f..270f,
             modifier = Modifier.semantics { contentDescription = "Minimum time slider" },
-            colors = SliderDefaults.colors(
-                thumbColor = TimerColors.AccentPrimary,
-                activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack,
-            ),
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                ),
         )
 
         // Max slider - label centered above
@@ -408,11 +443,12 @@ private fun TimeRangeSliders(
             },
             valueRange = 30f..300f,
             modifier = Modifier.semantics { contentDescription = "Maximum time slider" },
-            colors = SliderDefaults.colors(
-                thumbColor = TimerColors.AccentPrimary,
-                activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack,
-            ),
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                ),
         )
     }
 }
@@ -439,21 +475,25 @@ private fun SoundTypeButton(
 
     Surface(
         onClick = onClick,
-        modifier = modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-        },
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
         interactionSource = interactionSource,
         shape = RoundedCornerShape(12.dp),
-        color = if (selected)
-            TimerColors.AccentPrimary.copy(alpha = 0.15f)
-        else
-            TimerColors.GlassBackground,
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
-        ),
+        color =
+            if (selected) {
+                TimerColors.AccentPrimary.copy(alpha = 0.15f)
+            } else {
+                TimerColors.GlassBackground
+            },
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+            ),
     ) {
         Text(
             text = label,
@@ -490,24 +530,24 @@ private fun VolumeSlider(
             value = value,
             onValueChange = onValueChange,
             onValueChangeFinished = onValueChangeFinished,
-            colors = SliderDefaults.colors(
-                thumbColor = TimerColors.AccentPrimary,
-                activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack,
-            ),
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                ),
         )
     }
 }
 
-private fun formatTime(seconds: Int): String {
-    return if (seconds >= 60) {
+private fun formatTime(seconds: Int): String =
+    if (seconds >= 60) {
         val mins = seconds / 60
         val secs = seconds % 60
         if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
     } else {
         "${seconds}s"
     }
-}
 
 @Preview(showBackground = true)
 @Composable
