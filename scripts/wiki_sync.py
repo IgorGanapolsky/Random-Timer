@@ -207,6 +207,13 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     """Replace placeholder sections in the dashboard with live data."""
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     dashboard = dashboard.replace("<!-- TIMESTAMP -->", now)
+    # Keep the footer timestamp current even when legacy templates contain
+    # a literal date string instead of the TIMESTAMP marker.
+    dashboard = re.sub(
+        r"_Dashboard generated at: `[^`]+`\. Data refreshed daily by \[`wiki-sync\.yml`\]\([^)]*\)\._",
+        f"_Dashboard generated at: `{now}`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._",
+        dashboard,
+    )
 
     # --- Downloads & Active Users ---
     dl = load_json(data_dir / "store_downloads.json")

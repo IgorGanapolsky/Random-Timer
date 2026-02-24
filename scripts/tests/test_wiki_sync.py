@@ -186,3 +186,16 @@ def test_budget_allocation_nested_format(data_dir: Path, dashboard_template: str
     assert "$8.00" in result
     assert "$5.00" in result
     assert "$13.00" in result
+
+
+def test_refreshes_legacy_footer_timestamp(data_dir: Path) -> None:
+    template = (
+        "# Dashboard\n\n"
+        "_Dashboard generated at: `2026-02-21T16:30:28+00:00`. "
+        "Data refreshed daily by [`wiki-sync.yml`]"
+        "(https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._\n"
+    )
+    result = inject_dashboard_data(template, data_dir)
+    assert "2026-02-21T16:30:28+00:00" not in result
+    assert "_Dashboard generated at: `" in result
+    assert "wiki-sync.yml" in result
