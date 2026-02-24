@@ -52,7 +52,13 @@ fun RandomTimerNavHost(
         } else {
             // Timer stopped - go back to setup screen
             if (currentRoute == Screen.ActiveTimer.route) {
-                navController.popBackStack(Screen.Setup.route, inclusive = false)
+                val popped = navController.popBackStack(Screen.Setup.route, inclusive = false)
+                if (!popped) {
+                    navController.navigate(Screen.Setup.route) {
+                        launchSingleTop = true
+                        popUpTo(Screen.ActiveTimer.route) { inclusive = true }
+                    }
+                }
                 // Prompt for review after timer completion (if eligible)
                 activity?.let { viewModel.storeReviewManager.requestReview(it) }
             }
@@ -101,16 +107,25 @@ fun RandomTimerNavHost(
             LaunchedEffect(Unit) {
                 viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)
             }
-            timerState?.let { state ->
+            val state = timerState
+            if (state == null) {
+                LaunchedEffect(Unit) {
+                    val popped = navController.popBackStack(Screen.Setup.route, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(Screen.Setup.route) {
+                            launchSingleTop = true
+                            popUpTo(Screen.ActiveTimer.route) { inclusive = true }
+                        }
+                    }
+                }
+            } else {
                 ActiveTimerScreen(
                     state = state,
                     onStop = {
                         viewModel.cancelTimer()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
                     onDismissAlarm = {
                         viewModel.dismissAlarm()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
                     onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
@@ -118,9 +133,7 @@ fun RandomTimerNavHost(
                     onReset = {
                         viewModel.resetTimer()
                     },
-                    onLoopToggle = { enabled ->
-                        viewModel.updateLoopSetting(enabled)
-                    },
+                    onLoopToggle = viewModel::updateLoopSetting,
                 )
             }
         }

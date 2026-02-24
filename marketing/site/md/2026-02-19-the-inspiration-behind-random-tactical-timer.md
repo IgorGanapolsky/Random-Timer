@@ -33,11 +33,11 @@ Better release quality means fewer crashes, clearer store listing content, and f
 Tomorrow we will ship one more experiment on onboarding clarity and measure conversion delta.
 
 ## Try the app
-- iOS: [https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog](https://apps.apple.com/us/app/random-tactical-timer/id6742267714?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog)
+- iOS: [https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog](https://apps.apple.com/us/app/random-tactical-timer/id6758355312?utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog)
 - Android: [https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260219&utm_content=daily_blog)
 
 ## Help us improve
-- Leave an iOS review: [https://apps.apple.com/us/app/random-tactical-timer/id6742267714?action=write-review](https://apps.apple.com/us/app/random-tactical-timer/id6742267714?action=write-review)
+- Leave an iOS review: [https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review](https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review)
 - Leave an Android review: [https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0)
 
 ## Diagram

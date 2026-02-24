@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | 5 | — | 5 |
+| Downloads (30d) | — | — | — |
 | Active Installs | — | — | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 4 |
-| WAU | 5 |
-| MAU | 129 |
+| DAU | — |
+| WAU | — |
+| MAU | — |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,13 +23,13 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 0 |
-| Timer Completed (7d) | 2 |
-| Completed Users (7d) | 1 |
-| Sessions/Completed User (7d) | 2.0 |
+| Timer Completed (7d) | 0 |
+| Completed Users (7d) | 0 |
+| Sessions/Completed User (7d) | 0.0 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
-| Active Campaign Count | 2 |
+| Active Campaign Count | 1 |
 | Guardrail Violated | YES |
 <!-- NORTH_STAR_END -->
 
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-02-23T16:28:52+00:00
+**Generated:** 2026-02-24T15:47:22+00:00
 
 ## Onboarding Funnel
-- First Open: **130**
-- First Timer Configured: **61** (46.9% of opens)
-- First Timer Completed: **32** (24.6% of opens)
+- First Open: **132**
+- First Timer Configured: **62** (47.0% of opens)
+- First Timer Completed: **32** (24.2% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,9 +60,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 130 | — |
-| First Timer Configured | 61 | 46.9% of opens |
-| First Timer Completed | 32 | 24.6% of opens |
+| First Open | 132 | — |
+| First Timer Configured | 62 | 47.0% of opens |
+| First Timer Completed | 32 | 24.2% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -91,9 +91,10 @@
 <!-- CAMPAIGNS_START -->
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
-| apple_search_ads | $6.00 | draft | 37 |
-| google_uac | $4.00 | draft | 10 |
-| **Total** | **$10.00** | — | 47 |
+| apple_search_ads | $10.00 | active | 37 |
+| google_uac | $10.00 | ready_to_launch | 10 |
+| reddit_ads | $10.00 | ready_to_launch | 0 |
+| **Total** | **$30.00** | — | 47 |
 <!-- CAMPAIGNS_END -->
 
 ## ASO Keywords
@@ -129,17 +130,10 @@
 
 <!-- CHARTS_START -->
 ```mermaid
-xychart-beta
-    title "WQTU (7d)"
-    x-axis ["2026-02-23" , "2026-02-23" , "2026-02-23"]
-    y-axis "Users"
-    line [0 , 0 , 0]
-```
-
-```mermaid
 pie title Daily Ad Budget Allocation ($)
-    "Apple Search Ads" : 6.0
-    "Google Uac" : 4.0
+    "Apple Search Ads" : 10.0
+    "Google Uac" : 10.0
+    "Reddit Ads" : 10.0
 ```
 
 ```mermaid
@@ -161,4 +155,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-02-21T16:30:28+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-02-24T17:38:32+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

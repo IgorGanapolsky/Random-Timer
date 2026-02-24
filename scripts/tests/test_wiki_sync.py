@@ -11,7 +11,7 @@ import pytest
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from wiki_sync import inject_dashboard_data, load_json, load_jsonl
+from wiki_sync import inject_dashboard_data, inject_paid_acquisition_data, load_json, load_jsonl
 
 
 @pytest.fixture
@@ -115,6 +115,33 @@ def dashboard_template() -> str:
     """)
 
 
+@pytest.fixture
+def paid_template() -> str:
+    return textwrap.dedent("""\
+        # Paid Acquisition
+
+        <!-- LIVE_PAID_START -->
+        old
+        <!-- LIVE_PAID_END -->
+
+        <!-- LIVE_PAID_SOURCES_START -->
+        old
+        <!-- LIVE_PAID_SOURCES_END -->
+
+        <!-- LIVE_PAID_CHARTS_START -->
+        old
+        <!-- LIVE_PAID_CHARTS_END -->
+
+        <!-- LIVE_PAID_BUDGET_START -->
+        old
+        <!-- LIVE_PAID_BUDGET_END -->
+
+        <!-- LIVE_CAMPAIGN_STATUS_START -->
+        old
+        <!-- LIVE_CAMPAIGN_STATUS_END -->
+    """)
+
+
 def test_inject_reviews(data_dir: Path, dashboard_template: str) -> None:
     result = inject_dashboard_data(dashboard_template, data_dir)
     assert "42" in result  # ios_total
@@ -186,3 +213,61 @@ def test_budget_allocation_nested_format(data_dir: Path, dashboard_template: str
     assert "$8.00" in result
     assert "$5.00" in result
     assert "$13.00" in result
+
+
+def test_refreshes_legacy_footer_timestamp(data_dir: Path) -> None:
+    template = (
+        "# Dashboard\n\n"
+        "_Dashboard generated at: `2026-02-21T16:30:28+00:00`. "
+        "Data refreshed daily by [`wiki-sync.yml`]"
+        "(https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._\n"
+    )
+    result = inject_dashboard_data(template, data_dir)
+    assert "2026-02-21T16:30:28+00:00" not in result
+    assert "_Dashboard generated at: `" in result
+    assert "wiki-sync.yml" in result
+
+
+def test_inject_paid_uses_apple_live_metrics(data_dir: Path, paid_template: str) -> None:
+    (data_dir / "north_star.json").write_text(json.dumps({
+        "north_star": {
+            "wqtu_7d": 0,
+            "targets": {"checkpoint_2026_03_31": 8, "quarter_2026_06_30": 25},
+        },
+        "paid": {
+            "paid_distinct_users_30d": 0,
+            "paid_events_by_source_30d": [],
+            "active_campaign_count": 1,
+            "guardrail_violated": True,
+        },
+    }))
+    (data_dir / "store_downloads.json").write_text(json.dumps({
+        "combined": {"downloads_30d": 9},
+    }))
+    (data_dir / "content_feedback.json").write_text(json.dumps({
+        "onboarding_funnel": {"open_to_completed_rate": 0.242},
+    }))
+    (data_dir / "apple_ads_live_metrics.json").write_text(json.dumps({
+        "status": "ok",
+        "campaign_count": 1,
+        "active_campaign_count": 1,
+        "finding": "API reports 1 campaign(s), 1 active; 30d taps 0, spend $0.00, installs 0.",
+        "metrics_30d": {
+            "impressions": 0,
+            "taps": 0,
+            "spend_usd": 0.0,
+            "installs": 0,
+        },
+        "snapshots": [
+            {"timestamp": "2026-02-24T17:00:00+00:00", "taps": 0, "spend_usd": 0.0},
+            {"timestamp": "2026-02-24T17:15:00+00:00", "taps": 1, "spend_usd": 1.23},
+        ],
+    }))
+
+    result = inject_paid_acquisition_data(paid_template, data_dir)
+    assert "Apple Ads Campaigns (API) | 1" in result
+    assert "Apple Ads Clicks/Taps (30d) | 0" in result
+    assert "Apple Ads Spend (30d) | $0.00" in result
+    assert "API reports 1 campaign(s), 1 active" in result
+    assert "Apple Ads Taps (30d snapshot trend)" in result
+    assert "Platform | Config Status | Live Status | Daily Budget" in result

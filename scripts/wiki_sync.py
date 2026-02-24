@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Inject live data from marketing/data/ JSON files into wiki dashboard template.
+"""Inject live data from marketing/data/ JSON files into wiki templates.
 
 Reads the static wiki templates from wiki/, injects live metrics from
-marketing/data/ JSON files into the Daily Metrics Dashboard. Git
+marketing/data/ JSON files into the Daily Metrics Dashboard and
+Paid Acquisition pages. Git
 operations (clone wiki repo, commit, push) are handled by the GitHub
 Actions workflow YAML, not this script.
 
@@ -69,17 +70,26 @@ def _fmt_num_allow_zero(val: Any) -> str:
     return str(val)
 
 
+def _extract_budget_allocation(pc: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    if not pc:
+        return {}
+    raw_alloc = pc.get("budget_allocation", {})
+    alloc: Dict[str, float] = {}
+    for key, value in raw_alloc.items():
+        if isinstance(value, dict):
+            amount = value.get("daily_budget_usd", 0)
+        else:
+            amount = value
+        try:
+            alloc[key] = float(amount or 0)
+        except (TypeError, ValueError):
+            alloc[key] = 0.0
+    return alloc
+
+
 def _mermaid_budget_pie(pc: Optional[Dict[str, Any]]) -> str:
     """Generate a Mermaid pie chart for budget allocation."""
-    if not pc:
-        return ""
-    raw_alloc = pc.get("budget_allocation", {})
-    alloc = {}
-    for k, v in raw_alloc.items():
-        if isinstance(v, dict):
-            alloc[k] = v.get("daily_budget_usd", 0)
-        else:
-            alloc[k] = v
+    alloc = _extract_budget_allocation(pc)
     if not alloc or all(v == 0 for v in alloc.values()):
         return ""
     slices = "\n".join(
@@ -203,10 +213,138 @@ def _mermaid_wqtu_trend(ns: Optional[Dict[str, Any]]) -> str:
     )
 
 
+def _mermaid_paid_source_bar(ns: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid bar chart for paid-attributed users by source."""
+    if not ns:
+        return ""
+    paid = ns.get("paid", {})
+    rows = paid.get("paid_events_by_source_30d", [])
+    if not isinstance(rows, list) or not rows:
+        return ""
+    labels: list[str] = []
+    users: list[int] = []
+    for row in rows:
+        source = str(row.get("source", "(unknown)"))
+        count = int(row.get("users", 0) or 0)
+        labels.append(f'"{source}"')
+        users.append(count)
+    ymax = max(users) + 1 if users else 1
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        '    title "Paid Attributed Users by Source (30d)"\n'
+        f"    x-axis [{' , '.join(labels)}]\n"
+        f'    y-axis "Users" 0 --> {ymax}\n'
+        f"    bar [{' , '.join(str(v) for v in users)}]\n"
+        "```"
+    )
+
+
+def _mermaid_north_star_vs_targets(ns: Optional[Dict[str, Any]]) -> str:
+    """Generate a bar chart for current WQTU vs checkpoint/quarter targets."""
+    if not ns:
+        return ""
+    nsm = ns.get("north_star", {})
+    targets = nsm.get("targets", {})
+    wqtu = int(nsm.get("wqtu_7d", 0) or 0)
+    checkpoint = int(targets.get("checkpoint_2026_03_31", 0) or 0)
+    quarter = int(targets.get("quarter_2026_06_30", 0) or 0)
+    ymax = max(wqtu, checkpoint, quarter, 1) + 2
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        '    title "North Star Progress (WQTU)"\n'
+        '    x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]\n'
+        f'    y-axis "Users" 0 --> {ymax}\n'
+        f"    bar [{wqtu} , {checkpoint} , {quarter}]\n"
+        "```"
+    )
+
+
+def _mermaid_apple_ads_trend(apple: Optional[Dict[str, Any]], field: str, title: str, y_label: str) -> str:
+    if not apple:
+        return ""
+    snapshots = apple.get("snapshots", [])
+    if not isinstance(snapshots, list) or len(snapshots) < 2:
+        return ""
+    recent = snapshots[-14:]
+    labels: list[str] = []
+    values: list[str] = []
+    for row in recent:
+        ts = str(row.get("timestamp", ""))
+        labels.append(f'"{ts[5:16]}"')
+        values.append(str(row.get(field, 0)))
+    ymax = max([float(v) for v in values] + [1.0]) * 1.2
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        f'    title "{title}"\n'
+        f"    x-axis [{' , '.join(labels)}]\n"
+        f'    y-axis "{y_label}" 0 --> {int(ymax) if ymax >= 1 else 1}\n'
+        f"    line [{' , '.join(values)}]\n"
+        "```"
+    )
+
+
+def _dynamic_budget_block(pc: Optional[Dict[str, Any]]) -> str:
+    if not pc:
+        return "_No paid campaign configuration available._"
+    alloc = _extract_budget_allocation(pc)
+    total = sum(v for v in alloc.values() if isinstance(v, (int, float)))
+    rows = ["| Platform | Daily Budget | Share |", "|----------|:-----------:|:-----:|"]
+    for platform, amount in alloc.items():
+        share = (amount / total) if total > 0 else 0
+        rows.append(f"| {platform} | ${amount:.2f} | {share:.0%} |")
+    rows.append(f"| **Total** | **${total:.2f}/day** | 100% |")
+
+    budget_cfg = pc.get("budget_config", {})
+    target_cpa = _to_float(budget_cfg.get("target_cpa_usd"))
+    max_cpt = _to_float(budget_cfg.get("max_cpt_usd"))
+    return "\n".join(rows) + f"\n\n**Target CPA:** ${target_cpa:.2f} | **Max CPT (Apple):** ${max_cpt:.2f}"
+
+
+def _to_float(value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _dynamic_campaign_status_block(pc: Optional[Dict[str, Any]], apple: Optional[Dict[str, Any]]) -> str:
+    campaigns = pc.get("campaigns", []) if pc else []
+    rows = [
+        "| Platform | Config Status | Live Status | Daily Budget |",
+        "|----------|---------------|-------------|-------------:|",
+    ]
+    apple_live = {}
+    if apple:
+        apple_campaigns = apple.get("campaigns", [])
+        if isinstance(apple_campaigns, list) and apple_campaigns:
+            apple_live = apple_campaigns[0]
+    for campaign in campaigns:
+        platform = str(campaign.get("platform", "unknown"))
+        status = str(campaign.get("status", "unknown"))
+        budget = _to_float(campaign.get("daily_budget_usd"))
+        live_status = "—"
+        if platform == "apple_search_ads":
+            live_status = str(apple_live.get("serving_status") or apple_live.get("status") or "—")
+        rows.append(f"| {platform} | {status} | {live_status} | ${budget:.2f} |")
+    if len(rows) == 2:
+        rows.append("| (none) | — | — | $0.00 |")
+    return "\n".join(rows)
+
+
 def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     """Replace placeholder sections in the dashboard with live data."""
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     dashboard = dashboard.replace("<!-- TIMESTAMP -->", now)
+    # Keep the footer timestamp current even when legacy templates contain
+    # a literal date string instead of the TIMESTAMP marker.
+    dashboard = re.sub(
+        r"_Dashboard generated at: `[^`]+`\. Data refreshed daily by \[`wiki-sync\.yml`\]\([^)]*\)\._",
+        f"_Dashboard generated at: `{now}`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._",
+        dashboard,
+    )
 
     # --- Downloads & Active Users ---
     dl = load_json(data_dir / "store_downloads.json")
@@ -499,6 +637,144 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     return dashboard
 
 
+def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
+    """Inject live paid-acquisition metrics + charts into wiki page markers."""
+    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
+    ns = load_json(data_dir / "north_star.json") or {}
+    pc = load_json(data_dir / "paid_campaigns.json") or {}
+    dl = load_json(data_dir / "store_downloads.json") or {}
+    cf = load_json(data_dir / "content_feedback.json") or {}
+    live = load_json(data_dir / "live_growth_snapshot.json") or {}
+    apple = load_json(data_dir / "apple_ads_live_metrics.json") or {}
+
+    nsm = ns.get("north_star", {})
+    paid = ns.get("paid", {})
+    funnel = cf.get("onboarding_funnel", {})
+    targets = nsm.get("targets", {})
+    budget_alloc = _extract_budget_allocation(pc)
+    total_budget = sum(v for v in budget_alloc.values() if isinstance(v, (int, float)))
+
+    apple_metrics = apple.get("metrics_30d", {}) if isinstance(apple, dict) else {}
+    if apple.get("status") == "ok":
+        apple_finding = str(
+            apple.get("finding")
+            or f"API reports {apple.get('campaign_count', 0)} campaign(s) for adamId {apple.get('adam_id', '—')}."
+        )
+    else:
+        apple_finding = (
+            str(apple.get("finding", "")).strip()
+            or live.get("apple_ads_live_check", {}).get("finding")
+            or live.get("paid_ads", {}).get("live_status_reason")
+            or "No live Apple Ads check available"
+        )
+
+    downloads_30d = dl.get("combined", {}).get("downloads_30d")
+    kpi_block = (
+        "| Metric | Value |\n"
+        "|--------|-------|\n"
+        f"| Snapshot (UTC) | `{now}` |\n"
+        f"| Paid Attributed Users (30d) | {_fmt_num_allow_zero(paid.get('paid_distinct_users_30d'))} |\n"
+        f"| Paid Events (30d) | {_fmt_num_allow_zero(sum(int(r.get('events', 0) or 0) for r in paid.get('paid_events_by_source_30d', [])))} |\n"
+        f"| Active Campaign Count (tracked) | {_fmt_num_allow_zero(paid.get('active_campaign_count'))} |\n"
+        f"| Daily Budget Configured | ${total_budget:.2f} |\n"
+        f"| Blended CPI Target | $3.00 |\n"
+        f"| Open -> Completed Rate (30d) | {_fmt(funnel.get('open_to_completed_rate', 0))} |\n"
+        f"| WQTU (7d) | {_fmt_num_allow_zero(nsm.get('wqtu_7d'))} |\n"
+        f"| WQTU Checkpoint Target (2026-03-31) | {_fmt_num_allow_zero(targets.get('checkpoint_2026_03_31'))} |\n"
+        f"| WQTU Quarter Target (2026-06-30) | {_fmt_num_allow_zero(targets.get('quarter_2026_06_30'))} |\n"
+        f"| Downloads (30d) | {_fmt_num_allow_zero(downloads_30d)} |\n"
+        f"| Apple Ads Campaigns (API) | {_fmt_num_allow_zero(apple.get('campaign_count', 0))} |\n"
+        f"| Apple Ads Active Campaigns (API) | {_fmt_num_allow_zero(apple.get('active_campaign_count', 0))} |\n"
+        f"| Apple Ads Impressions (30d) | {_fmt_num_allow_zero(apple_metrics.get('impressions', 0))} |\n"
+        f"| Apple Ads Clicks/Taps (30d) | {_fmt_num_allow_zero(apple_metrics.get('taps', 0))} |\n"
+        f"| Apple Ads Spend (30d) | ${_to_float(apple_metrics.get('spend_usd')):.2f} |\n"
+        f"| Apple Ads Installs (30d) | {_fmt_num_allow_zero(apple_metrics.get('installs', 0))} |\n"
+        f"| Apple Ads Live Finding | {apple_finding} |\n"
+        f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
+    )
+
+    paid_rows = paid.get("paid_events_by_source_30d", [])
+    if isinstance(paid_rows, list) and paid_rows:
+        source_rows = [
+            f"| {row.get('source', '(unknown)')} | {int(row.get('events', 0) or 0)} | {int(row.get('users', 0) or 0)} |"
+            for row in paid_rows
+        ]
+        source_block = (
+            "| Source | Events (30d) | Users (30d) |\n"
+            "|--------|:------------:|:-----------:|\n"
+            + "\n".join(source_rows)
+        )
+    else:
+        source_block = (
+            "| Source | Events (30d) | Users (30d) |\n"
+            "|--------|:------------:|:-----------:|\n"
+            "| (none) | 0 | 0 |"
+        )
+
+    charts: list[str] = []
+    budget_pie = _mermaid_budget_pie(pc)
+    if budget_pie:
+        charts.append(budget_pie)
+    source_bar = _mermaid_paid_source_bar(ns)
+    if source_bar:
+        charts.append(source_bar)
+    north_star_bar = _mermaid_north_star_vs_targets(ns)
+    if north_star_bar:
+        charts.append(north_star_bar)
+    apple_taps_trend = _mermaid_apple_ads_trend(
+        apple,
+        field="taps",
+        title="Apple Ads Taps (30d snapshot trend)",
+        y_label="Taps",
+    )
+    if apple_taps_trend:
+        charts.append(apple_taps_trend)
+    apple_spend_trend = _mermaid_apple_ads_trend(
+        apple,
+        field="spend_usd",
+        title="Apple Ads Spend USD (30d snapshot trend)",
+        y_label="USD",
+    )
+    if apple_spend_trend:
+        charts.append(apple_spend_trend)
+    charts_block = "\n\n".join(charts) if charts else "_No paid chart data available yet._"
+
+    budget_block = _dynamic_budget_block(pc)
+    campaign_status_block = _dynamic_campaign_status_block(pc, apple)
+
+    page = re.sub(
+        r"<!-- LIVE_PAID_START -->.*?<!-- LIVE_PAID_END -->",
+        f"<!-- LIVE_PAID_START -->\n{kpi_block}\n<!-- LIVE_PAID_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_SOURCES_START -->.*?<!-- LIVE_PAID_SOURCES_END -->",
+        f"<!-- LIVE_PAID_SOURCES_START -->\n{source_block}\n<!-- LIVE_PAID_SOURCES_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_CHARTS_START -->.*?<!-- LIVE_PAID_CHARTS_END -->",
+        f"<!-- LIVE_PAID_CHARTS_START -->\n{charts_block}\n<!-- LIVE_PAID_CHARTS_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_BUDGET_START -->.*?<!-- LIVE_PAID_BUDGET_END -->",
+        f"<!-- LIVE_PAID_BUDGET_START -->\n{budget_block}\n<!-- LIVE_PAID_BUDGET_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_CAMPAIGN_STATUS_START -->.*?<!-- LIVE_CAMPAIGN_STATUS_END -->",
+        f"<!-- LIVE_CAMPAIGN_STATUS_START -->\n{campaign_status_block}\n<!-- LIVE_CAMPAIGN_STATUS_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    return page
+
+
 def main() -> int:
     """Inject live data into wiki dashboard template.
 
@@ -520,6 +796,13 @@ def main() -> int:
         updated = inject_dashboard_data(dashboard, data_dir)
         dashboard_path.write_text(updated, encoding="utf-8")
         print("[wiki-sync] Dashboard updated with live data")
+
+    paid_path = wiki_dir / "Paid-Acquisition.md"
+    if paid_path.exists():
+        paid_page = paid_path.read_text(encoding="utf-8")
+        paid_updated = inject_paid_acquisition_data(paid_page, data_dir)
+        paid_path.write_text(paid_updated, encoding="utf-8")
+        print("[wiki-sync] Paid Acquisition updated with live data")
 
     print(f"[wiki-sync] {len(list(wiki_dir.glob('*.md')))} wiki pages ready in {wiki_dir}")
     return 0
