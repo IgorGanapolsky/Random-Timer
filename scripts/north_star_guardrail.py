@@ -17,7 +17,7 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 try:
     from scripts.store_downloads_snapshot import query_rows, query_scalar
@@ -48,9 +48,59 @@ def _active_campaigns(campaigns: Sequence[Dict[str, Any]], active_statuses: Set[
                 "platform": campaign.get("platform", "unknown"),
                 "status": campaign.get("status", ""),
                 "daily_budget_usd": campaign.get("daily_budget_usd"),
+                "launched_at": campaign.get("launched_at"),
             }
         )
     return active
+
+
+def _parse_iso_utc(value: Any) -> Optional[dt.datetime]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc)
+
+
+def _campaign_outside_grace(campaign: Dict[str, Any], now: dt.datetime, grace_days: int) -> bool:
+    launched = _parse_iso_utc(campaign.get("launched_at"))
+    if launched is None:
+        # Without launch timestamp, treat as mature campaign and enforce attribution hygiene.
+        return True
+    return launched <= now - dt.timedelta(days=max(0, grace_days))
+
+
+def _load_apple_ads_live_metrics(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    if isinstance(payload, dict):
+        return payload
+    return {}
+
+
+def _apple_paid_traffic_signal(snapshot: Dict[str, Any]) -> Tuple[bool, str]:
+    if not snapshot:
+        return False, "apple snapshot missing"
+    if str(snapshot.get("status", "")).strip().lower() != "ok":
+        return False, f"apple snapshot status={snapshot.get('status') or 'unknown'}"
+    metrics = snapshot.get("metrics_30d", {}) if isinstance(snapshot.get("metrics_30d"), dict) else {}
+    taps = int(metrics.get("taps", 0) or 0)
+    spend = float(metrics.get("spend_usd", 0.0) or 0.0)
+    installs = int(metrics.get("installs", 0) or 0)
+    has_signal = taps > 0 or spend > 0 or installs > 0
+    detail = f"apple_30d taps={taps}, spend_usd={spend:.2f}, installs={installs}"
+    return has_signal, detail
 
 
 def _empty_payload(lookback_days: int, wqtu_window_days: int, reason: str = "") -> Dict[str, Any]:
@@ -79,6 +129,10 @@ def _empty_payload(lookback_days: int, wqtu_window_days: int, reason: str = "") 
             "active_campaigns": [],
             "active_campaign_count": 0,
             "active_statuses": [],
+            "campaign_grace_days": 7,
+            "active_campaigns_outside_grace_count": 0,
+            "paid_traffic_signal": False,
+            "paid_traffic_signal_detail": "",
             "guardrail_violated": False,
             "guardrail_reason": "",
         },
@@ -93,6 +147,7 @@ def run(
     wqtu_window_days: int = 7,
     checkpoint_target: int = 8,
     quarter_target: int = 25,
+    campaign_grace_days: int = 7,
     active_statuses: Optional[Set[str]] = None,
 ) -> Dict[str, Any]:
     output_path = repo_root / "marketing" / "data" / "north_star.json"
@@ -121,6 +176,7 @@ def run(
     active = _active_campaigns(campaigns, statuses)
     payload["paid"]["active_campaigns"] = active
     payload["paid"]["active_campaign_count"] = len(active)
+    payload["paid"]["campaign_grace_days"] = campaign_grace_days
 
     if not key or not project_id:
         payload["status"] = "skipped"
@@ -224,9 +280,35 @@ def run(
     payload["paid"]["paid_events_by_source_30d"] = [
         {"source": str(row[0]), "events": int(row[1] or 0), "users": int(row[2] or 0)} for row in paid_events_rows
     ]
-    payload["paid"]["guardrail_violated"] = len(active) > 0 and paid_distinct_users_30d == 0
-    if payload["paid"]["guardrail_violated"]:
-        payload["paid"]["guardrail_reason"] = "active campaigns exist but paid-attributed users over lookback window is zero"
+    now = dt.datetime.now(dt.timezone.utc)
+    outside_grace = [c for c in active if _campaign_outside_grace(c, now, campaign_grace_days)]
+    payload["paid"]["active_campaigns_outside_grace_count"] = len(outside_grace)
+
+    has_apple_active = any(str(c.get("platform", "")).lower() == "apple_search_ads" for c in active)
+    signal = False
+    signal_detail = "no active paid campaigns"
+    if has_apple_active:
+        signal, signal_detail = _apple_paid_traffic_signal(
+            _load_apple_ads_live_metrics(repo_root / "marketing" / "data" / "apple_ads_live_metrics.json")
+        )
+    payload["paid"]["paid_traffic_signal"] = signal
+    payload["paid"]["paid_traffic_signal_detail"] = signal_detail
+
+    should_enforce = (
+        len(active) > 0
+        and paid_distinct_users_30d == 0
+        and (len(outside_grace) > 0 or signal)
+    )
+    payload["paid"]["guardrail_violated"] = should_enforce
+    if should_enforce:
+        payload["paid"]["guardrail_reason"] = (
+            "active campaigns exist, paid-attributed users over lookback window is zero, "
+            f"outside_grace={len(outside_grace)}, signal={signal} ({signal_detail})"
+        )
+    elif len(active) > 0 and paid_distinct_users_30d == 0:
+        payload["paid"]["guardrail_reason"] = (
+            "guardrail not enforced: campaigns are within grace window and no paid traffic signal detected"
+        )
 
     payload["query_diagnostics"]["errors"] = errors
 
@@ -274,6 +356,12 @@ def main() -> int:
     parser.add_argument("--checkpoint-target", type=int, default=8, help="Checkpoint target for WQTU")
     parser.add_argument("--quarter-target", type=int, default=25, help="Quarter target for WQTU")
     parser.add_argument(
+        "--campaign-grace-days",
+        type=int,
+        default=7,
+        help="Days after campaign launch before zero paid attribution can fail guardrail",
+    )
+    parser.add_argument(
         "--active-statuses",
         default="active,running,enabled,live,serving,on",
         help="Comma-separated statuses treated as active campaigns",
@@ -293,6 +381,7 @@ def main() -> int:
         wqtu_window_days=args.wqtu_window_days,
         checkpoint_target=args.checkpoint_target,
         quarter_target=args.quarter_target,
+        campaign_grace_days=args.campaign_grace_days,
         active_statuses=statuses,
     )
     print(json.dumps(result, indent=2))
