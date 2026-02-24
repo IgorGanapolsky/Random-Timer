@@ -3,7 +3,9 @@
     {
       "platform": "apple_search_ads",
       "created": "2026-02-20T21:08:11Z",
-      "status": "draft",
+      "status": "active",
+      "campaign_id": 2143440089,
+      "launched_at": "2026-02-24T16:30:00Z",
       "daily_budget_usd": 10.0,
       "ad_groups": [
         {
@@ -186,6 +188,16 @@
       "target_locations": 5,
       "target_cpi_usd": 2.5,
       "config_file": "marketing/google_uac_campaign.md"
+    },
+    {
+      "timestamp": "2026-02-24T16:30:00Z",
+      "action": "apple_search_ads_launched",
+      "campaign_id": 2143440089,
+      "ad_groups": 3,
+      "keywords": 37,
+      "negative_keywords": 4,
+      "daily_budget_usd": 10.0,
+      "status": "RUNNING"
     }
   ],
   "budget_allocation": {

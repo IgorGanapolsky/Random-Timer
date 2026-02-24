@@ -130,6 +130,7 @@ def create_campaign(headers: Dict[str, str], budget: float) -> int:
         "countriesOrRegions": ["US"],
         "status": "ENABLED",
         "adChannelType": "SEARCH",
+        "billingEvent": "TAPS",
         "supplySources": ["APPSTORE_SEARCH_RESULTS"],
     }
     print(f"Creating campaign with ${budget}/day budget...")
@@ -147,13 +148,16 @@ def create_ad_group(
     auto_keywords: bool = False,
 ) -> int:
     """Create an ad group. Returns ad group ID."""
+    import datetime as dt
+    start = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000")
     payload = {
         "campaignId": campaign_id,
         "name": name,
         "defaultBidAmount": {"amount": str(default_bid), "currency": "USD"},
         "automatedKeywordsOptIn": auto_keywords,
+        "pricingModel": "CPC",
         "status": "ENABLED",
-        "startTime": None,
+        "startTime": start,
     }
     print(f"  Creating ad group: {name} (bid=${default_bid})...")
     result = api_post(f"/campaigns/{campaign_id}/adgroups", headers, payload)
@@ -213,11 +217,12 @@ def add_negative_keywords(
 
 
 def enable_campaign(headers: Dict[str, str], campaign_id: int) -> str:
-    """Enable the campaign to go live."""
-    payload = {"status": "ENABLED"}
-    result = api_put(f"/campaigns/{campaign_id}", headers, payload)
-    status = result.get("data", {}).get("status", "UNKNOWN")
-    print(f"  Campaign status: {status}")
+    """Verify campaign is enabled (created with ENABLED status)."""
+    result = api_get(f"/campaigns/{campaign_id}", headers)
+    data = result.get("data", {})
+    status = data.get("status", "UNKNOWN")
+    serving = data.get("servingStatus", "UNKNOWN")
+    print(f"  Campaign status: {status}, serving: {serving}")
     return status
 
 
@@ -270,9 +275,16 @@ def main() -> int:
     existing_campaigns = existing.get("data", [])
     print(f"  Found {len(existing_campaigns)} existing campaigns")
 
-    # Create campaign
+    # Reuse existing campaign or create new one
     budget = apple_campaign.get("daily_budget_usd", 10.0)
-    campaign_id = create_campaign(hdrs, budget)
+    campaign_id = None
+    for ec in existing_campaigns:
+        if "Random Tactical Timer" in ec.get("name", ""):
+            campaign_id = ec["id"]
+            print(f"  Reusing existing campaign: ID={campaign_id} ({ec['name']})")
+            break
+    if campaign_id is None:
+        campaign_id = create_campaign(hdrs, budget)
 
     # Create ad groups and keywords
     total_keywords = 0
