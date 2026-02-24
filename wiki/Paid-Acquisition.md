@@ -1,6 +1,55 @@
 # Paid Acquisition
 
-Campaign configurations for Apple Search Ads and Google Universal App Campaigns.
+Campaign configurations and live paid performance for Apple Search Ads and Google Universal App Campaigns.
+
+> Auto-updated by `scripts/wiki_sync.py` from `marketing/data/*.json`.
+
+## Live Paid Snapshot
+
+<!-- LIVE_PAID_START -->
+| Metric | Value |
+|--------|-------|
+| Snapshot (UTC) | `2026-02-24T15:51:47+00:00` |
+| Paid Attributed Users (30d) | 0 |
+| Paid Events (30d) | 0 |
+| Active Campaign Count (tracked) | 0 |
+| Daily Budget Configured | $30.00 |
+| Blended CPI Target | $3.00 |
+| Open -> Completed Rate (30d) | 24.2% |
+| WQTU (7d) | 0 |
+| WQTU Checkpoint Target (2026-03-31) | 8 |
+| WQTU Quarter Target (2026-06-30) | 25 |
+| Downloads (30d) | 8 |
+| Apple Ads Live Finding | You do not have any campaigns |
+| Guardrail Violated | NO |
+<!-- LIVE_PAID_END -->
+
+## Paid Attribution Sources (30d)
+
+<!-- LIVE_PAID_SOURCES_START -->
+| Source | Events (30d) | Users (30d) |
+|--------|:------------:|:-----------:|
+| (none) | 0 | 0 |
+<!-- LIVE_PAID_SOURCES_END -->
+
+## Paid Charts
+
+<!-- LIVE_PAID_CHARTS_START -->
+```mermaid
+pie title Daily Ad Budget Allocation ($)
+    "Apple Search Ads" : 10.0
+    "Google Uac" : 10.0
+    "Reddit Ads" : 10.0
+```
+
+```mermaid
+xychart-beta
+    title "North Star Progress (WQTU)"
+    x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]
+    y-axis "Users" 0 --> 27
+    bar [0 , 8 , 25]
+```
+<!-- LIVE_PAID_CHARTS_END -->
 
 ## Budget Allocation
 
