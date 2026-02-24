@@ -128,6 +128,6 @@ object ReengagementScheduler {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMs, pi)
+        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMs, pi)
     }
 }
