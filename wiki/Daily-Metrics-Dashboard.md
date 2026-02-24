@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | 6 | — | 6 |
+| Downloads (30d) | 7 | — | 7 |
 | Active Installs | — | — | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 5 |
-| WAU | 6 |
-| MAU | 130 |
+| DAU | 2 |
+| WAU | 7 |
+| MAU | 131 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-02-23T16:39:18+00:00
+**Generated:** 2026-02-23T16:28:52+00:00
 
 ## Onboarding Funnel
 - First Open: **130**
@@ -92,7 +92,7 @@
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
 | apple_search_ads | $10.00 | draft | 37 |
-| google_uac | $10.00 | draft | 10 |
+| google_uac | $10.00 | ready_to_launch | 10 |
 | reddit_ads | $10.00 | ready_to_launch | 0 |
 | **Total** | **$30.00** | — | 47 |
 <!-- CAMPAIGNS_END -->
@@ -100,7 +100,7 @@
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `boxing,bjj,mma,combatives,drills,sparring,interval,coach,crossfit,rounds,fighter,workout,tabata`
+**iOS (current):** `boxing,bjj,mma,combat,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —
@@ -132,18 +132,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-02-23" , "2026-02-23" , "2026-02-23"]
+    x-axis ["2026-02-23" , "2026-02-24"]
     y-axis "Downloads"
-    line [6 , 6 , 6]
-    line [0 , 0 , 0]
+    line [5 , 7]
+    line [0 , 0]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-02-23" , "2026-02-23" , "2026-02-23" , "2026-02-23"]
+    x-axis ["2026-02-23" , "2026-02-23" , "2026-02-23" , "2026-02-23" , "2026-02-23" , "2026-02-24"]
     y-axis "Users"
-    line [0 , 0 , 0 , 0]
+    line [0 , 0 , 0 , 0 , 0 , 0]
 ```
 
 ```mermaid
@@ -172,4 +172,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-02-21T16:30:28+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-02-24T15:20:40+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
