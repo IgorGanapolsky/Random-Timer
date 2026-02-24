@@ -37,7 +37,12 @@ fun RandomTimerNavHost(
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val currentRoute =
+        navController
+            .currentBackStackEntryAsState()
+            .value
+            ?.destination
+            ?.route
     val activity = LocalContext.current as? Activity
 
     // Auto-navigate based on timer state
@@ -88,6 +93,8 @@ fun RandomTimerNavHost(
                 onStartTimer = viewModel::startTimer,
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
+                totalSessions = viewModel.totalSessions,
+                currentStreak = viewModel.currentStreak,
             )
         }
 

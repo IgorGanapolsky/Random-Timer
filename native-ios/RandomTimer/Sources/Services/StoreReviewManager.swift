@@ -9,7 +9,7 @@ final class StoreReviewManager {
     private let lastReviewTimestampKey = "review_last_timestamp"
     private let lastReviewVersionKey = "review_last_version"
 
-    private let completionsBeforeReview = 3
+    private let completionsBeforeReview = 1
     private let minDaysBetweenRequests = 30
 
     private init() {}

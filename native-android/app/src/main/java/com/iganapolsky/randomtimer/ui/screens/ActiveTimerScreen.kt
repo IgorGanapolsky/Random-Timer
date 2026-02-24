@@ -1,5 +1,7 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,8 +22,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -74,6 +77,7 @@ fun ActiveTimerScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
@@ -124,6 +128,12 @@ fun ActiveTimerScreen(
                             resetFeedbackCounter += 1
                             onReset()
                         },
+                        modifier = modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SecondaryButton(
+                        text = "Tell a Training Partner",
+                        onClick = { shareWithTrainingPartner(context) },
                         modifier = modifier.fillMaxWidth(),
                     )
                 } else {
@@ -346,11 +356,12 @@ private fun LoopBadge(
 
     Surface(
         onClick = onClick,
-        modifier = modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-        },
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
         interactionSource = interactionSource,
         shape = RoundedCornerShape(8.dp),
         color = TimerColors.GlassBackground,
@@ -377,6 +388,17 @@ private fun LoopBadge(
             )
         }
     }
+}
+
+private fun shareWithTrainingPartner(context: Context) {
+    val shareText = "This is the timer I use for random fight drills. It goes off unpredictably so you can't game it. Train for chaos, not comfort.\nhttps://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer"
+    val sendIntent =
+        Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+    context.startActivity(Intent.createChooser(sendIntent, "Tell a Training Partner"))
 }
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
