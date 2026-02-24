@@ -16,10 +16,13 @@ from typing import Any, Dict, List, Optional
 
 try:
     import jwt
+except ImportError:
+    jwt = None  # type: ignore[assignment]
+
+try:
     import requests
 except ImportError:
-    print("ERROR: install dependencies: PyJWT cryptography requests")
-    raise SystemExit(1)
+    requests = None  # type: ignore[assignment]
 
 
 APPLE_AUTH_URL = "https://appleid.apple.com/auth/oauth2/token"
@@ -73,6 +76,8 @@ def _amount(value: Any) -> float:
 
 
 def _oauth_access_token() -> tuple[str, str]:
+    if jwt is None or requests is None:
+        return "", "missing dependencies: install PyJWT and requests"
     required = ["APPLE_ADS_CLIENT_ID", "APPLE_ADS_TEAM_ID", "APPLE_ADS_KEY_ID"]
     missing = [k for k in required if not os.getenv(k, "").strip()]
     if missing:

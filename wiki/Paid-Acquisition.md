@@ -9,7 +9,7 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-02-24T17:36:25+00:00` |
+| Snapshot (UTC) | `2026-02-24T17:38:32+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 1 |
@@ -19,7 +19,7 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 | WQTU (7d) | 0 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
-| Downloads (30d) | 9 |
+| Downloads (30d) | 0 |
 | Apple Ads Campaigns (API) | 1 |
 | Apple Ads Active Campaigns (API) | 1 |
 | Apple Ads Impressions (30d) | 0 |
@@ -54,6 +54,22 @@ xychart-beta
     x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]
     y-axis "Users" 0 --> 27
     bar [0 , 8 , 25]
+```
+
+```mermaid
+xychart-beta
+    title "Apple Ads Taps (30d snapshot trend)"
+    x-axis ["02-24T17:36" , "02-24T17:38"]
+    y-axis "Taps" 0 --> 1
+    line [0 , 0]
+```
+
+```mermaid
+xychart-beta
+    title "Apple Ads Spend USD (30d snapshot trend)"
+    x-axis ["02-24T17:36" , "02-24T17:38"]
+    y-axis "USD" 0 --> 1
+    line [0.0 , 0.0]
 ```
 <!-- LIVE_PAID_CHARTS_END -->
 
