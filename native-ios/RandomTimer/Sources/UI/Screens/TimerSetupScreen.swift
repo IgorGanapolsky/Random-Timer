@@ -3,9 +3,17 @@ import SwiftUI
 /// Initial screen for configuring and starting a timer
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
+    @State private var showShareSheet = false
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
+
+    private static let shareMessage = """
+        This is the timer I use for random fight drills. \
+        It goes off unpredictably so you can't game it. \
+        Train for chaos, not comfort.
+        https://apps.apple.com/us/app/random-tactical-timer/id6758355312
+        """
 
     var body: some View {
         ScrollView {
@@ -135,6 +143,20 @@ struct TimerSetupScreen: View {
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showShareSheet = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundColor(.accentPrimary)
+                }
+                .accessibilityLabel("Share app")
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: [Self.shareMessage])
+        }
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
         }

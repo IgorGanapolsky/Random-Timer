@@ -44,6 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
@@ -98,6 +101,8 @@ fun TimerSetupScreen(
         )
     }
 
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -108,6 +113,25 @@ fun TimerSetupScreen(
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.TextPrimary,
                     )
+                },
+                actions = {
+                    TextButton(onClick = {
+                        val shareText = "This is the timer I use for random fight drills. " +
+                            "It goes off unpredictably so you can't game it. " +
+                            "Train for chaos, not comfort.\n" +
+                            "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer"
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Share"))
+                    }) {
+                        Text(
+                            text = "Share",
+                            color = TimerColors.AccentPrimary,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = TimerColors.BackgroundDark,
