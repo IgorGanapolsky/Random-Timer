@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Inject live data from marketing/data/ JSON files into wiki dashboard template.
+"""Inject live data from marketing/data/ JSON files into wiki templates.
 
 Reads the static wiki templates from wiki/, injects live metrics from
-marketing/data/ JSON files into the Daily Metrics Dashboard. Git
+marketing/data/ JSON files into the Daily Metrics Dashboard and
+Paid Acquisition pages. Git
 operations (clone wiki repo, commit, push) are handled by the GitHub
 Actions workflow YAML, not this script.
 
@@ -69,17 +70,26 @@ def _fmt_num_allow_zero(val: Any) -> str:
     return str(val)
 
 
+def _extract_budget_allocation(pc: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    if not pc:
+        return {}
+    raw_alloc = pc.get("budget_allocation", {})
+    alloc: Dict[str, float] = {}
+    for key, value in raw_alloc.items():
+        if isinstance(value, dict):
+            amount = value.get("daily_budget_usd", 0)
+        else:
+            amount = value
+        try:
+            alloc[key] = float(amount or 0)
+        except (TypeError, ValueError):
+            alloc[key] = 0.0
+    return alloc
+
+
 def _mermaid_budget_pie(pc: Optional[Dict[str, Any]]) -> str:
     """Generate a Mermaid pie chart for budget allocation."""
-    if not pc:
-        return ""
-    raw_alloc = pc.get("budget_allocation", {})
-    alloc = {}
-    for k, v in raw_alloc.items():
-        if isinstance(v, dict):
-            alloc[k] = v.get("daily_budget_usd", 0)
-        else:
-            alloc[k] = v
+    alloc = _extract_budget_allocation(pc)
     if not alloc or all(v == 0 for v in alloc.values()):
         return ""
     slices = "\n".join(
@@ -200,6 +210,54 @@ def _mermaid_wqtu_trend(ns: Optional[Dict[str, Any]]) -> str:
         f'    y-axis "Users"\n'
         f'    line [{" , ".join(wqtu_vals)}]\n'
         f"```"
+    )
+
+
+def _mermaid_paid_source_bar(ns: Optional[Dict[str, Any]]) -> str:
+    """Generate a Mermaid bar chart for paid-attributed users by source."""
+    if not ns:
+        return ""
+    paid = ns.get("paid", {})
+    rows = paid.get("paid_events_by_source_30d", [])
+    if not isinstance(rows, list) or not rows:
+        return ""
+    labels: list[str] = []
+    users: list[int] = []
+    for row in rows:
+        source = str(row.get("source", "(unknown)"))
+        count = int(row.get("users", 0) or 0)
+        labels.append(f'"{source}"')
+        users.append(count)
+    ymax = max(users) + 1 if users else 1
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        '    title "Paid Attributed Users by Source (30d)"\n'
+        f"    x-axis [{' , '.join(labels)}]\n"
+        f'    y-axis "Users" 0 --> {ymax}\n'
+        f"    bar [{' , '.join(str(v) for v in users)}]\n"
+        "```"
+    )
+
+
+def _mermaid_north_star_vs_targets(ns: Optional[Dict[str, Any]]) -> str:
+    """Generate a bar chart for current WQTU vs checkpoint/quarter targets."""
+    if not ns:
+        return ""
+    nsm = ns.get("north_star", {})
+    targets = nsm.get("targets", {})
+    wqtu = int(nsm.get("wqtu_7d", 0) or 0)
+    checkpoint = int(targets.get("checkpoint_2026_03_31", 0) or 0)
+    quarter = int(targets.get("quarter_2026_06_30", 0) or 0)
+    ymax = max(wqtu, checkpoint, quarter, 1) + 2
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        '    title "North Star Progress (WQTU)"\n'
+        '    x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]\n'
+        f'    y-axis "Users" 0 --> {ymax}\n'
+        f"    bar [{wqtu} , {checkpoint} , {quarter}]\n"
+        "```"
     )
 
 
@@ -506,6 +564,98 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     return dashboard
 
 
+def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
+    """Inject live paid-acquisition metrics + charts into wiki page markers."""
+    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
+    ns = load_json(data_dir / "north_star.json") or {}
+    pc = load_json(data_dir / "paid_campaigns.json") or {}
+    dl = load_json(data_dir / "store_downloads.json") or {}
+    cf = load_json(data_dir / "content_feedback.json") or {}
+    live = load_json(data_dir / "live_growth_snapshot.json") or {}
+
+    nsm = ns.get("north_star", {})
+    paid = ns.get("paid", {})
+    funnel = cf.get("onboarding_funnel", {})
+    targets = nsm.get("targets", {})
+    budget_alloc = _extract_budget_allocation(pc)
+    total_budget = sum(v for v in budget_alloc.values() if isinstance(v, (int, float)))
+
+    apple_finding = (
+        live.get("apple_ads_live_check", {}).get("finding")
+        or live.get("paid_ads", {}).get("live_status_reason")
+        or "No live Apple Ads check available"
+    )
+
+    downloads_30d = dl.get("combined", {}).get("downloads_30d")
+    kpi_block = (
+        "| Metric | Value |\n"
+        "|--------|-------|\n"
+        f"| Snapshot (UTC) | `{now}` |\n"
+        f"| Paid Attributed Users (30d) | {_fmt_num_allow_zero(paid.get('paid_distinct_users_30d'))} |\n"
+        f"| Paid Events (30d) | {_fmt_num_allow_zero(sum(int(r.get('events', 0) or 0) for r in paid.get('paid_events_by_source_30d', [])))} |\n"
+        f"| Active Campaign Count (tracked) | {_fmt_num_allow_zero(paid.get('active_campaign_count'))} |\n"
+        f"| Daily Budget Configured | ${total_budget:.2f} |\n"
+        f"| Blended CPI Target | $3.00 |\n"
+        f"| Open -> Completed Rate (30d) | {_fmt(funnel.get('open_to_completed_rate', 0))} |\n"
+        f"| WQTU (7d) | {_fmt_num_allow_zero(nsm.get('wqtu_7d'))} |\n"
+        f"| WQTU Checkpoint Target (2026-03-31) | {_fmt_num_allow_zero(targets.get('checkpoint_2026_03_31'))} |\n"
+        f"| WQTU Quarter Target (2026-06-30) | {_fmt_num_allow_zero(targets.get('quarter_2026_06_30'))} |\n"
+        f"| Downloads (30d) | {_fmt_num_allow_zero(downloads_30d)} |\n"
+        f"| Apple Ads Live Finding | {apple_finding} |\n"
+        f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
+    )
+
+    paid_rows = paid.get("paid_events_by_source_30d", [])
+    if isinstance(paid_rows, list) and paid_rows:
+        source_rows = [
+            f"| {row.get('source', '(unknown)')} | {int(row.get('events', 0) or 0)} | {int(row.get('users', 0) or 0)} |"
+            for row in paid_rows
+        ]
+        source_block = (
+            "| Source | Events (30d) | Users (30d) |\n"
+            "|--------|:------------:|:-----------:|\n"
+            + "\n".join(source_rows)
+        )
+    else:
+        source_block = (
+            "| Source | Events (30d) | Users (30d) |\n"
+            "|--------|:------------:|:-----------:|\n"
+            "| (none) | 0 | 0 |"
+        )
+
+    charts: list[str] = []
+    budget_pie = _mermaid_budget_pie(pc)
+    if budget_pie:
+        charts.append(budget_pie)
+    source_bar = _mermaid_paid_source_bar(ns)
+    if source_bar:
+        charts.append(source_bar)
+    north_star_bar = _mermaid_north_star_vs_targets(ns)
+    if north_star_bar:
+        charts.append(north_star_bar)
+    charts_block = "\n\n".join(charts) if charts else "_No paid chart data available yet._"
+
+    page = re.sub(
+        r"<!-- LIVE_PAID_START -->.*?<!-- LIVE_PAID_END -->",
+        f"<!-- LIVE_PAID_START -->\n{kpi_block}\n<!-- LIVE_PAID_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_SOURCES_START -->.*?<!-- LIVE_PAID_SOURCES_END -->",
+        f"<!-- LIVE_PAID_SOURCES_START -->\n{source_block}\n<!-- LIVE_PAID_SOURCES_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_CHARTS_START -->.*?<!-- LIVE_PAID_CHARTS_END -->",
+        f"<!-- LIVE_PAID_CHARTS_START -->\n{charts_block}\n<!-- LIVE_PAID_CHARTS_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    return page
+
+
 def main() -> int:
     """Inject live data into wiki dashboard template.
 
@@ -527,6 +677,13 @@ def main() -> int:
         updated = inject_dashboard_data(dashboard, data_dir)
         dashboard_path.write_text(updated, encoding="utf-8")
         print("[wiki-sync] Dashboard updated with live data")
+
+    paid_path = wiki_dir / "Paid-Acquisition.md"
+    if paid_path.exists():
+        paid_page = paid_path.read_text(encoding="utf-8")
+        paid_updated = inject_paid_acquisition_data(paid_page, data_dir)
+        paid_path.write_text(paid_updated, encoding="utf-8")
+        print("[wiki-sync] Paid Acquisition updated with live data")
 
     print(f"[wiki-sync] {len(list(wiki_dir.glob('*.md')))} wiki pages ready in {wiki_dir}")
     return 0

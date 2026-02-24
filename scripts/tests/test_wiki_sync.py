@@ -11,7 +11,12 @@ import pytest
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from wiki_sync import inject_dashboard_data, load_json, load_jsonl
+from wiki_sync import (
+    inject_dashboard_data,
+    inject_paid_acquisition_data,
+    load_json,
+    load_jsonl,
+)
 
 
 @pytest.fixture
@@ -65,6 +70,49 @@ def data_dir(tmp_path: Path) -> Path:
         "budget_allocation": {"apple_search_ads": 6.0, "google_uac": 4.0},
     }))
 
+    # north_star.json
+    (d / "north_star.json").write_text(json.dumps({
+        "north_star": {
+            "wqtu_7d": 2,
+            "targets": {
+                "checkpoint_2026_03_31": 8,
+                "quarter_2026_06_30": 25,
+            },
+        },
+        "paid": {
+            "paid_distinct_users_30d": 3,
+            "active_campaign_count": 1,
+            "guardrail_violated": False,
+            "paid_events_by_source_30d": [
+                {"source": "apple_ads", "events": 12, "users": 3},
+                {"source": "reddit", "events": 4, "users": 1},
+            ],
+        },
+    }))
+
+    # store_downloads.json
+    (d / "store_downloads.json").write_text(json.dumps({
+        "combined": {"downloads_30d": 42},
+        "ios": {"downloads_30d": 42},
+        "android": {"downloads_30d": 0},
+        "active_users": {"dau": 5, "wau": 11, "mau": 80},
+        "snapshots": [],
+    }))
+
+    # content_feedback.json
+    (d / "content_feedback.json").write_text(json.dumps({
+        "onboarding_funnel": {
+            "open_to_completed_rate": 0.25,
+        }
+    }))
+
+    # live_growth_snapshot.json
+    (d / "live_growth_snapshot.json").write_text(json.dumps({
+        "apple_ads_live_check": {
+            "finding": "You do not have any campaigns",
+        }
+    }))
+
     # posts.jsonl
     (d / "posts.jsonl").write_text(
         json.dumps({"title": "Test Post", "timestamp": "2026-02-20T12:00:00+00:00"}) + "\n"
@@ -112,6 +160,25 @@ def dashboard_template() -> str:
         <!-- REFERRAL_END -->
 
         <!-- TIMESTAMP -->
+    """)
+
+
+@pytest.fixture
+def paid_template() -> str:
+    return textwrap.dedent("""\
+        # Paid Acquisition
+
+        <!-- LIVE_PAID_START -->
+        placeholder
+        <!-- LIVE_PAID_END -->
+
+        <!-- LIVE_PAID_SOURCES_START -->
+        placeholder
+        <!-- LIVE_PAID_SOURCES_END -->
+
+        <!-- LIVE_PAID_CHARTS_START -->
+        placeholder
+        <!-- LIVE_PAID_CHARTS_END -->
     """)
 
 
@@ -199,3 +266,18 @@ def test_refreshes_legacy_footer_timestamp(data_dir: Path) -> None:
     assert "2026-02-21T16:30:28+00:00" not in result
     assert "_Dashboard generated at: `" in result
     assert "wiki-sync.yml" in result
+
+
+def test_inject_paid_snapshot(data_dir: Path, paid_template: str) -> None:
+    result = inject_paid_acquisition_data(paid_template, data_dir)
+    assert "Paid Attributed Users (30d) | 3" in result
+    assert "Open -> Completed Rate (30d) | 25.0%" in result
+    assert "Daily Budget Configured | $10.00" in result
+    assert "You do not have any campaigns" in result
+
+
+def test_inject_paid_charts(data_dir: Path, paid_template: str) -> None:
+    result = inject_paid_acquisition_data(paid_template, data_dir)
+    assert "pie title Daily Ad Budget Allocation ($)" in result
+    assert "title \"Paid Attributed Users by Source (30d)\"" in result
+    assert "title \"North Star Progress (WQTU)\"" in result

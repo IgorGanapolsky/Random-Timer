@@ -70,13 +70,14 @@ FROM (
 3. **Retention floor**: D30 retention >= `6%` (target above broad-market baselines).
 4. **Attribution hygiene**: `paid_distinct_users_30d` and campaign-level UTM rows must be non-empty before claiming paid impact.
 
-### Baseline Snapshot (2026-02-23 UTC)
+### Baseline Snapshot (2026-02-24 UTC)
 
 - `WQTU`: `0` (no user reached >=3 `timer_completed` in trailing 7d).
 - `timer_completed` last 7d: `2` events by `1` user.
-- `open_to_completed_rate` (30d): `24.62%` (32/130).
+- `open_to_completed_rate` (30d): `24.24%` (32/132).
 - Paid attribution last 30d: `0` distinct users, `0` campaign rows.
-- Downloads (30d): iOS `6`, Android `0`, combined `6`.
+- Downloads (30d): iOS `8`, Android `0`, combined `8`.
+- Apple Ads live serving evidence: account shows `0` campaigns and `0` spend rows in dashboard (`Last 7 days` view).
 
 ### Targets
 

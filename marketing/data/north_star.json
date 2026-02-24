@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-24T15:20:35+00:00",
+  "generated_at": "2026-02-24T15:47:20+00:00",
   "source": "posthog",
   "status": "ok",
   "status_reason": "",
@@ -41,7 +41,7 @@
   },
   "snapshots": [
     {
-      "timestamp": "2026-02-23T17:04:01+00:00",
+      "timestamp": "2026-02-24T15:38:34+00:00",
       "wqtu_7d": 0,
       "timer_completed_7d": 2,
       "completed_users_7d": 1,
@@ -50,7 +50,7 @@
       "guardrail_violated": false
     },
     {
-      "timestamp": "2026-02-23T17:04:14+00:00",
+      "timestamp": "2026-02-24T15:39:58+00:00",
       "wqtu_7d": 0,
       "timer_completed_7d": 2,
       "completed_users_7d": 1,
@@ -59,34 +59,7 @@
       "guardrail_violated": false
     },
     {
-      "timestamp": "2026-02-23T17:04:56+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 2,
-      "guardrail_violated": true
-    },
-    {
-      "timestamp": "2026-02-23T17:04:56+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
-    },
-    {
-      "timestamp": "2026-02-23T17:05:10+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
-    },
-    {
-      "timestamp": "2026-02-24T15:20:35+00:00",
+      "timestamp": "2026-02-24T15:47:20+00:00",
       "wqtu_7d": 0,
       "timer_completed_7d": 2,
       "completed_users_7d": 1,
