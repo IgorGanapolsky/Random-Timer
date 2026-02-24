@@ -70,8 +70,14 @@ class SoundPreviewManagerImpl
                 when (soundType) {
                     SoundType.INTENSE -> R.raw.alarm
                     SoundType.GENTLE -> R.raw.gentle_chime
-                    SoundType.KLAXON, SoundType.BUZZER, SoundType.AIRHORN, SoundType.SIREN -> R.raw.alarm
-                    SoundType.WHISTLE, SoundType.GONG, SoundType.DRUM_ROLL, SoundType.BELL -> R.raw.gentle_chime
+                    SoundType.KLAXON -> R.raw.klaxon
+                    SoundType.WHISTLE -> R.raw.whistle
+                    SoundType.BUZZER -> R.raw.buzzer
+                    SoundType.GONG -> R.raw.gong
+                    SoundType.AIRHORN -> R.raw.airhorn
+                    SoundType.DRUM_ROLL -> R.raw.drum_roll
+                    SoundType.SIREN -> R.raw.siren
+                    SoundType.BELL -> R.raw.bell
                 }
 
             player =

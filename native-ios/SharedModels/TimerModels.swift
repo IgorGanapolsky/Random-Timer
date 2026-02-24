@@ -38,9 +38,14 @@ public enum SoundType: String, Codable, Sendable, CaseIterable {
         switch self {
         case .intense: return "alarm.mp3"
         case .gentle: return "gentle-chime.mp3"
-        // Pro sounds: map to existing files until real assets are added
-        case .klaxon, .buzzer, .airhorn, .siren: return "alarm.mp3"
-        case .whistle, .gong, .drumRoll, .bell: return "gentle-chime.mp3"
+        case .klaxon: return "klaxon.mp3"
+        case .whistle: return "whistle.mp3"
+        case .buzzer: return "buzzer.mp3"
+        case .gong: return "gong.mp3"
+        case .airhorn: return "airhorn.mp3"
+        case .drumRoll: return "drum_roll.mp3"
+        case .siren: return "siren.mp3"
+        case .bell: return "bell.mp3"
         }
     }
 }
