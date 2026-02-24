@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-24T15:47:20+00:00",
+  "generated_at": "2026-02-24T17:36:00+00:00",
   "source": "posthog",
   "status": "ok",
   "status_reason": "",
@@ -10,9 +10,9 @@
     "key": "WQTU",
     "definition": "distinct users with >=3 timer_completed events in trailing 7 days",
     "wqtu_7d": 0,
-    "timer_completed_7d": 2,
-    "completed_users_7d": 1,
-    "sessions_per_completed_user_7d": 2.0,
+    "timer_completed_7d": 3,
+    "completed_users_7d": 2,
+    "sessions_per_completed_user_7d": 1.5,
     "targets": {
       "checkpoint_2026_03_31": 8,
       "quarter_2026_06_30": 25
@@ -23,8 +23,14 @@
   "paid": {
     "paid_distinct_users_30d": 0,
     "paid_events_by_source_30d": [],
-    "active_campaigns": [],
-    "active_campaign_count": 0,
+    "active_campaigns": [
+      {
+        "platform": "apple_search_ads",
+        "status": "active",
+        "daily_budget_usd": 10.0
+      }
+    ],
+    "active_campaign_count": 1,
     "active_statuses": [
       "active",
       "enabled",
@@ -33,39 +39,30 @@
       "running",
       "serving"
     ],
-    "guardrail_violated": false,
-    "guardrail_reason": ""
+    "guardrail_violated": true,
+    "guardrail_reason": "active campaigns exist but paid-attributed users over lookback window is zero"
   },
   "query_diagnostics": {
     "errors": []
   },
   "snapshots": [
     {
-      "timestamp": "2026-02-24T15:38:34+00:00",
+      "timestamp": "2026-02-24T17:16:47+00:00",
       "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
+      "timer_completed_7d": 3,
+      "completed_users_7d": 2,
       "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
+      "active_campaign_count": 1,
+      "guardrail_violated": true
     },
     {
-      "timestamp": "2026-02-24T15:39:58+00:00",
+      "timestamp": "2026-02-24T17:36:00+00:00",
       "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
+      "timer_completed_7d": 3,
+      "completed_users_7d": 2,
       "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
-    },
-    {
-      "timestamp": "2026-02-24T15:47:20+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 2,
-      "completed_users_7d": 1,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
+      "active_campaign_count": 1,
+      "guardrail_violated": true
     }
   ]
 }
