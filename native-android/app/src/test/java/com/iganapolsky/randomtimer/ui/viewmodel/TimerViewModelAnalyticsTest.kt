@@ -10,6 +10,7 @@ import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
+import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -43,6 +44,7 @@ class TimerViewModelAnalyticsTest {
         val serviceController = mockk<TimerServiceController>()
         analyticsService = mockk(relaxed = true)
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
+        val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
         every { serviceController.bindService(any()) } just runs
@@ -55,6 +57,7 @@ class TimerViewModelAnalyticsTest {
             serviceController = serviceController,
             analyticsService = analyticsService,
             storeReviewManager = storeReviewManager,
+            trainingStatsService = trainingStatsService,
         )
     }
 

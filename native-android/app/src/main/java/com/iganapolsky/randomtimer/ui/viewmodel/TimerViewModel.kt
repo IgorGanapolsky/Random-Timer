@@ -17,6 +17,7 @@ import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
+import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +36,11 @@ class TimerViewModel
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
+        private val trainingStatsService: TrainingStatsService,
     ) : ViewModel() {
+        val totalSessions: Int get() = trainingStatsService.totalSessions
+        val currentStreak: Int get() = trainingStatsService.currentStreak
+
         val config: StateFlow<TimerConfig> =
             repository
                 .getTimerConfig()
@@ -205,7 +210,10 @@ class TimerViewModel
             analyticsService.screen(screen)
         }
 
-        internal fun onTimerStateObservedForAnalytics(previousStatus: TimerStatus?, state: TimerState?) {
+        internal fun onTimerStateObservedForAnalytics(
+            previousStatus: TimerStatus?,
+            state: TimerState?,
+        ) {
             val currentStatus = state?.status ?: return
 
             if (previousStatus != null && previousStatus != TimerStatus.ALARM && currentStatus == TimerStatus.ALARM) {

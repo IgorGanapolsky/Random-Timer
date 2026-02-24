@@ -16,6 +16,8 @@ protocol TimerNotificationHandling {
     func stopPreview()
     var didTapAlarmNotification: Bool { get }
     func clearNotificationTapFlag()
+    func scheduleReengagementReminder()
+    func cancelReengagementReminders()
 }
 
 protocol TimerStorage: Sendable {

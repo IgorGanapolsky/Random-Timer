@@ -20,19 +20,21 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.util.Log
-import android.view.KeyEvent
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
+import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
+import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.review.StoreReviewManager
+import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +54,7 @@ import kotlin.time.Duration.Companion.seconds
 class TimerForegroundService : Service() {
     @Inject lateinit var storeReviewManager: StoreReviewManager
 
+    private val trainingStatsService by lazy { TrainingStatsService(this) }
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var timerJob: Job? = null
@@ -394,6 +397,10 @@ class TimerForegroundService : Service() {
                     stopVibration()
                     unregisterScreenOffReceiver()
                     storeReviewManager.recordCompletion()
+                    trainingStatsService.recordSession()
+
+                    // Schedule re-engagement reminders so user gets nudged back
+                    ReengagementScheduler.schedule(this@TimerForegroundService)
 
                     val currentState = _timerState.value
                     if (currentState?.config?.repeatEnabled == true) {
@@ -402,11 +409,12 @@ class TimerForegroundService : Service() {
                     } else {
                         // Alarm sound finished — keep state as COMPLETE (iOS parity)
                         // User must manually Stop or Reset from the ActiveTimerScreen
-                        _timerState.value = currentState?.copy(
-                            status = TimerStatus.COMPLETE,
-                            alarmTimeRemaining = 0.seconds,
-                            isAlarmSilenced = false,
-                        )
+                        _timerState.value =
+                            currentState?.copy(
+                                status = TimerStatus.COMPLETE,
+                                alarmTimeRemaining = 0.seconds,
+                                isAlarmSilenced = false,
+                            )
                         _timerState.value?.let { updateNotification(it) }
                     }
                 }
@@ -491,17 +499,19 @@ class TimerForegroundService : Service() {
         val maxFormatted = formatSecondsToReadable(state.config.maxSeconds)
         val rangeText = "$minFormatted - $maxFormatted"
 
-        val title = when {
-            isSilencedAlarm -> "Alarm Silenced"
-            isComplete -> "Timer Complete!"
-            isPaused -> "Timer Paused"
-            else -> "Timer Running"
-        }
-        val text = if (isComplete || isSilencedAlarm) {
-            "Went off after ${formatSecondsToReadable(state.targetDuration.inWholeSeconds.toInt())}"
-        } else {
-            "Goes off between $rangeText"
-        }
+        val title =
+            when {
+                isSilencedAlarm -> "Alarm Silenced"
+                isComplete -> "Timer Complete!"
+                isPaused -> "Timer Paused"
+                else -> "Timer Running"
+            }
+        val text =
+            if (isComplete || isSilencedAlarm) {
+                "Went off after ${formatSecondsToReadable(state.targetDuration.inWholeSeconds.toInt())}"
+            } else {
+                "Goes off between $rangeText"
+            }
 
         val builder =
             NotificationCompat
@@ -769,8 +779,9 @@ class TimerForegroundService : Service() {
                     .build()
             val player = MediaPlayer()
             player.setAudioAttributes(alarmAttributes)
-            val afd = resources.openRawResourceFd(resourceId)
-                ?: throw IllegalStateException("Could not open alarm sound resource")
+            val afd =
+                resources.openRawResourceFd(resourceId)
+                    ?: throw IllegalStateException("Could not open alarm sound resource")
             player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
             afd.close()
             player.isLooping = true

@@ -18,6 +18,7 @@
 		1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */; };
 		17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
 		1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */; };
+		B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */; };
 		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
 		1EF5792885AFE606EACC05F9 /* TimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */; };
 		49B707298D8B919D28D01A71 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */; };
@@ -101,6 +102,7 @@
 		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
 		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreReviewManager.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingStatsService.swift; sourceTree = "<group>"; };
 		4C626B57059C6BDF97711A5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
 		50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerWidgetBundle.swift; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */,
 				4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */,
 				48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */,
+				B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -469,6 +472,7 @@
 				4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */,
 				D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */,
 				1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */,
+				B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */,
 				A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

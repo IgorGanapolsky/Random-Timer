@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Screen shown when a timer is actively counting down
 struct ActiveTimerScreen: View {
@@ -7,6 +8,9 @@ struct ActiveTimerScreen: View {
     @State private var loopEnabled: Bool = false // Default to LOOP OFF
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
+    @State private var showShareSheet: Bool = false
+
+    private let shareMessage = "This is the timer I use for random fight drills. It goes off unpredictably so you can't game it. Train for chaos, not comfort.\nhttps://apps.apple.com/us/app/random-tactical-timer/id6758355312"
 
     private var state: TimerState? {
         timerManager.timerState
@@ -305,6 +309,14 @@ struct ActiveTimerScreen: View {
                         }
                     }
                 }
+
+                // Share with training partner
+                SecondaryButton(title: "Tell a Training Partner") {
+                    showShareSheet = true
+                }
+                .sheet(isPresented: $showShareSheet) {
+                    ActivityViewController(activityItems: [shareMessage])
+                }
             } else {
                 // Pause / Resume
                 PrimaryButton(
@@ -346,6 +358,17 @@ struct ActiveTimerScreen: View {
             showResetFeedback = false
         }
     }
+}
+
+/// UIKit share sheet wrapper for SwiftUI
+private struct ActivityViewController: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview("Running") {

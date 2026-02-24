@@ -162,6 +162,8 @@ final class TimerManager: ObservableObject {
         AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
+        // Schedule re-engagement reminders before clearing timer state
+        notificationService.scheduleReengagementReminder()
         await cancelTimer()
     }
 
@@ -231,6 +233,9 @@ final class TimerManager: ObservableObject {
     }
 
     func handleForeground() async {
+        // User is back — cancel any pending re-engagement reminders
+        notificationService.cancelReengagementReminders()
+
         // Process any pending actions from Live Activity buttons
         await processPendingLiveActivityAction()
 
@@ -576,10 +581,14 @@ final class TimerManager: ObservableObject {
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
+            TrainingStatsService.shared.recordSession()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
             ])
             AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
+
+            // Schedule re-engagement reminders so user gets nudged back
+            notificationService.scheduleReengagementReminder()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {
