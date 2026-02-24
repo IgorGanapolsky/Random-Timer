@@ -7,6 +7,11 @@ on:
         description: "iOS marketing version to update (e.g. 1.1.1). Leave blank to auto-detect."
         required: false
         type: string
+      metadata_only:
+        description: "Allow metadata sync without requiring a VALID build attached to this App Store version."
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   sync-metadata:
@@ -100,15 +105,21 @@ jobs:
         run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
         working-directory: native-ios
 
-      - name: Verify App Store listing readiness
+      - name: Verify App Store listing readiness (strict by default)
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
+          BUILD_FLAG=""
+          if [[ "${{ inputs.metadata_only }}" == "true" ]]; then
+            echo "⚠️ metadata_only=true: build attached/VALID check is intentionally skipped."
+            BUILD_FLAG="--skip-build-check"
+          fi
+
           python scripts/asc_verify_ready.py \
             --version "${{ steps.asc_version.outputs.selected_version }}" \
-            --skip-build-check \
+            $BUILD_FLAG \
             --json /tmp/asc_ready.json
 
       - name: Upload readiness report
