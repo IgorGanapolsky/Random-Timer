@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | 8 | — | 8 |
+| Downloads (30d) | — | — | — |
 | Active Installs | — | — | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 2 |
-| WAU | 8 |
-| MAU | 132 |
+| DAU | — |
+| WAU | — |
+| MAU | — |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,14 +23,14 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 0 |
-| Timer Completed (7d) | 2 |
-| Completed Users (7d) | 1 |
-| Sessions/Completed User (7d) | 2.0 |
+| Timer Completed (7d) | 0 |
+| Completed Users (7d) | 0 |
+| Sessions/Completed User (7d) | 0.0 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
-| Active Campaign Count | 0 |
-| Guardrail Violated | NO |
+| Active Campaign Count | 1 |
+| Guardrail Violated | YES |
 <!-- NORTH_STAR_END -->
 
 ## Attribution Summary
@@ -91,7 +91,7 @@
 <!-- CAMPAIGNS_START -->
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
-| apple_search_ads | $10.00 | draft | 37 |
+| apple_search_ads | $10.00 | active | 37 |
 | google_uac | $10.00 | ready_to_launch | 10 |
 | reddit_ads | $10.00 | ready_to_launch | 0 |
 | **Total** | **$30.00** | — | 47 |
@@ -130,23 +130,6 @@
 
 <!-- CHARTS_START -->
 ```mermaid
-xychart-beta
-    title "Downloads (30d rolling)"
-    x-axis ["2026-02-24" , "2026-02-24"]
-    y-axis "Downloads"
-    line [8 , 8]
-    line [0 , 0]
-```
-
-```mermaid
-xychart-beta
-    title "WQTU (7d)"
-    x-axis ["2026-02-24" , "2026-02-24" , "2026-02-24"]
-    y-axis "Users"
-    line [0 , 0 , 0]
-```
-
-```mermaid
 pie title Daily Ad Budget Allocation ($)
     "Apple Search Ads" : 10.0
     "Google Uac" : 10.0
@@ -172,4 +155,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-02-24T15:51:47+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-02-24T17:38:32+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

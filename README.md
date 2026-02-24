@@ -27,11 +27,11 @@ This is the core metric because it captures repeated stress/reaction training be
 
 - Snapshot date: `2026-02-24`
 - `WQTU`: `0`
-- `timer_completed` (7d): `2` events by `1` user
+- `timer_completed` (7d): `3` events by `2` users
 - `open_to_completed_rate` (30d): `24.24%` (`32/132`)
 - Paid-attributed users (30d): `0`
-- Downloads (30d): iOS `8`, Android `0`, combined `8`
-- Apple Ads live dashboard: `0` campaigns and `0` spend rows in last 7 days
+- Downloads (30d): iOS `9`, Android `0`, combined `9`
+- Apple Ads live API: `1` campaign (`ENABLED`/`RUNNING`) with `0` taps and `$0.00` spend in trailing 30 days
 
 ### Targets
 
@@ -40,7 +40,7 @@ This is the core metric because it captures repeated stress/reaction training be
 
 ### Are We On Track?
 
-**Not yet.** As of February 24, 2026, paid-attributed acquisition is zero and Apple Ads has no live campaigns serving, so paid media is not moving WQTU.
+**Not yet.** As of February 24, 2026, paid-attributed acquisition is zero and the single live Apple Ads campaign has produced zero taps/spend so far, so paid media is not moving WQTU.
 
 ### Benchmark Context (latest available by Feb 2026)
 

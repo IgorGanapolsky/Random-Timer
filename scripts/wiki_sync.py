@@ -261,6 +261,79 @@ def _mermaid_north_star_vs_targets(ns: Optional[Dict[str, Any]]) -> str:
     )
 
 
+def _mermaid_apple_ads_trend(apple: Optional[Dict[str, Any]], field: str, title: str, y_label: str) -> str:
+    if not apple:
+        return ""
+    snapshots = apple.get("snapshots", [])
+    if not isinstance(snapshots, list) or len(snapshots) < 2:
+        return ""
+    recent = snapshots[-14:]
+    labels: list[str] = []
+    values: list[str] = []
+    for row in recent:
+        ts = str(row.get("timestamp", ""))
+        labels.append(f'"{ts[5:16]}"')
+        values.append(str(row.get(field, 0)))
+    ymax = max([float(v) for v in values] + [1.0]) * 1.2
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        f'    title "{title}"\n'
+        f"    x-axis [{' , '.join(labels)}]\n"
+        f'    y-axis "{y_label}" 0 --> {int(ymax) if ymax >= 1 else 1}\n'
+        f"    line [{' , '.join(values)}]\n"
+        "```"
+    )
+
+
+def _dynamic_budget_block(pc: Optional[Dict[str, Any]]) -> str:
+    if not pc:
+        return "_No paid campaign configuration available._"
+    alloc = _extract_budget_allocation(pc)
+    total = sum(v for v in alloc.values() if isinstance(v, (int, float)))
+    rows = ["| Platform | Daily Budget | Share |", "|----------|:-----------:|:-----:|"]
+    for platform, amount in alloc.items():
+        share = (amount / total) if total > 0 else 0
+        rows.append(f"| {platform} | ${amount:.2f} | {share:.0%} |")
+    rows.append(f"| **Total** | **${total:.2f}/day** | 100% |")
+
+    budget_cfg = pc.get("budget_config", {})
+    target_cpa = _to_float(budget_cfg.get("target_cpa_usd"))
+    max_cpt = _to_float(budget_cfg.get("max_cpt_usd"))
+    return "\n".join(rows) + f"\n\n**Target CPA:** ${target_cpa:.2f} | **Max CPT (Apple):** ${max_cpt:.2f}"
+
+
+def _to_float(value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _dynamic_campaign_status_block(pc: Optional[Dict[str, Any]], apple: Optional[Dict[str, Any]]) -> str:
+    campaigns = pc.get("campaigns", []) if pc else []
+    rows = [
+        "| Platform | Config Status | Live Status | Daily Budget |",
+        "|----------|---------------|-------------|-------------:|",
+    ]
+    apple_live = {}
+    if apple:
+        apple_campaigns = apple.get("campaigns", [])
+        if isinstance(apple_campaigns, list) and apple_campaigns:
+            apple_live = apple_campaigns[0]
+    for campaign in campaigns:
+        platform = str(campaign.get("platform", "unknown"))
+        status = str(campaign.get("status", "unknown"))
+        budget = _to_float(campaign.get("daily_budget_usd"))
+        live_status = "—"
+        if platform == "apple_search_ads":
+            live_status = str(apple_live.get("serving_status") or apple_live.get("status") or "—")
+        rows.append(f"| {platform} | {status} | {live_status} | ${budget:.2f} |")
+    if len(rows) == 2:
+        rows.append("| (none) | — | — | $0.00 |")
+    return "\n".join(rows)
+
+
 def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     """Replace placeholder sections in the dashboard with live data."""
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
@@ -572,6 +645,7 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
     dl = load_json(data_dir / "store_downloads.json") or {}
     cf = load_json(data_dir / "content_feedback.json") or {}
     live = load_json(data_dir / "live_growth_snapshot.json") or {}
+    apple = load_json(data_dir / "apple_ads_live_metrics.json") or {}
 
     nsm = ns.get("north_star", {})
     paid = ns.get("paid", {})
@@ -580,11 +654,19 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
     budget_alloc = _extract_budget_allocation(pc)
     total_budget = sum(v for v in budget_alloc.values() if isinstance(v, (int, float)))
 
-    apple_finding = (
-        live.get("apple_ads_live_check", {}).get("finding")
-        or live.get("paid_ads", {}).get("live_status_reason")
-        or "No live Apple Ads check available"
-    )
+    apple_metrics = apple.get("metrics_30d", {}) if isinstance(apple, dict) else {}
+    if apple.get("status") == "ok":
+        apple_finding = str(
+            apple.get("finding")
+            or f"API reports {apple.get('campaign_count', 0)} campaign(s) for adamId {apple.get('adam_id', '—')}."
+        )
+    else:
+        apple_finding = (
+            str(apple.get("finding", "")).strip()
+            or live.get("apple_ads_live_check", {}).get("finding")
+            or live.get("paid_ads", {}).get("live_status_reason")
+            or "No live Apple Ads check available"
+        )
 
     downloads_30d = dl.get("combined", {}).get("downloads_30d")
     kpi_block = (
@@ -601,6 +683,12 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
         f"| WQTU Checkpoint Target (2026-03-31) | {_fmt_num_allow_zero(targets.get('checkpoint_2026_03_31'))} |\n"
         f"| WQTU Quarter Target (2026-06-30) | {_fmt_num_allow_zero(targets.get('quarter_2026_06_30'))} |\n"
         f"| Downloads (30d) | {_fmt_num_allow_zero(downloads_30d)} |\n"
+        f"| Apple Ads Campaigns (API) | {_fmt_num_allow_zero(apple.get('campaign_count', 0))} |\n"
+        f"| Apple Ads Active Campaigns (API) | {_fmt_num_allow_zero(apple.get('active_campaign_count', 0))} |\n"
+        f"| Apple Ads Impressions (30d) | {_fmt_num_allow_zero(apple_metrics.get('impressions', 0))} |\n"
+        f"| Apple Ads Clicks/Taps (30d) | {_fmt_num_allow_zero(apple_metrics.get('taps', 0))} |\n"
+        f"| Apple Ads Spend (30d) | ${_to_float(apple_metrics.get('spend_usd')):.2f} |\n"
+        f"| Apple Ads Installs (30d) | {_fmt_num_allow_zero(apple_metrics.get('installs', 0))} |\n"
         f"| Apple Ads Live Finding | {apple_finding} |\n"
         f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
     )
@@ -633,7 +721,26 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
     north_star_bar = _mermaid_north_star_vs_targets(ns)
     if north_star_bar:
         charts.append(north_star_bar)
+    apple_taps_trend = _mermaid_apple_ads_trend(
+        apple,
+        field="taps",
+        title="Apple Ads Taps (30d snapshot trend)",
+        y_label="Taps",
+    )
+    if apple_taps_trend:
+        charts.append(apple_taps_trend)
+    apple_spend_trend = _mermaid_apple_ads_trend(
+        apple,
+        field="spend_usd",
+        title="Apple Ads Spend USD (30d snapshot trend)",
+        y_label="USD",
+    )
+    if apple_spend_trend:
+        charts.append(apple_spend_trend)
     charts_block = "\n\n".join(charts) if charts else "_No paid chart data available yet._"
+
+    budget_block = _dynamic_budget_block(pc)
+    campaign_status_block = _dynamic_campaign_status_block(pc, apple)
 
     page = re.sub(
         r"<!-- LIVE_PAID_START -->.*?<!-- LIVE_PAID_END -->",
@@ -650,6 +757,18 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
     page = re.sub(
         r"<!-- LIVE_PAID_CHARTS_START -->.*?<!-- LIVE_PAID_CHARTS_END -->",
         f"<!-- LIVE_PAID_CHARTS_START -->\n{charts_block}\n<!-- LIVE_PAID_CHARTS_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_PAID_BUDGET_START -->.*?<!-- LIVE_PAID_BUDGET_END -->",
+        f"<!-- LIVE_PAID_BUDGET_START -->\n{budget_block}\n<!-- LIVE_PAID_BUDGET_END -->",
+        page,
+        flags=re.DOTALL,
+    )
+    page = re.sub(
+        r"<!-- LIVE_CAMPAIGN_STATUS_START -->.*?<!-- LIVE_CAMPAIGN_STATUS_END -->",
+        f"<!-- LIVE_CAMPAIGN_STATUS_START -->\n{campaign_status_block}\n<!-- LIVE_CAMPAIGN_STATUS_END -->",
         page,
         flags=re.DOTALL,
     )

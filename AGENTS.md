@@ -73,11 +73,11 @@ FROM (
 ### Baseline Snapshot (2026-02-24 UTC)
 
 - `WQTU`: `0` (no user reached >=3 `timer_completed` in trailing 7d).
-- `timer_completed` last 7d: `2` events by `1` user.
+- `timer_completed` last 7d: `3` events by `2` users.
 - `open_to_completed_rate` (30d): `24.24%` (32/132).
 - Paid attribution last 30d: `0` distinct users, `0` campaign rows.
-- Downloads (30d): iOS `8`, Android `0`, combined `8`.
-- Apple Ads live serving evidence: account shows `0` campaigns and `0` spend rows in dashboard (`Last 7 days` view).
+- Downloads (30d): iOS `9`, Android `0`, combined `9`.
+- Apple Ads live serving evidence: API reports `1` campaign (`ENABLED`/`RUNNING`) with `0` taps and `$0.00` spend in the trailing 30 days.
 
 ### Targets
 
