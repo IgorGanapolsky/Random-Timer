@@ -7,6 +7,7 @@ This prevents duplicate/stale screenshots when fastlane deliver appends assets.
 from __future__ import annotations
 
 import argparse
+import json
 from typing import Any, Dict, List
 
 from scripts.asc_client import APP_STORE_CONNECT_API, AscClient, AscClientError
@@ -19,7 +20,7 @@ from scripts.asc_verify_ready import (
 )
 
 
-def _api_delete(client: AscClient, path: str) -> None:
+def _api_delete(client: AscClient, path: str) -> bool:
     try:
         import requests
     except ImportError:
@@ -34,13 +35,41 @@ def _api_delete(client: AscClient, path: str) -> None:
         timeout=30,
     )
     if response.status_code >= 400:
+        body_text = response.text[:2000]
+        if _is_submit_lock_delete_error(response.status_code, body_text):
+            print(
+                "⚠️ Skipping screenshot delete due to App Store Connect submit lock "
+                f"(DELETE {path})."
+            )
+            return False
         _die(
             2,
             "❌ App Store Connect API error\n"
             f"  DELETE {path}\n"
             f"  HTTP {response.status_code}\n"
-            f"  Body: {response.text[:2000]}",
+            f"  Body: {body_text}",
         )
+    return True
+
+
+def _is_submit_lock_delete_error(status_code: int, body_text: str) -> bool:
+    if status_code != 409:
+        return False
+    try:
+        payload = json.loads(body_text or "{}")
+    except json.JSONDecodeError:
+        return False
+    errors = payload.get("errors")
+    if not isinstance(errors, list):
+        return False
+    for item in errors:
+        if not isinstance(item, dict):
+            continue
+        code = str(item.get("code") or "").upper()
+        detail = str(item.get("detail") or "").lower()
+        if code == "STATE_ERROR" and "can't delete screenshot after submit for review" in detail:
+            return True
+    return False
 
 
 def list_screenshot_assets(client: AscClient, localization_id: str) -> List[Dict[str, str]]:
@@ -97,13 +126,19 @@ def reset_screenshots(version: str, locale: str, bundle_id: str, dry_run: bool) 
     localization_id = str(loc["id"])
     assets = list_screenshot_assets(client, localization_id)
     deleted = 0
+    skipped_locked = 0
     for asset in assets:
         shot_id = asset.get("screenshot_id") or ""
         if not shot_id:
             continue
         if not dry_run:
-            _api_delete(client, f"/appScreenshots/{shot_id}")
-        deleted += 1
+            deleted_ok = _api_delete(client, f"/appScreenshots/{shot_id}")
+            if deleted_ok:
+                deleted += 1
+            else:
+                skipped_locked += 1
+        else:
+            deleted += 1
 
     summary = {
         "bundle_id": bundle_id,
@@ -112,6 +147,7 @@ def reset_screenshots(version: str, locale: str, bundle_id: str, dry_run: bool) 
         "localization_id": localization_id,
         "found_assets": len(assets),
         "deleted_assets": deleted,
+        "skipped_locked_assets": skipped_locked,
         "dry_run": dry_run,
     }
     return summary
