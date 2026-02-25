@@ -37,8 +37,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Show timer UI over lock screen (like Samsung Clock)
-        setShowWhenLocked(true)
-        setTurnScreenOn(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        }
 
         enableEdgeToEdge()
         requestNotificationPermission()

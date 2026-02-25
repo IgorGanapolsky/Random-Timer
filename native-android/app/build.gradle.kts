@@ -122,6 +122,9 @@ dependencies {
     // In-App Review
     implementation(libs.play.review)
 
+    // In-App Billing
+    implementation(libs.play.billing)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)

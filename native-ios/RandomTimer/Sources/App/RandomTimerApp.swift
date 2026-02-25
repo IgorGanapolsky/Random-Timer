@@ -13,6 +13,7 @@ struct RandomTimerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(timerManager)
+                .environmentObject(ProManager.shared)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     AnalyticsService.shared.trackDeepLink(url)
@@ -119,4 +120,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(TimerManager())
+        .environmentObject(ProManager.shared)
 }

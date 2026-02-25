@@ -764,6 +764,14 @@ class TimerForegroundService : Service() {
             when (state.config.soundType) {
                 SoundType.INTENSE -> R.raw.alarm
                 SoundType.GENTLE -> R.raw.gentle_chime
+                SoundType.KLAXON -> R.raw.klaxon
+                SoundType.WHISTLE -> R.raw.whistle
+                SoundType.BUZZER -> R.raw.buzzer
+                SoundType.GONG -> R.raw.gong
+                SoundType.AIRHORN -> R.raw.airhorn
+                SoundType.DRUM_ROLL -> R.raw.drum_roll
+                SoundType.SIREN -> R.raw.siren
+                SoundType.BELL -> R.raw.bell
             }
 
         // Request audio focus BEFORE playing alarm sound
