@@ -82,7 +82,7 @@ class AscResetScreenshotsTests(unittest.TestCase):
         ]
 
         with (
-            mock.patch("scripts.asc_reset_screenshots.AscClient", return_value=fake_client),
+            mock.patch("scripts.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
             mock.patch("scripts.asc_reset_screenshots._get_app_id", return_value="app1"),
             mock.patch("scripts.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
             mock.patch("scripts.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
@@ -115,7 +115,7 @@ class AscResetScreenshotsTests(unittest.TestCase):
         ]
 
         with (
-            mock.patch("scripts.asc_reset_screenshots.AscClient", return_value=fake_client),
+            mock.patch("scripts.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
             mock.patch("scripts.asc_reset_screenshots._get_app_id", return_value="app1"),
             mock.patch("scripts.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
             mock.patch("scripts.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
@@ -137,7 +137,7 @@ class AscResetScreenshotsTests(unittest.TestCase):
     def test_api_delete_dies_on_http_error(self):
         response = SimpleNamespace(status_code=500, text="server exploded")
         fake_requests = SimpleNamespace(delete=lambda *_args, **_kwargs: response)
-        fake_client = SimpleNamespace(_get_token=lambda: "token")
+        fake_client = SimpleNamespace(token_value=lambda: "token")
 
         with mock.patch.dict("sys.modules", {"requests": fake_requests}):
             with self.assertRaises(SystemExit):
