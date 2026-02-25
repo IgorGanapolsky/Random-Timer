@@ -7,7 +7,6 @@ on:
 jobs:
   analyze-workflows:
     uses: ./.github/workflows/weekly-shared.yml
-    secrets: inherit
     with:
       run_command: |
         gh api -H "Accept: application/vnd.github+json" \
@@ -39,7 +38,6 @@ jobs:
 
   analyze-security:
     uses: ./.github/workflows/weekly-shared.yml
-    secrets: inherit
     with:
       run_command: |
         echo "### Security Metrics Report (Last 7 Days)" > security_report.md
@@ -70,7 +68,6 @@ jobs:
 
   analyze-deployments:
     uses: ./.github/workflows/weekly-shared.yml
-    secrets: inherit
     with:
       run_command: |
         echo "### Deployment Metrics Report (Last 7 Days)" > deployment_report.md

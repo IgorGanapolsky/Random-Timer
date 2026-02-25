@@ -15,7 +15,11 @@ concurrency:
 jobs:
   refresh-llm-kpi:
     uses: ./.github/workflows/weekly-shared.yml
-    secrets: inherit
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
     with:
       fetch_depth: "0"
       pip_packages: requests
