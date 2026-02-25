@@ -31,7 +31,11 @@ class GenerateIosStoreCreativesTests(unittest.TestCase):
             self.assertEqual(payload["locale"], "en-US")
             self.assertEqual(len(payload["written_files"]), len(creatives.CREATIVE_COPY))
 
-            backup_dir = Path(payload["backup_dir"])
+            backup_root = shots_dir / "_backup"
+            backup_dirs = sorted(backup_root.iterdir())
+            self.assertEqual(len(backup_dirs), 1)
+            backup_dir = backup_dirs[0]
+            self.assertEqual(payload["backup_dir"], str(backup_dir))
             self.assertTrue(backup_dir.is_dir())
             self.assertTrue((backup_dir / "1_setup.png").is_file())
 
