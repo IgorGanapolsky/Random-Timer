@@ -87,7 +87,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest lancedb pyarrow
+          python -m pip install pytest==8.4.2 lancedb==0.27.1 pyarrow==21.0.0
 
       - name: Compile Python sources
         run: |
@@ -142,8 +142,8 @@ jobs:
           }
           GSEOF
 
-      - name: Run unit tests
-        run: ./gradlew test --no-daemon
+      - name: Run unit tests with coverage
+        run: ./gradlew testDebugUnitTest jacocoDebugUnitTestReport --no-daemon
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
@@ -153,6 +153,16 @@ jobs:
         with:
           name: app-debug
           path: native-android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Android coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-coverage
+          path: |
+            native-android/app/build/reports/tests/testDebugUnitTest
+            native-android/app/build/reports/jacoco/jacocoDebugUnitTestReport
+            native-android/app/build/jacoco/testDebugUnitTest.exec
 
   ios:
     name: iOS Build Check
@@ -198,13 +208,24 @@ jobs:
 
       - name: Run unit tests
         run: |
+          rm -rf build/TestResults.xcresult
           xcodebuild test \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
             -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
             -skip-testing:RandomTimerUITests \
+            -enableCodeCoverage YES \
+            -resultBundlePath build/TestResults.xcresult \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS xcresult
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results-xcresult
+          path: native-ios/build/TestResults.xcresult
+          if-no-files-found: warn
 
   playwright-local:
     name: Playwright Local Checks
@@ -249,10 +270,30 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip pytest pillow
+        run: python -m pip install --upgrade pip pytest==8.4.2 pytest-cov==7.0.0 pillow==11.3.0
 
       - name: Run unit tests
-        run: python -m pytest scripts/tests/ -q
+        run: python -m pytest scripts/tests/ -q --cov=scripts --cov-report=term --cov-report=xml:coverage-python.xml
+
+      - name: Upload Python coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage-xml
+          path: coverage-python.xml
+          if-no-files-found: error
+
+      - name: Upload Python coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        with:
+          files: coverage-python.xml
+          flags: python-scripts
+          name: python-scripts-coverage
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Release readiness gate (local)
         run: |
@@ -274,7 +315,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python -m pip install --upgrade pip requests
+        run: python -m pip install --upgrade pip requests==2.32.5
 
       - name: Enforce paid attribution guardrail
         env:

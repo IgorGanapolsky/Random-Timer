@@ -9,13 +9,13 @@ from __future__ import annotations
 import argparse
 from typing import Any, Dict, List
 
+from scripts.asc_client import APP_STORE_CONNECT_API, AscClient, AscClientError
 from scripts.asc_verify_ready import (
     _die,
     _get_app_id,
     _get_screenshot_sets,
     _list_app_store_versions,
     _pick_localization,
-    AscClient,
 )
 
 
@@ -26,9 +26,9 @@ def _api_delete(client: AscClient, path: str) -> None:
         _die(2, "❌ Missing requests. Install: pip install requests")
 
     response = requests.delete(
-        f"https://api.appstoreconnect.apple.com/v1{path}",
+        f"{APP_STORE_CONNECT_API}{path}",
         headers={
-            "Authorization": f"Bearer {client._get_token()}",
+            "Authorization": f"Bearer {client.token_value()}",
             "Content-Type": "application/json",
         },
         timeout=30,
@@ -68,7 +68,10 @@ def list_screenshot_assets(client: AscClient, localization_id: str) -> List[Dict
 
 
 def reset_screenshots(version: str, locale: str, bundle_id: str, dry_run: bool) -> Dict[str, Any]:
-    client = AscClient()
+    try:
+        client = AscClient.from_env(timeout=30)
+    except AscClientError as exc:
+        _die(2, f"❌ {exc}")
     app_id = _get_app_id(client, bundle_id)
     _, version_obj = _list_app_store_versions(client, app_id, version)
     if not version_obj:

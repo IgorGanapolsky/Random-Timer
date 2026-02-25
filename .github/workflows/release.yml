@@ -15,6 +15,10 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: mobile-release-pipeline
+  cancel-in-progress: false
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -30,15 +34,9 @@ jobs:
       - name: Get version
         id: get-version
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_VERSION: ${{ github.event.inputs.version }}
-          GITHUB_REF_VAR: ${{ github.ref }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "version=$INPUT_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF_VAR#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
+          echo "version=$INPUT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Validate version
         env:
@@ -142,7 +140,7 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
-        if: ${{ github.event.inputs.environment == 'production' || github.event_name == 'push' }}
+        if: ${{ github.event.inputs.environment == 'production' }}
         with:
           tag_name: ${{ needs.prepare.outputs.version }}
           name: Release ${{ needs.prepare.outputs.version }}

@@ -28,13 +28,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
+from scripts.asc_client import AscClient, AscClientError
+
 DEFAULT_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 DEFAULT_LOCALE = "en-US"
 
@@ -42,92 +41,6 @@ DEFAULT_LOCALE = "en-US"
 def _die(code: int, msg: str) -> None:
     print(msg, file=sys.stderr)
     raise SystemExit(code)
-
-
-def _read_private_key_material(key_id: str) -> str:
-    value = (os.environ.get("APPSTORE_PRIVATE_KEY") or "").strip()
-    if not value:
-        value = (os.environ.get("APPSTORE_PRIVATE_KEY_PATH") or "").strip()
-    if not value:
-        default_path = os.path.expanduser(
-            f"~/.appstoreconnect/private_keys/AuthKey_{key_id}.p8"
-        )
-        if os.path.isfile(default_path):
-            value = default_path
-    if not value:
-        return ""
-
-    expanded = os.path.expanduser(value)
-    if os.path.isfile(expanded):
-        with open(expanded, "r", encoding="utf-8") as f:
-            return f.read()
-    return value
-
-
-class AscClient:
-    def __init__(self):
-        self._token: Optional[str] = None
-        self._token_expiry = 0
-
-    def _get_token(self) -> str:
-        now = time.time()
-        if self._token and now < self._token_expiry - 30:
-            return self._token
-
-        try:
-            import jwt  # PyJWT
-        except ImportError:
-            _die(2, "❌ Missing PyJWT. Install: pip install pyjwt cryptography")
-
-        key_id = (os.environ.get("APPSTORE_KEY_ID") or "").strip()
-        issuer_id = (os.environ.get("APPSTORE_ISSUER_ID") or "").strip()
-        private_key = _read_private_key_material(key_id)
-
-        missing: List[str] = []
-        if not key_id:
-            missing.append("APPSTORE_KEY_ID")
-        if not issuer_id:
-            missing.append("APPSTORE_ISSUER_ID")
-        if not private_key:
-            missing.append("APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH)")
-        if missing:
-            _die(2, f"❌ Missing env vars: {', '.join(missing)}")
-
-        now_i = int(now)
-        exp = now_i + 1200  # 20 minutes
-        payload = {"iss": issuer_id, "iat": now_i, "exp": exp, "aud": "appstoreconnect-v1"}
-        headers = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
-
-        self._token = jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
-        self._token_expiry = exp
-        return self._token
-
-    def get(self, path: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-        try:
-            import requests
-        except ImportError:
-            _die(2, "❌ Missing requests. Install: pip install requests")
-
-        url = f"{APP_STORE_CONNECT_API}{path}"
-        resp = requests.get(
-            url,
-            headers={
-                "Authorization": f"Bearer {self._get_token()}",
-                "Content-Type": "application/json",
-            },
-            params=params or {},
-            timeout=30,
-        )
-        if resp.status_code >= 400:
-            # Print the response body for debugging: ASC errors are very actionable.
-            _die(
-                2,
-                "❌ App Store Connect API error\n"
-                f"  GET {path}\n"
-                f"  HTTP {resp.status_code}\n"
-                f"  Body: {resp.text[:2000]}",
-            )
-        return resp.json()
 
 
 def _get_app_id(client: AscClient, bundle_id: str) -> str:
@@ -312,7 +225,7 @@ def verify_ready(
     min_ipad: int,
     require_build: bool,
 ) -> Tuple[bool, Dict[str, Any]]:
-    client = AscClient()
+    client = AscClient(timeout=30)
     checks: List[Check] = []
 
     app_id = _get_app_id(client, bundle_id)
@@ -440,7 +353,7 @@ def verify_ready(
                 evidence=privacy_meta | ({"privacyPolicyUrl": privacy_url} if privacy_url else {}),
             )
         )
-    except SystemExit as exc:
+    except AscClientError as exc:
         checks.append(
             Check(
                 name="Privacy Policy URL",
@@ -475,7 +388,7 @@ def verify_ready(
                 evidence={"contactEmail": email, "contactPhone": phone},
             )
         )
-    except SystemExit as exc:
+    except AscClientError as exc:
         checks.append(
             Check(
                 name="App Review Contact",
@@ -504,7 +417,7 @@ def verify_ready(
                 evidence={"appPriceSchedules_count": len(schedules)},
             )
         )
-    except SystemExit as exc:
+    except AscClientError as exc:
         checks.append(
             Check(
                 name="Pricing Set",
@@ -532,7 +445,7 @@ def verify_ready(
                 details="OK" if decl else "Missing appStoreAgeRatingDeclaration",
             )
         )
-    except SystemExit as exc:
+    except AscClientError as exc:
         checks.append(
             Check(
                 name="Age Rating Completed",
@@ -653,14 +566,17 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    passed, report = verify_ready(
-        bundle_id=args.bundle_id,
-        version=args.version,
-        locale=args.locale,
-        min_iphone=args.min_iphone,
-        min_ipad=args.min_ipad,
-        require_build=not args.skip_build_check,
-    )
+    try:
+        passed, report = verify_ready(
+            bundle_id=args.bundle_id,
+            version=args.version,
+            locale=args.locale,
+            min_iphone=args.min_iphone,
+            min_ipad=args.min_ipad,
+            require_build=not args.skip_build_check,
+        )
+    except AscClientError as exc:
+        _die(2, f"❌ {exc}")
     _print_report(passed, report)
 
     if args.json_path:

@@ -17,7 +17,8 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from scripts.asc_submit_for_review import ASCAuth, ASCClient, die, get_app
+from scripts.asc_client import ASCClient, AscClientError
+from scripts.asc_submit_for_review import die, get_app
 
 
 # States that are not safe targets for listing edits.
@@ -275,8 +276,10 @@ def main() -> int:
     except ValueError as exc:
         die(str(exc), code=2)
 
-    auth = ASCAuth.from_env()
-    client = ASCClient(auth)
+    try:
+        client = ASCClient.from_env(timeout=30)
+    except AscClientError as exc:
+        die(str(exc), code=2)
     app = get_app(client, args.bundle_id)
     app_id = str(app.get("id") or "")
     if not app_id:

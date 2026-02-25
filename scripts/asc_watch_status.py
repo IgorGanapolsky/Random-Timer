@@ -14,8 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from scripts.asc_client import ASCClient, AscClientError
 from scripts.asc_poll_version_state import find_app_store_version_id
-from scripts.asc_submit_for_review import ASCAuth, ASCClient, get_app
+from scripts.asc_submit_for_review import die, get_app
 
 
 def utc_iso_now() -> str:
@@ -80,7 +81,10 @@ def main() -> int:
         raise SystemExit("max-polls must be >= 1")
 
     out_path = Path(args.jsonl).resolve()
-    client = ASCClient(ASCAuth.from_env())
+    try:
+        client = ASCClient.from_env(timeout=30)
+    except AscClientError as exc:
+        die(str(exc), code=2)
 
     for idx in range(args.max_polls):
         record = poll_state(client, bundle_id=args.bundle_id, version=args.version)

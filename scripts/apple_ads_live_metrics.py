@@ -32,6 +32,19 @@ APPLE_API_BASE = "https://api.searchads.apple.com/api/v5"
 DEFAULT_ADAM_ID = 6758355312
 
 
+def _safe_json(resp: Any, context: str) -> Dict[str, Any]:
+    try:
+        data = resp.json()
+    except Exception as exc:
+        raise RuntimeError(
+            f"{context} returned non-JSON payload: HTTP {getattr(resp, 'status_code', '?')} "
+            f"body={str(getattr(resp, 'text', ''))[:400]!r}"
+        ) from exc
+    if not isinstance(data, dict):
+        raise RuntimeError(f"{context} returned unexpected JSON type: {type(data).__name__}")
+    return data
+
+
 def load_env(repo_root: Path) -> None:
     env_path = repo_root / ".env"
     if not env_path.exists():
@@ -115,7 +128,10 @@ def _oauth_access_token() -> tuple[str, str]:
     )
     if resp.status_code >= 400:
         return "", f"oauth failed: HTTP {resp.status_code}"
-    data = resp.json()
+    try:
+        data = _safe_json(resp, "Apple Ads OAuth")
+    except RuntimeError as exc:
+        return "", str(exc)
     token = data.get("access_token", "")
     if not token:
         return "", "oauth failed: access token missing"
@@ -272,7 +288,41 @@ def run(repo_root: Path, window_days: int = 30, adam_id: int = DEFAULT_ADAM_ID) 
             "campaign_count": 0,
             "active_campaign_count": 0,
         }
-    all_campaigns = campaigns_resp.json().get("data", [])
+    try:
+        campaigns_payload = _safe_json(campaigns_resp, "Apple Ads campaign list")
+    except RuntimeError as exc:
+        payload = {
+            "generated_at": now,
+            "source": "apple_ads_api",
+            "status": "degraded",
+            "status_reason": str(exc),
+            "window_days": window_days,
+            "adam_id": adam_id,
+            "campaign_count": 0,
+            "active_campaign_count": 0,
+            "campaigns": [],
+            "metrics_30d": {
+                "impressions": 0,
+                "taps": 0,
+                "spend_usd": 0.0,
+                "installs": 0,
+                "avg_cpt_usd": 0.0,
+                "tap_install_cpi_usd": 0.0,
+                "ttr": 0.0,
+                "tap_install_rate": 0.0,
+            },
+            "finding": f"Apple Ads campaign API error: {exc}",
+            "snapshots": [],
+        }
+        output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        return {
+            "status": payload["status"],
+            "output": str(output_path),
+            "reason": payload["status_reason"],
+            "campaign_count": 0,
+            "active_campaign_count": 0,
+        }
+    all_campaigns = campaigns_payload.get("data", [])
     campaigns_by_id = {
         int(c.get("id")): c for c in all_campaigns if c.get("id") is not None
     }
@@ -311,7 +361,41 @@ def run(repo_root: Path, window_days: int = 30, adam_id: int = DEFAULT_ADAM_ID) 
             "active_campaign_count": 0,
         }
 
-    report = report_resp.json().get("data", {}).get("reportingDataResponse", {})
+    try:
+        report_payload = _safe_json(report_resp, "Apple Ads report")
+    except RuntimeError as exc:
+        payload = {
+            "generated_at": now,
+            "source": "apple_ads_api",
+            "status": "degraded",
+            "status_reason": str(exc),
+            "window_days": window_days,
+            "adam_id": adam_id,
+            "campaign_count": 0,
+            "active_campaign_count": 0,
+            "campaigns": [],
+            "metrics_30d": {
+                "impressions": 0,
+                "taps": 0,
+                "spend_usd": 0.0,
+                "installs": 0,
+                "avg_cpt_usd": 0.0,
+                "tap_install_cpi_usd": 0.0,
+                "ttr": 0.0,
+                "tap_install_rate": 0.0,
+            },
+            "finding": f"Apple Ads reporting API error: {exc}",
+            "snapshots": [],
+        }
+        output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        return {
+            "status": payload["status"],
+            "output": str(output_path),
+            "reason": payload["status_reason"],
+            "campaign_count": 0,
+            "active_campaign_count": 0,
+        }
+    report = report_payload.get("data", {}).get("reportingDataResponse", {})
     rows = report.get("row", [])
 
     campaign_rows: List[Dict[str, Any]] = []

@@ -27,6 +27,18 @@ BASE_URL = "https://api.searchads.apple.com/api/v5"
 ADAM_ID = 6758355312  # iOS App Store ID
 
 
+def _safe_json(resp: requests.Response, context: str) -> Dict[str, Any]:
+    try:
+        data = resp.json()
+    except Exception as exc:
+        raise RuntimeError(
+            f"{context} returned non-JSON payload: HTTP {resp.status_code} body={resp.text[:400]!r}"
+        ) from exc
+    if not isinstance(data, dict):
+        raise RuntimeError(f"{context} returned unexpected JSON type: {type(data).__name__}")
+    return data
+
+
 def load_env():
     """Load .env file into os.environ."""
     env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -83,7 +95,11 @@ def get_access_token(client_secret: str) -> str:
         timeout=30,
     )
     resp.raise_for_status()
-    return resp.json()["access_token"]
+    data = _safe_json(resp, "OAuth token exchange")
+    token = data.get("access_token")
+    if not isinstance(token, str) or not token:
+        raise RuntimeError("OAuth token exchange returned no access_token")
+    return token
 
 
 def api_headers(access_token: str, org_id: int) -> Dict[str, str]:
@@ -98,7 +114,7 @@ def api_get(path: str, headers: Dict[str, str]) -> Dict[str, Any]:
     url = f"{BASE_URL}{path}"
     resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
-    return resp.json()
+    return _safe_json(resp, f"GET {path}")
 
 
 def api_post(path: str, headers: Dict[str, str], payload: Any) -> Dict[str, Any]:
@@ -107,7 +123,7 @@ def api_post(path: str, headers: Dict[str, str], payload: Any) -> Dict[str, Any]
     if resp.status_code >= 400:
         print(f"ERROR {resp.status_code}: {resp.text}")
         resp.raise_for_status()
-    return resp.json()
+    return _safe_json(resp, f"POST {path}")
 
 
 def api_put(path: str, headers: Dict[str, str], payload: Any) -> Dict[str, Any]:
@@ -116,7 +132,7 @@ def api_put(path: str, headers: Dict[str, str], payload: Any) -> Dict[str, Any]:
     if resp.status_code >= 400:
         print(f"ERROR {resp.status_code}: {resp.text}")
         resp.raise_for_status()
-    return resp.json()
+    return _safe_json(resp, f"PUT {path}")
 
 
 def create_campaign(headers: Dict[str, str], budget: float) -> int:
