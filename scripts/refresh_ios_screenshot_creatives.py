@@ -22,6 +22,7 @@ SCREENSHOT_SPECS: dict[str, tuple[int, int]] = {
     "1_setup.png": (1290, 2796),
     "2_active.png": (1290, 2796),
     "3_alarm.png": (1290, 2796),
+    "4_running.png": (1290, 2796),
     "5_ipad_setup.png": (2048, 2732),
     "6_ipad_running.png": (2048, 2732),
     "7_ipad_stopped.png": (2048, 2732),
