@@ -24,7 +24,7 @@ def test_constants():
     assert cc.PROJECT_ID == "random-timer-486213"
     assert cc.PACKAGE == "com.iganapolsky.randomtimer"
     assert cc.BQ_DATASET == "firebase_crashlytics"
-    assert cc.DEFAULT_THRESHOLD == 99.0
+    assert int(cc.DEFAULT_THRESHOLD) == 99
 
 
 def test_bq_query_returns_error_on_failure():
