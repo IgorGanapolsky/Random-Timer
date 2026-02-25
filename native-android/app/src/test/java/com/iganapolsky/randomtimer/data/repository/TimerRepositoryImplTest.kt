@@ -98,7 +98,7 @@ class TimerRepositoryImplTest {
                     alarmDuration = 30,
                     hiddenMode = false,
                     repeatEnabled = true,
-                    soundType = SoundType.BELL,
+                    soundType = SoundType.GENTLE,
                     volume = 0.6f,
                     vibrationEnabled = true,
                 )
@@ -131,7 +131,7 @@ class TimerRepositoryImplTest {
                             alarmDuration = 15,
                             hiddenMode = true,
                             repeatEnabled = true,
-                            soundType = SoundType.GONG,
+                            soundType = SoundType.GENTLE,
                             volume = 0.9f,
                             vibrationEnabled = true,
                         ),
