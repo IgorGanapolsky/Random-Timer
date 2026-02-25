@@ -135,6 +135,13 @@ jobs:
     if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+    outputs:
+      requested_track: ${{ steps.play_result.outputs.requested_track }}
+      effective_track: ${{ steps.play_result.outputs.effective_track }}
+      fallback_used: ${{ steps.play_result.outputs.fallback_used }}
+      precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
     steps:
       - uses: actions/checkout@v4
 
@@ -218,6 +225,8 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
+          PLAY_FALLBACK_TRACK: alpha
+          PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
@@ -226,284 +235,54 @@ jobs:
             exit 1
           fi
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
-          python3 - <<'PYEOF'
-          import sys
-          import os
-          import json
-          import glob
-          import mimetypes
-          import time
+          python scripts/play_publish.py \
+            --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
+            --package com.iganapolsky.randomtimer \
+            --aab-path native-android/app/build/outputs/bundle/release/app-release.aab \
+            --requested-track "$PLAY_TRACK" \
+            --fallback-track "$PLAY_FALLBACK_TRACK" \
+            --release-status "$PLAY_RELEASE_STATUS" \
+            --retry-window-seconds "$PLAY_UPLOAD_RETRY_WINDOW_SECONDS" \
+            --retry-interval-seconds "$PLAY_UPLOAD_RETRY_INTERVAL_SECONDS" \
+            --result-json /tmp/play-upload-result.json \
+            --error-json /tmp/play-upload-error.json
 
-          from google.oauth2 import service_account
-          from googleapiclient.discovery import build
-          from googleapiclient.errors import HttpError
-          from googleapiclient.http import MediaFileUpload
+      - name: Capture Play publish result outputs
+        id: play_result
+        if: always()
+        run: |
+          REQUESTED_TRACK="${{ inputs.android_track }}"
+          EFFECTIVE_TRACK="${{ inputs.android_track }}"
+          FALLBACK_USED="false"
+          PRECONDITION_BLOCKED="false"
 
-          SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
-          PACKAGE = 'com.iganapolsky.randomtimer'
-          AAB_PATH = 'native-android/app/build/outputs/bundle/release/app-release.aab'
-          TRACK = (os.getenv("PLAY_TRACK", "") or "production").strip()
-          DEFAULT_STATUS = "completed"
-          RELEASE_STATUS = (os.getenv("PLAY_RELEASE_STATUS", "") or DEFAULT_STATUS).strip() or DEFAULT_STATUS
-          RETRY_WINDOW = int(os.getenv("PLAY_UPLOAD_RETRY_WINDOW_SECONDS", "10800"))
-          RETRY_INTERVAL = int(os.getenv("PLAY_UPLOAD_RETRY_INTERVAL_SECONDS", "300"))
-          RESET_ERROR_FRAGMENT = "certificate this apk is signed with is not yet valid because it has been recently reset"
-          TRANSIENT_ERROR_FRAGMENTS = (
-              "eof occurred in violation of protocol",
-              "connection reset",
-              "connection aborted",
-              "timed out",
-              "temporary failure",
-              "service unavailable",
-          )
+          if [ -f /tmp/play-upload-result.json ]; then
+            REQUESTED_TRACK="$(jq -r '.requested_track // empty' /tmp/play-upload-result.json)"
+            EFFECTIVE_TRACK="$(jq -r '.effective_track // empty' /tmp/play-upload-result.json)"
+            FALLBACK_USED="$(jq -r '.fallback_used // false' /tmp/play-upload-result.json)"
+            PRECONDITION_BLOCKED="$(jq -r '.precondition_blocked // false' /tmp/play-upload-result.json)"
+          fi
 
-          credentials = service_account.Credentials.from_service_account_file(
-              '/tmp/play-service-account.json', scopes=SCOPES
-          )
-          service = build('androidpublisher', 'v3', credentials=credentials)
+          if [ -z "$REQUESTED_TRACK" ] || [ "$REQUESTED_TRACK" = "null" ]; then
+            REQUESTED_TRACK="${{ inputs.android_track }}"
+          fi
+          if [ -z "$EFFECTIVE_TRACK" ] || [ "$EFFECTIVE_TRACK" = "null" ]; then
+            EFFECTIVE_TRACK="$REQUESTED_TRACK"
+          fi
 
-          deadline = time.time() + RETRY_WINDOW
-          attempt = 0
+          echo "requested_track=$REQUESTED_TRACK" >> "$GITHUB_OUTPUT"
+          echo "effective_track=$EFFECTIVE_TRACK" >> "$GITHUB_OUTPUT"
+          echo "fallback_used=$FALLBACK_USED" >> "$GITHUB_OUTPUT"
+          echo "precondition_blocked=$PRECONDITION_BLOCKED" >> "$GITHUB_OUTPUT"
+          echo "play_result requested=$REQUESTED_TRACK effective=$EFFECTIVE_TRACK fallback_used=$FALLBACK_USED precondition_blocked=$PRECONDITION_BLOCKED"
 
-          while True:
-              attempt += 1
-              try:
-                  edit = service.edits().insert(body={}, packageName=PACKAGE).execute()
-                  edit_id = edit['id']
-
-                  bundle = service.edits().bundles().upload(
-                      packageName=PACKAGE,
-                      editId=edit_id,
-                      media_body=MediaFileUpload(AAB_PATH, mimetype='application/octet-stream')
-                  ).execute()
-
-                  # Update store listing + images from fastlane metadata.
-                  # Play can block production submissions if the listing is incomplete.
-                  metadata_dir = os.path.join(
-                      "native-android",
-                      "fastlane",
-                      "metadata",
-                      "android",
-                      "en-US",
-                  )
-
-                  def read_text(rel_path: str) -> str:
-                      p = os.path.join(metadata_dir, rel_path)
-                      try:
-                          if os.path.isfile(p):
-                              with open(p, "r", encoding="utf-8") as f:
-                                  return f.read().strip()
-                      except Exception:
-                          return ""
-                      return ""
-
-                  title = read_text("title.txt")
-                  short_desc = read_text("short_description.txt")
-                  full_desc = read_text("full_description.txt")
-                  video = read_text("video.txt")
-
-                  listing = {}
-                  if title:
-                      listing["title"] = title
-                  if short_desc:
-                      listing["shortDescription"] = short_desc
-                  if full_desc:
-                      listing["fullDescription"] = full_desc
-                  if video:
-                      listing["video"] = video
-
-                  if listing:
-                      service.edits().listings().update(
-                          packageName=PACKAGE,
-                          editId=edit_id,
-                          language="en-US",
-                          body=listing,
-                      ).execute()
-
-                  # Best-effort: set details (contact + default language) if missing.
-                  details = {"defaultLanguage": "en-US"}
-                  support_url = ""
-                  try:
-                      support_path = os.path.join(
-                          "native-ios", "fastlane", "metadata", "en-US", "support_url.txt"
-                      )
-                      if os.path.isfile(support_path):
-                          with open(support_path, "r", encoding="utf-8") as f:
-                              support_url = f.read().strip()
-                  except Exception:
-                      support_url = ""
-                  if support_url:
-                      details["contactWebsite"] = support_url
-                  try:
-                      service.edits().details().patch(
-                          packageName=PACKAGE,
-                          editId=edit_id,
-                          body=details,
-                      ).execute()
-                  except Exception:
-                      # Non-fatal: some accounts/apps restrict patching details via API.
-                      pass
-
-                  def mime_for(path: str) -> str:
-                      mt, _ = mimetypes.guess_type(path)
-                      return mt or "application/octet-stream"
-
-                  def upload_images(image_type: str, pattern: str) -> None:
-                      files = sorted(glob.glob(pattern))
-                      if not files:
-                          return
-                      try:
-                          service.edits().images().deleteall(
-                              packageName=PACKAGE,
-                              editId=edit_id,
-                              language="en-US",
-                              imageType=image_type,
-                          ).execute()
-                      except Exception:
-                          pass
-                      for fp in files:
-                          service.edits().images().upload(
-                              packageName=PACKAGE,
-                              editId=edit_id,
-                              language="en-US",
-                              imageType=image_type,
-                              media_body=MediaFileUpload(fp, mimetype=mime_for(fp)),
-                          ).execute()
-
-                  upload_images(
-                      "icon",
-                      os.path.join(metadata_dir, "images", "icon.*"),
-                  )
-                  upload_images(
-                      "featureGraphic",
-                      os.path.join(metadata_dir, "images", "featureGraphic", "*.*"),
-                  )
-                  upload_images(
-                      "phoneScreenshots",
-                      os.path.join(metadata_dir, "images", "phoneScreenshots", "*.*"),
-                  )
-
-                  # Play Console can require release notes for first-time production submissions.
-                  notes_path = os.path.join(
-                      "native-android",
-                      "fastlane",
-                      "metadata",
-                      "android",
-                      "en-US",
-                      "changelogs",
-                      f"{bundle['versionCode']}.txt",
-                  )
-                  release_notes = ""
-                  try:
-                      if os.path.isfile(notes_path):
-                          with open(notes_path, "r", encoding="utf-8") as f:
-                              release_notes = f.read().strip()
-                  except Exception:
-                      release_notes = ""
-
-                  release = {
-                      "versionCodes": [bundle["versionCode"]],
-                      "status": RELEASE_STATUS,
-                      "name": f"v{bundle['versionCode']}",
-                  }
-                  if release_notes:
-                      release["releaseNotes"] = [{"language": "en-US", "text": release_notes}]
-                  if RELEASE_STATUS == "inProgress":
-                      # Staged rollout only. For full rollout use status=completed.
-                      # If not provided, default to 0.1 so we never send the invalid 1.0 value.
-                      user_fraction_raw = (os.getenv("PLAY_USER_FRACTION", "") or "0.1").strip()
-                      try:
-                          user_fraction = float(user_fraction_raw)
-                      except Exception:
-                          user_fraction = 0.1
-                      user_fraction = max(0.0, min(1.0, user_fraction))
-                      if user_fraction >= 1.0:
-                          user_fraction = 0.1
-                      release["userFraction"] = user_fraction
-
-                  service.edits().tracks().update(
-                      packageName=PACKAGE,
-                      editId=edit_id,
-                      track=TRACK,
-                      body={"releases": [release]},
-                  ).execute()
-
-                  service.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
-                  print(
-                      f"✅ Uploaded version code {bundle['versionCode']} to '{TRACK}' track "
-                      f"(status={RELEASE_STATUS})"
-                  )
-                  break
-              except HttpError as e:
-                  message = str(e)
-                  is_recent_reset = RESET_ERROR_FRAGMENT in message.lower()
-                  status = getattr(getattr(e, "resp", None), "status", None)
-                  is_transient_http = status in (429, 500, 502, 503, 504)
-                  remaining = int(deadline - time.time())
-
-                  if (is_recent_reset or is_transient_http) and remaining > 0:
-                      sleep_for = min(RETRY_INTERVAL, remaining)
-                      reason = "key reset propagation" if is_recent_reset else f"transient HTTP {status}"
-                      print(
-                          f"⚠️ Play upload retry due to {reason} (attempt {attempt}). "
-                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
-                          file=sys.stderr,
-                      )
-                      time.sleep(sleep_for)
-                      continue
-
-                  content = ""
-                  try:
-                      raw = getattr(e, "content", b"") or b""
-                      if isinstance(raw, (bytes, bytearray)):
-                          content = raw.decode("utf-8", errors="ignore").strip()
-                      else:
-                          content = str(raw).strip()
-                  except Exception:
-                      content = ""
-
-                  # Persist the raw response to an artifact-backed file so we can debug
-                  # FAILED_PRECONDITION even when GitHub masks the log output.
-                  try:
-                      payload = {
-                          "package": PACKAGE,
-                          "track": TRACK,
-                          "release_status": RELEASE_STATUS,
-                          "attempt": attempt,
-                          "http_status": status,
-                          "error": str(e),
-                          "response": content,
-                      }
-                      with open("/tmp/play-upload-error.json", "w", encoding="utf-8") as f:
-                          json.dump(payload, f, indent=2, ensure_ascii=True)
-                      print("📦 Wrote /tmp/play-upload-error.json", file=sys.stderr)
-                  except Exception as write_err:
-                      print(f"⚠️ Failed to write /tmp/play-upload-error.json: {write_err}", file=sys.stderr)
-
-                  if content:
-                      print(f"❌ Google Play upload failed: {e}\n\nResponse:\n{content}", file=sys.stderr)
-                  else:
-                      print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
-                  sys.exit(1)
-              except Exception as e:
-                  message = str(e).lower()
-                  remaining = int(deadline - time.time())
-                  is_transient_network = any(
-                      frag in message for frag in TRANSIENT_ERROR_FRAGMENTS
-                  )
-                  if is_transient_network and remaining > 0:
-                      sleep_for = min(RETRY_INTERVAL, remaining)
-                      print(
-                          f"⚠️ Play upload transient network error (attempt {attempt}): {e}. "
-                          f"Retrying in {sleep_for}s (remaining retry window: {remaining}s)...",
-                          file=sys.stderr,
-                      )
-                      time.sleep(sleep_for)
-                      continue
-
-                  print(f"❌ Google Play upload failed: {e}", file=sys.stderr)
-                  sys.exit(1)
-          PYEOF
+      - name: Upload Play upload result (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: play-upload-result
+          path: /tmp/play-upload-result.json
+          if-no-files-found: ignore
 
       - name: Upload Play upload error (if any)
         uses: actions/upload-artifact@v4
@@ -524,6 +303,45 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore /tmp/play-service-account.json
+
+  play-precondition-triage:
+    needs: [android-release]
+    if: ${{ always() && (inputs.platform == 'android' || inputs.platform == 'both') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Play error artifact
+        uses: actions/download-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: play-upload-error
+          path: /tmp/play-upload-error
+
+      - name: Download Play result artifact
+        uses: actions/download-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: play-upload-result
+          path: /tmp/play-upload-result
+
+      - name: Upsert Play precondition triage issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python scripts/play_precondition_triage.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --run-url "$RUN_URL" \
+            --error-json /tmp/play-upload-error/play-upload-error.json \
+            --result-json /tmp/play-upload-result/play-upload-result.json
 
   verify-releases:
     needs: [ios-testflight, android-release]
@@ -577,7 +395,12 @@ jobs:
       - name: Determine Android track (no secrets)
         id: android_track
         run: |
-          TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
+          TRACK="${{ needs.android-release.outputs.effective_track }}"
+          if [ -n "$TRACK" ] && [ "$TRACK" != "null" ]; then
+            echo "Using effective track from android-release output: $TRACK"
+          else
+            TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
+          fi
           if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
             TRACK="${{ inputs.android_track }}"
           fi

@@ -30,6 +30,7 @@ When delegating work via the `Task` tool, agents should specify the category (e.
    - Pricing: set (Free or paid)
    - App Review contact info: filled
 5. **Show evidence, not assertions.** When reporting status, include actual counts, actual field values, actual HTTP responses — not summaries or assumptions.
+6. **Truthfulness is mandatory.** Never guess, never bluff, and never claim a state that is not directly verified. Every status claim must include reproducible proof (command/query used + sanitized output).
 
 ## Operator Mandate: Env + Secrets Verification Before Blockers
 
