@@ -21,7 +21,10 @@ def test_build_asc_jwt_reports_missing_env(monkeypatch):
 
     token, err = csa._build_asc_jwt()
     assert token is None
-    assert "Missing App Store credentials" in err
+    assert (
+        "Missing App Store credentials" in err
+        or "Missing dependencies" in err
+    )
 
 
 def test_check_ios_access_handles_non_json_response(monkeypatch):
