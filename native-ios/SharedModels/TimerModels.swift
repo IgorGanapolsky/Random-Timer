@@ -112,6 +112,26 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public static let `default` = TimerConfig()
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
+
+    /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
+    /// Call this at deserialization time to enforce feature gating after subscription expiry.
+    public func clamped(isPro: Bool) -> TimerConfig {
+        let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
+        let clampedMax = min(maxSeconds, maxAllowed)
+        let clampedMin = min(minSeconds, clampedMax)
+        let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
+        let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
+        return TimerConfig(
+            minSeconds: clampedMin,
+            maxSeconds: clampedMax,
+            alarmDuration: alarmDuration,
+            hiddenMode: hiddenMode,
+            repeatEnabled: repeatEnabled,
+            soundType: clampedSound,
+            volume: volume,
+            vibrationEnabled: vibrationEnabled
+        )
+    }
 }
 
 // MARK: - Range Adjustment

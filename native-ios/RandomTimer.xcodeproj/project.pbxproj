@@ -31,6 +31,7 @@
 		69A55EE7F47BF51A55C13896 /* RandomTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */; };
 		7333136EFF1A48ADABA95895 /* bell.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 75387774E2DAB72906B19DCD /* bell.mp3 */; };
 		840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
+		PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRVT001122334455AABB0001 /* ProValidationTests.swift */; };
 		85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
 		96771424C44C551B73F7732B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15E4584476AB7D519E638B /* GlassCard.swift */; };
 		997459C4BEB58C7A5CB1C72F /* gong.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 18EB65CABE2573B583A2913B /* gong.mp3 */; };
@@ -137,6 +138,7 @@
 		F29061814BF691DA7F9CD649 /* airhorn.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = airhorn.mp3; sourceTree = "<group>"; };
 		F5F3E399050BD30295736FEA /* drum_roll.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = drum_roll.mp3; sourceTree = "<group>"; };
 		PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = RandomTimer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		PRVT001122334455AABB0001 /* ProValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProValidationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +176,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */,
+				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
 				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
 			);
@@ -532,6 +535,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
+				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
 				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,
 				840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */,
