@@ -45,6 +45,7 @@ def get_access_token():
 def bq_query(token, sql):
     """Execute a BigQuery SQL query."""
     ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT_ID}/queries"
     body = json.dumps({
         "query": sql,
@@ -70,6 +71,7 @@ def bq_query(token, sql):
 def check_bigquery_export(token):
     """Check if Crashlytics BQ export is set up by listing tables."""
     ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     url = (
         f"https://bigquery.googleapis.com/bigquery/v2"
         f"/projects/{PROJECT_ID}/datasets/{BQ_DATASET}/tables?maxResults=10"
