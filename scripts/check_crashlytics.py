@@ -156,6 +156,12 @@ def main():
         print("This is required for automated crash monitoring in CI.")
         sys.exit(0)
 
+    if not tables:
+        print("BigQuery dataset exists but no tables yet.")
+        print("Tables auto-create when the next crash event streams in.")
+        print("PASS: No crash data to evaluate (clean slate).")
+        sys.exit(0)
+
     print(f"BigQuery tables found: {tables}")
 
     # Query crash summary
