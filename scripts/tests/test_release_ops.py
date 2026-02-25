@@ -42,11 +42,13 @@ class ReleaseOpsTests(unittest.TestCase):
                 version="1.1.1",
                 locale="en-US",
                 context_out=str(context_out),
+                contract_out=None,
                 review_limit=200,
                 sla_hours=24,
                 strict_remote=True,
                 fail_on_sla=False,
                 no_remote=False,
+                enforce_contract=True,
             )
 
             with patch.object(release_ops, "_run", side_effect=fake_run):
@@ -85,17 +87,61 @@ class ReleaseOpsTests(unittest.TestCase):
                 version="1.1.1",
                 locale="en-US",
                 context_out=str(context_out),
+                contract_out=None,
                 review_limit=200,
                 sla_hours=24,
                 strict_remote=False,
                 fail_on_sla=True,
                 no_remote=False,
+                enforce_contract=True,
             )
 
             with patch.object(release_ops, "_run", side_effect=fake_run):
                 rc = release_ops.check_readiness(args, repo)
 
             self.assertEqual(rc, 1)
+
+    def test_check_readiness_allows_contract_failure_when_not_enforced(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            (repo / "scripts").mkdir(parents=True, exist_ok=True)
+            context_out = repo / "release-context.json"
+
+            def fake_run(cmd, cwd, env=None):
+                if any(str(x).endswith("release_context.py") for x in cmd):
+                    context_out.write_text(
+                        json.dumps(
+                            {
+                                "summary": {
+                                    "local_ready": False,
+                                    "remote_status": "skipped_no_remote",
+                                    "sla_breach_count": 0,
+                                    "blockers": ["local_listing_requirements_failed"],
+                                }
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                return subprocess.CompletedProcess(cmd, 0)
+
+            args = SimpleNamespace(
+                platform="ios",
+                version="1.1.1",
+                locale="en-US",
+                context_out=str(context_out),
+                contract_out=None,
+                review_limit=200,
+                sla_hours=24,
+                strict_remote=False,
+                fail_on_sla=False,
+                no_remote=False,
+                enforce_contract=False,
+            )
+
+            with patch.object(release_ops, "_run", side_effect=fake_run):
+                rc = release_ops.check_readiness(args, repo)
+
+            self.assertEqual(rc, 0)
 
     def test_sync_listing_dry_run_skips_execution(self):
         with tempfile.TemporaryDirectory() as td:

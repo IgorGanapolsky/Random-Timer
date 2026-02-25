@@ -139,6 +139,26 @@ The `native-release.yml` workflow automatically:
 6. **Tags the commit** as `vX.Y.Z` (idempotent — skips if tag exists)
 7. **Creates a GitHub Release** with combined Android + iOS release notes
 
+### Delegation Contract Gate
+
+High-impact iOS actions now run through an explicit delegation contract:
+
+- `ios_metadata_sync` (CI/local readiness): requires local listing readiness and no active blockers.
+- `ios_submit_for_review` (external submission): requires explicit submit intent plus proven ASC readiness checks with evidence.
+
+Manual command:
+
+```bash
+python scripts/delegation_contract.py \
+  --operation ios_submit_for_review \
+  --asc-ready-json /tmp/asc_ready.json \
+  --intent true \
+  --json-out /tmp/delegation_contract.json \
+  --enforce
+```
+
+CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so every "ready" claim is backed by machine-readable evidence.
+
 ## Store Metadata Locations
 
 ### Android (Google Play)

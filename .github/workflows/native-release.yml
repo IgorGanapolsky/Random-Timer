@@ -569,12 +569,25 @@ jobs:
             --version "${{ steps.asc_version.outputs.selected_version }}" \
             --json /tmp/asc_ready.json
 
+      - name: Enforce delegation contract (submit gate)
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          python scripts/delegation_contract.py \
+            --operation ios_submit_for_review \
+            --asc-ready-json /tmp/asc_ready.json \
+            --intent "${{ steps.gate.outputs.submit_review }}" \
+            --json-out /tmp/delegation_contract.json \
+            --enforce
+
       - name: Upload readiness report
         uses: actions/upload-artifact@v4
         if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
         with:
           name: asc-ready-report
-          path: /tmp/asc_ready.json
+          path: |
+            /tmp/asc_ready.json
+            /tmp/delegation_contract.json
+          if-no-files-found: ignore
 
       - name: Submit for App Review (App Store)
         if: steps.gate.outputs.enabled == 'true'
@@ -609,7 +622,7 @@ jobs:
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json
+          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/delegation_contract.json /tmp/asc_version.json
 
   tag-release:
     needs: [verify-releases]
