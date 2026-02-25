@@ -20,7 +20,12 @@ import tempfile
 from pathlib import Path
 from typing import List, Sequence
 
-from scripts.delegation_contract import evaluate_contract
+try:
+    # Works when running as module/package import.
+    from scripts.delegation_contract import evaluate_contract
+except ModuleNotFoundError:
+    # Works when invoking as: python scripts/release_ops.py ...
+    from delegation_contract import evaluate_contract
 
 
 class ReleaseOpsError(RuntimeError):
