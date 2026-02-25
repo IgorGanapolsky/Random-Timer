@@ -93,7 +93,20 @@ jobs:
 
       - name: Install dependencies
         if: inputs.pip_packages != ''
-        run: pip install ${{ inputs.pip_packages }}
+        env:
+          PIP_PACKAGES: ${{ inputs.pip_packages }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          import shlex
+          import subprocess
+
+          packages = os.environ.get("PIP_PACKAGES", "").strip()
+          if not packages:
+              raise SystemExit(0)
+          subprocess.run(["pip", "install", *shlex.split(packages)], check=True)
+          PY
 
       - name: Run task
         env:
@@ -105,31 +118,36 @@ jobs:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
+          RUN_COMMAND: ${{ inputs.run_command }}
         run: |
           set -euo pipefail
-          ${{ inputs.run_command }}
+          task_script="$(mktemp)"
+          trap 'rm -f "$task_script"' EXIT
+          printf '%s\n' "$RUN_COMMAND" > "$task_script"
+          bash "$task_script"
 
       - name: Commit updates
         if: inputs.commit_paths != '' && inputs.commit_message != ''
+        env:
+          COMMIT_PATHS: ${{ inputs.commit_paths }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          while IFS= read -r path; do
+          printf '%s\n' "$COMMIT_PATHS" | while IFS= read -r path; do
             if [ -n "$path" ]; then
               git add "$path"
             fi
-          done <<'PATHS'
-          ${{ inputs.commit_paths }}
-          PATHS
+          done
 
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
 
-          git commit -m "${{ inputs.commit_message }}"
+          git commit -m "$COMMIT_MESSAGE"
           git push
 
       - name: Publish wiki pages
