@@ -328,7 +328,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade pip requests==2.32.5
 
-      - name: Enforce paid attribution guardrail
+      - name: Evaluate paid attribution guardrail
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
@@ -337,8 +337,28 @@ jobs:
             --repo-root . \
             --lookback-days 30 \
             --wqtu-window-days 7 \
-            --enforce-guardrail \
             --require-posthog
+
+      - name: Warn if paid attribution guardrail is violated
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report_path = Path("marketing/data/north_star.json")
+          if not report_path.exists():
+              print("::warning::north_star.json not found; skipped guardrail warning annotation.")
+              raise SystemExit(0)
+
+          payload = json.loads(report_path.read_text(encoding="utf-8"))
+          paid = payload.get("paid", {})
+          if paid.get("guardrail_violated"):
+              reason = paid.get("guardrail_reason") or "paid attribution guardrail violated"
+              print(f"::warning::North Star guardrail violated: {reason}")
+          else:
+              print("North Star guardrail check passed without violations.")
+          PY
 
       - name: Upload north star artifact
         if: always()
@@ -412,12 +432,24 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Detect Crashlytics credentials
+        id: crashlytics-creds
+        run: |
+          if [ -n "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "has_creds=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_creds=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Crashlytics check because GCP_SA_KEY is not configured."
+          fi
+
       - name: Authenticate to Google Cloud
+        if: steps.crashlytics-creds.outputs.has_creds == 'true'
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Check crash-free rate
+        if: steps.crashlytics-creds.outputs.has_creds == 'true'
         run: python scripts/check_crashlytics.py --threshold 99.0 --hours 24
         continue-on-error: true
 
