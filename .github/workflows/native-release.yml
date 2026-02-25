@@ -33,6 +33,10 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: mobile-release-pipeline
+  cancel-in-progress: false
+
 jobs:
   ios-testflight:
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
