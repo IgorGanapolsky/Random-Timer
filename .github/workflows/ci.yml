@@ -142,8 +142,8 @@ jobs:
           }
           GSEOF
 
-      - name: Run unit tests
-        run: ./gradlew test --no-daemon
+      - name: Run unit tests with coverage
+        run: ./gradlew testDebugUnitTest jacocoDebugUnitTestReport --no-daemon
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
@@ -153,6 +153,16 @@ jobs:
         with:
           name: app-debug
           path: native-android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Android coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-coverage
+          path: |
+            native-android/app/build/reports/tests/testDebugUnitTest
+            native-android/app/build/reports/jacoco/jacocoDebugUnitTestReport
+            native-android/app/build/jacoco/testDebugUnitTest.exec
 
   ios:
     name: iOS Build Check
