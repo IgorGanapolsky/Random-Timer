@@ -300,7 +300,18 @@ jobs:
           python scripts/release_ops.py check_readiness \
             --platform ios \
             --context-out /tmp/release-context-ci.json \
+            --contract-out /tmp/release-delegation-contract-ci.json \
             --no-remote
+
+      - name: Upload release readiness artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-local
+          path: |
+            /tmp/release-context-ci.json
+            /tmp/release-delegation-contract-ci.json
+          if-no-files-found: error
 
   north-star-guardrail:
     name: North Star Guardrail
