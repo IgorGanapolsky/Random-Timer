@@ -2,8 +2,16 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest import mock
 
-from scripts.release_context import _extract_build_processing_state, build_summary, collect_local_context
+from scripts.release_context import (
+    ContextError,
+    _extract_build_processing_state,
+    _safe_output_path,
+    build_summary,
+    collect_local_context,
+    collect_remote_context,
+)
 
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
@@ -104,6 +112,82 @@ class ReleaseContextSummaryTests(unittest.TestCase):
             ]
         }
         self.assertEqual(_extract_build_processing_state(payload), "VALID")
+
+
+class ReleaseContextRemoteTests(unittest.TestCase):
+    def test_collect_remote_context_skips_when_remote_is_disabled(self):
+        with tempfile.TemporaryDirectory() as td:
+            ctx = collect_remote_context(
+                repo_root=Path(td),
+                version="1.2.3",
+                locale="en-US",
+                include_remote=False,
+                review_limit=200,
+                sla_hours=24,
+                env={},
+            )
+        self.assertEqual(ctx["status"], "skipped_no_remote")
+
+    def test_collect_remote_context_skips_when_credentials_missing(self):
+        with tempfile.TemporaryDirectory() as td:
+            ctx = collect_remote_context(
+                repo_root=Path(td),
+                version="1.2.3",
+                locale="en-US",
+                include_remote=True,
+                review_limit=200,
+                sla_hours=24,
+                env={},
+            )
+        self.assertEqual(ctx["status"], "skipped_missing_credentials")
+
+    def test_collect_remote_context_reports_partial_failure(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            with (
+                mock.patch("scripts.release_context.has_asc_credentials", return_value=True),
+                mock.patch(
+                    "scripts.release_context._run_json_command",
+                    side_effect=[
+                        {
+                            "status": "success",
+                            "payload": {"checks": [{"evidence": {"processingState": "VALID"}}]},
+                            "exit_code": 0,
+                            "command": [],
+                            "stdout_tail": "",
+                            "stderr_tail": "",
+                        },
+                        {
+                            "status": "failed",
+                            "payload": None,
+                            "exit_code": 1,
+                            "command": [],
+                            "stdout_tail": "",
+                            "stderr_tail": "boom",
+                        },
+                    ],
+                ),
+            ):
+                ctx = collect_remote_context(
+                    repo_root=repo_root,
+                    version="1.2.3",
+                    locale="en-US",
+                    include_remote=True,
+                    review_limit=200,
+                    sla_hours=24,
+                    env={},
+                )
+
+        self.assertEqual(ctx["status"], "partial_failure")
+        self.assertEqual(ctx["build_processing_state"], "VALID")
+        self.assertEqual(ctx["asc_readiness"]["status"], "success")
+        self.assertEqual(ctx["reviews_ops"]["status"], "failed")
+
+    def test_safe_output_path_rejects_paths_outside_allowed_roots(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            with self.assertRaises(ContextError):
+                _safe_output_path(str(Path.home() / "release-context-outside.json"), repo_root)
 
 
 if __name__ == "__main__":
