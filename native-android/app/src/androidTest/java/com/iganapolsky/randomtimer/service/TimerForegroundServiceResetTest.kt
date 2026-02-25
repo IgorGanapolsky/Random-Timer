@@ -8,6 +8,9 @@ import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import org.junit.Assert.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
@@ -17,6 +20,20 @@ class TimerForegroundServiceResetTest {
 
     @get:Rule
     val serviceRule = ServiceTestRule()
+
+    private fun waitForCondition(
+        timeoutMs: Long = 3_000,
+        pollMs: Long = 50,
+        condition: () -> Boolean,
+    ) {
+        runBlocking {
+            withTimeout(timeoutMs) {
+                while (!condition()) {
+                    delay(pollMs)
+                }
+            }
+        }
+    }
 
     @Test
     fun resetWhileAlarmStopsAlarmAndRestartsTimer() {
@@ -43,8 +60,10 @@ class TimerForegroundServiceResetTest {
         ) as TimerForegroundService.LocalBinder
         val service = binder.getService()
 
-        // Wait for the timer to expire and alarm state to start.
-        Thread.sleep(1200)
+        // Wait for timer state to transition into alarm.
+        waitForCondition(timeoutMs = 4_000) {
+            service.timerState.value?.status == TimerStatus.ALARM
+        }
 
         val state = service.timerState.value
         assertEquals(TimerStatus.ALARM, state?.status)
@@ -54,7 +73,12 @@ class TimerForegroundServiceResetTest {
         }
         service.onStartCommand(resetIntent, 0, 0)
 
-        Thread.sleep(200)
+        waitForCondition {
+            val state = service.timerState.value
+            state?.status == TimerStatus.RUNNING &&
+                (state.alarmTimeRemaining ?: Duration.ZERO) == Duration.ZERO &&
+                state.targetDuration == state.remainingDuration
+        }
 
         val updatedState = service.timerState.value
         assertEquals(TimerStatus.RUNNING, updatedState?.status)
@@ -87,7 +111,9 @@ class TimerForegroundServiceResetTest {
         ) as TimerForegroundService.LocalBinder
         val service = binder.getService()
 
-        Thread.sleep(100)
+        waitForCondition {
+            service.timerState.value?.status == TimerStatus.RUNNING
+        }
 
         val initialState = service.timerState.value
         assertEquals(TimerStatus.RUNNING, initialState?.status)
@@ -97,7 +123,13 @@ class TimerForegroundServiceResetTest {
         }
         service.onStartCommand(resetIntent, 0, 0)
 
-        Thread.sleep(200)
+        waitForCondition {
+            val state = service.timerState.value
+            state?.status == TimerStatus.RUNNING &&
+                state.remainingDuration == 5000.milliseconds &&
+                state.targetDuration == state.remainingDuration &&
+                (state.alarmTimeRemaining ?: Duration.ZERO) == Duration.ZERO
+        }
 
         val updatedState = service.timerState.value
         assertEquals(TimerStatus.RUNNING, updatedState?.status)

@@ -914,7 +914,18 @@ def _post_devto(markdown: str, title: str, tags: List[str], canonical_url: str) 
             "provider": "control_direct_api",
             "attempts": 1,
         }
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception:
+        return {
+            "channel": "devto",
+            "status": "error",
+            "code": response.status_code,
+            "body": response.text[:400],
+            "reason": "non_json_response",
+            "provider": "control_direct_api",
+            "attempts": 1,
+        }
     return {
         "channel": "devto",
         "status": "published",
@@ -969,7 +980,18 @@ def _post_devto_retry(markdown: str, title: str, tags: List[str], canonical_url:
             continue
 
         if response.status_code < 300:
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception:
+                return {
+                    "channel": "devto",
+                    "status": "error",
+                    "reason": "non_json_response",
+                    "code": response.status_code,
+                    "body": response.text[:400],
+                    "provider": "candidate_retry_api",
+                    "attempts": attempt,
+                }
             return {
                 "channel": "devto",
                 "status": "published",
@@ -1080,7 +1102,16 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
             "code": response.status_code,
             "body": response.text[:400],
         }
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception:
+        return {
+            "channel": "x",
+            "status": "error",
+            "code": response.status_code,
+            "body": response.text[:400],
+            "reason": "non_json_response",
+        }
     tweet_id = ((data.get("data") or {}).get("id"))
     return {
         "channel": "x",
@@ -1385,10 +1416,13 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
             response = requests.get(
                 f"https://dev.to/api/articles/{rid}",
                 headers={"api-key": devto_key},
-                timeout=20,
+                timeout=30,
             )
             if response.status_code < 300:
-                data = response.json()
+                try:
+                    data = response.json()
+                except Exception:
+                    data = {}
                 score = int(data.get("positive_reactions_count") or 0) + int(data.get("comments_count") or 0)
                 summary["channels"].setdefault("devto", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 
@@ -1406,10 +1440,14 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
                 f"https://api.twitter.com/2/tweets/{rid}",
                 params={"tweet.fields": "public_metrics"},
                 headers={"Authorization": f"Bearer {x_bearer}"},
-                timeout=20,
+                timeout=30,
             )
             if response.status_code < 300:
-                metrics = ((response.json().get("data") or {}).get("public_metrics") or {})
+                try:
+                    payload = response.json()
+                except Exception:
+                    payload = {}
+                metrics = ((payload.get("data") or {}).get("public_metrics") or {})
                 score = int(metrics.get("like_count") or 0) + int(metrics.get("retweet_count") or 0)
                 summary["channels"].setdefault("x", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 

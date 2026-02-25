@@ -109,7 +109,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
         run: |
-          python -m pip install pyjwt cryptography requests
+          python -m pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
           python scripts/check_store_access.py --platform ios
 
       - name: Build and upload to TestFlight
@@ -187,7 +187,7 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
         run: |
-          python -m pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib requests
+          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
           python scripts/check_store_access.py --platform android
 
       - name: Decode keystore
@@ -234,7 +234,7 @@ jobs:
             echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
             exit 1
           fi
-          pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+          pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
           python scripts/play_publish.py \
             --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
             --package com.iganapolsky.randomtimer \
@@ -334,7 +334,7 @@ jobs:
       - name: Upsert Play precondition triage issue
         if: always()
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python scripts/play_precondition_triage.py \
@@ -357,7 +357,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install google-api-python-client google-auth pyjwt cryptography requests
+        run: pip install google-api-python-client==2.190.0 google-auth==2.48.0 pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
       - name: Extract version info
         id: versions
@@ -486,7 +486,7 @@ jobs:
 
       - name: Install dependencies (ASC)
         if: steps.gate.outputs.enabled == 'true'
-        run: pip install pyjwt cryptography requests
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
       - name: Extract iOS version
         if: steps.gate.outputs.enabled == 'true'

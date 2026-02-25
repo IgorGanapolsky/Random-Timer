@@ -100,3 +100,10 @@ scripts/__pycache__/
 gradle.properties
 *.backup
 *.disabled
+
+# Release and screenshot artifacts
+native-ios/RandomTimer.ipa
+native-ios/RandomTimer.app.dSYM.zip
+apple_*.png
+artifacts_*.png
+apple_status.json

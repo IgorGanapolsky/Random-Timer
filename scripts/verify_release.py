@@ -296,7 +296,12 @@ class AppStoreVerifier:
         }
         resp = requests.get(url, headers=headers, params=params, timeout=30)
         resp.raise_for_status()
-        return resp.json()
+        try:
+            return resp.json()
+        except Exception as exc:
+            raise RuntimeError(
+                f"GET {path} returned non-JSON payload: HTTP {resp.status_code} body={resp.text[:400]}"
+            ) from exc
 
     def _get_app_id(self) -> str:
         """Look up the app ID by bundle ID."""

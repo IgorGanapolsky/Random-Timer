@@ -40,7 +40,7 @@ def posthog_query(query: str, api_key: str, project_id: str, errors: List[str]) 
                 "Content-Type": "application/json",
             },
             json={"query": {"kind": "HogQLQuery", "query": query}},
-            timeout=60,
+            timeout=30,
         )
     except requests.RequestException as exc:
         errors.append(f"request_error: {exc}")
@@ -49,7 +49,11 @@ def posthog_query(query: str, api_key: str, project_id: str, errors: List[str]) 
     if response.status_code >= 300:
         errors.append(f"http_{response.status_code}")
         return None
-    return response.json()
+    try:
+        return response.json()
+    except Exception as exc:
+        errors.append(f"invalid_json: {exc}")
+        return None
 
 
 def query_scalar(query: str, api_key: str, project_id: str, errors: List[str]) -> int:

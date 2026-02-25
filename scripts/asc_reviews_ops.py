@@ -120,7 +120,10 @@ class AscClient:
                 f"HTTP {resp.status_code}\n"
                 f"Body: {resp.text[:2000]}"
             )
-        return resp.json()
+        try:
+            return resp.json()
+        except Exception:
+            _die(f"App Store Connect API returned non-JSON payload for GET {url}: {resp.text[:400]}")
 
 
 @dataclass
@@ -243,7 +246,7 @@ def _slack_post(webhook_url: str, text: str) -> None:
     except ImportError:
         _die("Missing dependency: requests (pip install requests)")
 
-    resp = requests.post(webhook_url, json={"text": text}, timeout=15)
+    resp = requests.post(webhook_url, json={"text": text}, timeout=30)
     if resp.status_code >= 400:
         _die(f"Slack webhook failed: HTTP {resp.status_code} body={resp.text[:400]}")
 

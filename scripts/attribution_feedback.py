@@ -44,7 +44,7 @@ def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[st
                 "Content-Type": "application/json",
             },
             json={"query": {"kind": "HogQLQuery", "query": query}},
-            timeout=60,
+            timeout=30,
         )
     except requests.RequestException as exc:
         msg = f"request_error: {exc}"
@@ -57,7 +57,13 @@ def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[st
         QUERY_ERRORS.append(msg)
         print(f"[Attribution] PostHog query failed: {response.status_code}")
         return None
-    return response.json()
+    try:
+        return response.json()
+    except Exception as exc:
+        msg = f"invalid_json: {exc}"
+        QUERY_ERRORS.append(msg)
+        print(f"[Attribution] PostHog returned non-JSON payload: {exc}")
+        return None
 
 
 def query_scalar(query: str, api_key: str, project_id: str) -> int:
