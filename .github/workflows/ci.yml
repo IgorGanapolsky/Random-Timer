@@ -348,6 +348,27 @@ jobs:
             gitleaks git --no-banner --redact --exit-code 1
           fi
 
+  crashlytics:
+    name: Crashlytics Stability
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Check crash-free rate
+        run: python scripts/check_crashlytics.py --threshold 99.0 --hours 24
+        continue-on-error: true
+
   notify:
     name: Notify
     runs-on: ubuntu-latest
