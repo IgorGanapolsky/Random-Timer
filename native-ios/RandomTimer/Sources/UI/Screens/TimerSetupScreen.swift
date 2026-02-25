@@ -3,10 +3,18 @@ import SwiftUI
 /// Initial screen for configuring and starting a timer
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
+    @EnvironmentObject var proManager: ProManager
     @State private var showShareSheet = false
+    @State private var showAdvancedSettings = false
+    @State private var showPaywall = false
+    @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
+
+    private var showAllSettings: Bool { hasCompletedFirstTimer || showAdvancedSettings }
+    private var maxSliderRange: Double { Double(proManager.maxSecondsLimit) }
+    private var minSliderMax: Double { maxSliderRange - 30 }
 
     private static let shareMessage = """
         This is the timer I use for random fight drills. \
@@ -20,16 +28,18 @@ struct TimerSetupScreen: View {
             VStack(alignment: .leading, spacing: 20) {
                 Spacer().frame(height: 8)
 
-                // Training Stats
-                HStack {
-                    Text("Session #\(TrainingStatsService.shared.totalSessions + 1)")
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
-                    Spacer()
-                    if TrainingStatsService.shared.currentStreak > 1 {
-                        Label("\(TrainingStatsService.shared.currentStreak) day streak", systemImage: "flame.fill")
+                // Training Stats (only for returning users)
+                if hasCompletedFirstTimer {
+                    HStack {
+                        Text("Session #\(TrainingStatsService.shared.totalSessions + 1)")
                             .font(.caption)
-                            .foregroundColor(.accentPrimary)
+                            .foregroundColor(.textSecondary)
+                        Spacer()
+                        if TrainingStatsService.shared.currentStreak > 1 {
+                            Label("\(TrainingStatsService.shared.currentStreak) day streak", systemImage: "flame.fill")
+                                .font(.caption)
+                                .foregroundColor(.accentPrimary)
+                        }
                     }
                 }
 
@@ -46,6 +56,7 @@ struct TimerSetupScreen: View {
                         TimeRangeSliders(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
+                            maxSecondsLimit: proManager.maxSecondsLimit,
                             onRangeChange: { newMin, newMax in
                                 updateConfig(minSeconds: newMin, maxSeconds: newMax)
                             }
@@ -53,7 +64,8 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // Alarm Settings Card
+                // Alarm Settings Card (progressive disclosure)
+                if showAllSettings {
                 GlassCard {
                     VStack(alignment: .leading) {
                         Label("Alarm Sound Duration", systemImage: "bell.fill")
@@ -84,6 +96,7 @@ struct TimerSetupScreen: View {
                             .foregroundColor(.textMuted)
                             .padding(.bottom, 8)
 
+                        // Free sounds
                         HStack(spacing: 12) {
                             SoundTypeButton(
                                 label: "Intense",
@@ -103,6 +116,49 @@ struct TimerSetupScreen: View {
                                     timerManager.previewSound()
                                 }
                             )
+                        }
+
+                        // Pro sounds
+                        Spacer().frame(height: 8)
+
+                        let lockSuffix = proManager.isPro ? "" : " \u{1F512}"
+                        Text(proManager.isPro ? "PRO SOUNDS" : "PRO SOUNDS \u{1F512}")
+                            .font(.caption2)
+                            .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                            .padding(.bottom, 4)
+
+                        let proSounds = SoundType.proSounds
+                        ForEach(Array(stride(from: 0, to: proSounds.count, by: 2)), id: \.self) { i in
+                            HStack(spacing: 12) {
+                                let sound = proSounds[i]
+                                SoundTypeButton(
+                                    label: sound.rawValue.capitalized + lockSuffix,
+                                    selected: config.soundType == sound,
+                                    onTap: {
+                                        if proManager.isPro {
+                                            updateConfig(soundType: sound)
+                                            timerManager.previewSound()
+                                        } else {
+                                            showPaywall = true
+                                        }
+                                    }
+                                )
+                                if i + 1 < proSounds.count {
+                                    let sound2 = proSounds[i + 1]
+                                    SoundTypeButton(
+                                        label: sound2.rawValue.capitalized + lockSuffix,
+                                        selected: config.soundType == sound2,
+                                        onTap: {
+                                            if proManager.isPro {
+                                                updateConfig(soundType: sound2)
+                                                timerManager.previewSound()
+                                            } else {
+                                                showPaywall = true
+                                            }
+                                        }
+                                    )
+                                }
+                            }
                         }
 
                         Spacer().frame(height: 16)
@@ -140,6 +196,21 @@ struct TimerSetupScreen: View {
                         .transaction { $0.animation = nil }
                     }
                 }
+                } // end if showAllSettings
+
+                // "More options" for first-time users
+                if !showAllSettings {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showAdvancedSettings = true
+                        }
+                    } label: {
+                        Text("More options")
+                            .font(.subheadline)
+                            .foregroundColor(.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
 
                 Spacer(minLength: 32)
 
@@ -169,6 +240,10 @@ struct TimerSetupScreen: View {
         }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [Self.shareMessage])
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallSheet()
+                .environmentObject(proManager)
         }
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
@@ -203,6 +278,7 @@ struct TimerSetupScreen: View {
 private struct TimeRangeSliders: View {
     let minValue: Int
     let maxValue: Int
+    var maxSecondsLimit: Int = TimerConfig.maxSecondsFree
     let onRangeChange: (Int, Int) -> Void
 
     var body: some View {
@@ -241,12 +317,13 @@ private struct TimeRangeSliders: View {
                         let adjusted = TimeRangeAdjuster.adjustForMinChange(
                             currentMinSeconds: minValue,
                             currentMaxSeconds: maxValue,
-                            newMinSeconds: Int(newVal)
+                            newMinSeconds: Int(newVal),
+                            maxSecondsLimit: maxSecondsLimit
                         )
                         onRangeChange(adjusted.min, adjusted.max)
                     }
                 ),
-                in: 0...270,
+                in: 0...Double(maxSecondsLimit - 30),
                 step: 5
             )
             .tint(.accentPrimary)
@@ -265,12 +342,13 @@ private struct TimeRangeSliders: View {
                         let adjusted = TimeRangeAdjuster.adjustForMaxChange(
                             currentMinSeconds: minValue,
                             currentMaxSeconds: maxValue,
-                            newMaxSeconds: Int(newVal)
+                            newMaxSeconds: Int(newVal),
+                            maxSecondsLimit: maxSecondsLimit
                         )
                         onRangeChange(adjusted.min, adjusted.max)
                     }
                 ),
-                in: 30...300,
+                in: 30...Double(maxSecondsLimit),
                 step: 5
             )
             .tint(.accentPrimary)
@@ -384,5 +462,6 @@ private struct VolumeSliderView: View {
     NavigationStack {
         TimerSetupScreen()
             .environmentObject(TimerManager())
+            .environmentObject(ProManager.shared)
     }
 }

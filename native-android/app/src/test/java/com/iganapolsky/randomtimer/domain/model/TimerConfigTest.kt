@@ -6,7 +6,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class TimerConfigTest {
-
     @Test
     fun `default config has valid range`() {
         val config = TimerConfig.DEFAULT
@@ -26,16 +25,17 @@ class TimerConfigTest {
 
     @Test
     fun `config accepts valid range`() {
-        val config = TimerConfig(
-            minSeconds = 60,
-            maxSeconds = 300,
-            alarmDuration = 10,
-            hiddenMode = false,
-            repeatEnabled = false,
-            soundType = SoundType.INTENSE,
-            volume = 0.5f,
-            vibrationEnabled = false
-        )
+        val config =
+            TimerConfig(
+                minSeconds = 60,
+                maxSeconds = 300,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
 
         assertThat(config.minDuration).isEqualTo(1.minutes)
         assertThat(config.maxDuration).isEqualTo(5.minutes)
@@ -43,16 +43,17 @@ class TimerConfigTest {
 
     @Test
     fun `config accepts same min and max`() {
-        val config = TimerConfig(
-            minSeconds = 120,
-            maxSeconds = 120,
-            alarmDuration = 10,
-            hiddenMode = false,
-            repeatEnabled = false,
-            soundType = SoundType.INTENSE,
-            volume = 0.5f,
-            vibrationEnabled = false
-        )
+        val config =
+            TimerConfig(
+                minSeconds = 120,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
 
         assertThat(config.minSeconds).isEqualTo(config.maxSeconds)
     }
@@ -67,7 +68,7 @@ class TimerConfigTest {
             repeatEnabled = false,
             soundType = SoundType.INTENSE,
             volume = 0.5f,
-            vibrationEnabled = false
+            vibrationEnabled = false,
         )
     }
 
@@ -81,36 +82,53 @@ class TimerConfigTest {
             repeatEnabled = false,
             soundType = SoundType.INTENSE,
             volume = 0.5f,
-            vibrationEnabled = false
+            vibrationEnabled = false,
         )
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `config rejects duration over 5 minutes`() {
+    fun `config rejects duration over 60 minutes`() {
         TimerConfig(
             minSeconds = 60,
-            maxSeconds = 600, // 10 minutes - exceeds 5 min max
+            maxSeconds = 3601, // exceeds 60 min pro max
             alarmDuration = 10,
             hiddenMode = false,
             repeatEnabled = false,
             soundType = SoundType.INTENSE,
             volume = 0.5f,
-            vibrationEnabled = false
+            vibrationEnabled = false,
         )
     }
 
     @Test
+    fun `config accepts pro range up to 60 minutes`() {
+        val config =
+            TimerConfig(
+                minSeconds = 60,
+                maxSeconds = 3600, // 60 minutes - pro max
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
+        assertThat(config.maxSeconds).isEqualTo(3600)
+    }
+
+    @Test
     fun `config can enable vibration`() {
-        val config = TimerConfig(
-            minSeconds = 30,
-            maxSeconds = 120,
-            alarmDuration = 10,
-            hiddenMode = false,
-            repeatEnabled = false,
-            soundType = SoundType.INTENSE,
-            volume = 0.5f,
-            vibrationEnabled = true
-        )
+        val config =
+            TimerConfig(
+                minSeconds = 30,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = true,
+            )
 
         assertThat(config.vibrationEnabled).isTrue()
     }

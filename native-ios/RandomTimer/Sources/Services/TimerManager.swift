@@ -30,8 +30,10 @@ final class TimerManager: ObservableObject {
         self.notificationService = notificationService
         self.liveActivityService = liveActivityService
 
-        // Load config synchronously from storage to avoid UI flicker
-        self.config = storageService.loadConfigSync() ?? .default
+        // Load config synchronously from storage to avoid UI flicker.
+        // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
+        let rawConfig = storageService.loadConfigSync() ?? .default
+        self.config = rawConfig.clamped(isPro: ProManager.shared.isPro)
 
         // Wire Bluetooth/CarPlay media button and notification action callbacks.
         // Media button behavior must match timer-circle tap (silence + stay on timer screen).
@@ -445,7 +447,8 @@ final class TimerManager: ObservableObject {
 
     private func loadSavedConfig() async {
         if let saved = await storageService.loadConfig() {
-            config = saved
+            // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
+            config = saved.clamped(isPro: ProManager.shared.isPro)
         }
     }
 
@@ -582,6 +585,7 @@ final class TimerManager: ObservableObject {
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
             ])

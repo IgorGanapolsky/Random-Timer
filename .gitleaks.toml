@@ -40,6 +40,7 @@ paths = [
   '''\.git/''',
   '''ios/Pods/''',
   '''android/build/''',
+  '''\.claude/skills/''',
 ]
 commits = [
   "f9f5b3c75532bd1bb5b7af1a05aacd48245a648e",
