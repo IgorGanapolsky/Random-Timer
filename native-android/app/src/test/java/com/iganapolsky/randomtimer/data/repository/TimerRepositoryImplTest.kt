@@ -13,6 +13,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.nio.file.Files
@@ -231,6 +232,32 @@ class TimerRepositoryImplTest {
                     Files.createTempFile("timer-repo-test", ".preferences_pb").toFile()
                 },
             )
-        return TimerRepositoryImpl(dataStore) to dataStore
+        val ctor = TimerRepositoryImpl::class.java.constructors.first()
+        val repository =
+            when (ctor.parameterCount) {
+                1 -> ctor.newInstance(dataStore) as TimerRepositoryImpl
+                2 -> {
+                    val proManagerClass = Class.forName("com.iganapolsky.randomtimer.billing.ProManager")
+                    val unsafeClass = Class.forName("sun.misc.Unsafe")
+                    val unsafeField = unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }
+                    val unsafe = unsafeField.get(null)
+                    val allocateInstance = unsafeClass.getMethod("allocateInstance", Class::class.java)
+                    val proManager = allocateInstance.invoke(unsafe, proManagerClass)
+
+                    val isProFlow = MutableStateFlow(false)
+                    proManagerClass.getDeclaredField("_isPro").apply {
+                        isAccessible = true
+                        set(proManager, isProFlow)
+                    }
+                    proManagerClass.getDeclaredField("isPro").apply {
+                        isAccessible = true
+                        set(proManager, isProFlow)
+                    }
+
+                    ctor.newInstance(dataStore, proManager) as TimerRepositoryImpl
+                }
+                else -> error("Unexpected TimerRepositoryImpl constructor shape")
+            }
+        return repository to dataStore
     }
 }
