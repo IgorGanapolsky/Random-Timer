@@ -677,3 +677,116 @@ final class TimerManagerSilenceTests: XCTestCase {
                       "Opening via notification tap must set isAlarmSilenced since sound is stopped")
     }
 }
+
+// MARK: - Storage Service Persistence Tests
+
+final class StorageServiceTests: XCTestCase {
+    private let configKey = "timer_config"
+    private let timerStateKey = "active_timer_state"
+    private var storageService: StorageService!
+
+    override func setUp() {
+        super.setUp()
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: configKey)
+        defaults.removeObject(forKey: timerStateKey)
+        storageService = StorageService()
+    }
+
+    override func tearDown() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: configKey)
+        defaults.removeObject(forKey: timerStateKey)
+        storageService = nil
+        super.tearDown()
+    }
+
+    func testLoadConfigReturnsNilWhenNothingSaved() async {
+        let loadedAsync = await storageService.loadConfig()
+        let loadedSync = storageService.loadConfigSync()
+
+        XCTAssertNil(loadedAsync)
+        XCTAssertNil(loadedSync)
+    }
+
+    func testSaveAndLoadConfigPersistsAcrossAsyncAndSyncAPIs() async {
+        let config = RandomTimer.TimerConfig(
+            minSeconds: 15,
+            maxSeconds: 90,
+            alarmDuration: 30,
+            hiddenMode: true,
+            repeatEnabled: true,
+            soundType: .gentle,
+            volume: 0.8,
+            vibrationEnabled: true
+        )
+
+        await storageService.saveConfig(config)
+
+        let loadedAsync = await storageService.loadConfig()
+        let loadedSync = storageService.loadConfigSync()
+
+        XCTAssertEqual(loadedAsync, config)
+        XCTAssertEqual(loadedSync, config)
+    }
+
+    func testSaveAndLoadTimerStatePersistsAcrossAsyncAndSyncAPIs() async {
+        let config = RandomTimer.TimerConfig(minSeconds: 20, maxSeconds: 80, alarmDuration: 10)
+        let startedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        let alarmStartedAt = Date(timeIntervalSince1970: 1_700_000_050)
+        let state = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 72,
+            startedAt: startedAt,
+            remainingDuration: 18,
+            status: .alarm,
+            alarmTimeRemaining: 5,
+            alarmStartedAt: alarmStartedAt
+        )
+
+        await storageService.saveTimerState(state)
+
+        let loadedAsync = await storageService.loadTimerState()
+        let loadedSync = storageService.loadTimerStateSync()
+
+        XCTAssertEqual(loadedAsync, state)
+        XCTAssertEqual(loadedSync, state)
+    }
+
+    func testClearTimerStateRemovesPersistedState() async {
+        let state = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 60,
+            startedAt: Date(timeIntervalSince1970: 1_700_000_100),
+            remainingDuration: 30,
+            status: .running
+        )
+        await storageService.saveTimerState(state)
+        let savedState = await storageService.loadTimerState()
+        XCTAssertNotNil(savedState)
+
+        await storageService.clearTimerState()
+
+        let clearedAsync = await storageService.loadTimerState()
+        XCTAssertNil(clearedAsync)
+        XCTAssertNil(storageService.loadTimerStateSync())
+    }
+
+    func testClearTimerStateSyncRemovesPersistedState() async {
+        let state = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 45,
+            startedAt: Date(timeIntervalSince1970: 1_700_000_200),
+            remainingDuration: 22,
+            status: .paused
+        )
+        await storageService.saveTimerState(state)
+        XCTAssertNotNil(storageService.loadTimerStateSync())
+
+        storageService.clearTimerStateSync()
+
+        XCTAssertNil(storageService.loadTimerStateSync())
+        let clearedAsync = await storageService.loadTimerState()
+        XCTAssertNil(clearedAsync)
+    }
+}
