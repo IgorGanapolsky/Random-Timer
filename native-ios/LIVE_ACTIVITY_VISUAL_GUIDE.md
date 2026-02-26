@@ -144,7 +144,7 @@ Background Dark:   #0F0A1A  ■■■■■
 Emerald Green:     #10B981  ■■■■■
 Amber:             #F59E0B  ■■■■■
 Rose Red:          #EF4444  ■■■■■
-Purple:            #8B5CF6  ■■■■■
+Red:             #EF4444  ■■■■■
 White:             #F8FAFC  ■■■■■
 Muted Gray:        #A1A1AA  ■■■■■
 ```
