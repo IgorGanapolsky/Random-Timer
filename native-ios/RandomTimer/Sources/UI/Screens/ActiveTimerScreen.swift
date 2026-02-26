@@ -309,14 +309,6 @@ struct ActiveTimerScreen: View {
                         }
                     }
                 }
-
-                // Share with training partner
-                SecondaryButton(title: "Tell a Training Partner") {
-                    showShareSheet = true
-                }
-                .sheet(isPresented: $showShareSheet) {
-                    ActivityViewController(activityItems: [shareMessage])
-                }
             } else {
                 // Pause / Resume
                 PrimaryButton(

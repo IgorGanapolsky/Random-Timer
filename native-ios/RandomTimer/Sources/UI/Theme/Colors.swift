@@ -1,19 +1,19 @@
 import SwiftUI
 
-/// Timer app color palette - matches Apple Human Interface Guidelines for dark mode
+/// Timer app color palette - high-intensity tactical red
 extension Color {
 
     // MARK: - Background Colors
 
-    static let backgroundDark = Color(hex: "0F0A1A")
-    static let backgroundLight = Color(hex: "1A1425")
+    static let backgroundDark = Color(hex: "0A0A0F")
+    static let backgroundLight = Color(hex: "141419")
 
     // MARK: - Timer State Colors
 
     static let timerActive = Color(hex: "10B981")      // Emerald green - running
     static let timerWarning = Color(hex: "F59E0B")     // Amber - < 30 seconds
-    static let timerDanger = Color(hex: "EF4444")      // Rose red - < 10 seconds
-    static let timerComplete = Color(hex: "8B5CF6")    // Purple - complete/alarm
+    static let timerDanger = Color(hex: "EF4444")      // Tactical red - < 10 seconds
+    static let timerComplete = Color(hex: "DC2626")    // Crimson red - complete/alarm
 
     // MARK: - Glassmorphism
 
@@ -29,8 +29,8 @@ extension Color {
 
     // MARK: - Accent Colors
 
-    static let accentPrimary = Color(hex: "8B5CF6")    // Vibrant purple
-    static let accentSecondary = Color(hex: "A78BFA")  // Light purple
+    static let accentPrimary = Color(hex: "DC2626")    // Crimson red (matches Android)
+    static let accentSecondary = Color(hex: "EF4444")  // Bright red
 
     // MARK: - Helper
 
@@ -70,8 +70,7 @@ extension TimerStatus {
         case .running:
             return .timerActive
         case .warning, .danger:
-            // Random timer doesn't use warning/danger - just show running color
-            return .timerActive
+            return .timerWarning
         case .complete, .alarm:
             return .timerComplete
         case .paused:
