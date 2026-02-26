@@ -42,6 +42,7 @@ class AnalyticsService @Inject constructor() {
             properties = mapOf(
                 "platform" to "android",
                 "app_version" to BuildConfig.VERSION_NAME,
+                "environment" to if (BuildConfig.DEBUG) "development" else "production",
             ),
         )
         initialized = true

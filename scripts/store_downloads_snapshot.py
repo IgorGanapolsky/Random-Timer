@@ -120,6 +120,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT coalesce(properties.$os, properties.$os_name, 'Unknown') AS os, count(DISTINCT person_id) AS users
         FROM events
         WHERE event = 'Application Installed'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
         GROUP BY os
         ORDER BY users DESC
@@ -144,6 +145,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
+          AND properties.environment = 'production'
           AND (properties.$os = 'Android' OR properties.$os_name = 'Android')
           AND timestamp > now() - interval {days} day
         """,
@@ -157,6 +159,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval 1 day
         """,
         key,
@@ -168,6 +171,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval 7 day
         """,
         key,
@@ -179,6 +183,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
         """,
         key,

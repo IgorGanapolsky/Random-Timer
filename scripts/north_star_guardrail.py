@@ -200,6 +200,7 @@ def run(
           SELECT person_id
           FROM events
           WHERE event = 'timer_completed'
+            AND properties.environment = 'production'
             AND timestamp > now() - interval {wqtu_window_days} day
           GROUP BY person_id
           HAVING count() >= 3
@@ -214,6 +215,7 @@ def run(
         SELECT count()
         FROM events
         WHERE event = 'timer_completed'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval {wqtu_window_days} day
         """,
         key,
@@ -225,6 +227,7 @@ def run(
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'timer_completed'
+          AND properties.environment = 'production'
           AND timestamp > now() - interval {wqtu_window_days} day
         """,
         key,
@@ -236,6 +239,7 @@ def run(
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE timestamp > now() - interval {lookback_days} day
+          AND properties.environment = 'production'
           AND (
             lower(coalesce(properties.utm_source,'')) IN ('apple_ads','google_ads','reddit','meta','tiktok')
             OR properties.utm_campaign IS NOT NULL
@@ -252,6 +256,7 @@ def run(
                count(DISTINCT person_id) AS users
         FROM events
         WHERE timestamp > now() - interval {lookback_days} day
+          AND properties.environment = 'production'
           AND (
             lower(coalesce(properties.utm_source,'')) IN ('apple_ads','google_ads','reddit','meta','tiktok')
             OR properties.utm_campaign IS NOT NULL

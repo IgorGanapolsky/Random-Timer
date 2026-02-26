@@ -1,26 +1,37 @@
 {
-  "generated_at": "2026-02-24T17:38:31+00:00",
+  "generated_at": "2026-02-26T18:29:01+00:00",
   "window_days": 30,
   "source": "posthog",
-  "status": "skipped",
-  "status_reason": "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID",
+  "status": "ok",
+  "status_reason": "",
   "ios": {
-    "downloads_30d": 0
+    "downloads_30d": 18
   },
   "android": {
     "downloads_30d": 0,
     "active_installs": 0
   },
   "combined": {
-    "downloads_30d": 0
+    "downloads_30d": 18
   },
   "active_users": {
-    "dau": 0,
-    "wau": 0,
-    "mau": 0
+    "dau": 3,
+    "wau": 18,
+    "mau": 141
   },
   "query_diagnostics": {
     "errors": []
   },
-  "snapshots": []
+  "snapshots": [
+    {
+      "timestamp": "2026-02-26T18:29:01+00:00",
+      "ios_downloads_30d": 18,
+      "android_downloads_30d": 0,
+      "combined_downloads_30d": 18,
+      "android_active_installs": 0,
+      "dau": 3,
+      "wau": 18,
+      "mau": 141
+    }
+  ]
 }
