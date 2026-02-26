@@ -29,6 +29,9 @@ jobs:
     environment: production
     env:
       PYTHONPATH: ${{ github.workspace }}
+      IOS_METADATA_LOCALE: ${{ inputs.locale }}
+      IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
+      IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
     steps:
       - uses: actions/checkout@v4
 
@@ -106,24 +109,21 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           SELECTED_VERSION: ${{ steps.asc_version.outputs.selected_version }}
-          LOCALE_INPUT: ${{ inputs.locale }}
-          METADATA_ONLY_INPUT: ${{ inputs.metadata_only }}
-          STRICT_RETRY_INPUT: ${{ inputs.strict_retry_on_editable }}
         run: |
-          LOCALE="$LOCALE_INPUT"
+          LOCALE="$IOS_METADATA_LOCALE"
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
             echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
             exit 1
           fi
 
           BUILD_FLAG=""
-          if [[ "$METADATA_ONLY_INPUT" == "true" ]]; then
+          if [[ "$IOS_METADATA_ONLY" == "true" ]]; then
             echo "⚠️ metadata_only=true: build attached/VALID check is intentionally skipped."
             BUILD_FLAG="--skip-build-check"
           fi
 
           RETRY_FLAG="--retry-on-editable"
-          if [[ "$STRICT_RETRY_INPUT" != "true" ]]; then
+          if [[ "$IOS_STRICT_RETRY_ON_EDITABLE" != "true" ]]; then
             RETRY_FLAG="--no-retry-on-editable"
           fi
 
