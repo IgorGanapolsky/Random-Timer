@@ -1,6 +1,13 @@
 default_platform(:ios)
 
 platform :ios do
+  def screenshot_delete_submit_lock_error?(error)
+    msg = error.to_s
+    return true if msg.include?("Can't Delete Screenshot After Submit for review")
+    return true if msg.include?("Failed verification of all screenshots deleted")
+    false
+  end
+
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_ci if ENV["CI"] == "true"
@@ -150,8 +157,18 @@ platform :ios do
       api_key: defined?(api_key) ? api_key : nil
     }
     deliver_args[:app_version] = version unless use_live_version
-    deliver(deliver_args)
-		  end
+    begin
+      deliver(deliver_args)
+    rescue => e
+      raise unless screenshot_delete_submit_lock_error?(e)
+      UI.important("ASC screenshot deletion is locked after submit-for-review; retrying metadata lane with screenshots skipped.")
+      fallback_args = deliver_args.merge(
+        skip_screenshots: true,
+        overwrite_screenshots: false
+      )
+      deliver(fallback_args)
+    end
+  end
 
   desc "Submit a given version for App Review (uploads metadata + attaches build)"
   lane :submit_review do |options|
