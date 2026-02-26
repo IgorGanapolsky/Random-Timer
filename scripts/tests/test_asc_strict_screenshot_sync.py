@@ -26,7 +26,7 @@ def _report(state: str, *, iphone_ok: bool, ipad_ok: bool) -> dict:
 class AscStrictScreenshotSyncTests(unittest.TestCase):
     def _run(self, *, retry_on_editable: bool = True) -> tuple[int, dict]:
         return strict_sync.run_strict_screenshot_sync(
-            repo_root=Path("/tmp/repo"),
+            repo_root=Path("repo_root"),
             bundle_id="com.example.app",
             version="1.2.3",
             locale="en-US",
