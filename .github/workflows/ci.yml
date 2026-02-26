@@ -380,6 +380,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Enforce release branch promotion policy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" != "pull_request" || "$BASE_REF" != "main" ]]; then
+            echo "Skipping release-branch policy check (event=$EVENT_NAME base=$BASE_REF)."
+            exit 0
+          fi
+
+          python3 scripts/validate_release_branch.py --repo-root . --head-ref "$HEAD_REF"
+
       - name: Install gitleaks (OSS CLI)
         run: |
           mkdir -p "$HOME/.local/bin"
