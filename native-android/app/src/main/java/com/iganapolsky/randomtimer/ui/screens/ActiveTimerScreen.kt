@@ -130,12 +130,6 @@ fun ActiveTimerScreen(
                         },
                         modifier = modifier.fillMaxWidth(),
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Tell a Training Partner",
-                        onClick = { shareWithTrainingPartner(context) },
-                        modifier = modifier.fillMaxWidth(),
-                    )
                 } else {
                     PrimaryButton(
                         text = if (isPaused) "Resume" else "Pause",
