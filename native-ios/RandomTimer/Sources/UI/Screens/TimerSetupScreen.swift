@@ -26,7 +26,7 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
-                // 1. Training Window Card (Material 2026 Dual-Control Standard)
+                // 1. Training Window Card (Material 2026 Reconstruction)
                 GlassCard {
                     VStack(alignment: .leading) {
                         HStack {
@@ -51,7 +51,7 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 16)
 
-                        // Integrated Material Next Range Control
+                        // Integrated Range Control
                         TimeRangeScrubber(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
@@ -67,7 +67,7 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // 2. Alarm Setup (Semantic Standard)
+                // 2. Alarm Setup (Semantic Overhaul)
                 GlassCard {
                     VStack(alignment: .leading) {
                         Label("Alarm Setup", systemImage: "bell.fill")
@@ -92,7 +92,7 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // Core Sounds (Semantic Icons 🔥 / 💧)
+                        // Core Sounds (Semantic icons 🔥 / 💧)
                         HStack(spacing: 12) {
                             SoundTypeButton(
                                 label: "Intense",
@@ -315,7 +315,7 @@ struct TimerSetupScreen: View {
     }
 }
 
-// MARK: - Time Range Scrubber (Integrated Standard)
+// MARK: - Time Range Scrubber (Expressive Dual-Control)
 
 private struct TimeRangeScrubber: View {
     let minValue: Int
@@ -326,7 +326,7 @@ private struct TimeRangeScrubber: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // Interactive Data Chips
+            // High-Precision Chips
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("MIN").font(.caption2).foregroundColor(.textMuted)

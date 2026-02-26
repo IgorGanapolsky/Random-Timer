@@ -81,6 +81,12 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         volume: Float = 0.5,
         vibrationEnabled: Bool = false
     ) {
+        precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
+        precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
+        precondition(maxSeconds <= TimerConfig.maxSecondsPro, "Maximum seconds cannot exceed \(TimerConfig.maxSecondsPro)")
+        precondition(alarmDuration > 0, "Alarm duration must be positive")
+        precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
+
         self.minSeconds = minSeconds
         self.maxSeconds = maxSeconds
         self.alarmDuration = alarmDuration
@@ -91,11 +97,23 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         self.vibrationEnabled = vibrationEnabled
     }
 
+    /// Minimum as TimeInterval
+    public var minDuration: TimeInterval { TimeInterval(minSeconds) }
+
+    /// Maximum as TimeInterval
+    public var maxDuration: TimeInterval { TimeInterval(maxSeconds) }
+
+    /// Alarm duration as TimeInterval
+    public var alarmDurationInterval: TimeInterval { TimeInterval(alarmDuration) }
+
     public static let maxSecondsFree = 300
     public static let maxSecondsPro = 3600
+
     public static let `default` = TimerConfig()
+
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
+    /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
     public func clamped(isPro: Bool) -> TimerConfig {
         let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
         let clampedMax = min(maxSeconds, maxAllowed)
@@ -117,57 +135,191 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
 // MARK: - Range Adjustment
 
+/// Shared business rules for the "Goes Off In This Range" sliders.
 enum TimeRangeAdjuster {
+    static let defaultMinSecondsLimit = 0
+    static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
     static let defaultMinGapSeconds = 30
 
     static func adjustForMinChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,
         newMinSeconds: Int,
-        maxSecondsLimit: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
         minGapSeconds: Int = defaultMinGapSeconds
     ) -> (min: Int, max: Int) {
-        let adjustedMin = min(max(newMinSeconds, 0), maxSecondsLimit - minGapSeconds)
-        var adjustedMax = max(currentMaxSeconds, adjustedMin + minGapSeconds)
-        adjustedMax = min(adjustedMax, maxSecondsLimit)
-        return (adjustedMin, adjustedMax)
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(newMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(currentMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+
+        if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
     }
 
     static func adjustForMaxChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,
         newMaxSeconds: Int,
-        maxSecondsLimit: Int,
+        minSecondsLimit: Int = defaultMinSecondsLimit,
+        maxSecondsLimit: Int = defaultMaxSecondsLimit,
         minGapSeconds: Int = defaultMinGapSeconds
     ) -> (min: Int, max: Int) {
-        let adjustedMax = min(max(newMaxSeconds, minGapSeconds), maxSecondsLimit)
-        var adjustedMin = min(currentMinSeconds, adjustedMax - minGapSeconds)
-        adjustedMin = max(adjustedMin, 0)
-        return (adjustedMin, adjustedMax)
+        var adjustedMaxSeconds = Swift.min(
+            Swift.max(newMaxSeconds, minSecondsLimit + minGapSeconds),
+            maxSecondsLimit
+        )
+        var adjustedMinSeconds = Swift.min(
+            Swift.max(currentMinSeconds, minSecondsLimit),
+            maxSecondsLimit - minGapSeconds
+        )
+
+        if adjustedMaxSeconds < adjustedMinSeconds + minGapSeconds {
+            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
+        }
+
+        return (adjustedMinSeconds, adjustedMaxSeconds)
     }
 }
 
+// MARK: - Timer Status
+
 public enum TimerStatus: String, Codable, Sendable {
-    case idle, running, paused, complete, alarm
+    case idle
+    case running
+    case paused
+    case warning    // < 30 seconds remaining
+    case danger     // < 10 seconds remaining
+    case complete   // Timer finished, transitioning to alarm
+    case alarm      // Alarm is playing
 }
 
+// MARK: - Timer State
+
+/// Represents the current state of an active timer.
 public struct TimerState: Codable, Sendable, Equatable {
     public var config: TimerConfig
     public let targetDuration: TimeInterval
     public let startedAt: Date
     public var remainingDuration: TimeInterval
     public var status: TimerStatus
+    public var alarmTimeRemaining: TimeInterval
+    public var alarmStartedAt: Date?
 
-    public init(config: TimerConfig, targetDuration: TimeInterval, startedAt: Date = Date(), remainingDuration: TimeInterval? = nil, status: TimerStatus = .running) {
+    public init(
+        config: TimerConfig,
+        targetDuration: TimeInterval,
+        startedAt: Date = Date(),
+        remainingDuration: TimeInterval? = nil,
+        status: TimerStatus = .running,
+        alarmTimeRemaining: TimeInterval = 0,
+        alarmStartedAt: Date? = nil
+    ) {
         self.config = config
         self.targetDuration = targetDuration
         self.startedAt = startedAt
         self.remainingDuration = remainingDuration ?? targetDuration
         self.status = status
+        self.alarmTimeRemaining = alarmTimeRemaining
+        self.alarmStartedAt = alarmStartedAt
+    }
+
+    public var progress: Double {
+        guard targetDuration > 0 else { return 0 }
+        return 1.0 - (remainingDuration / targetDuration)
+    }
+
+    public var isComplete: Bool {
+        status == .complete || status == .alarm
+    }
+
+    public var isAlarmActive: Bool {
+        status == .alarm && alarmTimeRemaining > 0
+    }
+
+    /// The date when the timer will complete
+    public var endDate: Date {
+        startedAt.addingTimeInterval(targetDuration)
+    }
+
+    /// Time remaining in seconds (for display)
+    public var timeRemainingSeconds: Int {
+        Int(max(0, remainingDuration))
+    }
+
+    /// Remaining seconds for Live Activity — always 0 to prevent timing leak
+    public var liveActivityRemainingSeconds: Int { 0 }
+
+    /// End date for Live Activity
+    public var liveActivityEndDate: Date {
+        startedAt.addingTimeInterval(Double(config.maxSeconds))
     }
 }
 
+// MARK: - Live Activity Attributes
+
+/// ActivityKit attributes for the timer Live Activity
+public struct TimerActivityAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        public let status: TimerStatus
+        public let remainingSeconds: Int
+
+        public init(status: TimerStatus, remainingSeconds: Int) {
+            self.status = status
+            self.remainingSeconds = remainingSeconds
+        }
+    }
+
+    public let timerName: String
+    public let endDate: Date
+    public let minSeconds: Int
+    public let maxSeconds: Int
+
+    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+        self.timerName = timerName
+        self.endDate = endDate
+        self.minSeconds = minSeconds
+        self.maxSeconds = maxSeconds
+    }
+
+    public var rangeText: String {
+        let minFormatted = TimeInterval(minSeconds).formattedDuration
+        let maxFormatted = TimeInterval(maxSeconds).formattedDuration
+        return "\(minFormatted) - \(maxFormatted)"
+    }
+}
+
+// MARK: - Live Activity Action Signaling
+
+public enum TimerAction: String, Codable {
+    case stop
+    case pause
+    case resume
+}
+
+public let timerAppGroupSuite = "group.com.iganapolsky.randomtimer"
+public let timerPendingActionKey = "pendingTimerAction"
+
+// MARK: - Helpers
+
 extension TimeInterval {
+    public var formattedMMSS: String {
+        let totalSeconds = Int(max(0, self))
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
     public var formattedDuration: String {
         let totalSeconds = Int(max(0, self))
         let mins = totalSeconds / 60
@@ -176,5 +328,15 @@ extension TimeInterval {
             return secs > 0 ? "\(mins)m \(secs)s" : "\(mins)m"
         }
         return "\(secs)s"
+    }
+
+    public var minutes: Int { Int(self) / 60 }
+    public var seconds: Int { Int(self) % 60 }
+}
+
+extension TimerStatus {
+    public static func from(remainingSeconds: TimeInterval, currentStatus: TimerStatus) -> TimerStatus {
+        if remainingSeconds <= 0 { return .complete }
+        return currentStatus == .paused ? .paused : .running
     }
 }
