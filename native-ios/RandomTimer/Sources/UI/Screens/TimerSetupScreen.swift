@@ -299,7 +299,7 @@ struct TimerSetupScreen: View {
             minSeconds: minSeconds ?? config.minSeconds,
             maxSeconds: maxSeconds ?? config.maxSeconds,
             alarmDuration: alarmDuration ?? config.alarmDuration,
-            hiddenMode = false,
+            hiddenMode: config.hiddenMode,
             repeatEnabled: config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,

@@ -131,15 +131,16 @@ fun TimerSetupScreen(
             initialSeconds = config.minSeconds,
             onDismiss = { showDirectEntryMin = false },
             onConfirm = { seconds ->
-                val (min, max) = TimeRangeAdjuster.adjustForMinChange(
-                    currentMinSeconds = config.minSeconds,
-                    currentMaxSeconds = config.maxSeconds,
-                    newMinSeconds = seconds,
-                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                )
+                val (min, max) =
+                    TimeRangeAdjuster.adjustForMinChange(
+                        currentMinSeconds = config.minSeconds,
+                        currentMaxSeconds = config.maxSeconds,
+                        newMinSeconds = seconds,
+                        maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE,
+                    )
                 updateConfig(minSeconds = min, maxSeconds = max)
                 showDirectEntryMin = false
-            }
+            },
         )
     }
 
@@ -149,15 +150,16 @@ fun TimerSetupScreen(
             initialSeconds = config.maxSeconds,
             onDismiss = { showDirectEntryMax = false },
             onConfirm = { seconds ->
-                val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
-                    currentMinSeconds = config.minSeconds,
-                    currentMaxSeconds = config.maxSeconds,
-                    newMaxSeconds = seconds,
-                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                )
+                val (min, max) =
+                    TimeRangeAdjuster.adjustForMaxChange(
+                        currentMinSeconds = config.minSeconds,
+                        currentMaxSeconds = config.maxSeconds,
+                        newMaxSeconds = seconds,
+                        maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE,
+                    )
                 updateConfig(minSeconds = min, maxSeconds = max)
                 showDirectEntryMax = false
-            }
+            },
         )
     }
 
@@ -245,15 +247,16 @@ fun TimerSetupScreen(
                                     text = "PRO: 1H \uD83D\uDD12",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { onUpgradeTap() },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onSecretUnlock()
-                                        },
-                                    ),
+                                    modifier =
+                                        Modifier.combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { onUpgradeTap() },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onSecretUnlock()
+                                            },
+                                        ),
                                 )
                             }
                         }
@@ -286,7 +289,7 @@ fun TimerSetupScreen(
                                 updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                             },
                             onMinLabelClick = { showDirectEntryMin = true },
-                            onMaxLabelClick = { showDirectEntryMax = true }
+                            onMaxLabelClick = { showDirectEntryMax = true },
                         )
                     }
                 }
@@ -548,7 +551,7 @@ private fun TimeRangeSliders(
     onMinChange: (Int) -> Unit,
     onMaxChange: (Int) -> Unit,
     onMinLabelClick: () -> Unit = {},
-    onMaxLabelClick: () -> Unit = {}
+    onMaxLabelClick: () -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
     val nudgeStep = 5
@@ -565,35 +568,35 @@ private fun TimeRangeSliders(
                 color = TimerColors.GlassBackground,
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                modifier = Modifier.semantics { contentDescription = "Edit minimum time manually" }
+                modifier = Modifier.semantics { contentDescription = "Edit minimum time manually" },
             ) {
                 Text(
                     text = formatTime(minValue),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
             Text(
                 text = " - ",
                 style = MaterialTheme.typography.titleMedium,
                 color = TimerColors.TextSecondary,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 8.dp),
             )
             Surface(
                 onClick = onMaxLabelClick,
                 color = TimerColors.GlassBackground,
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                modifier = Modifier.semantics { contentDescription = "Edit maximum time manually" }
+                modifier = Modifier.semantics { contentDescription = "Edit maximum time manually" },
             ) {
                 Text(
                     text = formatTime(maxValue),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
         }
@@ -698,7 +701,7 @@ private fun DirectTimeEntryDialog(
     title: String,
     initialSeconds: Int,
     onDismiss: () -> Unit,
-    onConfirm: (Int) -> Unit
+    onConfirm: (Int) -> Unit,
 ) {
     var minutes by remember { mutableStateOf((initialSeconds / 60).toString()) }
     var seconds by remember { mutableStateOf((initialSeconds % 60).toString()) }
@@ -710,14 +713,14 @@ private fun DirectTimeEntryDialog(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
                     value = minutes,
                     onValueChange = { if (it.length <= 2) minutes = it.filter { char -> char.isDigit() } },
                     label = { Text("Min") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(80.dp)
+                    modifier = Modifier.width(80.dp),
                 )
                 Text(" : ", modifier = Modifier.padding(horizontal = 8.dp), color = TimerColors.TextPrimary)
                 OutlinedTextField(
@@ -725,7 +728,7 @@ private fun DirectTimeEntryDialog(
                     onValueChange = { if (it.length <= 2) seconds = it.filter { char -> char.isDigit() } },
                     label = { Text("Sec") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(80.dp)
+                    modifier = Modifier.width(80.dp),
                 )
             }
         },
@@ -735,7 +738,7 @@ private fun DirectTimeEntryDialog(
                     val m = minutes.toIntOrNull() ?: 0
                     val s = seconds.toIntOrNull() ?: 0
                     onConfirm(m * 60 + s)
-                }
+                },
             ) {
                 Text("Apply", color = TimerColors.AccentPrimary)
             }
@@ -745,7 +748,7 @@ private fun DirectTimeEntryDialog(
                 Text("Cancel", color = TimerColors.TextSecondary)
             }
         },
-        containerColor = TimerColors.BackgroundDark
+        containerColor = TimerColors.BackgroundDark,
     )
 }
 
@@ -765,7 +768,10 @@ private fun NudgeButton(
                 1.dp,
                 if (enabled) TimerColors.GlassBorder else TimerColors.GlassBorder.copy(alpha = 0.5f),
             ),
-        modifier = androidx.compose.ui.Modifier.width(44.dp).height(44.dp),
+        modifier =
+            androidx.compose.ui.Modifier
+                .width(44.dp)
+                .height(44.dp),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
