@@ -185,7 +185,7 @@ jobs:
           # Read current ASC state first so reruns are safe/idempotent.
           STATE_JSON="$(python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --json)"
           echo "ASC state (pre-submit): $STATE_JSON"
-          STATE="$(python - <<'PY'\nimport json,sys\nprint(json.loads(sys.argv[1])[\"state\"])\nPY\n\"$STATE_JSON\")"
+          STATE="$(python -c 'import json,sys; print(json.loads(sys.argv[1])["state"])' "$STATE_JSON")"
 
           if [[ "$STATE" == "WAITING_FOR_REVIEW" || "$STATE" == "IN_REVIEW" || "$STATE" == "PENDING_DEVELOPER_RELEASE" || "$STATE" == "READY_FOR_SALE" ]]; then
             echo "Already submitted ($STATE); skipping submit_review."
