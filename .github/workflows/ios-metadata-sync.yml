@@ -58,8 +58,9 @@ jobs:
 
       - name: Resolve iOS version
         id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          VERSION_INPUT="${{ github.event.inputs.version }}"
           if [ -n "$VERSION_INPUT" ]; then
             VERSION="$VERSION_INPUT"
           else
@@ -103,21 +104,24 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          LOCALE_INPUT: ${{ inputs.locale }}
+          METADATA_ONLY_INPUT: ${{ inputs.metadata_only }}
+          STRICT_RETRY_INPUT: ${{ inputs.strict_retry_on_editable }}
         run: |
-          LOCALE="${{ inputs.locale }}"
+          LOCALE="$LOCALE_INPUT"
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
             echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
             exit 1
           fi
 
           BUILD_FLAG=""
-          if [[ "${{ inputs.metadata_only }}" == "true" ]]; then
+          if [[ "$METADATA_ONLY_INPUT" == "true" ]]; then
             echo "⚠️ metadata_only=true: build attached/VALID check is intentionally skipped."
             BUILD_FLAG="--skip-build-check"
           fi
 
           RETRY_FLAG="--retry-on-editable"
-          if [[ "${{ inputs.strict_retry_on_editable }}" != "true" ]]; then
+          if [[ "$STRICT_RETRY_INPUT" != "true" ]]; then
             RETRY_FLAG="--no-retry-on-editable"
           fi
 
