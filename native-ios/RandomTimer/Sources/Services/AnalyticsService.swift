@@ -41,9 +41,17 @@ final class AnalyticsService {
         PostHogSDK.shared.setup(config)
 #endif
         let distinctId = getOrCreateDistinctId()
+        
+        #if DEBUG
+        let environment = "development"
+        #else
+        let environment = "production"
+        #endif
+        
         identify(userId: distinctId, properties: [
             "platform": "ios",
             "app_version": appVersion,
+            "environment": environment
         ])
         initialized = true
         print("[Analytics] PostHog initialized")
