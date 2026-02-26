@@ -28,10 +28,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -39,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,6 +58,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -94,6 +99,8 @@ fun TimerSetupScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(isPro) }
+    var showDirectEntryMin by remember { mutableStateOf(false) }
+    var showDirectEntryMax by remember { mutableStateOf(false) }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
@@ -115,6 +122,42 @@ fun TimerSetupScreen(
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
             ),
+        )
+    }
+
+    if (showDirectEntryMin) {
+        DirectTimeEntryDialog(
+            title = "Set Minimum Time",
+            initialSeconds = config.minSeconds,
+            onDismiss = { showDirectEntryMin = false },
+            onConfirm = { seconds ->
+                val (min, max) = TimeRangeAdjuster.adjustForMinChange(
+                    currentMinSeconds = config.minSeconds,
+                    currentMaxSeconds = config.maxSeconds,
+                    newMinSeconds = seconds,
+                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                )
+                updateConfig(minSeconds = min, maxSeconds = max)
+                showDirectEntryMin = false
+            }
+        )
+    }
+
+    if (showDirectEntryMax) {
+        DirectTimeEntryDialog(
+            title = "Set Maximum Time",
+            initialSeconds = config.maxSeconds,
+            onDismiss = { showDirectEntryMax = false },
+            onConfirm = { seconds ->
+                val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
+                    currentMinSeconds = config.minSeconds,
+                    currentMaxSeconds = config.maxSeconds,
+                    newMaxSeconds = seconds,
+                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                )
+                updateConfig(minSeconds = min, maxSeconds = max)
+                showDirectEntryMax = false
+            }
         )
     }
 
@@ -242,6 +285,8 @@ fun TimerSetupScreen(
                                     )
                                 updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                             },
+                            onMinLabelClick = { showDirectEntryMin = true },
+                            onMaxLabelClick = { showDirectEntryMax = true }
                         )
                     }
                 }
@@ -309,7 +354,7 @@ fun TimerSetupScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             SoundTypeButton(
-                                label = "\uD83D\uDCAA Intense",
+                                label = "\uD83D\uDD25 Intense", // Flame: High-Octane mass
                                 selected = config.soundType == SoundType.INTENSE,
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -319,7 +364,7 @@ fun TimerSetupScreen(
                                 modifier = Modifier.weight(1f),
                             )
                             SoundTypeButton(
-                                label = "\u26A1 Gentle",
+                                label = "\uD83E\uDDE1 Gentle", // Bubble/Soft: Organic fluidity
                                 selected = config.soundType == SoundType.GENTLE,
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -502,40 +547,61 @@ private fun TimeRangeSliders(
     enabled: Boolean = true,
     onMinChange: (Int) -> Unit,
     onMaxChange: (Int) -> Unit,
+    onMinLabelClick: () -> Unit = {},
+    onMaxLabelClick: () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
     val nudgeStep = 5
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Display
+        // Display (Tactical Dual Entry)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = formatTime(minValue),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
-            )
+            Surface(
+                onClick = onMinLabelClick,
+                color = TimerColors.GlassBackground,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                modifier = Modifier.semantics { contentDescription = "Edit minimum time manually" }
+            ) {
+                Text(
+                    text = formatTime(minValue),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
             Text(
                 text = " - ",
                 style = MaterialTheme.typography.titleMedium,
                 color = TimerColors.TextSecondary,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
-            Text(
-                text = formatTime(maxValue),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
-            )
+            Surface(
+                onClick = onMaxLabelClick,
+                color = TimerColors.GlassBackground,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                modifier = Modifier.semantics { contentDescription = "Edit maximum time manually" }
+            ) {
+                Text(
+                    text = formatTime(maxValue),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
         }
 
         // Min slider with nudge
         Column {
             Text(
-                text = "Minimum: ${formatTime(minValue)}",
+                text = "Minimum",
                 style = MaterialTheme.typography.labelSmall,
                 color = TimerColors.TextMuted,
                 modifier = Modifier.fillMaxWidth(),
@@ -555,6 +621,7 @@ private fun TimeRangeSliders(
                     onValueChange = { raw ->
                         val snapped = (raw / 5).toInt() * 5
                         if (snapped != minValue) {
+                            // High-Frequency Tactile Detent (Feb 2026 Standard)
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
                         onMinChange(snapped)
@@ -581,7 +648,7 @@ private fun TimeRangeSliders(
         // Max slider with nudge
         Column {
             Text(
-                text = "Maximum: ${formatTime(maxValue)}",
+                text = "Maximum",
                 style = MaterialTheme.typography.labelSmall,
                 color = TimerColors.TextMuted,
                 modifier = Modifier.fillMaxWidth(),
@@ -624,6 +691,62 @@ private fun TimeRangeSliders(
             }
         }
     }
+}
+
+@Composable
+private fun DirectTimeEntryDialog(
+    title: String,
+    initialSeconds: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    var minutes by remember { mutableStateOf((initialSeconds / 60).toString()) }
+    var seconds by remember { mutableStateOf((initialSeconds % 60).toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, color = TimerColors.TextPrimary) },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = minutes,
+                    onValueChange = { if (it.length <= 2) minutes = it.filter { char -> char.isDigit() } },
+                    label = { Text("Min") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.width(80.dp)
+                )
+                Text(" : ", modifier = Modifier.padding(horizontal = 8.dp), color = TimerColors.TextPrimary)
+                OutlinedTextField(
+                    value = seconds,
+                    onValueChange = { if (it.length <= 2) seconds = it.filter { char -> char.isDigit() } },
+                    label = { Text("Sec") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.width(80.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val m = minutes.toIntOrNull() ?: 0
+                    val s = seconds.toIntOrNull() ?: 0
+                    onConfirm(m * 60 + s)
+                }
+            ) {
+                Text("Apply", color = TimerColors.AccentPrimary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = TimerColors.TextSecondary)
+            }
+        },
+        containerColor = TimerColors.BackgroundDark
+    )
 }
 
 @Composable
