@@ -29,8 +29,8 @@ extension Color {
 
     // MARK: - Accent Colors
 
-    static let accentPrimary = Color(hex: "EF4444")    // Tactical red
-    static let accentSecondary = Color(hex: "F87171")  // Lighter red
+    static let accentPrimary = Color(hex: "DC2626")    // Crimson red (matches Android)
+    static let accentSecondary = Color(hex: "EF4444")  // Bright red
 
     // MARK: - Helper
 
