@@ -29,6 +29,8 @@ open RandomTimer.xcodeproj
 ## Guidelines
 
 - **Branch from `develop`**, not `main`
+- Keep branches short-lived (`feature/*`, `fix/*`), and merge back to `develop` quickly
+- For production promotion, cut `release/vX.Y.Z` from `develop` and open PR to `main`
 - Use conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
 - Write tests for new features
 - Keep PRs focused on a single change
