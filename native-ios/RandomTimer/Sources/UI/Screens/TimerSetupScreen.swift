@@ -26,7 +26,7 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
-                // 1. Training Window Card
+                // 1. Training Window Card (Material 2026 Dual-Control Standard)
                 GlassCard {
                     VStack(alignment: .leading) {
                         HStack {
@@ -51,7 +51,8 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 16)
 
-                        TimeRangeSliders(
+                        // Integrated Material Next Range Control
+                        TimeRangeScrubber(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
                             maxSecondsLimit: proManager.maxSecondsLimit,
@@ -66,7 +67,7 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // 2. Alarm Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Setup (Semantic Standard)
                 GlassCard {
                     VStack(alignment: .leading) {
                         Label("Alarm Setup", systemImage: "bell.fill")
@@ -91,11 +92,11 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // Core Sounds
+                        // Core Sounds (Semantic Icons 🔥 / 💧)
                         HStack(spacing: 12) {
                             SoundTypeButton(
                                 label: "Intense",
-                                systemImage: "flame.fill", // Semantic: Sound Pressure
+                                systemImage: "flame.fill",
                                 selected: config.soundType == .intense,
                                 onTap: {
                                     updateConfig(soundType: .intense)
@@ -104,7 +105,7 @@ struct TimerSetupScreen: View {
                             )
                             SoundTypeButton(
                                 label: "Gentle",
-                                systemImage: "drop.fill", // Semantic: Fluidity/Calm
+                                systemImage: "drop.fill",
                                 selected: config.soundType == .gentle,
                                 onTap: {
                                     updateConfig(soundType: .gentle)
@@ -299,11 +300,11 @@ struct TimerSetupScreen: View {
             minSeconds: minSeconds ?? config.minSeconds,
             maxSeconds: maxSeconds ?? config.maxSeconds,
             alarmDuration: alarmDuration ?? config.alarmDuration,
-            hiddenMode: config.hiddenMode,
-            repeatEnabled: config.repeatEnabled,
-            soundType: soundType ?? config.soundType,
-            volume: volume ?? config.volume,
-            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
+            hiddenMode = config.hiddenMode,
+            repeatEnabled = config.repeatEnabled,
+            soundType = soundType ?? config.soundType,
+            volume = volume ?? config.volume,
+            vibrationEnabled = vibrationEnabled ?? config.vibrationEnabled
         )
         timerManager.updateConfig(newConfig)
     }
@@ -314,141 +315,100 @@ struct TimerSetupScreen: View {
     }
 }
 
-// MARK: - Time Range Sliders
+// MARK: - Time Range Scrubber (Integrated Standard)
 
-private struct TimeRangeSliders: View {
+private struct TimeRangeScrubber: View {
     let minValue: Int
     let maxValue: Int
-    var maxSecondsLimit: Int = TimerConfig.maxSecondsFree
-    var enabled: Bool = true
+    var maxSecondsLimit: Int
     let onRangeChange: (Int, Int) -> Void
     let onLabelTap: (Bool) -> Void
 
-    private let nudgeStep = 5
-
     var body: some View {
-        VStack(spacing: 16) {
-            // Display (Cyber-Utilitarian Dual Entry)
+        VStack(spacing: 20) {
+            // Interactive Data Chips
             HStack {
-                Spacer()
-                Button { onLabelTap(true) } label: {
-                    Text(TimeInterval(minValue).formattedDuration)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(enabled ? .textPrimary : .textMuted)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.glassBackground)
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.glassBorder, lineWidth: 1))
-                }
-
-                Text(" - ")
-                    .font(.title2)
-                    .foregroundColor(.textSecondary)
-
-                Button { onLabelTap(false) } label: {
-                    Text(TimeInterval(maxValue).formattedDuration)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(enabled ? .textPrimary : .textMuted)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.glassBackground)
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.glassBorder, lineWidth: 1))
-                }
-                Spacer()
-            }
-
-            // Min slider with Nudge buttons
-            VStack(spacing: 4) {
-                Text("Minimum")
-                    .font(.caption2)
-                    .foregroundColor(.textMuted)
-
-                HStack(spacing: 12) {
-                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && minValue >= nudgeStep) {
-                        adjustMin(by: -nudgeStep)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("MIN").font(.caption2).foregroundColor(.textMuted)
+                    Button { onLabelTap(true) } label: {
+                        Text(TimeInterval(minValue).formattedDuration)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.textPrimary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.glassBackground)
+                            .cornerRadius(10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.glassBorder, lineWidth: 1))
                     }
+                }
 
-                    Slider(
-                        value: Binding(
-                            get: { Double(minValue) },
-                            set: { newVal in
-                                adjustMin(to: Int(newVal))
-                            }
-                        ),
-                        in: 0...Double(maxValue - 30),
-                        step: 5
-                    )
-                    .tint(enabled ? .accentPrimary : .textMuted)
+                Spacer()
+                Image(systemName: "arrow.right").foregroundColor(.textMuted)
+                Spacer()
 
-                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && minValue <= maxValue - 30 - nudgeStep) {
-                        adjustMin(by: nudgeStep)
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("MAX").font(.caption2).foregroundColor(.textMuted)
+                    Button { onLabelTap(false) } label: {
+                        Text(TimeInterval(maxValue).formattedDuration)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.textPrimary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.glassBackground)
+                            .cornerRadius(10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.glassBorder, lineWidth: 1))
                     }
                 }
             }
 
-            // Max slider with Nudge buttons
-            VStack(spacing: 4) {
-                Text("Maximum")
-                    .font(.caption2)
-                    .foregroundColor(.textMuted)
+            // Dual Slider (Implemented via separate sliders for native SwiftUI compatibility,
+            // but styled as a single integrated unit)
+            VStack(spacing: 0) {
+                Slider(
+                    value: Binding(
+                        get: { Double(minValue) },
+                        set: { newVal in
+                            let adj = TimeRangeAdjuster.adjustForMinChange(
+                                currentMinSeconds: minValue,
+                                currentMaxSeconds: maxValue,
+                                newMinSeconds: Int(newVal),
+                                maxSecondsLimit: maxSecondsLimit
+                            )
+                            onRangeChange(adj.min, adj.max)
+                        }
+                    ),
+                    in: 0...Double(maxSecondsLimit - 30),
+                    step: 5
+                )
+                .tint(.accentPrimary)
 
-                HStack(spacing: 12) {
-                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && maxValue >= minValue + 30 + nudgeStep) {
-                        adjustMax(by: -nudgeStep)
-                    }
-
-                    Slider(
-                        value: Binding(
-                            get: { Double(maxValue) },
-                            set: { newVal in
-                                adjustMax(to: Int(newVal))
-                            }
-                        ),
-                        in: Double(minValue + 30)...Double(maxSecondsLimit),
-                        step: 5
-                    )
-                    .tint(enabled ? .accentPrimary : .textMuted)
-
-                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && maxValue <= maxSecondsLimit - nudgeStep) {
-                        adjustMax(by: nudgeStep)
-                    }
-                }
+                Slider(
+                    value: Binding(
+                        get: { Double(maxValue) },
+                        set: { newVal in
+                            let adj = TimeRangeAdjuster.adjustForMaxChange(
+                                currentMinSeconds: minValue,
+                                currentMaxSeconds: maxValue,
+                                newMaxSeconds: Int(newVal),
+                                maxSecondsLimit: maxSecondsLimit
+                            )
+                            onRangeChange(adj.min, adj.max)
+                        }
+                    ),
+                    in: 30...Double(maxSecondsLimit),
+                    step: 5
+                )
+                .tint(.accentPrimary)
+            }
+            
+            HStack {
+                Text("0s").font(.caption2).foregroundColor(.textMuted)
+                Spacer()
+                Text(TimeInterval(maxSecondsLimit).formattedDuration).font(.caption2).foregroundColor(.textMuted)
             }
         }
-        .disabled(!enabled)
-        .transaction { $0.animation = nil }
-    }
-
-    private func adjustMin(by delta: Int) {
-        adjustMin(to: minValue + delta)
-    }
-
-    private func adjustMin(to newVal: Int) {
-        let adjusted = TimeRangeAdjuster.adjustForMinChange(
-            currentMinSeconds: minValue,
-            currentMaxSeconds: maxValue,
-            newMinSeconds: Swift.max(0, newVal),
-            maxSecondsLimit: maxSecondsLimit
-        )
-        onRangeChange(adjusted.min, adjusted.max)
-    }
-
-    private func adjustMax(by delta: Int) {
-        adjustMax(to: maxValue + delta)
-    }
-
-    private func adjustMax(to newVal: Int) {
-        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
-            currentMinSeconds: minValue,
-            currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newVal),
-            maxSecondsLimit: maxSecondsLimit
-        )
-        onRangeChange(adjusted.min, adjusted.max)
     }
 }
 
@@ -522,21 +482,6 @@ private struct DirectEntrySheet: View {
                 }
             }
         }
-    }
-}
-
-private struct NudgeButton: View {
-    let icon: String
-    let enabled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(enabled ? .accentPrimary : .textMuted)
-        }
-        .disabled(!enabled)
     }
 }
 
