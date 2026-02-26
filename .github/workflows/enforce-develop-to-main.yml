@@ -1,4 +1,4 @@
-name: enforce-develop-to-main
+name: enforce-release-branch-to-main
 
 on:
   pull_request_target:
@@ -7,15 +7,19 @@ on:
 
 jobs:
   enforce:
-    name: require develop as source
+    name: require release branch source
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: Fail if head branch is not develop
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          fetch-depth: 1
+
+      - name: Validate release branch and app versions
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
-          echo "Head ref: $HEAD_REF"
-          if [ "$HEAD_REF" != "develop" ] && [[ "$HEAD_REF" != release/* ]]; then
-            echo "Only PRs from 'develop' or 'release/*' are allowed into 'main'. Current: '$HEAD_REF'"
-            exit 1
-          fi
+          python3 scripts/validate_release_branch.py --repo-root . --head-ref "$HEAD_REF"
