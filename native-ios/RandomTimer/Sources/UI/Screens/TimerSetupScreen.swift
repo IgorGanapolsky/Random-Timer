@@ -4,7 +4,6 @@ import SwiftUI
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @EnvironmentObject var proManager: ProManager
-    @State private var showShareSheet = false
     @State private var showPaywall = false
     @State private var showArsenal = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
@@ -14,13 +13,6 @@ struct TimerSetupScreen: View {
 
     private var maxSliderRange: Double { Double(proManager.maxSecondsLimit) }
     private var minSliderMax: Double { maxSliderRange - 30 }
-
-    private static let shareMessage = """
-        This is the timer I use for random fight drills. \
-        It goes off unpredictably so you can't game it. \
-        Train for chaos, not comfort.
-        https://apps.apple.com/us/app/random-tactical-timer/id6758355312
-        """
 
     var body: some View {
         ScrollView {
@@ -244,20 +236,6 @@ struct TimerSetupScreen: View {
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showShareSheet = true
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .foregroundColor(.accentPrimary)
-                }
-                .accessibilityLabel("Share app")
-            }
-        }
-        .sheet(isPresented: $showShareSheet) {
-            ShareSheet(items: [Self.shareMessage])
-        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet()
                 .environmentObject(proManager)
