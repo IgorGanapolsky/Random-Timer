@@ -104,6 +104,7 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          SELECTED_VERSION: ${{ steps.asc_version.outputs.selected_version }}
           LOCALE_INPUT: ${{ inputs.locale }}
           METADATA_ONLY_INPUT: ${{ inputs.metadata_only }}
           STRICT_RETRY_INPUT: ${{ inputs.strict_retry_on_editable }}
@@ -126,7 +127,7 @@ jobs:
           fi
 
           python scripts/asc_strict_screenshot_sync.py \
-            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --version "$SELECTED_VERSION" \
             --locale "$LOCALE" \
             $BUILD_FLAG \
             $RETRY_FLAG \

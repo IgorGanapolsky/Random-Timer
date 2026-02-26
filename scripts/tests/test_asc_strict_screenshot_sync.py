@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+from typing import Optional
 from unittest.mock import patch
 
 from scripts import asc_strict_screenshot_sync as strict_sync
@@ -35,6 +36,24 @@ class AscStrictScreenshotSyncTests(unittest.TestCase):
             retry_on_editable=retry_on_editable,
             dry_run=False,
         )
+
+    def _run_with_verify(
+        self,
+        verify_side_effect: list[tuple[bool, dict]],
+        *,
+        retry_on_editable: bool = True,
+        reset_value: Optional[dict] = None,
+        fastlane_rc: int = 0,
+    ):
+        if reset_value is None:
+            reset_value = {"deleted_assets": 6}
+        with (
+            patch.object(strict_sync, "verify_ready", side_effect=verify_side_effect),
+            patch.object(strict_sync, "reset_screenshots", return_value=reset_value) as reset_mock,
+            patch.object(strict_sync, "_run_fastlane_metadata", return_value=fastlane_rc) as fastlane_mock,
+        ):
+            rc, payload = self._run(retry_on_editable=retry_on_editable)
+        return rc, payload, reset_mock, fastlane_mock
 
     def test_fails_fast_when_precheck_state_is_locked(self):
         with (
@@ -72,20 +91,13 @@ class AscStrictScreenshotSyncTests(unittest.TestCase):
         self.assertEqual(fastlane_mock.call_count, 1)
 
     def test_retries_once_when_screenshot_checks_fail_but_state_is_editable(self):
-        with (
-            patch.object(
-                strict_sync,
-                "verify_ready",
-                side_effect=[
-                    (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
-                    (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
-                    (True, _report("PREPARE_FOR_SUBMISSION", iphone_ok=True, ipad_ok=True)),
-                ],
-            ),
-            patch.object(strict_sync, "reset_screenshots", return_value={"deleted_assets": 6}) as reset_mock,
-            patch.object(strict_sync, "_run_fastlane_metadata", return_value=0) as fastlane_mock,
-        ):
-            rc, payload = self._run()
+        rc, payload, reset_mock, fastlane_mock = self._run_with_verify(
+            [
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
+                (True, _report("PREPARE_FOR_SUBMISSION", iphone_ok=True, ipad_ok=True)),
+            ]
+        )
 
         self.assertEqual(rc, 0)
         self.assertEqual(payload["result"], "success")
@@ -94,19 +106,12 @@ class AscStrictScreenshotSyncTests(unittest.TestCase):
         self.assertEqual(fastlane_mock.call_count, 2)
 
     def test_does_not_retry_when_screenshots_fail_and_state_locks(self):
-        with (
-            patch.object(
-                strict_sync,
-                "verify_ready",
-                side_effect=[
-                    (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
-                    (False, _report("WAITING_FOR_REVIEW", iphone_ok=False, ipad_ok=False)),
-                ],
-            ),
-            patch.object(strict_sync, "reset_screenshots", return_value={"deleted_assets": 6}) as reset_mock,
-            patch.object(strict_sync, "_run_fastlane_metadata", return_value=0) as fastlane_mock,
-        ):
-            rc, payload = self._run()
+        rc, payload, reset_mock, fastlane_mock = self._run_with_verify(
+            [
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
+                (False, _report("WAITING_FOR_REVIEW", iphone_ok=False, ipad_ok=False)),
+            ]
+        )
 
         self.assertEqual(rc, 1)
         self.assertEqual(payload["result"], "failed_after_replacement_attempts")
@@ -116,19 +121,12 @@ class AscStrictScreenshotSyncTests(unittest.TestCase):
         self.assertEqual(fastlane_mock.call_count, 1)
 
     def test_does_not_retry_when_non_screenshot_checks_fail(self):
-        with (
-            patch.object(
-                strict_sync,
-                "verify_ready",
-                side_effect=[
-                    (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
-                    (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=True, ipad_ok=True)),
-                ],
-            ),
-            patch.object(strict_sync, "reset_screenshots", return_value={"deleted_assets": 6}) as reset_mock,
-            patch.object(strict_sync, "_run_fastlane_metadata", return_value=0) as fastlane_mock,
-        ):
-            rc, payload = self._run()
+        rc, payload, reset_mock, fastlane_mock = self._run_with_verify(
+            [
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=True, ipad_ok=True)),
+            ]
+        )
 
         self.assertEqual(rc, 1)
         self.assertEqual(payload["result"], "failed_after_replacement_attempts")
