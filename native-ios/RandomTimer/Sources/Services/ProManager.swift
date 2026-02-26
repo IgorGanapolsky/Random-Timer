@@ -40,16 +40,17 @@ final class ProManager: ObservableObject {
 
     // MARK: - Purchase
 
-    func purchase() async -> Bool {
+    @discardableResult
+    func purchase() async -> ProPurchaseResult {
         guard let product else {
             await fetchProduct()
-            guard let product = self.product else { return false }
+            guard let product = self.product else { return .productUnavailable }
             return await doPurchase(product)
         }
         return await doPurchase(product)
     }
 
-    private func doPurchase(_ product: Product) async -> Bool {
+    private func doPurchase(_ product: Product) async -> ProPurchaseResult {
         do {
             let result = try await product.purchase()
             switch result {
@@ -57,28 +58,37 @@ final class ProManager: ObservableObject {
                 let transaction = try Self.checkVerified(verification)
                 isPro = true
                 await transaction.finish()
-                return true
-            case .userCancelled, .pending:
-                return false
+                return .success
+            case .userCancelled:
+                return .userCancelled
+            case .pending:
+                return .pending
             @unknown default:
-                return false
+                return .failed
             }
         } catch {
             Self.log.error("ProManager: purchase failed: \(error)")
-            return false
+            return .failed
         }
     }
 
     // MARK: - Restore
 
-    func restorePurchases() async {
+    @discardableResult
+    func restorePurchases() async -> ProRestoreResult {
+        if isPro {
+            return .alreadyUnlocked
+        }
+
         for await result in Transaction.currentEntitlements {
             if let transaction = try? Self.checkVerified(result),
                transaction.productID == Self.productID {
                 isPro = true
-                return
+                return .restored
             }
         }
+
+        return isPro ? .alreadyUnlocked : .notFound
     }
 
     // MARK: - Transaction Listener
@@ -116,8 +126,29 @@ final class ProManager: ObservableObject {
     var availableSounds: [SoundType] {
         isPro ? SoundType.allCases : SoundType.freeSounds
     }
+
+#if DEBUG
+    func unlockProForDebug() {
+        isPro = true
+        Self.log.notice("Developer override enabled: Pro unlocked in debug build")
+    }
+#endif
 }
 
 enum StoreError: Error {
     case failedVerification
+}
+
+enum ProPurchaseResult: String {
+    case success = "success"
+    case userCancelled = "user_cancelled"
+    case pending = "pending"
+    case productUnavailable = "product_unavailable"
+    case failed = "failed"
+}
+
+enum ProRestoreResult: String {
+    case restored = "restored"
+    case alreadyUnlocked = "already_unlocked"
+    case notFound = "not_found"
 }

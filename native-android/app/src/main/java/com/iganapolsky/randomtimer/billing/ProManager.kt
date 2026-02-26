@@ -16,6 +16,9 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,6 +36,7 @@ class ProManager
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        private val analyticsService: AnalyticsService,
     ) : PurchasesUpdatedListener {
         companion object {
             const val PRODUCT_ID = "pro_upgrade"
@@ -55,6 +59,7 @@ class ProManager
                 ).build()
 
         private var cachedProductDetails: com.android.billingclient.api.ProductDetails? = null
+        private var pendingPurchaseEntryPoint: String? = null
 
         init {
             connectAndRestore()
@@ -65,7 +70,13 @@ class ProManager
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(result: BillingResult) {
                         if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                            scope.launch { restorePurchases() }
+                            scope.launch {
+                                restorePurchases(
+                                    source = MonetizationSources.AUTO_RESTORE,
+                                    entryPoint = null,
+                                    trackResult = false,
+                                )
+                            }
                         }
                     }
 
@@ -76,7 +87,25 @@ class ProManager
             )
         }
 
-        private suspend fun restorePurchases() {
+        private suspend fun restorePurchases(
+            source: String,
+            entryPoint: String?,
+            trackResult: Boolean,
+        ): Boolean {
+            if (!billingClient.isReady) {
+                connectAndRestore()
+                if (trackResult) {
+                    trackRestoreResult(
+                        success = false,
+                        source = source,
+                        entryPoint = entryPoint,
+                        responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                        debugMessage = "billing_not_ready",
+                    )
+                }
+                return false
+            }
+
             val params =
                 QueryPurchasesParams
                     .newBuilder()
@@ -89,15 +118,48 @@ class ProManager
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
             _isPro.value = hasPro
+            if (trackResult) {
+                trackRestoreResult(
+                    success = hasPro,
+                    source = source,
+                    entryPoint = entryPoint,
+                    responseCode = result.billingResult.responseCode,
+                    debugMessage = result.billingResult.debugMessage,
+                )
+            }
+            return hasPro
         }
 
-        suspend fun launchPurchase(activity: Activity): Boolean {
+        suspend fun launchPurchase(
+            activity: Activity,
+            entryPoint: String,
+        ): Boolean {
+            pendingPurchaseEntryPoint = entryPoint
             if (!billingClient.isReady) {
                 connectAndRestore()
+                trackPurchaseResult(
+                    success = false,
+                    source = MonetizationSources.PAYWALL,
+                    entryPoint = entryPoint,
+                    responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                    debugMessage = "billing_not_ready",
+                )
+                pendingPurchaseEntryPoint = null
                 return false
             }
 
-            val productDetails = cachedProductDetails ?: fetchProductDetails() ?: return false
+            val productDetails = cachedProductDetails ?: fetchProductDetails()
+            if (productDetails == null) {
+                trackPurchaseResult(
+                    success = false,
+                    source = MonetizationSources.PAYWALL,
+                    entryPoint = entryPoint,
+                    responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
+                    debugMessage = "product_details_unavailable",
+                )
+                pendingPurchaseEntryPoint = null
+                return false
+            }
             cachedProductDetails = productDetails
 
             val productDetailsParamsList =
@@ -115,7 +177,63 @@ class ProManager
                     .build()
 
             val result = billingClient.launchBillingFlow(activity, flowParams)
-            return result.responseCode == BillingClient.BillingResponseCode.OK
+            if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+                trackPurchaseResult(
+                    success = false,
+                    source = MonetizationSources.PAYWALL,
+                    entryPoint = entryPoint,
+                    responseCode = result.responseCode,
+                    debugMessage = result.debugMessage,
+                )
+                pendingPurchaseEntryPoint = null
+                return false
+            }
+            return true
+        }
+
+        suspend fun restorePurchasesFromPaywall(entryPoint: String): Boolean =
+            restorePurchases(
+                source = MonetizationSources.PAYWALL,
+                entryPoint = entryPoint,
+                trackResult = true,
+            )
+
+        private fun trackPurchaseResult(
+            success: Boolean,
+            source: String,
+            entryPoint: String?,
+            responseCode: Int,
+            debugMessage: String?,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_PURCHASE_RESULT,
+                MonetizationAnalyticsPayload.resultProperties(
+                    success = success,
+                    source = source,
+                    entryPoint = entryPoint,
+                    responseCode = responseCode,
+                    debugMessage = debugMessage,
+                ),
+            )
+        }
+
+        private fun trackRestoreResult(
+            success: Boolean,
+            source: String,
+            entryPoint: String?,
+            responseCode: Int,
+            debugMessage: String?,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_RESTORE_RESULT,
+                MonetizationAnalyticsPayload.resultProperties(
+                    success = success,
+                    source = source,
+                    entryPoint = entryPoint,
+                    responseCode = responseCode,
+                    debugMessage = debugMessage,
+                ),
+            )
         }
 
         private suspend fun fetchProductDetails(): com.android.billingclient.api.ProductDetails? {
@@ -151,14 +269,32 @@ class ProManager
             result: BillingResult,
             purchases: MutableList<Purchase>?,
         ) {
+            var hasPurchasedPro = false
             if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
-                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                    if (
+                        purchase.products.contains(PRODUCT_ID) &&
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+                    ) {
+                        hasPurchasedPro = true
                         _isPro.value = true
                         scope.launch { acknowledgePurchaseIfNeeded(purchase) }
                     }
                 }
             }
+            trackPurchaseResult(
+                success = hasPurchasedPro,
+                source =
+                    if (pendingPurchaseEntryPoint.isNullOrBlank()) {
+                        MonetizationSources.BILLING_CALLBACK
+                    } else {
+                        MonetizationSources.PAYWALL
+                    },
+                entryPoint = pendingPurchaseEntryPoint,
+                responseCode = result.responseCode,
+                debugMessage = result.debugMessage,
+            )
+            pendingPurchaseEntryPoint = null
         }
 
         private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {
@@ -178,3 +314,26 @@ class ProManager
 
         fun availableSounds(isPro: Boolean = _isPro.value): List<SoundType> = if (isPro) SoundType.entries.toList() else SoundType.FREE
     }
+
+internal object MonetizationSources {
+    const val PAYWALL = "paywall"
+    const val AUTO_RESTORE = "auto_restore"
+    const val BILLING_CALLBACK = "billing_callback"
+}
+
+internal object MonetizationAnalyticsPayload {
+    fun resultProperties(
+        success: Boolean,
+        source: String,
+        entryPoint: String?,
+        responseCode: Int,
+        debugMessage: String?,
+    ): Map<String, Any> =
+        mapOf(
+            AnalyticsProperties.SUCCESS to success,
+            AnalyticsProperties.SOURCE to source,
+            AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),
+            AnalyticsProperties.RESPONSE_CODE to responseCode,
+            AnalyticsProperties.DEBUG_MESSAGE to (debugMessage ?: ""),
+        )
+}

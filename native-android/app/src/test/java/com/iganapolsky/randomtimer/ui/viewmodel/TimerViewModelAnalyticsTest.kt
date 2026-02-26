@@ -14,6 +14,7 @@ import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -35,6 +36,7 @@ class TimerViewModelAnalyticsTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var analyticsService: AnalyticsService
+    private lateinit var serviceController: TimerServiceController
     private lateinit var viewModel: TimerViewModel
 
     @Before
@@ -48,13 +50,14 @@ class TimerViewModelAnalyticsTest {
         val repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
-        val serviceController = mockk<TimerServiceController>()
+        serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
+        coEvery { repository.clearActiveTimer() } just runs
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
 
@@ -122,6 +125,38 @@ class TimerViewModelAnalyticsTest {
     fun `trackScreen delegates to analytics screen`() {
         viewModel.trackScreen("Timer Setup")
         verify { analyticsService.screen("Timer Setup") }
+    }
+
+    @Test
+    fun `trackPaywallViewed tracks with entry point`() {
+        viewModel.trackPaywallViewed("setup_upgrade_cta")
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEWED,
+                match { it["entry_point"] == "setup_upgrade_cta" },
+            )
+        }
+    }
+
+    @Test
+    fun `trackPaywallDismissed tracks with entry point`() {
+        viewModel.trackPaywallDismissed("setup_upgrade_cta")
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_DISMISSED,
+                match { it["entry_point"] == "setup_upgrade_cta" },
+            )
+        }
+    }
+
+    @Test
+    fun `cancelTimer does not track stop or abandoned directly`() {
+        viewModel.cancelTimer()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify(exactly = 0) { analyticsService.track(AnalyticsEvents.TIMER_STOPPED, any()) }
+        verify(exactly = 0) { analyticsService.track(AnalyticsEvents.TIMER_ABANDONED, any()) }
+        verify(exactly = 1) { serviceController.stopTimer() }
     }
 
     private fun timerState(status: TimerStatus): TimerState =

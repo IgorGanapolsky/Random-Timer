@@ -155,7 +155,7 @@ fun TimerSetupScreen(
                     text = "STANDARD OPS",
                     style = MaterialTheme.typography.labelSmall,
                     color = TimerColors.TextMuted,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                 )
             }
 
@@ -200,7 +200,7 @@ fun TimerSetupScreen(
                                     text = "PRO: 1H \uD83D\uDD12",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.clickable { onUpgradeTap() }
+                                    modifier = Modifier.clickable { onUpgradeTap() },
                                 )
                             }
                         }
@@ -265,19 +265,28 @@ fun TimerSetupScreen(
                                         Text(
                                             text = "${duration}s",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (config.alarmDuration == duration) TimerColors.AccentPrimary else TimerColors.TextSecondary,
+                                            color =
+                                                if (config.alarmDuration ==
+                                                    duration
+                                                ) {
+                                                    TimerColors.AccentPrimary
+                                                } else {
+                                                    TimerColors.TextSecondary
+                                                },
                                         )
                                     },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = TimerColors.GlassBackground,
-                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                    ),
-                                    border = FilterChipDefaults.filterChipBorder(
-                                        borderColor = TimerColors.GlassBorder,
-                                        selectedBorderColor = TimerColors.AccentPrimary,
-                                        enabled = true,
-                                        selected = config.alarmDuration == duration,
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = TimerColors.GlassBackground,
+                                            selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                        ),
+                                    border =
+                                        FilterChipDefaults.filterChipBorder(
+                                            borderColor = TimerColors.GlassBorder,
+                                            selectedBorderColor = TimerColors.AccentPrimary,
+                                            enabled = true,
+                                            selected = config.alarmDuration == duration,
+                                        ),
                                 )
                             }
                         }
@@ -362,10 +371,11 @@ fun TimerSetupScreen(
                 PrimaryButton(
                     text = "Start Timer",
                     onClick = onStartTimer,
-                    modifier = Modifier.padding(top = SetupSpacing.StartButtonTop).graphicsLayer {
-                        scaleX = 1.02f
-                        scaleY = 1.02f
-                    },
+                    modifier =
+                        Modifier.padding(top = SetupSpacing.StartButtonTop).graphicsLayer {
+                            scaleX = 1.02f
+                            scaleY = 1.02f
+                        },
                 )
             }
 
@@ -375,24 +385,25 @@ fun TimerSetupScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
                     )
-                    
+
                     if (!isPro) {
                         Text(
                             text = if (showArsenal) "Hide Arsenal" else "View Arsenal",
                             style = MaterialTheme.typography.labelSmall,
                             color = TimerColors.AccentPrimary,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { 
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showArsenal = !showArsenal 
-                            }
+                            modifier =
+                                Modifier.clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    showArsenal = !showArsenal
+                                },
                         )
                     }
                 }
@@ -403,12 +414,13 @@ fun TimerSetupScreen(
                 AnimatedVisibility(
                     visible = showArsenal,
                     enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+                    exit = fadeOut() + shrinkVertically(),
                 ) {
                     GlassCard(
-                        modifier = Modifier.fillMaxWidth().graphicsLayer {
-                            alpha = if (isPro) 1f else 0.6f
-                        },
+                        modifier =
+                            Modifier.fillMaxWidth().graphicsLayer {
+                                alpha = if (isPro) 1f else 0.6f
+                            },
                         padding = SetupSpacing.CardContent,
                     ) {
                         Column {
@@ -526,6 +538,16 @@ private fun TimeRangeSliders(
                     inactiveTrackColor = TimerColors.SliderTrack,
                 ),
         )
+        PrecisionAdjustRow(
+            label = "Fine tune minimum",
+            onAdjustLargeDown = { onMinChange((minValue - 30).coerceAtLeast(0)) },
+            onAdjustSmallDown = { onMinChange((minValue - 1).coerceAtLeast(0)) },
+            onAdjustSmallUp = { onMinChange((minValue + 1).coerceAtMost(minSliderMax.toInt())) },
+            onAdjustLargeUp = { onMinChange((minValue + 30).coerceAtMost(minSliderMax.toInt())) },
+            enabled = enabled,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Max slider - label centered above
         Text(
@@ -553,6 +575,79 @@ private fun TimeRangeSliders(
                     activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
                     inactiveTrackColor = TimerColors.SliderTrack,
                 ),
+        )
+        PrecisionAdjustRow(
+            label = "Fine tune maximum",
+            onAdjustLargeDown = { onMaxChange((maxValue - 30).coerceAtLeast(30)) },
+            onAdjustSmallDown = { onMaxChange((maxValue - 1).coerceAtLeast(30)) },
+            onAdjustSmallUp = { onMaxChange((maxValue + 1).coerceAtMost(maxSliderRange.toInt())) },
+            onAdjustLargeUp = { onMaxChange((maxValue + 30).coerceAtMost(maxSliderRange.toInt())) },
+            enabled = enabled,
+        )
+    }
+}
+
+@Composable
+private fun PrecisionAdjustRow(
+    label: String,
+    onAdjustLargeDown: () -> Unit,
+    onAdjustSmallDown: () -> Unit,
+    onAdjustSmallUp: () -> Unit,
+    onAdjustLargeUp: () -> Unit,
+    enabled: Boolean,
+) {
+    val haptic = LocalHapticFeedback.current
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = TimerColors.TextMuted,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PrecisionButton(label = "-30s", enabled = enabled) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAdjustLargeDown()
+            }
+            PrecisionButton(label = "-1s", enabled = enabled) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAdjustSmallDown()
+            }
+            PrecisionButton(label = "+1s", enabled = enabled) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAdjustSmallUp()
+            }
+            PrecisionButton(label = "+30s", enabled = enabled) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAdjustLargeUp()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrecisionButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(10.dp),
+        color = TimerColors.GlassBackground,
+        border = BorderStroke(1.dp, TimerColors.GlassBorder),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (enabled) TimerColors.TextSecondary else TimerColors.TextMuted,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
         )
     }
 }

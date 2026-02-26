@@ -54,6 +54,7 @@ fun RandomTimerNavHost(
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
     var paywallPrice by remember { mutableStateOf("$4.99") }
+    var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -110,6 +111,7 @@ fun RandomTimerNavHost(
                 onUpgradeTap = {
                     scope.launch {
                         paywallPrice = viewModel.proManager.getFormattedPrice()
+                        paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }
                 },
@@ -164,16 +166,33 @@ fun RandomTimerNavHost(
         }
     }
 
+    LaunchedEffect(showPaywall, paywallEntryPoint) {
+        if (showPaywall) {
+            viewModel.trackPaywallViewed(paywallEntryPoint)
+        }
+    }
+
     if (showPaywall) {
         PaywallSheet(
             price = paywallPrice,
             onPurchase = {
                 scope.launch {
-                    activity?.let { viewModel.proManager.launchPurchase(it) }
+                    activity?.let { viewModel.proManager.launchPurchase(it, paywallEntryPoint) }
                     showPaywall = false
                 }
             },
-            onDismiss = { showPaywall = false },
+            onRestore = {
+                scope.launch {
+                    val restored = viewModel.proManager.restorePurchasesFromPaywall(paywallEntryPoint)
+                    if (restored) {
+                        showPaywall = false
+                    }
+                }
+            },
+            onDismiss = {
+                viewModel.trackPaywallDismissed(paywallEntryPoint)
+                showPaywall = false
+            },
         )
     }
 }

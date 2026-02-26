@@ -5,6 +5,7 @@ struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @EnvironmentObject var proManager: ProManager
     @State private var showPaywall = false
+    @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
 
@@ -40,7 +41,9 @@ struct TimerSetupScreen: View {
                                 Text("PRO: 1H \u{1F512}")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
-                                    .onTapGesture { showPaywall = true }
+                                    .onTapGesture {
+                                        presentPaywall(entryPoint: .rangeGate)
+                                    }
                             }
                         }
 
@@ -202,7 +205,7 @@ struct TimerSetupScreen: View {
                                                 updateConfig(soundType: sound)
                                                 timerManager.previewSound()
                                             } else {
-                                                showPaywall = true
+                                                presentPaywall(entryPoint: .soundGate)
                                             }
                                         }
                                     )
@@ -212,15 +215,15 @@ struct TimerSetupScreen: View {
                                             label: sound2.rawValue.capitalized + lockSuffix,
                                             selected: config.soundType == sound2,
                                             onTap: {
-                                                if proManager.isPro {
-                                                    updateConfig(soundType: sound2)
-                                                    timerManager.previewSound()
-                                                } else {
-                                                    showPaywall = true
-                                                }
+                                            if proManager.isPro {
+                                                updateConfig(soundType: sound2)
+                                                timerManager.previewSound()
+                                            } else {
+                                                presentPaywall(entryPoint: .soundGate)
                                             }
-                                        )
-                                    }
+                                        }
+                                    )
+                                }
                                 }
                             }
                         }
@@ -237,7 +240,7 @@ struct TimerSetupScreen: View {
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
-            PaywallSheet()
+            PaywallSheet(entryPoint: paywallEntryPoint)
                 .environmentObject(proManager)
         }
         .onAppear {
@@ -269,6 +272,11 @@ struct TimerSetupScreen: View {
             vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
         )
         timerManager.updateConfig(newConfig)
+    }
+
+    private func presentPaywall(entryPoint: PaywallEntryPoint) {
+        paywallEntryPoint = entryPoint
+        showPaywall = true
     }
 }
 
@@ -330,6 +338,21 @@ private struct TimeRangeSliders: View {
             .tint(enabled ? .accentPrimary : .textMuted)
             .accessibilityIdentifier("minimumTimeSlider")
 
+            FineTuneRow(
+                title: "Fine tune minimum",
+                valueLabel: TimeInterval(minValue).formattedDuration,
+                decreaseSmall: { adjustMin(by: -1) },
+                decreaseLarge: { adjustMin(by: -30) },
+                increaseSmall: { adjustMin(by: 1) },
+                increaseLarge: { adjustMin(by: 30) },
+                stepperValue: Binding(
+                    get: { Double(minValue) },
+                    set: { adjustMin(to: Int($0.rounded())) }
+                ),
+                range: 0...Double(maxSecondsLimit - 30),
+                enabled: enabled
+            )
+
             // Max slider
             Text("Maximum: \(TimeInterval(maxValue).formattedDuration)")
                 .font(.caption2)
@@ -355,8 +378,97 @@ private struct TimeRangeSliders: View {
             .disabled(!enabled)
             .tint(enabled ? .accentPrimary : .textMuted)
             .accessibilityIdentifier("maximumTimeSlider")
+
+            FineTuneRow(
+                title: "Fine tune maximum",
+                valueLabel: TimeInterval(maxValue).formattedDuration,
+                decreaseSmall: { adjustMax(by: -1) },
+                decreaseLarge: { adjustMax(by: -30) },
+                increaseSmall: { adjustMax(by: 1) },
+                increaseLarge: { adjustMax(by: 30) },
+                stepperValue: Binding(
+                    get: { Double(maxValue) },
+                    set: { adjustMax(to: Int($0.rounded())) }
+                ),
+                range: 30...Double(maxSecondsLimit),
+                enabled: enabled
+            )
         }
         .transaction { $0.animation = nil }
+    }
+
+    private func adjustMin(by delta: Int) {
+        adjustMin(to: minValue + delta)
+    }
+
+    private func adjustMin(to proposed: Int) {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: minValue,
+            currentMaxSeconds: maxValue,
+            newMinSeconds: Swift.max(0, proposed),
+            maxSecondsLimit: maxSecondsLimit
+        )
+        onRangeChange(adjusted.min, adjusted.max)
+    }
+
+    private func adjustMax(by delta: Int) {
+        adjustMax(to: maxValue + delta)
+    }
+
+    private func adjustMax(to proposed: Int) {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: minValue,
+            currentMaxSeconds: maxValue,
+            newMaxSeconds: Swift.max(30, proposed),
+            maxSecondsLimit: maxSecondsLimit
+        )
+        onRangeChange(adjusted.min, adjusted.max)
+    }
+}
+
+private struct FineTuneRow: View {
+    let title: String
+    let valueLabel: String
+    let decreaseSmall: () -> Void
+    let decreaseLarge: () -> Void
+    let increaseSmall: () -> Void
+    let increaseLarge: () -> Void
+    let stepperValue: Binding<Double>
+    let range: ClosedRange<Double>
+    let enabled: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("\(title): \(valueLabel)")
+                .font(.caption2)
+                .foregroundColor(.textMuted)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            HStack(spacing: 8) {
+                Button("-30s", action: decreaseLarge)
+                    .disabled(!enabled)
+                Button("-1s", action: decreaseSmall)
+                    .disabled(!enabled)
+
+                Stepper(
+                    value: stepperValue,
+                    in: range,
+                    step: 1
+                ) {
+                    Text("Exact")
+                        .font(.caption2)
+                        .foregroundColor(.textSecondary)
+                }
+                .disabled(!enabled)
+
+                Button("+1s", action: increaseSmall)
+                    .disabled(!enabled)
+                Button("+30s", action: increaseLarge)
+                    .disabled(!enabled)
+            }
+            .buttonStyle(.bordered)
+            .tint(.accentPrimary)
+        }
     }
 }
 

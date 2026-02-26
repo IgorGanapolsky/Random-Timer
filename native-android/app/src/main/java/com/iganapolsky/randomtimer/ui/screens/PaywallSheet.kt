@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 fun PaywallSheet(
     price: String,
     onPurchase: () -> Unit,
+    onRestore: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -75,7 +77,22 @@ fun PaywallSheet(
                 text = "Restore purchase",
                 style = MaterialTheme.typography.labelMedium,
                 color = TimerColors.TextSecondary,
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .padding(bottom = 16.dp)
+                        .clickable(onClick = onRestore),
+                textAlign = TextAlign.Center,
+            )
+
+            Text(
+                text = "Not now",
+                style = MaterialTheme.typography.labelMedium,
+                color = TimerColors.TextSecondary,
+                modifier =
+                    Modifier
+                        .padding(bottom = 16.dp)
+                        .clickable(onClick = onDismiss),
+                textAlign = TextAlign.Center,
             )
         }
     }
