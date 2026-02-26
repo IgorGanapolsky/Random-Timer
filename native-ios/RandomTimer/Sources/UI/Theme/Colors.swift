@@ -5,15 +5,15 @@ extension Color {
 
     // MARK: - Background Colors
 
-    static let backgroundDark = Color(hex: "0F0A0A")
-    static let backgroundLight = Color(hex: "1A1414")
+    static let backgroundDark = Color(hex: "0A0A0F")
+    static let backgroundLight = Color(hex: "141419")
 
     // MARK: - Timer State Colors
 
     static let timerActive = Color(hex: "10B981")      // Emerald green - running
     static let timerWarning = Color(hex: "F59E0B")     // Amber - < 30 seconds
     static let timerDanger = Color(hex: "EF4444")      // Tactical red - < 10 seconds
-    static let timerComplete = Color(hex: "EF4444")    // Tactical red - complete/alarm
+    static let timerComplete = Color(hex: "DC2626")    // Crimson red - complete/alarm
 
     // MARK: - Glassmorphism
 
