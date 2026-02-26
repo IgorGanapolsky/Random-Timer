@@ -144,6 +144,19 @@ def run_strict_screenshot_sync(
         )
         fastlane_rc = _run_fastlane_metadata(repo_root=repo_root, version=version, dry_run=dry_run)
         if fastlane_rc != 0:
+            # Re-read ASC state after fastlane failure so artifacts reflect the latest reality.
+            verify_error = None
+            try:
+                final_verify = _verify_once(
+                    bundle_id=bundle_id,
+                    version=version,
+                    locale=locale,
+                    min_iphone=min_iphone,
+                    min_ipad=min_ipad,
+                    require_build=require_build,
+                )
+            except AscClientError as exc:
+                verify_error = str(exc)
             payload["result"] = "failed_fastlane_metadata"
             payload["reason"] = f"fastlane metadata exited with code {fastlane_rc}"
             payload["attempts"].append(
@@ -153,6 +166,14 @@ def run_strict_screenshot_sync(
                     "fastlane_exit_code": fastlane_rc,
                 }
             )
+            payload["final"] = {
+                "verify_ready_passed": final_verify["verify_ready_passed"],
+                "app_store_state": final_verify["app_store_state"],
+                "is_editable_state": final_verify["is_editable_state"],
+                "screenshot_checks": final_verify["screenshot_checks"],
+            }
+            if verify_error:
+                payload["post_failure_verify_error"] = verify_error
             payload["final_verify_report"] = final_verify["report"]
             return 2, payload
 

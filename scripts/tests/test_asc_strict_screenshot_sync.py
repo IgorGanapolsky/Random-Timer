@@ -120,6 +120,24 @@ class AscStrictScreenshotSyncTests(unittest.TestCase):
         self.assertEqual(reset_mock.call_count, 1)
         self.assertEqual(fastlane_mock.call_count, 1)
 
+    def test_fastlane_failure_sets_final_from_post_failure_verify(self):
+        rc, payload, reset_mock, fastlane_mock = self._run_with_verify(
+            [
+                (False, _report("PREPARE_FOR_SUBMISSION", iphone_ok=False, ipad_ok=False)),
+                (False, _report("WAITING_FOR_REVIEW", iphone_ok=True, ipad_ok=True)),
+            ],
+            fastlane_rc=3,
+        )
+
+        self.assertEqual(rc, 2)
+        self.assertEqual(payload["result"], "failed_fastlane_metadata")
+        self.assertEqual(len(payload["attempts"]), 1)
+        self.assertEqual(payload["final"]["app_store_state"], "WAITING_FOR_REVIEW")
+        self.assertTrue(payload["final"]["screenshot_checks"]["passed"])
+        self.assertEqual(payload["final_verify_report"]["app_store_state"], "WAITING_FOR_REVIEW")
+        self.assertEqual(reset_mock.call_count, 1)
+        self.assertEqual(fastlane_mock.call_count, 1)
+
     def test_does_not_retry_when_non_screenshot_checks_fail(self):
         rc, payload, reset_mock, fastlane_mock = self._run_with_verify(
             [
