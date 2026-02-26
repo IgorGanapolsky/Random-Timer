@@ -242,10 +242,8 @@ object AnalyticsEvents {
     const val WRITE_REVIEW_TAPPED = "write_review_tapped"
     const val PAYWALL_VIEWED = "paywall_viewed"
     const val PAYWALL_DISMISSED = "paywall_dismissed"
-    const val PAYWALL_PURCHASE_TAPPED = "paywall_purchase_tapped"
-    const val PAYWALL_RESTORE_TAPPED = "paywall_restore_tapped"
-    const val PURCHASE_RESULT = "purchase_result"
-    const val RESTORE_RESULT = "restore_result"
+    const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
+    const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
 
     // UTM Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"

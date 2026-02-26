@@ -225,20 +225,6 @@ class TimerViewModel
             )
         }
 
-        fun trackPaywallPurchaseTapped(entryPoint: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_PURCHASE_TAPPED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
-            )
-        }
-
-        fun trackPaywallRestoreTapped(entryPoint: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_RESTORE_TAPPED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
-            )
-        }
-
         internal fun onTimerStateObservedForAnalytics(
             previousStatus: TimerStatus?,
             state: TimerState?,

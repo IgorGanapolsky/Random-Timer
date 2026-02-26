@@ -206,7 +206,7 @@ class ProManager
             debugMessage: String?,
         ) {
             analyticsService.track(
-                AnalyticsEvents.PURCHASE_RESULT,
+                AnalyticsEvents.PAYWALL_PURCHASE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
                     success = success,
                     source = source,
@@ -225,7 +225,7 @@ class ProManager
             debugMessage: String?,
         ) {
             analyticsService.track(
-                AnalyticsEvents.RESTORE_RESULT,
+                AnalyticsEvents.PAYWALL_RESTORE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
                     success = success,
                     source = source,

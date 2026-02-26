@@ -150,28 +150,6 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
-    fun `trackPaywallPurchaseTapped tracks with entry point`() {
-        viewModel.trackPaywallPurchaseTapped("setup_upgrade_cta")
-        verify {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_PURCHASE_TAPPED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
-            )
-        }
-    }
-
-    @Test
-    fun `trackPaywallRestoreTapped tracks with entry point`() {
-        viewModel.trackPaywallRestoreTapped("setup_upgrade_cta")
-        verify {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_RESTORE_TAPPED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
-            )
-        }
-    }
-
-    @Test
     fun `cancelTimer does not track stop or abandoned directly`() {
         viewModel.cancelTimer()
         testDispatcher.scheduler.advanceUntilIdle()

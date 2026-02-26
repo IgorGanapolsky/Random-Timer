@@ -177,14 +177,12 @@ fun RandomTimerNavHost(
             price = paywallPrice,
             onPurchase = {
                 scope.launch {
-                    viewModel.trackPaywallPurchaseTapped(paywallEntryPoint)
                     activity?.let { viewModel.proManager.launchPurchase(it, paywallEntryPoint) }
                     showPaywall = false
                 }
             },
             onRestore = {
                 scope.launch {
-                    viewModel.trackPaywallRestoreTapped(paywallEntryPoint)
                     val restored = viewModel.proManager.restorePurchasesFromPaywall(paywallEntryPoint)
                     if (restored) {
                         showPaywall = false
