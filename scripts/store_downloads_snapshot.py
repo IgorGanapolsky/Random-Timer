@@ -15,6 +15,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+LIVE_EVENTS_PREDICATE = """
+(
+  lower(coalesce(properties.build_audience, 'live')) = 'live'
+  AND lower(coalesce(properties.build_type, 'release')) != 'debug'
+  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
+)
+"""
+
 
 def _requests_module():
     try:
@@ -122,6 +130,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         WHERE event = 'Application Installed'
           AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         GROUP BY os
         ORDER BY users DESC
         """,
@@ -148,6 +157,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
           AND properties.environment = 'production'
           AND (properties.$os = 'Android' OR properties.$os_name = 'Android')
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,
@@ -161,6 +171,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         WHERE event = 'Application Opened'
           AND properties.environment = 'production'
           AND timestamp > now() - interval 1 day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,
@@ -173,6 +184,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         WHERE event = 'Application Opened'
           AND properties.environment = 'production'
           AND timestamp > now() - interval 7 day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,
@@ -185,6 +197,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         WHERE event = 'Application Opened'
           AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,

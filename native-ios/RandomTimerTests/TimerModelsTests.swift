@@ -790,3 +790,93 @@ final class StorageServiceTests: XCTestCase {
         XCTAssertNil(clearedAsync)
     }
 }
+
+#if DEBUG
+private struct CapturedAnalyticsEvent {
+    let name: String
+    let properties: [String: Any]?
+}
+
+final class TimerAbandonedAnalyticsTests: XCTestCase {
+
+    @MainActor
+    func testCancelTimerIncludesAbandonReasonAndSource() async {
+        var captured: [CapturedAnalyticsEvent] = []
+        AnalyticsService.shared.testEventHandler = { event, properties in
+            captured.append(CapturedAnalyticsEvent(name: event, properties: properties))
+        }
+        defer { AnalyticsService.shared.testEventHandler = nil }
+
+        let manager = TimerManager()
+        manager._setTimerStateForTesting(
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
+                targetDuration: 120,
+                remainingDuration: 90,
+                status: .running
+            )
+        )
+
+        await manager.cancelTimer()
+
+        guard let abandonedEvent = captured.first(where: { $0.name == AnalyticsEvents.timerAbandoned }) else {
+            XCTFail("Expected timer_abandoned event")
+            return
+        }
+
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonReason] as? String,
+            AnalyticsValues.abandonReasonUserCancelled
+        )
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonSource] as? String,
+            AnalyticsValues.abandonSourceTimerControls
+        )
+    }
+
+    @MainActor
+    func testRestoreExpiredTimerEmitsStaleRestoreAbandonEvent() async {
+        let storage = StorageService()
+        storage.clearTimerStateSync()
+        defer { storage.clearTimerStateSync() }
+
+        await storage.saveTimerState(
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
+                targetDuration: 5,
+                startedAt: Date().addingTimeInterval(-120),
+                remainingDuration: 3,
+                status: .running
+            )
+        )
+
+        var captured: [CapturedAnalyticsEvent] = []
+        AnalyticsService.shared.testEventHandler = { event, properties in
+            captured.append(CapturedAnalyticsEvent(name: event, properties: properties))
+        }
+        defer { AnalyticsService.shared.testEventHandler = nil }
+
+        let manager = TimerManager(storageService: storage)
+
+        // restoreActiveTimer() is started asynchronously from init.
+        for _ in 0..<20 where !captured.contains(where: { $0.name == AnalyticsEvents.timerAbandoned }) {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        guard let abandonedEvent = captured.first(where: { $0.name == AnalyticsEvents.timerAbandoned }) else {
+            XCTFail("Expected timer_abandoned event for stale restore")
+            return
+        }
+
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonReason] as? String,
+            AnalyticsValues.abandonReasonStaleRestoreExpired
+        )
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonSource] as? String,
+            AnalyticsValues.abandonSourceStateRestore
+        )
+        XCTAssertNil(manager.timerState)
+    }
+}
+#endif

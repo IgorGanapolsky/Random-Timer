@@ -1,4 +1,5 @@
 import Foundation
+import os
 #if canImport(PostHog)
 import PostHog
 #endif
@@ -8,6 +9,7 @@ import PostHog
 @MainActor
 final class AnalyticsService {
     static let shared = AnalyticsService()
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "RandomTimer", category: "Analytics")
 
     private var initialized = false
     private let distinctIdDefaultsKey = "posthog_distinct_id"
@@ -25,12 +27,62 @@ final class AnalyticsService {
     }
     private let host = "https://us.i.posthog.com"
 
+#if DEBUG
+    var testEventHandler: ((_ event: String, _ properties: [String: Any]?) -> Void)?
+#endif
+
     private init() {}
+
+    private var analyticsContextProperties: [String: Any] {
+        [
+            "platform": "ios",
+            "app_version": appVersion,
+            AnalyticsProperties.buildAudience: buildAudience,
+            AnalyticsProperties.buildType: buildType,
+            AnalyticsProperties.runtimeTarget: runtimeTarget,
+        ]
+    }
+
+    private var buildAudience: String {
+#if DEBUG
+        return "dev"
+#else
+        #if targetEnvironment(simulator)
+        return "dev"
+        #else
+        return "live"
+        #endif
+#endif
+    }
+
+    private var buildType: String {
+#if DEBUG
+        return "debug"
+#else
+        return "release"
+#endif
+    }
+
+    private var runtimeTarget: String {
+#if targetEnvironment(simulator)
+        return "simulator"
+#else
+        return "device"
+#endif
+    }
+
+    private func mergedProperties(_ properties: [String: Any]?) -> [String: Any] {
+        guard var props = properties else { return analyticsContextProperties }
+        for (key, value) in analyticsContextProperties {
+            props[key] = value
+        }
+        return props
+    }
 
     func initialize() {
         guard !initialized else { return }
         guard !apiKey.isEmpty else {
-            print("[Analytics] No API key configured - analytics disabled")
+            logger.notice("No API key configured - analytics disabled")
             return
         }
 
@@ -40,43 +92,36 @@ final class AnalyticsService {
         config.captureScreenViews = false
         PostHogSDK.shared.setup(config)
 #endif
-        let distinctId = getOrCreateDistinctId()
-        
-        #if DEBUG
-        let environment = "development"
-        #else
-        let environment = "production"
-        #endif
-        
-        identify(userId: distinctId, properties: [
-            "platform": "ios",
-            "app_version": appVersion,
-            "environment": environment
-        ])
         initialized = true
-        print("[Analytics] PostHog initialized")
+        let distinctId = getOrCreateDistinctId()
+        identify(userId: distinctId, properties: analyticsContextProperties)
+        logger.info("PostHog initialized")
 
         trackFirstOpenIfNeeded()
     }
 
     func track(_ event: String, properties: [String: Any]? = nil) {
+        let payload = mergedProperties(properties)
+#if DEBUG
+        testEventHandler?(event, payload)
+#endif
         guard initialized else { return }
 #if canImport(PostHog)
-        PostHogSDK.shared.capture(event, properties: properties)
+        PostHogSDK.shared.capture(event, properties: payload)
 #endif
     }
 
     func screen(_ screenName: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
 #if canImport(PostHog)
-        PostHogSDK.shared.screen(screenName, properties: properties)
+        PostHogSDK.shared.screen(screenName, properties: mergedProperties(properties))
 #endif
     }
 
     func identify(userId: String, properties: [String: Any]? = nil) {
         guard initialized else { return }
 #if canImport(PostHog)
-        PostHogSDK.shared.identify(userId, userProperties: properties)
+        PostHogSDK.shared.identify(userId, userProperties: mergedProperties(properties))
 #endif
     }
 
@@ -200,6 +245,10 @@ enum AnalyticsEvents {
     static let settingsChanged = "settings_changed"
     static let reviewPromptRequested = "review_prompt_requested"
     static let writeReviewTapped = "write_review_tapped"
+    static let paywallViewed = "paywall_viewed"
+    static let paywallDismissed = "paywall_dismissed"
+    static let paywallPurchaseResult = "paywall_purchase_result"
+    static let paywallRestoreResult = "paywall_restore_result"
 
     // UTM Attribution
     static let deepLinkOpened = "deep_link_opened"
@@ -208,6 +257,24 @@ enum AnalyticsEvents {
     static let firstOpen = "first_open"
     static let firstTimerConfigured = "first_timer_configured"
     static let firstTimerCompleted = "first_timer_completed"
+}
+
+enum AnalyticsProperties {
+    static let entryPoint = "entry_point"
+    static let result = "result"
+    static let abandonReason = "abandon_reason"
+    static let abandonSource = "abandon_source"
+    static let dismissMethod = "dismiss_method"
+    static let buildAudience = "build_audience"
+    static let buildType = "build_type"
+    static let runtimeTarget = "runtime_target"
+}
+
+enum AnalyticsValues {
+    static let abandonReasonUserCancelled = "user_cancelled"
+    static let abandonReasonStaleRestoreExpired = "stale_restore_expired"
+    static let abandonSourceTimerControls = "timer_controls"
+    static let abandonSourceStateRestore = "state_restore"
 }
 
 enum AnalyticsScreens {

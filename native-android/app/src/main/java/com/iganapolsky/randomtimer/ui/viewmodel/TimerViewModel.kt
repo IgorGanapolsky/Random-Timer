@@ -7,6 +7,7 @@ import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
@@ -140,18 +141,6 @@ class TimerViewModel
         }
 
         fun cancelTimer() {
-            val state = _timerState.value
-            analyticsService.track(AnalyticsEvents.TIMER_STOPPED)
-            if (state != null && state.status != TimerStatus.ALARM && state.status != TimerStatus.COMPLETE) {
-                analyticsService.track(
-                    AnalyticsEvents.TIMER_ABANDONED,
-                    mapOf(
-                        "target_duration" to state.targetDuration.inWholeSeconds,
-                        "remaining_duration" to state.remainingDuration.inWholeSeconds,
-                        "status" to state.status.name,
-                    ),
-                )
-            }
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -220,6 +209,34 @@ class TimerViewModel
 
         fun trackScreen(screen: String) {
             analyticsService.screen(screen)
+        }
+
+        fun trackPaywallViewed(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEWED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        fun trackPaywallDismissed(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_DISMISSED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        fun trackPaywallPurchaseTapped(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_PURCHASE_TAPPED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        fun trackPaywallRestoreTapped(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_RESTORE_TAPPED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
         }
 
         internal fun onTimerStateObservedForAnalytics(

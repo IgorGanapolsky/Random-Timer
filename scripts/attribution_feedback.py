@@ -20,6 +20,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 QUERY_ERRORS: List[str] = []
+LIVE_EVENTS_PREDICATE = """
+(
+  lower(coalesce(properties.build_audience, 'live')) = 'live'
+  AND lower(coalesce(properties.build_type, 'release')) != 'debug'
+  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
+)
+"""
 
 
 def _requests_module():
@@ -93,6 +100,7 @@ def fetch_utm_attribution(api_key: str, project_id: str, days: int = 30) -> List
     FROM events
     WHERE event = 'deep_link_opened'
       AND timestamp > now() - interval {days} day
+      AND {LIVE_EVENTS_PREDICATE}
     GROUP BY source, medium, campaign, content
     ORDER BY installs DESC
     LIMIT 100
@@ -111,6 +119,7 @@ def fetch_utm_attribution(api_key: str, project_id: str, days: int = 30) -> List
         FROM events
         WHERE properties.utm_source IS NOT NULL
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         GROUP BY source, medium, campaign, content
         ORDER BY installs DESC
         LIMIT 100
@@ -138,6 +147,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
         FROM events
         WHERE event = 'first_open'
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         api_key,
         project_id,
@@ -148,6 +158,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
         FROM events
         WHERE event = 'first_timer_configured'
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         api_key,
         project_id,
@@ -158,6 +169,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
         FROM events
         WHERE event = 'first_timer_completed'
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         api_key,
         project_id,
@@ -171,6 +183,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
             FROM events
             WHERE event IN ('Application Opened', 'Application Installed')
               AND timestamp > now() - interval {days} day
+              AND {LIVE_EVENTS_PREDICATE}
             """,
             api_key,
             project_id,
@@ -182,6 +195,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
             FROM events
             WHERE event IN ('timer_started', 'settings_changed')
               AND timestamp > now() - interval {days} day
+              AND {LIVE_EVENTS_PREDICATE}
             """,
             api_key,
             project_id,
@@ -193,6 +207,7 @@ def fetch_onboarding_funnel(api_key: str, project_id: str, days: int = 30) -> Di
             FROM events
             WHERE event = 'timer_completed'
               AND timestamp > now() - interval {days} day
+              AND {LIVE_EVENTS_PREDICATE}
             """,
             api_key,
             project_id,
@@ -227,12 +242,14 @@ def fetch_campaign_installs(api_key: str, project_id: str, days: int = 30) -> Li
         count(DISTINCT person_id) AS attributed_users,
         countIf(person_id IN (
             SELECT DISTINCT person_id FROM events
-            WHERE event = 'first_timer_completed'
+            WHERE event IN ('first_timer_completed', 'timer_completed')
               AND timestamp > now() - interval {days} day
+              AND {LIVE_EVENTS_PREDICATE}
         )) AS activated_users
     FROM events
     WHERE event = 'deep_link_opened'
       AND timestamp > now() - interval {days} day
+      AND {LIVE_EVENTS_PREDICATE}
       AND properties.utm_campaign IS NOT NULL
     GROUP BY campaign, source
     ORDER BY attributed_users DESC
@@ -250,10 +267,12 @@ def fetch_campaign_installs(api_key: str, project_id: str, days: int = 30) -> Li
                 SELECT DISTINCT person_id FROM events
                 WHERE event IN ('first_timer_completed', 'timer_completed')
                   AND timestamp > now() - interval {days} day
+                  AND {LIVE_EVENTS_PREDICATE}
             )) AS activated_users
         FROM events
         WHERE properties.utm_campaign IS NOT NULL
           AND timestamp > now() - interval {days} day
+          AND {LIVE_EVENTS_PREDICATE}
         GROUP BY campaign, source
         ORDER BY attributed_users DESC
         LIMIT 50

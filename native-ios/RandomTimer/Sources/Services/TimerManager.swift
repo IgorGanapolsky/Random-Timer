@@ -150,6 +150,8 @@ final class TimerManager: ObservableObject {
                 "target_duration": state.targetDuration,
                 "remaining_duration": state.remainingDuration,
                 "status": state.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonUserCancelled,
+                AnalyticsProperties.abandonSource: AnalyticsValues.abandonSourceTimerControls,
             ])
         }
         stopCountdown()
@@ -477,6 +479,13 @@ final class TimerManager: ObservableObject {
             startCountdown()
         } else {
             // Timer should have completed while app was closed - go to complete state, don't replay alarm
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": saved.targetDuration,
+                "remaining_duration": 0,
+                "status": saved.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonStaleRestoreExpired,
+                AnalyticsProperties.abandonSource: AnalyticsValues.abandonSourceStateRestore,
+            ])
             await storageService.clearTimerState()
             timerState = nil
         }

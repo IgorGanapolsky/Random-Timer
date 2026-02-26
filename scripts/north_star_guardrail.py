@@ -24,6 +24,14 @@ try:
 except ModuleNotFoundError:
     from store_downloads_snapshot import query_rows, query_scalar
 
+LIVE_EVENTS_PREDICATE = """
+(
+  lower(coalesce(properties.build_audience, 'live')) = 'live'
+  AND lower(coalesce(properties.build_type, 'release')) != 'debug'
+  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
+)
+"""
+
 
 def _load_paid_campaigns(path: Path) -> Dict[str, Any]:
     if not path.exists():
@@ -161,6 +169,21 @@ def run(
     project_id = os.getenv("POSTHOG_PROJECT_ID", "").strip()
 
     statuses = active_statuses or {"active", "running", "enabled", "live", "serving", "on"}
+    paid_sources = (
+        "'apple_ads','apple_search_ads','google','google_ads',"
+        "'reddit_ads','meta','meta_ads','facebook','facebook_ads','tiktok','tiktok_ads'"
+    )
+    paid_media = "'paid','cpc','ppc','uac','asa','paid_social','paidsearch','search_ads'"
+    paid_utm_predicate = f"""
+        (
+            lower(coalesce(properties.utm_source,'')) IN ({paid_sources})
+            OR lower(coalesce(properties.utm_medium,'')) IN ({paid_media})
+            OR (
+                nullIf(coalesce(properties.utm_campaign,''), '') IS NOT NULL
+                AND lower(coalesce(properties.utm_medium,'')) NOT IN ('', 'organic', 'referral', 'social')
+            )
+        )
+    """
     errors: List[str] = []
     payload = _empty_payload(lookback_days, wqtu_window_days)
     payload["north_star"]["targets"] = {
@@ -200,8 +223,8 @@ def run(
           SELECT person_id
           FROM events
           WHERE event = 'timer_completed'
-            AND properties.environment = 'production'
             AND timestamp > now() - interval {wqtu_window_days} day
+            AND {LIVE_EVENTS_PREDICATE}
           GROUP BY person_id
           HAVING count() >= 3
         )
@@ -215,8 +238,8 @@ def run(
         SELECT count()
         FROM events
         WHERE event = 'timer_completed'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval {wqtu_window_days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,
@@ -227,8 +250,8 @@ def run(
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'timer_completed'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval {wqtu_window_days} day
+          AND {LIVE_EVENTS_PREDICATE}
         """,
         key,
         project_id,
@@ -239,11 +262,8 @@ def run(
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE timestamp > now() - interval {lookback_days} day
-          AND properties.environment = 'production'
-          AND (
-            lower(coalesce(properties.utm_source,'')) IN ('apple_ads','google_ads','reddit','meta','tiktok')
-            OR properties.utm_campaign IS NOT NULL
-          )
+          AND {LIVE_EVENTS_PREDICATE}
+          AND {paid_utm_predicate}
         """,
         key,
         project_id,
@@ -256,11 +276,8 @@ def run(
                count(DISTINCT person_id) AS users
         FROM events
         WHERE timestamp > now() - interval {lookback_days} day
-          AND properties.environment = 'production'
-          AND (
-            lower(coalesce(properties.utm_source,'')) IN ('apple_ads','google_ads','reddit','meta','tiktok')
-            OR properties.utm_campaign IS NOT NULL
-          )
+          AND {LIVE_EVENTS_PREDICATE}
+          AND {paid_utm_predicate}
         GROUP BY source
         ORDER BY events DESC
         """,
