@@ -130,15 +130,16 @@ fun TimerSetupScreen(
             initialSeconds = config.minSeconds,
             onDismiss = { showDirectEntryMin = false },
             onConfirm = { seconds ->
-                val (min, max) = TimeRangeAdjuster.adjustForMinChange(
-                    currentMinSeconds = config.minSeconds,
-                    currentMaxSeconds = config.maxSeconds,
-                    newMinSeconds = seconds,
-                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                )
+                val (min, max) =
+                    TimeRangeAdjuster.adjustForMinChange(
+                        currentMinSeconds = config.minSeconds,
+                        currentMaxSeconds = config.maxSeconds,
+                        newMinSeconds = seconds,
+                        maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE,
+                    )
                 updateConfig(minSeconds = min, maxSeconds = max)
                 showDirectEntryMin = false
-            }
+            },
         )
     }
 
@@ -148,15 +149,16 @@ fun TimerSetupScreen(
             initialSeconds = config.maxSeconds,
             onDismiss = { showDirectEntryMax = false },
             onConfirm = { seconds ->
-                val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
-                    currentMinSeconds = config.minSeconds,
-                    currentMaxSeconds = config.maxSeconds,
-                    newMaxSeconds = seconds,
-                    maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                )
+                val (min, max) =
+                    TimeRangeAdjuster.adjustForMaxChange(
+                        currentMinSeconds = config.minSeconds,
+                        currentMaxSeconds = config.maxSeconds,
+                        newMaxSeconds = seconds,
+                        maxSecondsLimit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE,
+                    )
                 updateConfig(minSeconds = min, maxSeconds = max)
                 showDirectEntryMax = false
-            }
+            },
         )
     }
 
@@ -220,22 +222,23 @@ fun TimerSetupScreen(
                                     text = "PRO: 1H \uD83D\uDD12",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { onUpgradeTap() },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onSecretUnlock()
-                                        },
-                                    ),
+                                    modifier =
+                                        Modifier.combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { onUpgradeTap() },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onSecretUnlock()
+                                            },
+                                        ),
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.height(SetupSpacing.HeaderToContent))
 
                         val maxRange = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                        
+
                         // Unified Material 2026 Range Control
                         TimeRangeScrubber(
                             minValue = config.minSeconds,
@@ -245,7 +248,7 @@ fun TimerSetupScreen(
                                 updateConfig(minSeconds = newMin, maxSeconds = newMax)
                             },
                             onMinClick = { showDirectEntryMin = true },
-                            onMaxClick = { showDirectEntryMax = true }
+                            onMaxClick = { showDirectEntryMax = true },
                         )
                     }
                 }
@@ -279,19 +282,28 @@ fun TimerSetupScreen(
                                         Text(
                                             text = "${duration}s",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (config.alarmDuration == duration) TimerColors.AccentPrimary else TimerColors.TextSecondary,
+                                            color =
+                                                if (config.alarmDuration ==
+                                                    duration
+                                                ) {
+                                                    TimerColors.AccentPrimary
+                                                } else {
+                                                    TimerColors.TextSecondary
+                                                },
                                         )
                                     },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = TimerColors.GlassBackground,
-                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                    ),
-                                    border = FilterChipDefaults.filterChipBorder(
-                                        borderColor = TimerColors.GlassBorder,
-                                        selectedBorderColor = TimerColors.AccentPrimary,
-                                        enabled = true,
-                                        selected = config.alarmDuration == duration,
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = TimerColors.GlassBackground,
+                                            selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                        ),
+                                    border =
+                                        FilterChipDefaults.filterChipBorder(
+                                            borderColor = TimerColors.GlassBorder,
+                                            selectedBorderColor = TimerColors.AccentPrimary,
+                                            enabled = true,
+                                            selected = config.alarmDuration == duration,
+                                        ),
                                 )
                             }
                         }
@@ -356,12 +368,13 @@ fun TimerSetupScreen(
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onConfigChange(config.copy(vibrationEnabled = newValue))
                                 },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = TimerColors.AccentPrimary,
-                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
-                                    uncheckedThumbColor = TimerColors.TextMuted,
-                                    uncheckedTrackColor = TimerColors.SliderTrack,
-                                ),
+                                colors =
+                                    SwitchDefaults.colors(
+                                        checkedThumbColor = TimerColors.AccentPrimary,
+                                        checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                        uncheckedThumbColor = TimerColors.TextMuted,
+                                        uncheckedTrackColor = TimerColors.SliderTrack,
+                                    ),
                             )
                         }
                     }
@@ -373,10 +386,11 @@ fun TimerSetupScreen(
                 PrimaryButton(
                     text = "Start Timer",
                     onClick = onStartTimer,
-                    modifier = Modifier.padding(top = SetupSpacing.StartButtonTop).graphicsLayer {
-                        scaleX = 1.02f
-                        scaleY = 1.02f
-                    },
+                    modifier =
+                        Modifier.padding(top = SetupSpacing.StartButtonTop).graphicsLayer {
+                            scaleX = 1.02f
+                            scaleY = 1.02f
+                        },
                 )
             }
 
@@ -386,33 +400,35 @@ fun TimerSetupScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                        modifier = Modifier.combinedClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                            onLongClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onSecretUnlock()
-                            }
-                        )
+                        modifier =
+                            Modifier.combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {},
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSecretUnlock()
+                                },
+                            ),
                     )
-                    
+
                     if (!isPro) {
                         Text(
                             text = if (showArsenal) "Hide Arsenal" else "View Arsenal",
                             style = MaterialTheme.typography.labelSmall,
                             color = TimerColors.AccentPrimary,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { 
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showArsenal = !showArsenal 
-                            }
+                            modifier =
+                                Modifier.clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    showArsenal = !showArsenal
+                                },
                         )
                     }
                 }
@@ -423,12 +439,13 @@ fun TimerSetupScreen(
                 AnimatedVisibility(
                     visible = showArsenal,
                     enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+                    exit = fadeOut() + shrinkVertically(),
                 ) {
                     GlassCard(
-                        modifier = Modifier.fillMaxWidth().graphicsLayer {
-                            alpha = if (isPro) 1f else 0.6f
-                        },
+                        modifier =
+                            Modifier.fillMaxWidth().graphicsLayer {
+                                alpha = if (isPro) 1f else 0.6f
+                            },
                         padding = SetupSpacing.CardContent,
                     ) {
                         Column {
@@ -448,9 +465,11 @@ fun TimerSetupScreen(
                                 ) {
                                     for (sound in row) {
                                         SoundTypeButton(
-                                            label = sound.name.lowercase()
-                                                .replaceFirstChar { it.uppercase() }
-                                                .replace("_", " ") + (if (!isPro) " \uD83D\uDD12" else ""),
+                                            label =
+                                                sound.name
+                                                    .lowercase()
+                                                    .replaceFirstChar { it.uppercase() }
+                                                    .replace("_", " ") + (if (!isPro) " \uD83D\uDD12" else ""),
                                             selected = config.soundType == sound,
                                             onClick = {
                                                 if (isPro) {
@@ -486,16 +505,16 @@ private fun TimeRangeScrubber(
     maxRange: Float,
     onRangeChange: (Int, Int) -> Void,
     onMinClick: () -> Unit,
-    onMaxClick: () -> Unit
+    onMaxClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    
+
     Column {
         // High-Precision Data Chips (Feb 2026 Dual-Entry Standard)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(horizontalAlignment = Alignment.Start) {
                 Text("Min", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
@@ -504,14 +523,14 @@ private fun TimeRangeScrubber(
                     color = TimerColors.GlassBackground,
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
                 ) {
                     Text(
                         text = formatTime(minValue),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.TextPrimary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     )
                 }
             }
@@ -519,7 +538,7 @@ private fun TimeRangeScrubber(
             Text(
                 text = "\u2192",
                 style = MaterialTheme.typography.titleMedium,
-                color = TimerColors.TextMuted
+                color = TimerColors.TextMuted,
             )
 
             Column(horizontalAlignment = Alignment.End) {
@@ -529,14 +548,14 @@ private fun TimeRangeScrubber(
                     color = TimerColors.GlassBackground,
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
                 ) {
                     Text(
                         text = formatTime(maxValue),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.TextPrimary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     )
                 }
             }
@@ -550,7 +569,7 @@ private fun TimeRangeScrubber(
             onValueChange = { range ->
                 val newMin = (range.start / 5).toInt() * 5
                 val newMax = (range.endInclusive / 5).toInt() * 5
-                
+
                 if (newMin != minValue || newMax != maxValue) {
                     // Tactile Detent Haptics
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -558,19 +577,20 @@ private fun TimeRangeScrubber(
                 }
             },
             valueRange = 0f..maxRange,
-            colors = SliderDefaults.colors(
-                thumbColor = TimerColors.AccentPrimary,
-                activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack,
-                activeTickColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
-                inactiveTickColor = TimerColors.SliderTrack.copy(alpha = 0.5f)
-            ),
-            modifier = Modifier.fillMaxWidth()
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                    activeTickColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                    inactiveTickColor = TimerColors.SliderTrack.copy(alpha = 0.5f),
+                ),
+            modifier = Modifier.fillMaxWidth(),
         )
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text("0s", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
             Text(formatTime(maxRange.toInt()), style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
@@ -583,7 +603,7 @@ private fun DirectTimeEntryDialog(
     title: String,
     initialSeconds: Int,
     onDismiss: () -> Unit,
-    onConfirm: (Int) -> Unit
+    onConfirm: (Int) -> Unit,
 ) {
     var minutes by remember { mutableStateOf((initialSeconds / 60).toString()) }
     var seconds by remember { mutableStateOf((initialSeconds % 60).toString()) }
@@ -595,14 +615,14 @@ private fun DirectTimeEntryDialog(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
                     value = minutes,
                     onValueChange = { if (it.length <= 2) minutes = it.filter { char -> char.isDigit() } },
                     label = { Text("Min") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(80.dp)
+                    modifier = Modifier.width(80.dp),
                 )
                 Text(" : ", modifier = Modifier.padding(horizontal = 8.dp), color = TimerColors.TextPrimary)
                 OutlinedTextField(
@@ -610,7 +630,7 @@ private fun DirectTimeEntryDialog(
                     onValueChange = { if (it.length <= 2) seconds = it.filter { char -> char.isDigit() } },
                     label = { Text("Sec") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(80.dp)
+                    modifier = Modifier.width(80.dp),
                 )
             }
         },
@@ -620,7 +640,7 @@ private fun DirectTimeEntryDialog(
                     val m = minutes.toIntOrNull() ?: 0
                     val s = seconds.toIntOrNull() ?: 0
                     onConfirm(m * 60 + s)
-                }
+                },
             ) {
                 Text("Apply", color = TimerColors.AccentPrimary)
             }
@@ -630,7 +650,7 @@ private fun DirectTimeEntryDialog(
                 Text("Cancel", color = TimerColors.TextSecondary)
             }
         },
-        containerColor = TimerColors.BackgroundDark
+        containerColor = TimerColors.BackgroundDark,
     )
 }
 
@@ -722,12 +742,13 @@ private fun VolumeSlider(
             value = 0f..value,
             onValueChange = { onValueChange(it.endInclusive) },
             valueRange = 0f..1f,
-            colors = SliderDefaults.colors(
-                thumbColor = TimerColors.AccentPrimary,
-                activeTrackColor = TimerColors.AccentPrimary,
-                inactiveTrackColor = TimerColors.SliderTrack,
-            ),
-            modifier = Modifier.fillMaxWidth()
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                ),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

@@ -300,11 +300,11 @@ struct TimerSetupScreen: View {
             minSeconds: minSeconds ?? config.minSeconds,
             maxSeconds: maxSeconds ?? config.maxSeconds,
             alarmDuration: alarmDuration ?? config.alarmDuration,
-            hiddenMode = config.hiddenMode,
-            repeatEnabled = config.repeatEnabled,
-            soundType = soundType ?? config.soundType,
-            volume = volume ?? config.volume,
-            vibrationEnabled = vibrationEnabled ?? config.vibrationEnabled
+            hiddenMode: config.hiddenMode,
+            repeatEnabled: config.repeatEnabled,
+            soundType: soundType ?? config.soundType,
+            volume: volume ?? config.volume,
+            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
         )
         timerManager.updateConfig(newConfig)
     }
@@ -363,8 +363,7 @@ private struct TimeRangeScrubber: View {
                 }
             }
 
-            // Dual Slider (Implemented via separate sliders for native SwiftUI compatibility,
-            // but styled as a single integrated unit)
+            // Dual Slider visual
             VStack(spacing: 0) {
                 Slider(
                     value: Binding(
