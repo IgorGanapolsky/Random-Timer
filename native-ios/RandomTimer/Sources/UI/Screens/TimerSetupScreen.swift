@@ -289,8 +289,12 @@ private struct TimeRangeSliders: View {
     var enabled: Bool = true
     let onRangeChange: (Int, Int) -> Void
 
+    // Precision nudge step (1 second for fine-tuning)
+    private let fineStep = 1
+    private let coarseStep = 5
+
     var body: some View {
-        VStack {
+        VStack(spacing: 16) {
             // Display
             HStack {
                 Spacer()
@@ -310,90 +314,61 @@ private struct TimeRangeSliders: View {
                 Spacer()
             }
 
-            Spacer().frame(height: 16)
+            // Min slider with Nudge buttons
+            VStack(spacing: 4) {
+                Text("Minimum: \(TimeInterval(minValue).formattedDuration)")
+                    .font(.caption2)
+                    .foregroundColor(.textMuted)
 
-            // Min slider
-            Text("Minimum: \(TimeInterval(minValue).formattedDuration)")
-                .font(.caption2)
-                .foregroundColor(.textMuted)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            Slider(
-                value: Binding(
-                    get: { Double(minValue) },
-                    set: { newVal in
-                        let adjusted = TimeRangeAdjuster.adjustForMinChange(
-                            currentMinSeconds: minValue,
-                            currentMaxSeconds: maxValue,
-                            newMinSeconds: Swift.max(0, Int(newVal)),
-                            maxSecondsLimit: maxSecondsLimit
-                        )
-                        onRangeChange(adjusted.min, adjusted.max)
+                HStack(spacing: 12) {
+                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && minValue >= fineStep) {
+                        adjustMin(by: -coarseStep)
                     }
-                ),
-                in: 0...Double(maxSecondsLimit - 30),
-                step: 5
-            )
-            .disabled(!enabled)
-            .tint(enabled ? .accentPrimary : .textMuted)
-            .accessibilityIdentifier("minimumTimeSlider")
 
-            FineTuneRow(
-                title: "Fine tune minimum",
-                valueLabel: TimeInterval(minValue).formattedDuration,
-                decreaseSmall: { adjustMin(by: -1) },
-                decreaseLarge: { adjustMin(by: -30) },
-                increaseSmall: { adjustMin(by: 1) },
-                increaseLarge: { adjustMin(by: 30) },
-                stepperValue: Binding(
-                    get: { Double(minValue) },
-                    set: { adjustMin(to: Int($0.rounded())) }
-                ),
-                range: 0...Double(maxSecondsLimit - 30),
-                enabled: enabled
-            )
+                    Slider(
+                        value: Binding(
+                            get: { Double(minValue) },
+                            set: { adjustMin(to: Int($0)) }
+                        ),
+                        in: 0...Double(maxValue - 30),
+                        step: 5
+                    )
+                    .tint(enabled ? .accentPrimary : .textMuted)
 
-            // Max slider
-            Text("Maximum: \(TimeInterval(maxValue).formattedDuration)")
-                .font(.caption2)
-                .foregroundColor(.textMuted)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            Slider(
-                value: Binding(
-                    get: { Double(maxValue) },
-                    set: { newVal in
-                        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
-                            currentMinSeconds: minValue,
-                            currentMaxSeconds: maxValue,
-                            newMaxSeconds: Swift.max(30, Int(newVal)),
-                            maxSecondsLimit: maxSecondsLimit
-                        )
-                        onRangeChange(adjusted.min, adjusted.max)
+                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && minValue <= maxValue - 30 - fineStep) {
+                        adjustMin(by: coarseStep)
                     }
-                ),
-                in: 30...Double(maxSecondsLimit),
-                step: 5
-            )
-            .disabled(!enabled)
-            .tint(enabled ? .accentPrimary : .textMuted)
-            .accessibilityIdentifier("maximumTimeSlider")
+                }
+            }
 
-            FineTuneRow(
-                title: "Fine tune maximum",
-                valueLabel: TimeInterval(maxValue).formattedDuration,
-                decreaseSmall: { adjustMax(by: -1) },
-                decreaseLarge: { adjustMax(by: -30) },
-                increaseSmall: { adjustMax(by: 1) },
-                increaseLarge: { adjustMax(by: 30) },
-                stepperValue: Binding(
-                    get: { Double(maxValue) },
-                    set: { adjustMax(to: Int($0.rounded())) }
-                ),
-                range: 30...Double(maxSecondsLimit),
-                enabled: enabled
-            )
+            // Max slider with Nudge buttons
+            VStack(spacing: 4) {
+                Text("Maximum: \(TimeInterval(maxValue).formattedDuration)")
+                    .font(.caption2)
+                    .foregroundColor(.textMuted)
+
+                HStack(spacing: 12) {
+                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && maxValue >= minValue + 30 + fineStep) {
+                        adjustMax(by: -coarseStep)
+                    }
+
+                    Slider(
+                        value: Binding(
+                            get: { Double(maxValue) },
+                            set: { adjustMax(to: Int($0)) }
+                        ),
+                        in: Double(minValue + 30)...Double(maxSecondsLimit),
+                        step: 5
+                    )
+                    .tint(enabled ? .accentPrimary : .textMuted)
+
+                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && maxValue <= maxSecondsLimit - fineStep) {
+                        adjustMax(by: coarseStep)
+                    }
+                }
+            }
         }
+        .disabled(!enabled)
         .transaction { $0.animation = nil }
     }
 
@@ -401,11 +376,11 @@ private struct TimeRangeSliders: View {
         adjustMin(to: minValue + delta)
     }
 
-    private func adjustMin(to proposed: Int) {
+    private func adjustMin(to newVal: Int) {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMinSeconds: Swift.max(0, proposed),
+            newMinSeconds: Swift.max(0, newVal),
             maxSecondsLimit: maxSecondsLimit
         )
         onRangeChange(adjusted.min, adjusted.max)
@@ -415,60 +390,29 @@ private struct TimeRangeSliders: View {
         adjustMax(to: maxValue + delta)
     }
 
-    private func adjustMax(to proposed: Int) {
+    private func adjustMax(to newVal: Int) {
         let adjusted = TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, proposed),
+            newMaxSeconds: Swift.max(30, newVal),
             maxSecondsLimit: maxSecondsLimit
         )
         onRangeChange(adjusted.min, adjusted.max)
     }
 }
 
-private struct FineTuneRow: View {
-    let title: String
-    let valueLabel: String
-    let decreaseSmall: () -> Void
-    let decreaseLarge: () -> Void
-    let increaseSmall: () -> Void
-    let increaseLarge: () -> Void
-    let stepperValue: Binding<Double>
-    let range: ClosedRange<Double>
+private struct NudgeButton: View {
+    let icon: String
     let enabled: Bool
+    let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text("\(title): \(valueLabel)")
-                .font(.caption2)
-                .foregroundColor(.textMuted)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            HStack(spacing: 8) {
-                Button("-30s", action: decreaseLarge)
-                    .disabled(!enabled)
-                Button("-1s", action: decreaseSmall)
-                    .disabled(!enabled)
-
-                Stepper(
-                    value: stepperValue,
-                    in: range,
-                    step: 1
-                ) {
-                    Text("Exact")
-                        .font(.caption2)
-                        .foregroundColor(.textSecondary)
-                }
-                .disabled(!enabled)
-
-                Button("+1s", action: increaseSmall)
-                    .disabled(!enabled)
-                Button("+30s", action: increaseLarge)
-                    .disabled(!enabled)
-            }
-            .buttonStyle(.bordered)
-            .tint(.accentPrimary)
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(enabled ? .accentPrimary : .textMuted)
         }
+        .disabled(!enabled)
     }
 }
 

@@ -1,6 +1,5 @@
 package com.iganapolsky.randomtimer.ui.screens
 
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -10,8 +9,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -48,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -75,7 +76,7 @@ private object SetupSpacing {
     val StartButtonTop = 16.dp
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TimerSetupScreen(
     config: TimerConfig,
@@ -88,6 +89,7 @@ fun TimerSetupScreen(
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     onUpgradeTap: () -> Unit = {},
+    onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -200,7 +202,15 @@ fun TimerSetupScreen(
                                     text = "PRO: 1H \uD83D\uDD12",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.clickable { onUpgradeTap() },
+                                    modifier = Modifier.combinedClickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { onUpgradeTap() },
+                                        onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onSecretUnlock()
+                                        },
+                                    ),
                                 )
                             }
                         }
@@ -223,14 +233,14 @@ fun TimerSetupScreen(
                                 updateConfig(minSeconds = min, maxSeconds = max)
                             },
                             onMaxChange = { newMax ->
-                                val (min, max) =
+                                val (adjMin, adjMax) =
                                     TimeRangeAdjuster.adjustForMaxChange(
                                         currentMinSeconds = config.minSeconds,
                                         currentMaxSeconds = config.maxSeconds,
                                         newMaxSeconds = newMax,
                                         maxSecondsLimit = maxRange,
                                     )
-                                updateConfig(minSeconds = min, maxSeconds = max)
+                                updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                             },
                         )
                     }
@@ -391,6 +401,16 @@ fun TimerSetupScreen(
                         text = "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                        modifier =
+                            Modifier.combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {},
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSecretUnlock()
+                                },
+                            ),
                     )
 
                     if (!isPro) {
@@ -484,8 +504,9 @@ private fun TimeRangeSliders(
     onMaxChange: (Int) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+    val nudgeStep = 5
 
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Display
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -511,146 +532,141 @@ private fun TimeRangeSliders(
             )
         }
 
-        // Min slider - label centered above
-        Text(
-            text = "Minimum: ${formatTime(minValue)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = TimerColors.TextMuted,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-        Slider(
-            value = minValue.toFloat(),
-            onValueChange = { raw ->
-                val snapped = (raw / 5).toInt() * 5
-                if (snapped != minValue) {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                }
-                onMinChange(snapped)
-            },
-            enabled = enabled,
-            valueRange = 0f..minSliderMax,
-            modifier = Modifier.semantics { contentDescription = "Minimum time slider" },
-            colors =
-                SliderDefaults.colors(
-                    thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                    inactiveTrackColor = TimerColors.SliderTrack,
-                ),
-        )
-        PrecisionAdjustRow(
-            label = "Fine tune minimum",
-            onAdjustLargeDown = { onMinChange((minValue - 30).coerceAtLeast(0)) },
-            onAdjustSmallDown = { onMinChange((minValue - 1).coerceAtLeast(0)) },
-            onAdjustSmallUp = { onMinChange((minValue + 1).coerceAtMost(minSliderMax.toInt())) },
-            onAdjustLargeUp = { onMinChange((minValue + 30).coerceAtMost(minSliderMax.toInt())) },
-            enabled = enabled,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Max slider - label centered above
-        Text(
-            text = "Maximum: ${formatTime(maxValue)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = TimerColors.TextMuted,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-        Slider(
-            value = maxValue.toFloat(),
-            onValueChange = { raw ->
-                val snapped = (raw / 5).toInt() * 5
-                if (snapped != maxValue) {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                }
-                onMaxChange(snapped)
-            },
-            enabled = enabled,
-            valueRange = 30f..maxSliderRange,
-            modifier = Modifier.semantics { contentDescription = "Maximum time slider" },
-            colors =
-                SliderDefaults.colors(
-                    thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                    inactiveTrackColor = TimerColors.SliderTrack,
-                ),
-        )
-        PrecisionAdjustRow(
-            label = "Fine tune maximum",
-            onAdjustLargeDown = { onMaxChange((maxValue - 30).coerceAtLeast(30)) },
-            onAdjustSmallDown = { onMaxChange((maxValue - 1).coerceAtLeast(30)) },
-            onAdjustSmallUp = { onMaxChange((maxValue + 1).coerceAtMost(maxSliderRange.toInt())) },
-            onAdjustLargeUp = { onMaxChange((maxValue + 30).coerceAtMost(maxSliderRange.toInt())) },
-            enabled = enabled,
-        )
-    }
-}
-
-@Composable
-private fun PrecisionAdjustRow(
-    label: String,
-    onAdjustLargeDown: () -> Unit,
-    onAdjustSmallDown: () -> Unit,
-    onAdjustSmallUp: () -> Unit,
-    onAdjustLargeUp: () -> Unit,
-    enabled: Boolean,
-) {
-    val haptic = LocalHapticFeedback.current
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = TimerColors.TextMuted,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PrecisionButton(label = "-30s", enabled = enabled) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onAdjustLargeDown()
+        // Min slider with nudge
+        Column {
+            Text(
+                text = "Minimum: ${formatTime(minValue)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = TimerColors.TextMuted,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                NudgeButton(
+                    icon = "-",
+                    enabled = enabled && minValue >= nudgeStep,
+                    onClick = { onMinChange(minValue - nudgeStep) },
+                )
+                Slider(
+                    value = minValue.toFloat(),
+                    onValueChange = { raw ->
+                        val snapped = (raw / 5).toInt() * 5
+                        if (snapped != minValue) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                        onMinChange(snapped)
+                    },
+                    enabled = enabled,
+                    valueRange = 0f..minSliderMax,
+                    modifier =
+                        Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
+                )
+                NudgeButton(
+                    icon = "+",
+                    enabled = enabled && minValue <= (maxValue - 30 - nudgeStep),
+                    onClick = { onMinChange(minValue + nudgeStep) },
+                )
             }
-            PrecisionButton(label = "-1s", enabled = enabled) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onAdjustSmallDown()
-            }
-            PrecisionButton(label = "+1s", enabled = enabled) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onAdjustSmallUp()
-            }
-            PrecisionButton(label = "+30s", enabled = enabled) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onAdjustLargeUp()
+        }
+
+        // Max slider with nudge
+        Column {
+            Text(
+                text = "Maximum: ${formatTime(maxValue)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = TimerColors.TextMuted,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                NudgeButton(
+                    icon = "-",
+                    enabled = enabled && maxValue >= (minValue + 30 + nudgeStep),
+                    onClick = { onMaxChange(maxValue - nudgeStep) },
+                )
+                Slider(
+                    value = maxValue.toFloat(),
+                    onValueChange = { raw ->
+                        val snapped = (raw / 5).toInt() * 5
+                        if (snapped != maxValue) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                        onMaxChange(snapped)
+                    },
+                    enabled = enabled,
+                    valueRange = 30f..maxSliderRange,
+                    modifier =
+                        Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
+                )
+                NudgeButton(
+                    icon = "+",
+                    enabled = enabled && maxValue <= (maxSliderRange - nudgeStep),
+                    onClick = { onMaxChange(maxValue + nudgeStep) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PrecisionButton(
-    label: String,
+private fun NudgeButton(
+    icon: String,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(10.dp),
-        color = TimerColors.GlassBackground,
-        border = BorderStroke(1.dp, TimerColors.GlassBorder),
+        shape = CircleShape,
+        color = if (enabled) TimerColors.GlassBackground else TimerColors.BackgroundDark,
+        border =
+            BorderStroke(
+                1.dp,
+                if (enabled) TimerColors.GlassBorder else TimerColors.GlassBorder.copy(alpha = 0.5f),
+            ),
+        modifier = androidx.compose.ui.Modifier.width(44.dp).height(44.dp),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (enabled) TimerColors.TextSecondary else TimerColors.TextMuted,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
+
+private fun formatTime(seconds: Int): String =
+    if (seconds >= 60) {
+        val mins = seconds / 60
+        val secs = seconds % 60
+        if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
+    } else {
+        "${seconds}s"
+    }
 
 @Composable
 private fun SoundTypeButton(
@@ -738,15 +754,6 @@ private fun VolumeSlider(
         )
     }
 }
-
-private fun formatTime(seconds: Int): String =
-    if (seconds >= 60) {
-        val mins = seconds / 60
-        val secs = seconds % 60
-        if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
-    } else {
-        "${seconds}s"
-    }
 
 @Preview(showBackground = true)
 @Composable
