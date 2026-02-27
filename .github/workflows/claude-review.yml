@@ -21,7 +21,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Claude Code Review
-        continue-on-error: true
         uses: anthropics/claude-code-action@29214eeb6626cb5b6abf73a380c90ca849259729 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
