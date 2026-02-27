@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
@@ -38,6 +42,15 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+
+private object SetupSpacing {
+    val OuterHorizontal = 16.dp
+    val ListItem = 16.dp
+    val ListTop = 8.dp
+    val ListBottom = 24.dp
+    val CardContent = 12.dp
+    val HeaderToContent = 12.dp
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -56,7 +69,11 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(isPro) }
+    
+    // Expanded states for the two Training Window options
+    var standardExpanded by remember { mutableStateOf(config.maxSeconds <= TimerConfig.MAX_SECONDS_FREE) }
+    var tacticalExpanded by remember { mutableStateOf(config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) }
+    
     var showDirectEntryMin by remember { mutableStateOf(false) }
     var showDirectEntryMax by remember { mutableStateOf(false) }
 
@@ -89,7 +106,7 @@ fun TimerSetupScreen(
             initialSeconds = config.minSeconds,
             onDismiss = { showDirectEntryMin = false },
             onConfirm = { seconds ->
-                val limit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                val limit = if (tacticalExpanded) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
                 val adjusted = TimeRangeAdjuster.adjustForMinChange(config.minSeconds, config.maxSeconds, seconds, limit)
                 updateConfig(minSeconds = adjusted.min, maxSeconds = adjusted.max)
                 showDirectEntryMin = false
@@ -103,7 +120,7 @@ fun TimerSetupScreen(
             initialSeconds = config.maxSeconds,
             onDismiss = { showDirectEntryMax = false },
             onConfirm = { seconds ->
-                val limit = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                val limit = if (tacticalExpanded) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
                 val adjusted = TimeRangeAdjuster.adjustForMaxChange(config.minSeconds, config.maxSeconds, seconds, limit)
                 updateConfig(minSeconds = adjusted.min, maxSeconds = adjusted.max)
                 showDirectEntryMax = false
@@ -122,55 +139,66 @@ fun TimerSetupScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(SetupSpacing.ListItem),
             contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
         ) {
             item {
-                Text("STANDARD OPS", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
+                Text("TRAINING WINDOW", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
             }
 
+            // 1. Standard Ops Card (0 - 5m)
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("\u23F1\uFE0F Training Window", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            if (!isPro) {
-                                Spacer(Modifier.weight(1f))
-                                Text(
-                                    "PRO: 1H \uD83D\uDD12",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = onUpgradeTap,
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onSecretUnlock()
-                                        }
-                                    )
-                                )
-                            }
+                ExpandableTrainingCard(
+                    title = "Standard Ops (5m)",
+                    subtitle = "High-precision short drills",
+                    isExpanded = standardExpanded,
+                    onExpandToggle = { 
+                        standardExpanded = !standardExpanded
+                        if (standardExpanded) tacticalExpanded = false 
+                    },
+                    minValue = config.minSeconds,
+                    maxValue = config.maxSeconds,
+                    maxLimit = TimerConfig.MAX_SECONDS_FREE.toFloat(),
+                    onRangeChange = { min, max -> updateConfig(minSeconds = min, maxSeconds = max) },
+                    onMinClick = { showDirectEntryMin = true },
+                    onMaxClick = { showDirectEntryMax = true }
+                )
+            }
+
+            // 2. Tactical Expansion Card (0 - 1h)
+            item {
+                ExpandableTrainingCard(
+                    title = "Tactical Expansion (1h)",
+                    subtitle = "Extended endurance training",
+                    isExpanded = tacticalExpanded,
+                    isLocked = !isPro,
+                    onExpandToggle = { 
+                        if (isPro) {
+                            tacticalExpanded = !tacticalExpanded
+                            if (tacticalExpanded) standardExpanded = false
+                        } else {
+                            onUpgradeTap()
                         }
-                        
-                        Spacer(Modifier.height(12.dp))
-                        
-                        TimeRangeScrubber(
-                            minValue = config.minSeconds,
-                            maxValue = config.maxSeconds,
-                            maxLimit = (if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE).toFloat(),
-                            onRangeChange = { minVal, maxVal -> updateConfig(minSeconds = minVal, maxSeconds = maxVal) },
-                            onMinClick = { showDirectEntryMin = true },
-                            onMaxClick = { showDirectEntryMax = true }
-                        )
-                    }
-                }
+                    },
+                    minValue = config.minSeconds,
+                    maxValue = config.maxSeconds,
+                    maxLimit = TimerConfig.MAX_SECONDS_PRO.toFloat(),
+                    onRangeChange = { min, max -> updateConfig(minSeconds = min, maxSeconds = max) },
+                    onMinClick = { showDirectEntryMin = true },
+                    onMaxClick = { showDirectEntryMax = true },
+                    onSecretUnlock = onSecretUnlock
+                )
+            }
+
+            item {
+                Spacer(Modifier.height(8.dp))
+                Text("ALARM SETUP", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
             }
 
             item {
                 GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("\uD83D\uDD14 Alarm Setup", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        Text("\uD83D\uDD14 Signal Configuration", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
                         
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -220,6 +248,77 @@ fun TimerSetupScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ExpandableTrainingCard(
+    title: String,
+    subtitle: String,
+    isExpanded: Boolean,
+    isLocked: Boolean = false,
+    onExpandToggle: () -> Unit,
+    minValue: Int,
+    maxValue: Int,
+    maxLimit: Float,
+    onRangeChange: (Int, Int) -> Unit,
+    onMinClick: () -> Unit,
+    onMaxClick: () -> Unit,
+    onSecretUnlock: () -> Unit = {}
+) {
+    val haptic = LocalHapticFeedback.current
+    
+    GlassCard(
+        modifier = Modifier.fillMaxWidth().clickable { onExpandToggle() },
+        padding = 0.dp // Manual padding inside
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        title + if (isLocked) " \uD83D\uDD12" else "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isLocked) TimerColors.TextMuted else TimerColors.TextPrimary,
+                        modifier = if (title.contains("Tactical")) {
+                            Modifier.combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = onExpandToggle,
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSecretUnlock()
+                                }
+                            )
+                        } else Modifier
+                    )
+                    Text(subtitle, style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
+                }
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = TimerColors.TextMuted
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded && !isLocked,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(Modifier.padding(top = 16.dp)) {
+                    TimeRangeScrubber(
+                        minValue = minValue,
+                        maxValue = maxValue,
+                        maxLimit = maxLimit,
+                        onRangeChange = onRangeChange,
+                        onMinClick = onMinClick,
+                        onMaxClick = onMaxClick
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimeRangeScrubber(
@@ -239,7 +338,7 @@ private fun TimeRangeScrubber(
         }
         Spacer(Modifier.height(16.dp))
         RangeSlider(
-            value = minValue.toFloat()..maxValue.toFloat(),
+            value = minValue.coerceAtMost(maxLimit.toInt()).toFloat()..maxValue.coerceAtMost(maxLimit.toInt()).toFloat(),
             onValueChange = { range ->
                 val newMin = (range.start / 5).toInt() * 5
                 val newMax = (range.endInclusive / 5).toInt() * 5

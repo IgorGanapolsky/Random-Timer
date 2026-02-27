@@ -5,54 +5,77 @@ struct TimerSetupScreen: View {
     @EnvironmentObject var proManager: ProManager
     @State private var showPaywall = false
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
-    @State private var showArsenal = false
     @State private var showDirectEntry = false
     @State private var directEntryIsMin = true
-    @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
+    
+    // Mission Expansion states
+    @State private var standardExpanded = true
+    @State private var tacticalExpanded = false
 
     private var config: TimerConfig { timerManager.config }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("STANDARD OPS")
+                Text("TRAINING MISSIONS")
                     .font(.caption2)
                     .fontWeight(.bold)
                     .foregroundColor(.textMuted)
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
-                // 1. Training Window Card
-                GlassCard {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Label("Training Window", systemImage: "timer")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            if !proManager.isPro {
-                                Spacer()
-                                Text("PRO: 1H \u{1F512}")
-                                    .font(.caption2)
-                                    .foregroundColor(.accentPrimary)
-                                    .onTapGesture { presentPaywall(entryPoint: .rangeGate) }
-                                    .onLongPressGesture(minimumDuration: 3.0) { proManager.forcePro() }
-                            }
+                // 1. Standard Ops Section (0 - 5m)
+                ExpandableTrainingCard(
+                    title: "Standard Ops (5m)",
+                    subtitle: "High-precision tactical drills",
+                    isExpanded: standardExpanded,
+                    onExpandToggle: {
+                        withAnimation(.spring()) {
+                            standardExpanded.toggle()
+                            if standardExpanded { tacticalExpanded = false }
                         }
-                        Spacer().frame(height: 12)
-                        TimeRangeScrubber(
-                            minValue: config.minSeconds,
-                            maxValue: config.maxSeconds,
-                            maxLimit: proManager.maxSecondsLimit,
-                            onRangeChange: { min, max in updateConfig(minSeconds: min, maxSeconds: max) },
-                            onLabelTap: { isMin in directEntryIsMin = isMin; showDirectEntry = true }
-                        )
-                    }
-                }
+                    },
+                    minValue: config.minSeconds,
+                    maxValue: config.maxSeconds,
+                    maxLimit: TimerConfig.maxSecondsFree,
+                    onRangeChange: { min, max in updateConfig(minSeconds: min, maxSeconds: max) },
+                    onLabelTap: { isMin in directEntryIsMin = isMin; showDirectEntry = true }
+                )
 
-                // 2. Alarm Setup
+                // 2. Tactical Expansion Section (0 - 1h)
+                ExpandableTrainingCard(
+                    title: "Tactical Expansion (1h)",
+                    subtitle: "Extended endurance & mission duration",
+                    isExpanded: tacticalExpanded,
+                    isLocked: !proManager.isPro,
+                    onExpandToggle: {
+                        if proManager.isPro {
+                            withAnimation(.spring()) {
+                                tacticalExpanded.toggle()
+                                if tacticalExpanded { standardExpanded = false }
+                            }
+                        } else {
+                            presentPaywall(entryPoint: .rangeGate)
+                        }
+                    },
+                    minValue: config.minSeconds,
+                    maxValue: config.maxSeconds,
+                    maxLimit: TimerConfig.maxSecondsPro,
+                    onRangeChange: { min, max in updateConfig(minSeconds: min, maxSeconds: max) },
+                    onLabelTap: { isMin in directEntryIsMin = isMin; showDirectEntry = true },
+                    onSecretUnlock: { proManager.forcePro() }
+                )
+
+                Text("SIGNAL CONFIGURATION")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.textMuted)
+                    .padding(.leading, 4)
+
+                // Alarm Setup
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Label("Alarm Setup", systemImage: "bell.fill").font(.headline).fontWeight(.semibold)
+                        Label("Signal Output", systemImage: "bell.fill").font(.headline).fontWeight(.semibold)
                         Spacer().frame(height: 12)
                         HStack(spacing: 8) {
                             ForEach(TimerConfig.alarmDurationOptions, id: \.self) { d in
@@ -76,18 +99,18 @@ struct TimerSetupScreen: View {
 
                 PrimaryButton(title: "Start Timer") { Task { await timerManager.startTimer() } }
                     .scaleEffect(1.02).padding(.vertical, 8)
-
-                // Tactical Expansion
-                HStack {
-                    Text("TACTICAL EXPANSION").font(.caption2).fontWeight(.bold).foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
-                        .onLongPressGesture(minimumDuration: 3.0) { proManager.forcePro() }
-                }
             }
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
         .sheet(isPresented: $showPaywall) { PaywallSheet(entryPoint: paywallEntryPoint).environmentObject(proManager) }
         .sheet(isPresented: $showDirectEntry) { DirectEntrySheet(isMin: directEntryIsMin, currentSeconds: directEntryIsMin ? config.minSeconds : config.maxSeconds, maxLimit: proManager.maxSecondsLimit) { updateConfig(minSeconds: directEntryIsMin ? $0 : config.minSeconds, maxSeconds: directEntryIsMin ? config.maxSeconds : $0); showDirectEntry = false } }
+        .onAppear {
+            if config.maxSeconds > TimerConfig.maxSecondsFree {
+                standardExpanded = false
+                tacticalExpanded = true
+            }
+        }
     }
 
     private func updateConfig(minSeconds: Int? = nil, maxSeconds: Int? = nil, alarmDuration: Int? = nil, soundType: SoundType? = nil, volume: Float? = nil, vibrationEnabled: Bool? = nil) {
@@ -107,6 +130,46 @@ struct TimerSetupScreen: View {
     private func presentPaywall(entryPoint: PaywallEntryPoint) { paywallEntryPoint = entryPoint; showPaywall = true }
 }
 
+private struct ExpandableTrainingCard: View {
+    let title: String; let subtitle: String; let isExpanded: Bool; var isLocked: Bool = false
+    let onExpandToggle: () -> Void; let minValue: Int; let maxValue: Int; let maxLimit: Int
+    let onRangeChange: (Int, Int) -> Void; let onLabelTap: (Bool) -> Void
+    var onSecretUnlock: (() -> Void)? = nil
+
+    var body: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 0) {
+                Button(action: onExpandToggle) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(title + (isLocked ? " \u{1F512}" : ""))
+                                .font(.headline).fontWeight(.bold).foregroundColor(isLocked ? .textMuted : .textPrimary)
+                                .onLongPressGesture(minimumDuration: 3.0) { onSecretUnlock?() }
+                            Text(subtitle).font(.caption2).foregroundColor(.textMuted)
+                        }
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down").foregroundColor(.textMuted)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                if isExpanded && !isLocked {
+                    VStack(spacing: 16) {
+                        TimeRangeScrubber(
+                            minValue: minValue,
+                            maxValue: maxValue,
+                            maxLimit: maxLimit,
+                            onRangeChange: onRangeChange,
+                            onLabelTap: onLabelTap
+                        )
+                    }
+                    .padding(.top, 16)
+                }
+            }
+        }
+    }
+}
+
 private struct TimeRangeScrubber: View {
     let minValue: Int; let maxValue: Int; var maxLimit: Int
     let onRangeChange: (Int, Int) -> Void; let onLabelTap: (Bool) -> Void
@@ -118,7 +181,7 @@ private struct TimeRangeScrubber: View {
                 TimeChip(label: "Max", value: TimeInterval(maxValue).formattedDuration) { onLabelTap(false) }
             }
             VStack(spacing: 0) {
-                Slider(value: Binding(get: { Double(minValue) }, set: { onRangeChange(Int($0), maxValue) }), in: 0...Double(maxValue - 30), step: 5).tint(.accentPrimary)
+                Slider(value: Binding(get: { Double(minValue) }, set: { onRangeChange(Int($0), maxValue) }), in: 0...Double(Swift.min(maxValue - 30, maxLimit - 30)), step: 5).tint(.accentPrimary)
                 Slider(value: Binding(get: { Double(maxValue) }, set: { onRangeChange(minValue, Int($0)) }), in: Double(minValue + 30)...Double(maxLimit), step: 5).tint(.accentPrimary)
             }
         }
