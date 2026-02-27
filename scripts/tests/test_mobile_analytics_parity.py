@@ -64,6 +64,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         self.assertIn("viewModel.trackScreen(AnalyticsScreens.TIMER_SETUP)", source)
         self.assertIn("viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)", source)
 
+    def test_result_property_is_defined_on_both_platforms(self):
+        android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
+        self.assertIn('const val RESULT = "result"', android_source)
+        self.assertIn('static let result = "result"', ios_source)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -45,6 +45,7 @@ class AnalyticsService
                 mapOf(
                     "platform" to "android",
                     "app_version" to BuildConfig.VERSION_NAME,
+                    AnalyticsProperties.ENVIRONMENT to environment(),
                     AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
                     AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
                     AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
@@ -188,6 +189,8 @@ class AnalyticsService
             return if (isEmulator()) "dev" else "live"
         }
 
+        private fun environment(): String = if (buildAudience() == "live") "production" else "development"
+
         private fun isEmulator(): Boolean {
             val fingerprint = Build.FINGERPRINT.lowercase()
             val model = Build.MODEL.lowercase()
@@ -256,10 +259,12 @@ object AnalyticsEvents {
 
 object AnalyticsProperties {
     const val ENTRY_POINT = "entry_point"
+    const val RESULT = "result"
     const val SUCCESS = "success"
     const val RESPONSE_CODE = "response_code"
     const val DEBUG_MESSAGE = "debug_message"
     const val SOURCE = "source"
+    const val ENVIRONMENT = "environment"
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"
     const val RUNTIME_TARGET = "runtime_target"

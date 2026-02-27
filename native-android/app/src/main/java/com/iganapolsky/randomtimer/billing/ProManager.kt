@@ -209,6 +209,7 @@ class ProManager
                 AnalyticsEvents.PAYWALL_PURCHASE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
                     success = success,
+                    result = purchaseResultValue(success, responseCode),
                     source = source,
                     entryPoint = entryPoint,
                     responseCode = responseCode,
@@ -228,6 +229,7 @@ class ProManager
                 AnalyticsEvents.PAYWALL_RESTORE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
                     success = success,
+                    result = restoreResultValue(success),
                     source = source,
                     entryPoint = entryPoint,
                     responseCode = responseCode,
@@ -235,6 +237,18 @@ class ProManager
                 ),
             )
         }
+
+        private fun purchaseResultValue(
+            success: Boolean,
+            responseCode: Int,
+        ): String =
+            when {
+                success -> "success"
+                responseCode == BillingClient.BillingResponseCode.USER_CANCELED -> "cancelled"
+                else -> "failed"
+            }
+
+        private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         private suspend fun fetchProductDetails(): com.android.billingclient.api.ProductDetails? {
             val productList =
@@ -324,12 +338,14 @@ internal object MonetizationSources {
 internal object MonetizationAnalyticsPayload {
     fun resultProperties(
         success: Boolean,
+        result: String,
         source: String,
         entryPoint: String?,
         responseCode: Int,
         debugMessage: String?,
     ): Map<String, Any> =
         mapOf(
+            AnalyticsProperties.RESULT to result,
             AnalyticsProperties.SUCCESS to success,
             AnalyticsProperties.SOURCE to source,
             AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),

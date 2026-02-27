@@ -81,6 +81,7 @@ __pycache__/
 .claude/memory/
 .claude/hooks/
 .claude/ralph/
+.claude/worktrees/
 .claude/scripts/feedback/
 
 # CCPM local workspace (project management)
