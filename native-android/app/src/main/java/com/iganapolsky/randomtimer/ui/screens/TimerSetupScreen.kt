@@ -38,6 +38,8 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private object SetupSpacing {
     val OuterHorizontal = 16.dp
@@ -65,17 +67,19 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
     
     // Expanded states for the two Training Window options
     var standardExpanded by remember { mutableStateOf(config.maxSeconds <= TimerConfig.MAX_SECONDS_FREE) }
     var tacticalExpanded by remember { mutableStateOf(config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) }
+    var arsenalVisible by remember { mutableStateOf(isPro) }
     
     var showDirectEntryMin by remember { mutableStateOf(false) }
     var showDirectEntryMax by remember { mutableStateOf(false) }
 
-    fun updateTimerConfig(
-        minS: Int = config.minSeconds,
-        maxS: Int = config.maxSeconds,
+    fun updateConfig(
+        newMin: Int = config.minSeconds,
+        newMax: Int = config.maxSeconds,
         alarmDuration: Int = config.alarmDuration,
         repeatEnabled: Boolean = config.repeatEnabled,
         soundType: SoundType = config.soundType,
@@ -84,8 +88,8 @@ fun TimerSetupScreen(
     ) {
         onConfigChange(
             config.copy(
-                minSeconds = minS,
-                maxSeconds = maxS,
+                minSeconds = newMin,
+                maxSeconds = newMax,
                 alarmDuration = alarmDuration,
                 hiddenMode = false,
                 repeatEnabled = repeatEnabled,
@@ -103,8 +107,8 @@ fun TimerSetupScreen(
             onDismiss = { showDirectEntryMin = false },
             onConfirm = { seconds ->
                 val limit = if (tacticalExpanded) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                val pair = TimeRangeAdjuster.adjustForMinChange(config.minSeconds, config.maxSeconds, seconds, maxSecondsLimit = limit)
-                updateTimerConfig(minS = pair.first, maxS = pair.second)
+                val adj = TimeRangeAdjuster.adjustForMinChange(config.minSeconds, config.maxSeconds, seconds, limit)
+                updateConfig(newMin = adj.min, newMax = adj.max)
                 showDirectEntryMin = false
             }
         )
@@ -117,8 +121,8 @@ fun TimerSetupScreen(
             onDismiss = { showDirectEntryMax = false },
             onConfirm = { seconds ->
                 val limit = if (tacticalExpanded) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                val pair = TimeRangeAdjuster.adjustForMaxChange(config.minSeconds, config.maxSeconds, seconds, maxSecondsLimit = limit)
-                updateTimerConfig(minS = pair.first, maxS = pair.second)
+                val adj = TimeRangeAdjuster.adjustForMaxChange(config.minSeconds, config.maxSeconds, seconds, limit)
+                updateConfig(newMin = adj.min, newMax = adj.max)
                 showDirectEntryMax = false
             }
         )
@@ -142,7 +146,7 @@ fun TimerSetupScreen(
                 Text("TRAINING MISSIONS", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
             }
 
-            // 1. Standard Ops Card (0 - 5m)
+            // 1. Standard Ops Card
             item {
                 ExpandableTrainingCard(
                     title = "Standard Ops (5m)",
@@ -155,13 +159,13 @@ fun TimerSetupScreen(
                     minValue = config.minSeconds,
                     maxValue = config.maxSeconds,
                     maxLimit = TimerConfig.MAX_SECONDS_FREE.toFloat(),
-                    onRangeChange = { rMin, rMax -> updateTimerConfig(minS = rMin, maxS = rMax) },
+                    onRangeChange = { rMin, rMax -> updateConfig(newMin = rMin, newMax = rMax) },
                     onMinClick = { showDirectEntryMin = true },
                     onMaxClick = { showDirectEntryMax = true }
                 )
             }
 
-            // 2. Tactical Expansion Card (0 - 1h)
+            // 2. Tactical Expansion Card (Backdoor enabled)
             item {
                 ExpandableTrainingCard(
                     title = "Tactical Expansion (1h)",
@@ -179,7 +183,7 @@ fun TimerSetupScreen(
                     minValue = config.minSeconds,
                     maxValue = config.maxSeconds,
                     maxLimit = TimerConfig.MAX_SECONDS_PRO.toFloat(),
-                    onRangeChange = { rMin, rMax -> updateTimerConfig(minS = rMin, maxS = rMax) },
+                    onRangeChange = { rMin, rMax -> updateConfig(newMin = rMin, newMax = rMax) },
                     onMinClick = { showDirectEntryMin = true },
                     onMaxClick = { showDirectEntryMax = true },
                     onSecretUnlock = onSecretUnlock
@@ -188,20 +192,32 @@ fun TimerSetupScreen(
 
             item {
                 Spacer(Modifier.height(8.dp))
-                Text("SIGNAL CONFIGURATION", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("SIGNAL CONFIGURATION", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
+                    if (!isPro) {
+                        Text(
+                            text = if (arsenalVisible) "Hide Arsenal" else "View Arsenal",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.AccentPrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { arsenalVisible = !arsenalVisible }
+                        )
+                    }
+                }
             }
 
+            // Signal Configuration Card
             item {
                 GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("\uD83D\uDD14 Signal Configuration", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        Text("\uD83D\uDD14 Output Control", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
                         
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TimerConfig.ALARM_DURATION_OPTIONS.forEach { duration ->
                                 FilterChip(
                                     selected = config.alarmDuration == duration,
-                                    onClick = { updateTimerConfig(alarmDuration = duration) },
+                                    onClick = { updateConfig(alarmDuration = duration) },
                                     label = { Text("${duration}s") }
                                 )
                             }
@@ -213,25 +229,68 @@ fun TimerSetupScreen(
                             SoundTypeButton(
                                 label = "Intense \uD83D\uDD25",
                                 selected = config.soundType == SoundType.INTENSE,
-                                onClick = { updateTimerConfig(soundType = SoundType.INTENSE); onSoundPreview(SoundType.INTENSE) },
+                                onClick = { updateConfig(soundType = SoundType.INTENSE); onSoundPreview(SoundType.INTENSE) },
                                 modifier = Modifier.weight(1f)
                             )
                             SoundTypeButton(
                                 label = "Gentle \uD83D\uDCA7",
                                 selected = config.soundType == SoundType.GENTLE,
-                                onClick = { updateTimerConfig(soundType = SoundType.GENTLE); onSoundPreview(SoundType.GENTLE) },
+                                onClick = { updateConfig(soundType = SoundType.GENTLE); onSoundPreview(SoundType.GENTLE) },
                                 modifier = Modifier.weight(1f)
                             )
                         }
 
                         Spacer(Modifier.height(20.dp))
 
-                        VolumeSlider(config.volume) { updateTimerConfig(volume = it); onVolumePreview(it) }
+                        VolumeSlider(config.volume) { updateConfig(volume = it); onVolumePreview(it) }
 
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Text("\uD83D\uDCF3 Vibration", style = MaterialTheme.typography.labelMedium)
                             Spacer(Modifier.weight(1f))
-                            Switch(checked = config.vibrationEnabled, onCheckedChange = { updateTimerConfig(vibrationEnabled = it) })
+                            Switch(checked = config.vibrationEnabled, onCheckedChange = { updateConfig(vibrationEnabled = it) })
+                        }
+                    }
+                }
+            }
+
+            // 3. Pro Sound Arsenal (Preview First logic)
+            item {
+                AnimatedVisibility(
+                    visible = arsenalVisible || isPro,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("\uD83C\uDFA7 Sound Arsenal", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(12.dp))
+
+                            val proSounds = SoundType.PRO
+                            proSounds.chunked(2).forEach { row ->
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    row.forEach { sound ->
+                                        SoundTypeButton(
+                                            label = sound.name.lowercase().replaceFirstChar { it.uppercase() } + (if (isPro) "" else " \uD83D\uDD12"),
+                                            selected = config.soundType == sound,
+                                            onClick = {
+                                                // Preview First logic
+                                                updateConfig(soundType = sound)
+                                                onSoundPreview(sound)
+                                                
+                                                if (!isPro) {
+                                                    scope.launch {
+                                                        delay(1500)
+                                                        onUpgradeTap()
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                                }
+                                Spacer(Modifier.height(8.dp))
+                            }
                         }
                     }
                 }
@@ -274,41 +333,24 @@ private fun ExpandableTrainingCard(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = if (isLocked) TimerColors.TextMuted else TimerColors.TextPrimary,
-                        modifier = if (title.contains("Tactical")) {
-                            Modifier.combinedClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = onExpandToggle,
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onSecretUnlock()
-                                }
-                            )
-                        } else Modifier
+                        modifier = Modifier.combinedClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onExpandToggle,
+                            onLongClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSecretUnlock()
+                            }
+                        )
                     )
                     Text(subtitle, style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
                 }
-                Text(
-                    text = if (isExpanded) "\u25B4" else "\u25BE",
-                    color = TimerColors.TextMuted,
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                Text(text = if (isExpanded) "\u25B4" else "\u25BE", color = TimerColors.TextMuted)
             }
 
-            AnimatedVisibility(
-                visible = isExpanded && !isLocked,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
+            AnimatedVisibility(visible = isExpanded && !isLocked) {
                 Column(Modifier.padding(top = 16.dp)) {
-                    TimeRangeScrubber(
-                        minValue = minValue,
-                        maxValue = maxValue,
-                        maxLimit = maxLimit,
-                        onRangeChange = onRangeChange,
-                        onMinClick = onMinClick,
-                        onMaxClick = onMaxClick
-                    )
+                    TimeRangeScrubber(minValue, maxValue, maxLimit, onRangeChange, onMinClick, onMaxClick)
                 }
             }
         }
@@ -317,14 +359,7 @@ private fun ExpandableTrainingCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimeRangeScrubber(
-    minValue: Int,
-    maxValue: Int,
-    maxLimit: Float,
-    onRangeChange: (Int, Int) -> Unit,
-    onMinClick: () -> Unit,
-    onMaxClick: () -> Unit
-) {
+private fun TimeRangeScrubber(minValue: Int, maxValue: Int, maxLimit: Float, onRangeChange: (Int, Int) -> Unit, onMinClick: () -> Unit, onMaxClick: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -353,13 +388,7 @@ private fun TimeRangeScrubber(
 private fun TimeChip(label: String, value: String, onClick: () -> Unit) {
     Column {
         Text(label, style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
-        Surface(
-            onClick = onClick,
-            color = TimerColors.GlassBackground,
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, TimerColors.GlassBorder),
-            modifier = Modifier.padding(top = 4.dp)
-        ) {
+        Surface(onClick = onClick, color = TimerColors.GlassBackground, shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, TimerColors.GlassBorder), modifier = Modifier.padding(top = 4.dp)) {
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
         }
     }
@@ -385,20 +414,14 @@ private fun DirectTimeEntryDialog(title: String, initialSeconds: Int, onDismiss:
 
 @Composable
 private fun SoundTypeButton(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        color = if (selected) TimerColors.AccentPrimary.copy(alpha = 0.15f) else TimerColors.GlassBackground,
-        border = BorderStroke(1.dp, if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder)
-    ) {
+    Surface(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(12.dp), color = if (selected) TimerColors.AccentPrimary.copy(alpha = 0.15f) else TimerColors.GlassBackground, border = BorderStroke(1.dp, if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder)) {
         Text(label, modifier = Modifier.padding(16.dp), textAlign = TextAlign.Center, color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary)
     }
 }
 
 @Composable
 private fun VolumeSlider(value: Float, onValueChange: (Float) -> Unit) {
-    androidx.compose.material3.Slider(value = value, onValueChange = onValueChange, colors = SliderDefaults.colors(thumbColor = TimerColors.AccentPrimary, activeTrackColor = TimerColors.AccentPrimary))
+    Slider(value = value, onValueChange = onValueChange, colors = SliderDefaults.colors(thumbColor = TimerColors.AccentPrimary, activeTrackColor = TimerColors.AccentPrimary))
 }
 
 private fun formatTime(seconds: Int): String = if (seconds >= 60) "${seconds/60}m ${seconds%60}s".replace(" 0s", "") else "${seconds}s"

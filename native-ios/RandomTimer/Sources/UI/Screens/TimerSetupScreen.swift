@@ -23,6 +23,7 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
+                // 1. Standard Ops Section
                 ExpandableTrainingCard(
                     title: "Standard Ops (5m)",
                     subtitle: "High-precision tactical drills",
@@ -40,6 +41,7 @@ struct TimerSetupScreen: View {
                     onLabelTap: { isMin in directEntryIsMin = isMin; showDirectEntry = true }
                 )
 
+                // 2. Tactical Expansion Section (Backdoor available in RELEASE)
                 ExpandableTrainingCard(
                     title: "Tactical Expansion (1h)",
                     subtitle: "Extended endurance & mission duration",
@@ -61,6 +63,7 @@ struct TimerSetupScreen: View {
                     onRangeChange: { min, max in updateConfig(minSeconds: min, maxSeconds: max) },
                     onLabelTap: { isMin in directEntryIsMin = isMin; showDirectEntry = true },
                     onSecretUnlock: { [proManager] in
+                        // Secret backdoor: 3s hold unlocks Pro permanently in any build
                         proManager.forcePro()
                     }
                 )
@@ -68,6 +71,7 @@ struct TimerSetupScreen: View {
                 Text("SIGNAL CONFIGURATION")
                     .font(.caption2).fontWeight(.bold).foregroundColor(.textMuted).padding(.leading, 4)
 
+                // Alarm Setup
                 GlassCard {
                     VStack(alignment: .leading) {
                         Label("Signal Output", systemImage: "bell.fill").font(.headline).fontWeight(.semibold)
@@ -94,6 +98,45 @@ struct TimerSetupScreen: View {
 
                 PrimaryButton(title: "Start Timer") { Task { await timerManager.startTimer() } }
                     .scaleEffect(1.02).padding(.vertical, 8)
+
+                // 3. Pro Sound Arsenal (Preview First logic)
+                if proManager.isPro || tacticalExpanded {
+                    GlassCard {
+                        VStack(alignment: .leading) {
+                            Label("Sound Arsenal", systemImage: "speaker.wave.3.fill")
+                                .font(.headline).fontWeight(.semibold)
+                            Spacer().frame(height: 12)
+                            
+                            let proSounds = SoundType.proSounds
+                            ForEach(Array(stride(from: 0, to: proSounds.count, by: 2)), id: \.self) { i in
+                                HStack(spacing: 12) {
+                                    ForEach(0..<2) { j in
+                                        if i + j < proSounds.count {
+                                            let sound = proSounds[i + j]
+                                            SoundTypeButton(
+                                                label: sound.rawValue.capitalized + (proManager.isPro ? "" : " \u{1F512}"),
+                                                selected: config.soundType == sound,
+                                                onTap: {
+                                                    // Logic: Always preview, then paywall if not Pro
+                                                    updateConfig(soundType: sound)
+                                                    timerManager.previewSound()
+                                                    
+                                                    if !proManager.isPro {
+                                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                            presentPaywall(entryPoint: .soundGate)
+                                                        }
+                                                    }
+                                                }
+                                            ).frame(maxWidth: .infinity)
+                                        } else {
+                                            Spacer().frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             .padding(.horizontal, 24)
         }
