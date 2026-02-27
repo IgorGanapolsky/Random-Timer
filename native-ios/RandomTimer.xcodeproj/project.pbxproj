@@ -91,6 +91,17 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		PH00112233445566778899CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				PH00112233445566778899AA /* PostHog in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXFileReference section */
 		01D20814587EFDB22A275849 /* klaxon.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = klaxon.mp3; sourceTree = "<group>"; };
 		05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RandomTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };

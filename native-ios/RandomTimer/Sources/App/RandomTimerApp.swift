@@ -31,6 +31,18 @@ struct RandomTimerApp: App {
                 break
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active:
+                Task {
+                    await timerManager.handleForeground()
+                }
+            case .background:
+                timerManager.handleBackground()
+            default:
+                break
+            }
+        }
     }
 }
 
