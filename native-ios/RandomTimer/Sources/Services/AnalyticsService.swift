@@ -37,6 +37,7 @@ final class AnalyticsService {
         [
             "platform": "ios",
             "app_version": appVersion,
+            AnalyticsProperties.environment: environment,
             AnalyticsProperties.buildAudience: buildAudience,
             AnalyticsProperties.buildType: buildType,
             AnalyticsProperties.runtimeTarget: runtimeTarget,
@@ -61,6 +62,10 @@ final class AnalyticsService {
 #else
         return "release"
 #endif
+    }
+
+    private var environment: String {
+        buildAudience == "live" ? "production" : "development"
     }
 
     private var runtimeTarget: String {
@@ -265,6 +270,7 @@ enum AnalyticsProperties {
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"
+    static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"
     static let runtimeTarget = "runtime_target"

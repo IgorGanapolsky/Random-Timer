@@ -10,6 +10,7 @@ class MonetizationAnalyticsPayloadTest {
         val properties =
             MonetizationAnalyticsPayload.resultProperties(
                 success = true,
+                result = "success",
                 source = MonetizationSources.PAYWALL,
                 entryPoint = "setup_upgrade_cta",
                 responseCode = 0,
@@ -17,6 +18,7 @@ class MonetizationAnalyticsPayloadTest {
             )
 
         assertThat(properties[AnalyticsProperties.ENTRY_POINT]).isEqualTo("setup_upgrade_cta")
+        assertThat(properties[AnalyticsProperties.RESULT]).isEqualTo("success")
         assertThat(properties[AnalyticsProperties.SUCCESS]).isEqualTo(true)
         assertThat(properties[AnalyticsProperties.SOURCE]).isEqualTo(MonetizationSources.PAYWALL)
     }
@@ -26,6 +28,7 @@ class MonetizationAnalyticsPayloadTest {
         val properties =
             MonetizationAnalyticsPayload.resultProperties(
                 success = false,
+                result = "failed",
                 source = MonetizationSources.AUTO_RESTORE,
                 entryPoint = null,
                 responseCode = 2,
@@ -33,6 +36,7 @@ class MonetizationAnalyticsPayloadTest {
             )
 
         assertThat(properties[AnalyticsProperties.ENTRY_POINT]).isEqualTo(MonetizationSources.AUTO_RESTORE)
+        assertThat(properties[AnalyticsProperties.RESULT]).isEqualTo("failed")
         assertThat(properties[AnalyticsProperties.DEBUG_MESSAGE]).isEqualTo("")
     }
 }

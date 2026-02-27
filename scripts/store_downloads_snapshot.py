@@ -17,7 +17,10 @@ from typing import Any, Dict, List, Optional
 
 LIVE_EVENTS_PREDICATE = """
 (
-  lower(coalesce(properties.build_audience, 'live')) = 'live'
+  (
+    lower(coalesce(properties.environment, '')) IN ('production', 'live')
+    OR lower(coalesce(properties.build_audience, '')) = 'live'
+  )
   AND lower(coalesce(properties.build_type, 'release')) != 'debug'
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
 )
@@ -128,7 +131,6 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT coalesce(properties.$os, properties.$os_name, 'Unknown') AS os, count(DISTINCT person_id) AS users
         FROM events
         WHERE event = 'Application Installed'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
           AND {LIVE_EVENTS_PREDICATE}
         GROUP BY os
@@ -154,7 +156,6 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
-          AND properties.environment = 'production'
           AND (properties.$os = 'Android' OR properties.$os_name = 'Android')
           AND timestamp > now() - interval {days} day
           AND {LIVE_EVENTS_PREDICATE}
@@ -165,11 +166,10 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     )
 
     dau = query_scalar(
-        """
+        f"""
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval 1 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
@@ -178,11 +178,10 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         errors,
     )
     wau = query_scalar(
-        """
+        f"""
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval 7 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
@@ -195,7 +194,6 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
-          AND properties.environment = 'production'
           AND timestamp > now() - interval {days} day
           AND {LIVE_EVENTS_PREDICATE}
         """,
