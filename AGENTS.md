@@ -103,6 +103,34 @@ Do not infer progress from draft campaign configs.
 - Treat every App Store rejection as a preventable failure. Anticipate review issues before submission.
 - When something fails, diagnose the root cause from the actual error response before retrying.
 
+## Worktree & Branch Protocol
+
+### Mandatory for ALL Agents
+1. **Use `isolation: "worktree"` for any code modification.** No exceptions.
+2. **Never commit directly to `develop`, `main`, or the user's active branch.**
+3. Push worktree branch to origin, then create a PR for review/merge.
+4. After work is pushed, the worktree is cleaned up automatically on next session start.
+
+### Multi-Agent Safety
+- Other agents (Claude, Gemini, GPT, Cursor) may have active worktrees concurrently.
+- The auto-cleanup hook (`.claude/hooks/worktree-cleanup.sh`) checks for:
+  - Registered git worktrees (skipped — another agent is working)
+  - `.git` link files (skipped — still connected)
+  - Lock files (skipped — in use)
+  - Dirty working trees (skipped — uncommitted changes)
+- Only truly orphaned directories (no git link, no lock, no changes) are removed.
+
+### Branch Naming
+- Features: `feat/{description}`
+- Fixes: `fix/{description}`
+- Releases: `release/vX.Y.Z` (only branch type allowed to merge to `main`)
+- Hotfixes: `hotfix/vX.Y.Z` (branches from `main`, merges to both `main` and `develop`)
+- Agent worktrees: `worktree-agent-{id}` (auto-generated, ephemeral)
+
+### Release Flow
+1. `develop` → `release/vX.Y.Z` → TestFlight + Google Play → tag on `main` → merge back to `develop`
+2. Hotfix: `main` → `hotfix/vX.Y.Z` → stores → tag on `main` → merge to `develop`
+
 ## Commands
 
 ```bash
