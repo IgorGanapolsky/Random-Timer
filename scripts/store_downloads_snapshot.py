@@ -166,7 +166,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     )
 
     dau = query_scalar(
-        """
+        f"""
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
@@ -178,7 +178,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         errors,
     )
     wau = query_scalar(
-        """
+        f"""
         SELECT count(DISTINCT person_id)
         FROM events
         WHERE event = 'Application Opened'
