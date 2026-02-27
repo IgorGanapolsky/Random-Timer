@@ -26,7 +26,10 @@ except ModuleNotFoundError:
 
 LIVE_EVENTS_PREDICATE = """
 (
-  lower(coalesce(properties.build_audience, 'live')) = 'live'
+  (
+    lower(coalesce(properties.environment, '')) IN ('production', 'live')
+    OR lower(coalesce(properties.build_audience, '')) = 'live'
+  )
   AND lower(coalesce(properties.build_type, 'release')) != 'debug'
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
 )
