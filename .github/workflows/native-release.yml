@@ -698,3 +698,91 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
+
+  sync-main:
+    needs: [tag-release]
+    if: always() && needs.tag-release.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract tag for PR title
+        id: tag
+        run: |
+          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
+          TAG="v${VERSION_NAME}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "current_branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR to sync main
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          CURRENT_BRANCH="${{ steps.tag.outputs.current_branch }}"
+
+          # Attach --label release only if the label exists in the repo
+          LABEL_FLAG=""
+          if gh label list --json name --jq '.[].name' | grep -qx "release"; then
+            LABEL_FLAG="--label release"
+          fi
+
+          gh pr create \
+            --base main \
+            --head "${CURRENT_BRANCH}" \
+            --title "release: sync main with ${TAG}" \
+            --body "## Automated Post-Release Sync
+
+          This PR was automatically created by the \`native-release\` workflow after successful store verification and tagging of **${TAG}**.
+
+          ### Why this PR exists
+          After a release is verified and tagged, \`main\` must be brought up to date with the release branch so it reflects the shipped code. This is the standard GitFlow post-release sync step.
+
+          ### What to do
+          - Review and merge this PR once CI passes.
+          - No manual changes should be needed; this is a fast-forward or clean merge from the release branch.
+
+          _Triggered by run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}_" \
+            ${LABEL_FLAG}
+
+          echo "✅ PR to main created for ${TAG}"
+
+      - name: Create PR to sync develop
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          CURRENT_BRANCH="${{ steps.tag.outputs.current_branch }}"
+
+          # Attach --label release only if the label exists in the repo
+          LABEL_FLAG=""
+          if gh label list --json name --jq '.[].name' | grep -qx "release"; then
+            LABEL_FLAG="--label release"
+          fi
+
+          gh pr create \
+            --base develop \
+            --head "${CURRENT_BRANCH}" \
+            --title "release: merge ${TAG} back into develop" \
+            --body "## Automated Post-Release Back-Merge
+
+          This PR was automatically created by the \`native-release\` workflow after successful store verification and tagging of **${TAG}**.
+
+          ### Why this PR exists
+          Any hotfixes or last-minute changes committed to the release branch during the release process must be brought back into \`develop\` to prevent regression on future releases. This is the standard GitFlow back-merge step.
+
+          ### What to do
+          - Review and merge this PR once CI passes.
+          - Resolve any conflicts that arose from parallel development on \`develop\`.
+
+          _Triggered by run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}_" \
+            ${LABEL_FLAG}
+
+          echo "✅ PR to develop created for ${TAG}"
