@@ -23,6 +23,34 @@ cd native-ios && pod deintegrate && pod install  # Fix pod failures
 - **Frontmatter stripping**: Before GitHub sync: `sed '1,/^---$/d; 1,/^---$/d'`
 - **Paths**: Always relative, never absolute. No usernames in paths.
 
+## Git Flow & Branching Strategy
+
+### Branch Model
+- `main` — production mirror. Only receives merges from `release/vX.Y.Z` or `hotfix/vX.Y.Z` branches.
+- `develop` — integration branch. All feature work merges here first.
+- `release/vX.Y.Z` — cut from `develop` when ready to ship. Version bump, QA, then merge to both `main` and back to `develop`.
+- `hotfix/vX.Y.Z` — cut from `main` for urgent production fixes. Merge to both `main` and `develop`.
+- `feat/*`, `fix/*`, `chore/*` — short-lived branches off `develop`.
+
+### Release Flow
+1. Cut `release/vX.Y.Z` from `develop`
+2. Bump version codes (Android versionCode + versionName, iOS MARKETING_VERSION)
+3. Run `native-release.yml` (workflow_dispatch) to build + upload to TestFlight/Google Play
+4. After verified release, `tag-release` job auto-tags on `main` and creates GitHub Release
+5. `sync-main` job auto-creates PRs to merge release → `main` and back → `develop`
+
+### Worktree Discipline
+- **All subagents MUST use `isolation: "worktree"`** for code modifications
+- **Never commit directly to the user's active branch** from any agent
+- Worktrees auto-clean on session start via `.claude/hooks/worktree-cleanup.sh`
+- Cleanup is safe: only removes orphaned dirs, never touches active worktrees from other agents/LLMs
+- `.claude/worktrees/` is gitignored — never shows in git status
+
+### Branch Hygiene
+- Delete feature branches after merge (local and remote)
+- `git fetch --prune` regularly to clean stale remote tracking refs
+- Naming enforcement: `validate_release_branch.py` blocks non-`release/vX.Y.Z` and non-`hotfix/vX.Y.Z` PRs to `main`
+
 ## Store Publishing Rule (MANDATORY)
 
 Every release MUST include complete store listing metadata before publishing:

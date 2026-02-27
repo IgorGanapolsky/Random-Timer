@@ -51,3 +51,23 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 - **Store Publishing**: Every release MUST include complete store listing metadata. NEVER publish without verifying.
 - **TDD**: Write failing test FIRST. NEVER write production code without a failing test.
 - **Verification**: Never claim "done" without running verification commands and showing output.
+
+## Git Flow & Worktree Protocol
+
+### Branch Model
+- `main` — production mirror. Only `release/vX.Y.Z` or `hotfix/vX.Y.Z` can merge here.
+- `develop` — integration branch. All feature work lands here first.
+- `release/vX.Y.Z` — release prep. Cut from `develop`, merge to `main` + back to `develop`.
+- `hotfix/vX.Y.Z` — urgent prod fixes. Cut from `main`, merge to `main` + `develop`.
+
+### Worktree Rules (MANDATORY)
+- **Always use isolated worktrees for code changes.** Never modify files on the user's active branch.
+- **Never touch another agent's active worktree.** Check `git worktree list` before cleanup.
+- Worktree cleanup runs automatically on session start. Only orphaned (unregistered, no .git link, no lock, clean) directories are removed.
+- `.claude/worktrees/` is gitignored.
+
+### Release Flow
+1. Cut `release/vX.Y.Z` from `develop`, bump versions
+2. Dispatch `native-release.yml` → builds + uploads to TestFlight/Google Play
+3. After verification, auto-tags `main` and creates GitHub Release
+4. Auto-PRs sync `main` and merge back to `develop`
