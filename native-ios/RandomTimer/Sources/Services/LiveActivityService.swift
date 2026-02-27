@@ -11,6 +11,7 @@ final class LiveActivityService: TimerLiveActivityHandling {
 
         // Use sanitized values to prevent timing leaks on lock screen
         let attributes = TimerActivityAttributes(
+            timerName: "Random Tactical Timer",
             endDate: state.liveActivityEndDate,
             minSeconds: state.config.minSeconds,
             maxSeconds: state.config.maxSeconds
