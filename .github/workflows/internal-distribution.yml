@@ -237,11 +237,16 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
-      - name: Authenticate Google Cloud (fallback for Firebase)
-        if: ${{ secrets.GOOGLE_PLAY_JSON_KEY != '' }}
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+      - name: Prepare Google auth fallback for Firebase
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            CREDENTIALS_FILE="${RUNNER_TEMP}/gcp-sa.json"
+            echo "$GOOGLE_PLAY_JSON_KEY" > "$CREDENTIALS_FILE"
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDENTIALS_FILE" >> "$GITHUB_ENV"
+          fi
 
       - name: Distribute to internal Firebase tester(s)
         env:
@@ -261,7 +266,7 @@ jobs:
           )
           if [ -n "${FIREBASE_TOKEN:-}" ]; then
             "${CMD[@]}" --token "$FIREBASE_TOKEN"
-          elif [ -n "${GOOGLE_GHA_CREDS_PATH:-}" ] || [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] || [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+          elif [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] || [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
             "${CMD[@]}"
           else
             echo "❌ Missing Firebase auth. Set FIREBASE_TOKEN or GOOGLE_PLAY_JSON_KEY."
