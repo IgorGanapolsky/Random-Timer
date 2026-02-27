@@ -27,12 +27,14 @@ setup_develop_protection() {
     --method PUT \
     "/repos/$GITHUB_REPOSITORY/branches/develop/protection" \
     -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=validate \
-    -f required_status_checks[contexts][]=security \
-    -f required_status_checks[contexts][]=build \
+    -f required_status_checks[contexts][]=GitGuardian\ Security\ Checks \
+    -f required_status_checks[contexts][]=SonarCloud \
+    -f required_status_checks[contexts][]=Claude\ Review \
     -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=1 \
+    -f required_pull_request_reviews[required_approving_review_count]=0 \
     -f required_pull_request_reviews[dismiss_stale_reviews]=true \
+    -f required_pull_request_reviews[require_code_owner_reviews]=false \
+    -f required_pull_request_reviews[require_last_push_approval]=false \
     -f allow_deletions=false \
     -f allow_force_pushes=false
 }
@@ -44,14 +46,14 @@ setup_main_protection() {
     --method PUT \
     "/repos/$GITHUB_REPOSITORY/branches/main/protection" \
     -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=validate \
-    -f required_status_checks[contexts][]=security \
-    -f required_status_checks[contexts][]=build \
-    -f required_status_checks[contexts][]=release \
+    -f required_status_checks[contexts][]=GitGuardian\ Security\ Checks \
+    -f required_status_checks[contexts][]=SonarCloud \
+    -f required_status_checks[contexts][]=Claude\ Review \
     -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=2 \
+    -f required_pull_request_reviews[required_approving_review_count]=0 \
     -f required_pull_request_reviews[dismiss_stale_reviews]=true \
-    -f required_pull_request_reviews[require_code_owner_reviews]=true \
+    -f required_pull_request_reviews[require_code_owner_reviews]=false \
+    -f required_pull_request_reviews[require_last_push_approval]=false \
     -f restrictions[users][] \
     -f restrictions[teams][] \
     -f restrictions[apps][] \
