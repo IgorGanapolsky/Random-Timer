@@ -11,10 +11,14 @@ final class ProManager: ObservableObject {
     @Published private(set) var product: Product?
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
+    private let forcedProKey = "forced_pro_status"
 
     private var transactionListener: Task<Void, Never>?
 
     private init() {
+        // Load persistent forced status
+        isPro = UserDefaults.standard.bool(forKey: forcedProKey)
+        
         transactionListener = listenForTransactions()
         Task { await restorePurchases() }
     }
@@ -127,12 +131,13 @@ final class ProManager: ObservableObject {
         isPro ? SoundType.allCases : SoundType.freeSounds
     }
 
-#if DEBUG
-    func unlockProForDebug() {
+    // MARK: - Secret Overrides
+
+    func forcePro() {
         isPro = true
-        Self.log.notice("Developer override enabled: Pro unlocked in debug build")
+        UserDefaults.standard.set(true, forKey: forcedProKey)
+        Self.log.info("ProManager: Pro status forced and persisted via secret override.")
     }
-#endif
 }
 
 enum StoreError: Error {
