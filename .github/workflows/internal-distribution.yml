@@ -237,24 +237,36 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Authenticate Google Cloud (fallback for Firebase)
+        if: ${{ secrets.GOOGLE_PLAY_JSON_KEY != '' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+
       - name: Distribute to internal Firebase tester(s)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_INTERNAL_TESTERS: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_APP_ID: ${{ steps.firebase.outputs.app_id }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${FIREBASE_TOKEN:-}" ]; then
-            echo "❌ Missing required secret: FIREBASE_TOKEN"
+          TESTERS="${FIREBASE_INTERNAL_TESTERS:-iganapolsky@gmail.com}"
+          CMD=(
+            firebase appdistribution:distribute
+            native-android/app/build/outputs/apk/release/app-release.apk
+            --app "$FIREBASE_APP_ID"
+            --testers "$TESTERS"
+            --release-notes "Internal auto-distribution from develop (${GITHUB_SHA})"
+          )
+          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+            "${CMD[@]}" --token "$FIREBASE_TOKEN"
+          elif [ -n "${GOOGLE_GHA_CREDS_PATH:-}" ] || [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] || [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            "${CMD[@]}"
+          else
+            echo "❌ Missing Firebase auth. Set FIREBASE_TOKEN or GOOGLE_PLAY_JSON_KEY."
             exit 1
           fi
-          TESTERS="${FIREBASE_INTERNAL_TESTERS:-iganapolsky@gmail.com}"
-          firebase appdistribution:distribute \
-            native-android/app/build/outputs/apk/release/app-release.apk \
-            --app "$FIREBASE_APP_ID" \
-            --testers "$TESTERS" \
-            --release-notes "Internal auto-distribution from develop (${GITHUB_SHA})" \
-            --token "$FIREBASE_TOKEN"
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
