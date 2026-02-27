@@ -259,6 +259,7 @@ object AnalyticsEvents {
 
 object AnalyticsProperties {
     const val ENTRY_POINT = "entry_point"
+    const val RESULT = "result"
     const val SUCCESS = "success"
     const val RESPONSE_CODE = "response_code"
     const val DEBUG_MESSAGE = "debug_message"

@@ -20,7 +20,7 @@ class AbandonRateReportTests(unittest.TestCase):
                 arr,
                 "query_scalar",
                 side_effect=[100, 40, 30, 12, 9, 3, 4],
-            ), mock.patch.object(
+            ) as scalar_mock, mock.patch.object(
                 arr,
                 "query_rows",
                 side_effect=[
@@ -34,6 +34,7 @@ class AbandonRateReportTests(unittest.TestCase):
                     arr.run()
 
         payload = json.loads(out.getvalue())
+        purchase_success_query = scalar_mock.call_args_list[5].args[0]
         self.assertEqual(payload["abandon_metrics"]["timer_started_30d"], 100)
         self.assertEqual(payload["abandon_metrics"]["timer_completed_30d"], 40)
         self.assertEqual(payload["abandon_metrics"]["abandon_rate_percent"], 60.0)
@@ -41,6 +42,8 @@ class AbandonRateReportTests(unittest.TestCase):
         self.assertEqual(payload["monetization_metrics"]["paywall_purchase_success_30d"], 3)
         self.assertEqual(payload["monetization_metrics"]["paywall_view_to_purchase_rate_percent"], 25.0)
         self.assertEqual(payload["build_audience_breakdown_30d"][0]["build_audience"], "live")
+        self.assertIn("properties.result", purchase_success_query)
+        self.assertIn("toString(properties.success)", purchase_success_query)
 
 
 if __name__ == "__main__":

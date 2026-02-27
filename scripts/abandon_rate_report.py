@@ -122,7 +122,10 @@ def run():
         SELECT count()
         FROM events
         WHERE event = 'paywall_purchase_result'
-          AND lower(coalesce(properties.result, '')) IN ('success', 'restored', 'already_unlocked')
+          AND (
+            lower(coalesce(properties.result, '')) IN ('success', 'restored', 'already_unlocked')
+            OR lower(toString(properties.success)) = 'true'
+          )
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
