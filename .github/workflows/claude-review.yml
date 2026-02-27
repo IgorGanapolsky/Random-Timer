@@ -24,6 +24,7 @@ jobs:
         uses: anthropics/claude-code-action@29214eeb6626cb5b6abf73a380c90ca849259729 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
           prompt: |
             Review this PR for the Random Timer app. This is a native mobile project:
             - Android: Kotlin + Jetpack Compose (native-android/)
@@ -51,7 +52,10 @@ jobs:
             - Start with overall assessment (APPROVE, REQUEST_CHANGES, or COMMENT)
             - List specific issues with file:line references
             - Provide fix suggestions for each issue
-          claude_args: '--max-turns 10 --model claude-sonnet-4-5-20250929'
+          claude_args: |
+            --max-turns 10
+            --model claude-sonnet-4-5-20250929
+            --setting-sources user
 
   # Auto-approve after Claude review passes (satisfies required 1 approval)
   ai-auto-approve:
@@ -87,6 +91,7 @@ jobs:
         uses: anthropics/claude-code-action@29214eeb6626cb5b6abf73a380c90ca849259729 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
           prompt: |
             A reviewer mentioned @claude with the following comment:
 
@@ -99,4 +104,6 @@ jobs:
 
             Respond helpfully to their request. If they're asking for code changes,
             explain what needs to be done and where. Be specific with file paths.
-          claude_args: '--max-turns 5'
+          claude_args: |
+            --max-turns 5
+            --setting-sources user
