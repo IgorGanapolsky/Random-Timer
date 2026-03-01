@@ -3,6 +3,9 @@ import os
 #if canImport(PostHog)
 import PostHog
 #endif
+#if canImport(AdServices)
+import AdServices
+#endif
 
 /// Analytics Service for PostHog integration
 /// To enable: Add PostHog Swift SDK via SPM (https://github.com/PostHog/posthog-ios)
@@ -17,6 +20,7 @@ final class AnalyticsService {
     private let hasFirstConfiguredKey = "has_first_configured"
     private let hasFirstCompletedKey = "has_first_completed"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
+    private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
 
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
@@ -103,6 +107,7 @@ final class AnalyticsService {
         logger.info("PostHog initialized")
 
         trackFirstOpenIfNeeded()
+        fetchAppleSearchAdsAttribution()
     }
 
     func track(_ event: String, properties: [String: Any]? = nil) {
@@ -184,6 +189,77 @@ final class AnalyticsService {
         return params
     }
 
+    // MARK: - Apple Search Ads Attribution
+
+    func fetchAppleSearchAdsAttribution() {
+        guard initialized else { return }
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: appleAdsAttributionFetchedKey) else { return }
+
+#if canImport(AdServices)
+        if #available(iOS 14.3, *) {
+            guard let token = try? AAAttribution.attributionToken() else {
+                logger.debug("No Apple Ads attribution token available")
+                return
+            }
+
+            var request = URLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
+            request.httpMethod = "POST"
+            request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
+            request.httpBody = Data(token.utf8)
+
+            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                guard let data = data, error == nil else {
+                    self?.logger.error("Apple Ads attribution request failed: \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+
+                guard let result = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    self?.logger.error("Apple Ads attribution response not parseable")
+                    return
+                }
+
+                let campaignId = result["campaignId"] as? Int ?? 0
+                // campaignId 1234567890 is Apple's test/organic value — skip it
+                guard campaignId != 0, campaignId != 1234567890 else {
+                    self?.logger.info("Apple Ads attribution: organic install (no paid campaign)")
+                    DispatchQueue.main.async {
+                        defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+                    }
+                    return
+                }
+
+                let attribution: [String: Any] = [
+                    "utm_source": "apple_search_ads",
+                    "utm_medium": "asa",
+                    "utm_campaign": result["campaignName"] as? String ?? "unknown",
+                    "apple_ads_campaign_id": campaignId,
+                    "apple_ads_adgroup_id": result["adGroupId"] as? Int ?? 0,
+                    "apple_ads_keyword": result["keyword"] as? String ?? "",
+                ]
+
+                DispatchQueue.main.async { [weak self] in
+                    defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+
+                    // Persist UTM params for future events
+                    defaults.set("apple_search_ads", forKey: "utm_source")
+                    defaults.set("asa", forKey: "utm_medium")
+                    defaults.set(attribution["utm_campaign"], forKey: "utm_campaign")
+
+#if canImport(PostHog)
+                    PostHogSDK.shared.identify(
+                        PostHogSDK.shared.getDistinctId(),
+                        userProperties: attribution
+                    )
+                    PostHogSDK.shared.capture(AnalyticsEvents.appleAdsAttribution, properties: attribution)
+#endif
+                    self?.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
+                }
+            }.resume()
+        }
+#endif
+    }
+
     // MARK: - Onboarding Funnel
 
     private func trackFirstOpenIfNeeded() {
@@ -255,8 +331,9 @@ enum AnalyticsEvents {
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
-    // UTM Attribution
+    // Attribution
     static let deepLinkOpened = "deep_link_opened"
+    static let appleAdsAttribution = "apple_ads_attribution"
 
     // Onboarding Funnel
     static let firstOpen = "first_open"
