@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [develop, main]
     types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+    branches: [develop, main]
   push:
     branches: [develop, main]
     paths-ignore:
