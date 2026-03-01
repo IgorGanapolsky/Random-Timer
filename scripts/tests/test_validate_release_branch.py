@@ -32,7 +32,7 @@ def test_validate_release_branch_passes_when_versions_match(tmp_path):
 
 def test_validate_release_branch_rejects_invalid_branch_name(tmp_path):
     _write_version_files(tmp_path, android_version="1.2.3", ios_version="1.2.3")
-    with pytest.raises(ValidationError, match="release/vX.Y.Z"):
+    with pytest.raises(ValidationError, match="release/vX.Y.Z or hotfix/vX.Y.Z"):
         validate_release_branch(repo_root=tmp_path, head_ref="develop")
 
 
@@ -46,3 +46,29 @@ def test_validate_release_branch_rejects_branch_version_mismatch(tmp_path):
     _write_version_files(tmp_path, android_version="1.2.3", ios_version="1.2.3")
     with pytest.raises(ValidationError, match="branch expects 1.2.4"):
         validate_release_branch(repo_root=tmp_path, head_ref="release/v1.2.4")
+
+
+def test_validate_hotfix_branch_passes_when_versions_match(tmp_path):
+    _write_version_files(tmp_path, android_version="1.2.4", ios_version="1.2.4")
+    result = validate_release_branch(repo_root=tmp_path, head_ref="hotfix/v1.2.4")
+    assert result["expected_version"] == "1.2.4"
+    assert result["android_version"] == "1.2.4"
+    assert result["ios_version"] == "1.2.4"
+
+
+def test_validate_hotfix_branch_rejects_platform_version_mismatch(tmp_path):
+    _write_version_files(tmp_path, android_version="1.2.4", ios_version="1.2.5")
+    with pytest.raises(ValidationError, match="Version mismatch"):
+        validate_release_branch(repo_root=tmp_path, head_ref="hotfix/v1.2.4")
+
+
+def test_validate_hotfix_branch_rejects_branch_version_mismatch(tmp_path):
+    _write_version_files(tmp_path, android_version="1.2.4", ios_version="1.2.4")
+    with pytest.raises(ValidationError, match="branch expects 1.2.5"):
+        validate_release_branch(repo_root=tmp_path, head_ref="hotfix/v1.2.5")
+
+
+def test_validate_release_branch_rejects_bare_hotfix_prefix(tmp_path):
+    _write_version_files(tmp_path, android_version="1.2.4", ios_version="1.2.4")
+    with pytest.raises(ValidationError, match="release/vX.Y.Z or hotfix/vX.Y.Z"):
+        validate_release_branch(repo_root=tmp_path, head_ref="hotfix")
