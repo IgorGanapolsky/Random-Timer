@@ -5,46 +5,56 @@ import StoreKit
 final class ProManager: ObservableObject {
     static let shared = ProManager()
 
-    static nonisolated let productID = "com.iganapolsky.randomtimer.pro"
+    static nonisolated let baseProductID = "com.iganapolsky.randomtimer.pro"
+    static nonisolated let eliteProductID = "com.iganapolsky.randomtimer.elite"
 
-    @Published private(set) var isPro = false
-    @Published private(set) var product: Product?
+    @Published private(set) var entitlementLevel: EntitlementLevel = .none
+    @Published private(set) var products: [Product] = []
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
+    private let forcedProKey = "forced_pro_status"
+    private let entitlementKey = "user_entitlement_level"
 
     private var transactionListener: Task<Void, Never>?
 
     private init() {
+        let savedLevel = UserDefaults.standard.integer(forKey: entitlementKey)
+        entitlementLevel = EntitlementLevel(rawValue: savedLevel) ?? .none
+        
+        if entitlementLevel == .none && UserDefaults.standard.bool(forKey: forcedProKey) {
+            entitlementLevel = .base
+        }
+        
         transactionListener = listenForTransactions()
-        Task { await restorePurchases() }
+        Task { 
+            await fetchProducts()
+            await restorePurchases() 
+        }
     }
 
     deinit {
         transactionListener?.cancel()
     }
 
-    // MARK: - Fetch Product
+    var isPro: Bool { entitlementLevel >= .base }
+    var isElite: Bool { entitlementLevel == .elite }
 
-    func fetchProduct() async {
+    func fetchProducts() async {
         do {
-            let products = try await Product.products(for: [Self.productID])
-            product = products.first
+            let storeProducts = try await Product.products(for: [Self.baseProductID, Self.eliteProductID])
+            products = storeProducts.sorted(by: { $0.price < $1.price })
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
         }
     }
 
-    var formattedPrice: String {
-        product?.displayPrice ?? "$4.99"
-    }
-
-    // MARK: - Purchase
-
     @discardableResult
-    func purchase() async -> ProPurchaseResult {
-        guard let product else {
-            await fetchProduct()
-            guard let product = self.product else { return .productUnavailable }
+    func purchase(productID: String) async -> ProPurchaseResult {
+        guard let product = products.first(where: { $0.id == productID }) else {
+            await fetchProducts()
+            guard let product = products.first(where: { $0.id == productID }) else {
+                return .productUnavailable
+            }
             return await doPurchase(product)
         }
         return await doPurchase(product)
@@ -55,8 +65,8 @@ final class ProManager: ObservableObject {
             let result = try await product.purchase()
             switch result {
             case .success(let verification):
-                let transaction = try Self.checkVerified(verification)
-                isPro = true
+                let transaction = try checkVerified(verification)
+                updateEntitlement(for: transaction.productID)
                 await transaction.finish()
                 return .success
             case .userCancelled:
@@ -72,40 +82,45 @@ final class ProManager: ObservableObject {
         }
     }
 
-    // MARK: - Restore
-
     @discardableResult
     func restorePurchases() async -> ProRestoreResult {
-        if isPro {
-            return .alreadyUnlocked
-        }
-
+        var restored = false
         for await result in Transaction.currentEntitlements {
-            if let transaction = try? Self.checkVerified(result),
-               transaction.productID == Self.productID {
-                isPro = true
-                return .restored
+            if let transaction = try? checkVerified(result) {
+                updateEntitlement(for: transaction.productID)
+                restored = true
             }
         }
-
-        return isPro ? .alreadyUnlocked : .notFound
+        return restored ? .restored : .notFound
     }
 
-    // MARK: - Transaction Listener
+    private func updateEntitlement(for productID: String) {
+        if productID == Self.eliteProductID {
+            entitlementLevel = .elite
+        } else if productID == Self.baseProductID {
+            if entitlementLevel < .base {
+                entitlementLevel = .base
+            }
+        }
+        UserDefaults.standard.set(entitlementLevel.rawValue, forKey: entitlementKey)
+    }
 
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached {
             for await result in Transaction.updates {
-                if let transaction = try? Self.checkVerified(result),
-                   transaction.productID == Self.productID {
-                    await MainActor.run { [weak self] in self?.isPro = true }
-                    await transaction.finish()
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    // Fix: Main actor-isolated method called from non-isolated context
+                    if let transaction = try? self.checkVerified(result) {
+                        self.updateEntitlement(for: transaction.productID)
+                        Task { await transaction.finish() }
+                    }
                 }
             }
         }
     }
 
-    private nonisolated static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
             throw StoreError.failedVerification
@@ -114,41 +129,20 @@ final class ProManager: ObservableObject {
         }
     }
 
-    // MARK: - Feature Gates
-
-    static let maxSecondsFree = 300
-    static let maxSecondsPro = 3600
-
-    var maxSecondsLimit: Int {
-        isPro ? Self.maxSecondsPro : Self.maxSecondsFree
+    func forcePro() {
+        entitlementLevel = .elite
+        UserDefaults.standard.set(entitlementLevel.rawValue, forKey: entitlementKey)
+        Self.log.info("ProManager: Elite status forced via secret override.")
     }
 
-    var availableSounds: [SoundType] {
-        isPro ? SoundType.allCases : SoundType.freeSounds
+    var maxSecondsLimit: Int { isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree }
+    var availableSounds: [SoundType] { isPro ? SoundType.allCases : SoundType.freeSounds }
+    
+    func formattedPrice(for id: String) -> String {
+        return products.first(where: { $0.id == id })?.displayPrice ?? (id == Self.eliteProductID ? "$19.99" : "$4.99")
     }
-
-#if DEBUG
-    func unlockProForDebug() {
-        isPro = true
-        Self.log.notice("Developer override enabled: Pro unlocked in debug build")
-    }
-#endif
 }
 
 enum StoreError: Error {
     case failedVerification
-}
-
-enum ProPurchaseResult: String {
-    case success = "success"
-    case userCancelled = "user_cancelled"
-    case pending = "pending"
-    case productUnavailable = "product_unavailable"
-    case failed = "failed"
-}
-
-enum ProRestoreResult: String {
-    case restored = "restored"
-    case alreadyUnlocked = "already_unlocked"
-    case notFound = "not_found"
 }

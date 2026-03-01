@@ -260,6 +260,10 @@ class TimerViewModel
             soundPreviewManager.previewVolume(config.value.soundType, volume)
         }
 
+        fun forcePro() {
+            proManager.forcePro()
+        }
+
         private fun stopSoundPreview() {
             soundPreviewManager.stop()
         }

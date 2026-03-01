@@ -158,6 +158,9 @@ struct TimerSetupScreen: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                        .onLongPressGesture(minimumDuration: 8.0) {
+                            proManager.forcePro()
+                        }
                     
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")

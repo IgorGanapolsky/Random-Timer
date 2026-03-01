@@ -11,6 +11,7 @@ final class LiveActivityService: TimerLiveActivityHandling {
 
         // Use sanitized values to prevent timing leaks on lock screen
         let attributes = TimerActivityAttributes(
+            timerName: "Random Tactical Timer",
             endDate: state.liveActivityEndDate,
             minSeconds: state.config.minSeconds,
             maxSeconds: state.config.maxSeconds
@@ -20,7 +21,6 @@ final class LiveActivityService: TimerLiveActivityHandling {
             remainingSeconds: state.liveActivityRemainingSeconds
         )
 
-        // Use real endDate for staleDate so iOS keeps the activity alive
         let staleDate = state.endDate
 
         do {
@@ -35,13 +35,11 @@ final class LiveActivityService: TimerLiveActivityHandling {
     }
 
     func update(state: TimerState) {
-        // Use sanitized values to prevent timing leaks
         let contentState = TimerActivityAttributes.ContentState(
             status: state.status,
             remainingSeconds: state.liveActivityRemainingSeconds
         )
 
-        // Use real endDate for staleDate so iOS keeps the activity alive
         let staleDate = state.endDate
 
         guard let currentActivity = activity else { return }
