@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validate release branch naming and platform version alignment.
+"""Validate release/hotfix branch naming and platform version alignment.
 
 Rules:
-1. Branch must be named `release/vX.Y.Z`.
+1. Branch must be named `release/vX.Y.Z` or `hotfix/vX.Y.Z`.
 2. Android `versionName` must equal iOS `MARKETING_VERSION`.
 3. Both platform versions must match X.Y.Z from the branch name.
 """
@@ -19,7 +19,7 @@ class ValidationError(RuntimeError):
     """Raised when release branch validation fails."""
 
 
-RELEASE_BRANCH_RE = re.compile(r"^release/v(?P<version>\d+\.\d+\.\d+)$")
+RELEASE_BRANCH_RE = re.compile(r"^(?:release|hotfix)/v(?P<version>\d+\.\d+\.\d+)$")
 ANDROID_VERSION_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
 IOS_VERSION_RE = re.compile(r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;")
 
@@ -52,7 +52,7 @@ def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
     branch_match = RELEASE_BRANCH_RE.match(head_ref.strip())
     if not branch_match:
         raise ValidationError(
-            f"Only release/vX.Y.Z branches are allowed for main promotion. Received: '{head_ref}'"
+            f"Only release/vX.Y.Z or hotfix/vX.Y.Z branches are allowed for main promotion. Received: '{head_ref}'"
         )
 
     expected_version = branch_match.group("version")
@@ -79,7 +79,7 @@ def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate release branch vs app versions.")
-    parser.add_argument("--head-ref", required=True, help="Branch name, e.g. release/v1.2.0")
+    parser.add_argument("--head-ref", required=True, help="Branch name, e.g. release/v1.2.0 or hotfix/v1.2.1")
     parser.add_argument("--repo-root", default=".", help="Repository root")
     return parser.parse_args()
 
