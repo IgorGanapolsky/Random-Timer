@@ -202,15 +202,16 @@ fun TimerSetupScreen(
                                     text = "PRO: 1H \uD83D\uDD12",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
-                                    modifier = Modifier.combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { onUpgradeTap() },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onSecretUnlock()
-                                        },
-                                    ),
+                                    modifier =
+                                        Modifier.combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { onUpgradeTap() },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onSecretUnlock()
+                                            },
+                                        ),
                                 )
                             }
                         }
