@@ -8,9 +8,29 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
     jacoco
+}
+
+val hasGoogleServicesConfig =
+    listOf(
+        "google-services.json",
+        "src/debug/google-services.json",
+        "src/release/google-services.json",
+    ).any { file(it).exists() }
+
+val enableFirebasePlugins =
+    providers.gradleProperty("enableFirebasePlugins")
+        .map(String::toBoolean)
+        .orElse(hasGoogleServicesConfig)
+        .get()
+
+if (enableFirebasePlugins) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+} else {
+    logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }
 
 android {

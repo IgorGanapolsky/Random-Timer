@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -64,6 +63,7 @@ import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import kotlin.math.roundToInt
 
 private object SetupSpacing {
     val OuterHorizontal = 16.dp
@@ -504,7 +504,11 @@ private fun TimeRangeSliders(
     onMaxChange: (Int) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    val nudgeStep = 5
+    val coarseNudgeStep = 5
+    val fineNudgeStep = 1
+    val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
+    val maxSliderRangeInt = maxSliderRange.toInt()
+    val minSliderMaxInt = minSliderMax.toInt()
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Display
@@ -531,6 +535,13 @@ private fun TimeRangeSliders(
                 color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
             )
         }
+        Text(
+            text = "Coarse: slider + \u00B15s  \u2022  Fine: \u00B11s buttons",
+            style = MaterialTheme.typography.labelSmall,
+            color = TimerColors.TextMuted,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
 
         // Min slider with nudge
         Column {
@@ -546,14 +557,14 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 NudgeButton(
-                    icon = "-",
-                    enabled = enabled && minValue >= nudgeStep,
-                    onClick = { onMinChange(minValue - nudgeStep) },
+                    label = "-5s",
+                    enabled = enabled && minValue >= coarseNudgeStep,
+                    onClick = { onMinChange(minValue - coarseNudgeStep) },
                 )
                 Slider(
                     value = minValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = (raw / 5).toInt() * 5
+                        val snapped = snapToStep(raw, coarseNudgeStep, 0, minSliderMaxInt)
                         if (snapped != minValue) {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
@@ -571,9 +582,27 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    icon = "+",
-                    enabled = enabled && minValue <= (maxValue - 30 - nudgeStep),
-                    onClick = { onMinChange(minValue + nudgeStep) },
+                    label = "+5s",
+                    enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
+                    onClick = { onMinChange(minValue + coarseNudgeStep) },
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NudgeButton(
+                    label = "-1s",
+                    enabled = enabled && minValue >= fineNudgeStep,
+                    onClick = { onMinChange(minValue - fineNudgeStep) },
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NudgeButton(
+                    label = "+1s",
+                    enabled = enabled && minValue <= (maxValue - minGapSeconds - fineNudgeStep),
+                    onClick = { onMinChange(minValue + fineNudgeStep) },
                 )
             }
         }
@@ -592,14 +621,14 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 NudgeButton(
-                    icon = "-",
-                    enabled = enabled && maxValue >= (minValue + 30 + nudgeStep),
-                    onClick = { onMaxChange(maxValue - nudgeStep) },
+                    label = "-5s",
+                    enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue - coarseNudgeStep) },
                 )
                 Slider(
                     value = maxValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = (raw / 5).toInt() * 5
+                        val snapped = snapToStep(raw, coarseNudgeStep, minGapSeconds, maxSliderRangeInt)
                         if (snapped != maxValue) {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
@@ -617,40 +646,69 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    icon = "+",
-                    enabled = enabled && maxValue <= (maxSliderRange - nudgeStep),
-                    onClick = { onMaxChange(maxValue + nudgeStep) },
+                    label = "+5s",
+                    enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue + coarseNudgeStep) },
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NudgeButton(
+                    label = "-1s",
+                    enabled = enabled && maxValue >= (minValue + minGapSeconds + fineNudgeStep),
+                    onClick = { onMaxChange(maxValue - fineNudgeStep) },
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NudgeButton(
+                    label = "+1s",
+                    enabled = enabled && maxValue <= (maxSliderRangeInt - fineNudgeStep),
+                    onClick = { onMaxChange(maxValue + fineNudgeStep) },
                 )
             }
         }
     }
 }
 
+private fun snapToStep(
+    rawValue: Float,
+    stepSize: Int,
+    min: Int,
+    max: Int,
+): Int {
+    val snapped = (rawValue / stepSize).roundToInt() * stepSize
+    return snapped.coerceIn(min, max)
+}
+
 @Composable
 private fun NudgeButton(
-    icon: String,
+    label: String,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = CircleShape,
+        shape = RoundedCornerShape(10.dp),
         color = if (enabled) TimerColors.GlassBackground else TimerColors.BackgroundDark,
         border =
             BorderStroke(
                 1.dp,
                 if (enabled) TimerColors.GlassBorder else TimerColors.GlassBorder.copy(alpha = 0.5f),
             ),
-        modifier = androidx.compose.ui.Modifier.width(44.dp).height(44.dp),
+        modifier = modifier.width(52.dp).height(40.dp),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = icon,
-                style = MaterialTheme.typography.headlineSmall,
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
                 textAlign = TextAlign.Center,

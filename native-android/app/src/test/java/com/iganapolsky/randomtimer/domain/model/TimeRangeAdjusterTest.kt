@@ -80,5 +80,34 @@ class TimeRangeAdjusterTest {
         assertThat(max).isEqualTo(30)
         assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
     }
-}
 
+    @Test
+    fun `min change with custom cap keeps gap and stays within cap`() {
+        val cap = TimerConfig.MAX_SECONDS_PRO
+        val (min, max) = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds = 3400,
+            currentMaxSeconds = 3550,
+            newMinSeconds = cap,
+            maxSecondsLimit = cap,
+        )
+
+        assertThat(max).isEqualTo(cap)
+        assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+    }
+
+    @Test
+    fun `max change above free cap clamps and keeps valid window`() {
+        val cap = TimerConfig.MAX_SECONDS_FREE
+        val (min, max) = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds = 280,
+            currentMaxSeconds = 300,
+            newMaxSeconds = cap + 120,
+            maxSecondsLimit = cap,
+        )
+
+        assertThat(max).isEqualTo(cap)
+        assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+    }
+}
