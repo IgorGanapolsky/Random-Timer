@@ -651,14 +651,15 @@ private fun TimeRangeSliders(
                 Slider(
                     value = maxValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, coarseNudgeStep, minGapSeconds, maxSliderRangeInt)
+                        val dynamicMin = minValue + minGapSeconds
+                        val snapped = snapToStep(raw, coarseNudgeStep, dynamicMin, maxSliderRangeInt)
                         if (snapped != maxValue) {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
                         onMaxChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = 30f..maxSliderRange,
+                    valueRange = (minValue + minGapSeconds).toFloat()..maxSliderRange,
                     modifier =
                         Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
                     colors =
