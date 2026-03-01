@@ -11,6 +11,7 @@ import com.posthog.android.PostHogAndroidConfig
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.UUID
 
 @Singleton
 class AnalyticsService

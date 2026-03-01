@@ -28,6 +28,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -361,6 +362,28 @@ class TimerForegroundService : Service() {
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
+        unregisterScreenOffReceiver()
+
+        _timerState.value?.let { current ->
+            if (current.status == TimerStatus.ALARM) {
+                val silenced = current.copy(isAlarmSilenced = true)
+                _timerState.value = silenced
+                // Downgrade from alarm notification (fullScreenIntent, HIGH channel)
+                // to regular timer notification so the screen stays off after
+                // power-button press.
+                updateNotification(silenced)
+            }
+        }
+    }
+
+    private fun silenceAlarm() {
+        // Stop sound/vibration but keep alarm countdown alive for loop support.
+        // The countdown continues ticking so that when it reaches 0,
+        // the loop logic in startAlarmCountdown() can restart the timer.
+        abandonAudioFocus()
+        stopAlarmSound()
+        stopVibration()
+        deactivateMediaSession()
         unregisterScreenOffReceiver()
 
         _timerState.value?.let { current ->
@@ -853,6 +876,7 @@ class TimerForegroundService : Service() {
     }
 
     private fun stopAlarmSound() {
+        deactivateMediaSession()
         alarmPlayer?.stop()
         alarmPlayer?.release()
         alarmPlayer = null
