@@ -205,7 +205,7 @@ struct TimerSetupScreen: View {
                                                 updateConfig(soundType: sound)
                                                 timerManager.previewSound()
                                             } else {
-                                                presentPaywall(entryPoint: .soundGate)
+                                                timerManager.previewSound(type: sound)
                                             }
                                         }
                                     )
@@ -219,12 +219,27 @@ struct TimerSetupScreen: View {
                                                 updateConfig(soundType: sound2)
                                                 timerManager.previewSound()
                                             } else {
-                                                presentPaywall(entryPoint: .soundGate)
+                                                timerManager.previewSound(type: sound2)
                                             }
                                         }
                                     )
                                 }
                                 }
+                            }
+
+                            if !proManager.isPro {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Tap a sound to preview. Unlock Pro to equip it.")
+                                        .font(.caption2)
+                                        .foregroundColor(.textMuted)
+
+                                    Button("Unlock Pro") {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    }
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundColor(.accentPrimary)
+                                }
+                                .padding(.top, 8)
                             }
                         }
                     }

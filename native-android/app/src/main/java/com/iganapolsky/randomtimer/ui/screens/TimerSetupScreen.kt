@@ -474,7 +474,7 @@ fun TimerSetupScreen(
                                                     updateConfig(soundType = sound)
                                                     onSoundPreview(sound)
                                                 } else {
-                                                    onUpgradeTap()
+                                                    onSoundPreview(sound)
                                                 }
                                             },
                                             modifier = Modifier.weight(1f),
@@ -485,6 +485,28 @@ fun TimerSetupScreen(
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            if (!isPro) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(
+                                        text = "Tap a sound to preview. Unlock Pro to equip it.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Unlock Pro",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.AccentPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.clickable(onClick = onUpgradeTap),
+                                    )
+                                }
                             }
                         }
                     }
