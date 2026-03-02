@@ -190,6 +190,11 @@ fun RandomTimerNavHost(
                     showPaywall = false
                 }
             },
+            onDebugUnlock = {
+                if (viewModel.proManager.unlockProForDebug(paywallEntryPoint)) {
+                    showPaywall = false
+                }
+            },
             onRestore = {
                 scope.launch {
                     val restored = viewModel.proManager.restorePurchasesFromPaywall(paywallEntryPoint)
