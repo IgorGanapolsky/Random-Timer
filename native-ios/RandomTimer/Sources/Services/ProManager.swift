@@ -131,7 +131,7 @@ final class ProManager: ObservableObject {
     func forcePro() {
         isPro = true
         UserDefaults.standard.set(true, forKey: "forced_pro_status")
-        AnalyticsService.shared.event("dev_force_pro")
+        AnalyticsService.shared.track("dev_force_pro")
         Self.log.notice("Developer override: Pro unlocked via backdoor")
     }
 }
