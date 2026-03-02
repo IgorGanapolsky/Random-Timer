@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
@@ -44,6 +45,7 @@ fun RandomTimerNavHost(
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val isPro by viewModel.proManager.isPro.collectAsStateWithLifecycle()
+    val isElite by viewModel.proManager.isElite.collectAsStateWithLifecycle()
     val currentRoute =
         navController
             .currentBackStackEntryAsState()
@@ -53,7 +55,8 @@ fun RandomTimerNavHost(
     val activity = LocalContext.current as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
-    var paywallPrice by remember { mutableStateOf("$4.99") }
+    var basePrice by remember { mutableStateOf("$4.99") }
+    var elitePrice by remember { mutableStateOf("$19.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
@@ -108,13 +111,18 @@ fun RandomTimerNavHost(
                 currentStreak = viewModel.currentStreak,
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
+                isElite = isElite,
                 onUpgradeTap = {
                     scope.launch {
-                        paywallPrice = viewModel.proManager.getFormattedPrice()
+                        basePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
+                        elitePrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }
                 },
+                onSecretUnlock = {
+                    viewModel.proManager.forcePro()
+                }
             )
         }
 
@@ -174,10 +182,11 @@ fun RandomTimerNavHost(
 
     if (showPaywall) {
         PaywallSheet(
-            price = paywallPrice,
-            onPurchase = {
+            basePrice = basePrice,
+            elitePrice = elitePrice,
+            onPurchase = { productID ->
                 scope.launch {
-                    activity?.let { viewModel.proManager.launchPurchase(it, paywallEntryPoint) }
+                    activity?.let { viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint) }
                     showPaywall = false
                 }
             },
@@ -191,10 +200,6 @@ fun RandomTimerNavHost(
             },
             onDismiss = {
                 viewModel.trackPaywallDismissed(paywallEntryPoint)
-                showPaywall = false
-            },
-            onForcePro = {
-                viewModel.proManager.forcePro()
                 showPaywall = false
             },
         )
