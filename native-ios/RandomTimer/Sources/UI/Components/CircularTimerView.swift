@@ -32,7 +32,7 @@ struct CircularTimerView: View {
     }
 
     private var isActivelyRunning: Bool {
-        status == .running || status == .warning || status == .danger
+        Self.shouldBreatheText(for: status)
     }
 
     /// Whether all animations (shimmer, pulse) should freeze
@@ -55,7 +55,7 @@ struct CircularTimerView: View {
             // Same perceptual tuning as shimmer orbit above.
             let pulseCycle = elapsed.truncatingRemainder(dividingBy: 5.0) / 5.0
             let pulseT = Self.computePulseT(pulseCycle)
-            let trackAlpha = isComplete ? 0.15 : (isPaused ? 0.3 : 0.3 + 0.4 * pulseT)
+            let trackAlpha = isComplete ? 0.15 : (isPaused ? 0.45 : 0.3 + 0.4 * pulseT)
 
             ZStack {
                 Canvas { context, size in
@@ -178,7 +178,7 @@ struct CircularTimerView: View {
                     VStack(spacing: 4) {
                         Text("Range")
                             .font(.subheadline)
-                            .foregroundColor(.textMuted)
+                            .foregroundColor(isPaused ? .textSecondary : .textMuted)
                         Text(rangeText)
                             .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
                             .foregroundColor(.textPrimary)
@@ -196,14 +196,14 @@ struct CircularTimerView: View {
         .frame(width: min(timerSize, 340), height: min(timerSize, 340))
         .onAppear {
             animationStartDate = .now
-            if isActivelyRunning {
+            if Self.shouldBreatheText(for: status) {
                 startTextBreathing()
             }
         }
         .onChange(of: status) { _, newStatus in
-            if newStatus == .alarm || newStatus == .complete {
+            if Self.shouldResetTextBreathing(for: newStatus) {
                 stopAnimations()
-            } else if newStatus == .running || newStatus == .warning || newStatus == .danger {
+            } else if Self.shouldBreatheText(for: newStatus) {
                 animationStartDate = .now
                 startTextBreathing()
             }
@@ -219,6 +219,14 @@ struct CircularTimerView: View {
         } else {
             return 1.0 - fastOutSlowIn((cycle - 0.5) * 2.0)
         }
+    }
+
+    static func shouldBreatheText(for status: TimerStatus) -> Bool {
+        status == .running || status == .warning || status == .danger
+    }
+
+    static func shouldResetTextBreathing(for status: TimerStatus) -> Bool {
+        status == .paused || status == .alarm || status == .complete
     }
 
     /// Android FastOutSlowInEasing = CubicBezier(0.4, 0.0, 0.2, 1.0)

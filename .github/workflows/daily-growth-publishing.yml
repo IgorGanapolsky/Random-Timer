@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   pages: write
   id-token: write
 
@@ -34,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install requests requests-oauthlib markdown
+          python -m pip install requests==2.32.5 requests-oauthlib==2.0.0 markdown==3.9
 
       - name: Generate + publish + collect + build site
         env:
@@ -55,6 +56,9 @@ jobs:
           ANDROID_REVIEW_URL: ${{ secrets.ANDROID_REVIEW_URL }}
           BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
           AI_BOT_LOG_PATH: ${{ secrets.AI_BOT_LOG_PATH }}
+          AB_PILOT_MAX_COST_USD: "10"
+          AB_CONTROL_COST_USD: "0.00"
+          AB_CANDIDATE_COST_USD: "0.25"
         run: |
           python scripts/growth_content_pipeline.py \
             --repo-root . \
@@ -64,7 +68,8 @@ jobs:
           python scripts/growth_content_pipeline.py \
             --repo-root . \
             --output-root marketing \
-            run-daily
+            run-daily \
+            --ab-pilot
 
       - name: Commit generated assets
         run: |
@@ -78,17 +83,23 @@ jobs:
           fi
 
           git commit -m "chore(growth): daily content, publishing logs, and pages build"
-          git push
+          BRANCH="auto/growth-publishing-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(growth): daily content and publishing update" --body "Automated daily growth content, publishing logs, and pages build" --label "automation" || true
 
       - name: Setup Pages
+        if: github.ref == 'refs/heads/develop'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/develop'
         uses: actions/upload-pages-artifact@v3
         with:
           path: marketing/site
 
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/develop'
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -101,6 +112,9 @@ jobs:
             marketing/data/publications.jsonl
             marketing/data/engagement.jsonl
             marketing/data/engagement-latest.md
+            marketing/data/publish_ab_pilot_runs.jsonl
+            marketing/data/publish_ab_pilot_summary.json
+            marketing/data/publish_ab_pilot_report.md
             marketing/data/bot_traffic_summary.json
             marketing/data/bot_traffic_summary.md
             marketing/keywords/keyword_backlog.json

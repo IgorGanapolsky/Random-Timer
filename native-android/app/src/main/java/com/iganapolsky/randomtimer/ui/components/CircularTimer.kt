@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -68,6 +70,12 @@ object CircularTimerAnimationConfig {
     const val TEXT_BREATHING_OPACITY_MIN = 0.85f
 }
 
+internal fun shouldBreatheText(status: TimerStatus): Boolean =
+    status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
+
+internal fun effectiveTrackAlpha(status: TimerStatus, pulseAlpha: Float): Float =
+    if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
+
 @Composable
 fun CircularTimer(
     progress: Float,
@@ -98,7 +106,7 @@ fun CircularTimer(
     )
 
     // Whether animations should be running (not paused, not complete)
-    val isActivelyRunning = status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
+    val isActivelyRunning = shouldBreatheText(status)
 
     // Subtle breathing animation for timer display (adds suspense)
     val pulseAlphaAnim = remember { Animatable(CircularTimerAnimationConfig.TEXT_BREATHING_OPACITY_MAX) }
@@ -164,7 +172,7 @@ fun CircularTimer(
         modifier =
             modifier
                 .aspectRatio(1f)
-                .padding(16.dp)
+                .padding(12.dp)
                 .clearAndSetSemantics { contentDescription = accessibilityText },
         contentAlignment = Alignment.Center,
     ) {
@@ -174,7 +182,7 @@ fun CircularTimer(
             val strokePx = strokeWidth.toPx()
 
             // Background track (glass effect) - full circle with pulse animation
-            val effectiveTrackAlpha = if (status == TimerStatus.PAUSED) 0.3f else circlePulseAlpha
+            val effectiveTrackAlpha = effectiveTrackAlpha(status, circlePulseAlpha)
             drawCircle(
                 color = TimerColors.GlassBackground.copy(alpha = effectiveTrackAlpha),
                 radius = radius - strokePx / 2,
@@ -268,20 +276,32 @@ fun CircularTimer(
                 textAlign = TextAlign.Center,
             )
         } else if (rangeText.isNotEmpty()) {
+            val rangeTextStyle =
+                if (rangeText.length >= 14) {
+                    MaterialTheme.typography.titleLarge
+                } else {
+                    MaterialTheme.typography.headlineLarge
+                }
+
             Column(
+                modifier = Modifier.fillMaxWidth(0.82f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = "Range",
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.labelMedium,
-                    color = TimerColors.TextMuted,
+                    color = if (status == TimerStatus.PAUSED) TimerColors.TextSecondary else TimerColors.TextMuted,
                     textAlign = TextAlign.Center,
                 )
                 Text(
                     text = rangeText,
-                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = rangeTextStyle,
                     color = TimerColors.TextPrimary.copy(alpha = pulseAlpha),
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         } else {

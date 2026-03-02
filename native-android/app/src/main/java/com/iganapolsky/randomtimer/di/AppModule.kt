@@ -11,6 +11,7 @@ import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.service.TimerServiceControllerImpl
+import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -26,16 +27,20 @@ import kotlin.random.Random
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
     fun provideDataStore(
-        @ApplicationContext context: Context
-    ): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.create {
+        @ApplicationContext context: Context,
+    ): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create {
             context.preferencesDataStoreFile("timer_preferences")
         }
-    }
+
+    @Provides
+    @Singleton
+    fun provideTrainingStatsService(
+        @ApplicationContext context: Context,
+    ): TrainingStatsService = TrainingStatsService(context)
 
     @Provides
     @Singleton
@@ -43,29 +48,21 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCoroutineScope(): CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    fun provideCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindTimerRepository(impl: TimerRepositoryImpl): TimerRepository
 
     @Binds
     @Singleton
-    abstract fun bindTimerRepository(
-        impl: TimerRepositoryImpl
-    ): TimerRepository
+    abstract fun bindSoundPreviewManager(impl: SoundPreviewManagerImpl): SoundPreviewManager
 
     @Binds
     @Singleton
-    abstract fun bindSoundPreviewManager(
-        impl: SoundPreviewManagerImpl
-    ): SoundPreviewManager
-
-    @Binds
-    @Singleton
-    abstract fun bindTimerServiceController(
-        impl: TimerServiceControllerImpl
-    ): TimerServiceController
+    abstract fun bindTimerServiceController(impl: TimerServiceControllerImpl): TimerServiceController
 }

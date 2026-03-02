@@ -27,6 +27,9 @@
     <!-- Allow timer notifications to bypass Do Not Disturb -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
+    <!-- In-App Billing for Pro upgrade -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+
     <!-- Remove AD_ID permission added by dependencies (Firebase/PostHog) — app does not use advertising ID -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 
@@ -54,6 +57,25 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Deep link for UTM attribution tracking -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="igorganapolsky.github.io"
+                    android:pathPrefix="/Random-Timer" />
+            </intent-filter>
+
+            <!-- Custom URL scheme for campaign tracking -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="randomtimer" android:host="open" />
             </intent-filter>
         </activity>
 
@@ -84,6 +106,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Re-engagement notification receiver -->
+        <receiver
+            android:name=".notifications.ReengagementReceiver"
+            android:exported="false" />
 
     </application>
 

@@ -6,12 +6,46 @@ import ActivityKit
 public enum SoundType: String, Codable, Sendable, CaseIterable {
     case intense
     case gentle
+    case klaxon
+    case whistle
+    case buzzer
+    case gong
+    case airhorn
+    case drumRoll
+    case siren
+    case bell
+
+    /// Whether this sound requires Pro upgrade
+    public var isPro: Bool {
+        switch self {
+        case .intense, .gentle: return false
+        default: return true
+        }
+    }
+
+    /// Free-tier sounds only
+    public static var freeSounds: [SoundType] {
+        allCases.filter { !$0.isPro }
+    }
+
+    /// Pro-tier sounds only
+    public static var proSounds: [SoundType] {
+        allCases.filter { $0.isPro }
+    }
 
     /// Filename for UNNotificationSound (must match bundle resource)
     public var notificationSoundName: String {
         switch self {
         case .intense: return "alarm.mp3"
         case .gentle: return "gentle-chime.mp3"
+        case .klaxon: return "klaxon.mp3"
+        case .whistle: return "whistle.mp3"
+        case .buzzer: return "buzzer.mp3"
+        case .gong: return "gong.mp3"
+        case .airhorn: return "airhorn.mp3"
+        case .drumRoll: return "drum_roll.mp3"
+        case .siren: return "siren.mp3"
+        case .bell: return "bell.mp3"
         }
     }
 }
@@ -39,7 +73,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        maxSeconds: Int = 60,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -49,7 +83,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     ) {
         precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
         precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
-        precondition(maxSeconds <= 300, "Maximum seconds cannot exceed 300 (5 minutes)")
+        precondition(maxSeconds <= TimerConfig.maxSecondsPro, "Maximum seconds cannot exceed \(TimerConfig.maxSecondsPro)")
         precondition(alarmDuration > 0, "Alarm duration must be positive")
         precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
 
@@ -72,9 +106,32 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     /// Alarm duration as TimeInterval
     public var alarmDurationInterval: TimeInterval { TimeInterval(alarmDuration) }
 
+    public static let maxSecondsFree = 300
+    public static let maxSecondsPro = 3600
+
     public static let `default` = TimerConfig()
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
+
+    /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
+    /// Call this at deserialization time to enforce feature gating after subscription expiry.
+    public func clamped(isPro: Bool) -> TimerConfig {
+        let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
+        let clampedMax = min(maxSeconds, maxAllowed)
+        let clampedMin = min(minSeconds, clampedMax)
+        let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
+        let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
+        return TimerConfig(
+            minSeconds: clampedMin,
+            maxSeconds: clampedMax,
+            alarmDuration: alarmDuration,
+            hiddenMode: hiddenMode,
+            repeatEnabled: repeatEnabled,
+            soundType: clampedSound,
+            volume: volume,
+            vibrationEnabled: vibrationEnabled
+        )
+    }
 }
 
 // MARK: - Range Adjustment
@@ -86,7 +143,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
-    static let defaultMaxSecondsLimit = 300
+    static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
     static let defaultMinGapSeconds = 30
 
     static func adjustForMinChange(

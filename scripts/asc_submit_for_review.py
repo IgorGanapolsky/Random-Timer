@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Optional
 
-APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
+from scripts.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
 
@@ -181,123 +181,6 @@ def ensure_app_info_urls(client: "ASCClient", *, loc_id: str, locale: str, attrs
             die(f"Failed to update App Info URLs for locale {locale}: {e}")
 
     return attrs
-
-def _read_private_key_material(key_id: str) -> str:
-    key = (os.environ.get("APPSTORE_PRIVATE_KEY") or "").strip()
-    if key:
-        return key
-
-    key_path = (os.environ.get("APPSTORE_PRIVATE_KEY_PATH") or "").strip()
-    if key_path:
-        return key_path
-
-    default_key_path = os.path.expanduser(f"~/.appstoreconnect/private_keys/AuthKey_{key_id}.p8")
-    if os.path.isfile(default_key_path):
-        return default_key_path
-
-    return ""
-
-
-@dataclass
-class ASCAuth:
-    key_id: str
-    issuer_id: str
-    private_key: str  # raw key or file path
-
-    @classmethod
-    def from_env(cls) -> "ASCAuth":
-        key_id = (os.environ.get("APPSTORE_KEY_ID") or "").strip()
-        issuer_id = (os.environ.get("APPSTORE_ISSUER_ID") or "").strip()
-        private_key = _read_private_key_material(key_id)
-        missing = []
-        if not key_id:
-            missing.append("APPSTORE_KEY_ID")
-        if not issuer_id:
-            missing.append("APPSTORE_ISSUER_ID")
-        if not private_key:
-            missing.append("APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH or ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8)")
-        if missing:
-            die("Missing env vars: " + ", ".join(missing), code=2)
-        return cls(key_id=key_id, issuer_id=issuer_id, private_key=private_key)
-
-    def jwt(self) -> str:
-        try:
-            import jwt  # PyJWT
-        except ImportError:
-            die("Missing PyJWT. Install: pip install pyjwt cryptography", code=2)
-
-        private_key = self.private_key
-        if os.path.isfile(private_key):
-            with open(private_key, "r", encoding="utf-8") as f:
-                private_key = f.read()
-
-        now = int(time.time())
-        exp = now + 20 * 60
-        payload = {"iss": self.issuer_id, "iat": now, "exp": exp, "aud": "appstoreconnect-v1"}
-        headers = {"alg": "ES256", "kid": self.key_id, "typ": "JWT"}
-        return jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
-
-
-class ASCClient:
-    def __init__(self, auth: ASCAuth):
-        self._auth = auth
-        self._token = None
-        self._token_exp = 0
-
-    def _token_value(self) -> str:
-        now = time.time()
-        if self._token and now < self._token_exp - 30:
-            return self._token
-        token = self._auth.jwt()
-        # Keep a conservative cache window (token exp is 20min)
-        self._token = token
-        self._token_exp = now + 18 * 60
-        return token
-
-    def request(self, method: str, path: str, *, params: dict | None = None, payload: dict | None = None) -> dict:
-        try:
-            import requests
-        except ImportError:
-            die("Missing requests. Install: pip install requests", code=2)
-
-        url = f"{APP_STORE_CONNECT_API}{path}"
-        headers = {
-            "Authorization": f"Bearer {self._token_value()}",
-            "Content-Type": "application/json",
-        }
-        resp = requests.request(method, url, headers=headers, params=params, json=payload, timeout=30)
-        if resp.status_code >= 400:
-            try:
-                body = resp.json()
-            except Exception:
-                body = {"raw": resp.text}
-            raise RuntimeError(f"{method} {path} failed: HTTP {resp.status_code} {body}")
-        return resp.json() if resp.content else {}
-
-    def get_all(self, path: str, *, params: dict | None = None) -> list[dict]:
-        items: list[dict] = []
-        next_path = path
-        next_params = dict(params or {})
-        while True:
-            data = self.request("GET", next_path, params=next_params)
-            items.extend(data.get("data", []))
-            next_url = (data.get("links") or {}).get("next")
-            if not next_url:
-                break
-            # next is a full URL; convert to API path+query
-            if next_url.startswith(APP_STORE_CONNECT_API):
-                next_url = next_url[len(APP_STORE_CONNECT_API) :]
-            if "?" in next_url:
-                next_path, query = next_url.split("?", 1)
-                # ASC includes pagination params in the URL; just pass full query via requests by reusing next_url.
-                # Simpler: call request with next_path and no params by embedding query in path.
-                next_path = f"{next_path}?{query}"
-                next_params = {}
-            else:
-                next_path = next_url
-                next_params = {}
-        return items
-
 
 def first(items: Iterable[dict]) -> Optional[dict]:
     for i in items:
@@ -863,8 +746,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    auth = ASCAuth.from_env()
-    client = ASCClient(auth)
+    try:
+        client = ASCClient.from_env(timeout=30)
+    except AscClientError as exc:
+        die(str(exc), code=2)
 
     app = get_app(client, args.bundle_id)
     app_id = app["id"]

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background_dark">#FF0F0A1A</color>
-    <color name="background_light">#FF1A1425</color>
-    <color name="accent_primary">#FF8B5CF6</color>
+    <color name="background_dark">#FF0A0A0F</color>
+    <color name="background_light">#FF141419</color>
+    <color name="accent_primary">#FFDC2626</color>
     <color name="text_primary">#FFF8FAFC</color>
     <color name="timer_active">#FF10B981</color>
     <color name="timer_warning">#FFF59E0B</color>
@@ -12,5 +12,5 @@
     <color name="md3_notification_background">#FF1C1B1F</color>
     <color name="md3_notification_text_primary">#FFE6E1E5</color>
     <color name="md3_notification_text_secondary">#FFCAC4D0</color>
-    <color name="md3_notification_accent">#FFD0BCFF</color>
+    <color name="md3_notification_accent">#FFEF4444</color>
 </resources>

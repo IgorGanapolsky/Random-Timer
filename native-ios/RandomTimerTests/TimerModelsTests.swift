@@ -8,7 +8,7 @@ final class TimerConfigTests: XCTestCase {
         let config = TimerConfig.default
 
         XCTAssertEqual(config.minSeconds, 0)
-        XCTAssertEqual(config.maxSeconds, 300)
+        XCTAssertEqual(config.maxSeconds, 60)
         XCTAssertEqual(config.volume, 0.5)
         XCTAssertFalse(config.vibrationEnabled)
     }
@@ -269,6 +269,44 @@ final class TimeRangeAdjusterTests: XCTestCase {
         XCTAssertEqual(adjusted.min, 0)
         XCTAssertEqual(adjusted.max, 30)
         XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMinChangeByOneSecondNearUpperBoundPushesMaxByOne() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 269,
+            currentMaxSeconds: 299,
+            newMinSeconds: 270,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 270)
+        XCTAssertEqual(adjusted.max, 300)
+        XCTAssertEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMaxChangeByOneSecondNearLowerBoundPullsMinBackByOne() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 1,
+            currentMaxSeconds: 31,
+            newMaxSeconds: 30,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 0)
+        XCTAssertEqual(adjusted.max, 30)
+        XCTAssertEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMinChangeBeyondUpperBoundIsDeterministicallyClamped() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 270,
+            currentMaxSeconds: 300,
+            newMinSeconds: 275,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 270)
+        XCTAssertEqual(adjusted.max, 300)
     }
 }
 
@@ -677,3 +715,206 @@ final class TimerManagerSilenceTests: XCTestCase {
                       "Opening via notification tap must set isAlarmSilenced since sound is stopped")
     }
 }
+
+// MARK: - Storage Service Persistence Tests
+
+final class StorageServiceTests: XCTestCase {
+    private let configKey = "timer_config"
+    private let timerStateKey = "active_timer_state"
+    private var storageService: StorageService!
+
+    override func setUp() {
+        super.setUp()
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: configKey)
+        defaults.removeObject(forKey: timerStateKey)
+        storageService = StorageService()
+    }
+
+    override func tearDown() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: configKey)
+        defaults.removeObject(forKey: timerStateKey)
+        storageService = nil
+        super.tearDown()
+    }
+
+    func testLoadConfigReturnsNilWhenNothingSaved() async {
+        let loadedAsync = await storageService.loadConfig()
+        let loadedSync = storageService.loadConfigSync()
+
+        XCTAssertNil(loadedAsync)
+        XCTAssertNil(loadedSync)
+    }
+
+    func testSaveAndLoadConfigPersistsAcrossAsyncAndSyncAPIs() async {
+        let config = RandomTimer.TimerConfig(
+            minSeconds: 15,
+            maxSeconds: 90,
+            alarmDuration: 30,
+            hiddenMode: true,
+            repeatEnabled: true,
+            soundType: .gentle,
+            volume: 0.8,
+            vibrationEnabled: true
+        )
+
+        await storageService.saveConfig(config)
+
+        let loadedAsync = await storageService.loadConfig()
+        let loadedSync = storageService.loadConfigSync()
+
+        XCTAssertEqual(loadedAsync, config)
+        XCTAssertEqual(loadedSync, config)
+    }
+
+    func testSaveAndLoadTimerStatePersistsAcrossAsyncAndSyncAPIs() async {
+        let config = RandomTimer.TimerConfig(minSeconds: 20, maxSeconds: 80, alarmDuration: 10)
+        let startedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        let alarmStartedAt = Date(timeIntervalSince1970: 1_700_000_050)
+        let state = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 72,
+            startedAt: startedAt,
+            remainingDuration: 18,
+            status: .alarm,
+            alarmTimeRemaining: 5,
+            alarmStartedAt: alarmStartedAt
+        )
+
+        await storageService.saveTimerState(state)
+
+        let loadedAsync = await storageService.loadTimerState()
+        let loadedSync = storageService.loadTimerStateSync()
+
+        XCTAssertEqual(loadedAsync, state)
+        XCTAssertEqual(loadedSync, state)
+    }
+
+    func testClearTimerStateRemovesPersistedState() async {
+        let state = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 60,
+            startedAt: Date(timeIntervalSince1970: 1_700_000_100),
+            remainingDuration: 30,
+            status: .running
+        )
+        await storageService.saveTimerState(state)
+        let savedState = await storageService.loadTimerState()
+        XCTAssertNotNil(savedState)
+
+        await storageService.clearTimerState()
+
+        let clearedAsync = await storageService.loadTimerState()
+        XCTAssertNil(clearedAsync)
+        XCTAssertNil(storageService.loadTimerStateSync())
+    }
+
+    func testClearTimerStateSyncRemovesPersistedState() async {
+        let state = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 45,
+            startedAt: Date(timeIntervalSince1970: 1_700_000_200),
+            remainingDuration: 22,
+            status: .paused
+        )
+        await storageService.saveTimerState(state)
+        XCTAssertNotNil(storageService.loadTimerStateSync())
+
+        storageService.clearTimerStateSync()
+
+        XCTAssertNil(storageService.loadTimerStateSync())
+        let clearedAsync = await storageService.loadTimerState()
+        XCTAssertNil(clearedAsync)
+    }
+}
+
+#if DEBUG
+private struct CapturedAnalyticsEvent {
+    let name: String
+    let properties: [String: Any]?
+}
+
+final class TimerAbandonedAnalyticsTests: XCTestCase {
+
+    @MainActor
+    func testCancelTimerIncludesAbandonReasonAndSource() async {
+        var captured: [CapturedAnalyticsEvent] = []
+        AnalyticsService.shared.testEventHandler = { event, properties in
+            captured.append(CapturedAnalyticsEvent(name: event, properties: properties))
+        }
+        defer { AnalyticsService.shared.testEventHandler = nil }
+
+        let manager = TimerManager()
+        manager._setTimerStateForTesting(
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
+                targetDuration: 120,
+                remainingDuration: 90,
+                status: .running
+            )
+        )
+
+        await manager.cancelTimer()
+
+        guard let abandonedEvent = captured.first(where: { $0.name == AnalyticsEvents.timerAbandoned }) else {
+            XCTFail("Expected timer_abandoned event")
+            return
+        }
+
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonReason] as? String,
+            AnalyticsValues.abandonReasonUserCancelled
+        )
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonSource] as? String,
+            AnalyticsValues.abandonSourceTimerControls
+        )
+    }
+
+    @MainActor
+    func testRestoreExpiredTimerEmitsStaleRestoreAbandonEvent() async {
+        let storage = StorageService()
+        storage.clearTimerStateSync()
+        defer { storage.clearTimerStateSync() }
+
+        await storage.saveTimerState(
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
+                targetDuration: 5,
+                startedAt: Date().addingTimeInterval(-120),
+                remainingDuration: 3,
+                status: .running
+            )
+        )
+
+        var captured: [CapturedAnalyticsEvent] = []
+        AnalyticsService.shared.testEventHandler = { event, properties in
+            captured.append(CapturedAnalyticsEvent(name: event, properties: properties))
+        }
+        defer { AnalyticsService.shared.testEventHandler = nil }
+
+        let manager = TimerManager(storageService: storage)
+
+        // restoreActiveTimer() is started asynchronously from init.
+        for _ in 0..<20 where !captured.contains(where: { $0.name == AnalyticsEvents.timerAbandoned }) {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        guard let abandonedEvent = captured.first(where: { $0.name == AnalyticsEvents.timerAbandoned }) else {
+            XCTFail("Expected timer_abandoned event for stale restore")
+            return
+        }
+
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonReason] as? String,
+            AnalyticsValues.abandonReasonStaleRestoreExpired
+        )
+        XCTAssertEqual(
+            abandonedEvent.properties?[AnalyticsProperties.abandonSource] as? String,
+            AnalyticsValues.abandonSourceStateRestore
+        )
+        XCTAssertNil(manager.timerState)
+    }
+}
+#endif

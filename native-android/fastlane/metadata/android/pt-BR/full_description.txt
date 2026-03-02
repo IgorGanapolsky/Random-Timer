@@ -1,0 +1,41 @@
+Random Tactical Timer dispara um alarme em um momento imprevisível dentro do intervalo de tempo escolhido. Defina uma duração mínima e máxima, pressione iniciar e treine. Você nunca sabe quando vai disparar — mantendo você afiado, reativo e pronto para combate.
+
+Feito para lutadores, treinadores e atletas táticos que precisam treinar reação sob pressão real — não padrões previsíveis de contagem regressiva.
+
+PARA QUEM É:
+- Boxeadores, lutadores de MMA e praticantes de BJJ treinando velocidade de reação
+- Praticantes de defesa pessoal treinando inoculação de estresse
+- Treinadores com sessões de intervalos imprevisíveis
+- Atletas de CrossFit e HIIT quebrando padrões previsíveis de descanso
+- Militares e forças policiais em treinamento tático
+- Qualquer pessoa que precise de um timer sem antecipação
+
+RECURSOS PRINCIPAIS:
+- Intervalos personalizados — defina duração mínima e máxima
+- Contagem regressiva oculta — esconde o timer para não antecipar
+- Modo loop — reinicia automaticamente com nova duração aleatória
+- Contagem na tela de bloqueio — veja o timer na tela de bloqueio
+- Vários sons de alarme — escolha entre alertas intensos e suaves
+- Controles ajustáveis de volume e vibração
+- Pause, retome e reinicie a qualquer momento
+- Funciona de forma confiável em segundo plano com serviço em primeiro plano
+- Funciona com fones Bluetooth e Android Auto
+
+COMO FUNCIONA:
+1. Defina o tempo mínimo e máximo (ex: 30 segundos a 5 minutos)
+2. Toque Iniciar — o app escolhe uma duração aleatória nesse intervalo
+3. Mova-se, treine, lute ou trabalhe normalmente
+4. Reaja quando o alarme disparar com alerta em tela cheia, som e vibração
+5. Loop para iniciar automaticamente um novo intervalo aleatório
+
+CASOS DE USO:
+- Drills de reação para boxe, kickboxing, Muay Thai e MMA
+- Treinamento de troca de posição e scramble em BJJ
+- Inoculação de estresse para defesa pessoal e combate
+- HIIT e condicionamento com intervalos imprevisíveis
+- CrossFit EMOM e AMRAP com transições surpresa
+- Cenários de treinamento militar e tático
+- Treinos de equipe com timing aleatório de apito
+
+PROJETADO PARA SIMPLICIDADE:
+Interface escura. Sem bagunça. Sem anúncios. Sem rastreamento. Sem assinaturas. Defina seu intervalo. Treine para o caos.

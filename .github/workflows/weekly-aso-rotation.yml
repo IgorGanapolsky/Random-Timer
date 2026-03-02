@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: aso-keyword-rotation
@@ -36,6 +37,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Fetch latest attribution feedback
+        run: |
+          # Pull latest feedback data committed by Sunday's attribution workflow
+          git pull --ff-only origin "${GITHUB_REF_NAME}" || true
+          if [ -f marketing/keywords/posthog_feedback.json ]; then
+            echo "PostHog attribution feedback found — using real install data"
+          else
+            echo "No PostHog feedback — falling back to simulated rankings"
+          fi
 
       - name: Run ASO keyword rotation
         env:
@@ -67,7 +78,10 @@ jobs:
           fi
 
           git commit -m "chore(aso): weekly keyword rotation"
-          git push
+          BRANCH="auto/aso-rotation-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(aso): weekly keyword rotation" --body "Automated weekly ASO keyword rotation" --label "automation" || true
 
       - name: Upload rotation report
         if: always()

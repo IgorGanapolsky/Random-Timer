@@ -21,6 +21,12 @@ Events emitted on both platforms:
 - `alarm_triggered`
 - `alarm_dismissed`
 - `settings_changed`
+- `review_prompt_requested`
+- `write_review_tapped`
+- `paywall_viewed`
+- `paywall_dismissed`
+- `paywall_purchase_result`
+- `paywall_restore_result`
 
 Screens emitted on both platforms:
 
@@ -33,7 +39,8 @@ Screens emitted on both platforms:
 - `settings_changed`: `min_duration` (seconds), `max_duration` (seconds), `sound_type`, `repeat_enabled`
 - `alarm_triggered`: `target_duration` (seconds)
 - `timer_completed`: `target_duration` (seconds) on Android, no properties on iOS
-- `identify`: `platform`, `app_version`
+- `paywall_*`: `entry_point`; result events also include `result` (iOS) or `success`/`response_code` (Android)
+- common context on all events: `platform`, `app_version`, `environment`, `build_audience`, `build_type`, `runtime_target`
 
 ## Verification
 

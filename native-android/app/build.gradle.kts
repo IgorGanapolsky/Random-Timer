@@ -1,23 +1,51 @@
+import org.gradle.api.tasks.testing.Test
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
+    jacoco
 }
+
+val hasGoogleServicesConfig =
+    listOf(
+        "google-services.json",
+        "src/debug/google-services.json",
+        "src/release/google-services.json",
+    ).any { file(it).exists() }
+
+val enableFirebasePlugins =
+    providers.gradleProperty("enableFirebasePlugins")
+        .map(String::toBoolean)
+        .orElse(hasGoogleServicesConfig)
+        .get()
+
+if (enableFirebasePlugins) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+} else {
+    logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
+}
+
+val ciCompileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toIntOrNull()
+val ciTargetSdk = providers.gradleProperty("ciTargetSdk").orNull?.toIntOrNull()
 
 android {
     namespace = "com.iganapolsky.randomtimer"
-    compileSdk = 35
+    compileSdk = ciCompileSdk ?: 35
 
     defaultConfig {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 6
-        versionName = "1.2.0"
+        targetSdk = ciTargetSdk ?: 35
+        versionCode = 11
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -77,6 +105,15 @@ android {
             isReturnDefaultValues = true
         }
     }
+    lint {
+        // Work around upstream Compose lint detector crash:
+        // IncompatibleClassChangeError in FrequentlyChangingValueDetector.
+        // Keep lint enabled for all other checks.
+        disable += "FrequentlyChangingValue"
+        disable += "RememberInComposition"
+        disable += "NullSafeMutableLiveData"
+        disable += "AutoboxingStateCreation"
+    }
 }
 
 dependencies {
@@ -113,6 +150,9 @@ dependencies {
     // In-App Review
     implementation(libs.play.review)
 
+    // In-App Billing
+    implementation(libs.play.billing)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
@@ -137,4 +177,49 @@ dependencies {
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.withType<Test>().configureEach {
+    extensions.configure(JacocoTaskExtension::class.java) {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+tasks.register<JacocoReport>("jacocoDebugUnitTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val excludes = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/*\$Lambda$*.*",
+        "**/*\$inlined$*.*",
+    )
+
+    val buildDirFile = layout.buildDirectory.get().asFile
+    val kotlinClasses = fileTree(buildDirFile.resolve("tmp/kotlin-classes/debug")) { exclude(excludes) }
+    val javaClasses = fileTree(buildDirFile.resolve("intermediates/javac/debug/classes")) { exclude(excludes) }
+
+    classDirectories.setFrom(files(kotlinClasses, javaClasses))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(
+        fileTree(buildDirFile) {
+            include("jacoco/testDebugUnitTest.exec")
+            include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        }
+    )
 }

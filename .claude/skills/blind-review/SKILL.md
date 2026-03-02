@@ -216,6 +216,15 @@ Issues flagged by multiple reviewers:
 - Domain: [unique finding]
 ```
 
+Additionally, emit a machine-checkable JSON payload that conforms to:
+`.claude/contracts/review-contract.schema.json`
+
+Validation command:
+
+```bash
+python scripts/review_contract_check.py --input <review-artifact.json>
+```
+
 ---
 
 ## Why This Works

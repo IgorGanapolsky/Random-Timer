@@ -9,6 +9,10 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,8 +23,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
+import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
+import kotlinx.coroutines.launch
 
 sealed class Screen(
     val route: String,
@@ -37,8 +43,18 @@ fun RandomTimerNavHost(
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val isPro by viewModel.proManager.isPro.collectAsStateWithLifecycle()
+    val currentRoute =
+        navController
+            .currentBackStackEntryAsState()
+            .value
+            ?.destination
+            ?.route
     val activity = LocalContext.current as? Activity
+    val scope = rememberCoroutineScope()
+    var showPaywall by remember { mutableStateOf(false) }
+    var paywallPrice by remember { mutableStateOf("$4.99") }
+    var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -52,7 +68,13 @@ fun RandomTimerNavHost(
         } else {
             // Timer stopped - go back to setup screen
             if (currentRoute == Screen.ActiveTimer.route) {
-                navController.popBackStack(Screen.Setup.route, inclusive = false)
+                val popped = navController.popBackStack(Screen.Setup.route, inclusive = false)
+                if (!popped) {
+                    navController.navigate(Screen.Setup.route) {
+                        launchSingleTop = true
+                        popUpTo(Screen.ActiveTimer.route) { inclusive = true }
+                    }
+                }
                 // Prompt for review after timer completion (if eligible)
                 activity?.let { viewModel.storeReviewManager.requestReview(it) }
             }
@@ -82,6 +104,17 @@ fun RandomTimerNavHost(
                 onStartTimer = viewModel::startTimer,
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
+                totalSessions = viewModel.totalSessions,
+                currentStreak = viewModel.currentStreak,
+                hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
+                isPro = isPro,
+                onUpgradeTap = {
+                    scope.launch {
+                        paywallPrice = viewModel.proManager.getFormattedPrice()
+                        paywallEntryPoint = "setup_upgrade_cta"
+                        showPaywall = true
+                    }
+                },
             )
         }
 
@@ -101,16 +134,25 @@ fun RandomTimerNavHost(
             LaunchedEffect(Unit) {
                 viewModel.trackScreen(AnalyticsScreens.ACTIVE_TIMER)
             }
-            timerState?.let { state ->
+            val state = timerState
+            if (state == null) {
+                LaunchedEffect(Unit) {
+                    val popped = navController.popBackStack(Screen.Setup.route, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(Screen.Setup.route) {
+                            launchSingleTop = true
+                            popUpTo(Screen.ActiveTimer.route) { inclusive = true }
+                        }
+                    }
+                }
+            } else {
                 ActiveTimerScreen(
                     state = state,
                     onStop = {
                         viewModel.cancelTimer()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
                     onDismissAlarm = {
                         viewModel.dismissAlarm()
-                        navController.popBackStack(Screen.Setup.route, inclusive = false)
                     },
                     onSilence = viewModel::silenceAlarm,
                     onPause = viewModel::pauseTimer,
@@ -118,11 +160,39 @@ fun RandomTimerNavHost(
                     onReset = {
                         viewModel.resetTimer()
                     },
-                    onLoopToggle = { enabled ->
-                        viewModel.updateLoopSetting(enabled)
-                    },
+                    onLoopToggle = viewModel::updateLoopSetting,
                 )
             }
         }
+    }
+
+    LaunchedEffect(showPaywall, paywallEntryPoint) {
+        if (showPaywall) {
+            viewModel.trackPaywallViewed(paywallEntryPoint)
+        }
+    }
+
+    if (showPaywall) {
+        PaywallSheet(
+            price = paywallPrice,
+            onPurchase = {
+                scope.launch {
+                    activity?.let { viewModel.proManager.launchPurchase(it, paywallEntryPoint) }
+                    showPaywall = false
+                }
+            },
+            onRestore = {
+                scope.launch {
+                    val restored = viewModel.proManager.restorePurchasesFromPaywall(paywallEntryPoint)
+                    if (restored) {
+                        showPaywall = false
+                    }
+                }
+            },
+            onDismiss = {
+                viewModel.trackPaywallDismissed(paywallEntryPoint)
+                showPaywall = false
+            },
+        )
     }
 }

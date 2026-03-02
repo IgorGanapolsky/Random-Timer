@@ -1,26 +1,26 @@
-Random Tactical Timer is an unpredictable interval timer for reaction training.
+TRAIN REACTION, NOT RHYTHM.
 
-Set a minimum and maximum time window, then the alarm fires at a random point inside that range. You stop training for countdown patterns and train real reaction.
+Random Tactical Timer gives you a start cue at an unpredictable moment inside your chosen range. No fixed countdown. No easy pattern. Just real reaction training under pressure.
 
-BEST FOR:
-- HIIT and conditioning intervals
-- Boxing, martial arts, and tactical drills
-- Team practices and coach-led sessions
-- Focus sprints and break routines
+DESIGNED FOR:
+- Boxing, kickboxing, Muay Thai, MMA, and BJJ drills
+- Bag work, pad rounds, scramble transitions, and spar prep
+- Tactical conditioning and stress-focused intervals
+- HIIT sessions that need surprise start triggers
 
-KEY FEATURES:
-- True random trigger inside your chosen range
-- Hidden countdown mode to reduce anticipation
-- Loop mode for continuous random rounds
-- Multiple alarm sounds, vibration, and volume controls
-- Pause, resume, reset, and stable background behavior
-- Live Activity support on iPhone lock screen
+WHAT MAKES IT DIFFERENT:
+- True random trigger between your min and max time
+- Optional hidden countdown mode to prevent anticipation
+- Loop mode for continuous multi-round training blocks
+- Clear alarm + haptic vibration + adjustable volume
+- Fast controls: start, stop, pause, resume, reset
+- Live Activity support for active round visibility
 
-HOW IT WORKS:
-1. Pick your range (for example 30 seconds to 5 minutes)
-2. Tap Start
-3. Move, drill, or work normally
-4. React when the alarm hits
-5. Repeat single rounds or run loop mode
+USE IT IN 5 STEPS:
+1. Set a range (example: 10s to 4m)
+2. Press Start
+3. Move and drill normally
+4. React immediately when the cue hits
+5. Repeat with loop mode for sustained stress rounds
 
-No ads. No subscriptions. Fast setup, daily use.
+If your current timer teaches anticipation, it is teaching the wrong habit. Train with uncertainty so your reaction speed holds up when timing is not predictable.

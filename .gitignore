@@ -81,7 +81,9 @@ __pycache__/
 .claude/memory/
 .claude/hooks/
 .claude/ralph/
+.claude/worktrees/
 .claude/scripts/feedback/
+.claude/worktrees/
 
 # CCPM local workspace (project management)
 .claude/epics/
@@ -94,3 +96,16 @@ scripts/__pycache__/
 .auth/
 .agent-device/
 .rag/
+.omx/
+.artifacts/
+.env
+gradle.properties
+*.backup
+*.disabled
+
+# Release and screenshot artifacts
+native-ios/RandomTimer.ipa
+native-ios/RandomTimer.app.dSYM.zip
+apple_*.png
+artifacts_*.png
+apple_status.json

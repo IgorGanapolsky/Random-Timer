@@ -6,8 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,8 +18,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -173,7 +171,7 @@ fun ActiveTimerScreen(
                     Text(
                         text = "Paused",
                         style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextMuted,
+                        color = TimerColors.TextSecondary,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -182,7 +180,7 @@ fun ActiveTimerScreen(
             @Composable
             fun TimerCircle() {
                 CircularTimer(
-                    progress = if (isComplete) 1f else 0f,
+                    progress = state.progress,
                     status = state.status,
                     modifier =
                         Modifier
@@ -224,7 +222,7 @@ fun ActiveTimerScreen(
                     Text(
                         text = "You don't know when it will go off...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TimerColors.TextMuted,
+                        color = if (isPaused) TimerColors.TextSecondary else TimerColors.TextMuted,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -346,11 +344,12 @@ private fun LoopBadge(
 
     Surface(
         onClick = onClick,
-        modifier = modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-        },
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
         interactionSource = interactionSource,
         shape = RoundedCornerShape(8.dp),
         color = TimerColors.GlassBackground,

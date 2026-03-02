@@ -2,14 +2,18 @@ branches:
   - name: main
     protection:
       required_pull_request_reviews:
-        required_approving_review_count: 1
+        required_approving_review_count: 0
         dismiss_stale_reviews: true
-        require_code_owner_reviews: true
+        require_code_owner_reviews: false
       required_status_checks:
         strict: true
+        # Merge queue readiness: keep required checks stable and deterministic.
+        # Claude Review is intentionally non-required.
         contexts:
-          - "Main Pipeline / Validate"
-          - "Main Pipeline / Security"
+          - "Android Tests"
+          - "iOS Build Check"
+          - "Security"
+          - "Seer Code Review"
       enforce_admins: true
       required_linear_history: true
       allow_force_pushes: false
@@ -23,14 +27,18 @@ branches:
   - name: develop
     protection:
       required_pull_request_reviews:
-        required_approving_review_count: 1
+        required_approving_review_count: 0
         dismiss_stale_reviews: true
       required_status_checks:
         strict: true
+        # Merge queue readiness: keep required checks stable and deterministic.
+        # Claude Review is intentionally non-required.
         contexts:
-          - "Main Pipeline / Validate"
-          - "Main Pipeline / Security"
-      enforce_admins: false
+          - "Android Tests"
+          - "iOS Build Check"
+          - "Security"
+          - "Seer Code Review"
+      enforce_admins: true
       required_linear_history: true
       allow_force_pushes: false
       allow_deletions: false

@@ -270,6 +270,14 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         switch type {
         case .intense: return "alarm"
         case .gentle: return "gentle-chime"
+        case .klaxon: return "klaxon"
+        case .whistle: return "whistle"
+        case .buzzer: return "buzzer"
+        case .gong: return "gong"
+        case .airhorn: return "airhorn"
+        case .drumRoll: return "drum_roll"
+        case .siren: return "siren"
+        case .bell: return "bell"
         }
     }
 
@@ -352,6 +360,42 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
     func clearNotificationTapFlag() {
         didTapAlarmNotification = false
+    }
+
+    // MARK: - Re-engagement Reminders
+
+    func scheduleReengagementReminder() {
+        let center = UNUserNotificationCenter.current()
+
+        // Remove any existing re-engagement notifications
+        center.removePendingNotificationRequests(withIdentifiers: ["reengagement_24h", "reengagement_72h"])
+
+        // 24-hour reminder
+        let content24 = UNMutableNotificationContent()
+        content24.title = "Keep your streak alive"
+        content24.body = "Train for chaos, not comfort. Your next random drill is waiting."
+        content24.sound = .default
+
+        let trigger24 = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false)
+        let request24 = UNNotificationRequest(identifier: "reengagement_24h", content: content24, trigger: trigger24)
+        center.add(request24, withCompletionHandler: nil)
+
+        // 72-hour reminder (if they miss the 24h one)
+        let content72 = UNMutableNotificationContent()
+        content72.title = "Don't break the habit"
+        content72.body = "Fighters train when they don't feel like it. Open Random Tactical Timer."
+        content72.sound = .default
+
+        let trigger72 = UNTimeIntervalNotificationTrigger(timeInterval: 72 * 3600, repeats: false)
+        let request72 = UNNotificationRequest(identifier: "reengagement_72h", content: content72, trigger: trigger72)
+        center.add(request72, withCompletionHandler: nil)
+
+        Logger.notification.debug("Scheduled re-engagement reminders at 24h and 72h")
+    }
+
+    func cancelReengagementReminders() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["reengagement_24h", "reengagement_72h"])
+        Logger.notification.debug("Cancelled re-engagement reminders")
     }
 
     /// Test-only hook for simulating notification tap.

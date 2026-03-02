@@ -1,0 +1,4 @@
+- Dual-Mission UI: Standard Ops (5m) and Tactical Expansion (1h) training windows.
+- Tactical Keypad: Direct numeric entry for exact time selection.
+- Semantic Iconography: New 🔥 (Intense) and 💧 (Gentle) material-driven icons.
+- Production Backdoor: Persistent Pro unlock for verified testers.

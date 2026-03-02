@@ -24,6 +24,8 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +35,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install pyjwt cryptography requests
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
       - name: Build release context snapshot
         env:

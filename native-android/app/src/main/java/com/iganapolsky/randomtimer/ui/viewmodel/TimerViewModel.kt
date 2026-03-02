@@ -1,12 +1,15 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -17,7 +20,9 @@ import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
+import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,13 +34,26 @@ import javax.inject.Inject
 class TimerViewModel
     @Inject
     constructor(
+        @ApplicationContext private val appContext: Context,
         private val repository: TimerRepository,
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
+        private val trainingStatsService: TrainingStatsService,
+        val proManager: ProManager,
     ) : ViewModel() {
+        val totalSessions: Int get() = trainingStatsService.totalSessions
+        val currentStreak: Int get() = trainingStatsService.currentStreak
+
+        private val prefs = appContext.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
+        val hasCompletedFirstTimer: Boolean get() = prefs.getBoolean("hasCompletedFirstTimer", false)
+
+        private fun markFirstTimerCompleted() {
+            prefs.edit().putBoolean("hasCompletedFirstTimer", true).apply()
+        }
+
         val config: StateFlow<TimerConfig> =
             repository
                 .getTimerConfig()
@@ -118,11 +136,11 @@ class TimerViewModel
                         "target_duration" to state.targetDuration.inWholeSeconds,
                     ),
                 )
+                analyticsService.trackFirstTimerConfiguredIfNeeded()
             }
         }
 
         fun cancelTimer() {
-            analyticsService.track(AnalyticsEvents.TIMER_STOPPED)
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -193,10 +211,31 @@ class TimerViewModel
             analyticsService.screen(screen)
         }
 
-        internal fun onTimerStateObservedForAnalytics(previousStatus: TimerStatus?, state: TimerState?) {
+        fun trackPaywallViewed(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEWED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        fun trackPaywallDismissed(entryPoint: String) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_DISMISSED,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        internal fun onTimerStateObservedForAnalytics(
+            previousStatus: TimerStatus?,
+            state: TimerState?,
+        ) {
             val currentStatus = state?.status ?: return
 
             if (previousStatus != null && previousStatus != TimerStatus.ALARM && currentStatus == TimerStatus.ALARM) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_COUNTDOWN_FINISHED,
+                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                )
                 analyticsService.track(
                     AnalyticsEvents.ALARM_TRIGGERED,
                     mapOf("target_duration" to state.targetDuration.inWholeSeconds),
@@ -208,6 +247,8 @@ class TimerViewModel
                     AnalyticsEvents.TIMER_COMPLETED,
                     mapOf("target_duration" to state.targetDuration.inWholeSeconds),
                 )
+                analyticsService.trackFirstTimerCompletedIfNeeded()
+                markFirstTimerCompleted()
             }
         }
 

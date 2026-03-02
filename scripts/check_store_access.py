@@ -185,7 +185,10 @@ def check_ios_access(bundle_id: str) -> Tuple[bool, str]:
             timeout=30,
         )
         resp.raise_for_status()
-        payload: Dict[str, Any] = resp.json()
+        try:
+            payload: Dict[str, Any] = resp.json()
+        except Exception as exc:
+            return (False, f"App Store Connect API returned non-JSON payload: {exc}")
         apps = payload.get("data", [])
         if not apps:
             return (

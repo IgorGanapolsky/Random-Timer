@@ -110,6 +110,38 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     }
 
     @MainActor
+    func testHandleBackgroundSilencesAlarmViaPowerButton() {
+        let manager = TimerManager()
+        manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
+
+        // Simulate power button press (app goes to background while alarm is playing)
+        manager.handleBackground()
+
+        // Alarm should be silenced so it does NOT restart when returning to foreground
+        XCTAssertTrue(manager.isAlarmSilenced, "Power button (background) should silence the alarm")
+        // Status stays .alarm — countdown keeps ticking for loop support
+        XCTAssertEqual(manager.timerState?.status, .alarm)
+    }
+
+    @MainActor
+    func testHandleBackgroundDoesNothingWhenNotAlarming() {
+        let manager = TimerManager()
+        let state = RandomTimer.TimerState(
+            config: makeConfig(),
+            targetDuration: 60,
+            remainingDuration: 30,
+            status: .running
+        )
+        manager._setTimerStateForTesting(state)
+
+        manager.handleBackground()
+
+        // Should not set silenced flag when not in alarm state
+        XCTAssertFalse(manager.isAlarmSilenced)
+        XCTAssertEqual(manager.timerState?.status, .running)
+    }
+
+    @MainActor
     func testPreservesLoopConfig() {
         let manager = TimerManager()
         let config = RandomTimer.TimerConfig(

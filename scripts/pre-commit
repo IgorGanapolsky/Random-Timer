@@ -202,6 +202,33 @@ if [ -n "$STAGED_SWIFT" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
+# UI STATE BINDING AUDIT — Prevent hardcoded values masking real state
+# ═══════════════════════════════════════════════════════════════════
+
+if [ -n "$STAGED_KT" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+
+    # Only check Screen composables (where state is bound to components)
+    if echo "$file" | grep -qi 'Screen'; then
+
+      # Ban hardcoded progress values in CircularTimer calls
+      if grep -Pn 'progress\s*=\s*(if\s*\(|0f|1f)' "$file" 2>/dev/null | grep -v '// allow-hardcoded-progress' > /dev/null 2>&1; then
+        err "$file: Hardcoded progress in CircularTimer — use state.progress"
+      fi
+
+      # Warn if CircularTimer is called but state.progress is never referenced
+      if grep -q 'CircularTimer(' "$file" 2>/dev/null; then
+        if ! grep -q 'state\.progress' "$file" 2>/dev/null; then
+          warn "$file: CircularTimer called but state.progress not referenced — verify binding"
+        fi
+      fi
+    fi
+
+  done <<< "$STAGED_KT"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
 # ACCESSIBILITY CHECKS
 # ═══════════════════════════════════════════════════════════════════
 

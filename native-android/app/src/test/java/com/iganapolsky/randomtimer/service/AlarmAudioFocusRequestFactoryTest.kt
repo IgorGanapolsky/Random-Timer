@@ -6,13 +6,19 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class AlarmAudioFocusRequestFactoryTest {
-
     @Test
-    fun `alarm audio focus requests transient may duck and will not pause when ducked`() {
+    fun `alarm audio focus requests transient gain and will not pause when ducked`() {
         val spec = AlarmAudioFocusRequestFactory.spec()
 
-        assertThat(spec.focusGain).isEqualTo(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+        assertThat(spec.focusGain).isEqualTo(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
         assertThat(spec.willPauseWhenDucked).isFalse()
         assertThat(spec.usage).isEqualTo(AudioAttributes.USAGE_ALARM)
+    }
+
+    @Test
+    fun `alarm audio focus spec keeps sonification content type`() {
+        val spec = AlarmAudioFocusRequestFactory.spec()
+
+        assertThat(spec.contentType).isEqualTo(AudioAttributes.CONTENT_TYPE_SONIFICATION)
     }
 }

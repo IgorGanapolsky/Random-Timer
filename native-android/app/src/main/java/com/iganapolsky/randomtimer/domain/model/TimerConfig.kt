@@ -5,11 +5,29 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Sound type for the alarm
+ * Sound type for the alarm.
+ * Free tier: INTENSE, GENTLE
+ * Pro tier: all 10 sounds
  */
-enum class SoundType {
+enum class SoundType(
+    val isPro: Boolean = false,
+) {
     INTENSE,
-    GENTLE
+    GENTLE,
+    KLAXON(isPro = true),
+    WHISTLE(isPro = true),
+    BUZZER(isPro = true),
+    GONG(isPro = true),
+    AIRHORN(isPro = true),
+    DRUM_ROLL(isPro = true),
+    SIREN(isPro = true),
+    BELL(isPro = true),
+    ;
+
+    companion object {
+        val FREE = entries.filter { !it.isPro }
+        val PRO = entries.filter { it.isPro }
+    }
 }
 
 /**
@@ -31,12 +49,12 @@ data class TimerConfig(
     /** Volume level 0.0 - 1.0 */
     val volume: Float,
     /** Whether vibration is enabled */
-    val vibrationEnabled: Boolean = false
+    val vibrationEnabled: Boolean = false,
 ) {
     init {
         require(minSeconds >= 0) { "Minimum seconds cannot be negative" }
         require(maxSeconds >= minSeconds) { "Maximum seconds must be >= minimum seconds" }
-        require(maxSeconds <= 300) { "Maximum seconds cannot exceed 300 (5 minutes)" }
+        require(maxSeconds <= MAX_SECONDS_PRO) { "Maximum seconds cannot exceed $MAX_SECONDS_PRO" }
         require(alarmDuration > 0) { "Alarm duration must be positive" }
         require(volume in 0f..1f) { "Volume must be between 0 and 1" }
     }
@@ -51,16 +69,20 @@ data class TimerConfig(
     val alarmDurationDuration: Duration get() = alarmDuration.seconds
 
     companion object {
-        val DEFAULT = TimerConfig(
-            minSeconds = 0,
-            maxSeconds = 300,
-            alarmDuration = 10,
-            hiddenMode = false,
-            repeatEnabled = false, // Default to LOOP OFF
-            soundType = SoundType.INTENSE,
-            volume = 0.5f, // Default to 50%
-            vibrationEnabled = false
-        )
+        const val MAX_SECONDS_FREE = 300
+        const val MAX_SECONDS_PRO = 3600
+
+        val DEFAULT =
+            TimerConfig(
+                minSeconds = 0,
+                maxSeconds = 60,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)
     }
@@ -76,11 +98,15 @@ data class TimerState(
     val status: TimerStatus,
     val alarmTimeRemaining: Duration = Duration.ZERO,
     val startedAt: Long = System.currentTimeMillis(),
-    val isAlarmSilenced: Boolean = false
+    val isAlarmSilenced: Boolean = false,
 ) {
     val progress: Float
-        get() = if (targetDuration == Duration.ZERO) 0f
-                else 1f - (remainingDuration / targetDuration).toFloat()
+        get() =
+            if (targetDuration == Duration.ZERO) {
+                0f
+            } else {
+                1f - (remainingDuration / targetDuration).toFloat()
+            }
 
     val isComplete: Boolean
         get() = status == TimerStatus.COMPLETE
@@ -106,8 +132,8 @@ enum class TimerStatus {
     IDLE,
     RUNNING,
     PAUSED,
-    WARNING,  // < 30 seconds remaining
-    DANGER,   // < 10 seconds remaining
+    WARNING, // < 30 seconds remaining
+    DANGER, // < 10 seconds remaining
     COMPLETE, // Timer finished, transitioning to alarm
-    ALARM     // Alarm is playing
+    ALARM, // Alarm is playing
 }

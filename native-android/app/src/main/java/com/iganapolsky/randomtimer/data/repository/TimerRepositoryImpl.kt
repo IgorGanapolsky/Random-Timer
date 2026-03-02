@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -21,14 +22,34 @@ import kotlin.time.Duration
 
 @Singleton
 class TimerRepositoryImpl @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val proManager: ProManager
 ) : TimerRepository {
+
+    /**
+     * Clamps a deserialized config to the current Pro entitlement.
+     * Applied on load only — save paths are unchanged so the original values remain persisted
+     * and can be restored if the user re-subscribes.
+     */
+    private fun TimerConfig.clampedForPro(): TimerConfig {
+        val isPro = proManager.isPro.value
+        val maxAllowed = proManager.maxSecondsLimit(isPro)
+        val allowedSounds = proManager.availableSounds(isPro)
+        val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
+        val clampedMin = minSeconds.coerceAtMost(clampedMax)
+        val clampedSound = if (soundType in allowedSounds) soundType else SoundType.INTENSE
+        return copy(
+            minSeconds = clampedMin,
+            maxSeconds = clampedMax,
+            soundType = clampedSound
+        )
+    }
 
     override fun getTimerConfig(): Flow<TimerConfig> {
         return dataStore.data.map { preferences ->
             TimerConfig(
                 minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
                 alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -37,7 +58,7 @@ class TimerRepositoryImpl @Inject constructor(
                 } ?: SoundType.INTENSE,
                 volume = preferences[KEY_VOLUME] ?: 0.5f,
                 vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false
-            )
+            ).clampedForPro()
         }
     }
 
@@ -63,7 +84,7 @@ class TimerRepositoryImpl @Inject constructor(
 
             val config = TimerConfig(
                 minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
                 alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -72,7 +93,7 @@ class TimerRepositoryImpl @Inject constructor(
                 } ?: SoundType.INTENSE,
                 volume = preferences[KEY_VOLUME] ?: 0.5f,
                 vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false
-            )
+            ).clampedForPro()
 
             TimerState(
                 config = config,

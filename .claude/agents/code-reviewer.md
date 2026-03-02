@@ -1,3 +1,11 @@
+---
+name: code-reviewer
+description: Strict read-only review agent for superior intelligence review.
+tools: Glob, Grep, LS, Read, Bash
+category: UltraBrain
+color: purple
+---
+
 # Code Reviewer Agent
 
 Read-only review agent for Ralph Mode's superior intelligence review step.
@@ -48,7 +56,10 @@ For each changed file, evaluate:
 
 ## Output Format
 
-Return a structured verdict:
+Return a strict JSON object that matches:
+`.claude/contracts/review-contract.schema.json`
+
+Required output format:
 
 ```json
 {
@@ -57,6 +68,7 @@ Return a structured verdict:
   "issues": [
     {
       "severity": "critical" | "major" | "minor" | "style",
+      "status": "open" | "fixed" | "accepted_risk",
       "file": "path/to/file.ts",
       "line": 42,
       "description": "What's wrong",
@@ -65,6 +77,11 @@ Return a structured verdict:
   ]
 }
 ```
+
+Contract requirements:
+- Every issue must include `file` and `line` evidence.
+- Any unresolved `critical` issue (`status != fixed`) must force `verdict = "BLOCK"`.
+- Do not output prose outside the JSON payload.
 
 ### Verdict Rules
 

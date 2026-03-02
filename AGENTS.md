@@ -1,5 +1,16 @@
 # AGENTS.md — Random Timer
 
+## Agent-Model Matching Standard
+
+To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
+
+- **Orchestration**: `claude-3-5-sonnet` (UltraBrain) for planning and coordination.
+- **Deep Specialist**: `claude-3-opus` or `gpt-4o` (Deep) for complex refactoring.
+- **Utility Runner**: `gemini-1.5-flash` or `claude-3-haiku` (Quick) for search, analysis, and scaffolding.
+- **UI/UX Specialist**: `gemini-1.5-pro` (Visual) for multimodal and layout tasks.
+
+When delegating work via the `Task` tool, agents should specify the category (e.g., `subagent_type: "Quick"`) to ensure the correct model is selected from the fallback chain.
+
 ## Mandate: Never Claim Readiness Without Verification
 
 **This is the highest-priority rule. Violations are treated as critical failures.**
@@ -19,6 +30,74 @@
    - Pricing: set (Free or paid)
    - App Review contact info: filled
 5. **Show evidence, not assertions.** When reporting status, include actual counts, actual field values, actual HTTP responses — not summaries or assumptions.
+6. **Truthfulness is mandatory.** Never guess, never bluff, and never claim a state that is not directly verified. Every status claim must include reproducible proof (command/query used + sanitized output).
+
+## Operator Mandate: Env + Secrets Verification Before Blockers
+
+When a task depends on credentials, the agent must verify local and CI credential wiring before reporting any blocker.
+
+1. **Always check `.env` key names first** (without exposing secret values).
+2. **Always check GitHub Actions secret names second** (`gh secret list`) and confirm required names exist.
+3. **If a key is provided by the user, update both `.env` and GitHub secrets immediately** when requested.
+4. **Prove access with a real authenticated read/write test** (status code + endpoint + sanitized response).
+5. **Never claim “no access” or ask the user to re-provide credentials** until steps 1–4 are completed and reported with evidence.
+
+## Growth North Star (Effective February 23, 2026)
+
+### Business Goal
+
+**Earn $100/day after-tax from app sales** while improving product quality and operational reliability.
+
+### Primary North Star Metric (NSM)
+
+**Weekly Qualified Training Users (WQTU)**: number of distinct users with **3 or more `timer_completed` events** in the trailing 7 days.
+
+This is the product-value metric for Random Tactical Timer (repeat stress/reaction training), not a vanity install metric.
+
+### Canonical Query (PostHog HogQL)
+
+```sql
+SELECT count(*)
+FROM (
+  SELECT person_id
+  FROM events
+  WHERE event = 'timer_completed'
+    AND timestamp > now() - interval 7 day
+  GROUP BY person_id
+  HAVING count() >= 3
+)
+```
+
+### Guardrails (must be tracked with NSM)
+
+1. **Paid efficiency**: blended paid CPI <= `$3.00` (target), with Apple Ads benchmark context checked monthly.
+2. **Activation quality**: `open_to_completed_rate` >= `25%`.
+3. **Retention floor**: D30 retention >= `6%` (target above broad-market baselines).
+4. **Attribution hygiene**: `paid_distinct_users_30d` and campaign-level UTM rows must be non-empty before claiming paid impact.
+
+### Baseline Snapshot (2026-02-24 UTC)
+
+- `WQTU`: `0` (no user reached >=3 `timer_completed` in trailing 7d).
+- `timer_completed` last 7d: `3` events by `2` users.
+- `open_to_completed_rate` (30d): `24.24%` (32/132).
+- Paid attribution last 30d: `0` distinct users, `0` campaign rows.
+- Downloads (30d): iOS `9`, Android `0`, combined `9`.
+- Apple Ads live serving evidence: API reports `1` campaign (`ENABLED`/`RUNNING`) with `0` taps and `$0.00` spend in the trailing 30 days.
+
+### Targets
+
+- **Checkpoint target (2026-03-31):** `WQTU >= 8`
+- **Quarter target (2026-06-30):** `WQTU >= 25`
+
+### Execution Rule
+
+When asked “are we on track to our North Star?”, answer only from:
+
+- live PostHog query results,
+- latest campaign serving + spend evidence,
+- and current WQTU versus target.
+
+Do not infer progress from draft campaign configs.
 
 ## Act Like the World's Top iOS App Publisher
 
@@ -27,6 +106,34 @@
 - Use `fastlane deliver` or the App Store Connect API correctly — verify every upload succeeded with a read-back.
 - Treat every App Store rejection as a preventable failure. Anticipate review issues before submission.
 - When something fails, diagnose the root cause from the actual error response before retrying.
+
+## Worktree & Branch Protocol
+
+### Mandatory for ALL Agents
+1. **Use `isolation: "worktree"` for any code modification.** No exceptions.
+2. **Never commit directly to `develop`, `main`, or the user's active branch.**
+3. Push worktree branch to origin, then create a PR for review/merge.
+4. After work is pushed, the worktree is cleaned up automatically on next session start.
+
+### Multi-Agent Safety
+- Other agents (Claude, Gemini, GPT, Cursor) may have active worktrees concurrently.
+- The auto-cleanup hook (`.claude/hooks/worktree-cleanup.sh`) checks for:
+  - Registered git worktrees (skipped — another agent is working)
+  - `.git` link files (skipped — still connected)
+  - Lock files (skipped — in use)
+  - Dirty working trees (skipped — uncommitted changes)
+- Only truly orphaned directories (no git link, no lock, no changes) are removed.
+
+### Branch Naming
+- Features: `feat/{description}`
+- Fixes: `fix/{description}`
+- Releases: `release/vX.Y.Z` (only branch type allowed to merge to `main`)
+- Hotfixes: `hotfix/vX.Y.Z` (branches from `main`, merges to both `main` and `develop`)
+- Agent worktrees: `worktree-agent-{id}` (auto-generated, ephemeral)
+
+### Release Flow
+1. `develop` → `release/vX.Y.Z` → TestFlight + Google Play → tag on `main` → merge back to `develop`
+2. Hotfix: `main` → `hotfix/vX.Y.Z` → stores → tag on `main` → merge to `develop`
 
 ## Commands
 

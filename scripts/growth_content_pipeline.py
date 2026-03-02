@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import textwrap
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -45,6 +46,7 @@ FIRST_POST_SOURCE = "https://www.amazon.com/Hard-Target-Become-Person-Predators/
 DEFAULT_TAGS: Tuple[str, ...] = ("ai", "mobile", "devops", "github", "testing")
 DEFAULT_BLOG_BASE_URL = "https://igorganapolsky.github.io/Random-Timer"
 LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
+AB_PILOT_WINDOW_DAYS = 14
 
 
 @dataclass
@@ -133,6 +135,17 @@ def ensure_keyword_backlog(output_root: Path) -> Dict[str, Any]:
     return keyword_engine.run_build(keywords_dir, strategy_path)
 
 
+def load_content_feedback(output_root: Path) -> Optional[Dict[str, Any]]:
+    """Load content performance feedback from attribution pipeline."""
+    feedback_path = output_root / "data" / "content_feedback.json"
+    if not feedback_path.is_file():
+        return None
+    try:
+        return json.loads(feedback_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, KeyError):
+        return None
+
+
 def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, Any]]:
     payload = ensure_keyword_backlog(output_root)
     backlog_json = payload.get("outputs", {}).get("json")
@@ -142,6 +155,26 @@ def choose_keyword_topic(output_root: Path, day: dt.date) -> Optional[Dict[str, 
     if not backlog_path.is_file():
         return None
     rows = json.loads(backlog_path.read_text(encoding="utf-8"))
+
+    # Boost keywords that drove real installs (feedback loop)
+    feedback = load_content_feedback(output_root)
+    if feedback:
+        top_campaigns = feedback.get("top_campaigns_by_activation", [])
+        boosted_sources = {
+            str(c.get("source", "")).strip().lower()
+            for c in top_campaigns
+            if (c.get("activation_rate") or 0) > 0.1
+        }
+        # If content from certain sources drives activation,
+        # prefer keywords aligned with those sources
+        if boosted_sources:
+            for row in rows:
+                kw = str(row.get("keyword") or "")
+                for source in boosted_sources:
+                    if source in kw:
+                        row["bid_score"] = row.get("bid_score", 0) + 15
+            rows.sort(key=lambda r: (r.get("ai_trap", False), -r.get("bid_score", 0)))
+
     selected = keyword_engine.select_daily_keyword(rows, day=day)
     if not selected:
         return None
@@ -454,6 +487,11 @@ def add_utm(url: str, source: str, campaign: str, medium: str = "organic") -> st
     )
 
 
+# Deep link base URL — routes through the app's verified domain so UTM params
+# are captured by the PostHog deep_link_opened handler before redirecting to stores.
+DEEP_LINK_BASE = "https://igorganapolsky.github.io/Random-Timer/download"
+
+
 def compose_markdown(
     *,
     title: str,
@@ -468,8 +506,8 @@ def compose_markdown(
     android_review_url: str,
     campaign: str,
 ) -> str:
-    blog_ios = add_utm(app_store_url, "github_pages", campaign)
-    blog_android = add_utm(play_store_url, "github_pages", campaign)
+    blog_ios = add_utm(DEEP_LINK_BASE + "?platform=ios", "github_pages", campaign)
+    blog_android = add_utm(DEEP_LINK_BASE + "?platform=android", "github_pages", campaign)
     frontmatter = (
         "---\n"
         f"title: {title}\n"
@@ -873,13 +911,110 @@ def _post_devto(markdown: str, title: str, tags: List[str], canonical_url: str) 
             "status": "error",
             "code": response.status_code,
             "body": response.text[:400],
+            "provider": "control_direct_api",
+            "attempts": 1,
         }
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception:
+        return {
+            "channel": "devto",
+            "status": "error",
+            "code": response.status_code,
+            "body": response.text[:400],
+            "reason": "non_json_response",
+            "provider": "control_direct_api",
+            "attempts": 1,
+        }
     return {
         "channel": "devto",
         "status": "published",
         "id": data.get("id"),
         "url": data.get("url"),
+        "provider": "control_direct_api",
+        "attempts": 1,
+    }
+
+
+def _post_devto_retry(markdown: str, title: str, tags: List[str], canonical_url: str) -> Dict[str, Any]:
+    requests = _requests_module()
+    if requests is None:
+        return {"channel": "devto", "status": "error", "reason": "missing requests dependency", "provider": "candidate_retry_api"}
+
+    api_key = os.getenv("DEVTO_API_KEY", "").strip()
+    if not api_key:
+        return {"channel": "devto", "status": "skipped", "reason": "missing DEVTO_API_KEY", "provider": "candidate_retry_api"}
+
+    payload = {
+        "article": {
+            "title": title,
+            "published": True,
+            "body_markdown": markdown,
+            "tags": tags[:4],
+            "canonical_url": canonical_url,
+        }
+    }
+    max_attempts = max(1, int(os.getenv("AB_CANDIDATE_MAX_ATTEMPTS", "3")))
+    backoff_seconds = max(1, int(os.getenv("AB_CANDIDATE_BACKOFF_SECONDS", "2")))
+
+    last_code: Optional[int] = None
+    last_body = ""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = requests.post(
+                "https://dev.to/api/articles",
+                headers={"api-key": api_key, "Content-Type": "application/json"},
+                json=payload,
+                timeout=30,
+            )
+        except Exception as exc:
+            if attempt == max_attempts:
+                return {
+                    "channel": "devto",
+                    "status": "error",
+                    "reason": f"request-failed: {exc}",
+                    "provider": "candidate_retry_api",
+                    "attempts": attempt,
+                }
+            time.sleep(backoff_seconds * attempt)
+            continue
+
+        if response.status_code < 300:
+            try:
+                data = response.json()
+            except Exception:
+                return {
+                    "channel": "devto",
+                    "status": "error",
+                    "reason": "non_json_response",
+                    "code": response.status_code,
+                    "body": response.text[:400],
+                    "provider": "candidate_retry_api",
+                    "attempts": attempt,
+                }
+            return {
+                "channel": "devto",
+                "status": "published",
+                "id": data.get("id"),
+                "url": data.get("url"),
+                "provider": "candidate_retry_api",
+                "attempts": attempt,
+            }
+
+        last_code = response.status_code
+        last_body = response.text[:400]
+        should_retry = response.status_code in {429, 500, 502, 503, 504}
+        if not should_retry or attempt == max_attempts:
+            break
+        time.sleep(backoff_seconds * attempt)
+
+    return {
+        "channel": "devto",
+        "status": "error",
+        "code": last_code,
+        "body": last_body,
+        "provider": "candidate_retry_api",
+        "attempts": max_attempts,
     }
 
 
@@ -967,7 +1102,16 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
             "code": response.status_code,
             "body": response.text[:400],
         }
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception:
+        return {
+            "channel": "x",
+            "status": "error",
+            "code": response.status_code,
+            "body": response.text[:400],
+            "reason": "non_json_response",
+        }
     tweet_id = ((data.get("data") or {}).get("id"))
     return {
         "channel": "x",
@@ -977,7 +1121,12 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
     }
 
 
-def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> List[Dict[str, Any]]:
+def publish_post(
+    post: PostAsset,
+    output_root: Path,
+    dry_run: bool = False,
+    devto_mode: str = "control",
+) -> List[Dict[str, Any]]:
     markdown = post.markdown_path.read_text(encoding="utf-8")
     base_url = resolve_blog_base_url(output_root)
     canonical_url = f"{base_url}/posts/{post.slug}.html"
@@ -989,13 +1138,17 @@ def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> L
 
     if dry_run:
         results = [
-            {"channel": "devto", "status": "dry_run", "url": canonical_url},
+            {"channel": "devto", "status": "dry_run", "url": canonical_url, "provider": f"{devto_mode}_dry_run"},
             {"channel": "linkedin", "status": "dry_run", "url": canonical_url},
             {"channel": "x", "status": "dry_run", "url": canonical_url},
         ]
     else:
+        if devto_mode == "candidate":
+            devto_result = _post_devto_retry(devto_markdown, post.title, post.tags, canonical_url)
+        else:
+            devto_result = _post_devto(devto_markdown, post.title, post.tags, canonical_url)
         results = [
-            _post_devto(devto_markdown, post.title, post.tags, canonical_url),
+            devto_result,
             _post_linkedin(short_text, canonical_url),
             _post_x(short_text, canonical_url),
         ]
@@ -1007,10 +1160,214 @@ def publish_post(post: PostAsset, output_root: Path, dry_run: bool = False) -> L
             {
                 "timestamp": iso_timestamp(),
                 "slug": post.slug,
+                "devto_mode": devto_mode,
                 **item,
             },
         )
     return results
+
+
+def _arm_counts(rows: List[Dict[str, Any]]) -> Tuple[int, int]:
+    control = sum(1 for row in rows if str(row.get("arm")) == "control")
+    candidate = sum(1 for row in rows if str(row.get("arm")) == "candidate")
+    return control, candidate
+
+
+def choose_ab_arm(existing_rows: List[Dict[str, Any]], window_days: int = AB_PILOT_WINDOW_DAYS) -> Optional[str]:
+    if len(existing_rows) >= window_days:
+        return None
+    control, candidate = _arm_counts(existing_rows)
+    return "control" if control <= candidate else "candidate"
+
+
+def _safe_float_env(name: str, default: float = 0.0) -> float:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+def _pilot_window_rows(rows: List[Dict[str, Any]], window_days: int = AB_PILOT_WINDOW_DAYS) -> List[Dict[str, Any]]:
+    ordered = sorted(rows, key=lambda row: str(row.get("timestamp") or ""))
+    return ordered[-window_days:]
+
+
+def summarize_ab_pilot(rows: List[Dict[str, Any]], window_days: int = AB_PILOT_WINDOW_DAYS) -> Dict[str, Any]:
+    window = _pilot_window_rows(rows, window_days=window_days)
+    budget_cap_usd = _safe_float_env("AB_PILOT_MAX_COST_USD", 10.0)
+    budget_spent_usd = round(sum(float(item.get("estimated_cost_usd") or 0.0) for item in window), 6)
+    grouped: Dict[str, List[Dict[str, Any]]] = {"control": [], "candidate": []}
+    for row in window:
+        arm = str(row.get("arm") or "")
+        if arm in grouped:
+            grouped[arm].append(row)
+
+    summary: Dict[str, Any] = {
+        "window_days": window_days,
+        "total_runs": len(window),
+        "budget_cap_usd": budget_cap_usd,
+        "budget_spent_usd": budget_spent_usd,
+        "budget_remaining_usd": round(max(0.0, budget_cap_usd - budget_spent_usd), 6),
+        "arms": {},
+        "decision": "insufficient_data",
+    }
+    for arm, items in grouped.items():
+        runs = len(items)
+        successes = sum(1 for item in items if bool(item.get("success")))
+        mean_ms = (
+            round(sum(float(item.get("duration_ms") or 0) for item in items) / runs, 2)
+            if runs
+            else None
+        )
+        total_cost = round(sum(float(item.get("estimated_cost_usd") or 0) for item in items), 6)
+        cost_per_success = round(total_cost / successes, 6) if successes else None
+        summary["arms"][arm] = {
+            "runs": runs,
+            "successes": successes,
+            "success_rate": round(successes / runs, 4) if runs else None,
+            "mean_duration_ms": mean_ms,
+            "total_cost_usd": total_cost,
+            "cost_per_success_usd": cost_per_success,
+        }
+
+    control = summary["arms"]["control"]
+    candidate = summary["arms"]["candidate"]
+    complete = summary["total_runs"] >= window_days and control["runs"] > 0 and candidate["runs"] > 0
+    summary["complete"] = complete
+
+    if complete:
+        if control["successes"] == 0 and candidate["successes"] > 0:
+            summary["decision"] = "candidate_keep"
+        elif candidate["successes"] == 0:
+            summary["decision"] = "control_keep"
+        else:
+            candidate_beats = (
+                (candidate["success_rate"] or 0) > (control["success_rate"] or 0)
+                and (candidate["mean_duration_ms"] or float("inf")) < (control["mean_duration_ms"] or float("inf"))
+                and (candidate["cost_per_success_usd"] or float("inf")) < (control["cost_per_success_usd"] or float("inf"))
+            )
+            summary["decision"] = "candidate_keep" if candidate_beats else "control_keep"
+
+    return summary
+
+
+def write_ab_pilot_report(output_root: Path, summary: Dict[str, Any]) -> None:
+    lines = [
+        "# DEV.to Publish A/B Pilot",
+        "",
+        f"Timestamp: {iso_timestamp()}",
+        f"Window size: {summary.get('window_days')} runs",
+        f"Runs collected: {summary.get('total_runs')}",
+        f"Budget cap (USD): {summary.get('budget_cap_usd')}",
+        f"Budget spent (USD): {summary.get('budget_spent_usd')}",
+        f"Budget remaining (USD): {summary.get('budget_remaining_usd')}",
+        f"Complete: {summary.get('complete')}",
+        f"Decision: {summary.get('decision')}",
+        "",
+        "| Arm | Runs | Successes | Success Rate | Mean Duration (ms) | Cost/Success (USD) |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for arm in ("control", "candidate"):
+        stats = summary.get("arms", {}).get(arm, {})
+        lines.append(
+            f"| {arm} | {stats.get('runs', 0)} | {stats.get('successes', 0)} | "
+            f"{stats.get('success_rate')} | {stats.get('mean_duration_ms')} | {stats.get('cost_per_success_usd')} |"
+        )
+    lines.append("")
+    lines.append("Rule: Candidate is kept only if it beats control on all three metrics.")
+    report = "\n".join(lines) + "\n"
+    (output_root / "data" / "publish_ab_pilot_report.md").write_text(report, encoding="utf-8")
+
+
+def run_publish_ab_pilot(post: PostAsset, output_root: Path, dry_run: bool = False) -> Dict[str, Any]:
+    pilot_log = output_root / "data" / "publish_ab_pilot_runs.jsonl"
+    existing_rows = read_jsonl(pilot_log)
+    summary_before = summarize_ab_pilot(existing_rows, AB_PILOT_WINDOW_DAYS)
+
+    selected_arm = choose_ab_arm(existing_rows, AB_PILOT_WINDOW_DAYS)
+    if selected_arm is None:
+        if summary_before.get("decision") == "candidate_keep":
+            selected_arm = "candidate"
+        else:
+            selected_arm = "control"
+
+    budget_cap_usd = _safe_float_env("AB_PILOT_MAX_COST_USD", 10.0)
+    spent_before = round(sum(float(row.get("estimated_cost_usd") or 0.0) for row in existing_rows), 6)
+    control_cost = _safe_float_env("AB_CONTROL_COST_USD", 0.0)
+    candidate_cost = _safe_float_env("AB_CANDIDATE_COST_USD", 0.0)
+    projected_cost = candidate_cost if selected_arm == "candidate" else control_cost
+
+    budget_adjustment: Optional[str] = None
+    if spent_before + projected_cost > budget_cap_usd:
+        options = [("control", control_cost), ("candidate", candidate_cost)]
+        affordable = [(arm, cost) for arm, cost in sorted(options, key=lambda item: item[1]) if spent_before + cost <= budget_cap_usd]
+        if affordable:
+            selected_arm = affordable[0][0]
+            projected_cost = affordable[0][1]
+            budget_adjustment = f"fallback_to_{selected_arm}"
+        else:
+            budget_adjustment = "cap_exhausted"
+
+    devto_mode = "candidate" if selected_arm == "candidate" else "control"
+    if budget_adjustment == "cap_exhausted":
+        publish_results = [
+            {
+                "channel": "devto",
+                "status": "skipped",
+                "reason": "ab_pilot_budget_cap_exhausted",
+                "provider": "none",
+            },
+            {"channel": "linkedin", "status": "skipped", "reason": "not-run"},
+            {"channel": "x", "status": "skipped", "reason": "not-run"},
+        ]
+        duration_ms = 0
+    else:
+        started = time.perf_counter()
+        publish_results = publish_post(post, output_root, dry_run=dry_run, devto_mode=devto_mode)
+        duration_ms = int((time.perf_counter() - started) * 1000)
+
+    devto_result = next((row for row in publish_results if row.get("channel") == "devto"), {"status": "error"})
+    success = str(devto_result.get("status")) == "published" or str(devto_result.get("status")) == "dry_run"
+    cost = projected_cost if budget_adjustment != "cap_exhausted" else 0.0
+
+    row = {
+        "timestamp": iso_timestamp(),
+        "workflow": "devto_publish",
+        "arm": selected_arm,
+        "provider": str(devto_result.get("provider") or devto_mode),
+        "status": str(devto_result.get("status") or "unknown"),
+        "success": success,
+        "duration_ms": duration_ms,
+        "estimated_cost_usd": round(cost, 6),
+        "slug": post.slug,
+        "budget_cap_usd": budget_cap_usd,
+        "budget_spent_before_usd": spent_before,
+        "budget_adjustment": budget_adjustment,
+    }
+    append_jsonl(pilot_log, row)
+
+    refreshed_rows = read_jsonl(pilot_log)
+    summary_after = summarize_ab_pilot(refreshed_rows, AB_PILOT_WINDOW_DAYS)
+    spent_after = round(sum(float(item.get("estimated_cost_usd") or 0.0) for item in refreshed_rows), 6)
+    summary_after["budget_cap_usd"] = budget_cap_usd
+    summary_after["budget_spent_usd"] = spent_after
+    summary_after["budget_remaining_usd"] = round(max(0.0, budget_cap_usd - spent_after), 6)
+    (output_root / "data" / "publish_ab_pilot_summary.json").write_text(
+        json.dumps(summary_after, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    write_ab_pilot_report(output_root, summary_after)
+
+    return {
+        "selected_arm": selected_arm,
+        "devto_mode": devto_mode,
+        "run": row,
+        "summary": summary_after,
+        "results": publish_results,
+    }
 
 
 def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
@@ -1059,10 +1416,13 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
             response = requests.get(
                 f"https://dev.to/api/articles/{rid}",
                 headers={"api-key": devto_key},
-                timeout=20,
+                timeout=30,
             )
             if response.status_code < 300:
-                data = response.json()
+                try:
+                    data = response.json()
+                except Exception:
+                    data = {}
                 score = int(data.get("positive_reactions_count") or 0) + int(data.get("comments_count") or 0)
                 summary["channels"].setdefault("devto", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 
@@ -1080,10 +1440,14 @@ def collect_engagement(output_root: Path, days: int = 14) -> Dict[str, Any]:
                 f"https://api.twitter.com/2/tweets/{rid}",
                 params={"tweet.fields": "public_metrics"},
                 headers={"Authorization": f"Bearer {x_bearer}"},
-                timeout=20,
+                timeout=30,
             )
             if response.status_code < 300:
-                metrics = ((response.json().get("data") or {}).get("public_metrics") or {})
+                try:
+                    payload = response.json()
+                except Exception:
+                    payload = {}
+                metrics = ((payload.get("data") or {}).get("public_metrics") or {})
                 score = int(metrics.get("like_count") or 0) + int(metrics.get("retweet_count") or 0)
                 summary["channels"].setdefault("x", {"published": 0, "engagement": 0, "items": 0})["engagement"] += score
 
@@ -1166,7 +1530,7 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
 
     app_store_url = os.getenv(
         "APP_STORE_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6742267714",
+        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312",
     )
     play_store_url = os.getenv(
         "PLAY_STORE_URL",
@@ -1174,7 +1538,7 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
     )
     ios_review_url = os.getenv(
         "IOS_REVIEW_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6742267714?action=write-review",
+        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review",
     )
     android_review_url = os.getenv(
         "ANDROID_REVIEW_URL",
@@ -1237,7 +1601,12 @@ def run_daily(args: argparse.Namespace) -> int:
     keyword_payload = ensure_keyword_backlog(output_root)
     post = generate_post(args)
     site = build_site(output_root)
-    publish_results = publish_post(post, output_root, dry_run=args.dry_run)
+    pilot_payload: Optional[Dict[str, Any]] = None
+    if getattr(args, "ab_pilot", False):
+        pilot_payload = run_publish_ab_pilot(post, output_root, dry_run=args.dry_run)
+        publish_results = list(pilot_payload.get("results") or [])
+    else:
+        publish_results = publish_post(post, output_root, dry_run=args.dry_run)
     engagement = collect_engagement(output_root, days=args.engagement_days)
 
     payload = {
@@ -1246,6 +1615,7 @@ def run_daily(args: argparse.Namespace) -> int:
         "post": post.slug,
         "site": site,
         "publish": publish_results,
+        "ab_pilot": pilot_payload,
         "engagement": engagement,
     }
     print(json.dumps(payload, indent=2))
@@ -1283,6 +1653,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p_daily.add_argument("--max-commits", type=int, default=8)
     p_daily.add_argument("--engagement-days", type=int, default=14)
     p_daily.add_argument("--dry-run", action="store_true")
+    p_daily.add_argument("--ab-pilot", action="store_true", help="Run 14-run DEV.to publish A/B pilot")
+
+    p_pilot = sub.add_parser("pilot-report", help="Summarize 14-run DEV.to publish A/B pilot")
+    p_pilot.add_argument("--window-days", type=int, default=AB_PILOT_WINDOW_DAYS)
 
     return parser
 
@@ -1327,6 +1701,17 @@ def main() -> int:
 
     if args.command == "run-daily":
         return run_daily(args)
+
+    if args.command == "pilot-report":
+        rows = read_jsonl(output_root / "data" / "publish_ab_pilot_runs.jsonl")
+        summary = summarize_ab_pilot(rows, window_days=args.window_days)
+        (output_root / "data" / "publish_ab_pilot_summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        write_ab_pilot_report(output_root, summary)
+        print(json.dumps(summary, indent=2))
+        return 0
 
     parser.error(f"Unknown command: {args.command}")
     return 2

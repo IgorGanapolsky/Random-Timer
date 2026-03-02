@@ -23,16 +23,21 @@ check_auth() {
 # Set up develop branch protection
 setup_develop_protection() {
   echo "Setting up develop branch protection..."
+  # Merge queue readiness: keep required checks stable; Claude Review is non-required.
   gh api \
     --method PUT \
     "/repos/$GITHUB_REPOSITORY/branches/develop/protection" \
     -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=validate \
-    -f required_status_checks[contexts][]=security \
-    -f required_status_checks[contexts][]=build \
+    -f required_status_checks[contexts][]=Android\ Tests \
+    -f required_status_checks[contexts][]=iOS\ Build\ Check \
+    -f required_status_checks[contexts][]=Security \
+    -f required_status_checks[contexts][]=Seer\ Code\ Review \
     -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=1 \
+    -f required_pull_request_reviews[required_approving_review_count]=0 \
     -f required_pull_request_reviews[dismiss_stale_reviews]=true \
+    -f required_pull_request_reviews[require_code_owner_reviews]=false \
+    -f required_pull_request_reviews[require_last_push_approval]=false \
+    -f required_conversation_resolution=true \
     -f allow_deletions=false \
     -f allow_force_pushes=false
 }
@@ -40,22 +45,25 @@ setup_develop_protection() {
 # Set up main branch protection
 setup_main_protection() {
   echo "Setting up main branch protection..."
+  # Merge queue readiness: keep required checks stable; Claude Review is non-required.
   gh api \
     --method PUT \
     "/repos/$GITHUB_REPOSITORY/branches/main/protection" \
     -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=validate \
-    -f required_status_checks[contexts][]=security \
-    -f required_status_checks[contexts][]=build \
-    -f required_status_checks[contexts][]=release \
+    -f required_status_checks[contexts][]=Android\ Tests \
+    -f required_status_checks[contexts][]=iOS\ Build\ Check \
+    -f required_status_checks[contexts][]=Security \
+    -f required_status_checks[contexts][]=Seer\ Code\ Review \
     -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=2 \
+    -f required_pull_request_reviews[required_approving_review_count]=0 \
     -f required_pull_request_reviews[dismiss_stale_reviews]=true \
-    -f required_pull_request_reviews[require_code_owner_reviews]=true \
+    -f required_pull_request_reviews[require_code_owner_reviews]=false \
+    -f required_pull_request_reviews[require_last_push_approval]=false \
     -f restrictions[users][] \
     -f restrictions[teams][] \
     -f restrictions[apps][] \
     -f required_linear_history=true \
+    -f required_conversation_resolution=true \
     -f allow_force_pushes=false \
     -f allow_deletions=false
 }

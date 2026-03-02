@@ -44,3 +44,10 @@ With evidence: branch count before/after, merged PR list, CI status, APK link.
 - Never claim a PR was merged without verifying via API
 - Always poll for APK artifact and provide the direct download link
 - Always check for merge conflicts before attempting merge
+
+## 2026-03-02 Lessons
+
+- If `strict_required_status_checks_policy` is enabled on branch rulesets, auto-merge PRs can flip to `BEHIND` after any merge to base. Immediately run `gh pr update-branch <pr>` to unblock.
+- Keep required checks deterministic: `Android Tests`, `iOS Build Check`, `Security`, `Seer Code Review`. Keep advisory bot checks non-required to prevent deadlocks.
+- GitHub Rulesets API accepted strict-check updates but rejected `merge_queue` rule for this repository configuration with HTTP 422. Record the exact response and continue with strict-check enforcement instead of blocking the whole rollout.
+- When release PR branch naming policy requires `release/vX.Y.Z`, close superseded non-compliant release PRs and open a compliant replacement branch/PR to avoid persistent policy failures.

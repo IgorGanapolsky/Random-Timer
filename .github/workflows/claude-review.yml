@@ -11,7 +11,10 @@ jobs:
   claude-review:
     name: Claude Review
     if: github.event_name == 'pull_request'
+    continue-on-error: true
     runs-on: ubuntu-latest
+    outputs:
+      claude_ok: ${{ steps.claude_review.outcome == 'success' }}
     permissions:
       contents: read
       pull-requests: write
@@ -21,10 +24,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Claude Code Review
+        id: claude_review
+        if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
         continue-on-error: true
-        uses: anthropics/claude-code-action@29214eeb6626cb5b6abf73a380c90ca849259729 # v1
+        uses: anthropics/claude-code-action@ea5a04005c9fd4deed2ed803c15a64d0e6eb65d0 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_bots: 'trunk-io,dependabot[bot],github-actions[bot]'
           prompt: |
             Review this PR for the Random Timer app. This is a native mobile project:
             - Android: Kotlin + Jetpack Compose (native-android/)
@@ -52,19 +58,36 @@ jobs:
             - Start with overall assessment (APPROVE, REQUEST_CHANGES, or COMMENT)
             - List specific issues with file:line references
             - Provide fix suggestions for each issue
-          claude_args: '--max-turns 10 --model claude-sonnet-4-5-20250929'
+          claude_args: '--max-turns 10'
+
+      - name: Advisory mode notice when secret is unavailable
+        if: ${{ secrets.ANTHROPIC_API_KEY == '' }}
+        run: |
+          echo "ANTHROPIC_API_KEY is not available for this run."
+          echo "Claude Review remains advisory and non-blocking."
+
+      - name: Warn when Claude review crashes
+        if: steps.claude_review.outcome != 'success'
+        run: |
+          echo "Claude review action failed/crashed; leaving non-blocking warning."
 
   # Auto-approve after Claude review passes (satisfies required 1 approval)
   ai-auto-approve:
     name: AI Auto-Approve
     needs: claude-review
-    if: github.event_name == 'pull_request'
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.claude-review.outputs.claude_ok == 'true' &&
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    continue-on-error: true
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     steps:
       - name: Auto-approve PR
+        continue-on-error: true
         uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
         with:
           review-message: "Auto-approved: Claude AI review passed, all CI checks green."
@@ -85,9 +108,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Claude Code Assist
-        uses: anthropics/claude-code-action@29214eeb6626cb5b6abf73a380c90ca849259729 # v1
+        uses: anthropics/claude-code-action@ea5a04005c9fd4deed2ed803c15a64d0e6eb65d0 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          allowed_bots: 'trunk-io,dependabot[bot],github-actions[bot]'
           prompt: |
             A reviewer mentioned @claude with the following comment:
 
@@ -100,4 +125,6 @@ jobs:
 
             Respond helpfully to their request. If they're asking for code changes,
             explain what needs to be done and where. Be specific with file paths.
-          claude_args: '--max-turns 5'
+          claude_args: |
+            --max-turns 5
+            --setting-sources user

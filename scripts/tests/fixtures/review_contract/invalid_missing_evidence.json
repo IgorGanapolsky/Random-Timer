@@ -1,0 +1,13 @@
+{
+  "verdict": "REQUEST_CHANGES",
+  "summary": "Issue reported without evidence line.",
+  "issues": [
+    {
+      "severity": "major",
+      "status": "open",
+      "file": "native-ios/RandomTimer/Sources/Services/TimerManager.swift",
+      "description": "State transition is unsafe.",
+      "suggestion": "Add alarm-state gate before reset."
+    }
+  ]
+}

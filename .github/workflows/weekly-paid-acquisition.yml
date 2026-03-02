@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: paid-acquisition
@@ -59,7 +60,10 @@ jobs:
           fi
 
           git commit -m "chore(ads): weekly campaign keyword and budget refresh"
-          git push
+          BRANCH="auto/paid-acquisition-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(paid): weekly campaign keyword and budget refresh" --body "Automated weekly paid acquisition campaign refresh" --label "automation" || true
 
       - name: Upload acquisition report
         if: always()

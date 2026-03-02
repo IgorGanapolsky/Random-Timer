@@ -20,6 +20,13 @@ import tempfile
 from pathlib import Path
 from typing import List, Sequence
 
+try:
+    # Works when running as module/package import.
+    from scripts.delegation_contract import evaluate_contract
+except ModuleNotFoundError:
+    # Works when invoking as: python scripts/release_ops.py ...
+    from delegation_contract import evaluate_contract
+
 
 class ReleaseOpsError(RuntimeError):
     """Raised for malformed command usage."""
@@ -129,6 +136,18 @@ def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
 
     payload = json.loads(context_out.read_text(encoding="utf-8"))
     summary = payload.get("summary", {})
+    contract = evaluate_contract(
+        operation="ios_metadata_sync",
+        context_payload=payload,
+        intent=True,
+    )
+
+    contract_out_raw = getattr(args, "contract_out", None)
+    if contract_out_raw:
+        contract_out = _safe_io_path(contract_out_raw, repo_root)
+        contract_out.parent.mkdir(parents=True, exist_ok=True)
+        contract_out.write_text(json.dumps(contract, indent=2, sort_keys=True), encoding="utf-8")
+        print(f"Delegation contract: {contract_out}")
 
     if args.strict_remote and summary.get("remote_status") not in ("success", "skipped_no_remote"):
         print(
@@ -142,6 +161,15 @@ def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
         print("❌ fail_on_sla enabled and SLA breaches are present", file=sys.stderr)
         return 1
 
+    if not contract["passed"]:
+        print(
+            "❌ delegation contract failed: "
+            + ", ".join(str(item) for item in contract.get("blockers", [])),
+            file=sys.stderr,
+        )
+        if getattr(args, "enforce_contract", True):
+            return 1
+
     blockers = summary.get("blockers") or []
     print("══ Release Ops Readiness ═══════════════════════════")
     print(f"Context:      {context_out}")
@@ -149,6 +177,7 @@ def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
     print(f"Remote:       {summary.get('remote_status')}")
     print(f"SLA breaches: {summary.get('sla_breach_count')}")
     print(f"Blockers:     {', '.join(blockers) if blockers else 'none'}")
+    print(f"Contract:     {'pass' if contract['passed'] else 'fail'}")
     print("═════════════════════════════════════════════════════")
 
     return 0
@@ -317,6 +346,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_ready.add_argument("--strict-remote", action="store_true", help="Fail if remote checks are not fully successful")
     p_ready.add_argument("--fail-on-sla", action="store_true", help="Fail if review SLA breaches are present")
     p_ready.add_argument("--no-remote", action="store_true", help="Skip remote ASC checks")
+    p_ready.add_argument("--contract-out", help="Optional path for delegation contract decision JSON")
+    p_ready.add_argument(
+        "--enforce-contract",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Fail when delegation contract is not satisfied (default: true)",
+    )
 
     p_sync = sub.add_parser("sync_listing", help="Upload listing metadata/screenshots via fastlane")
     p_sync.add_argument("--version", help="iOS marketing version")

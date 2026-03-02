@@ -1,0 +1,14 @@
+{
+  "verdict": "BLOCK",
+  "summary": "Critical security issue remains open.",
+  "issues": [
+    {
+      "severity": "critical",
+      "status": "open",
+      "file": "native-android/app/src/main/java/com/iganapolsky/randomtimer/MainActivity.kt",
+      "line": 45,
+      "description": "Potential sensitive token could be logged in deep-link handler.",
+      "suggestion": "Redact query values before logging and add unit tests."
+    }
+  ]
+}

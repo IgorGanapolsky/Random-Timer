@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: referral-content
@@ -44,7 +45,10 @@ jobs:
           fi
 
           git commit -m "chore(referral): weekly Reddit, PH, and blog content refresh"
-          git push
+          BRANCH="auto/referral-content-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(referral): weekly referral content refresh" --body "Automated weekly Reddit, ProductHunt, and blog referral content refresh" --label "automation" || true
 
       - name: Upload referral report
         if: always()

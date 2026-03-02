@@ -30,8 +30,10 @@ final class TimerManager: ObservableObject {
         self.notificationService = notificationService
         self.liveActivityService = liveActivityService
 
-        // Load config synchronously from storage to avoid UI flicker
-        self.config = storageService.loadConfigSync() ?? .default
+        // Load config synchronously from storage to avoid UI flicker.
+        // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
+        let rawConfig = storageService.loadConfigSync() ?? .default
+        self.config = rawConfig.clamped(isPro: ProManager.shared.isPro)
 
         // Wire Bluetooth/CarPlay media button and notification action callbacks.
         // Media button behavior must match timer-circle tap (silence + stay on timer screen).
@@ -126,6 +128,7 @@ final class TimerManager: ObservableObject {
             "max_duration": config.maxDuration,
             "target_duration": randomDuration,
         ])
+        AnalyticsService.shared.trackFirstTimerConfiguredIfNeeded()
 
         // Save state for recovery
         await storageService.saveTimerState(state)
@@ -142,6 +145,15 @@ final class TimerManager: ObservableObject {
 
     func cancelTimer() async {
         AnalyticsService.shared.track(AnalyticsEvents.timerStopped)
+        if let state = timerState, state.status != .alarm, state.status != .complete {
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": state.targetDuration,
+                "remaining_duration": state.remainingDuration,
+                "status": state.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonUserCancelled,
+                AnalyticsProperties.abandonSource: AnalyticsValues.abandonSourceTimerControls,
+            ])
+        }
         stopCountdown()
         timerState = nil
 
@@ -154,6 +166,8 @@ final class TimerManager: ObservableObject {
         AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
+        // Schedule re-engagement reminders before clearing timer state
+        notificationService.scheduleReengagementReminder()
         await cancelTimer()
     }
 
@@ -189,12 +203,14 @@ final class TimerManager: ObservableObject {
         await startTimer()
     }
 
-    /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume
+    /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
+    /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
+    /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
         guard let state = timerState, state.status == .alarm else { return }
-        // Deactivate audio session so iOS won't auto-resume playback on foreground
-        notificationService.stopAlarmSound()
-        notificationService.stopVibration()
+        // Silence alarm — stops sound/vibration AND marks as silenced so
+        // handleForeground() won't restart the alarm when the user returns.
+        silenceAlarm()
     }
 
     /// Check for pending actions from Live Activity intents (via shared App Group UserDefaults)
@@ -221,6 +237,9 @@ final class TimerManager: ObservableObject {
     }
 
     func handleForeground() async {
+        // User is back — cancel any pending re-engagement reminders
+        notificationService.cancelReengagementReminders()
+
         // Process any pending actions from Live Activity buttons
         await processPendingLiveActivityAction()
 
@@ -398,6 +417,13 @@ final class TimerManager: ObservableObject {
         )
     }
 
+    func previewSound(type: SoundType) {
+        notificationService.playPreviewSound(
+            type: type,
+            volume: config.volume
+        )
+    }
+
     func updatePreviewVolume() {
         notificationService.updatePreviewVolume(config.volume)
     }
@@ -430,7 +456,8 @@ final class TimerManager: ObservableObject {
 
     private func loadSavedConfig() async {
         if let saved = await storageService.loadConfig() {
-            config = saved
+            // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
+            config = saved.clamped(isPro: ProManager.shared.isPro)
         }
     }
 
@@ -459,6 +486,13 @@ final class TimerManager: ObservableObject {
             startCountdown()
         } else {
             // Timer should have completed while app was closed - go to complete state, don't replay alarm
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": saved.targetDuration,
+                "remaining_duration": 0,
+                "status": saved.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonStaleRestoreExpired,
+                AnalyticsProperties.abandonSource: AnalyticsValues.abandonSourceStateRestore,
+            ])
             await storageService.clearTimerState()
             timerState = nil
         }
@@ -505,6 +539,9 @@ final class TimerManager: ObservableObject {
 
             stopCountdown()
 
+            AnalyticsService.shared.track(AnalyticsEvents.timerCountdownFinished, properties: [
+                "target_duration": state.targetDuration,
+            ])
             AnalyticsService.shared.track(AnalyticsEvents.alarmTriggered, properties: [
                 "target_duration": state.targetDuration,
             ])
@@ -563,7 +600,15 @@ final class TimerManager: ObservableObject {
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
-            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted)
+            TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                "target_duration": state.targetDuration,
+            ])
+            AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
+
+            // Schedule re-engagement reminders so user gets nudged back
+            notificationService.scheduleReengagementReminder()
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {

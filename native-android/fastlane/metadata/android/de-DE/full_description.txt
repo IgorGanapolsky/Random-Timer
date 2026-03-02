@@ -1,0 +1,41 @@
+Random Tactical Timer löst einen Alarm zu einem unvorhersehbaren Zeitpunkt innerhalb deines gewählten Zeitbereichs aus. Stelle eine Mindest- und Höchstdauer ein, drücke Start und trainiere. Du weißt nie, wann es losgeht — das hält dich scharf, reaktionsfähig und kampfbereit.
+
+Entwickelt für Kämpfer, Trainer und taktische Athleten, die unter echtem Druck Reaktion trainieren müssen — nicht mit vorhersehbaren Countdown-Mustern.
+
+FÜR WEN:
+- Boxer, MMA-Kämpfer und BJJ-Praktizierende für Reaktionsgeschwindigkeit
+- Selbstverteidigungstraining mit Stressinokulation
+- Trainer mit unvorhersehbaren Intervalleinheiten
+- CrossFit- und HIIT-Athleten gegen vorhersehbare Pausenmuster
+- Militär und Polizei für taktisches Drilltraining
+- Alle, die einen Timer ohne Antizipation brauchen
+
+HAUPTFUNKTIONEN:
+- Benutzerdefinierte Zeitbereiche — Mindest- und Höchstdauer einstellen
+- Versteckter Countdown — Timer verbirgt sich, damit du nicht voraussehen kannst
+- Loop-Modus — startet automatisch mit neuer zufälliger Dauer
+- Sperrbildschirm-Countdown — Timer direkt auf dem Sperrbildschirm
+- Mehrere Alarmtöne — zwischen intensiven und sanften Signalen wählen
+- Einstellbare Lautstärke und Vibration
+- Jederzeit pausieren, fortsetzen und zurücksetzen
+- Zuverlässig im Hintergrund mit Vordergrunddienst
+- Funktioniert mit Bluetooth-Kopfhörern und Android Auto
+
+SO FUNKTIONIERT ES:
+1. Mindest- und Höchstzeit einstellen (z.B. 30 Sekunden bis 5 Minuten)
+2. Start tippen — die App wählt eine zufällige Dauer in diesem Bereich
+3. Bewegen, trainieren, sparren oder normal arbeiten
+4. Reagieren, wenn der Alarm mit Vollbild-Alert, Ton und Vibration auslöst
+5. Loop für automatisches neues zufälliges Intervall
+
+EINSATZBEREICHE:
+- Reaktionsdrills für Boxen, Kickboxen, Muay Thai und MMA
+- BJJ-Positionswechsel und Scramble-Training
+- Stressinokulation für Selbstverteidigung und Nahkampf
+- HIIT und Kondition mit unvorhersehbaren Intervallen
+- CrossFit EMOM und AMRAP mit Überraschungsübergängen
+- Militärische und taktische Trainingsszenarien
+- Teamtraining mit zufälligem Pfeiftiming
+
+FÜR EINFACHHEIT ENTWICKELT:
+Dunkle Oberfläche. Kein Durcheinander. Keine Werbung. Kein Tracking. Keine Abos. Stelle deinen Bereich ein. Trainiere für Chaos.

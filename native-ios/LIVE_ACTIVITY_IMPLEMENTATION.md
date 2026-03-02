@@ -206,7 +206,7 @@ Consistent with main app theme:
 - Timer Active: #10B981 (Emerald)
 - Timer Warning: #F59E0B (Amber)
 - Timer Danger: #EF4444 (Rose)
-- Timer Complete: #8B5CF6 (Purple)
+- Timer Complete: #EF4444 (Red)
 - Text Primary: #F8FAFC (Near white)
 - Text Secondary: #A1A1AA (Muted gray)
 

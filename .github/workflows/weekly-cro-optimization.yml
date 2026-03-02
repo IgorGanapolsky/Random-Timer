@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: cro-optimization
@@ -59,7 +60,10 @@ jobs:
           fi
 
           git commit -m "chore(cro): weekly conversion optimization and localization sync"
-          git push
+          BRANCH="auto/cro-optimization-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" --title "chore(cro): weekly conversion optimization" --body "Automated weekly CRO optimization and localization sync" --label "automation" || true
 
       - name: Upload CRO report
         if: always()

@@ -5,21 +5,21 @@ Formalized release and versioning strategy for Random Tactical Timer (Android + 
 ## Branch Strategy
 
 ```
-develop  ──────────────►  main
-  │  (features/fixes)       │  (releases only)
-  │                         │
-  └── feature branches      └── git tags (v1.2.0)
+feature/* ──► develop ──► release/vX.Y.Z ──► main
+                (trunk)      (stabilize)      (production truth)
 ```
 
 | Branch | Purpose | Rules |
 |--------|---------|-------|
-| `develop` | Primary development branch | All features, fixes, version bumps land here first |
-| `main` | Release branch (production) | Only receives merges from `develop` (enforced by CI) |
-| `feature/*`, `claude/*` | Feature branches | Branch from develop, PR back to develop |
+| `develop` | Primary development trunk | All verified features/fixes merge here fast |
+| `release/vX.Y.Z` | Release stabilization branch | Cut from `develop` for store release prep/hotfixes |
+| `main` | Production source of truth | Only receives PRs from `release/vX.Y.Z` |
+| `feature/*`, `fix/*`, `claude/*` | Short-lived working branches | Branch from `develop`, PR back to `develop` |
 
-**Flow**: `develop` → PR → `main` → tag → release to stores
+**Flow**: `feature/fix` → `develop` → `release/vX.Y.Z` → `main` → tag → release to stores
 
-Version bumps always happen on `develop` **before** merging to `main`. Main always reflects what's in production.
+Version bumps happen on `develop` first, then release branches are cut from `develop`.
+`main` always reflects what is live (or being promoted live) in stores.
 
 ## Versioning
 
@@ -74,7 +74,7 @@ $EDITOR native-android/fastlane/metadata/android/en-US/changelogs/<versionCode>.
 $EDITOR native-ios/fastlane/metadata/en-US/release_notes.txt
 ```
 
-### 3. Commit and PR to `main`
+### 3. Commit to `develop` and Cut a Release Branch
 
 ```bash
 git add native-android/app/build.gradle.kts \
@@ -86,7 +86,19 @@ git commit -m "chore: bump version to 1.2.0"
 git push origin develop
 ```
 
-Create a PR from `develop` → `main`. The `enforce-develop-to-main` workflow ensures only develop can merge into main.
+Cut release branch from `develop`:
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b release/v1.2.0
+git push -u origin release/v1.2.0
+```
+
+Create a PR from `release/v1.2.0` → `main`. The `enforce-release-branch-to-main` workflow enforces:
+- PR source must be `release/vX.Y.Z`
+- branch version must match Android `versionName`
+- branch version must match iOS `MARKETING_VERSION`
 
 ### 4. Run Preflight Checks
 
@@ -106,7 +118,7 @@ This validates:
 - Screenshot counts and dimensions
 - Builds compile successfully (layer 2)
 
-### 5. Merge to `main` and Release
+### 5. Merge `release/*` to `main` and Release
 
 After the PR is approved and CI passes:
 
@@ -138,6 +150,26 @@ The `native-release.yml` workflow automatically:
 5. **Verifies** builds landed on the correct store track
 6. **Tags the commit** as `vX.Y.Z` (idempotent — skips if tag exists)
 7. **Creates a GitHub Release** with combined Android + iOS release notes
+
+### Delegation Contract Gate
+
+High-impact iOS actions now run through an explicit delegation contract:
+
+- `ios_metadata_sync` (CI/local readiness): requires local listing readiness and no active blockers.
+- `ios_submit_for_review` (external submission): requires explicit submit intent plus proven ASC readiness checks with evidence.
+
+Manual command:
+
+```bash
+python scripts/delegation_contract.py \
+  --operation ios_submit_for_review \
+  --asc-ready-json /tmp/asc_ready.json \
+  --intent true \
+  --json-out /tmp/delegation_contract.json \
+  --enforce
+```
+
+CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so every "ready" claim is backed by machine-readable evidence.
 
 ## Store Metadata Locations
 
@@ -183,14 +215,22 @@ native-ios/fastlane/metadata/en-US/
 
 native-ios/fastlane/screenshots/en-US/
 ├── 1_setup.png
-├── 2_running.png
-├── ...
+├── 2_active.png
+├── 3_alarm.png
+├── 4_running.png
 ├── 5_ipad_setup.png       # Required iPad screenshots
 ├── 6_ipad_running.png
 └── 7_ipad_stopped.png
 ```
 
 Metadata is synced via fastlane `deliver` (metadata lane) and `submit_review` lane.
+
+Regenerate screenshot creatives before metadata sync:
+
+```bash
+python scripts/generate_ios_store_creatives.py --repo-root . --locale en-US
+python scripts/refresh_ios_screenshot_creatives.py
+```
 
 ## Git Tags
 

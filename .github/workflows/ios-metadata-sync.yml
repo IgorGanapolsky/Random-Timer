@@ -7,6 +7,25 @@ on:
         description: "iOS marketing version to update (e.g. 1.1.1). Leave blank to auto-detect."
         required: false
         type: string
+      locale:
+        description: "App Store locale to replace screenshots for."
+        required: true
+        type: string
+        default: "en-US"
+      metadata_only:
+        description: "Allow metadata sync without requiring a VALID build attached to this App Store version."
+        required: true
+        type: boolean
+        default: false
+      strict_retry_on_editable:
+        description: "Retry full screenshot replacement one time when screenshot checks fail and ASC state is editable."
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: ios-metadata-sync-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
+  cancel-in-progress: true
 
 jobs:
   sync-metadata:
@@ -14,8 +33,25 @@ jobs:
     environment: production
     env:
       PYTHONPATH: ${{ github.workspace }}
+      IOS_METADATA_LOCALE: ${{ inputs.locale }}
+      IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
+      IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fail fast on required App Store secrets
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
 
       - name: Preflight release checks (iOS listing assets)
         run: bash scripts/preflight-release.sh --platform ios --layer 1
@@ -39,12 +75,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install pyjwt cryptography requests
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
       - name: Resolve iOS version
         id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          VERSION_INPUT="${{ github.event.inputs.version }}"
           if [ -n "$VERSION_INPUT" ]; then
             VERSION="$VERSION_INPUT"
           else
@@ -72,9 +109,10 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          VERSION_RESOLVED: ${{ steps.version.outputs.version }}
         run: |
           python scripts/asc_resolve_version.py \
-            --preferred-version "${{ steps.version.outputs.version }}" \
+            --preferred-version "$VERSION_RESOLVED" \
             --create-if-needed \
             --auto-next-patch \
             --json-out /tmp/asc_version.json
@@ -82,41 +120,48 @@ jobs:
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "Using editable App Store version: $SELECTED_VERSION"
 
-      - name: Reset existing screenshots for locale
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
-        run: |
-          python scripts/asc_reset_screenshots.py \
-            --version "${{ steps.asc_version.outputs.selected_version }}" \
-            --locale "en-US"
-
-      - name: Upload iOS metadata + screenshots
+      - name: Strict screenshot replacement + metadata upload
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
-        working-directory: native-ios
-
-      - name: Verify App Store listing readiness
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          SELECTED_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
-          python scripts/asc_verify_ready.py \
-            --version "${{ steps.asc_version.outputs.selected_version }}" \
-            --skip-build-check \
-            --json /tmp/asc_ready.json
+          LOCALE="$IOS_METADATA_LOCALE"
+          if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
+            echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
+            exit 1
+          fi
+
+          BUILD_FLAG=""
+          if [[ "$IOS_METADATA_ONLY" == "true" ]]; then
+            echo "⚠️ metadata_only=true: build attached/VALID check is intentionally skipped."
+            BUILD_FLAG="--skip-build-check"
+          fi
+
+          RETRY_FLAG="--retry-on-editable"
+          if [[ "$IOS_STRICT_RETRY_ON_EDITABLE" != "true" ]]; then
+            RETRY_FLAG="--no-retry-on-editable"
+          fi
+
+          python scripts/asc_strict_screenshot_sync.py \
+            --version "$SELECTED_VERSION" \
+            --locale "$LOCALE" \
+            $BUILD_FLAG \
+            $RETRY_FLAG \
+            --json-out /tmp/asc_screenshot_sync.json \
+            --asc-ready-json /tmp/asc_ready.json
 
       - name: Upload readiness report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: asc-ready-report
-          path: /tmp/asc_ready.json
+          path: |
+            /tmp/asc_ready.json
+            /tmp/asc_screenshot_sync.json
+          if-no-files-found: ignore
 
       - name: Upload version resolution report
         if: always()
@@ -127,4 +172,4 @@ jobs:
 
       - name: Cleanup secrets
         if: always()
-        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json
+        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json /tmp/asc_screenshot_sync.json
