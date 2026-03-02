@@ -44,6 +44,10 @@ When a task depends on credentials, the agent must verify local and CI credentia
 
 ## Growth North Star (Effective February 23, 2026)
 
+### Business Goal
+
+**Earn $100/day after-tax from app sales** while improving product quality and operational reliability.
+
 ### Primary North Star Metric (NSM)
 
 **Weekly Qualified Training Users (WQTU)**: number of distinct users with **3 or more `timer_completed` events** in the trailing 7 days.

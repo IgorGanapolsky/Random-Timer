@@ -34,7 +34,7 @@ on:
         default: 'false'
 
 concurrency:
-  group: mobile-release-pipeline
+  group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
   cancel-in-progress: false
 
 jobs:
@@ -44,6 +44,24 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fail fast on required iOS release secrets
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION ADMIN_TOKEN; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
 
       - name: Preflight release checks (iOS)
         run: bash scripts/preflight-release.sh --platform ios --layer 1
@@ -148,6 +166,22 @@ jobs:
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fail fast on required Android release secrets
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in GOOGLE_PLAY_JSON_KEY ANDROID_KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
 
       - name: Preflight release checks (Android)
         run: bash scripts/preflight-release.sh --platform android --layer 1
