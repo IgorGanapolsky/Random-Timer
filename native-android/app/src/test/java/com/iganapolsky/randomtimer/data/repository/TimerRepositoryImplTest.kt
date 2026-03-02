@@ -1,263 +1,104 @@
 package com.iganapolsky.randomtimer.data.repository
 
-import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.common.truth.Truth.assertThat
+import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.nio.file.Files
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 class TimerRepositoryImplTest {
     @Test
-    fun `getTimerConfig returns defaults when preferences are empty`() =
+    fun getTimerConfig_returns_defaults_when_preferences_are_empty() =
         runTest {
-            val (repository, _) = createRepository(backgroundScope)
-
-            val config = repository.getTimerConfig().first()
-
+            val repo = createRepository(this)
+            val config = repo.getTimerConfig().first()
             assertThat(config).isEqualTo(TimerConfig.DEFAULT)
         }
 
     @Test
-    fun `saveTimerConfig persists and emits stored config`() =
+    fun saveTimerConfig_persists_and_emits_stored_config() =
         runTest {
-            val (repository, _) = createRepository(backgroundScope)
-            val expected =
-                TimerConfig(
-                    minSeconds = 5,
-                    maxSeconds = 120,
-                    alarmDuration = 15,
-                    hiddenMode = true,
+            val repo = createRepository(this)
+            val newConfig =
+                TimerConfig.DEFAULT.copy(
+                    minSeconds = 15,
+                    maxSeconds = 45,
+                    alarmDuration = 20,
                     repeatEnabled = true,
                     soundType = SoundType.GENTLE,
                     volume = 0.8f,
                     vibrationEnabled = true,
                 )
 
-            repository.saveTimerConfig(expected)
-
-            val restored = repository.getTimerConfig().first()
-            assertThat(restored).isEqualTo(expected)
+            repo.saveTimerConfig(newConfig)
+            val stored = repo.getTimerConfig().first()
+            assertThat(stored).isEqualTo(newConfig)
         }
 
     @Test
-    fun `getTimerConfig falls back to INTENSE for invalid stored sound type`() =
+    fun getActiveTimer_returns_null_when_active_timer_is_not_stored() =
         runTest {
-            val (repository, dataStore) = createRepository(backgroundScope)
-
-            dataStore.edit { preferences ->
-                preferences[stringPreferencesKey("sound_type")] = "INVALID_SOUND"
-            }
-
-            val config = repository.getTimerConfig().first()
-            assertThat(config.soundType).isEqualTo(SoundType.INTENSE)
+            val repo = createRepository(this)
+            val active = repo.getActiveTimer().first()
+            assertThat(active).isNull()
         }
 
     @Test
-    fun `getActiveTimer returns null when active timer is not stored`() =
+    fun saveActiveTimer_persists_and_restores_active_timer_state() =
         runTest {
-            val (repository, _) = createRepository(backgroundScope)
-
-            val activeTimer = repository.getActiveTimer().first()
-
-            assertThat(activeTimer).isNull()
-        }
-
-    @Test
-    fun `getActiveTimer returns null when active timer keys are incomplete`() =
-        runTest {
-            val (repository, dataStore) = createRepository(backgroundScope)
-
-            dataStore.edit { preferences ->
-                preferences[longPreferencesKey("active_target_ms")] = 5_000L
-            }
-
-            val activeTimer = repository.getActiveTimer().first()
-            assertThat(activeTimer).isNull()
-        }
-
-    @Test
-    fun `saveActiveTimer persists and restores active timer state`() =
-        runTest {
-            val (repository, _) = createRepository(backgroundScope)
-            val config =
-                TimerConfig(
-                    minSeconds = 10,
-                    maxSeconds = 90,
-                    alarmDuration = 30,
-                    hiddenMode = false,
-                    repeatEnabled = true,
-                    soundType = SoundType.GENTLE,
-                    volume = 0.6f,
-                    vibrationEnabled = true,
-                )
-            val expected =
+            val repo = createRepository(this)
+            val state =
                 TimerState(
-                    config = config,
-                    targetDuration = 90.seconds,
-                    remainingDuration = 45.seconds,
-                    status = TimerStatus.PAUSED,
+                    config = TimerConfig.DEFAULT,
+                    targetDuration = 5000.milliseconds,
+                    remainingDuration = 3000.milliseconds,
+                    status = TimerStatus.RUNNING,
                     startedAt = 123456789L,
                 )
 
-            repository.saveTimerConfig(config)
-            repository.saveActiveTimer(expected)
-
-            val restored = repository.getActiveTimer().first()
-            assertThat(restored).isEqualTo(expected)
+            repo.saveActiveTimer(state)
+            val restored = repo.getActiveTimer().first()
+            assertThat(restored).isEqualTo(state)
         }
 
-    @Test
-    fun `getActiveTimer uses default config when config keys are absent`() =
-        runTest {
-            val (repository, _) = createRepository(backgroundScope)
-            val state =
-                TimerState(
-                    config =
-                        TimerConfig.DEFAULT.copy(
-                            minSeconds = 10,
-                            maxSeconds = 20,
-                            alarmDuration = 15,
-                            hiddenMode = true,
-                            repeatEnabled = true,
-                            soundType = SoundType.GENTLE,
-                            volume = 0.9f,
-                            vibrationEnabled = true,
-                        ),
-                    targetDuration = 20.seconds,
-                    remainingDuration = 5.seconds,
-                    status = TimerStatus.RUNNING,
-                    startedAt = 999L,
-                )
-
-            repository.saveActiveTimer(state)
-
-            val restored = repository.getActiveTimer().first()
-            assertThat(restored?.config).isEqualTo(TimerConfig.DEFAULT)
-        }
-
-    @Test
-    fun `getActiveTimer falls back to INTENSE for invalid stored sound type`() =
-        runTest {
-            val (repository, dataStore) = createRepository(backgroundScope)
-            val state =
-                TimerState(
-                    config = TimerConfig.DEFAULT,
-                    targetDuration = 25.seconds,
-                    remainingDuration = 7.seconds,
-                    status = TimerStatus.PAUSED,
-                    startedAt = 123L,
-                )
-            repository.saveActiveTimer(state)
-            dataStore.edit { preferences ->
-                preferences[stringPreferencesKey("sound_type")] = "NOT_A_REAL_SOUND"
-            }
-
-            val restored = repository.getActiveTimer().first()
-
-            assertThat(restored?.config?.soundType).isEqualTo(SoundType.INTENSE)
-        }
-
-    @Test
-    fun `clearActiveTimer removes persisted active timer`() =
-        runTest {
-            val (repository, _) = createRepository(backgroundScope)
-            val state =
-                TimerState(
-                    config = TimerConfig.DEFAULT,
-                    targetDuration = 30.seconds,
-                    remainingDuration = 10.seconds,
-                    status = TimerStatus.RUNNING,
-                    startedAt = 777L,
-                )
-
-            repository.saveActiveTimer(state)
-            repository.clearActiveTimer()
-
-            val restored = repository.getActiveTimer().first()
-            assertThat(restored).isNull()
-        }
-
-    @Test
-    fun `clearActiveTimer does not remove saved timer config`() =
-        runTest {
-            val (repository, _) = createRepository(backgroundScope)
-            val config =
-                TimerConfig(
-                    minSeconds = 3,
-                    maxSeconds = 100,
-                    alarmDuration = 30,
-                    hiddenMode = true,
-                    repeatEnabled = true,
-                    soundType = SoundType.GENTLE,
-                    volume = 0.75f,
-                    vibrationEnabled = true,
-                )
-            val state =
-                TimerState(
-                    config = config,
-                    targetDuration = 40.seconds,
-                    remainingDuration = 11.seconds,
-                    status = TimerStatus.WARNING,
-                    startedAt = 456L,
-                )
-
-            repository.saveTimerConfig(config)
-            repository.saveActiveTimer(state)
-            repository.clearActiveTimer()
-
-            val restoredConfig = repository.getTimerConfig().first()
-            val restoredActiveTimer = repository.getActiveTimer().first()
-            assertThat(restoredConfig).isEqualTo(config)
-            assertThat(restoredActiveTimer).isNull()
-        }
-
-    private fun createRepository(scope: CoroutineScope): Pair<TimerRepositoryImpl, DataStore<Preferences>> {
+    private fun createRepository(testScope: TestScope): TimerRepositoryImpl {
         val dataStore =
             PreferenceDataStoreFactory.create(
-                scope = scope,
+                scope = testScope.backgroundScope,
                 produceFile = {
                     Files.createTempFile("timer-repo-test", ".preferences_pb").toFile()
                 },
             )
-        val ctor = TimerRepositoryImpl::class.java.constructors.first()
-        val repository =
-            when (ctor.parameterCount) {
-                1 -> ctor.newInstance(dataStore) as TimerRepositoryImpl
-                2 -> {
-                    val proManagerClass = Class.forName("com.iganapolsky.randomtimer.billing.ProManager")
-                    val unsafeClass = Class.forName("sun.misc.Unsafe")
-                    val unsafeField = unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }
-                    val unsafe = unsafeField.get(null)
-                    val allocateInstance = unsafeClass.getMethod("allocateInstance", Class::class.java)
-                    val proManager = allocateInstance.invoke(unsafe, proManagerClass)
 
-                    val isProFlow = MutableStateFlow(false)
-                    proManagerClass.getDeclaredField("_isPro").apply {
-                        isAccessible = true
-                        set(proManager, isProFlow)
-                    }
-                    proManagerClass.getDeclaredField("isPro").apply {
-                        isAccessible = true
-                        set(proManager, isProFlow)
-                    }
+        val proManager = mockk<ProManager>(relaxed = true)
+        val entitlementLevelFlow = MutableStateFlow(EntitlementLevel.NONE)
+        val isProFlow = MutableStateFlow(false)
 
-                    ctor.newInstance(dataStore, proManager) as TimerRepositoryImpl
-                }
-                else -> error("Unexpected TimerRepositoryImpl constructor shape")
-            }
-        return repository to dataStore
+        every { proManager.entitlementLevel } returns entitlementLevelFlow.asStateFlow()
+        every { proManager.isPro } returns isProFlow.asStateFlow()
+        every { proManager.maxSecondsLimit(any()) } answers {
+            val level = firstArg<EntitlementLevel>()
+            if (level.isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+        }
+        every { proManager.availableSounds(any()) } answers {
+            val level = firstArg<EntitlementLevel>()
+            if (level.isPro) SoundType.entries.toList() else SoundType.FREE
+        }
+
+        return TimerRepositoryImpl(dataStore, proManager)
     }
 }

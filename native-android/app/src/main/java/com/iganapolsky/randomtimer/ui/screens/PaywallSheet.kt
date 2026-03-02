@@ -29,24 +29,14 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    price: String,
-    onPurchase: () -> Unit,
+    basePrice: String,
+    elitePrice: String,
+    onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val debugUnlockEnabled = BuildConfig.DEBUG && onDebugUnlock != null
-    val purchaseModifier =
-        if (debugUnlockEnabled) {
-            Modifier.combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onPurchase,
-                onLongClick = { onDebugUnlock?.invoke() },
-            )
-        } else {
-            Modifier
-        }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -61,36 +51,96 @@ fun PaywallSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Upgrade to Pro",
+                text = "Hybrid Tactical Monetization",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "One-time purchase. No subscriptions.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
                 textAlign = TextAlign.Center,
+                modifier =
+                    if (debugUnlockEnabled) {
+                        Modifier.combinedClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                            onLongClick = { onDebugUnlock?.invoke() },
+                        )
+                    } else {
+                        Modifier
+                    },
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Support independent development")
+            // Tactical Base
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+            ) {
+                Text(
+                    text = "Tactical Base",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary,
+                )
+                Text(
+                    text = "One-time purchase. Essential tactical features.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
+                ProFeatureRow(text = "Extended range up to 60 minutes")
+                Spacer(modifier = Modifier.height(8.dp))
+                PrimaryButton(
+                    text = "Unlock Base \u2022 $basePrice",
+                    onClick = { onPurchase("pro_base") },
+                )
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            PrimaryButton(
-                text = "Unlock Pro \u2022 $price",
-                onClick = if (debugUnlockEnabled) ({}) else onPurchase,
-                modifier = purchaseModifier,
-            )
+            // Tactical Elite
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Tactical Elite",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TimerColors.AccentPrimary,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "RECOMMENDED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TimerColors.TextPrimary,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                }
+                Text(
+                    text = "Subscription. The ultimate tactical experience.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ProFeatureRow(text = "Includes all Base features")
+                ProFeatureRow(text = "AI Voice Callouts (Coming Soon)")
+                ProFeatureRow(text = "Support independent development")
+                Spacer(modifier = Modifier.height(8.dp))
+                PrimaryButton(
+                    text = "Unlock Elite \u2022 $elitePrice",
+                    onClick = { onPurchase("elite_tactical") },
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Restore purchase",

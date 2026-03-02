@@ -62,7 +62,7 @@ jobs:
     name: iOS TestFlight (Internal)
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true'
-    runs-on: macos-15
+    runs-on: macos-26
     environment: production
     steps:
       - uses: actions/checkout@v4

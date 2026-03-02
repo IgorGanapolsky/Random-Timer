@@ -44,38 +44,71 @@ struct PaywallSheet: View {
                 .font(.caption)
                 .foregroundColor(.textSecondary)
 
-            VStack(alignment: .leading, spacing: 12) {
-                ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
-                ProFeatureRow(text: "Extended range up to 60 minutes")
-                ProFeatureRow(text: "Support independent development")
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("PRO FEATURES")
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                    ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
+                    ProFeatureRow(text: "Extended range up to 60 minutes")
+                }
+
+                Divider().background(Color.glassBorder)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("ELITE FEATURES")
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                    ProFeatureRow(text: "AI Voice Callouts (Real-time coaching)")
+                    ProFeatureRow(text: "Unlocks everything forever")
+                }
             }
             .padding(.horizontal)
 
-            PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice)") {
-                Task {
-                    let result = await proManager.purchase()
-                    AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
-                        AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                        AnalyticsProperties.result: result.rawValue,
-                    ])
+            VStack(spacing: 12) {
+                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.baseProductID))") {
+                    Task {
+                        let result = await proManager.purchase(productID: ProManager.baseProductID)
+                        AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
+                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                            AnalyticsProperties.result: result.rawValue,
+                            "product_id": ProManager.baseProductID
+                        ])
 
-                    if result == .success {
-                        hasTrackedDismiss = true
-                        dismiss()
+                        if result == .success {
+                            hasTrackedDismiss = true
+                            dismiss()
+                        }
                     }
                 }
+
+                PrimaryButton(title: "Go Elite \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
+                    Task {
+                        let result = await proManager.purchase(productID: ProManager.eliteProductID)
+                        AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
+                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                            AnalyticsProperties.result: result.rawValue,
+                            "product_id": ProManager.eliteProductID
+                        ])
+
+                        if result == .success {
+                            hasTrackedDismiss = true
+                            dismiss()
+                        }
+                    }
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.accentPrimary, lineWidth: 2)
+                )
             }
-#if DEBUG
-            .onLongPressGesture(minimumDuration: 0.8) {
-                proManager.unlockProForDebug()
+            #if DEBUG
+            .onLongPressGesture(minimumDuration: 8.0) {
+                proManager.unlockEliteForDebug()
                 hasTrackedDismiss = true
-                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
-                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                    AnalyticsProperties.result: "dev_override",
-                ])
                 dismiss()
             }
-#endif
+            #endif
 
             Button("Restore purchase") {
                 Task {

@@ -308,7 +308,10 @@ enum TimeRangeAdjuster {
 
         if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
             adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
-            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            // Only pull min back if max hit ceiling and gap is still too small
+            if adjustedMaxSeconds - adjustedMinSeconds < minGapSeconds {
+                adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            }
         }
 
         return (adjustedMinSeconds, adjustedMaxSeconds)
@@ -605,6 +608,18 @@ extension TimerStatus {
             return .complete
         }
         return currentStatus == .paused ? .paused : .running
+    }
+}
+
+// MARK: - Entitlement Level
+
+public enum EntitlementLevel: String, Codable, Sendable {
+    case none
+    case base
+    case elite
+
+    public var isPro: Bool {
+        self != .none
     }
 }
 

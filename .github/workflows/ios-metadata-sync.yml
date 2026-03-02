@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   sync-metadata:
-    runs-on: macos-15
+    runs-on: macos-26
     environment: production
     env:
       PYTHONPATH: ${{ github.workspace }}

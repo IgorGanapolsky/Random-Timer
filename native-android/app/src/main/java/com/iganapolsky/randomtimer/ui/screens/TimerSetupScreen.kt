@@ -117,6 +117,7 @@ fun TimerSetupScreen(
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
+    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -285,16 +286,17 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // 2. Alarm Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
                 item {
                     GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
                         Column {
                             Text(
-                                text = "\uD83D\uDD14 Alarm Setup",
+                                text = "\uD83D\uDD14 Alarm Sound Setup",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TimerColors.TextPrimary,
                             )
+
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
                             // Duration Chips
@@ -336,6 +338,63 @@ fun TimerSetupScreen(
                                                 selected = config.alarmDuration == duration,
                                             ),
                                     )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // AI Voice Callouts (Elite Feature)
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                    )
+                                    Text(
+                                        text = "Voice prompts during countdown",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
+                                    )
+                                }
+                                if (isElite) {
+                                    Text(
+                                        text = "ENABLED",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TimerColors.AccentPrimary,
+                                    )
+                                } else {
+                                    Surface(
+                                        onClick = onUpgradeTap,
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = "ELITE ",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                            Text(
+                                                text = "\uD83D\uDD12",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
@@ -656,15 +715,6 @@ private fun TimeRangeSliders(
                 color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
             )
         }
-        if (!compactMode) {
-            Text(
-                text = "Coarse: slider + \u00B15s  \u2022  Fine: \u00B11s buttons",
-                style = MaterialTheme.typography.labelSmall,
-                color = TimerColors.TextMuted,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
-        }
 
         // Min slider with nudge
         Column {
@@ -680,7 +730,7 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "-5s",
+                    label = "\u2212",
                     enabled = enabled && minValue >= coarseNudgeStep,
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
                     width = nudgeWidth,
@@ -707,31 +757,9 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+5s",
+                    label = "+",
                     enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
                     onClick = { onMinChange(minValue + coarseNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-            }
-            Spacer(modifier = Modifier.height(if (compactMode) 6.dp else 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NudgeButton(
-                    label = "-1s",
-                    enabled = enabled && minValue >= fineNudgeStep,
-                    onClick = { onMinChange(minValue - fineNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                NudgeButton(
-                    label = "+1s",
-                    enabled = enabled && minValue <= (maxValue - minGapSeconds - fineNudgeStep),
-                    onClick = { onMinChange(minValue + fineNudgeStep) },
                     width = nudgeWidth,
                     height = nudgeHeight,
                 )
@@ -752,7 +780,7 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "-5s",
+                    label = "\u2212",
                     enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
                     onClick = { onMaxChange(maxValue - coarseNudgeStep) },
                     width = nudgeWidth,
@@ -780,31 +808,9 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+5s",
+                    label = "+",
                     enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
                     onClick = { onMaxChange(maxValue + coarseNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-            }
-            Spacer(modifier = Modifier.height(if (compactMode) 6.dp else 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NudgeButton(
-                    label = "-1s",
-                    enabled = enabled && maxValue >= (minValue + minGapSeconds + fineNudgeStep),
-                    onClick = { onMaxChange(maxValue - fineNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                NudgeButton(
-                    label = "+1s",
-                    enabled = enabled && maxValue <= (maxSliderRangeInt - fineNudgeStep),
-                    onClick = { onMaxChange(maxValue + fineNudgeStep) },
                     width = nudgeWidth,
                     height = nudgeHeight,
                 )

@@ -40,7 +40,7 @@ concurrency:
 jobs:
   ios-testflight:
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
-    runs-on: macos-15
+    runs-on: macos-26
     environment: production
     steps:
       - uses: actions/checkout@v4

@@ -5,10 +5,15 @@ import StoreKit
 final class ProManager: ObservableObject {
     static let shared = ProManager()
 
-    static nonisolated let productID = "com.iganapolsky.randomtimer.pro"
+    static nonisolated let baseProductID = "com.iganapolsky.randomtimer.pro"
+    static nonisolated let eliteProductID = "com.iganapolsky.randomtimer.elite"
+    static nonisolated var productIDs: Set<String> { [baseProductID, eliteProductID] }
 
-    @Published private(set) var isPro = false
-    @Published private(set) var product: Product?
+    @Published private(set) var entitlementLevel: EntitlementLevel = .none
+    @Published private(set) var products: [Product] = []
+
+    var isPro: Bool { entitlementLevel.isPro }
+    var isElite: Bool { entitlementLevel == .elite }
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
@@ -27,26 +32,29 @@ final class ProManager: ObservableObject {
 
     func fetchProduct() async {
         do {
-            let products = try await Product.products(for: [Self.productID])
-            product = products.first
+            products = try await Product.products(for: Self.productIDs)
+                .sorted(by: { $0.price < $1.price })
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
         }
     }
 
-    var formattedPrice: String {
-        product?.displayPrice ?? "$4.99"
+    func formattedPrice(for productID: String) -> String {
+        products.first(where: { $0.id == productID })?.displayPrice ?? (productID == Self.eliteProductID ? "$19.99/yr" : "$4.99")
     }
 
     // MARK: - Purchase
 
     @discardableResult
-    func purchase() async -> ProPurchaseResult {
-        guard let product else {
+    func purchase(productID: String) async -> ProPurchaseResult {
+        if products.isEmpty {
             await fetchProduct()
-            guard let product = self.product else { return .productUnavailable }
-            return await doPurchase(product)
         }
+        
+        guard let product = products.first(where: { $0.id == productID }) else {
+            return .productUnavailable
+        }
+        
         return await doPurchase(product)
     }
 
@@ -56,7 +64,7 @@ final class ProManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try Self.checkVerified(verification)
-                isPro = true
+                updateEntitlement(for: transaction.productID)
                 await transaction.finish()
                 return .success
             case .userCancelled:
@@ -76,19 +84,29 @@ final class ProManager: ObservableObject {
 
     @discardableResult
     func restorePurchases() async -> ProRestoreResult {
-        if isPro {
-            return .alreadyUnlocked
-        }
+        var highestLevel: EntitlementLevel = .none
 
         for await result in Transaction.currentEntitlements {
-            if let transaction = try? Self.checkVerified(result),
-               transaction.productID == Self.productID {
-                isPro = true
-                return .restored
+            if let transaction = try? Self.checkVerified(result) {
+                let level = levelFor(productID: transaction.productID)
+                if level == .elite {
+                    highestLevel = .elite
+                } else if level == .base && highestLevel == .none {
+                    highestLevel = .base
+                }
             }
         }
 
-        return isPro ? .alreadyUnlocked : .notFound
+        let wasPro = isPro
+        entitlementLevel = highestLevel
+        
+        if isPro && !wasPro {
+            return .restored
+        } else if isPro {
+            return .alreadyUnlocked
+        }
+
+        return .notFound
     }
 
     // MARK: - Transaction Listener
@@ -96,12 +114,32 @@ final class ProManager: ObservableObject {
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached {
             for await result in Transaction.updates {
-                if let transaction = try? Self.checkVerified(result),
-                   transaction.productID == Self.productID {
-                    await MainActor.run { [weak self] in self?.isPro = true }
+                if let transaction = try? Self.checkVerified(result) {
+                    let productID = transaction.productID
+                    await MainActor.run { [weak self] in 
+                        self?.updateEntitlement(for: productID) 
+                    }
                     await transaction.finish()
                 }
             }
+        }
+    }
+
+    private func updateEntitlement(for productID: String) {
+        let newLevel = levelFor(productID: productID)
+        // Only upgrade, don't downgrade via this path (downgrades handled by restore/currentEntitlements)
+        if newLevel == .elite {
+            entitlementLevel = .elite
+        } else if newLevel == .base && entitlementLevel == .none {
+            entitlementLevel = .base
+        }
+    }
+
+    private func levelFor(productID: String) -> EntitlementLevel {
+        switch productID {
+        case Self.eliteProductID: return .elite
+        case Self.baseProductID: return .base
+        default: return .none
         }
     }
 
@@ -129,8 +167,13 @@ final class ProManager: ObservableObject {
 
 #if DEBUG
     func unlockProForDebug() {
-        isPro = true
+        entitlementLevel = .base
         Self.log.notice("Developer override enabled: Pro unlocked in debug build")
+    }
+    
+    func unlockEliteForDebug() {
+        entitlementLevel = .elite
+        Self.log.notice("Developer override enabled: Elite unlocked in debug build")
     }
 #endif
 }

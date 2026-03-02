@@ -107,6 +107,9 @@ final class TimerManager: ObservableObject {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
+        // Reset AI Voice Callout session for fresh chaos drill timing
+        AIVoiceCalloutService.shared.resetSession()
+
         // Stop any preview sound
         notificationService.stopPreview()
 
@@ -526,6 +529,11 @@ final class TimerManager: ObservableObject {
 
         state.remainingDuration -= 1
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
+
+        // Trigger AI Voice Callout for ELITE users
+        if ProManager.shared.isElite {
+            AIVoiceCalloutService.shared.triggerCallout(remainingSeconds: Int(state.remainingDuration))
+        }
 
         if state.remainingDuration <= 0 {
             state.remainingDuration = 0
