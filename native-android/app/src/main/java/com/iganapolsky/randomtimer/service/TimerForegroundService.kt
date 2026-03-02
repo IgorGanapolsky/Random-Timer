@@ -28,7 +28,6 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
-import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -265,8 +264,8 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    // Trigger voice callouts for ELITE users
-                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
+                    // Trigger voice callouts for Pro users
+                    if (proManager.entitlementLevel.value.isPro) {
                         voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
                     }
 

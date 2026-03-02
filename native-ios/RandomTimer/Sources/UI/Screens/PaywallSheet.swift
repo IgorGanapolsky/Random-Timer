@@ -41,8 +41,8 @@ struct PaywallSheet: View {
                 .foregroundColor(.textPrimary)
 
             VStack(spacing: 4) {
-                Text("Base Pro: one-time purchase.")
-                Text("Elite: yearly auto-renewing subscription. Cancel anytime.")
+                Text("One premium plan.")
+                Text("Yearly auto-renewing subscription. Cancel anytime.")
             }
             .font(.caption)
             .foregroundColor(.textSecondary)
@@ -55,40 +55,22 @@ struct PaywallSheet: View {
                         .foregroundColor(.accentPrimary)
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
-                }
-
-                Divider().background(Color.glassBorder)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("ELITE PLAN")
-                        .font(.caption.bold())
-                        .foregroundColor(.accentPrimary)
-                    ProFeatureRow(text: "Includes all Pro features")
-                    ProFeatureRow(text: "Yearly subscription access to Elite features")
+                    ProFeatureRow(text: "Voice callouts during countdown")
+                    ProFeatureRow(text: "Support independent development")
                 }
             }
             .padding(.horizontal)
 
             VStack(spacing: 12) {
-                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.baseProductID))") {
-                    Task {
-                        await purchase(productID: ProManager.baseProductID)
-                    }
-                }
-
-                PrimaryButton(title: "Go Elite \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
+                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
                     Task {
                         await purchase(productID: ProManager.eliteProductID)
                     }
                 }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.accentPrimary, lineWidth: 2)
-                )
             }
             #if DEBUG
             .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.unlockEliteForDebug()
+                proManager.unlockProForDebug()
                 hasTrackedDismiss = true
                 dismiss()
             }

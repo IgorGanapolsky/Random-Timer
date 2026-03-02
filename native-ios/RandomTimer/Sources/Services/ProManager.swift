@@ -40,7 +40,7 @@ final class ProManager: ObservableObject {
     }
 
     func formattedPrice(for productID: String) -> String {
-        products.first(where: { $0.id == productID })?.displayPrice ?? (productID == Self.eliteProductID ? "$19.99/yr" : "$4.99")
+        products.first(where: { $0.id == productID })?.displayPrice ?? (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99")
     }
 
     // MARK: - Purchase

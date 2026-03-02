@@ -292,7 +292,7 @@ class ProManager
                     ?.pricingPhases
                     ?.pricingPhaseList
                     ?.firstOrNull()
-                    ?.formattedPrice ?: "$19.99"
+                    ?.formattedPrice ?: "$29.99"
             } else {
                 details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$4.99"
             }
