@@ -328,6 +328,8 @@ enum AnalyticsEvents {
     static let writeReviewTapped = "write_review_tapped"
     static let paywallViewed = "paywall_viewed"
     static let paywallDismissed = "paywall_dismissed"
+    static let paywallPurchaseAttempt = "paywall_purchase_attempt"
+    static let paywallPurchaseSuccess = "paywall_purchase_success"
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
@@ -347,6 +349,8 @@ enum AnalyticsProperties {
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"
+    static let productId = "product_id"
+    static let entitlementLevel = "entitlement_level"
     static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"

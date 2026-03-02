@@ -53,6 +53,8 @@ class NorthStarGuardrailTests(unittest.TestCase):
             payload = json.loads(out.read_text(encoding="utf-8"))
             self.assertEqual(payload["status"], "skipped")
             self.assertFalse(payload["paid"]["guardrail_violated"])
+            self.assertFalse(payload["paid"]["no_scale_lock"]["active"])
+            self.assertEqual(payload["paid"]["no_scale_lock"]["enforceable_status"], "not_applicable")
 
     def test_guardrail_violates_when_active_and_zero_paid_users(self):
         from scripts import north_star_guardrail as nsg
@@ -85,6 +87,8 @@ class NorthStarGuardrailTests(unittest.TestCase):
             self.assertEqual(result["active_campaign_count"], 1)
             self.assertEqual(result["paid_distinct_users_30d"], 0)
             self.assertTrue(result["guardrail_violated"])
+            self.assertTrue(result["no_scale_lock_active"])
+            self.assertEqual(result["no_scale_lock_enforceable_status"], "enforceable")
 
     def test_guardrail_grace_window_skips_violation_for_new_campaign(self):
         from scripts import north_star_guardrail as nsg
@@ -120,6 +124,8 @@ class NorthStarGuardrailTests(unittest.TestCase):
             self.assertEqual(result["active_campaign_count"], 1)
             self.assertEqual(result["paid_distinct_users_30d"], 0)
             self.assertFalse(result["guardrail_violated"])
+            self.assertFalse(result["no_scale_lock_active"])
+            self.assertEqual(result["no_scale_lock_enforceable_status"], "advisory")
 
     def test_guardrail_violates_with_apple_traffic_signal_even_in_grace(self):
         from scripts import north_star_guardrail as nsg
@@ -208,6 +214,8 @@ class NorthStarGuardrailTests(unittest.TestCase):
             self.assertEqual(result["active_campaign_count"], 2)
             self.assertEqual(result["paid_distinct_users_30d"], 7)
             self.assertFalse(result["guardrail_violated"])
+            self.assertFalse(result["no_scale_lock_active"])
+            self.assertEqual(result["no_scale_lock_enforceable_status"], "not_applicable")
 
     def test_main_require_posthog_when_active_fails_on_missing_credentials(self):
         from scripts import north_star_guardrail as nsg
@@ -306,6 +314,41 @@ class NorthStarGuardrailTests(unittest.TestCase):
                 exit_code = nsg.main()
 
             self.assertEqual(exit_code, 3)
+
+    def test_main_enforce_guardrail_fails_when_no_scale_lock_enforceable(self):
+        from scripts import north_star_guardrail as nsg
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._write_paid_campaigns(root, ["active"])
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "POSTHOG_PERSONAL_API_KEY": "phx_test",
+                    "POSTHOG_PROJECT_ID": "299775",
+                },
+                clear=True,
+            ), mock.patch.object(
+                nsg,
+                "query_scalar",
+                side_effect=[0, 2, 1, 0],
+            ), mock.patch.object(
+                nsg,
+                "query_rows",
+                return_value=[],
+            ), mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "north_star_guardrail.py",
+                    "--repo-root",
+                    str(root),
+                    "--enforce-guardrail",
+                ],
+            ):
+                exit_code = nsg.main()
+
+            self.assertEqual(exit_code, 1)
 
 
 if __name__ == "__main__":

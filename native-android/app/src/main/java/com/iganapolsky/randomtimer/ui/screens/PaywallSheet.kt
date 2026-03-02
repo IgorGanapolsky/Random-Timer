@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.BuildConfig
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 
@@ -95,7 +96,7 @@ fun PaywallSheet(
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
                     text = "Unlock Base \u2022 $basePrice",
-                    onClick = { onPurchase("pro_base") },
+                    onClick = { onPurchase(ProManager.BASE_PRODUCT_ID) },
                 )
             }
 
@@ -125,18 +126,18 @@ fun PaywallSheet(
                     )
                 }
                 Text(
-                    text = "Subscription. The ultimate tactical experience.",
+                    text = "Yearly subscription. Includes all Base features.",
                     style = MaterialTheme.typography.bodySmall,
                     color = TimerColors.TextSecondary,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 ProFeatureRow(text = "Includes all Base features")
-                ProFeatureRow(text = "AI Voice Callouts (Coming Soon)")
                 ProFeatureRow(text = "Support independent development")
+                ProFeatureRow(text = "Cancel anytime in Google Play subscriptions")
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
                     text = "Unlock Elite \u2022 $elitePrice",
-                    onClick = { onPurchase("elite_tactical") },
+                    onClick = { onPurchase(ProManager.ELITE_PRODUCT_ID) },
                 )
             }
 

@@ -356,28 +356,8 @@ jobs:
             --repo-root . \
             --lookback-days 30 \
             --wqtu-window-days 7 \
-            --require-posthog
-
-      - name: Warn if paid attribution guardrail is violated
-        if: always()
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          report_path = Path("marketing/data/north_star.json")
-          if not report_path.exists():
-              print("::warning::north_star.json not found; skipped guardrail warning annotation.")
-              raise SystemExit(0)
-
-          payload = json.loads(report_path.read_text(encoding="utf-8"))
-          paid = payload.get("paid", {})
-          if paid.get("guardrail_violated"):
-              reason = paid.get("guardrail_reason") or "paid attribution guardrail violated"
-              print(f"::warning::North Star guardrail violated: {reason}")
-          else:
-              print("North Star guardrail check passed without violations.")
-          PY
+            --enforce-guardrail \
+            --require-posthog-when-active
 
       - name: Upload north star artifact
         if: always()

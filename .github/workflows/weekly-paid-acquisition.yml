@@ -33,6 +33,45 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Preflight north star guardrail
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7 \
+            --enforce-guardrail \
+            --require-posthog-when-active
+
+      - name: Gate paid refresh when no-scale lock is active
+        env:
+          DAILY_BUDGET: ${{ inputs.daily_budget }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("marketing/data/north_star.json")
+          if not path.exists():
+              raise SystemExit("north_star.json missing; cannot evaluate no-scale lock")
+
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          paid = payload.get("paid", {})
+          lock = paid.get("no_scale_lock", {})
+          active = bool(lock.get("active")) or bool(paid.get("guardrail_violated"))
+          if not active:
+              raise SystemExit(0)
+
+          reasons = lock.get("reasons") or []
+          reason_text = "; ".join(reasons) if reasons else (paid.get("guardrail_reason") or "no-scale lock active")
+          if os.getenv("DAILY_BUDGET", "").strip():
+              raise SystemExit(f"Budget override blocked while no-scale lock active: {reason_text}")
+          raise SystemExit(f"Campaign refresh blocked while no-scale lock active: {reason_text}")
+          PY
+
       - name: Run paid acquisition pipeline
         env:
           DAILY_BUDGET: ${{ inputs.daily_budget }}

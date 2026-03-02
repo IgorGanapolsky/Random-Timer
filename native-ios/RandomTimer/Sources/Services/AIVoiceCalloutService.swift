@@ -19,7 +19,7 @@ final class AIVoiceCalloutService {
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = 0.5
 
-        Self.log.info("AI Voice Callout: \(text)")
+        Self.log.info("Voice Callout: \(text)")
         synthesizer.speak(utterance)
     }
 

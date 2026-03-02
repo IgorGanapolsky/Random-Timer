@@ -107,7 +107,7 @@ final class TimerManager: ObservableObject {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
-        // Reset AI Voice Callout session for fresh chaos drill timing
+        // Reset voice callout session for fresh chaos drill timing
         AIVoiceCalloutService.shared.resetSession()
 
         // Stop any preview sound
@@ -530,7 +530,7 @@ final class TimerManager: ObservableObject {
         state.remainingDuration -= 1
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
-        // Trigger AI Voice Callout for ELITE users
+        // Trigger voice callouts for ELITE users
         if ProManager.shared.isElite {
             AIVoiceCalloutService.shared.triggerCallout(remainingSeconds: Int(state.remainingDuration))
         }
@@ -612,6 +612,7 @@ final class TimerManager: ObservableObject {
             UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
+                AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
             ])
             AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
 
