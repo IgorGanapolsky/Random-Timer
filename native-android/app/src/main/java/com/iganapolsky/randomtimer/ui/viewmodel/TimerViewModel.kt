@@ -245,7 +245,10 @@ class TimerViewModel
             if (previousStatus == TimerStatus.ALARM && currentStatus == TimerStatus.COMPLETE) {
                 analyticsService.track(
                     AnalyticsEvents.TIMER_COMPLETED,
-                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                    mapOf(
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                        AnalyticsProperties.ENTITLEMENT_LEVEL to proManager.entitlementLevel.value.name.lowercase(),
+                    ),
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
                 markFirstTimerCompleted()

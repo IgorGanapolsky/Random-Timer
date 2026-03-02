@@ -41,6 +41,29 @@ jobs:
             --enforce-guardrail \
             --require-posthog-when-active
 
+      - name: Assert no-scale lock schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path("marketing/data/north_star.json")
+          if not report.exists():
+              raise SystemExit("north_star.json missing")
+          payload = json.loads(report.read_text(encoding="utf-8"))
+          paid = payload.get("paid")
+          if not isinstance(paid, dict):
+              raise SystemExit("paid section missing from north_star.json")
+          lock = paid.get("no_scale_lock")
+          if not isinstance(lock, dict):
+              raise SystemExit("paid.no_scale_lock missing from north_star.json")
+          required = {"active", "reasons", "enforceable_status"}
+          missing = required - set(lock.keys())
+          if missing:
+              raise SystemExit(f"paid.no_scale_lock missing fields: {sorted(missing)}")
+          print("no_scale_lock schema ok")
+          PY
+
       - name: Upload north star snapshot
         if: always()
         uses: actions/upload-artifact@v4

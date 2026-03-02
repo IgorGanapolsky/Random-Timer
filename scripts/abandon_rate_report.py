@@ -105,11 +105,11 @@ def run():
         project_id,
         errors,
     )
-    paywall_purchase_attempts = query_scalar(
+    canonical_purchase_attempts = query_scalar(
         f"""
         SELECT count()
         FROM events
-        WHERE event = 'paywall_purchase_result'
+        WHERE event = 'paywall_purchase_attempt'
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
@@ -117,15 +117,11 @@ def run():
         project_id,
         errors,
     )
-    paywall_purchase_success = query_scalar(
+    canonical_purchase_success = query_scalar(
         f"""
         SELECT count()
         FROM events
-        WHERE event = 'paywall_purchase_result'
-          AND (
-            lower(coalesce(properties.result, '')) IN ('success', 'restored', 'already_unlocked')
-            OR lower(toString(properties.success)) = 'true'
-          )
+        WHERE event = 'paywall_purchase_success'
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
@@ -133,6 +129,39 @@ def run():
         project_id,
         errors,
     )
+    purchase_metrics_source = "canonical_events"
+    paywall_purchase_attempts = canonical_purchase_attempts
+    paywall_purchase_success = canonical_purchase_success
+    if canonical_purchase_attempts == 0 and canonical_purchase_success == 0:
+        purchase_metrics_source = "paywall_purchase_result_fallback"
+        paywall_purchase_attempts = query_scalar(
+            f"""
+            SELECT count()
+            FROM events
+            WHERE event = 'paywall_purchase_result'
+              AND timestamp > now() - interval 30 day
+              AND {LIVE_EVENTS_PREDICATE}
+            """,
+            key,
+            project_id,
+            errors,
+        )
+        paywall_purchase_success = query_scalar(
+            f"""
+            SELECT count()
+            FROM events
+            WHERE event = 'paywall_purchase_result'
+              AND (
+                lower(coalesce(properties.result, '')) IN ('success', 'restored', 'already_unlocked')
+                OR lower(toString(properties.success)) = 'true'
+              )
+              AND timestamp > now() - interval 30 day
+              AND {LIVE_EVENTS_PREDICATE}
+            """,
+            key,
+            project_id,
+            errors,
+        )
     paywall_restore_events = query_scalar(
         f"""
         SELECT count()
@@ -172,6 +201,7 @@ def run():
             "paywall_purchase_attempts_30d": paywall_purchase_attempts,
             "paywall_purchase_success_30d": paywall_purchase_success,
             "paywall_restore_events_30d": paywall_restore_events,
+            "paywall_purchase_metrics_source": purchase_metrics_source,
             "paywall_view_to_purchase_rate_percent": round((paywall_purchase_success / paywall_viewed) * 100, 2) if paywall_viewed > 0 else 0.0,
         },
         "build_audience_breakdown_30d": [{"build_audience": row[0], "events": row[1]} for row in build_audience_breakdown],

@@ -146,6 +146,11 @@ def _empty_payload(lookback_days: int, wqtu_window_days: int, reason: str = "") 
             "paid_traffic_signal_detail": "",
             "guardrail_violated": False,
             "guardrail_reason": "",
+            "no_scale_lock": {
+                "active": False,
+                "reasons": [],
+                "enforceable_status": "not_applicable",
+            },
         },
         "query_diagnostics": {"errors": []},
         "snapshots": [],
@@ -207,9 +212,16 @@ def run(
     if not key or not project_id:
         payload["status"] = "skipped"
         payload["status_reason"] = "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID"
-        payload["paid"]["guardrail_violated"] = len(active) > 0
-        if len(active) > 0:
-            payload["paid"]["guardrail_reason"] = "active campaigns exist but PostHog credentials are missing"
+        lock_active = len(active) > 0
+        lock_reasons = ["active campaigns exist but PostHog credentials are missing"] if lock_active else []
+        lock_status = "enforceable" if lock_active else "not_applicable"
+        payload["paid"]["no_scale_lock"] = {
+            "active": lock_active,
+            "reasons": lock_reasons,
+            "enforceable_status": lock_status,
+        }
+        payload["paid"]["guardrail_violated"] = lock_active
+        payload["paid"]["guardrail_reason"] = "; ".join(lock_reasons)
         output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         return {
             "status": payload["status"],
@@ -217,6 +229,9 @@ def run(
             "reason": payload["status_reason"],
             "guardrail_violated": payload["paid"]["guardrail_violated"],
             "active_campaign_count": len(active),
+            "no_scale_lock_active": lock_active,
+            "no_scale_lock_reasons": lock_reasons,
+            "no_scale_lock_enforceable_status": lock_status,
         }
 
     wqtu = query_scalar(
@@ -324,16 +339,29 @@ def run(
         and paid_distinct_users_30d == 0
         and (len(outside_grace) > 0 or signal)
     )
-    payload["paid"]["guardrail_violated"] = should_enforce
+    lock_active = should_enforce
+    lock_reasons: List[str] = []
     if should_enforce:
-        payload["paid"]["guardrail_reason"] = (
+        lock_reasons.append(
             "active campaigns exist, paid-attributed users over lookback window is zero, "
             f"outside_grace={len(outside_grace)}, signal={signal} ({signal_detail})"
         )
     elif len(active) > 0 and paid_distinct_users_30d == 0:
-        payload["paid"]["guardrail_reason"] = (
+        lock_reasons.append(
             "guardrail not enforced: campaigns are within grace window and no paid traffic signal detected"
         )
+    lock_status = (
+        "enforceable"
+        if lock_active
+        else ("advisory" if len(active) > 0 and paid_distinct_users_30d == 0 else "not_applicable")
+    )
+    payload["paid"]["no_scale_lock"] = {
+        "active": lock_active,
+        "reasons": lock_reasons,
+        "enforceable_status": lock_status,
+    }
+    payload["paid"]["guardrail_violated"] = lock_active
+    payload["paid"]["guardrail_reason"] = "; ".join(lock_reasons)
 
     payload["query_diagnostics"]["errors"] = errors
 
@@ -369,6 +397,9 @@ def run(
         "paid_distinct_users_30d": paid_distinct_users_30d,
         "active_campaign_count": len(active),
         "guardrail_violated": payload["paid"]["guardrail_violated"],
+        "no_scale_lock_active": payload["paid"]["no_scale_lock"]["active"],
+        "no_scale_lock_reasons": payload["paid"]["no_scale_lock"]["reasons"],
+        "no_scale_lock_enforceable_status": payload["paid"]["no_scale_lock"]["enforceable_status"],
         "query_errors_count": len(errors),
     }
 
@@ -423,7 +454,11 @@ def main() -> int:
         return 3
     if args.require_posthog and result.get("status") != "ok":
         return 2
-    if args.enforce_guardrail and result.get("guardrail_violated"):
+    if (
+        args.enforce_guardrail
+        and result.get("no_scale_lock_active")
+        and result.get("no_scale_lock_enforceable_status") == "enforceable"
+    ):
         return 1
     return 0
 

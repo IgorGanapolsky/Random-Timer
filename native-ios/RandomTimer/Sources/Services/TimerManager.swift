@@ -612,6 +612,7 @@ final class TimerManager: ObservableObject {
             UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
+                AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
             ])
             AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
 

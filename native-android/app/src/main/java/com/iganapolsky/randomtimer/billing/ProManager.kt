@@ -180,6 +180,11 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
+            trackPurchaseAttempt(
+                source = MonetizationSources.PAYWALL,
+                entryPoint = entryPoint,
+                productID = productID,
+            )
             if (!billingClient.isReady) {
                 connectAndRestore()
                 trackPurchaseResult(
@@ -298,23 +303,70 @@ class ProManager
             purchases: MutableList<Purchase>?,
         ) {
             var hasPurchased = false
+            val source =
+                if (pendingPurchaseEntryPoint.isNullOrBlank()) {
+                    MonetizationSources.BILLING_CALLBACK
+                } else {
+                    MonetizationSources.PAYWALL
+                }
             if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
                     if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                         hasPurchased = true
                         updateEntitlementFromPurchase(purchase)
                         externalScope.launch { acknowledgePurchaseIfNeeded(purchase) }
+                        trackPurchaseSuccess(
+                            source = source,
+                            entryPoint = pendingPurchaseEntryPoint,
+                            productID = purchase.products.firstOrNull(),
+                            responseCode = result.responseCode,
+                            debugMessage = result.debugMessage,
+                        )
                     }
                 }
             }
             trackPurchaseResult(
                 success = hasPurchased,
-                source = if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL,
+                source = source,
                 entryPoint = pendingPurchaseEntryPoint,
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
             )
             pendingPurchaseEntryPoint = null
+        }
+
+        private fun trackPurchaseAttempt(
+            source: String,
+            entryPoint: String?,
+            productID: String,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_PURCHASE_ATTEMPT,
+                MonetizationAnalyticsPayload.attemptProperties(
+                    source = source,
+                    entryPoint = entryPoint,
+                    productID = productID,
+                ),
+            )
+        }
+
+        private fun trackPurchaseSuccess(
+            source: String,
+            entryPoint: String?,
+            productID: String?,
+            responseCode: Int,
+            debugMessage: String?,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
+                MonetizationAnalyticsPayload.successProperties(
+                    source = source,
+                    entryPoint = entryPoint,
+                    productID = productID,
+                    responseCode = responseCode,
+                    debugMessage = debugMessage,
+                ),
+            )
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
@@ -437,6 +489,33 @@ internal object MonetizationSources {
 }
 
 internal object MonetizationAnalyticsPayload {
+    fun attemptProperties(
+        source: String,
+        entryPoint: String?,
+        productID: String,
+    ): Map<String, Any> =
+        mapOf(
+            AnalyticsProperties.SOURCE to source,
+            AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),
+            AnalyticsProperties.PRODUCT_ID to productID,
+        )
+
+    fun successProperties(
+        source: String,
+        entryPoint: String?,
+        productID: String?,
+        responseCode: Int,
+        debugMessage: String?,
+    ): Map<String, Any> =
+        buildMap {
+            put(AnalyticsProperties.SOURCE, source)
+            put(AnalyticsProperties.ENTRY_POINT, entryPoint ?: source)
+            put(AnalyticsProperties.SUCCESS, true)
+            put(AnalyticsProperties.RESPONSE_CODE, responseCode)
+            put(AnalyticsProperties.DEBUG_MESSAGE, debugMessage ?: "")
+            productID?.let { put(AnalyticsProperties.PRODUCT_ID, it) }
+        }
+
     fun resultProperties(
         success: Boolean,
         result: String,
