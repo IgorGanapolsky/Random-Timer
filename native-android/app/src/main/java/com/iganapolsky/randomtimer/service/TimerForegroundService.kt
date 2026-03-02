@@ -28,11 +28,11 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
-import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -57,9 +57,9 @@ class TimerForegroundService : Service() {
     @Inject lateinit var storeReviewManager: StoreReviewManager
 
     @Inject lateinit var analyticsService: AnalyticsService
-    
+
     @Inject lateinit var proManager: ProManager
-    
+
     @Inject lateinit var voiceCalloutManager: AIVoiceCalloutManager
 
     private val trainingStatsService by lazy { TrainingStatsService(this) }
