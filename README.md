@@ -72,7 +72,7 @@ Use paid spend only when attribution is measurable and activation quality holds.
 
 ### iOS (SwiftUI + Live Activities)
 <p align="center">
-  <img src="screenshots/ios-setup.png" width="200" alt="iOS setup screen showing training window, alarm settings, and start button" />
+  <img src="screenshots/ios-setup.png" width="200" alt="iOS setup screen showing timer range, alarm settings, and start button" />
   <img src="screenshots/ios-active.png" width="200" alt="iOS active timer screen during a running random interval" />
   <img src="screenshots/ios-alarm.png" width="200" alt="iOS alarm state with tactical alert controls" />
   <img src="screenshots/ios-running.png" width="200" alt="iOS running state with countdown and loop mode indicators" />
@@ -81,7 +81,7 @@ Use paid spend only when attribution is measurable and activation quality holds.
 
 ### Android (Jetpack Compose + Material 3)
 <p align="center">
-  <img src="screenshots/android-setup.png" width="200" alt="Android setup screen with training window sliders and alarm controls" />
+  <img src="screenshots/android-setup.png" width="200" alt="Android setup screen with timer range sliders and alarm controls" />
   <img src="screenshots/android-active.png" width="200" alt="Android active timer screen while interval is running" />
   <img src="screenshots/android-settings.png" width="200" alt="Android settings and tactical expansion options" />
   <img src="screenshots/android-loop.png" width="200" alt="Android loop mode and repeated drill workflow" />
