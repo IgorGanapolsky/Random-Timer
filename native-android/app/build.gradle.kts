@@ -33,14 +33,17 @@ if (enableFirebasePlugins) {
     logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }
 
+val ciCompileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toIntOrNull()
+val ciTargetSdk = providers.gradleProperty("ciTargetSdk").orNull?.toIntOrNull()
+
 android {
     namespace = "com.iganapolsky.randomtimer"
-    compileSdk = 35
+    compileSdk = ciCompileSdk ?: 35
 
     defaultConfig {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = ciTargetSdk ?: 35
         versionCode = 11
         versionName = "1.2.2"
 

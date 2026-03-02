@@ -26,9 +26,9 @@ object AlarmAudioFocusRequestFactory {
      */
     internal fun spec(): Spec =
         Spec(
-            focusGain = AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+            focusGain = AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
             willPauseWhenDucked = false,
-            // Keep USAGE_ALARM so volume stream + routing are alarm-like, but request ducking focus.
+            // Keep USAGE_ALARM so volume stream + routing are alarm-like.
             usage = AudioAttributes.USAGE_ALARM,
             contentType = AudioAttributes.CONTENT_TYPE_SONIFICATION,
         )
@@ -46,7 +46,7 @@ object AlarmAudioFocusRequestFactory {
         return AudioFocusRequest
             .Builder(spec.focusGain)
             .setAudioAttributes(attributes)
-            // Explicitly request ducking instead of pausing when the system can honor it.
+            // Keep non-pausing behavior explicit for compatibility across API levels.
             .setWillPauseWhenDucked(spec.willPauseWhenDucked)
             .build()
     }
