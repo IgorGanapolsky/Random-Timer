@@ -10,7 +10,6 @@ import android.media.AudioManager
  * Goal: duck other audio (navigation-app style) rather than pausing it, when possible.
  */
 object AlarmAudioFocusRequestFactory {
-
     internal data class Spec(
         val focusGain: Int,
         val willPauseWhenDucked: Boolean,
