@@ -180,7 +180,8 @@ jobs:
         run: |
           XCODE_PATH=""
           while IFS= read -r candidate; do
-            if DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphonesimulator'; then
+            if DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphonesimulator' \
+              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
               XCODE_PATH="${candidate}"
               break
             fi
