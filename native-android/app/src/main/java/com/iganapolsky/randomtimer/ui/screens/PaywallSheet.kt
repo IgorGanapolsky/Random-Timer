@@ -37,17 +37,6 @@ fun PaywallSheet(
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val debugUnlockEnabled = BuildConfig.DEBUG && onDebugUnlock != null
-    val purchaseModifier =
-        if (debugUnlockEnabled) {
-            Modifier.combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onPurchase,
-                onLongClick = { onDebugUnlock?.invoke() },
-            )
-        } else {
-            Modifier
-        }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -67,6 +56,17 @@ fun PaywallSheet(
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
+                modifier =
+                    if (debugUnlockEnabled) {
+                        Modifier.combinedClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                            onLongClick = { onDebugUnlock?.invoke() },
+                        )
+                    } else {
+                        Modifier
+                    },
             )
 
             Spacer(modifier = Modifier.height(24.dp))
