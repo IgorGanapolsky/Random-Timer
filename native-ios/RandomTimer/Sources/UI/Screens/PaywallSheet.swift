@@ -51,9 +51,9 @@ struct PaywallSheet: View {
             }
             .padding(.horizontal)
 
-            PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice)") {
+            PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.baseProductID))") {
                 Task {
-                    let result = await proManager.purchase()
+                    let result = await proManager.purchase(productID: ProManager.baseProductID)
                     AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
                         AnalyticsProperties.entryPoint: entryPoint.rawValue,
                         AnalyticsProperties.result: result.rawValue,
@@ -65,11 +65,13 @@ struct PaywallSheet: View {
                     }
                 }
             }
+            #if DEBUG
             .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.forcePro()
+                proManager.unlockEliteForDebug()
                 hasTrackedDismiss = true
                 dismiss()
             }
+            #endif
 
             Button("Restore purchase") {
                 Task {
