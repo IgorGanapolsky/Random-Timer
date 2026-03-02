@@ -790,6 +790,7 @@ class TimerForegroundService : Service() {
 
     private fun playAlarmSound() {
         val state = _timerState.value ?: return
+        if (!AlarmPlaybackPolicy.shouldRequestAudioFocus(state.status)) return
         val resourceId =
             when (state.config.soundType) {
                 SoundType.INTENSE -> R.raw.alarm
@@ -906,7 +907,12 @@ class TimerForegroundService : Service() {
 
     private fun registerScreenOffReceiver() {
         if (screenOffReceiver != null) return
-        val receiver = ScreenOffReceiver { silenceAlarm() }
+        val receiver =
+            ScreenOffReceiver {
+                if (AlarmPlaybackPolicy.shouldSilenceOnScreenOff(_timerState.value?.status)) {
+                    silenceAlarm()
+                }
+            }
         registerReceiver(receiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         screenOffReceiver = receiver
     }
