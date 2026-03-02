@@ -630,6 +630,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -698,3 +700,42 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
+
+  sync-main:
+    needs: [tag-release]
+    if: always() && needs.tag-release.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create PR to merge release into main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.tag-release.outputs.tag || '' }}"
+          BRANCH="${GITHUB_REF_NAME}"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "release: merge $BRANCH into main" \
+            --body "Auto-generated PR to sync main with release $TAG" \
+            || echo "PR already exists or branch is up to date"
+        continue-on-error: true
+
+      - name: Create PR to merge release back into develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "chore: merge $BRANCH back into develop" \
+            --body "Auto-generated PR to sync develop after release" \
+            || echo "PR already exists or branch is up to date"
+        continue-on-error: true

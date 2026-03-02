@@ -248,8 +248,9 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
 
-    // UTM Attribution
+    // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
+    const val APPLE_ADS_ATTRIBUTION = "apple_ads_attribution"
 
     // Onboarding Funnel
     const val FIRST_OPEN = "first_open"
