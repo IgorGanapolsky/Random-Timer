@@ -54,7 +54,7 @@ fun RandomTimerNavHost(
     val activity = LocalContext.current as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
-    var proPrice by remember { mutableStateOf("$19.99") }
+    var proPrice by remember { mutableStateOf("$29.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
