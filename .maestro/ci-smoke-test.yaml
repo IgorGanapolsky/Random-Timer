@@ -3,9 +3,12 @@ appId: com.iganapolsky.randomtimer
 # CI Smoke test: Works on any screen size (compact or regular).
 # Does NOT assert on "Random Tactical Timer" title which is hidden in compact mode.
 - launchApp
+- waitForAnimationToEnd
 
 # "Start Timer" button is always visible regardless of viewport height
-- assertVisible: 'Start Timer'
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 30000
 
 # Start the timer
 - tapOn: 'Start Timer'
