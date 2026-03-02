@@ -27,10 +27,12 @@ import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -55,6 +57,10 @@ class TimerForegroundService : Service() {
     @Inject lateinit var storeReviewManager: StoreReviewManager
 
     @Inject lateinit var analyticsService: AnalyticsService
+    
+    @Inject lateinit var proManager: ProManager
+    
+    @Inject lateinit var voiceCalloutManager: AIVoiceCalloutManager
 
     private val trainingStatsService by lazy { TrainingStatsService(this) }
     private val binder = LocalBinder()
@@ -171,6 +177,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        voiceCalloutManager.shutdown()
         serviceScope.cancel()
     }
 
@@ -225,6 +232,7 @@ class TimerForegroundService : Service() {
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
         updateNotification(initialState)
+        voiceCalloutManager.resetSession()
 
         timerJob?.cancel()
         timerJob =
@@ -256,6 +264,11 @@ class TimerForegroundService : Service() {
 
                     _timerState.value = state
                     updateNotification(state)
+
+                    // Trigger AI Voice Callout for ELITE users
+                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
+                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                    }
 
                     if (newStatus == TimerStatus.COMPLETE) {
                         triggerAlarm(state)

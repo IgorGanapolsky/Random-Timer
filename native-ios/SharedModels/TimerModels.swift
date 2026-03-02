@@ -168,7 +168,7 @@ enum TimeRangeAdjuster {
 
         if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
             adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
-            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            adjustedMinSeconds = Swift.max(adjustedMinSeconds - minGapSeconds, minSecondsLimit)
         }
 
         return (adjustedMinSeconds, adjustedMaxSeconds)

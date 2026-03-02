@@ -37,10 +37,9 @@ fun PaywallSheet(
         containerColor = TimerColors.BackgroundDark,
     ) {
         Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -48,28 +47,27 @@ fun PaywallSheet(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Tactical Base
             Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             ) {
                 Text(
                     text = "Tactical Base",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TimerColors.AccentPrimary,
+                    color = TimerColors.AccentPrimary
                 )
                 Text(
                     text = "One-time purchase. Essential tactical features.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TimerColors.TextSecondary,
+                    color = TimerColors.TextSecondary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
@@ -77,7 +75,7 @@ fun PaywallSheet(
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
                     text = "Unlock Base \u2022 $basePrice",
-                    onClick = { onPurchase("pro_base") },
+                    onClick = { onPurchase("pro_base") }
                 )
             }
 
@@ -85,17 +83,16 @@ fun PaywallSheet(
 
             // Tactical Elite
             Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Tactical Elite",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TimerColors.AccentPrimary,
+                        color = TimerColors.AccentPrimary
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
@@ -103,13 +100,13 @@ fun PaywallSheet(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.TextPrimary,
-                        modifier = Modifier.padding(horizontal = 4.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp)
                     )
                 }
                 Text(
                     text = "Subscription. The ultimate tactical experience.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TimerColors.TextSecondary,
+                    color = TimerColors.TextSecondary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 ProFeatureRow(text = "Includes all Base features")
@@ -118,7 +115,7 @@ fun PaywallSheet(
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
                     text = "Unlock Elite \u2022 $elitePrice",
-                    onClick = { onPurchase("elite_tactical") },
+                    onClick = { onPurchase("elite_tactical") }
                 )
             }
 
@@ -128,10 +125,9 @@ fun PaywallSheet(
                 text = "Restore purchase",
                 style = MaterialTheme.typography.labelMedium,
                 color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .padding(bottom = 16.dp)
-                        .clickable(onClick = onRestore),
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .clickable(onClick = onRestore),
                 textAlign = TextAlign.Center,
             )
 
@@ -139,10 +135,9 @@ fun PaywallSheet(
                 text = "Not now",
                 style = MaterialTheme.typography.labelMedium,
                 color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .padding(bottom = 16.dp)
-                        .clickable(onClick = onDismiss),
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .clickable(onClick = onDismiss),
                 textAlign = TextAlign.Center,
             )
         }

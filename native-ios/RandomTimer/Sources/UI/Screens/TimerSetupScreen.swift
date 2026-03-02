@@ -85,6 +85,48 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
+                        // AI Voice Callouts (Elite Feature)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label("AI Voice Callouts", systemImage: "waveform")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
+                                
+                                Text("Voice prompts during countdown")
+                                    .font(.caption2)
+                                    .foregroundColor(.textMuted)
+                            }
+                            
+                            Spacer()
+                            
+                            if proManager.isElite {
+                                Text("ENABLED")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.accentPrimary)
+                            } else {
+                                Button {
+                                    presentPaywall(entryPoint: .soundGate)
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text("ELITE")
+                                        Image(systemName: "lock.fill")
+                                    }
+                                    .font(.caption2.weight(.bold))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.accentPrimary.opacity(0.1))
+                                    .foregroundColor(.accentPrimary)
+                                    .cornerRadius(4)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .opacity(proManager.isElite ? 1.0 : 0.6)
+
+                        Spacer().frame(height: 20)
+
                         // Core Sounds
                         HStack(spacing: 12) {
                             SoundTypeButton(
