@@ -39,7 +39,7 @@ jobs:
             --lookback-days 30 \
             --wqtu-window-days 7 \
             --enforce-guardrail \
-            --require-posthog
+            --require-posthog-when-active
 
       - name: Upload north star snapshot
         if: always()

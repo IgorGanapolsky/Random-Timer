@@ -12,8 +12,19 @@ struct PaywallSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
+                Button("Not now") {
+                    trackDismiss(method: "header_not_now")
+                    dismiss()
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.textSecondary)
+
                 Spacer()
-                Button { dismiss() } label: {
+
+                Button {
+                    trackDismiss(method: "close_button")
+                    dismiss()
+                } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title2).foregroundColor(.textMuted).padding(16)
                 }
@@ -69,6 +80,15 @@ struct PaywallSheet: View {
                 }
                 .padding(.bottom, 32)
             }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
+
+            Button("Not now") {
+                trackDismiss(method: "footer_not_now")
+                dismiss()
+            }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
         }
         .background(Color.backgroundDark)
         .task { [proManager] in await proManager.fetchProducts() }

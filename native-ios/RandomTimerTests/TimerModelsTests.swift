@@ -270,6 +270,44 @@ final class TimeRangeAdjusterTests: XCTestCase {
         XCTAssertEqual(adjusted.max, 30)
         XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
     }
+
+    func testMinChangeByOneSecondNearUpperBoundPushesMaxByOne() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 269,
+            currentMaxSeconds: 299,
+            newMinSeconds: 270,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 270)
+        XCTAssertEqual(adjusted.max, 300)
+        XCTAssertEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMaxChangeByOneSecondNearLowerBoundPullsMinBackByOne() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 1,
+            currentMaxSeconds: 31,
+            newMaxSeconds: 30,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 0)
+        XCTAssertEqual(adjusted.max, 30)
+        XCTAssertEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+    }
+
+    func testMinChangeBeyondUpperBoundIsDeterministicallyClamped() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 270,
+            currentMaxSeconds: 300,
+            newMinSeconds: 275,
+            maxSecondsLimit: 300
+        )
+
+        XCTAssertEqual(adjusted.min, 270)
+        XCTAssertEqual(adjusted.max, 300)
+    }
 }
 
 final class TimeIntervalExtensionTests: XCTestCase {

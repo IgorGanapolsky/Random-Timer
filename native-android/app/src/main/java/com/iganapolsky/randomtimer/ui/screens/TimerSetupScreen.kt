@@ -40,8 +40,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 private object SetupSpacing {
     val OuterHorizontal = 16.dp
@@ -196,41 +195,54 @@ fun TimerSetupScreen(
             // 3. AI Coach Section (ELITE ONLY)
             if (isElite || tacticalExpanded) {
                 item {
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("\uD83E\uDDE0 AI Tactical Coach", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Spacer(Modifier.weight(1f))
-                                if (!isElite) {
-                                    Text("\u2605", color = TimerColors.AccentPrimary)
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Text("Verbal cues to simulate chaos.", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
-                            
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                                Text("Enable Callouts", style = MaterialTheme.typography.labelMedium)
-                                Spacer(Modifier.weight(1f))
-                                Switch(
-                                    checked = config.eliteConfig.aiCalloutsEnabled,
-                                    onCheckedChange = { 
-                                        if (isElite) {
-                                            onConfigChange(config.copy(eliteConfig = config.eliteConfig.copy(aiCalloutsEnabled = it)))
-                                        } else {
-                                            onUpgradeTap()
-                                        }
-                                    }
-                                )
-                            }
-                            
-                            if (config.eliteConfig.aiCalloutsEnabled) {
-                                Spacer(Modifier.height(12.dp))
-                                Text("Frequency: ${config.eliteConfig.calloutFrequency.toInt()}s", style = MaterialTheme.typography.labelSmall, color = TimerColors.TextMuted)
-                                Slider(
-                                    value = config.eliteConfig.calloutFrequency.toFloat(),
-                                    onValueChange = { onConfigChange(config.copy(eliteConfig = config.eliteConfig.copy(calloutFrequency = it.toDouble()))) },
-                                    valueRange = 3f..15f,
-                                    steps = 12
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Session #${totalSessions + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                        )
+                        if (currentStreak > 1) {
+                            Text(
+                                text = "\uD83D\uDD25 $currentStreak day streak",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TimerColors.AccentPrimary,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 1. Training Window Card
+            item {
+                GlassCard(modifier = Modifier.fillMaxWidth(), padding = SetupSpacing.CardContent) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "\u23F1\uFE0F Training Window",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TimerColors.TextPrimary,
+                            )
+                            if (!isPro) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "PRO: 1H \uD83D\uDD12",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TimerColors.AccentPrimary,
+                                    modifier =
+                                        Modifier.combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { onUpgradeTap() },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onSecretUnlock()
+                                            },
+                                        ),
                                 )
                             }
                         }
@@ -321,13 +333,12 @@ fun TimerSetupScreen(
                                             label = sound.name.lowercase().replaceFirstChar { it.uppercase() } + (if (isPro) "" else " \uD83D\uDD12"),
                                             selected = config.soundType == sound,
                                             onClick = {
-                                                updateConfig(soundType = sound)
-                                                onSoundPreview(sound)
-                                                if (!isPro) {
-                                                    scope.launch {
-                                                        delay(1500)
-                                                        onUpgradeTap()
-                                                    }
+                                                if (isPro) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    updateConfig(soundType = sound)
+                                                    onSoundPreview(sound)
+                                                } else {
+                                                    onSoundPreview(sound)
                                                 }
                                             },
                                             modifier = Modifier.weight(1f)
@@ -336,6 +347,28 @@ fun TimerSetupScreen(
                                     if (row.size == 1) Spacer(Modifier.weight(1f))
                                 }
                                 Spacer(Modifier.height(8.dp))
+                            }
+
+                            if (!isPro) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(
+                                        text = "Tap a sound to preview. Unlock Pro to equip it.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Unlock Pro",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.AccentPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.clickable(onClick = onUpgradeTap),
+                                    )
+                                }
                             }
                         }
                     }
@@ -407,6 +440,286 @@ private fun ExpandableTrainingCard(
 @Composable
 private fun TimeRangeScrubber(minValue: Int, maxValue: Int, maxLimit: Float, onRangeChange: (Int, Int) -> Unit, onMinClick: () -> Unit, onMaxClick: () -> Unit) {
     val haptic = LocalHapticFeedback.current
+    val coarseNudgeStep = 5
+    val fineNudgeStep = 1
+    val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
+    val maxSliderRangeInt = maxSliderRange.toInt()
+    val minSliderMaxInt = minSliderMax.toInt()
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Display
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = formatTime(minValue),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
+            )
+            Text(
+                text = " - ",
+                style = MaterialTheme.typography.titleMedium,
+                color = TimerColors.TextSecondary,
+            )
+            Text(
+                text = formatTime(maxValue),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
+            )
+        }
+        Text(
+            text = "Coarse: slider + \u00B15s  \u2022  Fine: \u00B11s buttons",
+            style = MaterialTheme.typography.labelSmall,
+            color = TimerColors.TextMuted,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+
+        // Min slider with nudge
+        Column {
+            Text(
+                text = "Minimum: ${formatTime(minValue)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = TimerColors.TextMuted,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                NudgeButton(
+                    label = "-5s",
+                    enabled = enabled && minValue >= coarseNudgeStep,
+                    onClick = { onMinChange(minValue - coarseNudgeStep) },
+                )
+                Slider(
+                    value = minValue.toFloat(),
+                    onValueChange = { raw ->
+                        val snapped = snapToStep(raw, coarseNudgeStep, 0, minSliderMaxInt)
+                        if (snapped != minValue) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                        onMinChange(snapped)
+                    },
+                    enabled = enabled,
+                    valueRange = 0f..minSliderMax,
+                    modifier =
+                        Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
+                )
+                NudgeButton(
+                    label = "+5s",
+                    enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
+                    onClick = { onMinChange(minValue + coarseNudgeStep) },
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NudgeButton(
+                    label = "-1s",
+                    enabled = enabled && minValue >= fineNudgeStep,
+                    onClick = { onMinChange(minValue - fineNudgeStep) },
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NudgeButton(
+                    label = "+1s",
+                    enabled = enabled && minValue <= (maxValue - minGapSeconds - fineNudgeStep),
+                    onClick = { onMinChange(minValue + fineNudgeStep) },
+                )
+            }
+        }
+
+        // Max slider with nudge
+        Column {
+            Text(
+                text = "Maximum: ${formatTime(maxValue)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = TimerColors.TextMuted,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                NudgeButton(
+                    label = "-5s",
+                    enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue - coarseNudgeStep) },
+                )
+                Slider(
+                    value = maxValue.toFloat(),
+                    onValueChange = { raw ->
+                        val dynamicMin = minValue + minGapSeconds
+                        val snapped = snapToStep(raw, coarseNudgeStep, dynamicMin, maxSliderRangeInt)
+                        if (snapped != maxValue) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                        onMaxChange(snapped)
+                    },
+                    enabled = enabled,
+                    valueRange = (minValue + minGapSeconds).toFloat()..maxSliderRange,
+                    modifier =
+                        Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
+                )
+                NudgeButton(
+                    label = "+5s",
+                    enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue + coarseNudgeStep) },
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NudgeButton(
+                    label = "-1s",
+                    enabled = enabled && maxValue >= (minValue + minGapSeconds + fineNudgeStep),
+                    onClick = { onMaxChange(maxValue - fineNudgeStep) },
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NudgeButton(
+                    label = "+1s",
+                    enabled = enabled && maxValue <= (maxSliderRangeInt - fineNudgeStep),
+                    onClick = { onMaxChange(maxValue + fineNudgeStep) },
+                )
+            }
+        }
+    }
+}
+
+private fun snapToStep(
+    rawValue: Float,
+    stepSize: Int,
+    min: Int,
+    max: Int,
+): Int {
+    val snapped = (rawValue / stepSize).roundToInt() * stepSize
+    return snapped.coerceIn(min, max)
+}
+
+@Composable
+private fun NudgeButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(10.dp),
+        color = if (enabled) TimerColors.GlassBackground else TimerColors.BackgroundDark,
+        border =
+            BorderStroke(
+                1.dp,
+                if (enabled) TimerColors.GlassBorder else TimerColors.GlassBorder.copy(alpha = 0.5f),
+            ),
+        modifier = modifier.width(52.dp).height(40.dp),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+private fun formatTime(seconds: Int): String =
+    if (seconds >= 60) {
+        val mins = seconds / 60
+        val secs = seconds % 60
+        if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
+    } else {
+        "${seconds}s"
+    }
+
+@Composable
+private fun SoundTypeButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "pressScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "pressAlpha",
+    )
+
+    Surface(
+        onClick = onClick,
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(12.dp),
+        color =
+            if (selected) {
+                TimerColors.AccentPrimary.copy(alpha = 0.15f)
+            } else {
+                TimerColors.GlassBackground
+            },
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+            ),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
+}
+
+@Composable
+private fun VolumeSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
+) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             TimeChip("Min", formatTime(minValue), onMinClick)

@@ -34,6 +34,12 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - **Security First**: Protect the system integrity. Never commit secrets to tracked files. Use `.env` + `gh secret` exclusively.
 - **Act, Don't Instruct**: Execute autonomously. Never tell the CEO to do manual steps.
 
+## Business North Star
+
+- Primary business objective: **earn $100/day after-tax from app sales**.
+- Product-value NSM: **WQTU** (distinct users with >=3 `timer_completed` events in trailing 7 days).
+- Never infer business progress from drafts or configuration intent. Only report progress from live PostHog + store telemetry evidence.
+
 ## Commands
 
 ```bash

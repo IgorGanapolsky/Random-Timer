@@ -44,8 +44,11 @@ When a task depends on credentials, the agent must verify local and CI credentia
 
 ## Global North Stars (Commercial & Product)
 
-### 1. Commercial North Star (Success Metric)
-**Earn $100/day (after-tax)** from app sales. Every marketing campaign, feature implementation, and API usage must be evaluated against this revenue target.
+### Business Goal
+
+**Earn $100/day after-tax from app sales** while improving product quality and operational reliability.
+
+### Primary North Star Metric (NSM)
 
 ### 2. Fiscal Mandate (Burn Limit)
 **Strict Budget Cap: $10/month**. Total project spend (Ads, APIs, Tools) MUST NOT exceed this amount. ROI must be maximized within this zero-burn framework.

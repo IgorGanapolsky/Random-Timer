@@ -15,23 +15,249 @@ struct TimerSetupScreen: View {
 
     var body: some View {
         ScrollView {
-            contentLayout
+            VStack(alignment: .leading, spacing: 20) {
+                
+                // Zone 1: Standard Ops
+                Text("STANDARD OPS")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.textMuted)
+                    .padding(.top, 16)
+                    .padding(.leading, 4)
+
+                // 1. Training Window Card
+                GlassCard {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Label("Training Window", systemImage: "timer")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+                            
+                            if !proManager.isPro {
+                                Spacer()
+                                Text("PRO: 1H \u{1F512}")
+                                    .font(.caption2)
+                                    .foregroundColor(.accentPrimary)
+                                    .onTapGesture {
+                                        presentPaywall(entryPoint: .rangeGate)
+                                    }
+                            }
+                        }
+
+                        Spacer().frame(height: 16)
+
+                        TimeRangeSliders(
+                            minValue: config.minSeconds,
+                            maxValue: config.maxSeconds,
+                            maxSecondsLimit: proManager.maxSecondsLimit,
+                            onRangeChange: { newMin, newMax in
+                                updateConfig(minSeconds: newMin, maxSeconds: newMax)
+                            }
+                        )
+                    }
+                }
+
+                // 2. Alarm Setup (Unified: Duration, Sounds, Volume, Vibration)
+                GlassCard {
+                    VStack(alignment: .leading) {
+                        Label("Alarm Setup", systemImage: "bell.fill")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.textPrimary)
+
+                        Spacer().frame(height: 12)
+
+                        // Duration Chips
+                        HStack(spacing: 8) {
+                            ForEach(TimerConfig.alarmDurationOptions, id: \.self) { duration in
+                                DurationChip(
+                                    duration: duration,
+                                    selected: config.alarmDuration == duration,
+                                    onTap: {
+                                        updateConfig(alarmDuration: duration)
+                                    }
+                                )
+                            }
+                        }
+
+                        Spacer().frame(height: 20)
+
+                        // Core Sounds
+                        HStack(spacing: 12) {
+                            SoundTypeButton(
+                                label: "Intense",
+                                systemImage: "flame.fill",
+                                selected: config.soundType == .intense,
+                                onTap: {
+                                    updateConfig(soundType: .intense)
+                                    timerManager.previewSound()
+                                }
+                            )
+                            SoundTypeButton(
+                                label: "Gentle",
+                                systemImage: "bolt.fill",
+                                selected: config.soundType == .gentle,
+                                onTap: {
+                                    updateConfig(soundType: .gentle)
+                                    timerManager.previewSound()
+                                }
+                            )
+                        }
+
+                        Spacer().frame(height: 24)
+
+                        // Volume Slider
+                        VolumeSliderView(
+                            value: config.volume,
+                            onChanged: { newVolume in
+                                updateConfig(volume: newVolume)
+                            },
+                            onSliding: { newVolume in
+                                updateConfig(volume: newVolume)
+                                timerManager.previewVolume()
+                            },
+                            systemImage: "speaker.wave.3.fill"
+                        )
+
+                        Spacer().frame(height: 12)
+
+                        // Vibration Toggle
+                        HStack {
+                            Text("Vibration")
+                                .font(.subheadline)
+                                .foregroundColor(.textSecondary)
+
+                            Spacer()
+
+                            Toggle("Vibration", isOn: Binding(
+                                get: { config.vibrationEnabled },
+                                set: { updateConfig(vibrationEnabled: $0) }
+                            ))
+                            .tint(.accentPrimary)
+                            .labelsHidden()
+                        }
+                        .transaction { $0.animation = nil }
+                    }
+                }
+
+                // Start Button
+                PrimaryButton(title: "Start Timer") {
+                    Task {
+                        await timerManager.startTimer()
+                    }
+                }
+                .scaleEffect(1.02)
+                .padding(.vertical, 8)
+
+                // Zone 2: Tactical Expansion (PRO)
+                HStack {
+                    Text("TACTICAL EXPANSION (PRO)")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                    
+                    if !proManager.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                            .foregroundColor(.textMuted)
+                        
+                        Spacer()
+                        
+                        Button {
+                            withAnimation(.spring()) {
+                                showArsenal.toggle()
+                            }
+                        } label: {
+                            Text(showArsenal ? "Hide Arsenal" : "View Arsenal")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.accentPrimary)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.leading, 4)
+
+                // Pro Sound Arsenal (Adaptive Visibility)
+                if proManager.isPro || showArsenal {
+                    GlassCard {
+                        VStack(alignment: .leading) {
+                            Label("Sound Arsenal", systemImage: "speaker.wave.3.fill")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+
+                            Spacer().frame(height: 12)
+
+                            let lockSuffix = proManager.isPro ? "" : " \u{1F512}"
+                            let proSounds = SoundType.proSounds
+                            ForEach(Array(stride(from: 0, to: proSounds.count, by: 2)), id: \.self) { i in
+                                HStack(spacing: 12) {
+                                    let sound = proSounds[i]
+                                    SoundTypeButton(
+                                        label: sound.rawValue.capitalized + lockSuffix,
+                                        selected: config.soundType == sound,
+                                        onTap: {
+                                            if proManager.isPro {
+                                                updateConfig(soundType: sound)
+                                                timerManager.previewSound()
+                                            } else {
+                                                timerManager.previewSound(type: sound)
+                                            }
+                                        }
+                                    )
+                                    if i + 1 < proSounds.count {
+                                        let sound2 = proSounds[i + 1]
+                                        SoundTypeButton(
+                                            label: sound2.rawValue.capitalized + lockSuffix,
+                                            selected: config.soundType == sound2,
+                                            onTap: {
+                                            if proManager.isPro {
+                                                updateConfig(soundType: sound2)
+                                                timerManager.previewSound()
+                                            } else {
+                                                timerManager.previewSound(type: sound2)
+                                            }
+                                        }
+                                    )
+                                }
+                                }
+                            }
+
+                            if !proManager.isPro {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Tap a sound to preview. Unlock Pro to equip it.")
+                                        .font(.caption2)
+                                        .foregroundColor(.textMuted)
+
+                                    Button("Unlock Pro") {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    }
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundColor(.accentPrimary)
+                                }
+                                .padding(.top, 8)
+                            }
+                        }
+                    }
+                    .opacity(proManager.isPro ? 1.0 : 0.7)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                Spacer(minLength: 32)
+            }
+            .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
-        .sheet(isPresented: $showPaywall) { PaywallSheet(entryPoint: paywallEntryPoint).environmentObject(proManager) }
-        .sheet(isPresented: $showDirectEntry) { DirectEntrySheet(isMin: directEntryIsMin, currentSeconds: directEntryIsMin ? config.minSeconds : config.maxSeconds, maxLimit: proManager.maxSecondsLimit) { updateConfig(minSeconds: directEntryIsMin ? $0 : config.minSeconds, maxSeconds: directEntryIsMin ? config.maxSeconds : $0); showDirectEntry = false } }
-    }
-
-    private var contentLayout: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            missionHeader
-            standardOpsCard
-            tacticalExpansionCard
-            aiCoachCard
-            signalHeader
-            alarmSetupCard
-            startButton
-            arsenalCard
+        .navigationTitle("Random Tactical Timer")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showPaywall) {
+            PaywallSheet(entryPoint: paywallEntryPoint)
+                .environmentObject(proManager)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .interactiveDismissDisabled(false)
         }
         .padding(.horizontal, 24)
     }
@@ -253,16 +479,30 @@ private struct ExpandableTrainingCard: View {
                 }
                 .buttonStyle(PlainButtonStyle())
 
-                if isExpanded && !isLocked {
-                    VStack(spacing: 16) {
-                        TimeRangeScrubber(minValue: minValue, maxValue: maxValue, maxLimit: maxLimit, onRangeChange: onRangeChange, onLabelTap: onLabelTap)
-                    }
-                    .padding(.top, 16)
-                }
-            }
-        }
+    // Precision nudge step (1 second for fine-tuning)
+    private let fineStep = 1
+    private let coarseStep = 5
+    private let minGap = TimeRangeAdjuster.defaultMinGapSeconds
+
+    private var minSliderUpperBound: Int {
+        Swift.max(0, maxValue - minGap)
     }
-}
+
+    private var maxSliderLowerBound: Int {
+        Swift.min(maxSecondsLimit, minValue + minGap)
+    }
+
+    private var minSliderRange: ClosedRange<Double> {
+        let lower = 0.0
+        let upper = Double(minSliderUpperBound)
+        return lower < upper ? lower...upper : lower...(lower + 1)
+    }
+
+    private var maxSliderRange: ClosedRange<Double> {
+        let lower = Double(maxSliderLowerBound)
+        let upper = Double(maxSecondsLimit)
+        return lower < upper ? lower...upper : lower...(lower + 1)
+    }
 
 private struct TimeRangeScrubber: View {
     let minValue: Int; let maxValue: Int; var maxLimit: Int
@@ -274,25 +514,202 @@ private struct TimeRangeScrubber: View {
                 Spacer(); Image(systemName: "arrow.right").foregroundColor(.textMuted); Spacer()
                 TimeChip(label: "Max", value: TimeInterval(maxValue).formattedDuration) { onLabelTap(false) }
             }
-            VStack(spacing: 0) {
-                Slider(value: Binding(get: { Double(minValue) }, set: { onRangeChange(Int($0), maxValue) }), in: 0...Double(Swift.min(maxValue - 30, maxLimit - 30)), step: 5).tint(.accentPrimary)
-                Slider(value: Binding(get: { Double(maxValue) }, set: { onRangeChange(minValue, Int($0)) }), in: Double(minValue + 30)...Double(maxLimit), step: 5).tint(.accentPrimary)
+
+            // Min slider with Nudge buttons
+            VStack(spacing: 4) {
+                Text("Minimum: \(TimeInterval(minValue).formattedDuration)")
+                    .font(.caption2)
+                    .foregroundColor(.textMuted)
+
+                Slider(
+                    value: Binding(
+                        get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
+                        set: { newValue in
+                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                            adjustMin(to: snapped)
+                        }
+                    ),
+                    in: minSliderRange
+                )
+                .tint(enabled ? .accentPrimary : .textMuted)
+                .accessibilityLabel("Minimum time slider")
+                .accessibilityValue(TimeInterval(minValue).formattedDuration)
+
+                HStack(spacing: 8) {
+                    StepAdjustButton(
+                        label: "-5s",
+                        enabled: enabled && canAdjustMin(by: -coarseStep),
+                        accessibilityLabel: "Decrease minimum by 5 seconds"
+                    ) {
+                        adjustMin(by: -coarseStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "-1s",
+                        enabled: enabled && canAdjustMin(by: -fineStep),
+                        accessibilityLabel: "Decrease minimum by 1 second"
+                    ) {
+                        adjustMin(by: -fineStep)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    StepAdjustButton(
+                        label: "+1s",
+                        enabled: enabled && canAdjustMin(by: fineStep),
+                        accessibilityLabel: "Increase minimum by 1 second"
+                    ) {
+                        adjustMin(by: fineStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "+5s",
+                        enabled: enabled && canAdjustMin(by: coarseStep),
+                        accessibilityLabel: "Increase minimum by 5 seconds"
+                    ) {
+                        adjustMin(by: coarseStep)
+                    }
+                }
+            }
+
+            // Max slider with Nudge buttons
+            VStack(spacing: 4) {
+                Text("Maximum: \(TimeInterval(maxValue).formattedDuration)")
+                    .font(.caption2)
+                    .foregroundColor(.textMuted)
+
+                Slider(
+                    value: Binding(
+                        get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                        set: { newValue in
+                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                            adjustMax(to: snapped)
+                        }
+                    ),
+                    in: maxSliderRange
+                )
+                .tint(enabled ? .accentPrimary : .textMuted)
+                .accessibilityLabel("Maximum time slider")
+                .accessibilityValue(TimeInterval(maxValue).formattedDuration)
+
+                HStack(spacing: 8) {
+                    StepAdjustButton(
+                        label: "-5s",
+                        enabled: enabled && canAdjustMax(by: -coarseStep),
+                        accessibilityLabel: "Decrease maximum by 5 seconds"
+                    ) {
+                        adjustMax(by: -coarseStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "-1s",
+                        enabled: enabled && canAdjustMax(by: -fineStep),
+                        accessibilityLabel: "Decrease maximum by 1 second"
+                    ) {
+                        adjustMax(by: -fineStep)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    StepAdjustButton(
+                        label: "+1s",
+                        enabled: enabled && canAdjustMax(by: fineStep),
+                        accessibilityLabel: "Increase maximum by 1 second"
+                    ) {
+                        adjustMax(by: fineStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "+5s",
+                        enabled: enabled && canAdjustMax(by: coarseStep),
+                        accessibilityLabel: "Increase maximum by 5 seconds"
+                    ) {
+                        adjustMax(by: coarseStep)
+                    }
+                }
             }
         }
+        .disabled(!enabled)
+        .transaction { $0.animation = nil }
+    }
+
+    private func adjustMin(by delta: Int) {
+        adjustMin(to: minValue + delta)
+    }
+
+    private func adjustMin(to newVal: Int) {
+        let adjusted = adjustedRangeForMin(newValue: newVal)
+        applyAdjustedRangeIfChanged(adjusted)
+    }
+
+    private func adjustMax(by delta: Int) {
+        adjustMax(to: maxValue + delta)
+    }
+
+    private func adjustMax(to newVal: Int) {
+        let adjusted = adjustedRangeForMax(newValue: newVal)
+        applyAdjustedRangeIfChanged(adjusted)
+    }
+
+    private func canAdjustMin(by delta: Int) -> Bool {
+        let adjusted = adjustedRangeForMin(newValue: minValue + delta)
+        return adjusted.min != minValue || adjusted.max != maxValue
+    }
+
+    private func canAdjustMax(by delta: Int) -> Bool {
+        let adjusted = adjustedRangeForMax(newValue: maxValue + delta)
+        return adjusted.min != minValue || adjusted.max != maxValue
+    }
+
+    private func adjustedRangeForMin(newValue: Int) -> (min: Int, max: Int) {
+        TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: minValue,
+            currentMaxSeconds: maxValue,
+            newMinSeconds: Swift.max(0, newValue),
+            maxSecondsLimit: maxSecondsLimit
+        )
+    }
+
+    private func adjustedRangeForMax(newValue: Int) -> (min: Int, max: Int) {
+        TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: minValue,
+            currentMaxSeconds: maxValue,
+            newMaxSeconds: Swift.max(30, newValue),
+            maxSecondsLimit: maxSecondsLimit
+        )
+    }
+
+    private func applyAdjustedRangeIfChanged(_ adjusted: (min: Int, max: Int)) {
+        guard adjusted.min != minValue || adjusted.max != maxValue else { return }
+        onRangeChange(adjusted.min, adjusted.max)
     }
 }
 
-private struct TimeChip: View {
-    let label: String; let value: String; let onClick: () -> Void
+private struct StepAdjustButton: View {
+    let label: String
+    let enabled: Bool
+    let accessibilityLabel: String
+    let action: () -> Void
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.caption2).foregroundColor(.textMuted)
-            Button(action: onClick) {
-                Text(value).font(.title3).fontWeight(.bold).foregroundColor(.textPrimary)
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(Color.glassBackground).cornerRadius(8).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.glassBorder, lineWidth: 1))
-            }
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(enabled ? .accentPrimary : .textMuted)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(enabled ? Color.accentPrimary.opacity(0.12) : Color.glassBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(enabled ? Color.accentPrimary.opacity(0.6) : Color.glassBorder, lineWidth: 1)
+                )
         }
+        .disabled(!enabled)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 

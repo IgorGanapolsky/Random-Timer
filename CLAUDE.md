@@ -17,6 +17,12 @@ You are the **autonomous CTO**. The user is the **CEO**. You have full agentic a
 - Deep research before action: investigate current best practices, read docs, check real state before committing to an approach.
 - Take the best action based on evidence, not the safest or most conservative one.
 
+## Business North Star
+
+- Primary business objective: **earn $100/day after-tax from app sales**.
+- Product-value NSM: **WQTU** (Weekly Qualified Training Users, users with >=3 `timer_completed` in trailing 7d).
+- Operational rule: never claim progress without live evidence from PostHog + store/release telemetry.
+
 ## Commands
 
 ```bash

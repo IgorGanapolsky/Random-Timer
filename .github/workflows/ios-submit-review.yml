@@ -23,6 +23,10 @@ on:
         type: boolean
         default: true
 
+concurrency:
+  group: ios-submit-review-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
+  cancel-in-progress: false
+
 jobs:
   submit:
     runs-on: macos-15
@@ -31,6 +35,20 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fail fast on required App Store secrets
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
 
       - name: Preflight release checks (iOS)
         run: bash scripts/preflight-release.sh --platform ios --layer 1
