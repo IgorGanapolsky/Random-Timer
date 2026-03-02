@@ -117,7 +117,6 @@ fun TimerSetupScreen(
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
-    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -343,7 +342,7 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Voice Callouts (Elite Feature)
+                            // Voice Callouts (Pro Feature)
                             Row(
                                 modifier =
                                     Modifier
@@ -357,7 +356,7 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
                                         text = "Voice prompts during countdown",
@@ -365,7 +364,7 @@ fun TimerSetupScreen(
                                         color = TimerColors.TextMuted,
                                     )
                                 }
-                                if (isElite) {
+                                if (isPro) {
                                     Text(
                                         text = "ENABLED",
                                         style = MaterialTheme.typography.labelSmall,
@@ -383,7 +382,7 @@ fun TimerSetupScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             Text(
-                                                text = "ELITE ",
+                                                text = "PRO ",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TimerColors.AccentPrimary,
