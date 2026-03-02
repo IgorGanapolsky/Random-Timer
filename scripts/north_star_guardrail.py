@@ -397,6 +397,11 @@ def main() -> int:
         action="store_true",
         help="Exit non-zero if PostHog credentials are missing or queries degrade",
     )
+    parser.add_argument(
+        "--require-posthog-when-active",
+        action="store_true",
+        help="Exit non-zero if active campaigns exist and PostHog credentials are missing or queries degrade",
+    )
     args = parser.parse_args()
 
     statuses = {s.strip().lower() for s in args.active_statuses.split(",") if s.strip()}
@@ -411,6 +416,11 @@ def main() -> int:
     )
     print(json.dumps(result, indent=2))
 
+    active_campaign_count = int(result.get("active_campaign_count") or 0)
+    posthog_unhealthy = result.get("status") != "ok"
+
+    if args.require_posthog_when_active and active_campaign_count > 0 and posthog_unhealthy:
+        return 3
     if args.require_posthog and result.get("status") != "ok":
         return 2
     if args.enforce_guardrail and result.get("guardrail_violated"):

@@ -205,7 +205,7 @@ struct TimerSetupScreen: View {
                                                 updateConfig(soundType: sound)
                                                 timerManager.previewSound()
                                             } else {
-                                                presentPaywall(entryPoint: .soundGate)
+                                                timerManager.previewSound(type: sound)
                                             }
                                         }
                                     )
@@ -219,12 +219,27 @@ struct TimerSetupScreen: View {
                                                 updateConfig(soundType: sound2)
                                                 timerManager.previewSound()
                                             } else {
-                                                presentPaywall(entryPoint: .soundGate)
+                                                timerManager.previewSound(type: sound2)
                                             }
                                         }
                                     )
                                 }
                                 }
+                            }
+
+                            if !proManager.isPro {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Tap a sound to preview. Unlock Pro to equip it.")
+                                        .font(.caption2)
+                                        .foregroundColor(.textMuted)
+
+                                    Button("Unlock Pro") {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    }
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundColor(.accentPrimary)
+                                }
+                                .padding(.top, 8)
                             }
                         }
                     }
@@ -242,6 +257,9 @@ struct TimerSetupScreen: View {
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
                 .environmentObject(proManager)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .interactiveDismissDisabled(false)
         }
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
@@ -292,6 +310,27 @@ private struct TimeRangeSliders: View {
     // Precision nudge step (1 second for fine-tuning)
     private let fineStep = 1
     private let coarseStep = 5
+    private let minGap = TimeRangeAdjuster.defaultMinGapSeconds
+
+    private var minSliderUpperBound: Int {
+        Swift.max(0, maxValue - minGap)
+    }
+
+    private var maxSliderLowerBound: Int {
+        Swift.min(maxSecondsLimit, minValue + minGap)
+    }
+
+    private var minSliderRange: ClosedRange<Double> {
+        let lower = 0.0
+        let upper = Double(minSliderUpperBound)
+        return lower < upper ? lower...upper : lower...(lower + 1)
+    }
+
+    private var maxSliderRange: ClosedRange<Double> {
+        let lower = Double(maxSliderLowerBound)
+        let upper = Double(maxSecondsLimit)
+        return lower < upper ? lower...upper : lower...(lower + 1)
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -320,22 +359,52 @@ private struct TimeRangeSliders: View {
                     .font(.caption2)
                     .foregroundColor(.textMuted)
 
-                HStack(spacing: 12) {
-                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && minValue >= fineStep) {
+                Slider(
+                    value: Binding(
+                        get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
+                        set: { newValue in
+                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                            adjustMin(to: snapped)
+                        }
+                    ),
+                    in: minSliderRange
+                )
+                .tint(enabled ? .accentPrimary : .textMuted)
+                .accessibilityLabel("Minimum time slider")
+                .accessibilityValue(TimeInterval(minValue).formattedDuration)
+
+                HStack(spacing: 8) {
+                    StepAdjustButton(
+                        label: "-5s",
+                        enabled: enabled && canAdjustMin(by: -coarseStep),
+                        accessibilityLabel: "Decrease minimum by 5 seconds"
+                    ) {
                         adjustMin(by: -coarseStep)
                     }
 
-                    Slider(
-                        value: Binding(
-                            get: { Double(minValue) },
-                            set: { adjustMin(to: Int($0)) }
-                        ),
-                        in: 0...Double(maxValue - 30),
-                        step: 5
-                    )
-                    .tint(enabled ? .accentPrimary : .textMuted)
+                    StepAdjustButton(
+                        label: "-1s",
+                        enabled: enabled && canAdjustMin(by: -fineStep),
+                        accessibilityLabel: "Decrease minimum by 1 second"
+                    ) {
+                        adjustMin(by: -fineStep)
+                    }
 
-                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && minValue <= maxValue - 30 - fineStep) {
+                    Spacer(minLength: 8)
+
+                    StepAdjustButton(
+                        label: "+1s",
+                        enabled: enabled && canAdjustMin(by: fineStep),
+                        accessibilityLabel: "Increase minimum by 1 second"
+                    ) {
+                        adjustMin(by: fineStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "+5s",
+                        enabled: enabled && canAdjustMin(by: coarseStep),
+                        accessibilityLabel: "Increase minimum by 5 seconds"
+                    ) {
                         adjustMin(by: coarseStep)
                     }
                 }
@@ -347,22 +416,52 @@ private struct TimeRangeSliders: View {
                     .font(.caption2)
                     .foregroundColor(.textMuted)
 
-                HStack(spacing: 12) {
-                    NudgeButton(icon: "minus.circle.fill", enabled: enabled && maxValue >= minValue + 30 + fineStep) {
+                Slider(
+                    value: Binding(
+                        get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                        set: { newValue in
+                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                            adjustMax(to: snapped)
+                        }
+                    ),
+                    in: maxSliderRange
+                )
+                .tint(enabled ? .accentPrimary : .textMuted)
+                .accessibilityLabel("Maximum time slider")
+                .accessibilityValue(TimeInterval(maxValue).formattedDuration)
+
+                HStack(spacing: 8) {
+                    StepAdjustButton(
+                        label: "-5s",
+                        enabled: enabled && canAdjustMax(by: -coarseStep),
+                        accessibilityLabel: "Decrease maximum by 5 seconds"
+                    ) {
                         adjustMax(by: -coarseStep)
                     }
 
-                    Slider(
-                        value: Binding(
-                            get: { Double(maxValue) },
-                            set: { adjustMax(to: Int($0)) }
-                        ),
-                        in: Double(minValue + 30)...Double(maxSecondsLimit),
-                        step: 5
-                    )
-                    .tint(enabled ? .accentPrimary : .textMuted)
+                    StepAdjustButton(
+                        label: "-1s",
+                        enabled: enabled && canAdjustMax(by: -fineStep),
+                        accessibilityLabel: "Decrease maximum by 1 second"
+                    ) {
+                        adjustMax(by: -fineStep)
+                    }
 
-                    NudgeButton(icon: "plus.circle.fill", enabled: enabled && maxValue <= maxSecondsLimit - fineStep) {
+                    Spacer(minLength: 8)
+
+                    StepAdjustButton(
+                        label: "+1s",
+                        enabled: enabled && canAdjustMax(by: fineStep),
+                        accessibilityLabel: "Increase maximum by 1 second"
+                    ) {
+                        adjustMax(by: fineStep)
+                    }
+
+                    StepAdjustButton(
+                        label: "+5s",
+                        enabled: enabled && canAdjustMax(by: coarseStep),
+                        accessibilityLabel: "Increase maximum by 5 seconds"
+                    ) {
                         adjustMax(by: coarseStep)
                     }
                 }
@@ -377,13 +476,8 @@ private struct TimeRangeSliders: View {
     }
 
     private func adjustMin(to newVal: Int) {
-        let adjusted = TimeRangeAdjuster.adjustForMinChange(
-            currentMinSeconds: minValue,
-            currentMaxSeconds: maxValue,
-            newMinSeconds: Swift.max(0, newVal),
-            maxSecondsLimit: maxSecondsLimit
-        )
-        onRangeChange(adjusted.min, adjusted.max)
+        let adjusted = adjustedRangeForMin(newValue: newVal)
+        applyAdjustedRangeIfChanged(adjusted)
     }
 
     private func adjustMax(by delta: Int) {
@@ -391,28 +485,69 @@ private struct TimeRangeSliders: View {
     }
 
     private func adjustMax(to newVal: Int) {
-        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+        let adjusted = adjustedRangeForMax(newValue: newVal)
+        applyAdjustedRangeIfChanged(adjusted)
+    }
+
+    private func canAdjustMin(by delta: Int) -> Bool {
+        let adjusted = adjustedRangeForMin(newValue: minValue + delta)
+        return adjusted.min != minValue || adjusted.max != maxValue
+    }
+
+    private func canAdjustMax(by delta: Int) -> Bool {
+        let adjusted = adjustedRangeForMax(newValue: maxValue + delta)
+        return adjusted.min != minValue || adjusted.max != maxValue
+    }
+
+    private func adjustedRangeForMin(newValue: Int) -> (min: Int, max: Int) {
+        TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newVal),
+            newMinSeconds: Swift.max(0, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
+    }
+
+    private func adjustedRangeForMax(newValue: Int) -> (min: Int, max: Int) {
+        TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: minValue,
+            currentMaxSeconds: maxValue,
+            newMaxSeconds: Swift.max(30, newValue),
+            maxSecondsLimit: maxSecondsLimit
+        )
+    }
+
+    private func applyAdjustedRangeIfChanged(_ adjusted: (min: Int, max: Int)) {
+        guard adjusted.min != minValue || adjusted.max != maxValue else { return }
         onRangeChange(adjusted.min, adjusted.max)
     }
 }
 
-private struct NudgeButton: View {
-    let icon: String
+private struct StepAdjustButton: View {
+    let label: String
     let enabled: Bool
+    let accessibilityLabel: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(.title2)
+            Text(label)
+                .font(.caption)
+                .fontWeight(.semibold)
                 .foregroundColor(enabled ? .accentPrimary : .textMuted)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(enabled ? Color.accentPrimary.opacity(0.12) : Color.glassBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(enabled ? Color.accentPrimary.opacity(0.6) : Color.glassBorder, lineWidth: 1)
+                )
         }
         .disabled(!enabled)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 

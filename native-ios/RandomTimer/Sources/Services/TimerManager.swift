@@ -417,6 +417,13 @@ final class TimerManager: ObservableObject {
         )
     }
 
+    func previewSound(type: SoundType) {
+        notificationService.playPreviewSound(
+            type: type,
+            volume: config.volume
+        )
+    }
+
     func updatePreviewVolume() {
         notificationService.updatePreviewVolume(config.volume)
     }

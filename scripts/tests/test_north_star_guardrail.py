@@ -1,4 +1,5 @@
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -207,6 +208,104 @@ class NorthStarGuardrailTests(unittest.TestCase):
             self.assertEqual(result["active_campaign_count"], 2)
             self.assertEqual(result["paid_distinct_users_30d"], 7)
             self.assertFalse(result["guardrail_violated"])
+
+    def test_main_require_posthog_when_active_fails_on_missing_credentials(self):
+        from scripts import north_star_guardrail as nsg
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._write_paid_campaigns(root, ["active"])
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "POSTHOG_PERSONAL_API_KEY": "",
+                    "POSTHOG_API_KEY": "",
+                    "posthog_api_key": "",
+                    "POSTHOG_PROJECT_ID": "",
+                },
+                clear=True,
+            ), mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "north_star_guardrail.py",
+                    "--repo-root",
+                    str(root),
+                    "--require-posthog-when-active",
+                ],
+            ):
+                exit_code = nsg.main()
+
+            self.assertEqual(exit_code, 3)
+
+    def test_main_require_posthog_when_active_allows_missing_credentials_without_active_campaigns(self):
+        from scripts import north_star_guardrail as nsg
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._write_paid_campaigns(root, ["draft"])
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "POSTHOG_PERSONAL_API_KEY": "",
+                    "POSTHOG_API_KEY": "",
+                    "posthog_api_key": "",
+                    "POSTHOG_PROJECT_ID": "",
+                },
+                clear=True,
+            ), mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "north_star_guardrail.py",
+                    "--repo-root",
+                    str(root),
+                    "--require-posthog-when-active",
+                ],
+            ):
+                exit_code = nsg.main()
+
+            self.assertEqual(exit_code, 0)
+
+    def test_main_require_posthog_when_active_fails_on_degraded_query(self):
+        from scripts import north_star_guardrail as nsg
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._write_paid_campaigns(root, ["active"])
+
+            def degraded_scalar(_sql: str, _key: str, _project_id: str, errors: list[str]) -> int:
+                errors.append("query failed")
+                return 0
+
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "POSTHOG_PERSONAL_API_KEY": "phx_test",
+                    "POSTHOG_PROJECT_ID": "299775",
+                },
+                clear=True,
+            ), mock.patch.object(
+                nsg,
+                "query_scalar",
+                side_effect=degraded_scalar,
+            ), mock.patch.object(
+                nsg,
+                "query_rows",
+                return_value=[],
+            ), mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "north_star_guardrail.py",
+                    "--repo-root",
+                    str(root),
+                    "--require-posthog-when-active",
+                ],
+            ):
+                exit_code = nsg.main()
+
+            self.assertEqual(exit_code, 3)
 
 
 if __name__ == "__main__":
