@@ -31,21 +31,19 @@ actor StorageService: TimerStorage {
     }
 
     func loadConfig() -> TimerConfig? {
-        guard let data = defaults.value.data(forKey: Keys.config),
-              let config = try? decoder.decode(TimerConfig.self, from: data) else {
+        guard let data = defaults.value.data(forKey: Keys.config) else {
             return nil
         }
-        return config
+        return decodeOrClear(TimerConfig.self, from: data, key: Keys.config, decoder: decoder)
     }
 
     /// Synchronous config load for use in initializers (avoids async race condition)
     nonisolated func loadConfigSync() -> TimerConfig? {
         let defaults = self.defaults
-        guard let data = defaults.value.data(forKey: Keys.config),
-              let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
+        guard let data = defaults.value.data(forKey: Keys.config) else {
             return nil
         }
-        return config
+        return decodeOrClear(TimerConfig.self, from: data, key: Keys.config, decoder: JSONDecoder())
     }
 
     // MARK: - Timer State
@@ -56,11 +54,10 @@ actor StorageService: TimerStorage {
     }
 
     func loadTimerState() -> TimerState? {
-        guard let data = defaults.value.data(forKey: Keys.timerState),
-              let state = try? decoder.decode(TimerState.self, from: data) else {
+        guard let data = defaults.value.data(forKey: Keys.timerState) else {
             return nil
         }
-        return state
+        return decodeOrClear(TimerState.self, from: data, key: Keys.timerState, decoder: decoder)
     }
 
     func clearTimerState() {
@@ -70,15 +67,28 @@ actor StorageService: TimerStorage {
     /// Synchronous timer state load for use in initializers
     nonisolated func loadTimerStateSync() -> TimerState? {
         let defaults = self.defaults
-        guard let data = defaults.value.data(forKey: Keys.timerState),
-              let state = try? JSONDecoder().decode(TimerState.self, from: data) else {
+        guard let data = defaults.value.data(forKey: Keys.timerState) else {
             return nil
         }
-        return state
+        return decodeOrClear(TimerState.self, from: data, key: Keys.timerState, decoder: JSONDecoder())
     }
 
     /// Synchronous clear for use in initializers
     nonisolated func clearTimerStateSync() {
         defaults.value.removeObject(forKey: Keys.timerState)
+    }
+
+    private nonisolated func decodeOrClear<T: Decodable>(
+        _ type: T.Type,
+        from data: Data,
+        key: String,
+        decoder: JSONDecoder
+    ) -> T? {
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            defaults.value.removeObject(forKey: key)
+            return nil
+        }
     }
 }

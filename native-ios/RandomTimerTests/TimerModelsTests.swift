@@ -70,6 +70,38 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(config.maxDuration, 180.0)
         XCTAssertEqual(config.alarmDurationInterval, 10.0)
     }
+
+    func testConfigDecodingSupportsLegacyKeysAndLooseSoundNames() throws {
+        let payload = """
+        {
+          "min_time": -5,
+          "max_time": 9000,
+          "alarm_duration": 0,
+          "hidden_mode": "true",
+          "repeat_enabled": "1",
+          "sound_type": "DRUM_ROLL",
+          "soundVolume": "1.5",
+          "vibration": "yes"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
+
+        XCTAssertEqual(decoded.minSeconds, 0)
+        XCTAssertEqual(decoded.maxSeconds, TimerConfig.maxSecondsPro)
+        XCTAssertEqual(decoded.alarmDuration, 1)
+        XCTAssertTrue(decoded.hiddenMode)
+        XCTAssertTrue(decoded.repeatEnabled)
+        XCTAssertEqual(decoded.soundType, .drumRoll)
+        XCTAssertEqual(decoded.volume, 1.0, accuracy: 0.0001)
+        XCTAssertTrue(decoded.vibrationEnabled)
+    }
+
+    func testConfigDecodingFallsBackToDefaultsWhenFieldsMissing() throws {
+        let payload = "{}".data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
+        XCTAssertEqual(decoded, .default)
+    }
 }
 
 final class TimerStateTests: XCTestCase {
@@ -162,6 +194,36 @@ final class TimerStateTests: XCTestCase {
         )
 
         XCTAssertEqual(state.timeRemainingSeconds, 125)
+    }
+
+    func testStateDecodingSupportsLegacyKeysAndStatusNormalization() throws {
+        let payload = """
+        {
+          "config": {
+            "minSeconds": 15,
+            "maxSeconds": 120,
+            "alarmDuration": 10,
+            "hiddenMode": false,
+            "repeatEnabled": false,
+            "soundType": "GENTLE",
+            "volume": 0.4,
+            "vibrationEnabled": true
+          },
+          "target_duration": "90",
+          "started_at": "2026-03-02T00:00:00Z",
+          "remaining_duration": "45",
+          "timerStatus": "PAUSED",
+          "alarm_time_remaining": "5"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(TimerState.self, from: payload)
+
+        XCTAssertEqual(decoded.config.soundType, .gentle)
+        XCTAssertEqual(decoded.targetDuration, 90, accuracy: 0.0001)
+        XCTAssertEqual(decoded.remainingDuration, 45, accuracy: 0.0001)
+        XCTAssertEqual(decoded.status, .paused)
+        XCTAssertEqual(decoded.alarmTimeRemaining, 5, accuracy: 0.0001)
     }
 }
 
@@ -826,6 +888,24 @@ final class StorageServiceTests: XCTestCase {
         XCTAssertNil(storageService.loadTimerStateSync())
         let clearedAsync = await storageService.loadTimerState()
         XCTAssertNil(clearedAsync)
+    }
+
+    func testLoadConfigSyncClearsCorruptPayload() {
+        UserDefaults.standard.set(Data([0xFF, 0x00, 0xFE]), forKey: configKey)
+
+        let loaded = storageService.loadConfigSync()
+
+        XCTAssertNil(loaded)
+        XCTAssertNil(UserDefaults.standard.data(forKey: configKey))
+    }
+
+    func testLoadTimerStateSyncClearsCorruptPayload() {
+        UserDefaults.standard.set(Data([0xAA, 0xBB, 0xCC]), forKey: timerStateKey)
+
+        let loaded = storageService.loadTimerStateSync()
+
+        XCTAssertNil(loaded)
+        XCTAssertNil(UserDefaults.standard.data(forKey: timerStateKey))
     }
 }
 

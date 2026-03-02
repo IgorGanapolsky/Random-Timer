@@ -11,7 +11,7 @@
 
 **Built for fighters, operators, and serious athletes.**
 
-No ads. No tracking. No subscriptions. Pure performance.
+No ads. No subscriptions. Purpose-built performance training.
 
 ---
 
@@ -72,19 +72,21 @@ Use paid spend only when attribution is measurable and activation quality holds.
 
 ### iOS (SwiftUI + Live Activities)
 <p align="center">
-  <img src="screenshots/ios-setup.png" width="200" alt="iOS Setup" />
-  <img src="screenshots/ios-active.png" width="200" alt="iOS Active" />
-  <img src="screenshots/ios-alarm.png" width="200" alt="iOS Alarm" />
-  <img src="screenshots/ios-running.png" width="200" alt="iOS Running" />
+  <img src="screenshots/ios-setup.png" width="200" alt="iOS setup screen showing training window, alarm settings, and start button" />
+  <img src="screenshots/ios-active.png" width="200" alt="iOS active timer screen during a running random interval" />
+  <img src="screenshots/ios-alarm.png" width="200" alt="iOS alarm state with tactical alert controls" />
+  <img src="screenshots/ios-running.png" width="200" alt="iOS running state with countdown and loop mode indicators" />
 </p>
+<p align="center"><em>iOS flow: setup → run → alarm handling.</em></p>
 
 ### Android (Jetpack Compose + Material 3)
 <p align="center">
-  <img src="screenshots/android-setup.png" width="200" alt="Android Setup" />
-  <img src="screenshots/android-active.png" width="200" alt="Android Active" />
-  <img src="screenshots/android-settings.png" width="200" alt="Android Settings" />
-  <img src="screenshots/android-loop.png" width="200" alt="Android Loop" />
+  <img src="screenshots/android-setup.png" width="200" alt="Android setup screen with training window sliders and alarm controls" />
+  <img src="screenshots/android-active.png" width="200" alt="Android active timer screen while interval is running" />
+  <img src="screenshots/android-settings.png" width="200" alt="Android settings and tactical expansion options" />
+  <img src="screenshots/android-loop.png" width="200" alt="Android loop mode and repeated drill workflow" />
 </p>
+<p align="center"><em>Android flow: setup → active round → settings/loop.</em></p>
 
 ---
 
@@ -103,25 +105,55 @@ Use paid spend only when attribution is measurable and activation quality holds.
 - **Swift 6 + SwiftUI**
 - **Live Activities** for the Dynamic Island and Lock Screen
 - **AVAudioPlayer** for low-latency tactical alerts
+- **PostHog iOS SDK** for product analytics instrumentation
+- **StoreKit** for one-time Pro unlock + in-app review prompts
 
 ### Android
 - **Kotlin 2.1 + Jetpack Compose**
 - **Clean Architecture** with Hilt Dependency Injection
 - **Foreground Service** for bulletproof background reliability
 - **Material Design 3 Expressive** with spring-based motion
+- **PostHog Android SDK** for analytics instrumentation
+- **Google Play Billing** for one-time Pro unlocks
+- **In-App Review API** for review prompts
+- **Firebase Crashlytics + Firebase Analytics** for crash/health telemetry
+
+### Automation & Tooling
+- **Python automation layer** in [`scripts/`](scripts/) drives release ops, analytics snapshots, growth reporting, and store metadata workflows.
+- **GitHub Actions pipelines** in [`.github/workflows/`](.github/workflows/) run CI, release automation, metadata sync, and guardrail checks.
+- **Fastlane metadata** lives under [`native-ios/fastlane`](native-ios/fastlane) and [`native-android/fastlane`](native-android/fastlane).
 
 ## Build & Test
+
+The [`Makefile`](Makefile) is the canonical task entrypoint.
+
+### Quick Verification
+```bash
+make verify
+```
 
 ### iOS
 ```bash
 cd native-ios
-xcodebuild test -scheme RandomTimer -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild -scheme RandomTimer -showdestinations
+xcodebuild test -scheme RandomTimer -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.1'
 ```
+Note: simulator names vary by Xcode version. If `iPhone 17` is unavailable on your machine, use any available iPhone simulator from `-showdestinations` (for example `iPhone 16 Pro` on older Xcode).
 
 ### Android
 ```bash
 cd native-android
-./gradlew test
+./gradlew testDebugUnitTest assembleDebug lint
+```
+
+### More Useful Day-to-Day Commands
+```bash
+make run-ios-sim
+make run-android-emulator
+make verify-ios
+make verify-android
+make maestro-ios
+make maestro-android
 ```
 
 ## License
