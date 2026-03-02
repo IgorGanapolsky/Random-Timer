@@ -60,10 +60,10 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // 2. Alarm Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Label("Alarm Setup", systemImage: "bell.fill")
+                        Label("Alarm Sound Setup", systemImage: "bell.fill")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
@@ -401,51 +401,33 @@ private struct TimeRangeSliders: View {
                     .font(.caption2)
                     .foregroundColor(.textMuted)
 
-                Slider(
-                    value: Binding(
-                        get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
-                        set: { newValue in
-                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
-                            adjustMin(to: snapped)
-                        }
-                    ),
-                    in: minSliderRange
-                )
-                .tint(enabled ? .accentPrimary : .textMuted)
-                .accessibilityLabel("Minimum time slider")
-                .accessibilityValue(TimeInterval(minValue).formattedDuration)
-
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     StepAdjustButton(
-                        label: "-5s",
+                        systemImage: "minus.circle.fill",
                         enabled: enabled && canAdjustMin(by: -coarseStep),
-                        accessibilityLabel: "Decrease minimum by 5 seconds"
+                        accessibilityLabel: "Decrease minimum"
                     ) {
                         adjustMin(by: -coarseStep)
                     }
 
-                    StepAdjustButton(
-                        label: "-1s",
-                        enabled: enabled && canAdjustMin(by: -fineStep),
-                        accessibilityLabel: "Decrease minimum by 1 second"
-                    ) {
-                        adjustMin(by: -fineStep)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    StepAdjustButton(
-                        label: "+1s",
-                        enabled: enabled && canAdjustMin(by: fineStep),
-                        accessibilityLabel: "Increase minimum by 1 second"
-                    ) {
-                        adjustMin(by: fineStep)
-                    }
+                    Slider(
+                        value: Binding(
+                            get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
+                            set: { newValue in
+                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                adjustMin(to: snapped)
+                            }
+                        ),
+                        in: minSliderRange
+                    )
+                    .tint(enabled ? .accentPrimary : .textMuted)
+                    .accessibilityLabel("Minimum time slider")
+                    .accessibilityValue(TimeInterval(minValue).formattedDuration)
 
                     StepAdjustButton(
-                        label: "+5s",
+                        systemImage: "plus.circle.fill",
                         enabled: enabled && canAdjustMin(by: coarseStep),
-                        accessibilityLabel: "Increase minimum by 5 seconds"
+                        accessibilityLabel: "Increase minimum"
                     ) {
                         adjustMin(by: coarseStep)
                     }
@@ -458,51 +440,33 @@ private struct TimeRangeSliders: View {
                     .font(.caption2)
                     .foregroundColor(.textMuted)
 
-                Slider(
-                    value: Binding(
-                        get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
-                        set: { newValue in
-                            let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
-                            adjustMax(to: snapped)
-                        }
-                    ),
-                    in: maxSliderRange
-                )
-                .tint(enabled ? .accentPrimary : .textMuted)
-                .accessibilityLabel("Maximum time slider")
-                .accessibilityValue(TimeInterval(maxValue).formattedDuration)
-
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     StepAdjustButton(
-                        label: "-5s",
+                        systemImage: "minus.circle.fill",
                         enabled: enabled && canAdjustMax(by: -coarseStep),
-                        accessibilityLabel: "Decrease maximum by 5 seconds"
+                        accessibilityLabel: "Decrease maximum"
                     ) {
                         adjustMax(by: -coarseStep)
                     }
 
-                    StepAdjustButton(
-                        label: "-1s",
-                        enabled: enabled && canAdjustMax(by: -fineStep),
-                        accessibilityLabel: "Decrease maximum by 1 second"
-                    ) {
-                        adjustMax(by: -fineStep)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    StepAdjustButton(
-                        label: "+1s",
-                        enabled: enabled && canAdjustMax(by: fineStep),
-                        accessibilityLabel: "Increase maximum by 1 second"
-                    ) {
-                        adjustMax(by: fineStep)
-                    }
+                    Slider(
+                        value: Binding(
+                            get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                            set: { newValue in
+                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                adjustMax(to: snapped)
+                            }
+                        ),
+                        in: maxSliderRange
+                    )
+                    .tint(enabled ? .accentPrimary : .textMuted)
+                    .accessibilityLabel("Maximum time slider")
+                    .accessibilityValue(TimeInterval(maxValue).formattedDuration)
 
                     StepAdjustButton(
-                        label: "+5s",
+                        systemImage: "plus.circle.fill",
                         enabled: enabled && canAdjustMax(by: coarseStep),
-                        accessibilityLabel: "Increase maximum by 5 seconds"
+                        accessibilityLabel: "Increase maximum"
                     ) {
                         adjustMax(by: coarseStep)
                     }
@@ -566,25 +530,24 @@ private struct TimeRangeSliders: View {
 }
 
 private struct StepAdjustButton: View {
-    let label: String
+    let systemImage: String
     let enabled: Bool
     let accessibilityLabel: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(.caption)
-                .fontWeight(.semibold)
+            Image(systemName: systemImage)
+                .font(.title3)
+                .fontWeight(.bold)
                 .foregroundColor(enabled ? .accentPrimary : .textMuted)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(8)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    Circle()
                         .fill(enabled ? Color.accentPrimary.opacity(0.12) : Color.glassBackground)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    Circle()
                         .stroke(enabled ? Color.accentPrimary.opacity(0.6) : Color.glassBorder, lineWidth: 1)
                 )
         }

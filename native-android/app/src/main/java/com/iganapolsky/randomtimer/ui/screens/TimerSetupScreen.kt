@@ -286,16 +286,17 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // 2. Alarm Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
                 item {
                     GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
                         Column {
                             Text(
-                                text = "\uD83D\uDD14 Alarm Setup",
+                                text = "\uD83D\uDD14 Alarm Sound Setup",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TimerColors.TextPrimary,
                             )
+
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
                             // Duration Chips
@@ -714,15 +715,6 @@ private fun TimeRangeSliders(
                 color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
             )
         }
-        if (!compactMode) {
-            Text(
-                text = "Coarse: slider + \u00B15s  \u2022  Fine: \u00B11s buttons",
-                style = MaterialTheme.typography.labelSmall,
-                color = TimerColors.TextMuted,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
-        }
 
         // Min slider with nudge
         Column {
@@ -738,7 +730,7 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "-5s",
+                    label = "\u2212",
                     enabled = enabled && minValue >= coarseNudgeStep,
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
                     width = nudgeWidth,
@@ -765,31 +757,9 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+5s",
+                    label = "+",
                     enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
                     onClick = { onMinChange(minValue + coarseNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-            }
-            Spacer(modifier = Modifier.height(if (compactMode) 6.dp else 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NudgeButton(
-                    label = "-1s",
-                    enabled = enabled && minValue >= fineNudgeStep,
-                    onClick = { onMinChange(minValue - fineNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                NudgeButton(
-                    label = "+1s",
-                    enabled = enabled && minValue <= (maxValue - minGapSeconds - fineNudgeStep),
-                    onClick = { onMinChange(minValue + fineNudgeStep) },
                     width = nudgeWidth,
                     height = nudgeHeight,
                 )
@@ -810,7 +780,7 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "-5s",
+                    label = "\u2212",
                     enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
                     onClick = { onMaxChange(maxValue - coarseNudgeStep) },
                     width = nudgeWidth,
@@ -838,31 +808,9 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+5s",
+                    label = "+",
                     enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
                     onClick = { onMaxChange(maxValue + coarseNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-            }
-            Spacer(modifier = Modifier.height(if (compactMode) 6.dp else 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NudgeButton(
-                    label = "-1s",
-                    enabled = enabled && maxValue >= (minValue + minGapSeconds + fineNudgeStep),
-                    onClick = { onMaxChange(maxValue - fineNudgeStep) },
-                    width = nudgeWidth,
-                    height = nudgeHeight,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                NudgeButton(
-                    label = "+1s",
-                    enabled = enabled && maxValue <= (maxSliderRangeInt - fineNudgeStep),
-                    onClick = { onMaxChange(maxValue + fineNudgeStep) },
                     width = nudgeWidth,
                     height = nudgeHeight,
                 )
