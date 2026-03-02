@@ -21,6 +21,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,13 +40,26 @@ class ProManager
         private val analyticsService: AnalyticsService,
     ) : PurchasesUpdatedListener {
         companion object {
-            const val PRODUCT_ID = "pro_upgrade"
+            const val BASE_PRODUCT_ID = "pro_base"
+            const val ELITE_PRODUCT_ID = "elite_tactical"
         }
 
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-        private val _isPro = MutableStateFlow(false)
-        val isPro: StateFlow<Boolean> = _isPro
+        private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
+        val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel
+
+        val isPro: StateFlow<Boolean> = MutableStateFlow(false).apply {
+            scope.launch {
+                _entitlementLevel.collect { value = it.isPro }
+            }
+        }
+        
+        val isElite: StateFlow<Boolean> = MutableStateFlow(false).apply {
+            scope.launch {
+                _entitlementLevel.collect { value = it == EntitlementLevel.ELITE }
+            }
+        }
 
         private var billingClient: BillingClient =
             BillingClient
@@ -58,7 +72,7 @@ class ProManager
                         .build(),
                 ).build()
 
-        private var cachedProductDetails: com.android.billingclient.api.ProductDetails? = null
+        private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
 
         init {
@@ -76,6 +90,7 @@ class ProManager
                                     entryPoint = null,
                                     trackResult = false,
                                 )
+                                fetchAllProductDetails()
                             }
                         }
                     }
@@ -106,32 +121,51 @@ class ProManager
                 return false
             }
 
-            val params =
-                QueryPurchasesParams
-                    .newBuilder()
-                    .setProductType(BillingClient.ProductType.INAPP)
-                    .build()
-            val result = billingClient.queryPurchasesAsync(params)
-            val hasPro =
-                result.purchasesList.any { purchase ->
-                    purchase.products.contains(PRODUCT_ID) &&
+            // Check In-App (BASE)
+            val inAppParams = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+            val inAppResult = billingClient.queryPurchasesAsync(inAppParams)
+            
+            // Check Subs (ELITE)
+            val subsParams = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+            val subsResult = billingClient.queryPurchasesAsync(subsParams)
+
+            val hasElite = subsResult.purchasesList.any { purchase ->
+                purchase.products.contains(ELITE_PRODUCT_ID) &&
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-            _isPro.value = hasPro
+            }
+            
+            val hasBase = inAppResult.purchasesList.any { purchase ->
+                purchase.products.contains(BASE_PRODUCT_ID) &&
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+            }
+
+            val level = when {
+                hasElite -> EntitlementLevel.ELITE
+                hasBase -> EntitlementLevel.BASE
+                else -> EntitlementLevel.NONE
+            }
+            
+            _entitlementLevel.value = level
+            
             if (trackResult) {
                 trackRestoreResult(
-                    success = hasPro,
+                    success = level.isPro,
                     source = source,
                     entryPoint = entryPoint,
-                    responseCode = result.billingResult.responseCode,
-                    debugMessage = result.billingResult.debugMessage,
+                    responseCode = if (hasElite) subsResult.billingResult.responseCode else inAppResult.billingResult.responseCode,
+                    debugMessage = if (hasElite) subsResult.billingResult.debugMessage else inAppResult.billingResult.debugMessage,
                 )
             }
-            return hasPro
+            return level.isPro
         }
 
         suspend fun launchPurchase(
             activity: Activity,
+            productID: String,
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
@@ -148,7 +182,7 @@ class ProManager
                 return false
             }
 
-            val productDetails = cachedProductDetails ?: fetchProductDetails()
+            val productDetails = cachedProductDetails[productID] ?: fetchProductDetails(productID)
             if (productDetails == null) {
                 trackPurchaseResult(
                     success = false,
@@ -160,21 +194,24 @@ class ProManager
                 pendingPurchaseEntryPoint = null
                 return false
             }
-            cachedProductDetails = productDetails
+            cachedProductDetails[productID] = productDetails
 
-            val productDetailsParamsList =
-                listOf(
-                    BillingFlowParams.ProductDetailsParams
-                        .newBuilder()
-                        .setProductDetails(productDetails)
-                        .build(),
-                )
-
-            val flowParams =
-                BillingFlowParams
-                    .newBuilder()
-                    .setProductDetailsParamsList(productDetailsParamsList)
+            val productDetailsParamsList = listOf(
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productDetails)
+                    .apply {
+                        if (productID == ELITE_PRODUCT_ID) {
+                            productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken?.let {
+                                setOfferToken(it)
+                            }
+                        }
+                    }
                     .build()
+            )
+
+            val flowParams = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(productDetailsParamsList)
+                .build()
 
             val result = billingClient.launchBillingFlow(activity, flowParams)
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
@@ -189,6 +226,89 @@ class ProManager
                 return false
             }
             return true
+        }
+
+        private suspend fun fetchAllProductDetails() {
+            fetchProductDetails(BASE_PRODUCT_ID)
+            fetchProductDetails(ELITE_PRODUCT_ID)
+        }
+
+        private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
+            val productType = if (productID == ELITE_PRODUCT_ID) {
+                BillingClient.ProductType.SUBS
+            } else {
+                BillingClient.ProductType.INAPP
+            }
+            
+            val productList = listOf(
+                QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(productID)
+                    .setProductType(productType)
+                    .build()
+            )
+
+            val params = QueryProductDetailsParams.newBuilder()
+                .setProductList(productList)
+                .build()
+
+            val result = billingClient.queryProductDetails(params)
+            val details = result.productDetailsList?.firstOrNull()
+            if (details != null) {
+                cachedProductDetails[productID] = details
+            }
+            return details
+        }
+
+        suspend fun getFormattedPrice(productID: String): String {
+            val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
+            return if (productID == ELITE_PRODUCT_ID) {
+                details?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: "$19.99"
+            } else {
+                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$4.99"
+            }
+        }
+
+        override fun onPurchasesUpdated(
+            result: BillingResult,
+            purchases: MutableList<Purchase>?,
+        ) {
+            var hasPurchased = false
+            if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                for (purchase in purchases) {
+                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                        hasPurchased = true
+                        updateEntitlementFromPurchase(purchase)
+                        scope.launch { acknowledgePurchaseIfNeeded(purchase) }
+                    }
+                }
+            }
+            trackPurchaseResult(
+                success = hasPurchased,
+                source = if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL,
+                entryPoint = pendingPurchaseEntryPoint,
+                responseCode = result.responseCode,
+                debugMessage = result.debugMessage,
+            )
+            pendingPurchaseEntryPoint = null
+        }
+
+        private fun updateEntitlementFromPurchase(purchase: Purchase) {
+            if (purchase.products.contains(ELITE_PRODUCT_ID)) {
+                _entitlementLevel.value = EntitlementLevel.ELITE
+            } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
+                if (_entitlementLevel.value == EntitlementLevel.NONE) {
+                    _entitlementLevel.value = EntitlementLevel.BASE
+                }
+            }
+        }
+
+        private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {
+            if (!purchase.isAcknowledged) {
+                val params = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                billingClient.acknowledgePurchase(params)
+            }
         }
 
         suspend fun restorePurchasesFromPaywall(entryPoint: String): Boolean =
@@ -250,91 +370,12 @@ class ProManager
 
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
-        private suspend fun fetchProductDetails(): com.android.billingclient.api.ProductDetails? {
-            val productList =
-                listOf(
-                    QueryProductDetailsParams.Product
-                        .newBuilder()
-                        .setProductId(PRODUCT_ID)
-                        .setProductType(BillingClient.ProductType.INAPP)
-                        .build(),
-                )
-
-            val params =
-                QueryProductDetailsParams
-                    .newBuilder()
-                    .setProductList(productList)
-                    .build()
-
-            val result: ProductDetailsResult = billingClient.queryProductDetails(params)
-            return result.productDetailsList?.firstOrNull()
-        }
-
-        suspend fun getFormattedPrice(): String {
-            val details = cachedProductDetails ?: fetchProductDetails()
-            cachedProductDetails = details
-            return details
-                ?.oneTimePurchaseOfferDetails
-                ?.formattedPrice
-                ?: "$4.99"
-        }
-
-        override fun onPurchasesUpdated(
-            result: BillingResult,
-            purchases: MutableList<Purchase>?,
-        ) {
-            var hasPurchasedPro = false
-            if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-                for (purchase in purchases) {
-                    if (
-                        purchase.products.contains(PRODUCT_ID) &&
-                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                    ) {
-                        hasPurchasedPro = true
-                        _isPro.value = true
-                        scope.launch { acknowledgePurchaseIfNeeded(purchase) }
-                    }
-                }
-            }
-            trackPurchaseResult(
-                success = hasPurchasedPro,
-                source =
-                    if (pendingPurchaseEntryPoint.isNullOrBlank()) {
-                        MonetizationSources.BILLING_CALLBACK
-                    } else {
-                        MonetizationSources.PAYWALL
-                    },
-                entryPoint = pendingPurchaseEntryPoint,
-                responseCode = result.responseCode,
-                debugMessage = result.debugMessage,
-            )
-            pendingPurchaseEntryPoint = null
-        }
-
-        private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {
-            if (!purchase.isAcknowledged) {
-                val params =
-                    AcknowledgePurchaseParams
-                        .newBuilder()
-                        .setPurchaseToken(purchase.purchaseToken)
-                        .build()
-                billingClient.acknowledgePurchase(params)
-            }
-        }
-
-        /** Developer backdoor: unlock PRO without payment (8s long-press on paywall title). */
-        fun forcePro() {
-            _isPro.value = true
-            context.getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
-                .edit().putBoolean("forced_pro", true).apply()
-            analyticsService.track("dev_force_pro", emptyMap())
-        }
-
         // Feature gates
+        fun maxSecondsLimit(level: EntitlementLevel = _entitlementLevel.value): Int = 
+            if (level.isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
 
-        fun maxSecondsLimit(isPro: Boolean = _isPro.value): Int = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-
-        fun availableSounds(isPro: Boolean = _isPro.value): List<SoundType> = if (isPro) SoundType.entries.toList() else SoundType.FREE
+        fun availableSounds(level: EntitlementLevel = _entitlementLevel.value): List<SoundType> = 
+            if (level.isPro) SoundType.entries.toList() else SoundType.FREE
     }
 
 internal object MonetizationSources {

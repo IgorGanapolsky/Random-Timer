@@ -374,3 +374,15 @@ extension TimerStatus {
         return currentStatus == .paused ? .paused : .running
     }
 }
+
+// MARK: - Entitlement Level
+
+public enum EntitlementLevel: String, Codable, Sendable {
+    case none
+    case base
+    case elite
+
+    public var isPro: Bool {
+        self != .none
+    }
+}

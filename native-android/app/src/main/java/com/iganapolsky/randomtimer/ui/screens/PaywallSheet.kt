@@ -54,19 +54,21 @@ fun PaywallSheet(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-                modifier = Modifier.pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            val job = scope.launch {
-                                delay(8_000L)
-                                onForcePro()
-                                onDismiss()
-                            }
-                            tryAwaitRelease()
-                            job.cancel()
-                        },
-                    )
-                },
+                modifier =
+                    Modifier.pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                val job =
+                                    scope.launch {
+                                        delay(8_000L)
+                                        onForcePro()
+                                        onDismiss()
+                                    }
+                                tryAwaitRelease()
+                                job.cancel()
+                            },
+                        )
+                    },
             )
 
             Spacer(modifier = Modifier.height(8.dp))

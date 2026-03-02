@@ -15,6 +15,7 @@ final class ProManager: ObservableObject {
     private var transactionListener: Task<Void, Never>?
 
     private init() {
+        if UserDefaults.standard.bool(forKey: "forced_pro_status") { isPro = true }
         transactionListener = listenForTransactions()
         Task { await restorePurchases() }
     }

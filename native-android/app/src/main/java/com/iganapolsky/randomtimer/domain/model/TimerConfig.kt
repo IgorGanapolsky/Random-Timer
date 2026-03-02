@@ -137,3 +137,12 @@ enum class TimerStatus {
     COMPLETE, // Timer finished, transitioning to alarm
     ALARM, // Alarm is playing
 }
+
+enum class EntitlementLevel {
+    NONE,
+    BASE,
+    ELITE,
+    ;
+
+    val isPro: Boolean get() = this != NONE
+}
