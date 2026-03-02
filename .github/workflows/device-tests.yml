@@ -72,5 +72,5 @@ jobs:
           api-level: 30
           arch: x86_64
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: true
+          disable-animations: false
           script: sh scripts/device-tests/ci-maestro.sh
