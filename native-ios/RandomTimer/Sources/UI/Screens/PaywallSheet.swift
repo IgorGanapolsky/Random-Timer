@@ -15,7 +15,15 @@ struct PaywallSheet: View {
     var body: some View {
         VStack(spacing: 24) {
             HStack {
+                Button("Not now") {
+                    trackDismiss(method: "header_not_now")
+                    dismiss()
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.textSecondary)
+
                 Spacer()
+
                 Button {
                     trackDismiss(method: "close_button")
                     dismiss()
@@ -87,7 +95,7 @@ struct PaywallSheet: View {
             .foregroundColor(.textSecondary)
 
             Button("Not now") {
-                trackDismiss(method: "not_now")
+                trackDismiss(method: "footer_not_now")
                 dismiss()
             }
             .font(.footnote)
