@@ -1,7 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,94 +14,120 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    price: String,
-    onPurchase: () -> Unit,
+    basePrice: String,
+    elitePrice: String,
+    onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
-    onForcePro: () -> Unit = {},
 ) {
-    val scope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = TimerColors.BackgroundDark,
     ) {
         Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Upgrade to Pro",
+                text = "Hybrid Tactical Monetization",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-                modifier =
-                    Modifier.pointerInput(Unit) {
-                        detectTapGestures(
-                            onPress = {
-                                val job =
-                                    scope.launch {
-                                        delay(8_000L)
-                                        onForcePro()
-                                        onDismiss()
-                                    }
-                                tryAwaitRelease()
-                                job.cancel()
-                            },
-                        )
-                    },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "One-time purchase. No subscriptions.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Support independent development")
+            // Tactical Base
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Tactical Base",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary
+                )
+                Text(
+                    text = "One-time purchase. Essential tactical features.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
+                ProFeatureRow(text = "Extended range up to 60 minutes")
+                Spacer(modifier = Modifier.height(8.dp))
+                PrimaryButton(
+                    text = "Unlock Base \u2022 $basePrice",
+                    onClick = { onPurchase("pro_base") }
+                )
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            PrimaryButton(
-                text = "Unlock Pro \u2022 $price",
-                onClick = onPurchase,
-            )
+            // Tactical Elite
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Tactical Elite",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TimerColors.AccentPrimary
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "RECOMMENDED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TimerColors.TextPrimary,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+                Text(
+                    text = "Subscription. The ultimate tactical experience.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ProFeatureRow(text = "Includes all Base features")
+                ProFeatureRow(text = "AI Voice Callouts (Coming Soon)")
+                ProFeatureRow(text = "Support independent development")
+                Spacer(modifier = Modifier.height(8.dp))
+                PrimaryButton(
+                    text = "Unlock Elite \u2022 $elitePrice",
+                    onClick = { onPurchase("elite_tactical") }
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Restore purchase",
                 style = MaterialTheme.typography.labelMedium,
                 color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .padding(bottom = 16.dp)
-                        .clickable(onClick = onRestore),
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .clickable(onClick = onRestore),
                 textAlign = TextAlign.Center,
             )
 
@@ -110,10 +135,9 @@ fun PaywallSheet(
                 text = "Not now",
                 style = MaterialTheme.typography.labelMedium,
                 color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .padding(bottom = 16.dp)
-                        .clickable(onClick = onDismiss),
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .clickable(onClick = onDismiss),
                 textAlign = TextAlign.Center,
             )
         }

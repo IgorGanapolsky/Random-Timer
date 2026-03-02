@@ -60,11 +60,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
+import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlin.math.roundToInt
 
@@ -117,6 +117,7 @@ fun TimerSetupScreen(
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
+    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -336,6 +337,62 @@ fun TimerSetupScreen(
                                                 selected = config.alarmDuration == duration,
                                             ),
                                     )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // AI Voice Callouts (Elite Feature)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                    )
+                                    Text(
+                                        text = "Voice prompts during countdown",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
+                                    )
+                                }
+                                if (isElite) {
+                                    Text(
+                                        text = "ENABLED",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TimerColors.AccentPrimary,
+                                    )
+                                } else {
+                                    Surface(
+                                        onClick = onUpgradeTap,
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "ELITE ",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                            Text(
+                                                text = "\uD83D\uDD12",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                        }
+                                    }
                                 }
                             }
 

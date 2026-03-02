@@ -13,6 +13,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -32,9 +33,9 @@ class TimerRepositoryImpl @Inject constructor(
      * and can be restored if the user re-subscribes.
      */
     private fun TimerConfig.clampedForPro(): TimerConfig {
-        val isPro = proManager.isPro.value
-        val maxAllowed = proManager.maxSecondsLimit(isPro)
-        val allowedSounds = proManager.availableSounds(isPro)
+        val level = proManager.entitlementLevel.value
+        val maxAllowed = proManager.maxSecondsLimit(level)
+        val allowedSounds = proManager.availableSounds(level)
         val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
         val clampedMin = minSeconds.coerceAtMost(clampedMax)
         val clampedSound = if (soundType in allowedSounds) soundType else SoundType.INTENSE

@@ -28,6 +28,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,19 +51,15 @@ class ProManager
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
-        val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel
+        val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel.asStateFlow()
 
-        val isPro: StateFlow<Boolean> = MutableStateFlow(false).apply {
-            scope.launch {
-                _entitlementLevel.collect { value = it.isPro }
-            }
-        }
+        val isPro: StateFlow<Boolean> = _entitlementLevel
+            .map { it.isPro }
+            .stateIn(scope, SharingStarted.Eagerly, _entitlementLevel.value.isPro)
         
-        val isElite: StateFlow<Boolean> = MutableStateFlow(false).apply {
-            scope.launch {
-                _entitlementLevel.collect { value = it == EntitlementLevel.ELITE }
-            }
-        }
+        val isElite: StateFlow<Boolean> = _entitlementLevel
+            .map { it == EntitlementLevel.ELITE }
+            .stateIn(scope, SharingStarted.Eagerly, _entitlementLevel.value == EntitlementLevel.ELITE)
 
         private var billingClient: BillingClient =
             BillingClient
@@ -369,6 +369,16 @@ class ProManager
             }
 
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
+
+        fun forcePro() {
+            _entitlementLevel.value = EntitlementLevel.ELITE
+            context
+                .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("forced_pro", true)
+                .apply()
+            analyticsService.track("dev_force_pro", emptyMap())
+        }
 
         // Feature gates
         fun maxSecondsLimit(level: EntitlementLevel = _entitlementLevel.value): Int = 
