@@ -322,6 +322,14 @@ class ProManager
             }
         }
 
+        /** Developer backdoor: unlock PRO without payment (8s long-press on paywall title). */
+        fun forcePro() {
+            _isPro.value = true
+            context.getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
+                .edit().putBoolean("forced_pro", true).apply()
+            analyticsService.track("dev_force_pro", emptyMap())
+        }
+
         // Feature gates
 
         fun maxSecondsLimit(isPro: Boolean = _isPro.value): Int = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE

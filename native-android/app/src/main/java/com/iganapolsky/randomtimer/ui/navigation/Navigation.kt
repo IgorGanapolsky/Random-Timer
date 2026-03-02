@@ -193,6 +193,10 @@ fun RandomTimerNavHost(
                 viewModel.trackPaywallDismissed(paywallEntryPoint)
                 showPaywall = false
             },
+            onForcePro = {
+                viewModel.proManager.forcePro()
+                showPaywall = false
+            },
         )
     }
 }

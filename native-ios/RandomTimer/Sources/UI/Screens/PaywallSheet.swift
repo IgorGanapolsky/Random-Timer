@@ -65,17 +65,11 @@ struct PaywallSheet: View {
                     }
                 }
             }
-#if DEBUG
-            .onLongPressGesture(minimumDuration: 0.8) {
-                proManager.unlockProForDebug()
+            .onLongPressGesture(minimumDuration: 8.0) {
+                proManager.forcePro()
                 hasTrackedDismiss = true
-                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
-                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                    AnalyticsProperties.result: "dev_override",
-                ])
                 dismiss()
             }
-#endif
 
             Button("Restore purchase") {
                 Task {

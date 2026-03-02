@@ -127,12 +127,13 @@ final class ProManager: ObservableObject {
         isPro ? SoundType.allCases : SoundType.freeSounds
     }
 
-#if DEBUG
-    func unlockProForDebug() {
+    /// Developer backdoor: unlock PRO without payment (8s long-press on paywall title).
+    func forcePro() {
         isPro = true
-        Self.log.notice("Developer override enabled: Pro unlocked in debug build")
+        UserDefaults.standard.set(true, forKey: "forced_pro_status")
+        AnalyticsService.shared.event("dev_force_pro")
+        Self.log.notice("Developer override: Pro unlocked via backdoor")
     }
-#endif
 }
 
 enum StoreError: Error {
