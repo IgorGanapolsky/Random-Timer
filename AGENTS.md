@@ -4,6 +4,8 @@
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
 
+Gemini-specific operating directives are maintained in `docs/GEMINI.md` (canonical path enforced by repo hygiene checks).
+
 - **Orchestration**: latest high-reasoning `Claude Sonnet` class model (UltraBrain) for planning and coordination.
 - **Deep Specialist**: latest `Claude Opus` class model or strongest available `GPT-4o/5` class model (Deep) for complex refactoring.
 - **Utility Runner**: latest fast, low-cost `Gemini Flash` or `Claude Haiku` class model (Quick) for search, analysis, and scaffolding.
