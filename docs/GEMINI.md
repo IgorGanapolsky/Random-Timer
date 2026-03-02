@@ -36,6 +36,14 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - Product-value NSM: **WQTU** (distinct users with >=3 `timer_completed` events in trailing 7 days).
 - Never infer business progress from drafts or configuration intent. Only report progress from live PostHog + store telemetry evidence.
 
+## Operating Budget Mandate
+
+- **Hard cap: `$10 USD/month` total external spend** across ads, tooling, SaaS, cloud, and automation.
+- Default to zero-cost execution paths first.
+- Do not start or scale paid services/campaigns if doing so can exceed the cap.
+- If a required action cannot be completed within the cap, pause and request explicit CEO approval with exact cost impact.
+- Include month-to-date spend and remaining budget in spend-related reports.
+
 ## Commands
 
 ```bash

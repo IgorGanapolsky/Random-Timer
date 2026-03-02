@@ -48,6 +48,16 @@ When a task depends on credentials, the agent must verify local and CI credentia
 
 **Earn $100/day after-tax from app sales** while improving product quality and operational reliability.
 
+### Operating Budget Mandate (Effective March 2, 2026)
+
+**Hard budget cap: `$10 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
+
+Enforcement rules:
+- Prefer zero-cost approaches first (existing CI minutes, local tooling, OSS, existing subscriptions).
+- Do not start any new paid service, campaign, or add-on that can exceed the monthly cap.
+- If a required action cannot be completed within the cap, stop and request explicit CEO approval with the exact dollar amount and justification.
+- Every spend-related status update must include current month-to-date spend estimate and remaining budget.
+
 ### Primary North Star Metric (NSM)
 
 **Weekly Qualified Training Users (WQTU)**: number of distinct users with **3 or more `timer_completed` events** in the trailing 7 days.
