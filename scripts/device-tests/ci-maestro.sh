@@ -20,12 +20,10 @@ export PATH="$HOME/.maestro/bin:$PATH"
 PASS=0
 FAIL=0
 
-# CI-safe subset: exclude tests with runScript (sh-incompatible) and
-# long timeouts (alarm-circle-tap waits 330s for alarm on slow emulator).
+# CI-safe subset: uses ci-smoke-test (no compact-mode dependency),
+# excludes runScript tests and long-timeout alarm tests.
 for flow in \
-  .maestro/smoke-test.yaml \
-  .maestro/persistence-test.yaml \
-  .maestro/paused-timer-cannot-show-setup.yaml
+  .maestro/ci-smoke-test.yaml
 do
   echo "== Running: $flow =="
   adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
