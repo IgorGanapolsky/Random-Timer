@@ -188,14 +188,9 @@ jobs:
           # Ask xcodebuild for valid destinations for this exact scheme and pick
           # the first iOS Simulator destination it accepts.
           SIM_ID=$(xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | \
-            awk '
-              /platform:iOS Simulator/ {
-                if (match($0, /id:([A-F0-9-]+)/, m)) {
-                  print m[1]
-                  exit
-                }
-              }
-            ')
+            grep 'platform:iOS Simulator' | \
+            sed -n 's/.*id:\([[:xdigit:]-][[:xdigit:]-]*\).*/\1/p' | \
+            head -n 1)
           if [ -z "${SIM_ID}" ]; then
             echo "No valid iOS Simulator destination found for RandomTimer."
             xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations
