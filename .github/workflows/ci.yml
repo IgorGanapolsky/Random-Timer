@@ -197,6 +197,14 @@ jobs:
           sudo xcode-select -s "${XCODE_PATH}/Contents/Developer"
           xcodebuild -version
 
+      - name: Install iOS Simulator runtime if missing
+        run: |
+          if ! xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
+            echo "No iOS simulator found — installing runtime..."
+            xcodebuild -downloadPlatform iOS || true
+            xcrun simctl list runtimes
+          fi
+
       - name: Resolve simulator destination
         id: sim
         run: |
