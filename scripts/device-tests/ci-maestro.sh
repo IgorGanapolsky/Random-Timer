@@ -6,6 +6,15 @@ set -eu
 adb install -r native-android/app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
 
+# Re-enable animator duration for Compose rendering (Maestro needs it)
+adb shell settings put global animator_duration_scale 1.0
+
+# Warm-start: launch once, wait for full render, then kill
+adb shell am start -n com.iganapolsky.randomtimer/.MainActivity
+sleep 10
+adb shell am force-stop com.iganapolsky.randomtimer
+sleep 2
+
 export PATH="$HOME/.maestro/bin:$PATH"
 PASS=0
 FAIL=0
