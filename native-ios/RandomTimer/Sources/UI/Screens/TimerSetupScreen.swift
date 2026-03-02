@@ -85,10 +85,10 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // AI Voice Callouts (Elite Feature)
+                        // Voice Callouts (Elite Feature)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Label("AI Voice Callouts", systemImage: "waveform")
+                                Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
