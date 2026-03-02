@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import os
+import Security
 
 @MainActor
 final class AIVoiceCalloutService {
@@ -44,14 +45,14 @@ final class AIVoiceCalloutService {
         if remainingSeconds > 30, shouldFireChaosCue(remainingSeconds: remainingSeconds) {
             speak(randomChaosCue())
             lastChaosCueTime = remainingSeconds
-            nextChaosCueAt = remainingSeconds - Int.random(in: 8...19)
+            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 8...19)
         }
     }
 
     private func shouldFireChaosCue(remainingSeconds: Int) -> Bool {
         if nextChaosCueAt == 0 {
             // First cue: fire within first 5-15 seconds of timer running
-            nextChaosCueAt = remainingSeconds - Int.random(in: 5...15)
+            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 5...15)
         }
         return remainingSeconds <= nextChaosCueAt
     }
@@ -74,6 +75,19 @@ final class AIVoiceCalloutService {
             "Tighten up!",
             "Push through it!"
         ]
-        return cues.randomElement()!
+        let index = secureRandomInt(in: 0...(cues.count - 1))
+        return cues[index]
+    }
+
+    private func secureRandomInt(in range: ClosedRange<Int>) -> Int {
+        let count = range.upperBound - range.lowerBound + 1
+        var randomValue: UInt32 = 0
+        let status = SecRandomCopyBytes(kSecRandomDefault, MemoryLayout<UInt32>.size, &randomValue)
+        
+        if status == errSecSuccess {
+            return range.lowerBound + Int(randomValue % UInt32(count))
+        } else {
+            return Int.random(in: range)
+        }
     }
 }
