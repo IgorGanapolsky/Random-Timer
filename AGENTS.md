@@ -42,10 +42,15 @@ When a task depends on credentials, the agent must verify local and CI credentia
 4. **Prove access with a real authenticated read/write test** (status code + endpoint + sanitized response).
 5. **Never claim “no access” or ask the user to re-provide credentials** until steps 1–4 are completed and reported with evidence.
 
-## Growth North Star (Effective February 23, 2026)
+## Global North Stars (Commercial & Product)
 
-### Primary North Star Metric (NSM)
+### 1. Commercial North Star (Success Metric)
+**Earn $100/day (after-tax)** from app sales. Every marketing campaign, feature implementation, and API usage must be evaluated against this revenue target.
 
+### 2. Fiscal Mandate (Burn Limit)
+**Strict Budget Cap: $10/month**. Total project spend (Ads, APIs, Tools) MUST NOT exceed this amount. ROI must be maximized within this zero-burn framework.
+
+### 3. Primary Product North Star (NSM)
 **Weekly Qualified Training Users (WQTU)**: number of distinct users with **3 or more `timer_completed` events** in the trailing 7 days.
 
 This is the product-value metric for Random Tactical Timer (repeat stress/reaction training), not a vanity install metric.

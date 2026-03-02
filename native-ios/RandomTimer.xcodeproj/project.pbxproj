@@ -35,7 +35,9 @@
 		85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
 		96771424C44C551B73F7732B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15E4584476AB7D519E638B /* GlassCard.swift */; };
 		997459C4BEB58C7A5CB1C72F /* gong.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 18EB65CABE2573B583A2913B /* gong.mp3 */; };
-		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
+		                A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
+		                A1B2C3D400000005DEADBEEF /* AIVoiceCalloutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000006DEADBEEF /* AIVoiceCalloutService.swift */; };
+		
 		A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */; };
 		A1B2C3D400000004SHARE01 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004SHARE02 /* ShareSheet.swift */; };
 		A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */; };
@@ -119,7 +121,9 @@
 		91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "gentle-chime.mp3"; sourceTree = "<group>"; };
 		965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTimerScreen.swift; sourceTree = "<group>"; };
 		A1B2C3D400000002DEADBEEF /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		                A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		                A1B2C3D400000006DEADBEEF /* AIVoiceCalloutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVoiceCalloutService.swift; sourceTree = "<group>"; };
+		
 		A1B2C3D400000004SHARE02 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerViewTests.swift; sourceTree = "<group>"; };
 		A5A3DD46F85A68522E1B0902 /* ProManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProManager.swift; sourceTree = "<group>"; };
@@ -211,8 +215,10 @@
 		};
 		A7465B81D29C7680F842A4F4 /* Services */ = {
 			isa = PBXGroup;
-			children = (
-				A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
+			                        children = (
+			                                A1B2C3D400000006DEADBEEF /* AIVoiceCalloutService.swift */,
+			                                A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
+			
 				A1B2C3D400000002DEADBEEF /* Logger.swift */,
 				3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */,
 				8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */,

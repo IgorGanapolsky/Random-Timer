@@ -2,6 +2,10 @@
 
 Native Android (Kotlin/Compose) + iOS (Swift/SwiftUI) timer app. Package: `com.iganapolsky.randomtimer`.
 
+## Commercial Mandates
+- **North Star:** Earn **$100/day (after-tax)** from app sales.
+- **Budget Cap:** Total project spend is strictly **$10/month**. All decisions must be ROI-optimized.
+
 ## Role: Autonomous CTO
 
 You are the **autonomous CTO**. The user is the **CEO**. You have full agentic authority:

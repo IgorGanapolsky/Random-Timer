@@ -1,8 +1,170 @@
-# RLHF System Implementation - Random Timer
+# RLHF System - Random-Timer
 
-## What Was Built
+## Overview
 
-A hybrid RLHF (Reinforcement Learning from Human Feedback) system based on the digital-ecomm-shared-core implementation to ensure Claude learns from mistakes and never repeats them.
+A full RLHF (Reinforcement Learning from Human Feedback) pipeline ported from the Subway_RN_Demo project. It captures explicit and implicit feedback from the user (CEO), learns from it using Thompson Sampling + DPO, and continuously improves Claude's performance within this codebase.
+
+## Architecture
+
+```
+User Feedback (thumbs up/down, implicit signals)
+        |
+        v
+user-prompt-submit.sh  (hook: runs before every message)
+        |
+        +---> feedback-log.jsonl  (raw feedback log)
+        +---> LanceDB via semantic-memory-v2.py  (vector + BM25 search)
+        +---> train_from_feedback.py  (Thompson Sampling + DPO model)
+        +---> cortex_sync.py  (queues for ShieldCortex MCP memory)
+        |
+        v
+session-start.sh  (hook: runs at session start)
+        |
+        +---> Loads LanceDB context (background)
+        +---> Shows Thompson Sampling reliability table
+        +---> Syncs pending Cortex entries (BLOCKING)
+        +---> Shows RALPH mode status
+```
+
+## Components
+
+### Hooks
+
+| File | Purpose |
+|------|---------|
+| `.claude/hooks/user-prompt-submit.sh` | Detects thumbs up/down + implicit signals before each message |
+| `.claude/hooks/session-start.sh` | Loads RLHF context, Thompson Sampling reliability, Cortex sync |
+| `.claude/hooks/surface_feedback_patterns.sh` | Displays per-category reliability from feedback log |
+
+### Feedback Pipeline Scripts
+
+| File | Purpose |
+|------|---------|
+| `.claude/scripts/feedback/capture-feedback.js` | 974-line JS capture with LSTM sequences, diversity tracking, decision traces |
+| `.claude/scripts/feedback/validate-feedback.js` | 4-level validation: schema, semantics, anomaly, self-correction |
+| `.claude/scripts/feedback/feedback-to-rules.js` | Converts feedback patterns into actionable rules |
+| `.claude/scripts/feedback/train_from_feedback.py` | Thompson Sampling trainer with DPO batch optimization and meta-policy rules |
+| `.claude/scripts/feedback/semantic-memory-v2.py` | LanceDB hybrid search (vector + BM25/FTS), embedding cache, metrics |
+| `.claude/scripts/feedback/cortex_sync.py` | Queues feedback for ShieldCortex MCP memory persistence |
+
+## Feedback Types
+
+### Explicit
+
+- Thumbs up (`thumbs up`, `great`, `good job`, `well done`) -> `reward: +1`
+- Thumbs down (`thumbs down`, `wrong`, `incorrect`, `bad response`) -> `reward: -1`
+
+### Implicit (2026 Best Practice, arXiv:2509.03990)
+
+- Undo/revert signals ("undo", "revert", "that broke") -> `reward: -0.5`
+- Approval signals ("ship it", "lgtm", "looks good") -> `reward: +0.5`
+
+Implicit feedback accumulates at lower weight but still influences Thompson Sampling.
+
+## Thompson Sampling Model
+
+Beta-Bernoulli Thompson Sampling for per-category reliability estimation:
+
+- `alpha` = weighted positive feedback + 1 (uniform prior)
+- `beta` = weighted negative feedback + 1 (uniform prior)
+- `reliability` = alpha / (alpha + beta) = posterior mean
+
+### Time Decay
+
+Exponential decay with 7-day half-life:
+```
+weight = 2^(-age_days / 7)
+```
+
+### Categories
+
+- `code_edit`: File edits, implementations, refactors
+- `git`: Commits, pushes, branches, PRs
+- `testing`: Tests, coverage, assertions
+- `pr_review`: Review comments, resolution
+- `search`: File/code search operations
+- `architecture`: Design decisions, patterns
+- `security`: Secrets, vulnerabilities
+- `debugging`: Error investigation, fixes
+- `android`: Kotlin/Compose, Gradle, APK builds
+- `ios`: Swift/SwiftUI, Xcode, TestFlight
+
+## DPO Batch Optimization (Feb 2026)
+
+On top of Thompson Sampling, the system runs Direct Preference Optimization (DPO):
+
+- Pairs positive and negative feedback entries by category and timestamp proximity
+- Computes log-ratio adjustments (DPO's closed-form update)
+- Adjusts alpha/beta priors more aggressively than simple counting
+
+Reference: Rafailov et al. 2023 (arXiv:2305.18290)
+
+## Meta-Policy Rules (Feb 2026)
+
+When 3+ negative entries accumulate in a category, the system extracts reusable rules with recency-weighted confidence and trend analysis (improving/deteriorating/needs_attention/stable).
+
+## LanceDB Semantic Memory (v2)
+
+Hybrid search combining:
+1. LanceDB native FTS (Tantivy-based BM25) for exact-match patterns
+2. Vector similarity (sentence-transformers `all-MiniLM-L6-v2`) for semantic search
+3. LRU embedding cache with file persistence
+4. Similarity threshold filtering
+
+Fusion: `combined_score = (0.7 * vector_score) + (0.3 * bm25_score)`
+
+## Cortex Sync
+
+Feedback entries are queued to `pending_cortex_sync.jsonl` and synced to ShieldCortex (MCP memory) at session start. Session start is BLOCKING: Claude must sync all pending entries before responding.
+
+## Local Only
+
+ALL feedback data is local and excluded from git. NEVER commit:
+- `.claude/memory/feedback/` - all logs and model files
+- `.claude/memory/feedback/lancedb/` - vector database
+- `.claude/memory/feedback/training-data/` - LSTM/Transformer exports
+
+## Commands
+
+```bash
+# Capture feedback manually
+node .claude/scripts/feedback/capture-feedback.js --feedback=up --context="Fixed Android timer"
+
+# Train Thompson Sampling model
+python3 .claude/scripts/feedback/train_from_feedback.py --train
+
+# Show reliability table
+python3 .claude/scripts/feedback/train_from_feedback.py --reliability
+
+# Index memories into LanceDB
+python3 .claude/scripts/feedback/semantic-memory-v2.py --index
+
+# Query semantic memory
+python3 .claude/scripts/feedback/semantic-memory-v2.py --query "shallow answer"
+
+# Audit feedback quality
+node .claude/scripts/feedback/validate-feedback.js --audit
+
+# Generate rules from feedback
+node .claude/scripts/feedback/feedback-to-rules.js --rules
+
+# DPO batch optimization
+python3 .claude/scripts/feedback/train_from_feedback.py --dpo-train
+
+# Extract meta-policy rules
+python3 .claude/scripts/feedback/train_from_feedback.py --extract-rules
+
+# Show cortex pending entries
+python3 .claude/scripts/feedback/cortex_sync.py --list
+```
+
+---
+
+## Legacy Section (Original Random-Timer RLHF Notes)
+
+### What Was Built Initially
+
+A basic RLHF system before the full Subway pipeline was ported. Below are notes from the original simpler implementation.
 
 ## System Components
 

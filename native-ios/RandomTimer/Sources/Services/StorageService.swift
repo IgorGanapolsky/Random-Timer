@@ -1,84 +1,75 @@
 import Foundation
+import os
 
-/// Thread-safe wrapper for UserDefaults to satisfy Swift 6 Sendable requirements
-private struct SendableDefaults: @unchecked Sendable {
-    let value: UserDefaults
-}
-
-/// Service for persisting timer configuration and state
+/// Local persistence using UserDefaults
 actor StorageService: TimerStorage {
+    private let userDefaults: UserDefaults
+    private let configKey = "timer_config"
+    private let stateKey = "timer_active_state"
+    private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "storage")
 
-    private let defaults: SendableDefaults
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = SendableDefaults(value: defaults)
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
     }
 
-    // MARK: - Keys
-
-    private enum Keys {
-        static let config = "timer_config"
-        static let timerState = "active_timer_state"
+    func saveTimerConfig(_ config: TimerConfig) async {
+        do {
+            let data = try JSONEncoder().encode(config)
+            userDefaults.set(data, forKey: configKey)
+        } catch {
+            Self.log.error("Failed to save config: \(error)")
+        }
     }
 
-    // MARK: - Config
-
-    func saveConfig(_ config: TimerConfig) {
-        guard let data = try? encoder.encode(config) else { return }
-        defaults.value.set(data, forKey: Keys.config)
+    func getTimerConfig() async -> TimerConfig {
+        guard let data = userDefaults.data(forKey: configKey) else { return .default }
+        do {
+            return try JSONDecoder().decode(TimerConfig.self, from: data)
+        } catch {
+            Self.log.error("Failed to load config: \(error)")
+            return .default
+        }
     }
 
-    func loadConfig() -> TimerConfig? {
-        guard let data = defaults.value.data(forKey: Keys.config),
-              let config = try? decoder.decode(TimerConfig.self, from: data) else {
+    func saveTimerState(_ state: TimerState) async {
+        do {
+            let data = try JSONEncoder().encode(state)
+            userDefaults.set(data, forKey: stateKey)
+        } catch {
+            Self.log.error("Failed to save state: \(error)")
+        }
+    }
+
+    func loadTimerState() async -> TimerState? {
+        guard let data = userDefaults.data(forKey: stateKey) else { return nil }
+        do {
+            return try JSONDecoder().decode(TimerState.self, from: data)
+        } catch {
+            Self.log.error("Failed to load state: \(error)")
             return nil
         }
-        return config
     }
 
-    /// Synchronous config load for use in initializers (avoids async race condition)
-    nonisolated func loadConfigSync() -> TimerConfig? {
-        let defaults = self.defaults
-        guard let data = defaults.value.data(forKey: Keys.config),
-              let config = try? JSONDecoder().decode(TimerConfig.self, from: data) else {
-            return nil
-        }
-        return config
+    func clearTimerState() async {
+        userDefaults.removeObject(forKey: stateKey)
     }
 
-    // MARK: - Timer State
+    // --- Protocol conformance support ---
 
-    func saveTimerState(_ state: TimerState) {
-        guard let data = try? encoder.encode(state) else { return }
-        defaults.value.set(data, forKey: Keys.timerState)
+    func saveConfig(_ config: TimerConfig) async { await saveTimerConfig(config) }
+    func loadConfig() async -> TimerConfig? { await getTimerConfig() }
+    
+    @MainActor func loadConfigSync() -> TimerConfig? {
+        guard let data = UserDefaults.standard.data(forKey: configKey) else { return nil }
+        return try? JSONDecoder().decode(TimerConfig.self, from: data)
     }
 
-    func loadTimerState() -> TimerState? {
-        guard let data = defaults.value.data(forKey: Keys.timerState),
-              let state = try? decoder.decode(TimerState.self, from: data) else {
-            return nil
-        }
-        return state
+    @MainActor func loadTimerStateSync() -> TimerState? {
+        guard let data = UserDefaults.standard.data(forKey: stateKey) else { return nil }
+        return try? JSONDecoder().decode(TimerState.self, from: data)
     }
 
-    func clearTimerState() {
-        defaults.value.removeObject(forKey: Keys.timerState)
-    }
-
-    /// Synchronous timer state load for use in initializers
-    nonisolated func loadTimerStateSync() -> TimerState? {
-        let defaults = self.defaults
-        guard let data = defaults.value.data(forKey: Keys.timerState),
-              let state = try? JSONDecoder().decode(TimerState.self, from: data) else {
-            return nil
-        }
-        return state
-    }
-
-    /// Synchronous clear for use in initializers
-    nonisolated func clearTimerStateSync() {
-        defaults.value.removeObject(forKey: Keys.timerState)
+    @MainActor func clearTimerStateSync() {
+        UserDefaults.standard.removeObject(forKey: stateKey)
     }
 }
