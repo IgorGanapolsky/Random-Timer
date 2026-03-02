@@ -169,7 +169,7 @@ jobs:
 
   ios:
     name: iOS Build Check
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: native-ios
