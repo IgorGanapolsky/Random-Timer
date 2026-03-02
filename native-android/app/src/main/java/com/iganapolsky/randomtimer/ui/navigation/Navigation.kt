@@ -122,7 +122,7 @@ fun RandomTimerNavHost(
                 },
                 onSecretUnlock = {
                     viewModel.proManager.forcePro()
-                }
+                },
             )
         }
 

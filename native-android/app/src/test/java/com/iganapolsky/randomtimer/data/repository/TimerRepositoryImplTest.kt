@@ -18,6 +18,7 @@ import com.iganapolsky.randomtimer.billing.ProManager
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.test.TestScope
 
 class TimerRepositoryImplTest {
 
@@ -69,10 +70,10 @@ class TimerRepositoryImplTest {
         assertThat(restored).isEqualTo(state)
     }
 
-    private fun createRepository(scope: CoroutineScope): TimerRepositoryImpl {
+    private fun createRepository(testScope: TestScope): TimerRepositoryImpl {
         val dataStore =
             PreferenceDataStoreFactory.create(
-                scope = scope,
+                scope = testScope.backgroundScope,
                 produceFile = {
                     Files.createTempFile("timer-repo-test", ".preferences_pb").toFile()
                 },
