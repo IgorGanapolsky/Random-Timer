@@ -1,0 +1,107 @@
+name: Pause Paid Campaigns
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Reason for pausing paid campaigns
+        required: false
+        default: no_scale_lock_active
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  pause-paid:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests==2.32.5 PyJWT cryptography
+
+      - name: Pause Apple Search Ads campaign
+        env:
+          APPLE_ADS_CLIENT_ID: ${{ secrets.APPLE_ADS_CLIENT_ID }}
+          APPLE_ADS_TEAM_ID: ${{ secrets.APPLE_ADS_TEAM_ID }}
+          APPLE_ADS_KEY_ID: ${{ secrets.APPLE_ADS_KEY_ID }}
+          APPLE_ADS_ORG_ID: ${{ secrets.APPLE_ADS_ORG_ID }}
+          APPLE_ADS_PRIVATE_KEY: ${{ secrets.APPLE_ADS_PRIVATE_KEY }}
+        run: |
+          python scripts/apple_ads_pause.py \
+            --repo-root . \
+            --reason "${{ inputs.reason }}"
+
+      - name: Refresh North Star snapshot
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7 || true
+
+      - name: Commit campaign state updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add marketing/data/paid_campaigns.json marketing/data/north_star.json
+          if git diff --cached --quiet; then
+            echo "No campaign state updates to commit"
+            exit 0
+          fi
+          git commit -m "chore(ads): pause Apple Search Ads due to no-scale lock"
+          git push
+
+      - name: Comment status issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'marketing/data/north_star.json';
+            const issueNumber = 81;
+            let payload = {};
+            if (fs.existsSync(path)) {
+              payload = JSON.parse(fs.readFileSync(path, 'utf8'));
+            }
+            const ns = payload.north_star || {};
+            const paid = payload.paid || {};
+            const lock = paid.no_scale_lock || {};
+            const body = [
+              '## Paid Campaign Pause + North Star Snapshot',
+              '',
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `- WQTU (7d): ${ns.wqtu_7d ?? 'n/a'}`,
+              `- Checkpoint target (2026-03-31): ${(ns.targets || {}).checkpoint_2026_03_31 ?? 'n/a'}`,
+              `- Paid attributed users (30d): ${paid.paid_distinct_users_30d ?? 'n/a'}`,
+              `- Active campaign count: ${paid.active_campaign_count ?? 'n/a'}`,
+              `- No-scale lock active: ${lock.active ?? paid.guardrail_violated ?? 'n/a'}`,
+              '',
+              `Reason: ${'${{ inputs.reason }}'}`,
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body,
+            });
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paid-pause-artifacts
+          path: |
+            marketing/data/paid_campaigns.json
+            marketing/data/north_star.json
