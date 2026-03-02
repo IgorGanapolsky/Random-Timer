@@ -4,10 +4,10 @@
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
 
-- **Orchestration**: `claude-3-5-sonnet` (UltraBrain) for planning and coordination.
-- **Deep Specialist**: `claude-3-opus` or `gpt-4o` (Deep) for complex refactoring.
-- **Utility Runner**: `gemini-1.5-flash` or `claude-3-haiku` (Quick) for search, analysis, and scaffolding.
-- **UI/UX Specialist**: `gemini-1.5-pro` (Visual) for multimodal and layout tasks.
+- **Orchestration**: latest high-reasoning `Claude Sonnet` class model (UltraBrain) for planning and coordination.
+- **Deep Specialist**: latest `Claude Opus` class model or strongest available `GPT-4o/5` class model (Deep) for complex refactoring.
+- **Utility Runner**: latest fast, low-cost `Gemini Flash` or `Claude Haiku` class model (Quick) for search, analysis, and scaffolding.
+- **UI/UX Specialist**: strongest multimodal `Gemini Pro` class model (Visual) for layout and visual QA tasks.
 
 When delegating work via the `Task` tool, agents should specify the category (e.g., `subagent_type: "Quick"`) to ensure the correct model is selected from the fallback chain.
 
