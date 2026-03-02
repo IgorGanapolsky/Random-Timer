@@ -204,7 +204,8 @@ jobs:
           # the first iOS Simulator destination it accepts.
           SIM_ID=$(xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | \
             grep 'platform:iOS Simulator' | \
-            sed -n 's/.*id:\([[:xdigit:]-][[:xdigit:]-]*\).*/\1/p' | \
+            grep -v 'Any iOS Simulator Device' | \
+            sed -nE 's/.*id:([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}).*/\1/p' | \
             head -n 1)
           if [ -z "${SIM_ID}" ]; then
             echo "No valid iOS Simulator destination found for RandomTimer."
