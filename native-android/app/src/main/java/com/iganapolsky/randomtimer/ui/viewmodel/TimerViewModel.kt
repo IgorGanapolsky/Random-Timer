@@ -247,7 +247,9 @@ class TimerViewModel
                     AnalyticsEvents.TIMER_COMPLETED,
                     mapOf(
                         "target_duration" to state.targetDuration.inWholeSeconds,
-                        AnalyticsProperties.ENTITLEMENT_LEVEL to proManager.entitlementLevel.value.name.lowercase(),
+                        AnalyticsProperties.ENTITLEMENT_LEVEL to
+                            proManager.entitlementLevel.value.name
+                                .lowercase(),
                     ),
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
