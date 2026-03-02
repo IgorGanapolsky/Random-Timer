@@ -16,6 +16,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -40,6 +41,8 @@ class ProManager
     ) : PurchasesUpdatedListener {
         companion object {
             const val PRODUCT_ID = "pro_upgrade"
+
+            internal fun canUseDebugUnlock(isDebugBuild: Boolean = BuildConfig.DEBUG): Boolean = isDebugBuild
         }
 
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -327,6 +330,21 @@ class ProManager
         fun maxSecondsLimit(isPro: Boolean = _isPro.value): Int = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
 
         fun availableSounds(isPro: Boolean = _isPro.value): List<SoundType> = if (isPro) SoundType.entries.toList() else SoundType.FREE
+
+        fun unlockProForDebug(entryPoint: String): Boolean {
+            if (!canUseDebugUnlock()) {
+                return false
+            }
+            _isPro.value = true
+            trackPurchaseResult(
+                success = true,
+                source = MonetizationSources.PAYWALL,
+                entryPoint = entryPoint,
+                responseCode = BillingClient.BillingResponseCode.OK,
+                debugMessage = "debug_override",
+            )
+            return true
+        }
     }
 
 internal object MonetizationSources {
