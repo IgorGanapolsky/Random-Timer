@@ -287,9 +287,9 @@ class ProManager
                     ?.pricingPhases
                     ?.pricingPhaseList
                     ?.firstOrNull()
-                    ?.formattedPrice ?: "$19.99"
+                    ?.formattedPrice ?: "$4.99"
             } else {
-                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$4.99"
+                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
             }
         }
 
@@ -398,13 +398,20 @@ class ProManager
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         fun forcePro() {
-            _entitlementLevel.value = EntitlementLevel.ELITE
+            // Cycle: NONE → BASE → ELITE → NONE
+            val next = when (_entitlementLevel.value) {
+                EntitlementLevel.NONE -> EntitlementLevel.BASE
+                EntitlementLevel.BASE -> EntitlementLevel.ELITE
+                EntitlementLevel.ELITE -> EntitlementLevel.NONE
+            }
+            _entitlementLevel.value = next
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
-                .putBoolean("forced_pro", true)
+                .putBoolean("forced_pro", next != EntitlementLevel.NONE)
+                .putString("forced_level", next.name)
                 .apply()
-            analyticsService.track("dev_force_pro", emptyMap())
+            analyticsService.track("dev_force_pro", mapOf("level" to next.name))
         }
 
         // Feature gates

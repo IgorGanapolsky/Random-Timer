@@ -27,7 +27,7 @@ What's free:
 
 ---
 
-## Phase 2: PRO ($4.99 one-time unlock)
+## Phase 2: PRO ($7.99 one-time unlock)
 
 **Target**: Month 3-6. Ship when free version has traction.
 
@@ -44,7 +44,7 @@ What's free:
 | **Export Drill Log** | CSV/PDF of training sessions (time, duration, rounds) |
 
 ### Pricing
-- **$4.99** one-time (launch price)
+- **$7.99** one-time (launch price)
 - **$9.99** after 90 days or 1000 Pro upgrades
 - No subscription. No ads. Ever.
 
@@ -61,7 +61,7 @@ Expand from single app to training brand.
 
 | App | Description | Price |
 |---|---|---|
-| **Random Tactical Timer** | Core random interval timer | Free + $4.99 Pro |
+| **Random Tactical Timer** | Core random interval timer | Free + $7.99 Pro |
 | **Tactical Decision Trainer** | Random scenario prompts for force-on-force decision making | $6.99 |
 | **Stress Drill Audio** | Guided stress inoculation sessions with random triggers | $9.99 |
 | **Partner Reaction Mode** | Two phones sync — one triggers, one responds | Pro feature |
