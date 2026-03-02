@@ -39,6 +39,14 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
+            #if DEBUG
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 3.0) {
+                    proManager.unlockEliteForDebug()
+                    hasTrackedDismiss = true
+                    dismiss()
+                }
+            #endif
 
             Text("One-time purchase. No subscriptions.")
                 .font(.caption)
