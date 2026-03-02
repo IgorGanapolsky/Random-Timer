@@ -193,8 +193,7 @@ final class AnalyticsService {
 
     func fetchAppleSearchAdsAttribution() {
         guard initialized else { return }
-        let defaults = UserDefaults.standard
-        guard !defaults.bool(forKey: appleAdsAttributionFetchedKey) else { return }
+        guard !UserDefaults.standard.bool(forKey: appleAdsAttributionFetchedKey) else { return }
 
 #if canImport(AdServices)
         if #available(iOS 14.3, *) {
@@ -224,7 +223,8 @@ final class AnalyticsService {
                 guard campaignId != 0, campaignId != 1234567890 else {
                     self?.logger.info("Apple Ads attribution: organic install (no paid campaign)")
                     DispatchQueue.main.async {
-                        defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+                        guard let key = self?.appleAdsAttributionFetchedKey else { return }
+                        UserDefaults.standard.set(true, forKey: key)
                     }
                     return
                 }
@@ -239,12 +239,13 @@ final class AnalyticsService {
                 ]
 
                 DispatchQueue.main.async { [weak self] in
-                    defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+                    guard let self else { return }
+                    UserDefaults.standard.set(true, forKey: self.appleAdsAttributionFetchedKey)
 
                     // Persist UTM params for future events
-                    defaults.set("apple_search_ads", forKey: "utm_source")
-                    defaults.set("asa", forKey: "utm_medium")
-                    defaults.set(attribution["utm_campaign"], forKey: "utm_campaign")
+                    UserDefaults.standard.set("apple_search_ads", forKey: "utm_source")
+                    UserDefaults.standard.set("asa", forKey: "utm_medium")
+                    UserDefaults.standard.set(attribution["utm_campaign"], forKey: "utm_campaign")
 
 #if canImport(PostHog)
                     PostHogSDK.shared.identify(
@@ -253,7 +254,7 @@ final class AnalyticsService {
                     )
                     PostHogSDK.shared.capture(AnalyticsEvents.appleAdsAttribution, properties: attribution)
 #endif
-                    self?.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
+                    self.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
                 }
             }.resume()
         }
