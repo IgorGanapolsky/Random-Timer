@@ -20,6 +20,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import importlib
 import sys
@@ -45,6 +46,10 @@ FIRST_POST_SOURCE = "https://www.amazon.com/Hard-Target-Become-Person-Predators/
 
 DEFAULT_TAGS: Tuple[str, ...] = ("ai", "mobile", "devops", "github", "testing")
 DEFAULT_BLOG_BASE_URL = "https://igorganapolsky.github.io/Random-Timer"
+DEFAULT_SITE_DESCRIPTION = (
+    "Daily engineering posts about AI-assisted app development, automation, "
+    "testing, and release quality."
+)
 LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 AB_PILOT_WINDOW_DAYS = 14
 
@@ -479,11 +484,28 @@ def render_paperbanana_mermaid(spec: Dict[str, Any], output_path: Path) -> None:
     output_path.write_text(content, encoding="utf-8")
 
 
-def add_utm(url: str, source: str, campaign: str, medium: str = "organic") -> str:
-    sep = "&" if "?" in url else "?"
-    return (
-        f"{url}{sep}utm_source={source}&utm_medium={medium}&utm_campaign={campaign}"
-        "&utm_content=daily_blog"
+def with_query_params(url: str, params: Dict[str, str]) -> str:
+    parsed = urlparse(url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query.update(params)
+    return urlunparse(parsed._replace(query=urlencode(query)))
+
+
+def add_utm(
+    url: str,
+    source: str,
+    campaign: str,
+    medium: str = "organic",
+    content: str = "daily_blog",
+) -> str:
+    return with_query_params(
+        url,
+        {
+            "utm_source": source,
+            "utm_medium": medium,
+            "utm_campaign": campaign,
+            "utm_content": content,
+        },
     )
 
 
@@ -689,6 +711,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     clear_generated_files(posts_out, "*.html")
     clear_generated_files(diagrams_out, "*.svg")
     clear_generated_files(md_out, "*.md")
+    base_url = resolve_blog_base_url(output_root)
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
     plausible_domain = os.getenv("PLAUSIBLE_DOMAIN", "").strip()
@@ -720,6 +743,28 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         slug = md_path.stem
 
         body_html = markdown_to_html(body)
+        canonical_url = f"{base_url}/posts/{slug}.html"
+        og_image = f"{base_url}/diagrams/{slug}.svg"
+        structured_data = {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": title,
+            "description": description,
+            "datePublished": date,
+            "dateModified": date,
+            "mainEntityOfPage": canonical_url,
+            "image": [og_image],
+            "author": {
+                "@type": "Organization",
+                "name": "Random Tactical Timer",
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Random Tactical Timer",
+            },
+        }
+        structured_json = json.dumps(structured_data, separators=(",", ":"))
+
         post_html = textwrap.dedent(
             f"""
             <!doctype html>
@@ -729,7 +774,20 @@ def build_site(output_root: Path) -> Dict[str, Any]:
               <meta name="viewport" content="width=device-width, initial-scale=1" />
               <title>{html.escape(title)} | Random Tactical Timer Blog</title>
               <meta name="description" content="{html.escape(description)}" />
+              <meta name="robots" content="index,follow,max-image-preview:large" />
+              <link rel="canonical" href="{html.escape(canonical_url)}" />
+              <meta property="og:type" content="article" />
+              <meta property="og:site_name" content="Random Tactical Timer Engineering Blog" />
+              <meta property="og:title" content="{html.escape(title)}" />
+              <meta property="og:description" content="{html.escape(description)}" />
+              <meta property="og:url" content="{html.escape(canonical_url)}" />
+              <meta property="og:image" content="{html.escape(og_image)}" />
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:title" content="{html.escape(title)}" />
+              <meta name="twitter:description" content="{html.escape(description)}" />
+              <meta name="twitter:image" content="{html.escape(og_image)}" />
               <link rel="stylesheet" href="../styles.css" />
+              <script type="application/ld+json">{structured_json}</script>
               {analytics_block}
             </head>
             <body>
@@ -808,6 +866,18 @@ def build_site(output_root: Path) -> Dict[str, Any]:
             f"<p>{html.escape(post['description'])}</p></article>"
         )
 
+    index_og_image = f"{base_url}/diagrams/{posts_data[0]['slug']}.svg" if posts_data else ""
+    index_structured_json = json.dumps(
+        {
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "Random Tactical Timer Engineering Blog",
+            "description": DEFAULT_SITE_DESCRIPTION,
+            "url": f"{base_url}/index.html",
+        },
+        separators=(",", ":"),
+    )
+
     index_html = textwrap.dedent(
         f"""
         <!doctype html>
@@ -816,8 +886,21 @@ def build_site(output_root: Path) -> Dict[str, Any]:
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Random Tactical Timer Engineering Blog</title>
-          <meta name="description" content="Daily engineering posts about AI-assisted app development, automation, testing, and release quality." />
+          <meta name="description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
+          <meta name="robots" content="index,follow,max-image-preview:large" />
+          <link rel="canonical" href="{html.escape(base_url)}/index.html" />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Random Tactical Timer Engineering Blog" />
+          <meta property="og:title" content="Random Tactical Timer Engineering Blog" />
+          <meta property="og:description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
+          <meta property="og:url" content="{html.escape(base_url)}/index.html" />
+          <meta property="og:image" content="{html.escape(index_og_image)}" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="Random Tactical Timer Engineering Blog" />
+          <meta name="twitter:description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
+          <meta name="twitter:image" content="{html.escape(index_og_image)}" />
           <link rel="stylesheet" href="styles.css" />
+          <script type="application/ld+json">{index_structured_json}</script>
           {analytics_block}
         </head>
         <body>
@@ -833,13 +916,20 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     (site_root / "index.html").write_text(index_html + "\n", encoding="utf-8")
 
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
-    base_url = resolve_blog_base_url(output_root)
     sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
         sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
     sitemap.append("</urlset>")
     (site_root / "sitemap.xml").write_text("\n".join(sitemap) + "\n", encoding="utf-8")
+
+    robots = [
+        "User-agent: *",
+        "Allow: /",
+        "",
+        f"Sitemap: {base_url}/sitemap.xml",
+    ]
+    (site_root / "robots.txt").write_text("\n".join(robots) + "\n", encoding="utf-8")
 
     llms_lines = [
         "Random Tactical Timer Engineering Blog",
@@ -1121,6 +1211,21 @@ def _post_x(text: str, canonical_url: str) -> Dict[str, Any]:
     }
 
 
+def campaign_from_slug(slug: str) -> str:
+    prefix = slug[:10]
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", prefix):
+        return f"daily_blog_{prefix.replace('-', '')}"
+    return f"daily_blog_{utc_now().strftime('%Y%m%d')}"
+
+
+def compose_social_post_text(title: str) -> str:
+    return (
+        f"{title}\n\n"
+        "We shipped concrete improvements to mobile release quality, "
+        "App Store readiness checks, and feedback loops."
+    )
+
+
 def publish_post(
     post: PostAsset,
     output_root: Path,
@@ -1130,17 +1235,18 @@ def publish_post(
     markdown = post.markdown_path.read_text(encoding="utf-8")
     base_url = resolve_blog_base_url(output_root)
     canonical_url = f"{base_url}/posts/{post.slug}.html"
+    campaign = campaign_from_slug(post.slug)
+    linkedin_url = add_utm(canonical_url, "linkedin", campaign, medium="organic", content=post.slug)
+    x_url = add_utm(canonical_url, "x", campaign, medium="organic", content=post.slug)
     devto_markdown = prepare_devto_markdown(markdown, post.slug, base_url)
 
-    short_text = (
-        f"New build log: {post.title}. We share how AI + automation improved release quality and review outcomes."
-    )
+    short_text = compose_social_post_text(post.title)
 
     if dry_run:
         results = [
             {"channel": "devto", "status": "dry_run", "url": canonical_url, "provider": f"{devto_mode}_dry_run"},
-            {"channel": "linkedin", "status": "dry_run", "url": canonical_url},
-            {"channel": "x", "status": "dry_run", "url": canonical_url},
+            {"channel": "linkedin", "status": "dry_run", "url": linkedin_url},
+            {"channel": "x", "status": "dry_run", "url": x_url},
         ]
     else:
         if devto_mode == "candidate":
@@ -1149,8 +1255,8 @@ def publish_post(
             devto_result = _post_devto(devto_markdown, post.title, post.tags, canonical_url)
         results = [
             devto_result,
-            _post_linkedin(short_text, canonical_url),
-            _post_x(short_text, canonical_url),
+            _post_linkedin(short_text, linkedin_url),
+            _post_x(short_text, x_url),
         ]
 
     pub_log = output_root / "data" / "publications.jsonl"
