@@ -1,7 +1,5 @@
 package com.iganapolsky.randomtimer.ui.screens
 
-import kotlinx.coroutines.withTimeoutOrNull
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -55,9 +53,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -73,6 +71,7 @@ import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 
 private data class SetupSpacingValues(
@@ -729,9 +728,10 @@ private fun TimeRangeSliders(
                     text = "\u2212",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (enabled && minValue > 0) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier = Modifier
-                        .clickable(enabled = enabled && minValue > 0) { onMinChange(minValue - 1) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .clickable(enabled = enabled && minValue > 0) { onMinChange(minValue - 1) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
                 Slider(
                     value = minValue.toFloat(),
@@ -742,19 +742,28 @@ private fun TimeRangeSliders(
                     enabled = enabled,
                     valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
-                    colors = SliderDefaults.colors(
-                        thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                        activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                        inactiveTrackColor = TimerColors.SliderTrack,
-                    ),
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
                 )
                 Text(
                     text = "+",
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (enabled && minValue < maxSliderRangeInt - minGapSeconds) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier = Modifier
-                        .clickable(enabled = enabled && minValue < maxSliderRangeInt - minGapSeconds) { onMinChange(minValue + 1) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    color =
+                        if (enabled &&
+                            minValue < maxSliderRangeInt - minGapSeconds
+                        ) {
+                            TimerColors.AccentPrimary
+                        } else {
+                            TimerColors.TextMuted
+                        },
+                    modifier =
+                        Modifier
+                            .clickable(enabled = enabled && minValue < maxSliderRangeInt - minGapSeconds) { onMinChange(minValue + 1) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
         }
@@ -773,9 +782,10 @@ private fun TimeRangeSliders(
                     text = "\u2212",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (enabled && maxValue > minGapSeconds) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier = Modifier
-                        .clickable(enabled = enabled && maxValue > minGapSeconds) { onMaxChange(maxValue - 1) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .clickable(enabled = enabled && maxValue > minGapSeconds) { onMaxChange(maxValue - 1) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
                 Slider(
                     value = maxValue.toFloat(),
@@ -786,19 +796,21 @@ private fun TimeRangeSliders(
                     enabled = enabled,
                     valueRange = minGapSeconds.toFloat()..maxSliderRange,
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
-                    colors = SliderDefaults.colors(
-                        thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                        activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                        inactiveTrackColor = TimerColors.SliderTrack,
-                    ),
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                            inactiveTrackColor = TimerColors.SliderTrack,
+                        ),
                 )
                 Text(
                     text = "+",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (enabled && maxValue < maxSliderRangeInt) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier = Modifier
-                        .clickable(enabled = enabled && maxValue < maxSliderRangeInt) { onMaxChange(maxValue + 1) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .clickable(enabled = enabled && maxValue < maxSliderRangeInt) { onMaxChange(maxValue + 1) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
         }
@@ -938,28 +950,31 @@ private fun VolumeSlider(
                 text = "\u2212",
                 style = MaterialTheme.typography.titleMedium,
                 color = if (value > 0f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier = Modifier
-                    .clickable(enabled = value > 0f) { onValueChange((value - 0.01f).coerceAtLeast(0f)) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .clickable(enabled = value > 0f) { onValueChange((value - 0.01f).coerceAtLeast(0f)) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
             )
             Slider(
                 value = value,
                 onValueChange = onValueChange,
                 onValueChangeFinished = onValueChangeFinished,
                 modifier = Modifier.weight(1f),
-                colors = SliderDefaults.colors(
-                    thumbColor = TimerColors.AccentPrimary,
-                    activeTrackColor = TimerColors.AccentPrimary,
-                    inactiveTrackColor = TimerColors.SliderTrack,
-                ),
+                colors =
+                    SliderDefaults.colors(
+                        thumbColor = TimerColors.AccentPrimary,
+                        activeTrackColor = TimerColors.AccentPrimary,
+                        inactiveTrackColor = TimerColors.SliderTrack,
+                    ),
             )
             Text(
                 text = "+",
                 style = MaterialTheme.typography.titleMedium,
                 color = if (value < 1f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier = Modifier
-                    .clickable(enabled = value < 1f) { onValueChange((value + 0.01f).coerceAtMost(1f)) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .clickable(enabled = value < 1f) { onValueChange((value + 0.01f).coerceAtMost(1f)) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
     }
@@ -978,4 +993,3 @@ private fun TimerSetupScreenPreview() {
         )
     }
 }
-

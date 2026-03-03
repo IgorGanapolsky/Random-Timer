@@ -35,7 +35,6 @@ sealed class Screen(
     data object Setup : Screen("setup")
 
     data object ActiveTimer : Screen("active_timer")
-
 }
 
 @Composable
