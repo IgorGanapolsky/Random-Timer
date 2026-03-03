@@ -1,1 +1,1 @@
-reaction,timer,boxing,bjj,mma,hiit,interval,sparring,drills,coach,combat,training,focus,workout
+reaction,boxing,mma,bjj,muaythai,hiit,fighttimer,sparring,drills,kickboxing,reflex,interval
