@@ -242,18 +242,24 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
 
     written: list[str] = []
     backed_up: list[str] = []
+    source_images: Dict[str, Image.Image] = {}
 
     for filename, text in CREATIVE_COPY.items():
         target = screenshots_dir / filename
         if not target.is_file():
             raise FileNotFoundError(f"Missing target screenshot to overwrite: {target}")
 
+        source = _source_image(screenshots_dir, filename)
+        source_images[filename] = source.copy()
+        source.close()
+
+    for filename, text in CREATIVE_COPY.items():
+        target = screenshots_dir / filename
         backup_file = backup_dir / filename
         backup_file.write_bytes(target.read_bytes())
         backed_up.append(str(backup_file))
 
-        source = _source_image(screenshots_dir, filename)
-        out = _render_one(source, text)
+        out = _render_one(source_images[filename], text)
         out.save(target, format="PNG", optimize=True)
         written.append(str(target))
 
