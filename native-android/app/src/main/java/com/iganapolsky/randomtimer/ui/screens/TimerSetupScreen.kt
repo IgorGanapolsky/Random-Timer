@@ -1,5 +1,7 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import kotlinx.coroutines.withTimeoutOrNull
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -27,14 +29,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import com.iganapolsky.randomtimer.domain.model.PresetLibrary
+import com.iganapolsky.randomtimer.domain.model.TimerPreset
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -57,9 +59,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -68,16 +70,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.iganapolsky.randomtimer.domain.model.PresetLibrary
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
-import com.iganapolsky.randomtimer.domain.model.TimerPreset
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 
 private data class SetupSpacingValues(
@@ -772,11 +771,13 @@ private fun TimeRangeSliders(
                 textAlign = TextAlign.Center,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                StepAdjustButton(
+                Text(
                     text = "\u2212",
-                    enabled = enabled && minValue > 0,
-                    onClick = { onMinChange(minValue - 1) },
-                    contentDescription = "Decrease minimum",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled && minValue > 0) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                    modifier = Modifier
+                        .clickable(enabled = enabled && minValue > 0) { onMinChange(minValue - 1) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
                 Slider(
                     value = minValue.toFloat(),
@@ -787,18 +788,19 @@ private fun TimeRangeSliders(
                     enabled = enabled,
                     valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
-                    colors =
-                        SliderDefaults.colors(
-                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                            inactiveTrackColor = TimerColors.SliderTrack,
-                        ),
+                    colors = SliderDefaults.colors(
+                        thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                        activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                        inactiveTrackColor = TimerColors.SliderTrack,
+                    ),
                 )
-                StepAdjustButton(
+                Text(
                     text = "+",
-                    enabled = enabled && minValue < maxSliderRangeInt - minGapSeconds,
-                    onClick = { onMinChange(minValue + 1) },
-                    contentDescription = "Increase minimum",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled && minValue < maxSliderRangeInt - minGapSeconds) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                    modifier = Modifier
+                        .clickable(enabled = enabled && minValue < maxSliderRangeInt - minGapSeconds) { onMinChange(minValue + 1) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
         }
@@ -813,11 +815,13 @@ private fun TimeRangeSliders(
                 textAlign = TextAlign.Center,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                StepAdjustButton(
+                Text(
                     text = "\u2212",
-                    enabled = enabled && maxValue > minGapSeconds,
-                    onClick = { onMaxChange(maxValue - 1) },
-                    contentDescription = "Decrease maximum",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled && maxValue > minGapSeconds) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                    modifier = Modifier
+                        .clickable(enabled = enabled && maxValue > minGapSeconds) { onMaxChange(maxValue - 1) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
                 Slider(
                     value = maxValue.toFloat(),
@@ -828,59 +832,21 @@ private fun TimeRangeSliders(
                     enabled = enabled,
                     valueRange = minGapSeconds.toFloat()..maxSliderRange,
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
-                    colors =
-                        SliderDefaults.colors(
-                            thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                            activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
-                            inactiveTrackColor = TimerColors.SliderTrack,
-                        ),
+                    colors = SliderDefaults.colors(
+                        thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                        activeTrackColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.5f),
+                        inactiveTrackColor = TimerColors.SliderTrack,
+                    ),
                 )
-                StepAdjustButton(
+                Text(
                     text = "+",
-                    enabled = enabled && maxValue < maxSliderRangeInt,
-                    onClick = { onMaxChange(maxValue + 1) },
-                    contentDescription = "Increase maximum",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled && maxValue < maxSliderRangeInt) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                    modifier = Modifier
+                        .clickable(enabled = enabled && maxValue < maxSliderRangeInt) { onMaxChange(maxValue + 1) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun StepAdjustButton(
-    text: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        onClick = onClick,
-        enabled = enabled,
-        shape = CircleShape,
-        color = if (enabled) TimerColors.AccentPrimary.copy(alpha = 0.12f) else TimerColors.GlassBackground,
-        border =
-            BorderStroke(
-                1.dp,
-                if (enabled) TimerColors.AccentPrimary.copy(alpha = 0.6f) else TimerColors.GlassBorder,
-            ),
-        modifier =
-            modifier
-                .size(40.dp)
-                .semantics { this.contentDescription = contentDescription },
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                textAlign = TextAlign.Center,
-            )
         }
     }
 }
@@ -1018,31 +984,28 @@ private fun VolumeSlider(
                 text = "\u2212",
                 style = MaterialTheme.typography.titleMedium,
                 color = if (value > 0f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier =
-                    Modifier
-                        .clickable(enabled = value > 0f) { onValueChange((value - 0.01f).coerceAtLeast(0f)) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .clickable(enabled = value > 0f) { onValueChange((value - 0.01f).coerceAtLeast(0f)) }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
             )
             Slider(
                 value = value,
                 onValueChange = onValueChange,
                 onValueChangeFinished = onValueChangeFinished,
                 modifier = Modifier.weight(1f),
-                colors =
-                    SliderDefaults.colors(
-                        thumbColor = TimerColors.AccentPrimary,
-                        activeTrackColor = TimerColors.AccentPrimary,
-                        inactiveTrackColor = TimerColors.SliderTrack,
-                    ),
+                colors = SliderDefaults.colors(
+                    thumbColor = TimerColors.AccentPrimary,
+                    activeTrackColor = TimerColors.AccentPrimary,
+                    inactiveTrackColor = TimerColors.SliderTrack,
+                ),
             )
             Text(
                 text = "+",
                 style = MaterialTheme.typography.titleMedium,
                 color = if (value < 1f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier =
-                    Modifier
-                        .clickable(enabled = value < 1f) { onValueChange((value + 0.01f).coerceAtMost(1f)) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .clickable(enabled = value < 1f) { onValueChange((value + 0.01f).coerceAtMost(1f)) }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
     }
@@ -1116,14 +1079,7 @@ private fun PresetChip(
             Text(
                 text = preset.name,
                 style = MaterialTheme.typography.labelSmall,
-                color =
-                    if (isSelected) {
-                        TimerColors.AccentPrimary
-                    } else if (isLocked) {
-                        TimerColors.TextMuted
-                    } else {
-                        TimerColors.TextPrimary
-                    },
+                color = if (isSelected) TimerColors.AccentPrimary else if (isLocked) TimerColors.TextMuted else TimerColors.TextPrimary,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             )
             if (isLocked) {
