@@ -161,7 +161,7 @@ final class TimerManager: ObservableObject {
         timerState = nil
 
         await storageService.clearTimerState()
-        endLiveActivity()
+        await endLiveActivity()
         await notificationService.cancelPendingNotifications()
     }
 
@@ -320,7 +320,7 @@ final class TimerManager: ObservableObject {
                 notificationService.stopVibration()
                 await notificationService.cancelPendingNotifications()
                 notificationService.clearNotificationTapFlag()
-                    endLiveActivity()
+                    await endLiveActivity()
 
                 if state.config.repeatEnabled {
                     await restartTimer()
@@ -364,7 +364,7 @@ final class TimerManager: ObservableObject {
                 }
             }
             await storageService.saveTimerState(state)
-            endLiveActivity()
+            await endLiveActivity()
             startAlarmCountdown()
         } else {
             // Update remaining time and restart countdown
@@ -389,7 +389,7 @@ final class TimerManager: ObservableObject {
         notificationService.stopVibration()
         notificationService.clearNotificationTapFlag()
         stopCountdown()
-        endLiveActivity()
+        await endLiveActivity()
         await notificationService.cancelPendingNotifications()
 
         // Create new state with same duration
@@ -564,7 +564,7 @@ final class TimerManager: ObservableObject {
                 notificationService.startVibration()
             }
             // End Live Activity when alarm triggers - we don't need it anymore
-            endLiveActivity()
+            await endLiveActivity()
 
             // Start alarm duration countdown
             startAlarmCountdown()
@@ -577,7 +577,7 @@ final class TimerManager: ObservableObject {
             timerState = state
 
             await storageService.saveTimerState(state)
-            updateLiveActivity(state: state)
+            await updateLiveActivity(state: state)
         }
     }
 
@@ -634,12 +634,12 @@ final class TimerManager: ObservableObject {
         await liveActivityService.start(state: state)
     }
 
-    private func updateLiveActivity(state: TimerState) {
-        liveActivityService.update(state: state)
+    private func updateLiveActivity(state: TimerState) async {
+        await liveActivityService.update(state: state)
     }
 
-    private func endLiveActivity() {
-        liveActivityService.end()
+    private func endLiveActivity() async {
+        await liveActivityService.end()
     }
 
     private func endAllLiveActivities() async {

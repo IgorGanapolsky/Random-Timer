@@ -35,7 +35,7 @@ protocol TimerStorage: Sendable {
 @MainActor
 protocol TimerLiveActivityHandling {
     func start(state: TimerState) async
-    func update(state: TimerState)
-    func end()
+    func update(state: TimerState) async
+    func end() async
     func endAll() async
 }
