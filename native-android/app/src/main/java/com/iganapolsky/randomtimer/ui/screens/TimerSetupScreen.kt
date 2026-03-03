@@ -29,10 +29,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import com.iganapolsky.randomtimer.domain.model.PresetLibrary
-import com.iganapolsky.randomtimer.domain.model.TimerPreset
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -130,7 +126,6 @@ fun TimerSetupScreen(
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
-    onHistoryTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -200,28 +195,6 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                // Zone 1: Standard Ops
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "STANDARD OPS",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TimerColors.TextMuted,
-                        )
-                        Text(
-                            text = "History",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TimerColors.AccentPrimary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable(onClick = onHistoryTap),
-                        )
-                    }
-                }
-
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -244,25 +217,6 @@ fun TimerSetupScreen(
                             }
                         }
                     }
-                }
-
-                // Preset Library Row
-                item {
-                    PresetRow(
-                        config = config,
-                        isPro = isPro,
-                        onPresetSelect = { preset ->
-                            onConfigChange(
-                                config.copy(
-                                    minSeconds = preset.minSeconds,
-                                    maxSeconds = preset.maxSeconds,
-                                    soundType = preset.soundType,
-                                    alarmDuration = preset.alarmDuration,
-                                ),
-                            )
-                        },
-                        onUpgradeTap = onUpgradeTap,
-                    )
                 }
 
                 // 1. Timer Range Card
@@ -1025,66 +979,3 @@ private fun TimerSetupScreenPreview() {
     }
 }
 
-@Composable
-private fun PresetRow(
-    config: TimerConfig,
-    isPro: Boolean,
-    onPresetSelect: (TimerPreset) -> Unit,
-    onUpgradeTap: () -> Unit,
-) {
-    val haptic = LocalHapticFeedback.current
-    val selectedPreset = PresetLibrary.findMatchingPreset(config)
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp),
-    ) {
-        items(PresetLibrary.presets) { preset ->
-            PresetChip(
-                preset = preset,
-                isSelected = selectedPreset?.id == preset.id,
-                isLocked = preset.isPro && !isPro,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (preset.isPro && !isPro) {
-                        onUpgradeTap()
-                    } else {
-                        onPresetSelect(preset)
-                    }
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun PresetChip(
-    preset: TimerPreset,
-    isSelected: Boolean,
-    isLocked: Boolean,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) TimerColors.AccentPrimary.copy(alpha = 0.15f) else TimerColors.GlassBackground,
-        border = BorderStroke(1.dp, if (isSelected) TimerColors.AccentPrimary else TimerColors.GlassBorder),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(text = preset.emoji, style = MaterialTheme.typography.labelSmall)
-            Text(
-                text = preset.name,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) TimerColors.AccentPrimary else if (isLocked) TimerColors.TextMuted else TimerColors.TextPrimary,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            )
-            if (isLocked) {
-                Text(text = "\uD83D\uDD12", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 2.dp))
-            }
-        }
-    }
-}
