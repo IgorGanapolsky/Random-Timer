@@ -1,7 +1,5 @@
 package com.iganapolsky.randomtimer.ui.screens
 
-import kotlinx.coroutines.withTimeoutOrNull
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,7 +15,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -55,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -496,24 +492,33 @@ fun TimerSetupScreen(
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
                             modifier =
-                                Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
-                                            if (released == null) {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onSecretUnlock()
+                                Modifier.combinedClickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (isPro) {
+                                            if (isCompactHeight) {
+                                                showArsenalSheet = true
+                                            } else {
+                                                showArsenal = !showArsenal
                                             }
-                                        },
-                                    )
-                                },
+                                        } else {
+                                            onUpgradeTap()
+                                        }
+                                    },
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onSecretUnlock()
+                                    },
+                                ),
                         )
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Arsenal"
-                                !isPro -> if (showArsenal) "Hide Arsenal" else "View Arsenal"
-                                else -> "View Arsenal"
+                                isCompactHeight -> "Open Sound Arsenal"
+                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
+                                else -> "View Sound Arsenal"
                             }
                         Text(
                             text = actionLabel,
@@ -978,4 +983,3 @@ private fun TimerSetupScreenPreview() {
         )
     }
 }
-
