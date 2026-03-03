@@ -38,12 +38,10 @@ TEXT_WHITE = (255, 255, 255)
 TEXT_GRAY = (180, 180, 200)
 GLOW_COLOR = (100, 60, 200, 40)  # Purple glow around device
 
-# Device content crop regions — skip old marketing overlay headings.
-# The originals have a framed device area with a duplicate headline overlay
-# at the top (~400px for iPhone, ~350px for iPad).  We crop below that to
-# capture only the actual app UI.
-IPHONE_DEVICE_CROP = (200, 1060, 1089, 2615)  # skip overlay: +418px from 642
-IPAD_DEVICE_CROP = (338, 980, 1709, 2519)     # skip overlay: +345px from 635
+# Device content crop regions - adjusted for raw 1320x2868 captures from simulator/device.
+# We crop to skip the status bar (top ~120px) and home indicator (bottom ~100px).
+IPHONE_DEVICE_CROP = (0, 120, 1320, 2750)  # Full width, skip status/home
+IPAD_DEVICE_CROP = (0, 0, 2048, 2732)       # iPad is usually captured full-screen
 
 # Output dimensions (App Store requirements)
 IPHONE_SIZE = (1290, 2796)
@@ -53,7 +51,7 @@ IPAD_SIZE = (2048, 2732)
 SCREENSHOTS = [
     ("1_setup.png", "YOUR DRILL, YOUR RULES", "Customize timing from 30s to 10 min", False),
     ("2_active.png", "UNPREDICTABLE BY DESIGN", "You never know when it fires", False),
-    ("3_alarm.png", "TRAIN REAL REACTIONS", "No countdown. Just pure response.", False),
+    ("3_alarm.png", "REACT ON THE BEEP", "Built for pad work, sparring & HIIT", False),
     ("4_running.png", "NON-STOP CONDITIONING", "Auto-loop for continuous rounds", False),
     ("5_ipad_setup.png", "COACH VIEW", "Big screen for classes & partners", True),
     ("6_ipad_running.png", "VISIBLE ACROSS THE GYM", "Full-screen timer for group drills", True),
@@ -62,25 +60,18 @@ SCREENSHOTS = [
 
 
 def create_gradient(size: tuple[int, int], top_color: tuple, bottom_color: tuple) -> Image.Image:
-    """Create a vertical gradient background using numpy for speed."""
+    """Create a vertical gradient background."""
     w, h = size
-    try:
-        import numpy as np
-        gradient = np.zeros((h, w, 3), dtype=np.uint8)
-        for c in range(3):
-            gradient[:, :, c] = np.linspace(top_color[c], bottom_color[c], h, dtype=np.uint8)[:, None]
-        return Image.fromarray(gradient)
-    except ImportError:
-        img = Image.new("RGB", size)
-        pixels = img.load()
-        for y in range(h):
-            ratio = y / h
-            r = int(top_color[0] + (bottom_color[0] - top_color[0]) * ratio)
-            g = int(top_color[1] + (bottom_color[1] - top_color[1]) * ratio)
-            b = int(top_color[2] + (bottom_color[2] - top_color[2]) * ratio)
-            for x in range(w):
-                pixels[x, y] = (r, g, b)
-        return img
+    img = Image.new("RGB", size)
+    pixels = img.load()
+    for y in range(h):
+        ratio = y / h
+        r = int(top_color[0] + (bottom_color[0] - top_color[0]) * ratio)
+        g = int(top_color[1] + (bottom_color[1] - top_color[1]) * ratio)
+        b = int(top_color[2] + (bottom_color[2] - top_color[2]) * ratio)
+        for x in range(w):
+            pixels[x, y] = (r, g, b)
+    return img
 
 
 def add_rounded_corners(img: Image.Image, radius: int) -> Image.Image:
@@ -123,26 +114,34 @@ def generate_screenshot(
     crop_box = IPAD_DEVICE_CROP if is_ipad else IPHONE_DEVICE_CROP
     tw, th = target_size
 
-    # Load and crop device content from existing framed screenshot
+    # Load and crop device content from raw screenshot
     source = Image.open(source_path)
-    device_content = source.crop(crop_box)
+    # Ensure crop box is within source bounds
+    sw, sh = source.size
+    actual_crop = (
+        max(0, crop_box[0]),
+        max(0, crop_box[1]),
+        min(sw, crop_box[2]),
+        min(sh, crop_box[3])
+    )
+    device_content = source.crop(actual_crop)
 
     # Create dark gradient canvas
     canvas = create_gradient(target_size, BG_TOP, BG_BOTTOM).convert("RGBA")
 
     # Layout calculations
-    headline_area_height = int(th * 0.15)  # Top 15% for text
+    headline_area_height = int(th * 0.16)  # Top 16% for text
     device_area_top = headline_area_height
-    device_area_height = th - device_area_top - int(th * 0.02)  # 2% bottom padding
-    margin_x = int(tw * 0.06)  # 6% horizontal margin
+    device_area_height = th - device_area_top - int(th * 0.04)  # 4% bottom padding
+    margin_x = int(tw * 0.08)  # 8% horizontal margin
     device_area_width = tw - (margin_x * 2)
 
-    # Scale device content to fill the device area
+    # Scale device content to fit the device area while preserving aspect ratio
     dw, dh = device_content.size
     scale = min(device_area_width / dw, device_area_height / dh)
     new_dw = int(dw * scale)
     new_dh = int(dh * scale)
-    device_content = device_content.resize((new_dw, new_dh), Image.LANCZOS)
+    device_content = device_content.resize((new_dw, new_dh), Image.Resampling.LANCZOS)
 
     # Add rounded corners to device content
     corner_radius = int(new_dw * 0.04)  # 4% of width
@@ -190,7 +189,7 @@ def generate_screenshot(
     h_bbox = text_draw.textbbox((0, 0), headline, font=headline_font)
     h_w = h_bbox[2] - h_bbox[0]
     h_h = h_bbox[3] - h_bbox[1]
-    headline_y = int(th * 0.03)  # 3% from top
+    headline_y = int(th * 0.04)  # 4% from top
     text_draw.text(
         ((tw - h_w) // 2, headline_y),
         headline,
@@ -201,7 +200,7 @@ def generate_screenshot(
     # Subtitle - centered, light gray
     s_bbox = text_draw.textbbox((0, 0), subtitle, font=subtitle_font)
     s_w = s_bbox[2] - s_bbox[0]
-    subtitle_y = headline_y + h_h + int(th * 0.012)
+    subtitle_y = headline_y + h_h + int(th * 0.015)
     text_draw.text(
         ((tw - s_w) // 2, subtitle_y),
         subtitle,
@@ -216,38 +215,34 @@ def generate_screenshot(
 
 
 def main() -> int:
-    print("Generating marketing screenshots...")
-    print(f"Source dir: {SCREENSHOT_DIR}")
+    print("Generating marketing screenshots from raw originals...")
+    print(f"Source dir: {SCREENSHOT_DIR}/originals")
 
-    # Back up originals
-    backup_dir = SCREENSHOT_DIR / "originals"
-    backup_dir.mkdir(exist_ok=True)
+    # Use the originals directory we just populated
+    raw_dir = SCREENSHOT_DIR / "originals"
+    if not raw_dir.exists():
+        print(f"  ERROR: {raw_dir} not found. Please restore raw screenshots first.")
+        return 1
 
     for filename, headline, subtitle, is_ipad in SCREENSHOTS:
-        source_path = SCREENSHOT_DIR / filename
+        source_path = raw_dir / filename
         if not source_path.exists():
-            print(f"  SKIP: {filename} not found")
+            print(f"  SKIP: {filename} not found in originals")
             continue
 
-        # Back up original
-        backup_path = backup_dir / filename
-        if not backup_path.exists():
-            import shutil
-            shutil.copy2(source_path, backup_path)
-            print(f"  Backed up: {filename}")
-
-        # Generate new marketing screenshot (read from backup, write to original location)
+        output_path = SCREENSHOT_DIR / filename
+        
+        # Generate new marketing screenshot
         generate_screenshot(
-            source_path=backup_path,
-            output_path=source_path,
+            source_path=source_path,
+            output_path=output_path,
             headline=headline,
             subtitle=subtitle,
             is_ipad=is_ipad,
         )
 
-    print("\nDone! Screenshots generated in:")
+    print("\nDone! Screenshots regenerated in:")
     print(f"  {SCREENSHOT_DIR}")
-    print(f"  Originals backed up in: {backup_dir}")
     return 0
 
 

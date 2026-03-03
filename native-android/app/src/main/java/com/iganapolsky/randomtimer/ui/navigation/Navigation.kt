@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
+import com.iganapolsky.randomtimer.ui.screens.HistoryScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
@@ -35,6 +36,8 @@ sealed class Screen(
     data object Setup : Screen("setup")
 
     data object ActiveTimer : Screen("active_timer")
+
+    data object History : Screen("history")
 }
 
 @Composable
@@ -122,6 +125,33 @@ fun RandomTimerNavHost(
                 },
                 onSecretUnlock = {
                     viewModel.proManager.forcePro()
+                },
+                onHistoryTap = {
+                    navController.navigate(Screen.History.route)
+                },
+            )
+        }
+
+        composable(
+            Screen.History.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)) { it / 4 } },
+            exitTransition = { fadeOut(animationSpec = tween(300)) },
+            popExitTransition = { fadeOut(animationSpec = tween(300)) + slideOutVertically(animationSpec = tween(300)) { it / 4 } },
+        ) {
+            HistoryScreen(
+                sessions = viewModel.trainingStatsService.getWorkoutSessions(),
+                totalSessions = viewModel.totalSessions,
+                currentStreak = viewModel.currentStreak,
+                totalTrainingTimeSeconds = viewModel.trainingStatsService.getTotalTrainingTimeSeconds(),
+                isPro = isPro,
+                onBack = { navController.popBackStack() },
+                onUpgradeTap = {
+                    scope.launch {
+                        basePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
+                        elitePrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
+                        paywallEntryPoint = "history_upgrade"
+                        showPaywall = true
+                    }
                 },
             )
         }

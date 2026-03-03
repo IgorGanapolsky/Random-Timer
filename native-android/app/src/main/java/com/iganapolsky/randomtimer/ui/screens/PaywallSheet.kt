@@ -69,6 +69,8 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
+            ProFeatureRow(text = "Timer presets library")
+            ProFeatureRow(text = "Full workout history")
             ProFeatureRow(text = "All future updates included")
 
             Spacer(modifier = Modifier.height(24.dp))

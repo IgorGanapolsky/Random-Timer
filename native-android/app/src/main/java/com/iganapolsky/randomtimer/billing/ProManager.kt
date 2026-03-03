@@ -399,11 +399,12 @@ class ProManager
 
         fun forcePro() {
             // Cycle: NONE → BASE → ELITE → NONE
-            val next = when (_entitlementLevel.value) {
-                EntitlementLevel.NONE -> EntitlementLevel.BASE
-                EntitlementLevel.BASE -> EntitlementLevel.ELITE
-                EntitlementLevel.ELITE -> EntitlementLevel.NONE
-            }
+            val next =
+                when (_entitlementLevel.value) {
+                    EntitlementLevel.NONE -> EntitlementLevel.BASE
+                    EntitlementLevel.BASE -> EntitlementLevel.ELITE
+                    EntitlementLevel.ELITE -> EntitlementLevel.NONE
+                }
             _entitlementLevel.value = next
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
