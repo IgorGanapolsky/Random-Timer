@@ -135,6 +135,33 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertIn('property="og:type" content="website"', index_html)
             self.assertIn("Sitemap: https://example.com/blog/sitemap.xml", robots)
 
+    def test_build_site_prefers_png_social_image_for_cards_when_available(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = repo / "marketing"
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (repo / "screenshots").mkdir(parents=True, exist_ok=True)
+            (root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+            (repo / "screenshots" / "ios-active.png").write_bytes(b"png")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog"}, clear=False):
+                pipeline.build_site(root)
+
+            post_html = (root / "site" / "posts" / "2026-02-19-sample.html").read_text(encoding="utf-8")
+            self.assertIn("https://example.com/blog/assets/social-preview.png", post_html)
+            self.assertTrue((root / "site" / "assets" / "social-preview.png").is_file())
+
     def test_publish_post_uses_channel_specific_utm_links(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

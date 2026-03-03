@@ -94,6 +94,38 @@ def clear_generated_files(path: Path, glob_pattern: str) -> None:
             entry.unlink()
 
 
+def resolve_social_image_url(output_root: Path, site_root: Path, base_url: str) -> str:
+    configured_url = os.getenv("SOCIAL_OG_IMAGE_URL", "").strip()
+    if configured_url:
+        return configured_url
+
+    configured_path = os.getenv("SOCIAL_OG_IMAGE_PATH", "").strip()
+    candidates: List[Path] = []
+    if configured_path:
+        candidates.append(Path(configured_path).expanduser())
+    candidates.extend(
+        [
+            output_root.parent / "screenshots" / "ios-active.png",
+            output_root.parent / "screenshots" / "ios-running.png",
+            output_root.parent / "screenshots" / "ios-setup.png",
+        ]
+    )
+
+    for source in candidates:
+        if not source.is_file():
+            continue
+        suffix = source.suffix.lower()
+        if suffix not in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+            continue
+        assets_out = site_root / "assets"
+        ensure_dir(assets_out)
+        dest = assets_out / f"social-preview{suffix}"
+        dest.write_bytes(source.read_bytes())
+        return f"{base_url}/assets/{dest.name}"
+
+    return ""
+
+
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
     ensure_dir(path.parent)
     with path.open("a", encoding="utf-8") as handle:
@@ -712,6 +744,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     clear_generated_files(diagrams_out, "*.svg")
     clear_generated_files(md_out, "*.md")
     base_url = resolve_blog_base_url(output_root)
+    shared_social_image = resolve_social_image_url(output_root, site_root, base_url)
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
     plausible_domain = os.getenv("PLAUSIBLE_DOMAIN", "").strip()
@@ -744,7 +777,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
 
         body_html = markdown_to_html(body)
         canonical_url = f"{base_url}/posts/{slug}.html"
-        og_image = f"{base_url}/diagrams/{slug}.svg"
+        og_image = shared_social_image or f"{base_url}/diagrams/{slug}.svg"
         structured_data = {
             "@context": "https://schema.org",
             "@type": "BlogPosting",
@@ -866,7 +899,9 @@ def build_site(output_root: Path) -> Dict[str, Any]:
             f"<p>{html.escape(post['description'])}</p></article>"
         )
 
-    index_og_image = f"{base_url}/diagrams/{posts_data[0]['slug']}.svg" if posts_data else ""
+    index_og_image = shared_social_image or (
+        f"{base_url}/diagrams/{posts_data[0]['slug']}.svg" if posts_data else ""
+    )
     index_structured_json = json.dumps(
         {
             "@context": "https://schema.org",
