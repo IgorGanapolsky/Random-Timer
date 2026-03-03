@@ -37,6 +37,17 @@ Only one `pr-state:*` label should exist on a PR at any time.
 
 This avoids non-deterministic behavior from optional/non-required checks.
 
+## Resilience Guarantees
+
+`pr-state-machine.yml` includes safeguards for merge-queue and out-of-order event delivery:
+
+- Workflow concurrency is keyed by PR number (or `check_suite.head_sha` fallback), with `cancel-in-progress: true`.
+  This prevents stale runs from overwriting newer status decisions.
+- `check_suite` reconciliation mutates state only for terminal suite status (`completed`).
+- If `check_suite.pull_requests` is empty, the workflow resolves open PRs by `head_sha`
+  (`repos.listPullRequestsAssociatedWithCommit`) before exiting.
+- `pr/state-machine` is explicitly excluded from required-check evaluation to avoid self-referential deadlocks.
+
 ## Incident Automation
 
 When state is `pr-state:blocked`, automation opens or updates one incident issue per PR:
