@@ -35,7 +35,8 @@ class AnalyticsService
                     apiKey = apiKey,
                     host = "https://us.i.posthog.com",
                 ).apply {
-                    captureApplicationLifecycleEvents = true
+                    // Emit lifecycle events manually so every event includes our live/dev context tags.
+                    captureApplicationLifecycleEvents = false
                     captureDeepLinks = true
                     captureScreenViews = false // We track manually for better control
                 }
@@ -55,6 +56,7 @@ class AnalyticsService
                 userId = getOrCreateDistinctId(application),
                 properties = analyticsContextProperties,
             )
+            trackApplicationLifecycleEvents()
 
             trackFirstOpenIfNeeded()
         }
@@ -128,6 +130,15 @@ class AnalyticsService
         }
 
         // --- Onboarding Funnel ---
+
+        private fun trackApplicationLifecycleEvents() {
+            track(AnalyticsEvents.APPLICATION_OPENED)
+            val hasTrackedInstall = prefs?.getBoolean(KEY_HAS_TRACKED_APPLICATION_INSTALLED, false) ?: false
+            if (!hasTrackedInstall) {
+                track(AnalyticsEvents.APPLICATION_INSTALLED)
+                prefs?.edit()?.putBoolean(KEY_HAS_TRACKED_APPLICATION_INSTALLED, true)?.apply()
+            }
+        }
 
         private fun trackFirstOpenIfNeeded() {
             val hasOpened = prefs?.getBoolean(KEY_HAS_OPENED, false) ?: false
@@ -217,6 +228,7 @@ class AnalyticsService
             private const val KEY_HAS_OPENED = "has_first_opened"
             private const val KEY_HAS_CONFIGURED = "has_first_configured"
             private const val KEY_HAS_COMPLETED = "has_first_completed"
+            private const val KEY_HAS_TRACKED_APPLICATION_INSTALLED = "has_tracked_application_installed"
             private val UTM_KEYS =
                 listOf(
                     "utm_source",
@@ -230,6 +242,8 @@ class AnalyticsService
 
 // Event names for consistency
 object AnalyticsEvents {
+    const val APPLICATION_INSTALLED = "Application Installed"
+    const val APPLICATION_OPENED = "Application Opened"
     const val TIMER_STARTED = "timer_started"
     const val TIMER_COMPLETED = "timer_completed"
     const val TIMER_PAUSED = "timer_paused"
@@ -245,6 +259,8 @@ object AnalyticsEvents {
     const val WRITE_REVIEW_TAPPED = "write_review_tapped"
     const val PAYWALL_VIEWED = "paywall_viewed"
     const val PAYWALL_DISMISSED = "paywall_dismissed"
+    const val PAYWALL_PURCHASE_ATTEMPT = "paywall_purchase_attempt"
+    const val PAYWALL_PURCHASE_SUCCESS = "paywall_purchase_success"
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
 
@@ -265,6 +281,8 @@ object AnalyticsProperties {
     const val RESPONSE_CODE = "response_code"
     const val DEBUG_MESSAGE = "debug_message"
     const val SOURCE = "source"
+    const val PRODUCT_ID = "product_id"
+    const val ENTITLEMENT_LEVEL = "entitlement_level"
     const val ENVIRONMENT = "environment"
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"

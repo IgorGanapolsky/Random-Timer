@@ -27,11 +27,11 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
-                // 1. Training Window Card
+                // 1. Timer Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
                         HStack {
-                            Label("Training Window", systemImage: "timer")
+                            Label("Timer Range", systemImage: "timer")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
@@ -60,10 +60,10 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Label("Alarm Sound Setup", systemImage: "bell.fill")
+                        Label("Alarm Sound", systemImage: "bell.fill")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
@@ -85,13 +85,13 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // AI Voice Callouts (Elite Feature)
+                        // Voice Callouts (Pro Feature)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Label("AI Voice Callouts", systemImage: "waveform")
+                                Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
                                 
                                 Text("Voice prompts during countdown")
                                     .font(.caption2)
@@ -100,7 +100,7 @@ struct TimerSetupScreen: View {
                             
                             Spacer()
                             
-                            if proManager.isElite {
+                            if proManager.isPro {
                                 Text("ENABLED")
                                     .font(.caption2)
                                     .fontWeight(.bold)
@@ -110,7 +110,7 @@ struct TimerSetupScreen: View {
                                     presentPaywall(entryPoint: .soundGate)
                                 } label: {
                                     HStack(spacing: 4) {
-                                        Text("ELITE")
+                                        Text("PRO")
                                         Image(systemName: "lock.fill")
                                     }
                                     .font(.caption2.weight(.bold))
@@ -123,7 +123,7 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .opacity(proManager.isElite ? 1.0 : 0.6)
+                        .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
 

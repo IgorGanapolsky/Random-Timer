@@ -6,6 +6,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -22,6 +23,7 @@ import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -55,6 +57,7 @@ class TimerViewModelAnalyticsTest {
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
+        every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
         coEvery { repository.clearActiveTimer() } just runs
@@ -105,7 +108,10 @@ class TimerViewModelAnalyticsTest {
         verify {
             analyticsService.track(
                 AnalyticsEvents.TIMER_COMPLETED,
-                match { it["target_duration"] == 30L },
+                match {
+                    it["target_duration"] == 30L &&
+                        it["entitlement_level"] == "elite"
+                },
             )
         }
     }

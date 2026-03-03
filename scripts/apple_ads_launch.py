@@ -255,8 +255,38 @@ def verify_campaign(headers: Dict[str, str], campaign_id: int) -> Dict[str, Any]
     }
 
 
+def read_no_scale_lock(repo_root: Path) -> tuple[bool, str]:
+    report_path = repo_root / "marketing" / "data" / "north_star.json"
+    if not report_path.exists():
+        return False, ""
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return True, f"north_star.json unreadable ({exc})"
+    paid = payload.get("paid", {}) if isinstance(payload, dict) else {}
+    if not isinstance(paid, dict):
+        return True, "paid section missing from north_star.json"
+    lock = paid.get("no_scale_lock")
+    if isinstance(lock, dict) and "active" in lock:
+        active = bool(lock.get("active"))
+        reasons = lock.get("reasons") if isinstance(lock.get("reasons"), list) else []
+        reason = "; ".join(str(item) for item in reasons if item)
+        if active:
+            return True, reason or "no-scale lock active"
+        return False, ""
+    if paid.get("guardrail_violated"):
+        return True, str(paid.get("guardrail_reason") or "paid attribution guardrail violated")
+    return False, ""
+
+
 def main() -> int:
     load_env()
+    repo_root = Path(__file__).resolve().parent.parent
+
+    locked, lock_reason = read_no_scale_lock(repo_root)
+    if locked:
+        print(f"ERROR: paid no-scale lock active; refusing launch. reason={lock_reason}")
+        return 2
 
     required = ["APPLE_ADS_CLIENT_ID", "APPLE_ADS_TEAM_ID", "APPLE_ADS_KEY_ID"]
     missing = [k for k in required if not os.environ.get(k)]
@@ -265,7 +295,7 @@ def main() -> int:
         return 1
 
     # Load campaign config
-    config_path = Path(__file__).resolve().parent.parent / "marketing" / "data" / "paid_campaigns.json"
+    config_path = repo_root / "marketing" / "data" / "paid_campaigns.json"
     config = json.loads(config_path.read_text())
     apple_campaign = None
     for c in config.get("campaigns", []):
