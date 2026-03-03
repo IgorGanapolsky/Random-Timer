@@ -169,7 +169,7 @@ jobs:
 
   ios:
     name: iOS Build Check
-    runs-on: macos-26
+    runs-on: macos-15
     defaults:
       run:
         working-directory: native-ios
@@ -196,16 +196,6 @@ jobs:
           echo "Using Xcode at: ${XCODE_PATH}"
           sudo xcode-select -s "${XCODE_PATH}/Contents/Developer"
           xcodebuild -version
-
-      - name: Install iOS Simulator runtime (macos-26)
-        run: |
-          # macos-26 runners may not have an iOS simulator runtime pre-installed.
-          # Download the latest available one if no iPhone simulators exist.
-          if ! xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
-            echo "No iOS simulator found — installing runtime..."
-            xcodebuild -downloadPlatform iOS || true
-            xcrun simctl list runtimes
-          fi
 
       - name: Resolve simulator destination
         id: sim
