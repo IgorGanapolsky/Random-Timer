@@ -142,7 +142,13 @@ def _source_image(screenshots_dir: Path, target_filename: str) -> Image.Image:
     source_rel = SOURCE_MAP.get(target_filename, target_filename)
     source_path = screenshots_dir / source_rel
     if not source_path.is_file():
-        raise FileNotFoundError(f"Missing source screenshot for {target_filename}: {source_path}")
+        fallback_path = screenshots_dir / target_filename
+        if source_rel != target_filename and fallback_path.is_file():
+            source_path = fallback_path
+        else:
+            raise FileNotFoundError(
+                f"Missing source screenshot for {target_filename}: {source_path}"
+            )
     return Image.open(source_path).convert("RGB")
 
 
