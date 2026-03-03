@@ -169,8 +169,8 @@ jobs:
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
 
-  android-firebase-internal:
-    name: Android Firebase App Distribution (Internal)
+  android-internal:
+    name: Android Google Play (Internal)
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true'
     runs-on: ubuntu-latest
@@ -184,7 +184,6 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
@@ -196,8 +195,8 @@ jobs:
             echo "❌ Missing required secret: ANDROID_KEYSTORE_BASE64"
             exit 1
           fi
-          if [ -z "${FIREBASE_TOKEN:-}" ] && [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
-            echo "❌ Need one of FIREBASE_TOKEN or GOOGLE_PLAY_JSON_KEY for Firebase authentication"
+          if [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            echo "❌ Missing required secret: GOOGLE_PLAY_JSON_KEY"
             exit 1
           fi
 
@@ -210,13 +209,16 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          node-version: "20"
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-android
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-android
 
       - name: Create google-services.json
         working-directory: native-android
@@ -224,42 +226,16 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           set -euo pipefail
-          if [ -z "${GOOGLE_SERVICES_JSON:-}" ]; then
-            echo "❌ Missing required secret: GOOGLE_SERVICES_JSON"
-            exit 1
-          fi
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
-
-      - name: Resolve Firebase app id
-        id: firebase
-        working-directory: native-android
-        env:
-          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
-        run: |
-          set -euo pipefail
-          APP_ID="$(jq -r '.client[0].client_info.mobilesdk_app_id // empty' app/google-services.json)"
-          if [ -z "$APP_ID" ] && [ -n "${FIREBASE_ANDROID_APP_ID:-}" ]; then
-            APP_ID="$FIREBASE_ANDROID_APP_ID"
-          fi
-          if [ -z "$APP_ID" ]; then
-            echo "❌ Could not resolve Firebase Android app id. Set FIREBASE_ANDROID_APP_ID secret or include mobilesdk_app_id in GOOGLE_SERVICES_JSON."
-            exit 1
-          fi
-          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
-          echo "Resolved Firebase app id: $APP_ID"
 
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           set -euo pipefail
-          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
-            echo "❌ Missing required secret: ANDROID_KEYSTORE_BASE64"
-            exit 1
-          fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
 
-      - name: Build release APK
+      - name: Build release Bundle (AAB)
         working-directory: native-android
         env:
           KEYSTORE_PATH: /tmp/release.keystore
@@ -269,56 +245,27 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           set -euo pipefail
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew bundleRelease --no-daemon
 
-      - name: Install Firebase CLI
-        run: npm install --global firebase-tools
-
-      - name: Prepare Google auth fallback for Firebase
+      - name: Distribute to Google Play Internal
+        working-directory: native-android
         env:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          if [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
-            CREDENTIALS_FILE="${RUNNER_TEMP}/gcp-sa.json"
-            echo "$GOOGLE_PLAY_JSON_KEY" > "$CREDENTIALS_FILE"
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDENTIALS_FILE" >> "$GITHUB_ENV"
-          fi
+          echo "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
+          export SUP_JSON_KEY_PATH="play-store-key.json"
+          fastlane internal
 
-      - name: Distribute to internal Firebase tester(s)
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          FIREBASE_INTERNAL_TESTERS: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
-          FIREBASE_APP_ID: ${{ steps.firebase.outputs.app_id }}
-          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: |
-          set -euo pipefail
-          TESTERS="${FIREBASE_INTERNAL_TESTERS:-iganapolsky@gmail.com}"
-          CMD=(
-            firebase appdistribution:distribute
-            native-android/app/build/outputs/apk/release/app-release.apk
-            --app "$FIREBASE_APP_ID"
-            --testers "$TESTERS"
-            --release-notes "Internal auto-distribution from develop (${GITHUB_SHA})"
-          )
-          if [ -n "${FIREBASE_TOKEN:-}" ]; then
-            "${CMD[@]}" --token "$FIREBASE_TOKEN"
-          elif [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] || [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
-            "${CMD[@]}"
-          else
-            echo "❌ Missing Firebase auth. Set FIREBASE_TOKEN or GOOGLE_PLAY_JSON_KEY."
-            exit 1
-          fi
-
-      - name: Upload Android APK artifact
+      - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: android-apk-internal
-          path: native-android/app/build/outputs/apk/release/app-release.apk
+          name: android-aab-internal
+          path: native-android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: warn
 
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/release.keystore
+          rm -f /tmp/release.keystore native-android/play-store-key.json
