@@ -185,7 +185,7 @@
         "clock widget"
       ],
       "target_cpa_usd": 3.0,
-      "paused_at": "2026-03-02T23:46:34Z"
+      "paused_at": "2026-03-03T00:08:07Z"
     },
     {
       "platform": "google_uac",
@@ -332,6 +332,13 @@
       "action": "apple_search_ads_paused",
       "campaign_id": 2143440089,
       "reason": "no_scale_lock_active",
+      "status": "PAUSED"
+    },
+    {
+      "timestamp": "2026-03-03T00:08:07Z",
+      "action": "apple_search_ads_paused",
+      "campaign_id": 2143440089,
+      "reason": "post_merge_validation",
       "status": "PAUSED"
     }
   ],
