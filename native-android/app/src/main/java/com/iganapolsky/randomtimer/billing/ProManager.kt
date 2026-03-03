@@ -445,6 +445,33 @@ internal object MonetizationSources {
 }
 
 internal object MonetizationAnalyticsPayload {
+    fun attemptProperties(
+        source: String,
+        entryPoint: String?,
+        productID: String,
+    ): Map<String, Any> =
+        mapOf(
+            AnalyticsProperties.SOURCE to source,
+            AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),
+            AnalyticsProperties.PRODUCT_ID to productID,
+        )
+
+    fun successProperties(
+        source: String,
+        entryPoint: String?,
+        productID: String?,
+        responseCode: Int,
+        debugMessage: String?,
+    ): Map<String, Any> =
+        buildMap {
+            put(AnalyticsProperties.SOURCE, source)
+            put(AnalyticsProperties.ENTRY_POINT, entryPoint ?: source)
+            put(AnalyticsProperties.SUCCESS, true)
+            put(AnalyticsProperties.RESPONSE_CODE, responseCode)
+            put(AnalyticsProperties.DEBUG_MESSAGE, debugMessage ?: "")
+            productID?.let { put(AnalyticsProperties.PRODUCT_ID, it) }
+        }
+
     fun resultProperties(
         success: Boolean,
         result: String,
