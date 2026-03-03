@@ -1,4 +1,4 @@
-import ActivityKit
+@preconcurrency import ActivityKit
 import os
 
 /// Live Activity wrapper to allow testing via protocol
@@ -34,7 +34,7 @@ final class LiveActivityService: TimerLiveActivityHandling {
         }
     }
 
-    func update(state: TimerState) {
+    func update(state: TimerState) async {
         // Use sanitized values to prevent timing leaks
         let contentState = TimerActivityAttributes.ContentState(
             status: state.status,
@@ -45,18 +45,14 @@ final class LiveActivityService: TimerLiveActivityHandling {
         let staleDate = state.endDate
 
         guard let currentActivity = activity else { return }
-        Task {
-            await currentActivity.update(
-                ActivityContent(state: contentState, staleDate: staleDate)
-            )
-        }
+        await currentActivity.update(
+            ActivityContent(state: contentState, staleDate: staleDate)
+        )
     }
 
-    func end() {
+    func end() async {
         guard let currentActivity = activity else { return }
-        Task {
-            await currentActivity.end(nil, dismissalPolicy: .immediate)
-        }
+        await currentActivity.end(nil, dismissalPolicy: .immediate)
         activity = nil
     }
 
