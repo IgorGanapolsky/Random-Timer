@@ -181,7 +181,8 @@ jobs:
           XCODE_PATH=""
           while IFS= read -r candidate; do
             if DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphonesimulator' \
-              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
+              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphoneos' \
+              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator'; then
               XCODE_PATH="${candidate}"
               break
             fi
@@ -199,7 +200,7 @@ jobs:
 
       - name: Install iOS Simulator runtime if missing
         run: |
-          if ! xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
+          if ! xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator'; then
             echo "No iOS simulator found — installing runtime..."
             xcodebuild -downloadPlatform iOS || true
             xcrun simctl list runtimes
