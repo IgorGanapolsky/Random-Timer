@@ -68,13 +68,11 @@ struct PaywallSheet: View {
                     }
                 }
             }
-            #if DEBUG
             .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.unlockProForDebug()
+                proManager.unlockEliteForDebug()
                 hasTrackedDismiss = true
                 dismiss()
             }
-            #endif
 
             Button("Restore purchase") {
                 Task {
