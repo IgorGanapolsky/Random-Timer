@@ -13,6 +13,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -117,7 +120,6 @@ fun TimerSetupScreen(
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
-    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -222,13 +224,13 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // 1. Training Window Card
+                // 1. Timer Range Card
                 item {
                     GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "\u23F1\uFE0F Training Window",
+                                    text = "\u23F1\uFE0F Timer Range",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
@@ -286,12 +288,12 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
                 item {
                     GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
                         Column {
                             Text(
-                                text = "\uD83D\uDD14 Alarm Sound Setup",
+                                text = "\uD83D\uDD14 Alarm Sound",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TimerColors.TextPrimary,
@@ -343,7 +345,7 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Voice Callouts (Elite Feature)
+                            // Voice Callouts (Pro Feature)
                             Row(
                                 modifier =
                                     Modifier
@@ -357,7 +359,7 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
                                         text = "Voice prompts during countdown",
@@ -365,7 +367,7 @@ fun TimerSetupScreen(
                                         color = TimerColors.TextMuted,
                                     )
                                 }
-                                if (isElite) {
+                                if (isPro) {
                                     Text(
                                         text = "ENABLED",
                                         style = MaterialTheme.typography.labelSmall,
@@ -383,7 +385,7 @@ fun TimerSetupScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             Text(
-                                                text = "ELITE ",
+                                                text = "PRO ",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TimerColors.AccentPrimary,
@@ -502,7 +504,18 @@ fun TimerSetupScreen(
                                 Modifier.combinedClickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null,
-                                    onClick = {},
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (isPro) {
+                                            if (isCompactHeight) {
+                                                showArsenalSheet = true
+                                            } else {
+                                                showArsenal = !showArsenal
+                                            }
+                                        } else {
+                                            onUpgradeTap()
+                                        }
+                                    },
                                     onLongClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onSecretUnlock()
@@ -512,9 +525,9 @@ fun TimerSetupScreen(
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Arsenal"
-                                !isPro -> if (showArsenal) "Hide Arsenal" else "View Arsenal"
-                                else -> "View Arsenal"
+                                isCompactHeight -> "Open Sound Arsenal"
+                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
+                                else -> "View Sound Arsenal"
                             }
                         Text(
                             text = actionLabel,

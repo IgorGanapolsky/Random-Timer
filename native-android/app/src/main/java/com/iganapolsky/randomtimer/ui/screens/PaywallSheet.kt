@@ -30,8 +30,7 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    basePrice: String,
-    elitePrice: String,
+    proPrice: String,
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -72,37 +71,7 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tactical Base
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-            ) {
-                Text(
-                    text = "Tactical Base",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TimerColors.AccentPrimary,
-                )
-                Text(
-                    text = "One-time purchase. Essential tactical features.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TimerColors.TextSecondary,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-                ProFeatureRow(text = "Extended range up to 60 minutes")
-                Spacer(modifier = Modifier.height(8.dp))
-                PrimaryButton(
-                    text = "Unlock Base \u2022 $basePrice",
-                    onClick = { onPurchase(ProManager.BASE_PRODUCT_ID) },
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Tactical Elite
+            // Tactical Pro
             Column(
                 modifier =
                     Modifier
@@ -111,7 +80,7 @@ fun PaywallSheet(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Tactical Elite",
+                        text = "Tactical Pro",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TimerColors.AccentPrimary,
@@ -126,17 +95,19 @@ fun PaywallSheet(
                     )
                 }
                 Text(
-                    text = "Yearly subscription. Includes all Base features.",
+                    text = "Yearly subscription. Includes all premium features.",
                     style = MaterialTheme.typography.bodySmall,
                     color = TimerColors.TextSecondary,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                ProFeatureRow(text = "Includes all Base features")
+                ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
+                ProFeatureRow(text = "Extended range up to 60 minutes")
+                ProFeatureRow(text = "Voice callouts during countdown")
                 ProFeatureRow(text = "Support independent development")
                 ProFeatureRow(text = "Cancel anytime in Google Play subscriptions")
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
-                    text = "Unlock Elite \u2022 $elitePrice",
+                    text = "Unlock Pro \u2022 $proPrice",
                     onClick = { onPurchase(ProManager.ELITE_PRODUCT_ID) },
                 )
             }
