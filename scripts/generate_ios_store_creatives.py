@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -147,19 +148,44 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
     screenshots_dir = repo_root / "native-ios" / "fastlane" / "screenshots" / locale
     written: list[str] = []
 
+    if not screenshots_dir.is_dir():
+        raise FileNotFoundError(f"Screenshots directory not found: {screenshots_dir}")
+
+    # Backup logic
+    backup_root = screenshots_dir / "_backup"
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup_dir = backup_root / timestamp
+    
     for filename, text in CREATIVE_COPY.items():
         source_path = screenshots_dir / SOURCE_MAP.get(filename, filename)
         if not source_path.is_file():
-            continue
+            raise FileNotFoundError(f"Source screenshot not found: {source_path}")
+
+        # If target file exists, move to backup
+        target = screenshots_dir / filename
+        if target.exists():
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(target, backup_dir / filename)
 
         source = Image.open(source_path).convert("RGB")
         out = _render_one(source, text)
         
-        target = screenshots_dir / filename
         out.save(target, format="PNG", optimize=True)
         written.append(str(target))
 
-    return {"status": "success", "files": written}
+    report = {
+        "status": "success",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "locale": locale,
+        "written_files": written,
+        "backup_dir": str(backup_dir) if written else None,
+        "report_path": str(screenshots_dir / "report.json")
+    }
+    
+    with open(report["report_path"], "w") as f:
+        json.dump(report, f, indent=2)
+
+    return report
 
 
 if __name__ == "__main__":
