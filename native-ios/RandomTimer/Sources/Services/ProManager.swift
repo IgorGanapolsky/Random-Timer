@@ -165,17 +165,15 @@ final class ProManager: ObservableObject {
         isPro ? SoundType.allCases : SoundType.freeSounds
     }
 
-#if DEBUG
     func unlockProForDebug() {
         entitlementLevel = .base
-        Self.log.notice("Developer override enabled: Pro unlocked in debug build")
+        Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
     }
     
     func unlockEliteForDebug() {
         entitlementLevel = .elite
-        Self.log.notice("Developer override enabled: Elite unlocked in debug build")
+        Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
     }
-#endif
 }
 
 enum StoreError: Error {

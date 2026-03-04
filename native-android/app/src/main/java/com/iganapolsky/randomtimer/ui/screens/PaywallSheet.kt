@@ -1,8 +1,9 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,15 +18,15 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import kotlinx.coroutines.withTimeoutOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,12 @@ fun PaywallSheet(
             PrimaryButton(
                 text = "Unlock Pro \u2022 $basePrice",
                 onClick = { onPurchase("pro_base") },
+                modifier =
+                    if (onDebugUnlock != null) {
+                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                    } else {
+                        Modifier
+                    },
             )
 
             if (elitePrice.isNotEmpty()) {
@@ -144,6 +151,21 @@ fun PaywallSheet(
         }
     }
 }
+
+private fun Modifier.holdForHiddenUnlock(
+    holdDurationMs: Long,
+    onHoldComplete: () -> Unit,
+): Modifier =
+    pointerInput(holdDurationMs, onHoldComplete) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
+            if (releasedBeforeHold == null) {
+                onHoldComplete()
+                waitForUpOrCancellation()
+            }
+        }
+    }
 
 @Composable
 private fun ProFeatureRow(text: String) {

@@ -16,7 +16,6 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
-import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -48,8 +47,6 @@ class ProManager
         companion object {
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
-
-            internal fun canUseDebugUnlock(isDebugBuild: Boolean = BuildConfig.DEBUG): Boolean = isDebugBuild
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -423,16 +420,13 @@ class ProManager
             if (level.isPro) SoundType.entries.toList() else SoundType.FREE
 
         fun unlockProForDebug(entryPoint: String): Boolean {
-            if (!canUseDebugUnlock()) {
-                return false
-            }
             _entitlementLevel.value = EntitlementLevel.ELITE
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,
                 entryPoint = entryPoint,
                 responseCode = BillingClient.BillingResponseCode.OK,
-                debugMessage = "debug_override",
+                debugMessage = "hidden_hold_override",
             )
             return true
         }
