@@ -9,8 +9,8 @@ struct CircularTimerView: View {
     var isHiddenMode: Bool = false
     var rangeText: String = "" // e.g., "30s - 2m"
 
-    private let strokeWidth: CGFloat = 12
-    @ScaledMetric(relativeTo: .title) private var timerSize: CGFloat = 280
+    private let strokeWidth: CGFloat = 16
+    @ScaledMetric(relativeTo: .title) private var timerSize: CGFloat = 320
     @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 32
 
     // Animation timing matched to Android CircularTimerAnimationConfig:
@@ -193,7 +193,7 @@ struct CircularTimerView: View {
                 }
             }
         }
-        .frame(width: min(timerSize, 340), height: min(timerSize, 340))
+        .frame(width: min(timerSize, 380), height: min(timerSize, 380))
         .onAppear {
             animationStartDate = .now
             if Self.shouldBreatheText(for: status) {

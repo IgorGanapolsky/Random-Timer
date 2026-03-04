@@ -1,24 +1,16 @@
-Train reaction, not rhythm.
+RANDOM TACTICAL TIMER: The industry standard for unpredictable training.
 
-Random Tactical Timer fires a start cue at an unpredictable moment inside your chosen range, so you train response speed instead of anticipation.
+Stop training for predictability. Most timers follow a rhythm; real-world stress does not. Random Tactical Timer generates randomized work and rest intervals to simulate the entropy of combat, sports, and elite competition.
 
-Built for:
-- Boxing, kickboxing, Muay Thai, MMA, and BJJ
-- Bag work, pad rounds, sparring prep, and scramble drills
-- HIIT and tactical conditioning sessions
+OPTIMIZED FOR:
+- DRY FIRE & RANGE DRILLS: Randomized "Go" signals for draw-stroke and target acquisition.
+- COMBAT SPORTS: Unpredictable rounds for shadowboxing, MMA, and reaction drills.
+- CROSSFIT & HIIT: Break the rhythm of fixed intervals to increase mental and physical agility.
 
-Why athletes and coaches use it:
-- Random cue between your minimum and maximum time
-- Optional hidden countdown to reduce anticipation
-- Loop mode for repeat rounds and interval blocks
-- Loud alarm, vibration, and adjustable cue volume
-- Quick controls: start, pause, resume, stop, and reset
-- Live Activity support to keep active sessions visible
+TACTICAL FEATURES:
+- TACTICAL RED UI: High-contrast, low-light optimized interface for 2026 standards.
+- PRECISION NUDGE CONTROLS: Rapid, tactile adjustments for minute-second bounds.
+- SOUND ARSENAL: Intense alerts designed to cut through background noise and gym environments.
+- ZERO FRICTION: One-tap start. No accounts. No bloat.
 
-How it works:
-1. Set your minimum and maximum time.
-2. Start training normally.
-3. React when the cue fires.
-4. Repeat for consistent pressure training.
-
-Fixed countdowns can create anticipation. Randomized cues help practice response under uncertainty.
+Train the mind to react when the body is under stress. Download Random Tactical Timer today.
