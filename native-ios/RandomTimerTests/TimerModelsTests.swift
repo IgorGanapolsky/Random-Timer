@@ -27,7 +27,7 @@ final class TimerConfigTests: XCTestCase {
 
         XCTAssertEqual(config.minDuration, 60.0)
         XCTAssertEqual(config.maxDuration, 300.0)
-    }
+        }
 
     func testConfigAcceptsSameMinAndMax() {
         let config = TimerConfig(
@@ -288,12 +288,12 @@ final class TimeRangeAdjusterTests: XCTestCase {
     func testMinChangeBeyondMaxMinusGapPushesMaxForward() {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: 0,
-            currentMaxSeconds: 60,
-            newMinSeconds: 60
+            currentMaxSeconds: 300,
+            newMinSeconds: 300
         )
 
-        XCTAssertEqual(adjusted.min, 60)
-        XCTAssertEqual(adjusted.max, 60 + TimeRangeAdjuster.defaultMinGapSeconds)
+        XCTAssertEqual(adjusted.min, 300)
+        XCTAssertEqual(adjusted.max, 300 + TimeRangeAdjuster.defaultMinGapSeconds)
         XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
     }
 
@@ -610,7 +610,7 @@ final class TimerManagerLoopTests: XCTestCase {
 
         let newConfig = RandomTimer.TimerConfig(
             minSeconds: 1,
-            maxSeconds: 60,
+            maxSeconds: 300,
             alarmDuration: 5,
             hiddenMode: false,
             repeatEnabled: true,
@@ -635,7 +635,7 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     func testLiveActivityUpdateSendsZeroRemainingSeconds() {
         // When building the content state for a running timer,
         // remainingSeconds must always be 0 to prevent timing leaks
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 120, alarmDuration: 10)
+        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
         let state = TimerState(
             config: config,
             targetDuration: 75, // random duration
@@ -651,7 +651,7 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     /// Alarm/complete states CAN show 0 since the timer is done
     @MainActor
     func testLiveActivityShowsZeroWhenComplete() {
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 120, alarmDuration: 10)
+        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
         let state = TimerState(
             config: config,
             targetDuration: 75,
