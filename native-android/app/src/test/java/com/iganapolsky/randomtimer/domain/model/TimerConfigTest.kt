@@ -11,7 +11,7 @@ class TimerConfigTest {
         val config = TimerConfig.DEFAULT
 
         assertThat(config.minSeconds).isEqualTo(0)
-        assertThat(config.maxSeconds).isEqualTo(60)
+        assertThat(config.maxSeconds).isEqualTo(300)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
     }
@@ -62,7 +62,7 @@ class TimerConfigTest {
     fun `config rejects negative duration`() {
         TimerConfig(
             minSeconds = -1,
-            maxSeconds = 60,
+            maxSeconds = 300,
             alarmDuration = 10,
             hiddenMode = false,
             repeatEnabled = false,
@@ -75,8 +75,8 @@ class TimerConfigTest {
     @Test(expected = IllegalArgumentException::class)
     fun `config rejects max less than min`() {
         TimerConfig(
-            minSeconds = 120,
-            maxSeconds = 60,
+            minSeconds = 360,
+            maxSeconds = 300,
             alarmDuration = 10,
             hiddenMode = false,
             repeatEnabled = false,

@@ -476,8 +476,8 @@ class TimerForegroundService : Service() {
         val newState =
             TimerState(
                 config = currentConfig,
-                targetDuration = kotlin.time.Duration.parse("${randomMs}ms"),
-                remainingDuration = kotlin.time.Duration.parse("${randomMs}ms"),
+                targetDuration = randomMs.milliseconds,
+                remainingDuration = randomMs.milliseconds,
                 status = TimerStatus.RUNNING,
             )
 
