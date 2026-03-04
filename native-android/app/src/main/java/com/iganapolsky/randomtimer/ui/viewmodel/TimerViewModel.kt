@@ -41,7 +41,7 @@ class TimerViewModel
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
-        private val trainingStatsService: TrainingStatsService,
+        val trainingStatsService: TrainingStatsService,
         val proManager: ProManager,
     ) : ViewModel() {
         val totalSessions: Int get() = trainingStatsService.totalSessions

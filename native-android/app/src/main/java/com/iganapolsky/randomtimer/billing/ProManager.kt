@@ -180,11 +180,6 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
-            trackPurchaseAttempt(
-                source = MonetizationSources.PAYWALL,
-                entryPoint = entryPoint,
-                productID = productID,
-            )
             if (!billingClient.isReady) {
                 connectAndRestore()
                 trackPurchaseResult(
@@ -292,9 +287,9 @@ class ProManager
                     ?.pricingPhases
                     ?.pricingPhaseList
                     ?.firstOrNull()
-                    ?.formattedPrice ?: "$29.99"
+                    ?.formattedPrice ?: "$4.99"
             } else {
-                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$4.99"
+                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
             }
         }
 
@@ -303,70 +298,23 @@ class ProManager
             purchases: MutableList<Purchase>?,
         ) {
             var hasPurchased = false
-            val source =
-                if (pendingPurchaseEntryPoint.isNullOrBlank()) {
-                    MonetizationSources.BILLING_CALLBACK
-                } else {
-                    MonetizationSources.PAYWALL
-                }
             if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
                     if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                         hasPurchased = true
                         updateEntitlementFromPurchase(purchase)
                         externalScope.launch { acknowledgePurchaseIfNeeded(purchase) }
-                        trackPurchaseSuccess(
-                            source = source,
-                            entryPoint = pendingPurchaseEntryPoint,
-                            productID = purchase.products.firstOrNull(),
-                            responseCode = result.responseCode,
-                            debugMessage = result.debugMessage,
-                        )
                     }
                 }
             }
             trackPurchaseResult(
                 success = hasPurchased,
-                source = source,
+                source = if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL,
                 entryPoint = pendingPurchaseEntryPoint,
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
             )
             pendingPurchaseEntryPoint = null
-        }
-
-        private fun trackPurchaseAttempt(
-            source: String,
-            entryPoint: String?,
-            productID: String,
-        ) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_PURCHASE_ATTEMPT,
-                MonetizationAnalyticsPayload.attemptProperties(
-                    source = source,
-                    entryPoint = entryPoint,
-                    productID = productID,
-                ),
-            )
-        }
-
-        private fun trackPurchaseSuccess(
-            source: String,
-            entryPoint: String?,
-            productID: String?,
-            responseCode: Int,
-            debugMessage: String?,
-        ) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
-                MonetizationAnalyticsPayload.successProperties(
-                    source = source,
-                    entryPoint = entryPoint,
-                    productID = productID,
-                    responseCode = responseCode,
-                    debugMessage = debugMessage,
-                ),
-            )
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
@@ -450,13 +398,21 @@ class ProManager
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         fun forcePro() {
-            _entitlementLevel.value = EntitlementLevel.ELITE
+            // Cycle: NONE → BASE → ELITE → NONE
+            val next =
+                when (_entitlementLevel.value) {
+                    EntitlementLevel.NONE -> EntitlementLevel.BASE
+                    EntitlementLevel.BASE -> EntitlementLevel.ELITE
+                    EntitlementLevel.ELITE -> EntitlementLevel.NONE
+                }
+            _entitlementLevel.value = next
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
-                .putBoolean("forced_pro", true)
+                .putBoolean("forced_pro", next != EntitlementLevel.NONE)
+                .putString("forced_level", next.name)
                 .apply()
-            analyticsService.track("dev_force_pro", emptyMap())
+            analyticsService.track("dev_force_pro", mapOf("level" to next.name))
         }
 
         // Feature gates
