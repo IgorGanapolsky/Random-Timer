@@ -100,7 +100,18 @@ final class TimerConfigTests: XCTestCase {
     func testConfigDecodingFallsBackToDefaultsWhenFieldsMissing() throws {
         let payload = "{}".data(using: .utf8)!
         let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
-        XCTAssertEqual(decoded, .default)
+        
+        let expected = TimerConfig(
+            minSeconds: 0,
+            maxSeconds: 300,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false
+        )
+        XCTAssertEqual(decoded, expected)
     }
 }
 
