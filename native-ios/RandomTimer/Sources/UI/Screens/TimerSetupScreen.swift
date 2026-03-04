@@ -200,6 +200,11 @@ struct TimerSetupScreen: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                        .onTapGesture {
+                            if !proManager.isPro {
+                                presentPaywall(entryPoint: .soundGate)
+                            }
+                        }
                     
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
@@ -213,7 +218,7 @@ struct TimerSetupScreen: View {
                                 showArsenal.toggle()
                             }
                         } label: {
-                            Text(showArsenal ? "Hide Arsenal" : "View Arsenal")
+                            Text(showArsenal ? "Hide Sound Arsenal" : "View Sound Arsenal")
                                 .font(.caption2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.accentPrimary)
