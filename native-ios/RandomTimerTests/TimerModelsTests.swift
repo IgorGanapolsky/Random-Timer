@@ -15,7 +15,7 @@ final class TimerConfigTests: XCTestCase {
 
     func testConfigAcceptsValidRange() {
         let config = TimerConfig(
-            minSeconds: 60,
+            minSeconds : 300,
             maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
@@ -25,14 +25,14 @@ final class TimerConfigTests: XCTestCase {
             vibrationEnabled: false
         )
 
-        XCTAssertEqual(config.minDuration, 60.0)
+        XCTAssertEqual(config.minDuration, 300.0)
         XCTAssertEqual(config.maxDuration, 300.0)
     }
 
     func testConfigAcceptsSameMinAndMax() {
         let config = TimerConfig(
-            minSeconds: 120,
-            maxSeconds: 120,
+            minSeconds : 300,
+            maxSeconds : 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -133,7 +133,7 @@ final class TimerStateTests: XCTestCase {
     func testProgressIsHalfAtHalfway() {
         let state = TimerState(
             config: defaultConfig,
-            targetDuration: 600,
+            targetDuration : 3000,
             remainingDuration: 300,
             status: .running
         )
@@ -178,7 +178,7 @@ final class TimerStateTests: XCTestCase {
         let state = TimerState(
             config: defaultConfig,
             targetDuration: 300,
-            remainingDuration: 120,
+            remainingDuration : 300,
             status: .running
         )
 
@@ -278,10 +278,10 @@ final class TimeRangeAdjusterTests: XCTestCase {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: 0,
             currentMaxSeconds: 300,
-            newMinSeconds: 120
+            newMinSeconds : 300
         )
 
-        XCTAssertEqual(adjusted.min, 120)
+        XCTAssertEqual(adjusted.min, 300)
         XCTAssertEqual(adjusted.max, 300)
     }
 
