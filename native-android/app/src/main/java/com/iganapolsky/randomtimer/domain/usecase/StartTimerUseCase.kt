@@ -7,6 +7,7 @@ import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Use case for starting a new timer with a random duration within the configured range.
@@ -38,6 +39,6 @@ class StartTimerUseCase @Inject constructor(
         val maxMillis = max.inWholeMilliseconds
         val randomMillis = random.nextLong(minMillis, maxMillis + 1)
 
-        return Duration.parse("${randomMillis}ms")
+        return randomMillis.milliseconds
     }
 }
