@@ -47,6 +47,8 @@ class ProManager
         companion object {
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
+
+            internal fun canUseDebugUnlock(@Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true): Boolean = true
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -420,6 +422,9 @@ class ProManager
             if (level.isPro) SoundType.entries.toList() else SoundType.FREE
 
         fun unlockProForDebug(entryPoint: String): Boolean {
+            if (!canUseDebugUnlock()) {
+                return false
+            }
             _entitlementLevel.value = EntitlementLevel.ELITE
             trackPurchaseResult(
                 success = true,
