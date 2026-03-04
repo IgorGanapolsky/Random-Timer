@@ -8,7 +8,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     private func makeConfig() -> RandomTimer.TimerConfig {
         RandomTimer.TimerConfig(
             minSeconds: 30,
-            maxSeconds: 120,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -25,7 +25,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let cfg = config ?? makeConfig()
         return RandomTimer.TimerState(
             config: cfg,
-            targetDuration: 60,
+            targetDuration: 300,
             remainingDuration: 0,
             status: .alarm,
             alarmTimeRemaining: alarmTimeRemaining,
@@ -65,7 +65,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
 
         // timerState must NOT be nil — user stays on timer screen
         XCTAssertNotNil(manager.timerState)
-        XCTAssertEqual(manager.timerState?.targetDuration, 60)
+        XCTAssertEqual(manager.timerState?.targetDuration, 300)
     }
 
     @MainActor
@@ -73,7 +73,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let manager = TimerManager()
         let state = RandomTimer.TimerState(
             config: makeConfig(),
-            targetDuration: 60,
+            targetDuration: 300,
             remainingDuration: 30,
             status: .running
         )
@@ -89,7 +89,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let manager = TimerManager()
         let state = RandomTimer.TimerState(
             config: makeConfig(),
-            targetDuration: 60,
+            targetDuration: 300,
             remainingDuration: 0,
             status: .complete
         )
@@ -128,7 +128,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let manager = TimerManager()
         let state = RandomTimer.TimerState(
             config: makeConfig(),
-            targetDuration: 60,
+            targetDuration: 300,
             remainingDuration: 30,
             status: .running
         )
@@ -146,7 +146,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let manager = TimerManager()
         let config = RandomTimer.TimerConfig(
             minSeconds: 30,
-            maxSeconds: 120,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: true,

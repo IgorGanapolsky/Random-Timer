@@ -6,7 +6,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
         let proConfig = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 3600,
+            maxSeconds: 33000,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -24,7 +24,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testExpiredProUser_proSoundType_isResetToIntense() {
         let proConfig = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 60,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -42,7 +42,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testExpiredProUser_freeSoundType_isRetained() {
         let config = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 60,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -57,10 +57,10 @@ final class TimerConfigProClampingTests: XCTestCase {
                        "Free soundType must be retained after clamping")
     }
 
-    func testActiveProUser_maxSecondsUpTo3600_isRetained() {
+    func testActiveProUser_maxSecondsUpTo33000_isRetained() {
         let proConfig = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 3600,
+            maxSeconds: 33000,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -71,14 +71,14 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         let clamped = proConfig.clamped(isPro: true)
 
-        XCTAssertEqual(clamped.maxSeconds, 3600,
-                       "Active Pro user must retain maxSeconds = 3600")
+        XCTAssertEqual(clamped.maxSeconds, 33000,
+                       "Active Pro user must retain maxSeconds = 33000")
     }
 
     func testActiveProUser_proSoundType_isRetained() {
         let proConfig = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 60,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -96,7 +96,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testFreeUserConfig_withinFreeLimits_isUnchanged() {
         let freeConfig = TimerConfig(
             minSeconds: 30,
-            maxSeconds: 120,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: true,
@@ -119,7 +119,7 @@ final class TimerConfigProClampingTests: XCTestCase {
         for sound in proSounds {
             let config = TimerConfig(
                 minSeconds: 0,
-                maxSeconds: 60,
+                maxSeconds: 300,
                 alarmDuration: 10,
                 soundType: sound,
                 volume: 0.5
