@@ -182,7 +182,8 @@ jobs:
           while IFS= read -r candidate; do
             if DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphonesimulator' \
               && DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphoneos' \
-              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator'; then
+              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator' \
+              && ! DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'Any iOS Simulator Device'; then
               XCODE_PATH="${candidate}"
               break
             fi
@@ -200,10 +201,17 @@ jobs:
 
       - name: Install iOS Simulator runtime if missing
         run: |
-          if ! xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator'; then
+          if ! xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'platform:iOS Simulator' \
+            || xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | grep -q 'Any iOS Simulator Device'; then
             echo "No iOS simulator found — installing runtime..."
             xcodebuild -downloadPlatform iOS || true
             xcrun simctl list runtimes
+
+            RUNTIME_ID=$(xcrun simctl list runtimes | sed -nE 's/.*\\((com\\.apple\\.CoreSimulator\\.SimRuntime\\.iOS[^)]*)\\).*/\\1/p' | head -n1)
+            if [ -n "${RUNTIME_ID}" ]; then
+              xcrun simctl create "CI iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-16" "${RUNTIME_ID}" || true
+              xcrun simctl list devices available
+            fi
           fi
 
       - name: Resolve simulator destination
