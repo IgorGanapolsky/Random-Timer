@@ -11,6 +11,10 @@ on:
         description: "Optional PR number to reconcile"
         required: false
 
+concurrency:
+  group: pr-state-machine-${{ github.event.pull_request.number || github.event.check_suite.pull_requests[0].number || github.event.check_suite.head_sha || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   reconcile:
     name: reconcile-pr-state
@@ -382,7 +386,7 @@ jobs:
               const prUrl = pr.html_url;
 
               const required = await getRequiredContexts(baseRef);
-              const requiredContexts = required.contexts;
+              const requiredContexts = required.contexts.filter((contextName) => contextName !== "pr/state-machine");
 
               const checkRunMap = await getCheckRunMap(headSha);
               const statusContextMap = await getStatusContextMap(headSha);
@@ -461,8 +465,28 @@ jobs:
             if (context.eventName === "pull_request_target") {
               prCandidates.push(context.payload.pull_request?.number);
             } else if (context.eventName === "check_suite") {
-              for (const pr of context.payload.check_suite?.pull_requests || []) {
-                prCandidates.push(pr.number);
+              const suite = context.payload.check_suite || {};
+              const suiteStatus = String(suite.status || "");
+              if (suiteStatus !== "completed") {
+                core.info(`Skipping check_suite event with non-terminal status "${suiteStatus || "unknown"}".`);
+              } else {
+                for (const pr of suite.pull_requests || []) {
+                  prCandidates.push(pr.number);
+                }
+
+                if (prCandidates.length === 0 && suite.head_sha) {
+                  const associatedPrs = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+                    owner,
+                    repo,
+                    commit_sha: suite.head_sha,
+                    per_page: 100
+                  });
+                  for (const pr of associatedPrs) {
+                    if (pr.state === "open") {
+                      prCandidates.push(pr.number);
+                    }
+                  }
+                }
               }
             } else if (context.eventName === "workflow_dispatch") {
               const raw = core.getInput("pr_number");

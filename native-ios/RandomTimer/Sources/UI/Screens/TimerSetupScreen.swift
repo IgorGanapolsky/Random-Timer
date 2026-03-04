@@ -27,11 +27,11 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
-                // 1. Training Window Card
+                // 1. Timer Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
                         HStack {
-                            Label("Training Window", systemImage: "timer")
+                            Label("Timer Range", systemImage: "timer")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
@@ -60,10 +60,10 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // 2. Alarm Sound Setup (Unified: Duration, Sounds, Volume, Vibration)
+                // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
                 GlassCard {
                     VStack(alignment: .leading) {
-                        Label("Alarm Sound Setup", systemImage: "bell.fill")
+                        Label("Alarm Sound", systemImage: "bell.fill")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
@@ -200,6 +200,11 @@ struct TimerSetupScreen: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                        .onTapGesture {
+                            if !proManager.isPro {
+                                presentPaywall(entryPoint: .soundGate)
+                            }
+                        }
                     
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
@@ -213,7 +218,7 @@ struct TimerSetupScreen: View {
                                 showArsenal.toggle()
                             }
                         } label: {
-                            Text(showArsenal ? "Hide Arsenal" : "View Arsenal")
+                            Text(showArsenal ? "Hide Sound Arsenal" : "View Sound Arsenal")
                                 .font(.caption2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.accentPrimary)

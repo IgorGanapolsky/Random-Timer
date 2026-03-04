@@ -19,6 +19,7 @@ final class AnalyticsService {
     private let hasFirstOpenedKey = "has_first_opened"
     private let hasFirstConfiguredKey = "has_first_configured"
     private let hasFirstCompletedKey = "has_first_completed"
+    private let hasTrackedApplicationInstalledKey = "has_tracked_application_installed"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
 
@@ -97,13 +98,15 @@ final class AnalyticsService {
 
 #if canImport(PostHog)
         let config = PostHogConfig(apiKey: apiKey, host: host)
-        config.captureApplicationLifecycleEvents = true
+        // Emit lifecycle events manually so every event includes our live/dev context tags.
+        config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
         PostHogSDK.shared.setup(config)
 #endif
         initialized = true
         let distinctId = getOrCreateDistinctId()
         identify(userId: distinctId, properties: analyticsContextProperties)
+        trackApplicationLifecycleEvents()
         logger.info("PostHog initialized")
 
         trackFirstOpenIfNeeded()
@@ -263,6 +266,14 @@ final class AnalyticsService {
 
     // MARK: - Onboarding Funnel
 
+    private func trackApplicationLifecycleEvents() {
+        let defaults = UserDefaults.standard
+        track(AnalyticsEvents.applicationOpened)
+        guard !defaults.bool(forKey: hasTrackedApplicationInstalledKey) else { return }
+        track(AnalyticsEvents.applicationInstalled)
+        defaults.set(true, forKey: hasTrackedApplicationInstalledKey)
+    }
+
     private func trackFirstOpenIfNeeded() {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: hasFirstOpenedKey) else { return }
@@ -314,6 +325,8 @@ final class AnalyticsService {
 
 // Event names for consistency
 enum AnalyticsEvents {
+    static let applicationInstalled = "Application Installed"
+    static let applicationOpened = "Application Opened"
     static let timerStarted = "timer_started"
     static let timerCompleted = "timer_completed"
     static let timerPaused = "timer_paused"

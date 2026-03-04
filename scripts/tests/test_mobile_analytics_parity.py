@@ -70,6 +70,22 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         self.assertIn('const val RESULT = "result"', android_source)
         self.assertIn('static let result = "result"', ios_source)
 
+    def test_lifecycle_autocapture_disabled_on_both_platforms(self):
+        android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
+        self.assertIn("captureApplicationLifecycleEvents = false", android_source)
+        self.assertIn("config.captureApplicationLifecycleEvents = false", ios_source)
+
+    def test_manual_lifecycle_events_tracked_on_initialize(self):
+        android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
+        self.assertIn("trackApplicationLifecycleEvents()", android_source)
+        self.assertIn("trackApplicationLifecycleEvents()", ios_source)
+        self.assertIn('const val APPLICATION_INSTALLED = "Application Installed"', android_source)
+        self.assertIn('const val APPLICATION_OPENED = "Application Opened"', android_source)
+        self.assertIn('static let applicationInstalled = "Application Installed"', ios_source)
+        self.assertIn('static let applicationOpened = "Application Opened"', ios_source)
+
 
 if __name__ == "__main__":
     unittest.main()
