@@ -497,6 +497,18 @@ fun TimerSetupScreen(
                             modifier =
                                 Modifier.pointerInput(Unit) {
                                     detectTapGestures(
+                                        onTap = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            if (isPro) {
+                                                if (isCompactHeight) {
+                                                    showArsenalSheet = true
+                                                } else {
+                                                    showArsenal = !showArsenal
+                                                }
+                                            } else {
+                                                onUpgradeTap()
+                                            }
+                                        },
                                         onPress = {
                                             val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
                                             if (released == null) {
@@ -510,9 +522,9 @@ fun TimerSetupScreen(
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Arsenal"
-                                !isPro -> if (showArsenal) "Hide Arsenal" else "View Arsenal"
-                                else -> "View Arsenal"
+                                isCompactHeight -> "Open Sound Arsenal"
+                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
+                                else -> "View Sound Arsenal"
                             }
                         Text(
                             text = actionLabel,

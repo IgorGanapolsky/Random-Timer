@@ -1,26 +1,24 @@
-TRAIN REACTION, NOT RHYTHM.
+Train reaction, not rhythm.
 
-Random Tactical Timer gives you a start cue at an unpredictable moment inside your chosen range. No fixed countdown. No easy pattern. Just real reaction training under pressure.
+Random Tactical Timer fires a start cue at an unpredictable moment inside your chosen range, so you train response speed instead of anticipation.
 
-DESIGNED FOR:
-- Boxing, kickboxing, Muay Thai, MMA, and BJJ drills
-- Bag work, pad rounds, scramble transitions, and spar prep
-- Tactical conditioning and stress-focused intervals
-- HIIT sessions that need surprise start triggers
+Built for:
+- Boxing, kickboxing, Muay Thai, MMA, and BJJ
+- Bag work, pad rounds, sparring prep, and scramble drills
+- HIIT and tactical conditioning sessions
 
-WHAT MAKES IT DIFFERENT:
-- True random trigger between your min and max time
-- Optional hidden countdown mode to prevent anticipation
-- Loop mode for continuous multi-round training blocks
-- Clear alarm + haptic vibration + adjustable volume
-- Fast controls: start, stop, pause, resume, reset
-- Live Activity support for active round visibility
+Why athletes and coaches use it:
+- Random cue between your minimum and maximum time
+- Optional hidden countdown to reduce anticipation
+- Loop mode for repeat rounds and interval blocks
+- Loud alarm, vibration, and adjustable cue volume
+- Quick controls: start, pause, resume, stop, and reset
+- Live Activity support to keep active sessions visible
 
-USE IT IN 5 STEPS:
-1. Set a range (example: 10s to 4m)
-2. Press Start
-3. Move and drill normally
-4. React immediately when the cue hits
-5. Repeat with loop mode for sustained stress rounds
+How it works:
+1. Set your minimum and maximum time.
+2. Start training normally.
+3. React when the cue fires.
+4. Repeat for consistent pressure training.
 
-If your current timer teaches anticipation, it is teaching the wrong habit. Train with uncertainty so your reaction speed holds up when timing is not predictable.
+Fixed countdowns can create anticipation. Randomized cues help practice response under uncertainty.
