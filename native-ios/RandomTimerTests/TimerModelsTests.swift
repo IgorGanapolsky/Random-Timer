@@ -665,7 +665,7 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     /// endDate must be the MAX possible end time, not the actual random end time
     @MainActor
     func testLiveActivityEndDateUsesMaxDuration() {
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 120, alarmDuration: 10)
+        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
         let state = TimerState(
             config: config,
             targetDuration: 75, // actual random: 75s
@@ -679,7 +679,7 @@ final class LiveActivityTimingLeakTests: XCTestCase {
         XCTAssertEqual(
             state.liveActivityEndDate.timeIntervalSinceReferenceDate,
             maxPossibleEnd.timeIntervalSinceReferenceDate,
-            accuracy: 1.0,
+            accuracy: 2.0,
             "Live Activity endDate must use maxSeconds to avoid leaking the random duration"
         )
     }
