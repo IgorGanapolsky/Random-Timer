@@ -266,19 +266,29 @@ platform :ios do
         raise unless should_recover
 
         UI.important("Detected stale match state. Running appstore match_nuke + fresh match regeneration.")
-        match_nuke(
-          type: "appstore",
-          app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-          skip_confirmation: true,
-          api_key: api_key
-        )
-        match(
-          type: "appstore",
-          app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-          readonly: false,
-          force: true,
-          api_key: api_key
-        )
+        previous_match_readonly = ENV["MATCH_READONLY"]
+        ENV["MATCH_READONLY"] = "false"
+        begin
+          match_nuke(
+            type: "appstore",
+            app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+            skip_confirmation: true,
+            api_key: api_key
+          )
+          match(
+            type: "appstore",
+            app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+            readonly: false,
+            force: true,
+            api_key: api_key
+          )
+        ensure
+          if previous_match_readonly.nil?
+            ENV.delete("MATCH_READONLY")
+          else
+            ENV["MATCH_READONLY"] = previous_match_readonly
+          end
+        end
       end
     else
       UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
