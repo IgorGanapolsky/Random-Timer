@@ -301,15 +301,25 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
+          FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_ANDROID_APP_ID FIREBASE_INTERNAL_TESTERS GOOGLE_PLAY_JSON_KEY; do
+          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_ANDROID_APP_ID; do
             if [ -z "${!name:-}" ]; then
               echo "❌ Missing required secret: $name"
               exit 1
             fi
           done
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            echo "❌ Missing credentials: set FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_PLAY_JSON_KEY"
+            exit 1
+          fi
+          if [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ] && [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
+            echo "❌ Missing Firebase distribution audience: set FIREBASE_INTERNAL_TESTERS or FIREBASE_INTERNAL_GROUPS"
+            exit 1
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -351,23 +361,59 @@ jobs:
 
       - name: Write Firebase service account key
         env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          if [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > /tmp/firebase-service-account.json
+          else
+            echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          fi
 
       - name: Distribute APK to Firebase App Distribution
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
           FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
+          FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
         run: |
           set -euo pipefail
-          npx --yes firebase-tools appdistribution:distribute \
-            native-android/app/build/outputs/apk/release/app-release.apk \
-            --app "$FIREBASE_ANDROID_APP_ID" \
-            --testers "$FIREBASE_INTERNAL_TESTERS" \
+          normalize_csv() {
+            tr '\n;' ',,' <<< "$1" | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^,+//; s/,+$//; s/,+/,/g'
+          }
+
+          TESTERS="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}")"
+          GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
+
+          DIST_CMD=(
+            npx --yes firebase-tools appdistribution:distribute
+            native-android/app/build/outputs/apk/release/app-release.apk
+            --app "$FIREBASE_ANDROID_APP_ID"
             --release-notes "Internal CI build ${GITHUB_SHA}"
+          )
+          if [ -n "$TESTERS" ]; then
+            DIST_CMD+=(--testers "$TESTERS")
+          fi
+          if [ -n "$GROUPS" ]; then
+            DIST_CMD+=(--groups "$GROUPS")
+          fi
+
+          set +e
+          "${DIST_CMD[@]}" 2>&1 | tee /tmp/firebase-distribute.log
+          dist_rc=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$dist_rc" -ne 0 ] && grep -qi "Precondition check failed" /tmp/firebase-distribute.log && [ -n "$TESTERS" ] && [ -n "$GROUPS" ]; then
+            echo "⚠️ Firebase distribute precondition failure with testers+groups. Retrying with groups-only."
+            npx --yes firebase-tools appdistribution:distribute \
+              native-android/app/build/outputs/apk/release/app-release.apk \
+              --app "$FIREBASE_ANDROID_APP_ID" \
+              --groups "$GROUPS" \
+              --release-notes "Internal CI build ${GITHUB_SHA}"
+          elif [ "$dist_rc" -ne 0 ]; then
+            exit "$dist_rc"
+          fi
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
