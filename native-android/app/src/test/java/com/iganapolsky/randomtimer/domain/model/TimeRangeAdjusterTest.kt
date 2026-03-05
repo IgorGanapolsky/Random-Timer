@@ -39,7 +39,7 @@ class TimeRangeAdjusterTest {
                 currentMinSeconds = 250,
                 currentMaxSeconds = 300,
                 newMinSeconds = 299 + TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS,
-                maxSecondsLimit = cap
+                maxSecondsLimit = cap,
             )
 
         assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
