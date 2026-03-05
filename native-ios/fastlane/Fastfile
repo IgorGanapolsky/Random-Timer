@@ -249,8 +249,8 @@ platform :ios do
       end
 
       # Distribution profiles for App Store export.
-      # If Apple revoked/deleted a cert referenced by the saved profile, retry once
-      # with profile regeneration to self-heal CI instead of requiring manual cleanup.
+      # If match storage references a stale/revoked cert, self-heal by nuking
+      # stale appstore profiles/certs and recreating a clean appstore state.
       begin
         match(
           type: "appstore",
@@ -260,9 +260,18 @@ platform :ios do
         )
       rescue => e
         message = e.to_s
-        raise unless message.include?("not available on the Developer Portal")
+        should_recover = message.include?("not available on the Developer Portal") ||
+                         message.include?("match nuke") ||
+                         message.include?("stored in your storage")
+        raise unless should_recover
 
-        UI.important("Detected stale App Store profile certificate reference. Retrying match with forced profile regeneration.")
+        UI.important("Detected stale match state. Running appstore match_nuke + fresh match regeneration.")
+        match_nuke(
+          type: "appstore",
+          app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+          skip_confirmation: true,
+          api_key: api_key
+        )
         match(
           type: "appstore",
           app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
