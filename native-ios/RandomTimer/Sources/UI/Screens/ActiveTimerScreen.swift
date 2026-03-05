@@ -47,145 +47,158 @@ struct ActiveTimerScreen: View {
             Color.backgroundDark.ignoresSafeArea()
 
             if let state = state {
-                Group {
+                // Main content container - uses a stable vertical stack
+                VStack(spacing: 0) {
                     if isLandscape {
-                        HStack(spacing: 24) {
-                            VStack(spacing: 16) {
-                                Group {
-                                    if isComplete {
-                                        Color.clear.frame(height: 36)
-                                    } else {
-                                        loopBadge
-                                    }
-                                }
-                                .frame(height: 36)
-
-                                statusText(for: state)
-                                    .frame(height: 28)
-
-                                CircularTimerView(
-                                    progress: isComplete ? 1.0 : (state.unpredictableProgress),
-                                    status: state.status,
-                                    rangeText: rangeText
-                                )
-                                .accessibilityIdentifier("activeTimerCircle")
-                                .onTapGesture {
-                                    guard state.status == .alarm else { return }
-                                    timerManager.silenceAlarm()
-                                }
-                                .accessibilityElement(children: .ignore)
-                                .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
-                                .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
-
-                                Group {
-                                    if showResetFeedback {
-                                        Text("Timer restarted")
-                                            .font(.subheadline)
-                                            .foregroundColor(.accentPrimary)
-                                    } else if isComplete {
-                                        Text("Went off after \(state.targetDuration.formattedDuration)")
-                                            .font(.subheadline)
-                                            .foregroundColor(.textSecondary)
-                                    } else {
-                                        Text("You don't know when it will go off...")
-                                            .font(.subheadline)
-                                            .foregroundColor(isPaused ? .textSecondary : .textMuted)
-                                    }
-                                }
-                                .frame(height: 20)
-
-                                Group {
-                                    if state.status == .alarm {
-                                        loopBadge
-                                    } else {
-                                        Color.clear
-                                    }
-                                }
-                                .frame(height: 36)
-                            }
-                            .frame(maxWidth: .infinity)
-
-                            VStack {
-                                Spacer()
-                                actionButtons(for: state)
-                                    .padding(.bottom, 8)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 24)
+                        landscapeLayout(state: state)
                     } else {
-                        VStack(spacing: 32) {
-                            // Loop badge at top - use fixed height placeholder to prevent layout shift
-                            Group {
-                                if isComplete {
-                                    // Invisible placeholder with same height as badge
-                                    Color.clear.frame(height: 36)
-                                } else {
-                                    loopBadge
-                                }
-                            }
-                            .frame(height: 36)
-
-                            // Status text - fixed height to prevent layout shift
-                            statusText(for: state)
-                                .frame(height: 28)
-
-                            // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-                            CircularTimerView(
-                                progress: isComplete ? 1.0 : (state.unpredictableProgress),
-                                status: state.status,
-                                rangeText: rangeText
-                            )
-                            .accessibilityIdentifier("activeTimerCircle")
-                            .onTapGesture {
-                                guard state.status == .alarm else { return }
-                                timerManager.silenceAlarm()
-                            }
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
-                            .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
-
-                            // Info message - fixed height placeholder to prevent layout shift
-                            Group {
-                                if showResetFeedback {
-                                    Text("Timer restarted")
-                                        .font(.subheadline)
-                                        .foregroundColor(.accentPrimary)
-                                } else if isComplete {
-                                    Text("Went off after \(state.targetDuration.formattedDuration)")
-                                        .font(.subheadline)
-                                        .foregroundColor(.textSecondary)
-                                } else {
-                                    Text("You don't know when it will go off...")
-                                        .font(.subheadline)
-                                        .foregroundColor(isPaused ? .textSecondary : .textMuted)
-                                }
-                            }
-                            .frame(height: 20)
-
-                            // Alarm state: show loop toggle (fixed position)
-                            Group {
-                                if state.status == .alarm {
-                                    loopBadge
-                                } else {
-                                    Color.clear
-                                }
-                            }
-                            .frame(height: 36)
-
-                            Spacer()
-
-                            // Action buttons
-                            actionButtons(for: state)
-                                .padding(.horizontal, 24)
-                                .padding(.bottom, 32)
-                        }
-                        .padding(.top, 48)
+                        portraitLayout(state: state)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                // Action buttons as a fixed-position overlay to prevent any layout shifts in the main circle
+                VStack {
+                    Spacer()
+                    actionButtons(for: state)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, isLandscape ? 24 : 48)
+                }
+                .ignoresSafeArea(.keyboard)
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
+            if let state = state {
+                loopEnabled = state.config.repeatEnabled
+            }
+        }
+        .onChange(of: state?.config.repeatEnabled) { _, newValue in
+            if let newValue = newValue {
+                loopEnabled = newValue
+            }
+        }
+        .onDisappear {
+            resetFeedbackTask?.cancel()
+            resetFeedbackTask = nil
+            showResetFeedback = false
+        }
+    }
+
+    @ViewBuilder
+    private func portraitLayout(state: TimerState) -> some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 48)
+            
+            // Fixed height container for top elements
+            ZStack {
+                if !isComplete {
+                    loopBadge
+                }
+            }
+            .frame(height: 40)
+            
+            Spacer().frame(height: 24)
+            
+            // Status text - fixed height to prevent vertical jitter
+            statusText(for: state)
+                .frame(height: 32)
+            
+            Spacer().frame(height: 32)
+
+            CircularTimerView(
+                progress: isComplete ? 1.0 : state.unpredictableProgress,
+                status: state.status,
+                rangeText: rangeText
+            )
+            .accessibilityIdentifier("activeTimerCircle")
+            .onTapGesture {
+                guard state.status == .alarm else { return }
+                timerManager.silenceAlarm()
+            }
+
+            Spacer().frame(height: 32)
+
+            // Info message - fixed height
+            ZStack {
+                if showResetFeedback {
+                    Text("Timer restarted")
+                        .font(.subheadline)
+                        .foregroundColor(.accentPrimary)
+                } else if isComplete {
+                    Text("Went off after \(state.targetDuration.formattedDuration)")
+                        .font(.subheadline)
+                        .foregroundColor(.textSecondary)
+                } else {
+                    Text("You don't know when it will go off...")
+                        .font(.subheadline)
+                        .foregroundColor(isPaused ? .textSecondary : .textMuted)
+                }
+            }
+            .frame(height: 24)
+
+            Spacer().frame(height: 24)
+            
+            // Alarm state loop badge placeholder
+            ZStack {
+                if state.status == .alarm {
+                    loopBadge
+                }
+            }
+            .frame(height: 40)
+            
+            Spacer() // Pushes everything up, buttons are in overlay
+        }
+    }
+
+    @ViewBuilder
+    private func landscapeLayout(state: TimerState) -> some View {
+        HStack(spacing: 48) {
+            VStack(spacing: 0) {
+                ZStack {
+                    if !isComplete {
+                        loopBadge
+                    }
+                }
+                .frame(height: 40)
+                
+                Spacer().frame(height: 12)
+                
+                statusText(for: state)
+                    .frame(height: 28)
+
+                CircularTimerView(
+                    progress: isComplete ? 1.0 : state.unpredictableProgress,
+                    status: state.status,
+                    rangeText: rangeText
+                )
+                .scaleEffect(0.8) // Shrink slightly for landscape
+                
+                Spacer().frame(height: 12)
+                
+                ZStack {
+                    if isComplete {
+                        Text("Went off after \(state.targetDuration.formattedDuration)")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                    } else {
+                        Text("Surprise interval active")
+                            .font(.caption)
+                            .foregroundColor(.textMuted)
+                    }
+                }
+                .frame(height: 20)
+            }
+            .frame(maxWidth: .infinity)
+            
+            // Right side is empty to leave room for buttons overlay if needed, 
+            // or we could center the circle and let buttons overlay it.
+            // For now, let's keep it centered.
+            Color.clear.frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, 40)
+    }
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
