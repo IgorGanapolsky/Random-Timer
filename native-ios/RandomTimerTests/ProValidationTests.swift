@@ -4,7 +4,7 @@ import XCTest
 final class TimerConfigProClampingTests: XCTestCase {
 
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 33000,
             alarmDuration: 10,
@@ -22,7 +22,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testExpiredProUser_proSoundType_isResetToIntense() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -40,7 +40,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testExpiredProUser_freeSoundType_isRetained() {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -58,7 +58,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testActiveProUser_maxSecondsUpTo33000_isRetained() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 33000,
             alarmDuration: 10,
@@ -76,7 +76,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testActiveProUser_proSoundType_isRetained() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -94,7 +94,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testFreeUserConfig_withinFreeLimits_isUnchanged() {
-        let freeConfig = TimerConfig(
+        let freeConfig = RandomTimer.TimerConfig(
             minSeconds: 30,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -117,7 +117,7 @@ final class TimerConfigProClampingTests: XCTestCase {
         let proSounds: [SoundType] = [.klaxon, .whistle, .buzzer, .gong, .airhorn, .drumRoll, .siren, .bell]
 
         for sound in proSounds {
-            let config = TimerConfig(
+            let config = RandomTimer.TimerConfig(
                 minSeconds: 0,
                 maxSeconds: 300,
                 alarmDuration: 10,

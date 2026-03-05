@@ -6,7 +6,7 @@ import XCTest
 final class SilenceAndStopAlarmTests: XCTestCase {
 
     private func makeConfig() -> TimerConfig {
-        TimerConfig(
+        RandomTimer.TimerConfig(
             minSeconds: 30,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -23,7 +23,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         alarmTimeRemaining: TimeInterval = 8
     ) -> TimerState {
         let cfg = config ?? makeConfig()
-        return TimerState(
+        return RandomTimer.TimerState(
             config: cfg,
             targetDuration: 300,
             remainingDuration: 0,
@@ -57,7 +57,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     }
 
     @MainActor
-    func testDoesNotClearTimerState() {
+    func testDoesNotClearRandomTimer.TimerState() {
         let manager = TimerManager()
         manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
 
@@ -71,7 +71,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     @MainActor
     func testDoesNothingWhenRunning() {
         let manager = TimerManager()
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: makeConfig(),
             targetDuration: 300,
             remainingDuration: 30,
@@ -87,7 +87,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     @MainActor
     func testDoesNothingWhenComplete() {
         let manager = TimerManager()
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: makeConfig(),
             targetDuration: 300,
             remainingDuration: 0,
@@ -126,7 +126,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     @MainActor
     func testHandleBackgroundDoesNothingWhenNotAlarming() {
         let manager = TimerManager()
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: makeConfig(),
             targetDuration: 300,
             remainingDuration: 30,
@@ -144,7 +144,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     @MainActor
     func testPreservesLoopConfig() {
         let manager = TimerManager()
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 30,
             maxSeconds: 300,
             alarmDuration: 10,
