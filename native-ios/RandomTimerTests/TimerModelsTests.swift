@@ -429,7 +429,8 @@ final class TimerManagerTests: XCTestCase {
         let manager = TimerManager()
         let config = TimerConfig(minSeconds: 5, maxSeconds: 10)
         
-        await manager.startTimer(config: config)
+        manager.updateConfig(config)
+        await manager.startTimer()
         
         XCTAssertNotNil(manager.timerState)
         XCTAssertEqual(manager.timerState?.status, .running)
@@ -440,7 +441,7 @@ final class TimerManagerTests: XCTestCase {
     @MainActor
     func testCancelTimerClearsTimerState() async {
         let manager = TimerManager()
-        await manager.startTimer(config: .default)
+        await manager.startTimer()
         XCTAssertNotNil(manager.timerState)
         
         await manager.cancelTimer()
@@ -450,7 +451,7 @@ final class TimerManagerTests: XCTestCase {
     @MainActor
     func testPauseAndResumeTimer() async {
         let manager = TimerManager()
-        await manager.startTimer(config: .default)
+        await manager.startTimer()
         
         manager.pauseTimer()
         XCTAssertEqual(manager.timerState?.status, .paused)
@@ -468,7 +469,8 @@ final class TimerManagerTests: XCTestCase {
             hiddenMode: false, repeatEnabled: false,
             soundType: .intense, volume: 0.5, vibrationEnabled: false
         )
-        await manager.startTimer(config: config)
+        manager.updateConfig(config)
+        await manager.startTimer()
         XCTAssertFalse(manager.timerState!.config.repeatEnabled)
 
         // Toggle loop ON via manager (simulating UI toggle)
@@ -485,9 +487,9 @@ final class TimerManagerTests: XCTestCase {
         manager.updateConfig(newConfig)
 
         // timerState.config must reflect the change
-        XCTAssertTrue(timerManager.timerState!.config.repeatEnabled,
+        XCTAssertTrue(manager.timerState!.config.repeatEnabled,
                       "Loop toggle must propagate into running timerState.config")
-    }
+        }
 
     @MainActor
     func testUpdateConfigDoesNotCrashWhenNoTimerRunning() {
