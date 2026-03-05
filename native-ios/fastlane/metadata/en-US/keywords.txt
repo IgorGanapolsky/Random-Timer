@@ -1,1 +1,1 @@
-reaction,boxing,mma,bjj,muaythai,hiit,fighttimer,sparring,drills,kickboxing,reflex,interval
+tactical timer,random timer,dry fire timer,boxing timer,mma timer,reaction timer,interval timer,hiit timer,shooting timer,range timer,workout timer,randomized timer,tactical training,stress training,reaction drills

@@ -37,7 +37,7 @@ class ReleaseOpsTests(unittest.TestCase):
                     )
                 return subprocess.CompletedProcess(cmd, 0)
 
-            args = SimpleNamespace(
+            args = SimpleNamespace(skip_preflight=False, 
                 platform="ios",
                 version="1.1.1",
                 locale="en-US",
@@ -82,7 +82,7 @@ class ReleaseOpsTests(unittest.TestCase):
                     )
                 return subprocess.CompletedProcess(cmd, 0)
 
-            args = SimpleNamespace(
+            args = SimpleNamespace(skip_preflight=False, 
                 platform="ios",
                 version="1.1.1",
                 locale="en-US",
@@ -124,7 +124,7 @@ class ReleaseOpsTests(unittest.TestCase):
                     )
                 return subprocess.CompletedProcess(cmd, 0)
 
-            args = SimpleNamespace(
+            args = SimpleNamespace(skip_preflight=False, 
                 platform="ios",
                 version="1.1.1",
                 locale="en-US",
@@ -148,7 +148,7 @@ class ReleaseOpsTests(unittest.TestCase):
             repo = Path(td)
             (repo / "native-ios").mkdir(parents=True, exist_ok=True)
 
-            args = SimpleNamespace(version="1.1.1", upload_metadata=True, dry_run=True)
+            args = SimpleNamespace(skip_preflight=False, version="1.1.1", upload_metadata=True, dry_run=True)
             env = {
                 "APPSTORE_KEY_ID": "KEY",
                 "APPSTORE_ISSUER_ID": "ISSUER",
@@ -165,7 +165,7 @@ class ReleaseOpsTests(unittest.TestCase):
             repo = Path(td)
             (repo / "native-ios").mkdir(parents=True, exist_ok=True)
 
-            args = SimpleNamespace(version="1.1.1", upload_metadata=True, dry_run=True)
+            args = SimpleNamespace(skip_preflight=False, version="1.1.1", upload_metadata=True, dry_run=True)
             env = {
                 "APPSTORE_KEY_ID": "KEY",
                 "APPSTORE_ISSUER_ID": "ISSUER",
@@ -223,7 +223,7 @@ class ReleaseOpsTests(unittest.TestCase):
                     )
                 return subprocess.CompletedProcess(cmd, 0)
 
-            args = SimpleNamespace(
+            args = SimpleNamespace(skip_preflight=False, 
                 limit=200,
                 sla_hours=24,
                 history_jsonl=str(history_jsonl),
@@ -302,7 +302,7 @@ class ReleaseOpsTests(unittest.TestCase):
                     return subprocess.CompletedProcess(cmd, 1)
                 return subprocess.CompletedProcess(cmd, 0)
 
-            args = SimpleNamespace(
+            args = SimpleNamespace(skip_preflight=False, 
                 limit=200,
                 sla_hours=24,
                 history_jsonl=str(history_jsonl),

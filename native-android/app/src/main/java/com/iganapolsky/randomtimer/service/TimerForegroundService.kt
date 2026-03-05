@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
@@ -221,8 +222,8 @@ class TimerForegroundService : Service() {
         val initialState =
             TimerState(
                 config = config,
-                targetDuration = kotlin.time.Duration.parse("${targetMs}ms"),
-                remainingDuration = kotlin.time.Duration.parse("${remainingMs}ms"),
+                targetDuration = targetMs.milliseconds,
+                remainingDuration = remainingMs.milliseconds,
                 status = TimerStatus.RUNNING,
             )
 
@@ -475,8 +476,8 @@ class TimerForegroundService : Service() {
         val newState =
             TimerState(
                 config = currentConfig,
-                targetDuration = kotlin.time.Duration.parse("${randomMs}ms"),
-                remainingDuration = kotlin.time.Duration.parse("${randomMs}ms"),
+                targetDuration = randomMs.milliseconds,
+                remainingDuration = randomMs.milliseconds,
                 status = TimerStatus.RUNNING,
             )
 

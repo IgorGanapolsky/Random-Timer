@@ -64,7 +64,7 @@ struct ActiveTimerScreen: View {
                                     .frame(height: 28)
 
                                 CircularTimerView(
-                                    progress: isComplete ? 1.0 : 0,
+                                    progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                     status: state.status,
                                     rangeText: rangeText
                                 )
@@ -132,11 +132,10 @@ struct ActiveTimerScreen: View {
                                 .frame(height: 28)
 
                             // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-                            // Hide progress ring since we're not revealing time info
                             CircularTimerView(
-                                progress: isComplete ? 1.0 : 0, // Full progress ring when complete
+                                progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                 status: state.status,
-                                rangeText: rangeText // ALWAYS show range, never countdown
+                                rangeText: rangeText
                             )
                             .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {
@@ -282,13 +281,6 @@ struct ActiveTimerScreen: View {
     private func actionButtons(for state: TimerState) -> some View {
         VStack(spacing: 12) {
             if isComplete {
-                // Silence - only shown during active alarm when sound is still playing
-                if state.status == .alarm && !timerManager.isAlarmSilenced {
-                    SecondaryButton(title: "Silence") {
-                        timerManager.silenceAlarm()
-                    }
-                }
-
                 // Stop - stops alarm and goes home
                 DangerButton(title: "Stop") {
                     Task {

@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 class TimerRepositoryImpl
@@ -51,7 +51,7 @@ class TimerRepositoryImpl
             dataStore.data.map { preferences ->
                 TimerConfig(
                     minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
+                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
                     alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                     hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                     repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -91,7 +91,7 @@ class TimerRepositoryImpl
                 val config =
                     TimerConfig(
                         minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 60,
+                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
                         alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                         hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                         repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -109,8 +109,8 @@ class TimerRepositoryImpl
 
                 TimerState(
                     config = config,
-                    targetDuration = Duration.parse("${targetMs}ms"),
-                    remainingDuration = Duration.parse("${remainingMs}ms"),
+                    targetDuration = targetMs.milliseconds,
+                    remainingDuration = remainingMs.milliseconds,
                     status = TimerStatus.valueOf(statusStr),
                     startedAt = startedAt,
                 )

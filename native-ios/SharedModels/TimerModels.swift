@@ -108,7 +108,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 60,
+        maxSeconds: Int = 300,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -195,7 +195,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_time],
-            defaultValue: 60
+            defaultValue: 300
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -284,7 +284,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
     static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
-    static let defaultMinGapSeconds = 30
+    static let defaultMinGapSeconds = 1
 
     static func adjustForMinChange(
         currentMinSeconds: Int,
@@ -484,6 +484,16 @@ public struct TimerState: Codable, Sendable, Equatable {
     public var progress: Double {
         guard targetDuration > 0 else { return 0 }
         return 1.0 - (remainingDuration / targetDuration)
+    }
+
+    /// Decorative progress for the UI that doesn't reveal the true random duration.
+    /// It fills based on maxSeconds, so it moves predictably but doesn't hit 100%
+    /// exactly when the timer completes (unless the random duration happens to be maxSeconds).
+    public var unpredictableProgress: Double {
+        let elapsed = Date().timeIntervalSince(startedAt)
+        let maxDuration = Double(config.maxSeconds)
+        guard maxDuration > 0 else { return 0 }
+        return min(0.98, elapsed / maxDuration)
     }
 
     public var isComplete: Bool {

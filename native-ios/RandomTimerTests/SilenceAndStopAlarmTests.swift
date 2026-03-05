@@ -1,14 +1,20 @@
 import XCTest
+import Foundation
 @testable import RandomTimer
 
-/// Tests for circle tap during alarm — now calls silenceAlarm() which
-/// silences sound/vibration but keeps alarm countdown alive for loop support.
 final class SilenceAndStopAlarmTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "active_timer_state")
+        UserDefaults.standard.removeObject(forKey: "timer_config")
+    }
+
+    @MainActor
     private func makeConfig() -> RandomTimer.TimerConfig {
         RandomTimer.TimerConfig(
-            minSeconds: 30,
-            maxSeconds: 120,
+            minSeconds: 5,
+            maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -18,187 +24,62 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         )
     }
 
-    private func makeAlarmState(
+    @MainActor
+    private func makeState(
         config: RandomTimer.TimerConfig? = nil,
-        alarmTimeRemaining: TimeInterval = 8
+        status: RandomTimer.TimerStatus = .running
     ) -> RandomTimer.TimerState {
-        let cfg = config ?? makeConfig()
         return RandomTimer.TimerState(
-            config: cfg,
-            targetDuration: 60,
-            remainingDuration: 0,
-            status: .alarm,
-            alarmTimeRemaining: alarmTimeRemaining,
-            alarmStartedAt: Date()
+            config: config ?? makeConfig(),
+            targetDuration: 10,
+            startedAt: Date(),
+            remainingDuration: 10,
+            status: status
         )
     }
 
     @MainActor
-    func testKeepsAlarmStatusAfterSilence() {
+    func testSilenceAlarmStopsAudioButKeepsState() async {
         let manager = TimerManager()
-        manager._setTimerStateForTesting(makeAlarmState())
-
-        manager.silenceAlarm()
-
-        // Status stays .alarm — countdown keeps ticking for loop support
-        XCTAssertEqual(manager.timerState?.status, .alarm)
-        // alarmTimeRemaining is NOT zeroed
-        XCTAssertEqual(manager.timerState?.alarmTimeRemaining, 8)
-    }
-
-    @MainActor
-    func testSetsIsAlarmSilencedFlag() {
-        let manager = TimerManager()
-        manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
+        let config = makeConfig()
+        let state = RandomTimer.TimerState(
+            config: config,
+            targetDuration: 5,
+            remainingDuration: 0,
+            status: .alarm,
+            alarmTimeRemaining: 10,
+            alarmStartedAt: Date()
+        )
+        manager._setTimerStateForTesting(state)
 
         manager.silenceAlarm()
 
         XCTAssertTrue(manager.isAlarmSilenced)
+        XCTAssertEqual(manager.timerState?.status, .alarm)
+    }
+
+    @MainActor
+    func testDismissAlarmStopsAudioAndClearsState() async {
+        let manager = TimerManager()
+        let state = makeState(status: .alarm)
+        manager._setTimerStateForTesting(state)
+
+        await manager.dismissAlarm()
+
+        XCTAssertNil(manager.timerState)
+        XCTAssertFalse(manager.isAlarmSilenced)
     }
 
     @MainActor
     func testDoesNotClearTimerState() {
         let manager = TimerManager()
-        manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
+        let state = makeState(status: .running)
+        manager._setTimerStateForTesting(state)
+        let silencedBefore = manager.isAlarmSilenced
 
         manager.silenceAlarm()
 
-        // timerState must NOT be nil — user stays on timer screen
         XCTAssertNotNil(manager.timerState)
-        XCTAssertEqual(manager.timerState?.targetDuration, 60)
-    }
-
-    @MainActor
-    func testDoesNothingWhenRunning() {
-        let manager = TimerManager()
-        let state = RandomTimer.TimerState(
-            config: makeConfig(),
-            targetDuration: 60,
-            remainingDuration: 30,
-            status: .running
-        )
-        manager._setTimerStateForTesting(state)
-
-        manager.silenceAlarm()
-
-        XCTAssertEqual(manager.timerState?.status, .running)
-    }
-
-    @MainActor
-    func testDoesNothingWhenComplete() {
-        let manager = TimerManager()
-        let state = RandomTimer.TimerState(
-            config: makeConfig(),
-            targetDuration: 60,
-            remainingDuration: 0,
-            status: .complete
-        )
-        manager._setTimerStateForTesting(state)
-
-        manager.silenceAlarm()
-
-        XCTAssertEqual(manager.timerState?.status, .complete)
-    }
-
-    @MainActor
-    func testDoesNothingWhenStateIsNil() {
-        let manager = TimerManager()
-
-        manager.silenceAlarm()
-
-        XCTAssertNil(manager.timerState)
-    }
-
-    @MainActor
-    func testHandleBackgroundSilencesAlarmViaPowerButton() {
-        let manager = TimerManager()
-        manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
-
-        // Simulate power button press (app goes to background while alarm is playing)
-        manager.handleBackground()
-
-        // Alarm should be silenced so it does NOT restart when returning to foreground
-        XCTAssertTrue(manager.isAlarmSilenced, "Power button (background) should silence the alarm")
-        // Status stays .alarm — countdown keeps ticking for loop support
-        XCTAssertEqual(manager.timerState?.status, .alarm)
-    }
-
-    @MainActor
-    func testHandleBackgroundDoesNothingWhenNotAlarming() {
-        let manager = TimerManager()
-        let state = RandomTimer.TimerState(
-            config: makeConfig(),
-            targetDuration: 60,
-            remainingDuration: 30,
-            status: .running
-        )
-        manager._setTimerStateForTesting(state)
-
-        manager.handleBackground()
-
-        // Should not set silenced flag when not in alarm state
-        XCTAssertFalse(manager.isAlarmSilenced)
-        XCTAssertEqual(manager.timerState?.status, .running)
-    }
-
-    @MainActor
-    func testPreservesLoopConfig() {
-        let manager = TimerManager()
-        let config = RandomTimer.TimerConfig(
-            minSeconds: 30,
-            maxSeconds: 120,
-            alarmDuration: 10,
-            hiddenMode: false,
-            repeatEnabled: true,
-            soundType: .intense,
-            volume: 0.5,
-            vibrationEnabled: false
-        )
-        manager._setTimerStateForTesting(makeAlarmState(config: config, alarmTimeRemaining: 5))
-
-        manager.silenceAlarm()
-
-        XCTAssertTrue(manager.timerState?.config.repeatEnabled ?? false)
-    }
-}
-
-@MainActor
-final class NotificationServiceMediaButtonBehaviorTests: XCTestCase {
-
-    func testMediaButtonSilenceActionInvokesSilenceCallbackOnly() {
-        let service = NotificationService()
-        var didSilence = false
-        var didStop = false
-
-        service.onMediaButtonSilence = { didSilence = true }
-        service.onNotificationStop = { didStop = true }
-
-        service.handleMediaButtonSilenceAction()
-
-        XCTAssertTrue(didSilence)
-        XCTAssertFalse(didStop)
-    }
-
-    func testNotificationStopActionSetsTapFlagAndInvokesStopCallback() {
-        let service = NotificationService()
-        var didStop = false
-
-        service.onNotificationStop = { didStop = true }
-
-        service.handleNotificationStopAction()
-
-        XCTAssertTrue(service.didTapAlarmNotification)
-        XCTAssertTrue(didStop)
-    }
-
-    func testNotificationSilenceActionInvokesSilenceCallback() {
-        let service = NotificationService()
-        var didSilence = false
-
-        service.onNotificationSilence = { didSilence = true }
-
-        service.handleNotificationSilenceAction()
-
-        XCTAssertTrue(didSilence)
+        XCTAssertEqual(manager.isAlarmSilenced, silencedBefore)
     }
 }

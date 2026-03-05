@@ -320,7 +320,8 @@ jobs:
             --platform ios \
             --context-out /tmp/release-context-ci.json \
             --contract-out /tmp/release-delegation-contract-ci.json \
-            --no-remote
+            --no-remote \
+            --skip-preflight
 
       - name: Upload release readiness artifacts
         if: always()

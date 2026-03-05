@@ -13,10 +13,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -29,8 +26,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -696,9 +695,8 @@ private fun TimeRangeSliders(
     val maxSliderRangeInt = maxSliderRange.toInt()
     val minSliderMaxInt = minSliderMax.toInt()
     val sectionGap = if (compactMode) 8.dp else 12.dp
-    val rowGap = if (compactMode) 8.dp else 12.dp
-    val nudgeWidth = if (compactMode) 44.dp else 52.dp
-    val nudgeHeight = if (compactMode) 36.dp else 40.dp
+    val rowGap = 4.dp
+    val nudgeSize = 32.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
         // Display
@@ -735,15 +733,16 @@ private fun TimeRangeSliders(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "\u2212",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (enabled && minValue > 0) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier =
-                        Modifier
-                            .clickable(enabled = enabled && minValue > 0) { onMinChange(minValue - 1) }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(rowGap),
+            ) {
+                NudgeButton(
+                    label = "\u2212",
+                    enabled = enabled && minValue >= coarseNudgeStep,
+                    onClick = { onMinChange(minValue - coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
                 Slider(
                     value = minValue.toFloat(),
@@ -761,21 +760,12 @@ private fun TimeRangeSliders(
                             inactiveTrackColor = TimerColors.SliderTrack,
                         ),
                 )
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.titleMedium,
-                    color =
-                        if (enabled &&
-                            minValue < maxSliderRangeInt - minGapSeconds
-                        ) {
-                            TimerColors.AccentPrimary
-                        } else {
-                            TimerColors.TextMuted
-                        },
-                    modifier =
-                        Modifier
-                            .clickable(enabled = enabled && minValue < maxSliderRangeInt - minGapSeconds) { onMinChange(minValue + 1) }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                NudgeButton(
+                    label = "+",
+                    enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
+                    onClick = { onMinChange(minValue + coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
             }
         }
@@ -789,15 +779,16 @@ private fun TimeRangeSliders(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "\u2212",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (enabled && maxValue > minGapSeconds) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier =
-                        Modifier
-                            .clickable(enabled = enabled && maxValue > minGapSeconds) { onMaxChange(maxValue - 1) }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(rowGap),
+            ) {
+                NudgeButton(
+                    label = "\u2212",
+                    enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue - coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
                 Slider(
                     value = maxValue.toFloat(),
@@ -815,14 +806,12 @@ private fun TimeRangeSliders(
                             inactiveTrackColor = TimerColors.SliderTrack,
                         ),
                 )
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (enabled && maxValue < maxSliderRangeInt) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                    modifier =
-                        Modifier
-                            .clickable(enabled = enabled && maxValue < maxSliderRangeInt) { onMaxChange(maxValue + 1) }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                NudgeButton(
+                    label = "+",
+                    enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
+                    onClick = { onMaxChange(maxValue + coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
             }
         }
@@ -851,14 +840,14 @@ private fun NudgeButton(
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(10.dp),
-        color = if (enabled) TimerColors.GlassBackground else TimerColors.BackgroundDark,
+        shape = CircleShape,
+        color = if (enabled) TimerColors.GlassBackground.copy(alpha = 0.3f) else TimerColors.BackgroundDark,
         border =
             BorderStroke(
-                1.dp,
-                if (enabled) TimerColors.GlassBorder else TimerColors.GlassBorder.copy(alpha = 0.5f),
+                0.5.dp,
+                if (enabled) TimerColors.GlassBorder.copy(alpha = 0.4f) else TimerColors.GlassBorder.copy(alpha = 0.2f),
             ),
-        modifier = modifier.width(width).height(height),
+        modifier = modifier.size(width),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -957,15 +946,16 @@ private fun VolumeSlider(
                 color = TimerColors.TextPrimary,
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "\u2212",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (value > 0f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier =
-                    Modifier
-                        .clickable(enabled = value > 0f) { onValueChange((value - 0.01f).coerceAtLeast(0f)) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            NudgeButton(
+                label = "\u2212",
+                enabled = value > 0f,
+                onClick = { onValueChange((value - 0.05f).coerceAtLeast(0f)) },
+                width = 32.dp,
+                height = 32.dp,
             )
             Slider(
                 value = value,
@@ -979,14 +969,12 @@ private fun VolumeSlider(
                         inactiveTrackColor = TimerColors.SliderTrack,
                     ),
             )
-            Text(
-                text = "+",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (value < 1f) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                modifier =
-                    Modifier
-                        .clickable(enabled = value < 1f) { onValueChange((value + 0.01f).coerceAtMost(1f)) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+            NudgeButton(
+                label = "+",
+                enabled = value < 1f,
+                onClick = { onValueChange((value + 0.05f).coerceAtMost(1f)) },
+                width = 32.dp,
+                height = 32.dp,
             )
         }
     }

@@ -177,7 +177,9 @@ final class TimerManager: ObservableObject {
     /// Stops sound and vibration but keeps alarm state and countdown active
     func silenceAlarm() {
         notificationService.silenceAlarm()
-        isAlarmSilenced = true
+        if timerState?.status == .alarm {
+            isAlarmSilenced = true
+        }
     }
 
     func pauseTimer() {
