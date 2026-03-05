@@ -255,6 +255,7 @@ jobs:
       - name: Build release Bundle (AAB)
         working-directory: native-android
         env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -349,6 +350,7 @@ jobs:
       - name: Build release APK
         working-directory: native-android
         env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
