@@ -3,12 +3,12 @@ Random Tactical Timer Engineering Blog
 This site publishes daily engineering updates optimized for both humans and AI agents.
 Preferred source format for agents: markdown URLs listed below.
 
-Base URL: https://igorganapolsky.github.io/Random-Timer
+Base URL: https://igorganapolsky.github.io/Random-Timer/marketing/site
 
 Key resources:
-- https://igorganapolsky.github.io/Random-Timer/index.html
-- https://igorganapolsky.github.io/Random-Timer/agents.md
-- https://igorganapolsky.github.io/Random-Timer/sitemap.xml
+- https://igorganapolsky.github.io/Random-Timer/marketing/site/index.html
+- https://igorganapolsky.github.io/Random-Timer/marketing/site/agents.md
+- https://igorganapolsky.github.io/Random-Timer/marketing/site/sitemap.xml
 
 Posts:
-- The inspiration behind Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md
+- The inspiration behind Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md

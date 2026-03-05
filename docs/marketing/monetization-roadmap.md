@@ -1,95 +1,93 @@
-# Monetization Roadmap
+# Monetization Roadmap (March 2026)
 
-## Core Principle
-No subscriptions. One-time purchase. Your audience hates recurring fees.
+## North Star And Constraints
 
----
-
-## Phase 1: FREE (Now — Month 1-3)
-
-**Goal**: Build usage, collect feedback, earn reviews.
-
-What's free:
-- Custom random time range
-- Alarm sound intensity (Intense / Gentle)
-- Volume + vibration controls
-- Loop mode
-- Background operation
-- Clean UI
-
-**KPIs**:
-- 500+ installs
-- 10+ quality App Store reviews (fighter/trainer reviews)
-- 5+ gym adoptions
-- D7 retention > 30%
-
-**Do NOT monetize until Phase 1 KPIs are hit.**
+- Business goal: `$100/day` after tax.
+- Product North Star: `WQTU` (distinct users with >= 3 `timer_completed` events in trailing 7 days).
+- Current live snapshot (2026-03-02): `WQTU=0`, `paid_distinct_users_30d=0`, active paid campaign present, no-scale lock active.
+- Execution rule: do not scale paid spend while no-scale lock is active.
 
 ---
 
-## Phase 2: PRO ($4.99 one-time unlock)
+## Offer Architecture (Now)
 
-**Target**: Month 3-6. Ship when free version has traction.
+One visible premium offer in paywall:
+- `Pro` annual subscription (single CTA, no plan picker in paywall UI).
+- All premium features included in Pro:
+  - Full sound arsenal.
+  - Extended training range to 60 minutes.
+  - Voice callouts during countdown.
+  - Future advanced training modules.
 
-### Pro Features
-
-| Feature | Description |
-|---|---|
-| **Multi-round blocks** | Chain 3-5 random intervals back-to-back with rest periods |
-| **Chaos Mode** | Intervals progressively shrink — pressure escalates |
-| **Voice Commands** | "GO!", "MOVE!", "SWITCH!", "SHOOT!" — random audio cues during drills |
-| **Drill Templates** | Pre-built presets: Boxing Flurry, BJJ Scramble, Wall Work, Dry Fire, HIIT |
-| **Custom Presets** | Save and name your own drill configurations |
-| **Tactical Themes** | Dark steel, military green, matte black UI themes |
-| **Export Drill Log** | CSV/PDF of training sessions (time, duration, rounds) |
-
-### Pricing
-- **$4.99** one-time (launch price)
-- **$9.99** after 90 days or 1000 Pro upgrades
-- No subscription. No ads. Ever.
-
-### Conversion Target
-- 5-10% of free users upgrade
-- At 1000 free installs: 50-100 Pro sales = $250-$500
-- At 10,000 free installs: 500-1000 Pro sales = $2,500-$5,000
+Backward compatibility:
+- Legacy SKUs can remain recognized for existing buyers.
+- Only one premium SKU should be actively merchandised in paywall.
 
 ---
 
-## Phase 3: TACTICAL SERIES (Month 6-12)
+## Price Strategy
 
-Expand from single app to training brand.
+Anchor price for premium SKU:
+- `Pro = $29.99/year` (default decision as of March 2026).
 
-| App | Description | Price |
-|---|---|---|
-| **Random Tactical Timer** | Core random interval timer | Free + $4.99 Pro |
-| **Tactical Decision Trainer** | Random scenario prompts for force-on-force decision making | $6.99 |
-| **Stress Drill Audio** | Guided stress inoculation sessions with random triggers | $9.99 |
-| **Partner Reaction Mode** | Two phones sync — one triggers, one responds | Pro feature |
+Rationale:
+- Supports premium positioning with one visible offer.
+- Improves chance of hitting `$100/day` without unrealistic daily unit volume.
 
-### Optional Hardware Play
-- Bluetooth remote trigger (physical button fires random alarm)
-- Sold via Amazon / direct. $19.99.
-- Requires app as companion.
+Rough net math (assumes 15% store fee, then 30% tax):
+- `$4.99` gross -> `~$2.97` net -> needs `~34 sales/day`.
+- `$29.99` gross -> `~$17.84` net -> needs `~6 sales/day`.
+- `$39.99` gross -> `~$23.79` net -> needs `~5 sales/day`.
 
----
-
-## Anti-Patterns (Do NOT Do)
-
-- No freemium with ads. Kills trust with tactical audience.
-- No monthly subscription. Fighters buy tools, not services.
-- No gamification (streaks, badges). This isn't Duolingo.
-- No social features until brand is established.
-- No "Pro trial" — either free or paid. Clean separation.
+Price test ladder:
+1. Start at `$29.99/year`.
+2. After >= 200 paywall views, if conversion is strong, test `$39.99/year`.
+3. If conversion is weak, test `$19.99/year` before cutting below that.
 
 ---
 
-## Revenue Targets
+## 30-Day GSD Plan
 
-| Milestone | Timeline | Revenue |
-|---|---|---|
-| 1,000 installs | Month 3 | $250-500 (Pro) |
-| 5,000 installs | Month 6 | $1,500-3,000 |
-| 10,000 installs | Month 9 | $3,000-7,000 |
-| 25,000 installs | Month 12 | $10,000-20,000 |
+Week 1:
+- Ensure store-side IAP prices match strategy (App Store Connect + Play Console).
+- Verify one-offer paywall is live on both platforms.
+- Confirm analytics events fire for:
+  - `paywall_viewed`
+  - `paywall_purchase_attempt`
+  - `paywall_purchase_success`
+  - `timer_completed` with entitlement level
 
-This assumes 5-8% Pro conversion, no paid acquisition beyond Apple Search Ads ($8/mo).
+Week 2:
+- Fix attribution hygiene so paid traffic maps to users/events.
+- Run no-scale lock check daily until paid attribution is non-zero.
+
+Week 3:
+- Improve activation path from open -> first completion.
+- Target `open_to_completed_rate >= 25%`.
+
+Week 4:
+- Re-evaluate price using actual conversion and retained usage:
+  - paywall conversion
+  - `WQTU`
+  - paid-attributed user quality
+
+---
+
+## Guardrails
+
+- Do not increase paid budget while:
+  - `paid_distinct_users_30d == 0` and
+  - active campaign signal exists.
+- Do not claim North Star progress from installs alone.
+- Always report:
+  - live `WQTU`
+  - current target (`>=8` by 2026-03-31)
+  - paid attribution status
+
+---
+
+## Anti-Patterns
+
+- Do not run split tiers in paywall copy if product strategy is single-Pro.
+- Do not keep stale pricing docs (`$4.99 one-time`) once premium subscription is live.
+- Do not scale acquisition before measurement is trustworthy.

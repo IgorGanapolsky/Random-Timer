@@ -64,7 +64,7 @@ struct ActiveTimerScreen: View {
                                     .frame(height: 28)
 
                                 CircularTimerView(
-                                    progress: isComplete ? 1.0 : 0,
+                                    progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                     status: state.status,
                                     rangeText: rangeText
                                 )
@@ -132,11 +132,10 @@ struct ActiveTimerScreen: View {
                                 .frame(height: 28)
 
                             // Circular Timer - ALWAYS show range (random timer - user should NEVER see countdown)
-                            // Hide progress ring since we're not revealing time info
                             CircularTimerView(
-                                progress: isComplete ? 1.0 : 0, // Full progress ring when complete
+                                progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                 status: state.status,
-                                rangeText: rangeText // ALWAYS show range, never countdown
+                                rangeText: rangeText
                             )
                             .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {

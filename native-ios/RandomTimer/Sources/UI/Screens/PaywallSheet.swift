@@ -40,42 +40,39 @@ struct PaywallSheet: View {
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
 
-            Text("One-time purchase. No subscriptions.")
-                .font(.caption)
-                .foregroundColor(.textSecondary)
+            VStack(spacing: 4) {
+                Text("One premium plan.")
+                Text("Yearly auto-renewing subscription. Cancel anytime.")
+            }
+            .font(.caption)
+            .foregroundColor(.textSecondary)
+            .multilineTextAlignment(.center)
 
-            VStack(alignment: .leading, spacing: 12) {
-                ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
-                ProFeatureRow(text: "Extended range up to 60 minutes")
-                ProFeatureRow(text: "Support independent development")
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("PRO FEATURES")
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                    ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
+                    ProFeatureRow(text: "Extended range up to 60 minutes")
+                    ProFeatureRow(text: "Voice callouts during countdown")
+                    ProFeatureRow(text: "Support independent development")
+                }
             }
             .padding(.horizontal)
 
-            PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice)") {
-                Task {
-                    let result = await proManager.purchase()
-                    AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
-                        AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                        AnalyticsProperties.result: result.rawValue,
-                    ])
-
-                    if result == .success {
-                        hasTrackedDismiss = true
-                        dismiss()
+            VStack(spacing: 12) {
+                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
+                    Task {
+                        await purchase(productID: ProManager.eliteProductID)
                     }
                 }
             }
-#if DEBUG
-            .onLongPressGesture(minimumDuration: 0.8) {
-                proManager.unlockProForDebug()
+            .onLongPressGesture(minimumDuration: 8.0) {
+                proManager.unlockEliteForDebug()
                 hasTrackedDismiss = true
-                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseResult, properties: [
-                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                    AnalyticsProperties.result: "dev_override",
-                ])
                 dismiss()
             }
-#endif
 
             Button("Restore purchase") {
                 Task {
@@ -113,6 +110,45 @@ struct PaywallSheet: View {
         .onDisappear {
             trackDismiss(method: "system")
         }
+    }
+
+    @MainActor
+    private func purchase(productID: String) async {
+        AnalyticsService.shared.track(
+            AnalyticsEvents.paywallPurchaseAttempt,
+            properties: purchaseProperties(productID: productID)
+        )
+
+        let result = await proManager.purchase(productID: productID)
+
+        // Compatibility event for existing dashboards while canonical events roll out.
+        AnalyticsService.shared.track(
+            AnalyticsEvents.paywallPurchaseResult,
+            properties: purchaseProperties(productID: productID, result: result)
+        )
+
+        guard result == .success else { return }
+
+        AnalyticsService.shared.track(
+            AnalyticsEvents.paywallPurchaseSuccess,
+            properties: purchaseProperties(productID: productID, result: result)
+        )
+        hasTrackedDismiss = true
+        dismiss()
+    }
+
+    private func purchaseProperties(
+        productID: String,
+        result: ProPurchaseResult? = nil
+    ) -> [String: Any] {
+        var properties: [String: Any] = [
+            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            AnalyticsProperties.productId: productID,
+        ]
+        if let result {
+            properties[AnalyticsProperties.result] = result.rawValue
+        }
+        return properties
     }
 
     private func trackDismiss(method: String) {

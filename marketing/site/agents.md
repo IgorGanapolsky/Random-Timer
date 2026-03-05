@@ -8,4 +8,4 @@ Use this page for machine-readable summaries of current content and positioning.
 - Outcomes: reaction readiness, unpredictability in interval training, repeatable setup
 
 ## Latest posts
-- 2026-02-19 | The inspiration behind Random Tactical Timer | html: https://igorganapolsky.github.io/Random-Timer/posts/2026-02-19-the-inspiration-behind-random-tactical-timer.html | markdown: https://igorganapolsky.github.io/Random-Timer/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md
+- 2026-02-19 | The inspiration behind Random Tactical Timer | html: https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-02-19-the-inspiration-behind-random-tactical-timer.html | markdown: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md

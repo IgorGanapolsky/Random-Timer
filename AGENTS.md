@@ -4,10 +4,12 @@
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
 
-- **Orchestration**: `claude-3-5-sonnet` (UltraBrain) for planning and coordination.
-- **Deep Specialist**: `claude-3-opus` or `gpt-4o` (Deep) for complex refactoring.
-- **Utility Runner**: `gemini-1.5-flash` or `claude-3-haiku` (Quick) for search, analysis, and scaffolding.
-- **UI/UX Specialist**: `gemini-1.5-pro` (Visual) for multimodal and layout tasks.
+Gemini-specific operating directives are maintained in `docs/GEMINI.md` (canonical path enforced by repo hygiene checks).
+
+- **Orchestration**: latest high-reasoning `Claude Sonnet` class model (UltraBrain) for planning and coordination.
+- **Deep Specialist**: latest `Claude Opus` class model or strongest available `GPT-4o/5` class model (Deep) for complex refactoring.
+- **Utility Runner**: latest fast, low-cost `Gemini Flash` or `Claude Haiku` class model (Quick) for search, analysis, and scaffolding.
+- **UI/UX Specialist**: strongest multimodal `Gemini Pro` class model (Visual) for layout and visual QA tasks.
 
 When delegating work via the `Task` tool, agents should specify the category (e.g., `subagent_type: "Quick"`) to ensure the correct model is selected from the fallback chain.
 
@@ -47,6 +49,16 @@ When a task depends on credentials, the agent must verify local and CI credentia
 ### Business Goal
 
 **Earn $100/day after-tax from app sales** while improving product quality and operational reliability.
+
+### Operating Budget Mandate (Effective March 2, 2026)
+
+**Hard budget cap: `$10 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
+
+Enforcement rules:
+- Prefer zero-cost approaches first (existing CI minutes, local tooling, OSS, existing subscriptions).
+- Do not start any new paid service, campaign, or add-on that can exceed the monthly cap.
+- If a required action cannot be completed within the cap, stop and request explicit CEO approval with the exact dollar amount and justification.
+- Every spend-related status update must include current month-to-date spend estimate and remaining budget.
 
 ### Primary North Star Metric (NSM)
 

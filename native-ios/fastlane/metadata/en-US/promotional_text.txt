@@ -1,1 +1,1 @@
-Build real reaction speed. Set a min/max range and get a random cue with no countdown pattern. Great for boxing, BJJ, MMA, HIIT, and coached sessions.
+Train reaction timing with randomized start cues. Set a min/max window, loop rounds, and use loud alarms plus haptics for pressure drills.

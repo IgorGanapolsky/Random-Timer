@@ -75,7 +75,7 @@ data class TimerConfig(
         val DEFAULT =
             TimerConfig(
                 minSeconds = 0,
-                maxSeconds = 60,
+                maxSeconds = 300,
                 alarmDuration = 10,
                 hiddenMode = false,
                 repeatEnabled = false,
@@ -136,4 +136,13 @@ enum class TimerStatus {
     DANGER, // < 10 seconds remaining
     COMPLETE, // Timer finished, transitioning to alarm
     ALARM, // Alarm is playing
+}
+
+enum class EntitlementLevel {
+    NONE,
+    BASE,
+    ELITE,
+    ;
+
+    val isPro: Boolean get() = this != NONE
 }

@@ -19,6 +19,7 @@ final class AnalyticsService {
     private let hasFirstOpenedKey = "has_first_opened"
     private let hasFirstConfiguredKey = "has_first_configured"
     private let hasFirstCompletedKey = "has_first_completed"
+    private let hasTrackedApplicationInstalledKey = "has_tracked_application_installed"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
 
@@ -97,13 +98,15 @@ final class AnalyticsService {
 
 #if canImport(PostHog)
         let config = PostHogConfig(apiKey: apiKey, host: host)
-        config.captureApplicationLifecycleEvents = true
+        // Emit lifecycle events manually so every event includes our live/dev context tags.
+        config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
         PostHogSDK.shared.setup(config)
 #endif
         initialized = true
         let distinctId = getOrCreateDistinctId()
         identify(userId: distinctId, properties: analyticsContextProperties)
+        trackApplicationLifecycleEvents()
         logger.info("PostHog initialized")
 
         trackFirstOpenIfNeeded()
@@ -193,8 +196,7 @@ final class AnalyticsService {
 
     func fetchAppleSearchAdsAttribution() {
         guard initialized else { return }
-        let defaults = UserDefaults.standard
-        guard !defaults.bool(forKey: appleAdsAttributionFetchedKey) else { return }
+        guard !UserDefaults.standard.bool(forKey: appleAdsAttributionFetchedKey) else { return }
 
 #if canImport(AdServices)
         if #available(iOS 14.3, *) {
@@ -224,7 +226,8 @@ final class AnalyticsService {
                 guard campaignId != 0, campaignId != 1234567890 else {
                     self?.logger.info("Apple Ads attribution: organic install (no paid campaign)")
                     DispatchQueue.main.async {
-                        defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+                        guard let key = self?.appleAdsAttributionFetchedKey else { return }
+                        UserDefaults.standard.set(true, forKey: key)
                     }
                     return
                 }
@@ -239,12 +242,13 @@ final class AnalyticsService {
                 ]
 
                 DispatchQueue.main.async { [weak self] in
-                    defaults.set(true, forKey: self?.appleAdsAttributionFetchedKey ?? "")
+                    guard let self else { return }
+                    UserDefaults.standard.set(true, forKey: self.appleAdsAttributionFetchedKey)
 
                     // Persist UTM params for future events
-                    defaults.set("apple_search_ads", forKey: "utm_source")
-                    defaults.set("asa", forKey: "utm_medium")
-                    defaults.set(attribution["utm_campaign"], forKey: "utm_campaign")
+                    UserDefaults.standard.set("apple_search_ads", forKey: "utm_source")
+                    UserDefaults.standard.set("asa", forKey: "utm_medium")
+                    UserDefaults.standard.set(attribution["utm_campaign"], forKey: "utm_campaign")
 
 #if canImport(PostHog)
                     PostHogSDK.shared.identify(
@@ -253,7 +257,7 @@ final class AnalyticsService {
                     )
                     PostHogSDK.shared.capture(AnalyticsEvents.appleAdsAttribution, properties: attribution)
 #endif
-                    self?.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
+                    self.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
                 }
             }.resume()
         }
@@ -261,6 +265,14 @@ final class AnalyticsService {
     }
 
     // MARK: - Onboarding Funnel
+
+    private func trackApplicationLifecycleEvents() {
+        let defaults = UserDefaults.standard
+        track(AnalyticsEvents.applicationOpened)
+        guard !defaults.bool(forKey: hasTrackedApplicationInstalledKey) else { return }
+        track(AnalyticsEvents.applicationInstalled)
+        defaults.set(true, forKey: hasTrackedApplicationInstalledKey)
+    }
 
     private func trackFirstOpenIfNeeded() {
         let defaults = UserDefaults.standard
@@ -313,6 +325,8 @@ final class AnalyticsService {
 
 // Event names for consistency
 enum AnalyticsEvents {
+    static let applicationInstalled = "Application Installed"
+    static let applicationOpened = "Application Opened"
     static let timerStarted = "timer_started"
     static let timerCompleted = "timer_completed"
     static let timerPaused = "timer_paused"
@@ -328,6 +342,8 @@ enum AnalyticsEvents {
     static let writeReviewTapped = "write_review_tapped"
     static let paywallViewed = "paywall_viewed"
     static let paywallDismissed = "paywall_dismissed"
+    static let paywallPurchaseAttempt = "paywall_purchase_attempt"
+    static let paywallPurchaseSuccess = "paywall_purchase_success"
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
@@ -347,6 +363,8 @@ enum AnalyticsProperties {
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"
+    static let productId = "product_id"
+    static let entitlementLevel = "entitlement_level"
     static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"

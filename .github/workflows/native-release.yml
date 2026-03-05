@@ -40,7 +40,7 @@ concurrency:
 jobs:
   ios-testflight:
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
-    runs-on: macos-15
+    runs-on: macos-26
     environment: production
     steps:
       - uses: actions/checkout@v4
@@ -341,45 +341,6 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore /tmp/play-service-account.json
-
-  play-precondition-triage:
-    needs: [android-release]
-    if: ${{ always() && (inputs.platform == 'android' || inputs.platform == 'both') }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-      actions: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Play error artifact
-        uses: actions/download-artifact@v4
-        if: always()
-        continue-on-error: true
-        with:
-          name: play-upload-error
-          path: /tmp/play-upload-error
-
-      - name: Download Play result artifact
-        uses: actions/download-artifact@v4
-        if: always()
-        continue-on-error: true
-        with:
-          name: play-upload-result
-          path: /tmp/play-upload-result
-
-      - name: Upsert Play precondition triage issue
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          python scripts/play_precondition_triage.py \
-            --repo "$GITHUB_REPOSITORY" \
-            --run-url "$RUN_URL" \
-            --error-json /tmp/play-upload-error/play-upload-error.json \
-            --result-json /tmp/play-upload-result/play-upload-result.json
 
   verify-releases:
     needs: [ios-testflight, android-release]
