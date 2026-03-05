@@ -20,52 +20,49 @@ check_auth() {
   fi
 }
 
-# Set up develop branch protection
-setup_develop_protection() {
-  echo "Setting up develop branch protection..."
-  # Autonomous merge gate: enforce bot-driven checks only.
-  gh api \
-    --method PUT \
-    "/repos/$GITHUB_REPOSITORY/branches/develop/protection" \
-    -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=Autonomous\ Android\ Tests \
-    -f required_status_checks[contexts][]=Autonomous\ iOS\ Build\ Check \
-    -f required_status_checks[contexts][]=Autonomous\ Security \
-    -f required_status_checks[contexts][]=Autonomous\ AI\ Review \
-    -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=0 \
-    -f required_pull_request_reviews[dismiss_stale_reviews]=true \
-    -f required_pull_request_reviews[require_code_owner_reviews]=false \
-    -f required_pull_request_reviews[require_last_push_approval]=false \
-    -f required_conversation_resolution=false \
-    -f allow_deletions=false \
-    -f allow_force_pushes=false
-}
+apply_branch_protection() {
+  local branch="$1"
+  local required_linear_history="$2"
 
-# Set up main branch protection
-setup_main_protection() {
-  echo "Setting up main branch protection..."
-  # Autonomous merge gate: enforce bot-driven checks only.
+  echo "Setting up ${branch} branch protection..."
+
+  local payload
+  payload="$(mktemp)"
+  cat > "$payload" <<JSON
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      { "context": "Autonomous Android Tests", "app_id": -1 },
+      { "context": "Autonomous iOS Build Check", "app_id": -1 },
+      { "context": "Autonomous Security", "app_id": -1 },
+      { "context": "Autonomous AI Review", "app_id": -1 }
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 0,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "require_last_push_approval": false
+  },
+  "restrictions": null,
+  "required_linear_history": ${required_linear_history},
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_conversation_resolution": false,
+  "lock_branch": false,
+  "allow_fork_syncing": true
+}
+JSON
+
   gh api \
     --method PUT \
-    "/repos/$GITHUB_REPOSITORY/branches/main/protection" \
-    -f required_status_checks[strict]=true \
-    -f required_status_checks[contexts][]=Autonomous\ Android\ Tests \
-    -f required_status_checks[contexts][]=Autonomous\ iOS\ Build\ Check \
-    -f required_status_checks[contexts][]=Autonomous\ Security \
-    -f required_status_checks[contexts][]=Autonomous\ AI\ Review \
-    -f enforce_admins=true \
-    -f required_pull_request_reviews[required_approving_review_count]=0 \
-    -f required_pull_request_reviews[dismiss_stale_reviews]=true \
-    -f required_pull_request_reviews[require_code_owner_reviews]=false \
-    -f required_pull_request_reviews[require_last_push_approval]=false \
-    -f restrictions[users][] \
-    -f restrictions[teams][] \
-    -f restrictions[apps][] \
-    -f required_linear_history=true \
-    -f required_conversation_resolution=false \
-    -f allow_force_pushes=false \
-    -f allow_deletions=false
+    "/repos/$GITHUB_REPOSITORY/branches/${branch}/protection" \
+    --input "$payload"
+
+  rm -f "$payload"
 }
 
 # Main execution
@@ -76,8 +73,8 @@ main() {
   echo "Setting up branch protection rules for $GITHUB_REPOSITORY"
   
   # Create or update branch protection rules
-  setup_develop_protection
-  setup_main_protection
+  apply_branch_protection "develop" "false"
+  apply_branch_protection "main" "true"
   
   echo "Branch protection rules set up successfully!"
 }
