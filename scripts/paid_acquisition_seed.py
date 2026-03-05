@@ -32,6 +32,49 @@ DEFAULT_BUDGET = {
 }
 
 
+def _safe_daily_budget_cap(previous_daily_budget: float) -> float:
+    if previous_daily_budget <= 0:
+        return DEFAULT_BUDGET["daily_budget_usd"]
+    return round(min(previous_daily_budget * 1.25, previous_daily_budget + 5.0), 2)
+
+
+def _apply_budget_override_guardrails(
+    current_budget: Dict[str, float],
+    budget_override: Optional[Dict[str, float]],
+) -> tuple[Dict[str, float], float, float, bool]:
+    requested_daily_budget = float(current_budget.get("daily_budget_usd", DEFAULT_BUDGET["daily_budget_usd"]))
+    applied_daily_budget = requested_daily_budget
+    budget_capped = False
+    merged_budget = dict(current_budget)
+
+    if budget_override is None:
+        return merged_budget, requested_daily_budget, applied_daily_budget, budget_capped
+
+    merged_budget.update(budget_override)
+    requested_daily_budget = float(merged_budget.get("daily_budget_usd", requested_daily_budget))
+    previous_daily_budget = float(current_budget.get("daily_budget_usd", DEFAULT_BUDGET["daily_budget_usd"]))
+    max_allowed_daily_budget = _safe_daily_budget_cap(previous_daily_budget)
+    applied_daily_budget = min(requested_daily_budget, max_allowed_daily_budget)
+    budget_capped = applied_daily_budget < requested_daily_budget
+    merged_budget["daily_budget_usd"] = applied_daily_budget
+    return merged_budget, requested_daily_budget, applied_daily_budget, budget_capped
+
+
+def _merge_managed_campaign(
+    existing_campaign: Optional[Dict[str, Any]],
+    generated_campaign: Dict[str, Any],
+) -> Dict[str, Any]:
+    merged = dict(generated_campaign)
+    if not isinstance(existing_campaign, dict):
+        return merged
+
+    # Preserve historical launch metadata for managed campaigns.
+    for key in ("created", "status", "campaign_id", "launched_at"):
+        if key in existing_campaign:
+            merged[key] = existing_campaign[key]
+    return merged
+
+
 def load_campaigns(repo_root: Path) -> Dict[str, Any]:
     path = repo_root / CAMPAIGNS_PATH
     if path.is_file():
@@ -169,7 +212,11 @@ def compute_budget_allocation(
 def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> Dict[str, Any]:
     """Main paid acquisition pipeline."""
     campaigns_data = load_campaigns(repo_root)
-    budget = budget_override or campaigns_data.get("budget_config", DEFAULT_BUDGET)
+    current_budget = campaigns_data.get("budget_config", DEFAULT_BUDGET)
+    budget, requested_daily_budget, applied_daily_budget, budget_capped = _apply_budget_override_guardrails(
+        current_budget=current_budget,
+        budget_override=budget_override,
+    )
 
     strategy_path = repo_root / STRATEGY_PATH
     blueprint = load_blueprint(strategy_path)
@@ -184,8 +231,35 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
         budget["daily_budget_usd"],
     )
 
-    # Update campaigns
-    campaigns_data["campaigns"] = [apple_campaign, google_campaign]
+    # Update managed campaigns while preserving unrelated platforms.
+    existing_campaigns = campaigns_data.get("campaigns", [])
+    if not isinstance(existing_campaigns, list):
+        existing_campaigns = []
+    existing_by_platform = {
+        str(item.get("platform")): item for item in existing_campaigns if isinstance(item, dict) and item.get("platform")
+    }
+
+    managed_updates = {
+        "apple_search_ads": _merge_managed_campaign(existing_by_platform.get("apple_search_ads"), apple_campaign),
+        "google_uac": _merge_managed_campaign(existing_by_platform.get("google_uac"), google_campaign),
+    }
+
+    updated_campaigns: List[Dict[str, Any]] = []
+    managed_inserted: set[str] = set()
+    for campaign in existing_campaigns:
+        if not isinstance(campaign, dict):
+            continue
+        platform = str(campaign.get("platform", ""))
+        if platform in managed_updates:
+            updated_campaigns.append(managed_updates[platform])
+            managed_inserted.add(platform)
+        else:
+            updated_campaigns.append(campaign)
+    for platform, campaign in managed_updates.items():
+        if platform not in managed_inserted:
+            updated_campaigns.append(campaign)
+
+    campaigns_data["campaigns"] = updated_campaigns
     campaigns_data["budget_config"] = budget
     campaigns_data["budget_allocation"] = allocation
     campaigns_data["history"].append({
@@ -193,6 +267,9 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
         "action": "campaign_refresh",
         "apple_keywords": len(apple_campaign["ad_groups"][0]["keywords"]),
         "google_themes": len(google_campaign["targeting"]["keyword_themes"]),
+        "daily_budget_requested_usd": requested_daily_budget,
+        "daily_budget_applied_usd": applied_daily_budget,
+        "budget_capped": budget_capped,
     })
     campaigns_data["history"] = campaigns_data["history"][-50:]
 

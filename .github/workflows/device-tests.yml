@@ -1,53 +1,78 @@
 name: Device Tests
 
 on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'native-android/**'
+      - '.maestro/**'
+      - 'scripts/device-tests/**'
+      - '.github/workflows/device-tests.yml'
   workflow_dispatch:
-    inputs:
-      skip_install:
-        description: 'Skip APK build and install'
-        type: boolean
-        default: false
-      test_suite:
-        description: 'Which tests to run'
-        type: choice
-        options:
-          - all
-          - adb-only
-          - maestro-only
-        default: all
+
+concurrency:
+  group: device-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  device-tests:
-    runs-on: [self-hosted, android-device]
+  android-device-tests:
+    name: Android Emulator + Maestro Tests
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
-      - name: Verify device connected
+      - name: Create dummy google-services.json for CI
+        working-directory: native-android
         run: |
-          DEVICES=$(adb devices | grep -c "device$" || true)
-          if [ "$DEVICES" -eq 0 ]; then
-            echo "::error::No Android device connected to self-hosted runner"
-            exit 1
-          fi
-          echo "Connected devices: $DEVICES"
+          cat > app/google-services.json << 'GSEOF'
+          {
+            "project_info": { "project_number": "000000000000", "project_id": "random-timer-ci", "storage_bucket": "random-timer-ci.appspot.com" },
+            "client": [{ "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": { "package_name": "com.iganapolsky.randomtimer" } }, "api_key": [{ "current_key": "CI_PLACEHOLDER" }] }],
+            "configuration_version": "1"
+          }
+          GSEOF
 
-      - name: Run device tests
+      - name: Build debug APK
+        working-directory: native-android
         run: |
-          ARGS=""
-          if [[ "${{ inputs.skip_install }}" == "true" ]]; then
-            ARGS="$ARGS --skip-install"
-          fi
-          if [[ "${{ inputs.test_suite }}" == "adb-only" ]]; then
-            ARGS="$ARGS --adb-only"
-          elif [[ "${{ inputs.test_suite }}" == "maestro-only" ]]; then
-            ARGS="$ARGS --maestro-only"
-          fi
-          bash scripts/device-tests/run-all.sh $ARGS
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -q
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api-30-${{ runner.os }}
+
+      - name: Run Maestro tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -skin 1080x2340
+          disable-animations: false
+          emulator-boot-timeout: 300
+          script: sh scripts/device-tests/ci-maestro.sh

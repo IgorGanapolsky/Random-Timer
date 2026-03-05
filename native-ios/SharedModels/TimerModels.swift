@@ -48,6 +48,41 @@ public enum SoundType: String, Codable, Sendable, CaseIterable {
         case .bell: return "bell.mp3"
         }
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        guard let soundType = Self.fromLoose(rawValue) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unknown sound type: \(rawValue)"
+            )
+        }
+        self = soundType
+    }
+
+    static func fromLoose(_ rawValue: String) -> SoundType? {
+        let normalized = rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: " ", with: "")
+
+        switch normalized {
+        case "intense": return .intense
+        case "gentle": return .gentle
+        case "klaxon": return .klaxon
+        case "whistle": return .whistle
+        case "buzzer": return .buzzer
+        case "gong": return .gong
+        case "airhorn": return .airhorn
+        case "drumroll": return .drumRoll
+        case "siren": return .siren
+        case "bell": return .bell
+        default: return nil
+        }
+    }
 }
 
 // MARK: - Timer Configuration
@@ -73,7 +108,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 60,
+        maxSeconds: Int = 300,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -113,6 +148,111 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
+    fileprivate enum DecodingKeys: String, CodingKey {
+        case minSeconds
+        case maxSeconds
+        case alarmDuration
+        case hiddenMode
+        case repeatEnabled
+        case soundType
+        case volume
+        case vibrationEnabled
+
+        // Legacy / compatibility keys
+        case minDuration
+        case maxDuration
+        case min_time
+        case max_time
+        case alarm_duration
+        case hidden_mode
+        case repeat_enabled
+        case loopEnabled
+        case sound_type
+        case alarmSound
+        case sound
+        case soundVolume
+        case vibration
+        case vibration_enabled
+    }
+
+    private enum EncodingKeys: String, CodingKey {
+        case minSeconds
+        case maxSeconds
+        case alarmDuration
+        case hiddenMode
+        case repeatEnabled
+        case soundType
+        case volume
+        case vibrationEnabled
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DecodingKeys.self)
+
+        let rawMin = container.decodeFirstInt(
+            forKeys: [.minSeconds, .minDuration, .min_time],
+            defaultValue: 0
+        )
+        let rawMax = container.decodeFirstInt(
+            forKeys: [.maxSeconds, .maxDuration, .max_time],
+            defaultValue: 300
+        )
+        let rawAlarm = container.decodeFirstInt(
+            forKeys: [.alarmDuration, .alarm_duration],
+            defaultValue: 10
+        )
+        let hiddenMode = container.decodeFirstBool(
+            forKeys: [.hiddenMode, .hidden_mode],
+            defaultValue: false
+        )
+        let repeatEnabled = container.decodeFirstBool(
+            forKeys: [.repeatEnabled, .repeat_enabled, .loopEnabled],
+            defaultValue: false
+        )
+        let volume = container.decodeFirstFloat(
+            forKeys: [.volume, .soundVolume],
+            defaultValue: 0.5
+        )
+        let vibrationEnabled = container.decodeFirstBool(
+            forKeys: [.vibrationEnabled, .vibration_enabled, .vibration],
+            defaultValue: false
+        )
+
+        let soundType = container.decodeFirstSoundType(
+            forKeys: [.soundType, .sound_type, .alarmSound, .sound],
+            defaultValue: .intense
+        )
+
+        let clampedMin = max(0, rawMin)
+        let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
+        let clampedMax = max(clampedMin, cappedMax)
+        let clampedAlarm = max(1, rawAlarm)
+        let clampedVolume = min(max(volume, 0), 1)
+
+        self.init(
+            minSeconds: clampedMin,
+            maxSeconds: clampedMax,
+            alarmDuration: clampedAlarm,
+            hiddenMode: hiddenMode,
+            repeatEnabled: repeatEnabled,
+            soundType: soundType,
+            volume: clampedVolume,
+            vibrationEnabled: vibrationEnabled
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: EncodingKeys.self)
+        try container.encode(minSeconds, forKey: .minSeconds)
+        try container.encode(maxSeconds, forKey: .maxSeconds)
+        try container.encode(alarmDuration, forKey: .alarmDuration)
+        try container.encode(hiddenMode, forKey: .hiddenMode)
+        try container.encode(repeatEnabled, forKey: .repeatEnabled)
+        try container.encode(soundType, forKey: .soundType)
+        try container.encode(volume, forKey: .volume)
+        try container.encode(vibrationEnabled, forKey: .vibrationEnabled)
+    }
+
     /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
     /// Call this at deserialization time to enforce feature gating after subscription expiry.
     public func clamped(isPro: Bool) -> TimerConfig {
@@ -144,7 +284,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
     static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
-    static let defaultMinGapSeconds = 30
+    static let defaultMinGapSeconds = 1
 
     static func adjustForMinChange(
         currentMinSeconds: Int,
@@ -168,7 +308,10 @@ enum TimeRangeAdjuster {
 
         if adjustedMinSeconds > adjustedMaxSeconds - minGapSeconds {
             adjustedMaxSeconds = Swift.min(adjustedMinSeconds + minGapSeconds, maxSecondsLimit)
-            adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            // Only pull min back if max hit ceiling and gap is still too small
+            if adjustedMaxSeconds - adjustedMinSeconds < minGapSeconds {
+                adjustedMinSeconds = Swift.max(adjustedMaxSeconds - minGapSeconds, minSecondsLimit)
+            }
         }
 
         return (adjustedMinSeconds, adjustedMaxSeconds)
@@ -213,6 +356,18 @@ public enum TimerStatus: String, Codable, Sendable {
     case danger     // < 10 seconds remaining
     case complete   // Timer finished, transitioning to alarm
     case alarm      // Alarm is playing
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        guard let status = Self(rawValue: rawValue.lowercased()) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unknown timer status: \(rawValue)"
+            )
+        }
+        self = status
+    }
 }
 
 // MARK: - Timer State
@@ -245,9 +400,100 @@ public struct TimerState: Codable, Sendable, Equatable {
         self.alarmStartedAt = alarmStartedAt
     }
 
+    fileprivate enum DecodingKeys: String, CodingKey {
+        case config
+        case targetDuration
+        case startedAt
+        case remainingDuration
+        case status
+        case alarmTimeRemaining
+        case alarmStartedAt
+
+        // Legacy / compatibility keys
+        case target_duration
+        case started_at
+        case remaining_duration
+        case timerStatus
+        case alarm_time_remaining
+        case alarm_started_at
+    }
+
+    private enum EncodingKeys: String, CodingKey {
+        case config
+        case targetDuration
+        case startedAt
+        case remainingDuration
+        case status
+        case alarmTimeRemaining
+        case alarmStartedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DecodingKeys.self)
+
+        let config = container.decodeFirstConfig(
+            forKeys: [.config],
+            defaultValue: .default
+        )
+        let targetDuration = container.decodeFirstTimeInterval(
+            forKeys: [.targetDuration, .target_duration],
+            defaultValue: max(TimeInterval(config.maxSeconds), 1)
+        )
+        let startedAt = container.decodeFirstDate(
+            forKeys: [.startedAt, .started_at],
+            defaultValue: Date()
+        )
+        let remainingDuration = container.decodeFirstTimeInterval(
+            forKeys: [.remainingDuration, .remaining_duration],
+            defaultValue: targetDuration
+        )
+        let status = container.decodeFirstTimerStatus(
+            forKeys: [.status, .timerStatus],
+            defaultValue: .running
+        )
+        let alarmTimeRemaining = container.decodeFirstTimeInterval(
+            forKeys: [.alarmTimeRemaining, .alarm_time_remaining],
+            defaultValue: 0
+        )
+        let alarmStartedAt = container.decodeFirstDateOptional(
+            forKeys: [.alarmStartedAt, .alarm_started_at]
+        )
+
+        self.init(
+            config: config,
+            targetDuration: max(targetDuration, 1),
+            startedAt: startedAt,
+            remainingDuration: max(remainingDuration, 0),
+            status: status,
+            alarmTimeRemaining: max(alarmTimeRemaining, 0),
+            alarmStartedAt: alarmStartedAt
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: EncodingKeys.self)
+        try container.encode(config, forKey: .config)
+        try container.encode(targetDuration, forKey: .targetDuration)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encode(remainingDuration, forKey: .remainingDuration)
+        try container.encode(status, forKey: .status)
+        try container.encode(alarmTimeRemaining, forKey: .alarmTimeRemaining)
+        try container.encodeIfPresent(alarmStartedAt, forKey: .alarmStartedAt)
+    }
+
     public var progress: Double {
         guard targetDuration > 0 else { return 0 }
         return 1.0 - (remainingDuration / targetDuration)
+    }
+
+    /// Decorative progress for the UI that doesn't reveal the true random duration.
+    /// It fills based on maxSeconds, so it moves predictably but doesn't hit 100%
+    /// exactly when the timer completes (unless the random duration happens to be maxSeconds).
+    public var unpredictableProgress: Double {
+        let elapsed = Date().timeIntervalSince(startedAt)
+        let maxDuration = Double(config.maxSeconds)
+        guard maxDuration > 0 else { return 0 }
+        return min(0.98, elapsed / maxDuration)
     }
 
     public var isComplete: Bool {
@@ -372,5 +618,171 @@ extension TimerStatus {
             return .complete
         }
         return currentStatus == .paused ? .paused : .running
+    }
+}
+
+// MARK: - Entitlement Level
+
+public enum EntitlementLevel: String, Codable, Sendable {
+    case none
+    case base
+    case elite
+
+    public var isPro: Bool {
+        self != .none
+    }
+}
+
+// MARK: - Decoding Helpers
+
+private extension KeyedDecodingContainer {
+    func decodeFirstString(forKeys keys: [Key]) -> String? {
+        for key in keys {
+            if let value = try? decodeIfPresent(String.self, forKey: key) {
+                return value
+            }
+        }
+        return nil
+    }
+
+    func decodeFirstInt(forKeys keys: [Key], defaultValue: Int) -> Int {
+        for key in keys {
+            if let value = try? decodeIfPresent(Int.self, forKey: key) {
+                return value
+            }
+            if let value = try? decodeIfPresent(Double.self, forKey: key) {
+                return Int(value)
+            }
+            if let value = decodeFirstString(forKeys: [key]), let parsed = Int(value) {
+                return parsed
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstFloat(forKeys keys: [Key], defaultValue: Float) -> Float {
+        for key in keys {
+            if let value = try? decodeIfPresent(Float.self, forKey: key) {
+                return value
+            }
+            if let value = try? decodeIfPresent(Double.self, forKey: key) {
+                return Float(value)
+            }
+            if let value = decodeFirstString(forKeys: [key]), let parsed = Float(value) {
+                return parsed
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstBool(forKeys keys: [Key], defaultValue: Bool) -> Bool {
+        for key in keys {
+            if let value = try? decodeIfPresent(Bool.self, forKey: key) {
+                return value
+            }
+            if let value = decodeFirstString(forKeys: [key]) {
+                let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                if ["true", "1", "yes"].contains(normalized) { return true }
+                if ["false", "0", "no"].contains(normalized) { return false }
+            }
+            if let value = try? decodeIfPresent(Int.self, forKey: key) {
+                return value != 0
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstTimeInterval(forKeys keys: [Key], defaultValue: TimeInterval) -> TimeInterval {
+        for key in keys {
+            if let value = try? decodeIfPresent(TimeInterval.self, forKey: key) {
+                return value
+            }
+            if let value = try? decodeIfPresent(Int.self, forKey: key) {
+                return TimeInterval(value)
+            }
+            if let value = decodeFirstString(forKeys: [key]), let parsed = Double(value) {
+                return parsed
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstDate(forKeys keys: [Key], defaultValue: Date) -> Date {
+        for key in keys {
+            if let value = try? decodeIfPresent(Date.self, forKey: key) {
+                return value
+            }
+            if let value = try? decodeIfPresent(TimeInterval.self, forKey: key) {
+                return Date(timeIntervalSince1970: value)
+            }
+            if let value = decodeFirstString(forKeys: [key]) {
+                if let date = ISO8601DateFormatter().date(from: value) {
+                    return date
+                }
+                if let seconds = Double(value) {
+                    return Date(timeIntervalSince1970: seconds)
+                }
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstDateOptional(forKeys keys: [Key]) -> Date? {
+        for key in keys {
+            if let value = try? decodeIfPresent(Date.self, forKey: key) {
+                return value
+            }
+            if let value = try? decodeIfPresent(TimeInterval.self, forKey: key) {
+                return Date(timeIntervalSince1970: value)
+            }
+            if let value = decodeFirstString(forKeys: [key]) {
+                if let date = ISO8601DateFormatter().date(from: value) {
+                    return date
+                }
+                if let seconds = Double(value) {
+                    return Date(timeIntervalSince1970: seconds)
+                }
+            }
+        }
+        return nil
+    }
+}
+
+private extension KeyedDecodingContainer where Key == TimerConfig.DecodingKeys {
+    func decodeFirstSoundType(forKeys keys: [Key], defaultValue: SoundType) -> SoundType {
+        for key in keys {
+            if let value = try? decodeIfPresent(SoundType.self, forKey: key) {
+                return value
+            }
+            if let rawValue = decodeFirstString(forKeys: [key]),
+               let value = SoundType.fromLoose(rawValue) {
+                return value
+            }
+        }
+        return defaultValue
+    }
+}
+
+private extension KeyedDecodingContainer where Key == TimerState.DecodingKeys {
+    func decodeFirstConfig(forKeys keys: [Key], defaultValue: TimerConfig) -> TimerConfig {
+        for key in keys {
+            if let value = try? decodeIfPresent(TimerConfig.self, forKey: key) {
+                return value
+            }
+        }
+        return defaultValue
+    }
+
+    func decodeFirstTimerStatus(forKeys keys: [Key], defaultValue: TimerStatus) -> TimerStatus {
+        for key in keys {
+            if let value = try? decodeIfPresent(TimerStatus.self, forKey: key) {
+                return value
+            }
+            if let rawValue = decodeFirstString(forKeys: [key]),
+               let value = TimerStatus(rawValue: rawValue.lowercased()) {
+                return value
+            }
+        }
+        return defaultValue
     }
 }

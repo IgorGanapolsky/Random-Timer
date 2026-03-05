@@ -27,6 +27,8 @@ import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
@@ -55,6 +58,10 @@ class TimerForegroundService : Service() {
     @Inject lateinit var storeReviewManager: StoreReviewManager
 
     @Inject lateinit var analyticsService: AnalyticsService
+
+    @Inject lateinit var proManager: ProManager
+
+    @Inject lateinit var voiceCalloutManager: AIVoiceCalloutManager
 
     private val trainingStatsService by lazy { TrainingStatsService(this) }
     private val binder = LocalBinder()
@@ -171,6 +178,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        voiceCalloutManager.shutdown()
         serviceScope.cancel()
     }
 
@@ -214,8 +222,8 @@ class TimerForegroundService : Service() {
         val initialState =
             TimerState(
                 config = config,
-                targetDuration = kotlin.time.Duration.parse("${targetMs}ms"),
-                remainingDuration = kotlin.time.Duration.parse("${remainingMs}ms"),
+                targetDuration = targetMs.milliseconds,
+                remainingDuration = remainingMs.milliseconds,
                 status = TimerStatus.RUNNING,
             )
 
@@ -225,6 +233,7 @@ class TimerForegroundService : Service() {
     private fun startTimer(initialState: TimerState) {
         _timerState.value = initialState
         updateNotification(initialState)
+        voiceCalloutManager.resetSession()
 
         timerJob?.cancel()
         timerJob =
@@ -256,6 +265,11 @@ class TimerForegroundService : Service() {
 
                     _timerState.value = state
                     updateNotification(state)
+
+                    // Trigger AI Voice Callout for ELITE users
+                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
+                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                    }
 
                     if (newStatus == TimerStatus.COMPLETE) {
                         triggerAlarm(state)
@@ -462,8 +476,8 @@ class TimerForegroundService : Service() {
         val newState =
             TimerState(
                 config = currentConfig,
-                targetDuration = kotlin.time.Duration.parse("${randomMs}ms"),
-                remainingDuration = kotlin.time.Duration.parse("${randomMs}ms"),
+                targetDuration = randomMs.milliseconds,
+                remainingDuration = randomMs.milliseconds,
                 status = TimerStatus.RUNNING,
             )
 

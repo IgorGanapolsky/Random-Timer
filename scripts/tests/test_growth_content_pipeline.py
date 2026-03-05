@@ -20,6 +20,17 @@ class GrowthContentPipelineTests(unittest.TestCase):
         self.assertIn("utm_source=github_pages", url)
         self.assertIn("utm_campaign=daily_blog_20260219", url)
 
+    def test_add_utm_preserves_existing_query_and_supports_content_override(self):
+        url = pipeline.add_utm(
+            "https://example.com/path?platform=ios",
+            "x",
+            "daily_blog_20260219",
+            content="2026-02-19-sample",
+        )
+        self.assertIn("platform=ios", url)
+        self.assertIn("utm_source=x", url)
+        self.assertIn("utm_content=2026-02-19-sample", url)
+
     def test_build_post_copy_includes_inspiration_block_when_supplied(self):
         _, _, body = pipeline.build_post_copy(
             "The inspiration behind Random Tactical Timer",
@@ -93,6 +104,122 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertTrue((root / "site" / "llms.txt").is_file())
             self.assertTrue((root / "site" / "agents.md").is_file())
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
+
+    def test_build_site_writes_social_meta_structured_data_and_robots(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog"}, clear=False):
+                pipeline.build_site(root)
+
+            post_html = (root / "site" / "posts" / "2026-02-19-sample.html").read_text(encoding="utf-8")
+            index_html = (root / "site" / "index.html").read_text(encoding="utf-8")
+            robots = (root / "site" / "robots.txt").read_text(encoding="utf-8")
+            self.assertIn('property="og:title"', post_html)
+            self.assertIn('name="twitter:card"', post_html)
+            self.assertIn('application/ld+json', post_html)
+            self.assertIn('rel="canonical"', post_html)
+            self.assertIn('property="og:type" content="website"', index_html)
+            self.assertIn("Sitemap: https://example.com/blog/sitemap.xml", robots)
+
+    def test_build_site_prefers_png_social_image_for_cards_when_available(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = repo / "marketing"
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (repo / "screenshots").mkdir(parents=True, exist_ok=True)
+            (root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+            (repo / "screenshots" / "ios-active.png").write_bytes(b"png")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog"}, clear=False):
+                pipeline.build_site(root)
+
+            post_html = (root / "site" / "posts" / "2026-02-19-sample.html").read_text(encoding="utf-8")
+            self.assertIn("https://example.com/blog/assets/social-preview.png", post_html)
+            self.assertTrue((root / "site" / "assets" / "social-preview.png").is_file())
+
+    def test_publish_post_uses_channel_specific_utm_links(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            md = root / "posts" / "2026-02-21-sample.md"
+            md.write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-21\n"
+                "tags: [ai, testing]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (root / "diagrams" / "2026-02-21-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+            (root / "diagrams" / "2026-02-21-sample.mmd").write_text("graph TD;A-->B", encoding="utf-8")
+
+            post = pipeline.PostAsset(
+                slug="2026-02-21-sample",
+                title="Sample",
+                description="Desc",
+                created_at="2026-02-21T00:00:00+00:00",
+                markdown_path=md,
+                diagram_svg_path=root / "diagrams" / "2026-02-21-sample.svg",
+                diagram_mermaid_path=root / "diagrams" / "2026-02-21-sample.mmd",
+                html_path=root / "site" / "posts" / "2026-02-21-sample.html",
+                tags=["ai", "testing"],
+            )
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog"}, clear=False):
+                with patch.object(
+                    pipeline,
+                    "_post_devto",
+                    return_value={"channel": "devto", "status": "published", "url": "https://dev.to/x"},
+                ) as mocked_devto:
+                    with patch.object(
+                        pipeline,
+                        "_post_linkedin",
+                        return_value={"channel": "linkedin", "status": "published"},
+                    ) as mocked_linkedin:
+                        with patch.object(
+                            pipeline,
+                            "_post_x",
+                            return_value={"channel": "x", "status": "published"},
+                        ) as mocked_x:
+                            pipeline.publish_post(post, root, dry_run=False, devto_mode="control")
+
+            devto_url = mocked_devto.call_args[0][3]
+            linkedin_url = mocked_linkedin.call_args[0][1]
+            x_url = mocked_x.call_args[0][1]
+            self.assertEqual(devto_url, "https://example.com/blog/posts/2026-02-21-sample.html")
+            self.assertIn("utm_source=linkedin", linkedin_url)
+            self.assertIn("utm_source=x", x_url)
+            self.assertIn("utm_content=2026-02-21-sample", x_url)
 
     def test_strip_frontmatter_returns_body_only(self):
         raw = (

@@ -9,8 +9,8 @@ package com.iganapolsky.randomtimer.domain.model
  */
 object TimeRangeAdjuster {
     const val DEFAULT_MIN_SECONDS = 0
-    const val DEFAULT_MAX_SECONDS = 300
-    const val DEFAULT_MIN_GAP_SECONDS = 30
+    const val DEFAULT_MAX_SECONDS = 3600
+    const val DEFAULT_MIN_GAP_SECONDS = 1
 
     fun adjustForMinChange(
         currentMinSeconds: Int,

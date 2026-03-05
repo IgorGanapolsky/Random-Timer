@@ -1,0 +1,135 @@
+name: Pause Paid Campaigns
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Reason for pausing paid campaigns
+        required: false
+        default: no_scale_lock_active
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  pause-paid:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests==2.32.5 PyJWT cryptography
+
+      - name: Pause Apple Search Ads campaign
+        env:
+          APPLE_ADS_CLIENT_ID: ${{ secrets.APPLE_ADS_CLIENT_ID }}
+          APPLE_ADS_TEAM_ID: ${{ secrets.APPLE_ADS_TEAM_ID }}
+          APPLE_ADS_KEY_ID: ${{ secrets.APPLE_ADS_KEY_ID }}
+          APPLE_ADS_ORG_ID: ${{ secrets.APPLE_ADS_ORG_ID }}
+          APPLE_ADS_PRIVATE_KEY: ${{ secrets.APPLE_ADS_PRIVATE_KEY }}
+        run: |
+          python scripts/apple_ads_pause.py \
+            --repo-root . \
+            --reason "${{ inputs.reason }}"
+
+      - name: Refresh North Star snapshot
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7 || true
+
+      - name: Create/update PR with campaign state updates
+        id: create_pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PROJECT_PAT || github.token }}
+          commit-message: "chore(ads): pause Apple Search Ads due to no-scale lock"
+          title: "chore(ads): pause paid campaigns + north star snapshot"
+          body: |
+            Automated pause workflow output.
+            Reason: `${{ inputs.reason }}`
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          branch: auto/pause-paid-campaigns
+          branch-suffix: timestamp
+          base: develop
+          add-paths: |
+            marketing/data/paid_campaigns.json
+            marketing/data/north_star.json
+          labels: |
+            automation
+
+      - name: Comment status issue
+        if: always()
+        env:
+          CREATE_PR_OUTCOME: ${{ steps.create_pr.outcome }}
+          CREATE_PR_OPERATION: ${{ steps.create_pr.outputs.pull-request-operation }}
+          CREATE_PR_URL: ${{ steps.create_pr.outputs.pull-request-url }}
+          INPUT_REASON: ${{ inputs.reason }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prOutcome = process.env.CREATE_PR_OUTCOME || 'unknown';
+            const prOperation = process.env.CREATE_PR_OPERATION || '';
+            const prUrl = (process.env.CREATE_PR_URL || '').trim();
+            const reason = process.env.INPUT_REASON || 'no_scale_lock_active';
+            let prLine = '- Update PR: status unknown';
+            if (prUrl) {
+              prLine = `- Update PR: ${prUrl} (${prOperation || 'created'})`;
+            } else if (prOutcome !== 'success') {
+              prLine = `- Update PR: failed (${prOutcome})`;
+            } else if (prOperation === 'none') {
+              prLine = '- Update PR: none (no file diff)';
+            }
+            const path = 'marketing/data/north_star.json';
+            const issueNumber = 81;
+            let payload = {};
+            if (fs.existsSync(path)) {
+              payload = JSON.parse(fs.readFileSync(path, 'utf8'));
+            }
+            const ns = payload.north_star || {};
+            const paid = payload.paid || {};
+            const lock = paid.no_scale_lock || {};
+            const body = [
+              '## Paid Campaign Pause + North Star Snapshot',
+              '',
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              prLine,
+              `- WQTU (7d): ${ns.wqtu_7d ?? 'n/a'}`,
+              `- Checkpoint target (2026-03-31): ${(ns.targets || {}).checkpoint_2026_03_31 ?? 'n/a'}`,
+              `- Paid attributed users (30d): ${paid.paid_distinct_users_30d ?? 'n/a'}`,
+              `- Active campaign count: ${paid.active_campaign_count ?? 'n/a'}`,
+              `- No-scale lock active: ${lock.active ?? paid.guardrail_violated ?? 'n/a'}`,
+              '',
+              `Reason: ${reason}`,
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body,
+            });
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paid-pause-artifacts
+          path: |
+            marketing/data/paid_campaigns.json
+            marketing/data/north_star.json

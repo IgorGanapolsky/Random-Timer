@@ -15,6 +15,7 @@ navigationCompose = "2.8.5"
 datastore = "1.1.1"
 coroutines = "1.9.0"
 mockk = "1.13.13"
+orgJson = "20240303"
 turbine = "1.2.0"
 truth = "1.4.4"
 posthog = "3.8.2"
@@ -53,6 +54,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 posthog = { group = "com.posthog", name = "posthog-android", version.ref = "posthog" }

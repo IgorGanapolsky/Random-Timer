@@ -103,7 +103,7 @@ platform :ios do
 
     # Upload to TestFlight
     upload_to_testflight(
-      skip_waiting_for_build_processing: true,
+      skip_waiting_for_build_processing: false,
       api_key: defined?(api_key) ? api_key : nil
     )
   end

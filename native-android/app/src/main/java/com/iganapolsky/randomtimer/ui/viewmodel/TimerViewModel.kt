@@ -41,7 +41,7 @@ class TimerViewModel
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
-        private val trainingStatsService: TrainingStatsService,
+        val trainingStatsService: TrainingStatsService,
         val proManager: ProManager,
     ) : ViewModel() {
         val totalSessions: Int get() = trainingStatsService.totalSessions
@@ -245,7 +245,12 @@ class TimerViewModel
             if (previousStatus == TimerStatus.ALARM && currentStatus == TimerStatus.COMPLETE) {
                 analyticsService.track(
                     AnalyticsEvents.TIMER_COMPLETED,
-                    mapOf("target_duration" to state.targetDuration.inWholeSeconds),
+                    mapOf(
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                        AnalyticsProperties.ENTITLEMENT_LEVEL to
+                            proManager.entitlementLevel.value.name
+                                .lowercase(),
+                    ),
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
                 markFirstTimerCompleted()
