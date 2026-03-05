@@ -314,6 +314,9 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Release metadata preflight (iOS)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
       - name: Release readiness gate (local)
         run: |
           python scripts/release_ops.py check_readiness \

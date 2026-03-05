@@ -255,8 +255,8 @@ jobs:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
-          export SUP_JSON_KEY_PATH="play-store-key.json"
+          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+          export GOOGLE_PLAY_JSON_KEY_PATH="/tmp/play-service-account.json"
           fastlane internal
 
       - name: Upload Android AAB artifact
@@ -270,5 +270,4 @@ jobs:
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/release.keystore native-android/play-store-key.json
-# Triggering fresh check
+          rm -f /tmp/release.keystore /tmp/play-service-account.json
