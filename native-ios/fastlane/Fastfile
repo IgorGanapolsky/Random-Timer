@@ -248,13 +248,29 @@ platform :ios do
         )
       end
 
-      # Distribution profiles for App Store export
-      match(
-        type: "appstore",
-        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-        readonly: false,
-        api_key: api_key
-      )
+      # Distribution profiles for App Store export.
+      # If Apple revoked/deleted a cert referenced by the saved profile, retry once
+      # with profile regeneration to self-heal CI instead of requiring manual cleanup.
+      begin
+        match(
+          type: "appstore",
+          app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+          readonly: false,
+          api_key: api_key
+        )
+      rescue => e
+        message = e.to_s
+        raise unless message.include?("not available on the Developer Portal")
+
+        UI.important("Detected stale App Store profile certificate reference. Retrying match with forced profile regeneration.")
+        match(
+          type: "appstore",
+          app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+          readonly: false,
+          force: true,
+          api_key: api_key
+        )
+      end
     else
       UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
     end

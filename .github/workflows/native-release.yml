@@ -223,7 +223,7 @@ jobs:
 
       - name: Verify Google Play API access
         env:
-          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
         run: |
           python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
           python scripts/check_store_access.py --platform android
@@ -261,20 +261,20 @@ jobs:
 
       - name: Upload to Google Play (track)
         env:
-          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
+          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
           PLAY_FALLBACK_TRACK: alpha
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
-          if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
-            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
+          if [ ! -f "$GOOGLE_PLAY_JSON_KEY_PATH" ]; then
+            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY_PATH"
             exit 1
           fi
           pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
           python scripts/play_publish.py \
-            --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
+            --service-account-json "$GOOGLE_PLAY_JSON_KEY_PATH" \
             --package com.iganapolsky.randomtimer \
             --aab-path native-android/app/build/outputs/bundle/release/app-release.aab \
             --requested-track "$PLAY_TRACK" \
