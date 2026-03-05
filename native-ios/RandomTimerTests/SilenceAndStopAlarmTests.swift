@@ -57,7 +57,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     }
 
     @MainActor
-    func testDoesNotClearRandomTimer.TimerState() {
+    func testDoesNotClearTimerState() {
         let manager = TimerManager()
         manager._setTimerStateForTesting(makeAlarmState(alarmTimeRemaining: 5))
 

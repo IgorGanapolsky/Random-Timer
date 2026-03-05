@@ -15,7 +15,7 @@ final class TimerConfigTests: XCTestCase {
 
     func testConfigAcceptsValidRange() {
         let config = RandomTimer.TimerConfig(
-            minSeconds : 300,
+            minSeconds: 60,
             maxSeconds: 300,
             alarmDuration: 10,
             hiddenMode: false,
@@ -25,14 +25,14 @@ final class TimerConfigTests: XCTestCase {
             vibrationEnabled: false
         )
 
-        XCTAssertEqual(config.minDuration, 300.0)
+        XCTAssertEqual(config.minDuration, 60.0)
         XCTAssertEqual(config.maxDuration, 300.0)
     }
 
     func testConfigAcceptsSameMinAndMax() {
         let config = RandomTimer.TimerConfig(
-            minSeconds : 300,
-            maxSeconds : 300,
+            minSeconds: 120,
+            maxSeconds: 120,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -133,7 +133,7 @@ final class TimerStateTests: XCTestCase {
     func testProgressIsHalfAtHalfway() {
         let state = RandomTimer.TimerState(
             config: defaultConfig,
-            targetDuration : 3000,
+            targetDuration: 600,
             remainingDuration: 300,
             status: .running
         )
@@ -178,7 +178,7 @@ final class TimerStateTests: XCTestCase {
         let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
-            remainingDuration : 300,
+            remainingDuration: 120,
             status: .running
         )
 
@@ -278,10 +278,10 @@ final class TimeRangeAdjusterTests: XCTestCase {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: 0,
             currentMaxSeconds: 300,
-            newMinSeconds : 300
+            newMinSeconds: 120
         )
 
-        XCTAssertEqual(adjusted.min, 300)
+        XCTAssertEqual(adjusted.min, 120)
         XCTAssertEqual(adjusted.max, 300)
     }
 
@@ -425,7 +425,7 @@ final class TimerManagerTests: XCTestCase {
     }
 
     @MainActor
-    func testStartTimerSetsRandomTimer.TimerState() async {
+    func testStartTimerSetsTimerState() async {
         let manager = TimerManager()
         let config = RandomTimer.TimerConfig(minSeconds: 5, maxSeconds: 10)
         
@@ -439,7 +439,7 @@ final class TimerManagerTests: XCTestCase {
     }
 
     @MainActor
-    func testCancelTimerClearsRandomTimer.TimerState() async {
+    func testCancelTimerClearsTimerState() async {
         let manager = TimerManager()
         await manager.startTimer()
         XCTAssertNotNil(manager.timerState)
@@ -489,7 +489,7 @@ final class TimerManagerTests: XCTestCase {
         // timerState.config must reflect the change
         XCTAssertTrue(manager.timerState!.config.repeatEnabled,
                       "Loop toggle must propagate into running timerState.config")
-        }
+    }
 
     @MainActor
     func testUpdateConfigDoesNotCrashWhenNoTimerRunning() {
@@ -733,9 +733,9 @@ final class StorageServiceTests: XCTestCase {
             alarmStartedAt: alarmStartedAt
         )
 
-        await storageService.saveRandomTimer.TimerState(state)
+        await storageService.saveTimerState(state)
 
-        let loadedAsync = await storageService.loadRandomTimer.TimerState()
+        let loadedAsync = await storageService.loadTimerState()
         let loadedSync = storageService.loadTimerStateSync()
 
         XCTAssertEqual(loadedAsync, state)
@@ -750,13 +750,13 @@ final class StorageServiceTests: XCTestCase {
             remainingDuration: 30,
             status: .running
         )
-        await storageService.saveRandomTimer.TimerState(state)
-        let savedState = await storageService.loadRandomTimer.TimerState()
+        await storageService.saveTimerState(state)
+        let savedState = await storageService.loadTimerState()
         XCTAssertNotNil(savedState)
 
-        await storageService.clearRandomTimer.TimerState()
+        await storageService.clearTimerState()
 
-        let clearedAsync = await storageService.loadRandomTimer.TimerState()
+        let clearedAsync = await storageService.loadTimerState()
         XCTAssertNil(clearedAsync)
         XCTAssertNil(storageService.loadTimerStateSync())
     }
@@ -769,13 +769,13 @@ final class StorageServiceTests: XCTestCase {
             remainingDuration: 22,
             status: .paused
         )
-        await storageService.saveRandomTimer.TimerState(state)
+        await storageService.saveTimerState(state)
         XCTAssertNotNil(storageService.loadTimerStateSync())
 
         storageService.clearTimerStateSync()
 
         XCTAssertNil(storageService.loadTimerStateSync())
-        let clearedAsync = await storageService.loadRandomTimer.TimerState()
+        let clearedAsync = await storageService.loadTimerState()
         XCTAssertNil(clearedAsync)
     }
 
@@ -847,7 +847,7 @@ final class TimerAbandonedAnalyticsTests: XCTestCase {
         storage.clearTimerStateSync()
         defer { storage.clearTimerStateSync() }
 
-        await storage.saveRandomTimer.TimerState(
+        await storage.saveTimerState(
             RandomTimer.TimerState(
                 config: RandomTimer.TimerConfig.default,
                 targetDuration: 5,
@@ -887,5 +887,3 @@ final class TimerAbandonedAnalyticsTests: XCTestCase {
     }
 }
 #endif
- 
-// Fresh trigger Thu Mar  5 08:50:24 EST 2026
