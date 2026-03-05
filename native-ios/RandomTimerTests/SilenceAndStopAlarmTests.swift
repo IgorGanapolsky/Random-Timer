@@ -5,8 +5,8 @@ import Foundation
 final class SilenceAndStopAlarmTests: XCTestCase {
 
     @MainActor
-    private func makeConfig() -> RandomTimer.TimerConfig {
-        RandomTimer.TimerConfig(
+    private func makeConfig() -> TimerConfig {
+        TimerConfig(
             minSeconds: 5,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -20,10 +20,10 @@ final class SilenceAndStopAlarmTests: XCTestCase {
 
     @MainActor
     private func makeState(
-        config: RandomTimer.TimerConfig? = nil,
-        status: RandomTimer.TimerStatus = .running
-    ) -> RandomTimer.TimerState {
-        return RandomTimer.TimerState(
+        config: TimerConfig? = nil,
+        status: TimerStatus = .running
+    ) -> TimerState {
+        return TimerState(
             config: config ?? makeConfig(),
             targetDuration: 10,
             startedAt: Date(),
@@ -36,7 +36,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     func testSilenceAlarmStopsAudioButKeepsState() async {
         let manager = TimerManager()
         let config = makeConfig()
-        let state = RandomTimer.TimerState(
+        let state = TimerState(
             config: config,
             targetDuration: 5,
             remainingDuration: 0,
