@@ -223,7 +223,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: .intense
         )
 
-        let clampedMin = max(0, rawMin)
+        let clampedMin = min(max(0, rawMin), TimerConfig.maxSecondsPro)
         let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
         let clampedMax = max(clampedMin, cappedMax)
         let clampedAlarm = max(1, rawAlarm)

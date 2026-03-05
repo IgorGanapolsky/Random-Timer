@@ -113,6 +113,20 @@ final class TimerConfigTests: XCTestCase {
         )
         XCTAssertEqual(decoded, expected)
     }
+
+    func testConfigDecodingCapsOversizedMinAtProLimit() throws {
+        let payload = """
+        {
+          "minSeconds": 999999,
+          "maxSeconds": 999999
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
+
+        XCTAssertEqual(decoded.minSeconds, RandomTimer.TimerConfig.maxSecondsPro)
+        XCTAssertEqual(decoded.maxSeconds, RandomTimer.TimerConfig.maxSecondsPro)
+    }
 }
 
 final class TimerStateTests: XCTestCase {
