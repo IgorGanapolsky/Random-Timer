@@ -35,6 +35,7 @@ if (enableFirebasePlugins) {
 
 val ciCompileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toIntOrNull()
 val ciTargetSdk = providers.gradleProperty("ciTargetSdk").orNull?.toIntOrNull()
+val ciVersionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull()
 
 android {
     namespace = "com.iganapolsky.randomtimer"
@@ -44,7 +45,7 @@ android {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
         targetSdk = ciTargetSdk ?: 35
-        versionCode = 11
+        versionCode = ciVersionCode ?: 11
         versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
