@@ -317,8 +317,7 @@ jobs:
             exit 1
           fi
           if [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ] && [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
-            echo "❌ Missing Firebase distribution audience: set FIREBASE_INTERNAL_TESTERS or FIREBASE_INTERNAL_GROUPS"
-            exit 1
+            echo "INFO: No Firebase audience configured. Falling back to upload-only mode."
           fi
 
       - name: Setup Java
@@ -385,35 +384,66 @@ jobs:
 
           TESTERS="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}")"
           GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
+          APK_PATH="native-android/app/build/outputs/apk/release/app-release.apk"
 
-          DIST_CMD=(
+          BASE_CMD=(
             npx --yes firebase-tools appdistribution:distribute
-            native-android/app/build/outputs/apk/release/app-release.apk
+            "$APK_PATH"
             --app "$FIREBASE_ANDROID_APP_ID"
             --release-notes "Internal CI build ${GITHUB_SHA}"
           )
+
+          run_dist() {
+            local label="$1"
+            local log_file="$2"
+            shift 2
+
+            echo "Firebase distribution attempt: $label"
+            set +e
+            "${BASE_CMD[@]}" "$@" 2>&1 | tee "$log_file"
+            local dist_rc=${PIPESTATUS[0]}
+            set -e
+
+            if [ "$dist_rc" -ne 0 ]; then
+              echo "Firebase attempt '$label' failed with exit code $dist_rc"
+              if [ -s "$log_file" ]; then
+                echo "Firebase CLI output (tail):"
+                tail -n 80 "$log_file"
+              else
+                echo "Firebase CLI produced no output."
+              fi
+            fi
+
+            return "$dist_rc"
+          }
+
+          ATTEMPT1_ARGS=()
           if [ -n "$TESTERS" ]; then
-            DIST_CMD+=(--testers "$TESTERS")
+            ATTEMPT1_ARGS+=(--testers "$TESTERS")
           fi
           if [ -n "$GROUPS" ]; then
-            DIST_CMD+=(--groups "$GROUPS")
+            ATTEMPT1_ARGS+=(--groups "$GROUPS")
           fi
 
-          set +e
-          "${DIST_CMD[@]}" 2>&1 | tee /tmp/firebase-distribute.log
-          dist_rc=${PIPESTATUS[0]}
-          set -e
-
-          if [ "$dist_rc" -ne 0 ] && grep -qi "Precondition check failed" /tmp/firebase-distribute.log && [ -n "$TESTERS" ] && [ -n "$GROUPS" ]; then
-            echo "⚠️ Firebase distribute precondition failure with testers+groups. Retrying with groups-only."
-            npx --yes firebase-tools appdistribution:distribute \
-              native-android/app/build/outputs/apk/release/app-release.apk \
-              --app "$FIREBASE_ANDROID_APP_ID" \
-              --groups "$GROUPS" \
-              --release-notes "Internal CI build ${GITHUB_SHA}"
-          elif [ "$dist_rc" -ne 0 ]; then
-            exit "$dist_rc"
+          if run_dist "audience-targeted" /tmp/firebase-distribute-attempt1.log "${ATTEMPT1_ARGS[@]}"; then
+            exit 0
           fi
+
+          if [ -n "$TESTERS" ] && [ -n "$GROUPS" ]; then
+            if run_dist "groups-only-retry" /tmp/firebase-distribute-attempt2.log --groups "$GROUPS"; then
+              exit 0
+            fi
+          fi
+
+          if [ "${#ATTEMPT1_ARGS[@]}" -gt 0 ]; then
+            echo "Retrying Firebase upload without testers/groups."
+            if run_dist "upload-only-retry" /tmp/firebase-distribute-attempt3.log; then
+              exit 0
+            fi
+          fi
+
+          echo "Firebase distribution failed after retries."
+          exit 1
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
