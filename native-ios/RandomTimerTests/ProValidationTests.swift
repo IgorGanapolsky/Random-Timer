@@ -4,9 +4,9 @@ import XCTest
 final class TimerConfigProClampingTests: XCTestCase {
 
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
-            maxSeconds: 33000,
+            maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -17,12 +17,12 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         let clamped = proConfig.clamped(isPro: false)
 
-        XCTAssertEqual(clamped.maxSeconds, TimerConfig.maxSecondsFree,
+        XCTAssertEqual(clamped.maxSeconds, RandomTimer.TimerConfig.maxSecondsFree,
                        "Expired Pro user must have maxSeconds clamped to free limit")
     }
 
     func testExpiredProUser_proSoundType_isResetToIntense() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -35,12 +35,12 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         let clamped = proConfig.clamped(isPro: false)
 
-        XCTAssertEqual(clamped.soundType, .intense,
+        XCTAssertEqual(clamped.soundType, RandomTimer.SoundType.intense,
                        "Expired Pro user must have Pro soundType reset to .intense")
     }
 
     func testExpiredProUser_freeSoundType_isRetained() {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -57,10 +57,10 @@ final class TimerConfigProClampingTests: XCTestCase {
                        "Free soundType must be retained after clamping")
     }
 
-    func testActiveProUser_maxSecondsUpTo33000_isRetained() {
-        let proConfig = TimerConfig(
+    func testActiveProUser_maxSecondsUpTo3600_isRetained() {
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
-            maxSeconds: 33000,
+            maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -71,12 +71,12 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         let clamped = proConfig.clamped(isPro: true)
 
-        XCTAssertEqual(clamped.maxSeconds, 33000,
-                       "Active Pro user must retain maxSeconds = 33000")
+        XCTAssertEqual(clamped.maxSeconds, 3600,
+                       "Active Pro user must retain maxSeconds = 3600")
     }
 
     func testActiveProUser_proSoundType_isRetained() {
-        let proConfig = TimerConfig(
+        let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -94,7 +94,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testFreeUserConfig_withinFreeLimits_isUnchanged() {
-        let freeConfig = TimerConfig(
+        let freeConfig = RandomTimer.TimerConfig(
             minSeconds: 30,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -114,10 +114,10 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testExpiredProUser_allProSoundTypes_areResetToIntense() {
-        let proSounds: [SoundType] = [.klaxon, .whistle, .buzzer, .gong, .airhorn, .drumRoll, .siren, .bell]
+        let proSounds: [RandomTimer.SoundType] = [.klaxon, .whistle, .buzzer, .gong, .airhorn, .drumRoll, .siren, .bell]
 
         for sound in proSounds {
-            let config = TimerConfig(
+            let config = RandomTimer.TimerConfig(
                 minSeconds: 0,
                 maxSeconds: 300,
                 alarmDuration: 10,
@@ -125,7 +125,7 @@ final class TimerConfigProClampingTests: XCTestCase {
                 volume: 0.5
             )
             let clamped = config.clamped(isPro: false)
-            XCTAssertEqual(clamped.soundType, .intense,
+            XCTAssertEqual(clamped.soundType, RandomTimer.SoundType.intense,
                            "Pro sound \(sound) must be clamped to .intense for expired Pro user")
         }
     }

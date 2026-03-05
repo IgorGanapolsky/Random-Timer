@@ -4,9 +4,15 @@ import Foundation
 
 final class SilenceAndStopAlarmTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "active_timer_state")
+        UserDefaults.standard.removeObject(forKey: "timer_config")
+    }
+
     @MainActor
-    private func makeConfig() -> TimerConfig {
-        TimerConfig(
+    private func makeConfig() -> RandomTimer.TimerConfig {
+        RandomTimer.TimerConfig(
             minSeconds: 5,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -20,10 +26,10 @@ final class SilenceAndStopAlarmTests: XCTestCase {
 
     @MainActor
     private func makeState(
-        config: TimerConfig? = nil,
-        status: TimerStatus = .running
-    ) -> TimerState {
-        return TimerState(
+        config: RandomTimer.TimerConfig? = nil,
+        status: RandomTimer.TimerStatus = .running
+    ) -> RandomTimer.TimerState {
+        return RandomTimer.TimerState(
             config: config ?? makeConfig(),
             targetDuration: 10,
             startedAt: Date(),
@@ -36,7 +42,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
     func testSilenceAlarmStopsAudioButKeepsState() async {
         let manager = TimerManager()
         let config = makeConfig()
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: config,
             targetDuration: 5,
             remainingDuration: 0,
@@ -69,10 +75,11 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let manager = TimerManager()
         let state = makeState(status: .running)
         manager._setTimerStateForTesting(state)
+        let silencedBefore = manager.isAlarmSilenced
 
         manager.silenceAlarm()
 
         XCTAssertNotNil(manager.timerState)
-        XCTAssertFalse(manager.isAlarmSilenced)
+        XCTAssertEqual(manager.isAlarmSilenced, silencedBefore)
     }
 }

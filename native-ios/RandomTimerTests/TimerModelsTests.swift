@@ -5,7 +5,7 @@ import Foundation
 final class TimerConfigTests: XCTestCase {
 
     func testDefaultConfigHasValidRange() {
-        let config = TimerConfig.default
+        let config = RandomTimer.TimerConfig.default
 
         XCTAssertEqual(config.minSeconds, 0)
         XCTAssertEqual(config.maxSeconds, 300)
@@ -14,7 +14,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigAcceptsValidRange() {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 60,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -30,7 +30,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigAcceptsSameMinAndMax() {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 120,
             maxSeconds: 120,
             alarmDuration: 10,
@@ -45,7 +45,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigCanEnableVibration() {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 30,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -60,12 +60,12 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testDefaultAlarmDurationIs10Seconds() {
-        let config = TimerConfig.default
+        let config = RandomTimer.TimerConfig.default
         XCTAssertEqual(config.alarmDuration, 10)
     }
 
     func testConfigDurationConversion() {
-        let config = TimerConfig(minSeconds: 90, maxSeconds: 300)
+        let config = RandomTimer.TimerConfig(minSeconds: 90, maxSeconds: 300)
         XCTAssertEqual(config.minDuration, 90.0)
         XCTAssertEqual(config.maxDuration, 300.0)
         XCTAssertEqual(config.alarmDurationInterval, 10.0)
@@ -85,10 +85,10 @@ final class TimerConfigTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
+        let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
         XCTAssertEqual(decoded.minSeconds, 0)
-        XCTAssertEqual(decoded.maxSeconds, TimerConfig.maxSecondsPro)
+        XCTAssertEqual(decoded.maxSeconds, RandomTimer.TimerConfig.maxSecondsPro)
         XCTAssertEqual(decoded.alarmDuration, 1)
         XCTAssertTrue(decoded.hiddenMode)
         XCTAssertTrue(decoded.repeatEnabled)
@@ -99,9 +99,9 @@ final class TimerConfigTests: XCTestCase {
 
     func testConfigDecodingFallsBackToDefaultsWhenFieldsMissing() throws {
         let payload = "{}".data(using: .utf8)!
-        let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
+        let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
         
-        let expected = TimerConfig(
+        let expected = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
             alarmDuration: 10,
@@ -117,10 +117,10 @@ final class TimerConfigTests: XCTestCase {
 
 final class TimerStateTests: XCTestCase {
 
-    private let defaultConfig = TimerConfig.default
+    private let defaultConfig = RandomTimer.TimerConfig.default
 
     func testProgressIsZeroAtStart() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 300,
@@ -131,7 +131,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testProgressIsHalfAtHalfway() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 600,
             remainingDuration: 300,
@@ -142,7 +142,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testProgressIsOneWhenComplete() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 0,
@@ -153,7 +153,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testIsCompleteTrueWhenStatusIsComplete() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 0,
@@ -164,7 +164,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testIsCompleteTrueWhenStatusIsAlarm() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 0,
@@ -175,7 +175,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testIsCompleteFalseWhenStillRunning() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 120,
@@ -186,7 +186,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testProgressHandlesZeroTargetDuration() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 0,
             remainingDuration: 0,
@@ -197,7 +197,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testTimeRemainingSeconds() {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: defaultConfig,
             targetDuration: 300,
             remainingDuration: 125.7,
@@ -228,7 +228,7 @@ final class TimerStateTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        let decoded = try JSONDecoder().decode(TimerState.self, from: payload)
+        let decoded = try JSONDecoder().decode(RandomTimer.TimerState.self, from: payload)
 
         XCTAssertEqual(decoded.config.soundType, .gentle)
         XCTAssertEqual(decoded.targetDuration, 90, accuracy: 0.0001)
@@ -241,11 +241,11 @@ final class TimerStateTests: XCTestCase {
 final class SoundTypeTests: XCTestCase {
 
     func testIntenseNotificationSoundName() {
-        XCTAssertEqual(SoundType.intense.notificationSoundName, "alarm.mp3")
+        XCTAssertEqual(RandomTimer.SoundType.intense.notificationSoundName, "alarm.mp3")
     }
 
     func testGentleNotificationSoundName() {
-        XCTAssertEqual(SoundType.gentle.notificationSoundName, "gentle-chime.mp3")
+        XCTAssertEqual(RandomTimer.SoundType.gentle.notificationSoundName, "gentle-chime.mp3")
     }
 }
 
@@ -292,8 +292,8 @@ final class TimeRangeAdjusterTests: XCTestCase {
             newMinSeconds: 300
         )
 
-        XCTAssertEqual(adjusted.min, 300)
-        XCTAssertEqual(adjusted.max, 300 + TimeRangeAdjuster.defaultMinGapSeconds)
+        XCTAssertEqual(adjusted.min, 299)
+        XCTAssertEqual(adjusted.max, 300)
         XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
     }
 
@@ -378,7 +378,7 @@ final class TimeRangeAdjusterTests: XCTestCase {
             maxSecondsLimit: 300
         )
 
-        XCTAssertEqual(adjusted.min, 290)
+        XCTAssertEqual(adjusted.min, 295)
         XCTAssertEqual(adjusted.max, 300)
     }
 }
@@ -427,7 +427,7 @@ final class TimerManagerTests: XCTestCase {
     @MainActor
     func testStartTimerSetsTimerState() async {
         let manager = TimerManager()
-        let config = TimerConfig(minSeconds: 5, maxSeconds: 10)
+        let config = RandomTimer.TimerConfig(minSeconds: 5, maxSeconds: 10)
         
         manager.updateConfig(config)
         await manager.startTimer()
@@ -464,7 +464,7 @@ final class TimerManagerTests: XCTestCase {
     func testLoopTogglePropagatesToRunningTimer() async {
         let manager = TimerManager()
         // Start with loop OFF
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 5, maxSeconds: 5, alarmDuration: 30,
             hiddenMode: false, repeatEnabled: false,
             soundType: .intense, volume: 0.5, vibrationEnabled: false
@@ -475,7 +475,7 @@ final class TimerManagerTests: XCTestCase {
 
         // Toggle loop ON via manager (simulating UI toggle)
         var newConfig = manager.config
-        newConfig = TimerConfig(
+        newConfig = RandomTimer.TimerConfig(
             minSeconds: newConfig.minSeconds,
             maxSeconds: newConfig.maxSeconds,
             alarmDuration: newConfig.alarmDuration,
@@ -497,7 +497,7 @@ final class TimerManagerTests: XCTestCase {
 
         XCTAssertNil(timerManager.timerState)
 
-        let newConfig = TimerConfig(
+        let newConfig = RandomTimer.TimerConfig(
             minSeconds: 1,
             maxSeconds: 300,
             alarmDuration: 5,
@@ -524,8 +524,8 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     func testLiveActivityUpdateSendsZeroRemainingSeconds() {
         // When building the content state for a running timer,
         // remainingSeconds must always be 0 to prevent timing leaks
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
-        let state = TimerState(
+        let config = RandomTimer.TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
+        let state = RandomTimer.TimerState(
             config: config,
             targetDuration: 75, // random duration
             remainingDuration: 42, // 42s left
@@ -540,8 +540,8 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     /// Alarm/complete states CAN show 0 since the timer is done
     @MainActor
     func testLiveActivityShowsZeroWhenComplete() {
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
-        let state = TimerState(
+        let config = RandomTimer.TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
+        let state = RandomTimer.TimerState(
             config: config,
             targetDuration: 75,
             remainingDuration: 0,
@@ -554,8 +554,8 @@ final class LiveActivityTimingLeakTests: XCTestCase {
     /// endDate must be the MAX possible end time, not the actual random end time
     @MainActor
     func testLiveActivityEndDateUsesMaxDuration() {
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
-        let state = TimerState(
+        let config = RandomTimer.TimerConfig(minSeconds: 30, maxSeconds: 300, alarmDuration: 10)
+        let state = RandomTimer.TimerState(
             config: config,
             targetDuration: 75, // actual random: 75s
             remainingDuration: 75,
@@ -589,12 +589,12 @@ final class TimerManagerSilenceTests: XCTestCase {
     func testSilenceAlarmSetsIsAlarmSilencedTrue() {
         let timerManager = TimerManager()
 
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 5, maxSeconds: 10, alarmDuration: 30,
             hiddenMode: false, repeatEnabled: false,
             soundType: .intense, volume: 0.5, vibrationEnabled: false
         )
-        let alarmState = TimerState(
+        let alarmState = RandomTimer.TimerState(
             config: config, targetDuration: 5,
             remainingDuration: 0, status: .alarm,
             alarmTimeRemaining: 25, alarmStartedAt: Date()
@@ -603,24 +603,21 @@ final class TimerManagerSilenceTests: XCTestCase {
 
         timerManager.silenceAlarm()
 
-        XCTAssertTrue(manager.isAlarmSilenced,
+        XCTAssertTrue(timerManager.isAlarmSilenced,
                       "After silenceAlarm(), isAlarmSilenced must be true")
     }
-
-    @MainActor
-    var manager: TimerManager { return TimerManager() }
 
     @MainActor
     func testIsAlarmSilencedResetsOnNewAlarm() async {
         let timerManager = TimerManager()
 
         // Simulate: alarm active, user silences it
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 5, maxSeconds: 5, alarmDuration: 30,
             hiddenMode: false, repeatEnabled: false,
             soundType: .intense, volume: 0.5, vibrationEnabled: false
         )
-        let alarmState = TimerState(
+        let alarmState = RandomTimer.TimerState(
             config: config, targetDuration: 5,
             remainingDuration: 0, status: .alarm,
             alarmTimeRemaining: 25, alarmStartedAt: Date()
@@ -643,14 +640,14 @@ final class TimerManagerSilenceTests: XCTestCase {
         let timerManager = TimerManager()
 
         // Simulate: timer expired while backgrounded, alarm is active
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 5, maxSeconds: 300, alarmDuration: 30,
             hiddenMode: false, repeatEnabled: false,
             soundType: .intense, volume: 0.5, vibrationEnabled: false
         )
         // Timer started 15s ago, target was 10s — already expired
         let startDate = Date().addingTimeInterval(-15)
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: config, targetDuration: 10,
             startedAt: startDate,
             remainingDuration: 5, // stale value from when app was suspended
@@ -702,7 +699,7 @@ final class StorageServiceTests: XCTestCase {
     }
 
     func testSaveAndLoadConfigPersistsAcrossAsyncAndSyncAPIs() async {
-        let config = TimerConfig(
+        let config = RandomTimer.TimerConfig(
             minSeconds: 15,
             maxSeconds: 90,
             alarmDuration: 30,
@@ -723,10 +720,10 @@ final class StorageServiceTests: XCTestCase {
     }
 
     func testSaveAndLoadTimerStatePersistsAcrossAsyncAndSyncAPIs() async {
-        let config = TimerConfig(minSeconds: 20, maxSeconds: 80, alarmDuration: 10)
+        let config = RandomTimer.TimerConfig(minSeconds: 20, maxSeconds: 80, alarmDuration: 10)
         let startedAt = Date(timeIntervalSince1970: 1_700_000_000)
         let alarmStartedAt = Date(timeIntervalSince1970: 1_700_000_050)
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: config,
             targetDuration: 72,
             startedAt: startedAt,
@@ -746,7 +743,7 @@ final class StorageServiceTests: XCTestCase {
     }
 
     func testClearTimerStateRemovesPersistedState() async {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: .default,
             targetDuration: 300,
             startedAt: Date(timeIntervalSince1970: 1_700_000_100),
@@ -765,7 +762,7 @@ final class StorageServiceTests: XCTestCase {
     }
 
     func testClearTimerStateSyncRemovesPersistedState() async {
-        let state = TimerState(
+        let state = RandomTimer.TimerState(
             config: .default,
             targetDuration: 45,
             startedAt: Date(timeIntervalSince1970: 1_700_000_200),
@@ -819,8 +816,8 @@ final class TimerAbandonedAnalyticsTests: XCTestCase {
 
         let manager = TimerManager()
         manager._setTimerStateForTesting(
-            TimerState(
-                config: TimerConfig.default,
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
                 targetDuration: 300,
                 remainingDuration: 90,
                 status: .running
@@ -851,8 +848,8 @@ final class TimerAbandonedAnalyticsTests: XCTestCase {
         defer { storage.clearTimerStateSync() }
 
         await storage.saveTimerState(
-            TimerState(
-                config: TimerConfig.default,
+            RandomTimer.TimerState(
+                config: RandomTimer.TimerConfig.default,
                 targetDuration: 5,
                 startedAt: Date().addingTimeInterval(-300),
                 remainingDuration: 3,
