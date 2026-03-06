@@ -13,6 +13,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Canvas
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -52,7 +54,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -737,7 +741,7 @@ private fun TimeRangeSliders(
     val minSliderMaxInt = minSliderMax.toInt()
     val sectionGap = if (compactMode) 8.dp else 12.dp
     val rowGap = 4.dp
-    val nudgeSize = 32.dp
+    val nudgeSize = 36.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
         // Display
@@ -779,11 +783,12 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "\u2212",
+                    type = NudgeType.Decrement,
                     enabled = enabled && minValue >= coarseNudgeStep,
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
+                    contentDescription = "Decrease minimum time",
                 )
                 Slider(
                     value = minValue.toFloat(),
@@ -802,11 +807,12 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+",
+                    type = NudgeType.Increment,
                     enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
                     onClick = { onMinChange(minValue + coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
+                    contentDescription = "Increase minimum time",
                 )
             }
         }
@@ -825,11 +831,12 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    label = "\u2212",
+                    type = NudgeType.Decrement,
                     enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
                     onClick = { onMaxChange(maxValue - coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
+                    contentDescription = "Decrease maximum time",
                 )
                 Slider(
                     value = maxValue.toFloat(),
@@ -848,11 +855,12 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    label = "+",
+                    type = NudgeType.Increment,
                     enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
                     onClick = { onMaxChange(maxValue + coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
+                    contentDescription = "Increase maximum time",
                 )
             }
         }
@@ -871,38 +879,62 @@ private fun snapToStep(
 
 @Composable
 private fun NudgeButton(
-    label: String,
+    type: NudgeType,
     enabled: Boolean,
     onClick: () -> Unit,
     width: Dp,
     height: Dp,
+    contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
+    val tint = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted.copy(alpha = 0.7f)
     Surface(
         onClick = onClick,
         enabled = enabled,
         shape = CircleShape,
-        color = if (enabled) TimerColors.GlassBackground.copy(alpha = 0.3f) else TimerColors.BackgroundDark,
+        color = if (enabled) TimerColors.GlassBackground.copy(alpha = 0.45f) else TimerColors.GlassBackground.copy(alpha = 0.22f),
         border =
             BorderStroke(
-                0.5.dp,
-                if (enabled) TimerColors.GlassBorder.copy(alpha = 0.4f) else TimerColors.GlassBorder.copy(alpha = 0.2f),
+                1.dp,
+                if (enabled) TimerColors.GlassBorder.copy(alpha = 0.62f) else TimerColors.GlassBorder.copy(alpha = 0.38f),
             ),
-        modifier = modifier.size(width),
+        modifier = modifier.size(width = width, height = height),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .semantics { this.contentDescription = contentDescription },
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                textAlign = TextAlign.Center,
-            )
+            Canvas(modifier = Modifier.size(14.dp)) {
+                val strokeWidth = 2.2.dp.toPx()
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val pad = 1.5.dp.toPx()
+                drawLine(
+                    color = tint,
+                    start = Offset(pad, center.y),
+                    end = Offset(size.width - pad, center.y),
+                    strokeWidth = strokeWidth,
+                    cap = StrokeCap.Round,
+                )
+                if (type == NudgeType.Increment) {
+                    drawLine(
+                        color = tint,
+                        start = Offset(center.x, pad),
+                        end = Offset(center.x, size.height - pad),
+                        strokeWidth = strokeWidth,
+                        cap = StrokeCap.Round,
+                    )
+                }
+            }
         }
     }
+}
+
+private enum class NudgeType {
+    Decrement,
+    Increment,
 }
 
 private fun formatTime(seconds: Int): String =
@@ -989,14 +1021,15 @@ private fun VolumeSlider(
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             NudgeButton(
-                label = "\u2212",
+                type = NudgeType.Decrement,
                 enabled = value > 0f,
                 onClick = { onValueChange((value - 0.05f).coerceAtLeast(0f)) },
-                width = 32.dp,
-                height = 32.dp,
+                width = 36.dp,
+                height = 36.dp,
+                contentDescription = "Decrease volume",
             )
             Slider(
                 value = value,
@@ -1011,11 +1044,12 @@ private fun VolumeSlider(
                     ),
             )
             NudgeButton(
-                label = "+",
+                type = NudgeType.Increment,
                 enabled = value < 1f,
                 onClick = { onValueChange((value + 0.05f).coerceAtMost(1f)) },
-                width = 32.dp,
-                height = 32.dp,
+                width = 36.dp,
+                height = 36.dp,
+                contentDescription = "Increase volume",
             )
         }
     }

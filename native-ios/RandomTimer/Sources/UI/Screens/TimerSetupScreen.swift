@@ -91,41 +91,17 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.textPrimary)
-
-                                Text("Spoken 30s/10s/5s countdowns plus short command cues fired at random times during longer timers.")
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                
+                                Text("Voice prompts during countdown")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-
+                            
                             Spacer()
-
-                            Button {
-                                timerManager.previewCountdownCue()
-                            } label: {
-                                Text("Countdown")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            Button {
-                                timerManager.previewCommandCue()
-                            } label: {
-                                Text("Commands")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
+                            
                             if proManager.isPro {
-                                Text("ON")
+                                Text("ENABLED")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.accentPrimary)
@@ -147,7 +123,6 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .contentShape(Rectangle())
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
@@ -324,7 +299,6 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
-        .accessibilityIdentifier("setupScreen")
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -549,7 +523,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(1, newValue),
+            newMaxSeconds: Swift.max(30, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -652,6 +626,7 @@ private struct VolumeSliderView: View {
     let onChanged: (Float) -> Void
     var onSliding: ((Float) -> Void)? = nil
     var systemImage: String = "speaker.wave.3.fill"
+    private let volumeStep: Float = 0.05
 
     var body: some View {
         VStack {
@@ -673,33 +648,34 @@ private struct VolumeSliderView: View {
                     enabled: value > 0,
                     accessibilityLabel: "Decrease volume"
                 ) {
-                    onChanged(Swift.max(0, value - 0.05))
+                    let next = max(0, value - volumeStep)
+                    onSliding?(next)
+                    onChanged(next)
                 }
 
                 Slider(
                     value: Binding(
                         get: { Double(value) },
                         set: { newValue in
-                            onSliding?(Float(newValue))
+                            let next = Float(newValue)
+                            onSliding?(next)
+                            onChanged(next)
                         }
                     ),
-                    in: 0...1,
-                    onEditingChanged: { editing in
-                        if !editing {
-                            onChanged(value)
-                        }
-                    }
+                    in: 0...1
                 )
                 .tint(.accentPrimary)
                 .accessibilityLabel("Volume slider")
-                .accessibilityValue("\(Int(value * 100))%")
+                .accessibilityValue("\(Int(value * 100)) percent")
 
                 StepAdjustButton(
                     systemImage: "plus.circle.fill",
                     enabled: value < 1,
                     accessibilityLabel: "Increase volume"
                 ) {
-                    onChanged(Swift.min(1, value + 0.05))
+                    let next = min(1, value + volumeStep)
+                    onSliding?(next)
+                    onChanged(next)
                 }
             }
         }

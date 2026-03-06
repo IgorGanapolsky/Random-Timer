@@ -315,7 +315,7 @@ if [ -n "$STAGED_ALL" ]; then
   while IFS= read -r file; do
     [ -f "$file" ] || continue
     if echo "$file" | grep -qi 'TimerSetupScreen'; then
-      
+
       # iOS Parity Check
       if [[ "$file" == *.swift ]]; then
         SLIDER_COUNT=$(grep -c 'Slider(' "$file" || true)
@@ -342,6 +342,28 @@ if [ -n "$STAGED_ALL" ]; then
 
     fi
   done <<< "$STAGED_ALL"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
+# UI/UX AUDIT CHECKS
+# ═══════════════════════════════════════════════════════════════════
+
+if [ -n "$STAGED_KT" ]; then
+  if echo "$STAGED_KT" | grep -qE 'native-android/app/src/main/java/.*/ui/(screens|components)/.*\.kt'; then
+    echo "Running Android UI/UX audit..."
+    if ! bash scripts/ui-ux-audit.sh --staged --with-lint; then
+      err "Android UI/UX audit failed."
+    fi
+  fi
+fi
+
+if [ -n "$STAGED_ALL" ]; then
+  if echo "$STAGED_ALL" | grep -qE '^(native-android/|native-ios/|\.github/workflows/|scripts/|\.maestro/|docs/AI_AGENT_MOBILE_BEST_PRACTICES\.md)'; then
+    echo "Running AI mobile guardrails..."
+    if ! bash scripts/ai-mobile-guardrails.sh --staged; then
+      err "AI mobile guardrails failed."
+    fi
+  fi
 fi
 
 # ═══════════════════════════════════════════════════════════════════

@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: AI mobile guardrails
+        run: bash scripts/ai-mobile-guardrails.sh --ci
+
       - name: Architecture ban checks (Kotlin)
         run: |
           ERRORS=0
@@ -103,6 +106,9 @@ jobs:
             "configuration_version": "1"
           }
           GSEOF
+
+      - name: Android UI/UX audit gates
+        run: bash ../scripts/ui-ux-audit.sh --ci --with-lint
 
       - name: Run unit tests with coverage
         run: ./gradlew testDebugUnitTest jacocoDebugUnitTestReport --no-daemon
