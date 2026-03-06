@@ -385,12 +385,19 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
-          if [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+            echo "Firebase token provided; skipping service account key file."
+            rm -f /tmp/firebase-service-account.json
+          elif [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
             echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > /tmp/firebase-service-account.json
-          else
+          elif [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
             echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          else
+            echo "No service account payload provided; expecting token auth."
+            rm -f /tmp/firebase-service-account.json
           fi
 
       - name: Distribute APK to Firebase App Distribution
@@ -402,13 +409,38 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
+
           normalize_csv() {
-            tr '\n;' ',,' <<< "$1" | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^,+//; s/,+$//; s/,+/,/g'
+            python -c 'import re,sys; raw=sys.argv[1] if len(sys.argv)>1 else ""; parts=[p.strip() for p in re.split(r"[,;\n\r]+", raw) if p.strip()]; print(",".join(parts))' "$1"
           }
+
+          if ! command -v npx >/dev/null 2>&1; then
+            echo "❌ npx not found; cannot run firebase-tools."
+            exit 1
+          fi
+
+          AUTH_MODE="service-account"
+          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+            AUTH_MODE="token"
+            unset GOOGLE_APPLICATION_CREDENTIALS
+            echo "Firebase auth mode: token"
+          elif [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+            echo "Firebase auth mode: service-account-file"
+          else
+            echo "❌ No usable Firebase auth mode: missing token and service account file."
+            exit 1
+          fi
 
           TESTERS="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}")"
           GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
           APK_PATH="native-android/app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ APK not found at $APK_PATH"
+            exit 1
+          fi
+          TESTER_COUNT="$(python -c 'import sys; value=sys.argv[1] if len(sys.argv)>1 else ""; print(0 if not value else len([x for x in value.split(",") if x]))' "$TESTERS")"
+          GROUP_COUNT="$(python -c 'import sys; value=sys.argv[1] if len(sys.argv)>1 else ""; print(0 if not value else len([x for x in value.split(",") if x]))' "$GROUPS")"
+          echo "Firebase audience normalized: testers=$TESTER_COUNT groups=$GROUP_COUNT"
 
           BASE_CMD=(
             npx --yes firebase-tools appdistribution:distribute
@@ -420,7 +452,7 @@ jobs:
           )
           if [ -n "${FIREBASE_TOKEN:-}" ]; then
             BASE_CMD+=(--token "$FIREBASE_TOKEN")
-            echo "Using Firebase token authentication fallback."
+            echo "Using Firebase token authentication."
           fi
 
           run_dist() {
@@ -428,7 +460,7 @@ jobs:
             local log_file="$2"
             shift 2
 
-            echo "Firebase distribution attempt: $label"
+            echo "Firebase distribution attempt: $label (auth=$AUTH_MODE)"
             set +e
             "${BASE_CMD[@]}" "$@" 2>&1 | tee "$log_file"
             local dist_rc=${PIPESTATUS[0]}
@@ -442,6 +474,7 @@ jobs:
               else
                 echo "Firebase CLI produced no output."
               fi
+              echo "Log file path: $log_file"
             fi
 
             return "$dist_rc"
