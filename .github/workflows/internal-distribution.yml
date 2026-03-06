@@ -348,18 +348,25 @@ jobs:
         run: |
           set -euo pipefail
           APP_ID_FROM_FILE="$(python -c 'import json; print(json.load(open("app/google-services.json")).get("client", [{}])[0].get("client_info", {}).get("mobilesdk_app_id", ""))')"
+          APP_ID_FROM_SECRET="${FIREBASE_ANDROID_APP_ID:-}"
 
-          if [ -z "$APP_ID_FROM_FILE" ]; then
-            echo "❌ Could not resolve mobilesdk_app_id from native-android/app/google-services.json"
+          if [ -z "$APP_ID_FROM_FILE" ] && [ -z "$APP_ID_FROM_SECRET" ]; then
+            echo "❌ Could not resolve Firebase app id from either FIREBASE_ANDROID_APP_ID or native-android/app/google-services.json"
             exit 1
           fi
 
-          if [ -n "${FIREBASE_ANDROID_APP_ID:-}" ] && [ "$FIREBASE_ANDROID_APP_ID" != "$APP_ID_FROM_FILE" ]; then
-            echo "::warning::FIREBASE_ANDROID_APP_ID secret does not match google-services.json mobilesdk_app_id; using file value."
+          RESOLVED_APP_ID="$APP_ID_FROM_FILE"
+          RESOLUTION_SOURCE="google-services.json"
+          if [ -n "$APP_ID_FROM_SECRET" ]; then
+            RESOLVED_APP_ID="$APP_ID_FROM_SECRET"
+            RESOLUTION_SOURCE="FIREBASE_ANDROID_APP_ID secret"
+            if [ -n "$APP_ID_FROM_FILE" ] && [ "$APP_ID_FROM_SECRET" != "$APP_ID_FROM_FILE" ]; then
+              echo "::warning::FIREBASE_ANDROID_APP_ID secret does not match google-services.json mobilesdk_app_id; using secret value."
+            fi
           fi
 
-          echo "firebase_android_app_id=$APP_ID_FROM_FILE" >> "$GITHUB_OUTPUT"
-          echo "Resolved Firebase app id suffix: ...${APP_ID_FROM_FILE: -8}"
+          echo "firebase_android_app_id=$RESOLVED_APP_ID" >> "$GITHUB_OUTPUT"
+          echo "Resolved Firebase app id from $RESOLUTION_SOURCE; suffix: ...${RESOLVED_APP_ID: -8}"
 
       - name: Decode keystore
         env:
