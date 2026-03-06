@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -105,7 +107,12 @@ fun ActiveTimerScreen(
                     .padding(24.dp),
         ) {
             val isLandscape = maxWidth > maxHeight
-            val circleSize = if (isLandscape) 220.dp else 280.dp
+            val circleSize =
+                if (isLandscape) {
+                    if (maxHeight < 400.dp) 180.dp else 220.dp
+                } else {
+                    280.dp
+                }
 
             @Composable
             fun ActionButtons(modifier: Modifier = Modifier) {
@@ -282,7 +289,8 @@ fun ActiveTimerScreen(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .fillMaxHeight(),
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {

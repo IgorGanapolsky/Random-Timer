@@ -98,7 +98,7 @@
 6. **Alarm Notification**
    - [ ] Let timer complete
    - [ ] Verify alarm notification appears
-   - [ ] Verify "Dismiss" button works from Lock Screen
+   - [ ] Verify "Stop" button works from Lock Screen
    - [ ] Verify alarm sound plays (if volume > 0)
    - [ ] Verify vibration (if enabled)
 

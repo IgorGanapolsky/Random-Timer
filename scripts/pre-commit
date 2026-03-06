@@ -165,9 +165,11 @@ if [ -n "$STAGED_KT" ]; then
       err "$file: Uses MediaPlayer.create() — construct manually and set AudioAttributes USAGE_ALARM"
     fi
 
-    # Ban wrong audio focus type
-    if grep -n 'AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK' "$file" > /dev/null 2>&1; then
-      err "$file: Uses AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — use AUDIOFOCUS_GAIN_TRANSIENT for alarms"
+    # Ban wrong audio focus type (allowed in Factory only)
+    if [[ "$file" != *"AlarmAudioFocusRequestFactory"* ]]; then
+      if grep -n 'AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK' "$file" > /dev/null 2>&1; then
+        err "$file: Uses AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — use AUDIOFOCUS_GAIN_TRANSIENT for alarms"
+      fi
     fi
 
   done <<< "$STAGED_KT"

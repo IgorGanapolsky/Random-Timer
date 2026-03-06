@@ -41,20 +41,20 @@ This file is the task source-of-truth for iterative agent work.
     - Android instrumentation test or Maestro flow verifying tap stops.
     - iOS UI test or Maestro flow verifying tap stops.
 
-- [ ] **Android: Duck Other Audio Instead of Pausing**
+- [x] **Android: Duck Other Audio Instead of Pausing**
   - Acceptance:
     - Alarm audio requests transient focus with ducking (navigation-app style).
     - Other audio should duck rather than stop when possible.
   - Tests:
     - Unit test for focus-request configuration helper (API-level behavior guarded).
 
-- [ ] **Landscape Layout Fix**
+- [x] **Landscape Layout Fix**
   - Acceptance:
     - Action buttons are visible and tappable in landscape on both platforms.
   - Tests:
     - Maestro flow(s) that run in landscape (or equivalent platform UI tests).
 
-- [ ] **Alarm Notification Stop Action**
+- [x] **Alarm Notification Stop Action**
   - Acceptance:
     - When alarm is ringing, notification action is labeled **Stop** (not Dismiss).
     - Action stops alarm and returns the user to the app home/setup screen (or device home where appropriate).

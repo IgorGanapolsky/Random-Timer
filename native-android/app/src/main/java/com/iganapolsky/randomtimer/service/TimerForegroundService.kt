@@ -641,7 +641,7 @@ class TimerForegroundService : Service() {
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
-                createStopIntent(),
+                createStopFromAlarmNotificationIntent(),
             )
             builder.addAction(
                 R.drawable.ic_refresh,

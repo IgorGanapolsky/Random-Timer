@@ -56,7 +56,8 @@ struct ActiveTimerScreen: View {
                                 CircularTimerView(
                                     progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                     status: state.status,
-                                    rangeText: rangeText
+                                    rangeText: rangeText,
+                                    isLandscape: isLandscape
                                 )
                                 .accessibilityIdentifier("activeTimerCircle")
                                 .onTapGesture {
@@ -86,8 +87,11 @@ struct ActiveTimerScreen: View {
 
                             VStack {
                                 Spacer()
-                                actionButtons(for: state)
-                                    .padding(.bottom, 8)
+                                ScrollView {
+                                    actionButtons(for: state)
+                                        .padding(.bottom, 8)
+                                }
+                                .scrollIndicators(.hidden)
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                         }
@@ -114,7 +118,8 @@ struct ActiveTimerScreen: View {
                             CircularTimerView(
                                 progress: isComplete ? 1.0 : (state.unpredictableProgress),
                                 status: state.status,
-                                rangeText: rangeText
+                                rangeText: rangeText,
+                                isLandscape: isLandscape
                             )
                             .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {
