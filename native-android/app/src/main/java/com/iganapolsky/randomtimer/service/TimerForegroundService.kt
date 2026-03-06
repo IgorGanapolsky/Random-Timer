@@ -376,9 +376,18 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         _timerState.value?.let { state ->
+            val minMs = state.config.minSeconds * 1000L
+            val maxMs = state.config.maxSeconds * 1000L
+            val rerolledTargetMs =
+                if (minMs == maxMs) {
+                    minMs
+                } else {
+                    kotlin.random.Random.nextLong(minMs, maxMs + 1)
+                }
             val resetState =
                 state.copy(
-                    remainingDuration = state.targetDuration,
+                    targetDuration = rerolledTargetMs.milliseconds,
+                    remainingDuration = rerolledTargetMs.milliseconds,
                     status = TimerStatus.RUNNING,
                     alarmTimeRemaining = kotlin.time.Duration.ZERO,
                     startedAt = System.currentTimeMillis(),
