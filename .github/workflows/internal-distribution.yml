@@ -236,7 +236,7 @@ jobs:
       - name: Record deferred iOS upload blocker
         if: steps.fastlane_beta.outputs.result == 'deferred_upload_cap'
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
           ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
           TARGET_REF: ${{ needs.gate.outputs.ref }}
         run: |
@@ -280,7 +280,7 @@ jobs:
       - name: Close deferred iOS upload blocker on success
         if: steps.fastlane_beta.outputs.result == 'success'
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
           ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
         run: |
           set -euo pipefail
