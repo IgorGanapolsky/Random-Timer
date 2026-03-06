@@ -20,6 +20,8 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
@@ -75,6 +77,7 @@ class TimerForegroundService : Service() {
     private var isAppInForeground = false
     private var isForegroundNotificationActive = false
 
+    private var mediaSession: MediaSessionCompat? = null
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
     private var screenOffReceiver: ScreenOffReceiver? = null
@@ -95,6 +98,28 @@ class TimerForegroundService : Service() {
                 getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
         createNotificationChannels()
+        initializeMediaSession()
+    }
+
+    private fun initializeMediaSession() {
+        mediaSession =
+            MediaSessionCompat(this, "RandomTimerAlarm").apply {
+                setCallback(
+                    object : MediaSessionCompat.Callback() {
+                        override fun onPause() {
+                            silenceAlarm()
+                        }
+
+                        override fun onStop() {
+                            silenceAlarm()
+                        }
+
+                        override fun onPlay() {
+                            silenceAlarm()
+                        }
+                    },
+                )
+            }
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
@@ -178,6 +203,8 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        mediaSession?.release()
+        mediaSession = null
         voiceCalloutManager.shutdown()
         serviceScope.cancel()
     }
@@ -292,6 +319,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        deactivateMediaSession()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -376,6 +404,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        deactivateMediaSession()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
@@ -398,6 +427,7 @@ class TimerForegroundService : Service() {
             )
 
         registerScreenOffReceiver()
+        activateMediaSession()
         _timerState.value?.let { updateNotification(it) }
 
         // Play sound (always enabled, controlled by volume)
@@ -412,6 +442,35 @@ class TimerForegroundService : Service() {
 
         // Start alarm countdown to auto-stop after alarmDuration
         startAlarmCountdown(state.config.alarmDuration)
+    }
+
+    private fun activateMediaSession() {
+        val state =
+            PlaybackStateCompat
+                .Builder()
+                .setActions(
+                    PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_STOP or
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE,
+                ).setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
+                .build()
+
+        mediaSession?.apply {
+            setPlaybackState(state)
+            isActive = true
+        }
+    }
+
+    private fun deactivateMediaSession() {
+        mediaSession?.apply {
+            isActive = false
+            setPlaybackState(
+                PlaybackStateCompat
+                    .Builder()
+                    .setState(PlaybackStateCompat.STATE_STOPPED, 0, 0f)
+                    .build(),
+            )
+        }
     }
 
     private var alarmCountdownJob: Job? = null
@@ -440,6 +499,7 @@ class TimerForegroundService : Service() {
                     stopAlarmSound()
                     stopVibration()
                     unregisterScreenOffReceiver()
+                    deactivateMediaSession()
                     storeReviewManager.recordCompletion()
                     trainingStatsService.recordSession()
 
@@ -581,7 +641,7 @@ class TimerForegroundService : Service() {
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
-                createStopIntent(),
+                createStopFromAlarmNotificationIntent(),
             )
             builder.addAction(
                 R.drawable.ic_refresh,

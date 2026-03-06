@@ -1,10 +1,10 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.click
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -18,29 +18,29 @@ import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 class ActiveTimerScreenTapCircleTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun tappingCircleWhenAlarmCallsOnSilence() {
-        val state = TimerState(
-            config = TimerConfig.DEFAULT,
-            targetDuration = 5.seconds,
-            remainingDuration = 0.seconds,
-            status = TimerStatus.ALARM,
-            alarmTimeRemaining = 10.seconds,
-        )
+    fun tappingCircleWhenAlarmCallsOnDismissAlarm() {
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT,
+                targetDuration = 5.seconds,
+                remainingDuration = 0.seconds,
+                status = TimerStatus.ALARM,
+                alarmTimeRemaining = 10.seconds,
+            )
 
-        var silenced = false
+        var dismissed = false
 
         composeRule.setContent {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
                     onStop = {},
-                    onDismissAlarm = {},
-                    onSilence = { silenced = true },
+                    onDismissAlarm = { dismissed = true },
+                    onSilence = {},
                     onPause = {},
                     onResume = {},
                     onReset = {},
@@ -55,18 +55,19 @@ class ActiveTimerScreenTapCircleTest {
             .performTouchInput { click() }
 
         composeRule.runOnIdle {
-            assertTrue(silenced)
+            assertTrue(dismissed)
         }
     }
 
     @Test
     fun tappingCircleWhenRunningDoesNothing() {
-        val state = TimerState(
-            config = TimerConfig.DEFAULT,
-            targetDuration = 60.seconds,
-            remainingDuration = 30.seconds,
-            status = TimerStatus.RUNNING,
-        )
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT,
+                targetDuration = 60.seconds,
+                remainingDuration = 30.seconds,
+                status = TimerStatus.RUNNING,
+            )
 
         var silenced = false
         var dismissed = false
@@ -99,15 +100,15 @@ class ActiveTimerScreenTapCircleTest {
     }
 
     @Test
-    fun tappingCircleWhenCompleteDoesNothing() {
-        val state = TimerState(
-            config = TimerConfig.DEFAULT,
-            targetDuration = 5.seconds,
-            remainingDuration = 0.seconds,
-            status = TimerStatus.COMPLETE,
-        )
+    fun tappingCircleWhenCompleteCallsOnDismissAlarm() {
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT,
+                targetDuration = 5.seconds,
+                remainingDuration = 0.seconds,
+                status = TimerStatus.COMPLETE,
+            )
 
-        var silenced = false
         var dismissed = false
 
         composeRule.setContent {
@@ -116,7 +117,7 @@ class ActiveTimerScreenTapCircleTest {
                     state = state,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
-                    onSilence = { silenced = true },
+                    onSilence = {},
                     onPause = {},
                     onResume = {},
                     onReset = {},
@@ -130,9 +131,8 @@ class ActiveTimerScreenTapCircleTest {
             .performTouchInput { click() }
 
         composeRule.runOnIdle {
-            // Circle tap during COMPLETE should NOT trigger silence or dismiss
-            assertTrue(!silenced)
-            assertTrue(!dismissed)
+            // Circle tap during COMPLETE should now trigger dismiss
+            assertTrue(dismissed)
         }
     }
 }

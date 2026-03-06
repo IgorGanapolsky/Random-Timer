@@ -190,7 +190,7 @@ fun TimerSetupScreen(
                 contentPadding =
                     PaddingValues(
                         top = spacing.listTop,
-                        bottom = spacing.listBottom,
+                        bottom = 32.dp,
                     ),
             ) {
                 // Training Stats

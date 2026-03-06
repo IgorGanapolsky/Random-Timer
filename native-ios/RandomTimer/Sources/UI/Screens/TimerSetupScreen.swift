@@ -299,6 +299,7 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
+        .accessibilityIdentifier("setupScreen")
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -641,21 +642,41 @@ private struct VolumeSliderView: View {
                     .foregroundColor(.textPrimary)
             }
 
-            Slider(
-                value: Binding(
-                    get: { Double(value) },
-                    set: { newValue in
-                        onSliding?(Float(newValue))
-                    }
-                ),
-                in: 0...1,
-                onEditingChanged: { editing in
-                    if !editing {
-                        onChanged(value)
-                    }
+            HStack(spacing: 12) {
+                StepAdjustButton(
+                    systemImage: "minus.circle.fill",
+                    enabled: value > 0,
+                    accessibilityLabel: "Decrease volume"
+                ) {
+                    onChanged(Swift.max(0, value - 0.05))
                 }
-            )
-            .tint(.accentPrimary)
+
+                Slider(
+                    value: Binding(
+                        get: { Double(value) },
+                        set: { newValue in
+                            onSliding?(Float(newValue))
+                        }
+                    ),
+                    in: 0...1,
+                    onEditingChanged: { editing in
+                        if !editing {
+                            onChanged(value)
+                        }
+                    }
+                )
+                .tint(.accentPrimary)
+                .accessibilityLabel("Volume slider")
+                .accessibilityValue("\(Int(value * 100))%")
+
+                StepAdjustButton(
+                    systemImage: "plus.circle.fill",
+                    enabled: value < 1,
+                    accessibilityLabel: "Increase volume"
+                ) {
+                    onChanged(Swift.min(1, value + 0.05))
+                }
+            }
         }
         .transaction { $0.animation = nil } // Completely disable all animations
     }

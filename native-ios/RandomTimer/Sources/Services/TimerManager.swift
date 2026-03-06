@@ -176,6 +176,7 @@ final class TimerManager: ObservableObject {
 
     /// Stops sound and vibration but keeps alarm state and countdown active
     func silenceAlarm() {
+        guard timerState?.status == .alarm else { return }
         notificationService.silenceAlarm()
         if timerState?.status == .alarm {
             isAlarmSilenced = true
@@ -321,16 +322,20 @@ final class TimerManager: ObservableObject {
                 notificationService.stopAlarmSound()
                 notificationService.stopVibration()
                 await notificationService.cancelPendingNotifications()
-                notificationService.clearNotificationTapFlag()
-                    await endLiveActivity()
+                await endLiveActivity()
 
                 if state.config.repeatEnabled {
+                    notificationService.clearNotificationTapFlag()
                     await restartTimer()
                 } else {
                     state.remainingDuration = 0
                     state.status = .complete
                     state.alarmTimeRemaining = 0
                     state.alarmStartedAt = alarmStartDate
+                    if notificationService.didTapAlarmNotification {
+                        isAlarmSilenced = true
+                    }
+                    notificationService.clearNotificationTapFlag()
                     timerState = state
                 }
                 return
@@ -347,6 +352,7 @@ final class TimerManager: ObservableObject {
             let wasNotificationTap = notificationService.didTapAlarmNotification
             if wasNotificationTap {
                 isAlarmSilenced = true
+                notificationService.clearNotificationTapFlag()
             }
             timerState = state
 

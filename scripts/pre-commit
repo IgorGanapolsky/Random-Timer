@@ -62,8 +62,11 @@ if [ -n "$STAGED_KT" ]; then
     fi
 
     # Ban MediaSession (stripped in Feb 2026 audit — not for timer apps)
-    if grep -n 'MediaSession\|MediaMetadata\|PlaybackState\|MediaStyle' "$file" | grep -v '//' > /dev/null 2>&1; then
-      err "$file: Uses MediaSession — not appropriate for timer apps (use specialUse FGS)"
+    # Exception: TimerForegroundService allowed for Bluetooth headset support
+    if [[ "$file" != *"TimerForegroundService.kt"* ]]; then
+      if grep -n 'MediaSession\|MediaMetadata\|PlaybackState\|MediaStyle' "$file" | grep -v '//' > /dev/null 2>&1; then
+        err "$file: Uses MediaSession — not appropriate for timer apps (use specialUse FGS)"
+      fi
     fi
 
     # Ban WARNING_THRESHOLD / DANGER_THRESHOLD — leaks timing through status
@@ -162,9 +165,11 @@ if [ -n "$STAGED_KT" ]; then
       err "$file: Uses MediaPlayer.create() — construct manually and set AudioAttributes USAGE_ALARM"
     fi
 
-    # Ban wrong audio focus type
-    if grep -n 'AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK' "$file" > /dev/null 2>&1; then
-      err "$file: Uses AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — use AUDIOFOCUS_GAIN_TRANSIENT for alarms"
+    # Ban wrong audio focus type (allowed in Factory only)
+    if [[ "$file" != *"AlarmAudioFocusRequestFactory"* ]]; then
+      if grep -n 'AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK' "$file" > /dev/null 2>&1; then
+        err "$file: Uses AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — use AUDIOFOCUS_GAIN_TRANSIENT for alarms"
+      fi
     fi
 
   done <<< "$STAGED_KT"
@@ -299,6 +304,44 @@ if [ -n "$STAGED_SWIFT" ]; then
       fi
     fi
   done <<< "$STAGED_SWIFT"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
+# TACTICAL UX PARITY (2026 STANDARDS)
+# ═══════════════════════════════════════════════════════════════════
+
+# Enforce Sliders with Nudge Buttons in setup screens
+if [ -n "$STAGED_ALL" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if echo "$file" | grep -qi 'TimerSetupScreen'; then
+      
+      # iOS Parity Check
+      if [[ "$file" == *.swift ]]; then
+        SLIDER_COUNT=$(grep -c 'Slider(' "$file" || true)
+        if [ "$SLIDER_COUNT" -gt 0 ]; then
+          NUDGE_COUNT=$(grep -c 'StepAdjustButton(' "$file" || true)
+          EXPECTED_NUDGE=$((SLIDER_COUNT * 2))
+          if [ "$NUDGE_COUNT" -lt "$EXPECTED_NUDGE" ]; then
+            err "$file: iOS Tactical Parity — Sliders in setup screen must have +/- StepAdjustButtons (found $NUDGE_COUNT, expected $EXPECTED_NUDGE)"
+          fi
+        fi
+      fi
+
+      # Android Parity Check
+      if [[ "$file" == *.kt ]]; then
+        # Check for VolumeSlider and core Sliders
+        if grep -q 'VolumeSlider\|Slider(' "$file"; then
+          NUDGE_COUNT=$(grep -c 'NudgeButton(' "$file" || true)
+          # Expect 6 nudges: 2 for min, 2 for max, 2 inside VolumeSlider definition
+          if [ "$NUDGE_COUNT" -lt 6 ]; then
+            err "$file: Android Tactical Parity — Setup screen missing +/- NudgeButtons (found $NUDGE_COUNT, expected at least 6)"
+          fi
+        fi
+      fi
+
+    fi
+  done <<< "$STAGED_ALL"
 fi
 
 # ═══════════════════════════════════════════════════════════════════

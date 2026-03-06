@@ -142,7 +142,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public var alarmDurationInterval: TimeInterval { TimeInterval(alarmDuration) }
 
     public static let maxSecondsFree = 300
-    public static let maxSecondsPro = 3600
+    public static let maxSecondsPro = 36000
 
     public static let `default` = TimerConfig()
 
@@ -283,9 +283,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
-    static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
-    static let defaultMinGapSeconds = 1
-
+    static let defaultMaxSecondsLimit = 36000
+    static let defaultMinGapSeconds = 30
     static func adjustForMinChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,
@@ -709,11 +708,11 @@ private extension KeyedDecodingContainer {
 
     func decodeFirstDate(forKeys keys: [Key], defaultValue: Date) -> Date {
         for key in keys {
-            if let value = try? decodeIfPresent(Date.self, forKey: key) {
-                return value
+            if let seconds = try? decodeIfPresent(Double.self, forKey: key) {
+                return Date(timeIntervalSince1970: seconds)
             }
-            if let value = try? decodeIfPresent(TimeInterval.self, forKey: key) {
-                return Date(timeIntervalSince1970: value)
+            if let date = try? decodeIfPresent(Date.self, forKey: key) {
+                return date
             }
             if let value = decodeFirstString(forKeys: [key]) {
                 if let date = ISO8601DateFormatter().date(from: value) {

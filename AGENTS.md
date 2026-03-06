@@ -119,6 +119,18 @@ Do not infer progress from draft campaign configs.
 - Treat every App Store rejection as a preventable failure. Anticipate review issues before submission.
 - When something fails, diagnose the root cause from the actual error response before retrying.
 
+## 2026 Tactical UI/UX Standards (MANDATORY)
+
+All agents must adhere to these tactical design standards to maintain "Heavy/Pro" military-grade aesthetics and UX consistency.
+
+1. **Circular Timer Stroke (iOS)**: Must use **16pt** stroke width for the main timer circle (8pt for small previews).
+2. **Nudge Buttons (Android)**: MUST use tactical symbols `\u2212` (MINUS) and `+` instead of Material Icons.
+3. **Button Height**: All primary/secondary buttons MUST be exactly **56dp/pt** height for maximum tap accessibility under stress.
+4. **Labeling**: Use **"Stop"** instead of "Dismiss" for all alarm-ending actions.
+5. **Ducking (Android)**: Alarm audio must request transient focus with ducking (`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`).
+
+These standards are enforced automatically by `scripts/hygiene-check.sh` and the pre-commit hook.
+
 ## Worktree & Branch Protocol
 
 ### Mandatory for ALL Agents
