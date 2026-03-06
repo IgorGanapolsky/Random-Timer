@@ -1,53 +1,52 @@
 name: Internal Distribution
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [develop]
-  schedule:
-    - cron: "20 */3 * * *"
   workflow_dispatch:
     inputs:
       ref:
         description: "Git ref to distribute (optional, defaults to develop)"
         required: false
         type: string
-      platform:
-        description: "Platform to distribute"
-        required: false
-        default: "both"
+      target:
+        description: "Distribution lane target"
+        required: true
         type: choice
         options:
+          - all
           - ios
-          - android
-          - both
+          - android_play
+          - android_firebase
+        default: all
+      budget_ack:
+        description: "Type I_ACKNOWLEDGE_10_USD_MONTHLY_CAP to proceed"
+        required: true
+        type: string
 
 concurrency:
-  group: internal-distribution-${{ github.event_name }}-${{ inputs.platform || 'both' }}-${{ github.event.workflow_run.head_branch || inputs.ref || github.ref_name || 'develop' }}-${{ github.event.workflow_run.conclusion || 'manual' }}
-  cancel-in-progress: ${{ github.event_name == 'workflow_dispatch' }}
+  group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all' }}
+  cancel-in-progress: true
 
 jobs:
   gate:
     name: Gate Internal Distribution
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.decide.outputs.should_run }}
       ref: ${{ steps.decide.outputs.ref }}
       sha: ${{ steps.decide.outputs.sha }}
       reason: ${{ steps.decide.outputs.reason }}
-      platform: ${{ steps.decide.outputs.platform }}
+      run_ios: ${{ steps.decide.outputs.run_ios }}
+      run_android_play: ${{ steps.decide.outputs.run_android_play }}
+      run_android_firebase: ${{ steps.decide.outputs.run_android_firebase }}
     steps:
       - name: Decide whether to run
         id: decide
         env:
           EVENT_NAME: ${{ github.event_name }}
-          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
           INPUT_REF: ${{ inputs.ref }}
-          INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_TARGET: ${{ inputs.target }}
+          INPUT_BUDGET_ACK: ${{ inputs.budget_ack }}
         run: |
           set -euo pipefail
 
@@ -55,55 +54,100 @@ jobs:
           REF=""
           SHA=""
           REASON="not_eligible"
-          PLATFORM="both"
+          RUN_IOS="false"
+          RUN_ANDROID_PLAY="false"
+          RUN_ANDROID_FIREBASE="false"
+          REQUIRED_BUDGET_ACK="I_ACKNOWLEDGE_10_USD_MONTHLY_CAP"
 
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            REF="${INPUT_REF:-develop}"
-            SHOULD_RUN="true"
-            REASON="manual_dispatch"
-            PLATFORM="${INPUT_PLATFORM:-both}"
-          elif [[ "$EVENT_NAME" == "workflow_run" && "$WORKFLOW_CONCLUSION" == "success" && "$WORKFLOW_BRANCH" == "develop" ]]; then
-            REF="$WORKFLOW_SHA"
-            SHA="$WORKFLOW_SHA"
-            SHOULD_RUN="true"
-            REASON="ci_green_on_develop"
-            PLATFORM="both"
-          elif [[ "$EVENT_NAME" == "schedule" ]]; then
-            REF="develop"
-            SHOULD_RUN="true"
-            REASON="scheduled_ios_retry"
-            PLATFORM="ios"
+          if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
+            echo "Only workflow_dispatch is supported for budget-safe internal distribution."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "ref=" >> "$GITHUB_OUTPUT"
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            echo "reason=event_not_allowed" >> "$GITHUB_OUTPUT"
+            echo "run_ios=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_play=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-          case "$PLATFORM" in
-            ios|android|both) ;;
+          if [[ "${INPUT_BUDGET_ACK:-}" != "$REQUIRED_BUDGET_ACK" ]]; then
+            echo "❌ budget_ack mismatch. Aborting distribution."
+            echo "Expected: $REQUIRED_BUDGET_ACK"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "ref=" >> "$GITHUB_OUTPUT"
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            echo "reason=budget_ack_failed" >> "$GITHUB_OUTPUT"
+            echo "run_ios=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_play=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TARGET="${INPUT_TARGET:-all}"
+          case "$TARGET" in
+            all)
+              RUN_IOS="true"
+              RUN_ANDROID_PLAY="true"
+              RUN_ANDROID_FIREBASE="true"
+              ;;
+            ios)
+              RUN_IOS="true"
+              ;;
+            android_play)
+              RUN_ANDROID_PLAY="true"
+              ;;
+            android_firebase)
+              RUN_ANDROID_FIREBASE="true"
+              ;;
             *)
-              echo "::warning::Invalid platform '$PLATFORM'; defaulting to both"
-              PLATFORM="both"
+              echo "❌ Unsupported target: $TARGET"
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              echo "ref=" >> "$GITHUB_OUTPUT"
+              echo "sha=" >> "$GITHUB_OUTPUT"
+              echo "reason=invalid_target" >> "$GITHUB_OUTPUT"
+              echo "run_ios=false" >> "$GITHUB_OUTPUT"
+              echo "run_android_play=false" >> "$GITHUB_OUTPUT"
+              echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+              exit 0
               ;;
           esac
+
+          REF="${INPUT_REF:-develop}"
+          SHOULD_RUN="true"
+          REASON="manual_dispatch_budget_ack"
+
+          if [[ "$REF" != "develop" ]]; then
+            echo "❌ Budget-safe guard: internal distribution is restricted to ref=develop."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "ref=" >> "$GITHUB_OUTPUT"
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            echo "reason=ref_not_allowed" >> "$GITHUB_OUTPUT"
+            echo "run_ios=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_play=false" >> "$GITHUB_OUTPUT"
+            echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$REF" =~ ^[0-9a-f]{40}$ ]]; then
+            SHA="$REF"
+          fi
 
           echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "reason=$REASON" >> "$GITHUB_OUTPUT"
-          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
-          MSG="gate: should_run=$SHOULD_RUN reason=$REASON"
-          MSG="$MSG platform=$PLATFORM ref=$REF sha=$SHA"
-          echo "$MSG"
+          echo "run_ios=$RUN_IOS" >> "$GITHUB_OUTPUT"
+          echo "run_android_play=$RUN_ANDROID_PLAY" >> "$GITHUB_OUTPUT"
+          echo "run_android_firebase=$RUN_ANDROID_FIREBASE" >> "$GITHUB_OUTPUT"
+          echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF target=$TARGET run_ios=$RUN_IOS run_android_play=$RUN_ANDROID_PLAY run_android_firebase=$RUN_ANDROID_FIREBASE sha=$SHA"
 
   ios-testflight-internal:
     name: iOS TestFlight (Internal)
     needs: [gate]
-    if: >-
-      needs.gate.outputs.should_run == 'true' &&
-      (needs.gate.outputs.platform == 'ios' ||
-      needs.gate.outputs.platform == 'both')
+    if: needs.gate.outputs.should_run == 'true' && needs.gate.outputs.run_ios == 'true'
     runs-on: macos-26
     environment: production
-    permissions:
-      contents: read
-      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -190,8 +234,6 @@ jobs:
         working-directory: native-ios
 
       - name: Build and upload to TestFlight
-        id: fastlane_beta
-        continue-on-error: true
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -200,140 +242,8 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-        run: |
-          set +e
-          fastlane beta 2>&1 | tee /tmp/fastlane-beta.log
-          lane_rc=${PIPESTATUS[0]}
-          set -e
-          echo "exit_code=$lane_rc" >> "$GITHUB_OUTPUT"
-
-          if [ "$lane_rc" -eq 0 ]; then
-            echo "result=success" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if grep -qi "IOS_UPLOAD_LIMIT_REACHED" /tmp/fastlane-beta.log \
-            || grep -qi "Upload limit reached" /tmp/fastlane-beta.log \
-            || grep -qi "wait 1 day" /tmp/fastlane-beta.log \
-            || grep -qi "Validation failed (409)" /tmp/fastlane-beta.log; then
-            echo "::warning::ASC upload cap hit; deferring to retry workflow."
-            echo "result=deferred_upload_cap" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "result=failure" >> "$GITHUB_OUTPUT"
-          exit "$lane_rc"
+        run: fastlane beta
         working-directory: native-ios
-
-      - name: Fail on non-cap iOS upload error
-        if: steps.fastlane_beta.outputs.result == 'failure'
-        run: |
-          EXIT_CODE="${{ steps.fastlane_beta.outputs.exit_code }}"
-          MSG="❌ iOS upload failed for a non-retryable reason."
-          echo "${MSG} exit=${EXIT_CODE}."
-          exit 1
-
-      - name: Record deferred iOS upload blocker
-        if: steps.fastlane_beta.outputs.result == 'deferred_upload_cap'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
-          TARGET_REF: ${{ needs.gate.outputs.ref }}
-        run: |
-          set -euo pipefail
-          WORKFLOW_RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          BODY=$(cat <<EOF
-          Apple rejected TestFlight upload with a daily upload cap.
-
-          - Workflow: [${GITHUB_WORKFLOW}](${WORKFLOW_RUN_URL})
-          - Run ID: ${GITHUB_RUN_ID}
-          - Ref/SHA: ${TARGET_REF}
-          - UTC: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          Auto-retry runs via \`.github/workflows/ios-internal-retry.yml\`.
-          EOF
-          )
-
-          ISSUE_NUMBER="$(
-            gh issue list --repo "$GITHUB_REPOSITORY" \
-              --state open \
-              --search "\"$ISSUE_TITLE\" in:title" \
-              --json number,title \
-              --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' \
-              | head -1
-          )"
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue comment "$ISSUE_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --body "$BODY"
-            echo "Updated blocker issue #$ISSUE_NUMBER"
-          else
-            gh issue create \
-              --repo "$GITHUB_REPOSITORY" \
-              --title "$ISSUE_TITLE" \
-              --body "$BODY" \
-              >/tmp/ios_upload_cap_issue_url.txt
-            ISSUE_URL="$(cat /tmp/ios_upload_cap_issue_url.txt)"
-            echo "Created blocker issue: ${ISSUE_URL}"
-          fi
-
-      - name: Close deferred iOS upload blocker on success
-        if: steps.fastlane_beta.outputs.result == 'success'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
-        run: |
-          set -euo pipefail
-          WORKFLOW_RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          ISSUE_NUMBER="$(
-            gh issue list --repo "$GITHUB_REPOSITORY" \
-              --state open \
-              --search "\"$ISSUE_TITLE\" in:title" \
-              --json number,title \
-              --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' \
-              | head -1
-          )"
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "No open deferred-upload issue to close."
-            exit 0
-          fi
-          COMMENT="Resolved by iOS internal distribution run."
-          COMMENT="${COMMENT} ${WORKFLOW_RUN_URL}"
-          gh issue close "$ISSUE_NUMBER" \
-            --repo "$GITHUB_REPOSITORY" \
-            --comment "$COMMENT"
-          echo "Closed blocker issue #$ISSUE_NUMBER"
-
-      - name: Install iOS release verification dependencies
-        if: steps.fastlane_beta.outputs.result == 'success'
-        run: python -m pip install pyjwt==2.10.1 cryptography==44.0.2 requests==2.32.5
-
-      - name: Verify TestFlight processing
-        if: steps.fastlane_beta.outputs.result == 'success'
-        env:
-          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: |
-          set -euo pipefail
-          IOS_VERSION="$(sed -n 's/.*MARKETING_VERSION = \([^;]*\);/\1/p' native-ios/RandomTimer.xcodeproj/project.pbxproj | head -1)"
-          python scripts/verify_release.py --platform ios --version "$IOS_VERSION" --wait --timeout 900 --json-out /tmp/ios-release-verification.json
-
-      - name: Upload iOS release verification
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: internal-distribution-verification-ios
-          path: /tmp/ios-release-verification.json
-          if-no-files-found: warn
-
-      - name: Upload Fastlane beta log
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ios-fastlane-beta-log
-          path: /tmp/fastlane-beta.log
-          if-no-files-found: warn
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -346,10 +256,7 @@ jobs:
   android-internal:
     name: Android Google Play (Internal)
     needs: [gate]
-    if: >-
-      needs.gate.outputs.should_run == 'true' &&
-      (needs.gate.outputs.platform == 'android' ||
-      needs.gate.outputs.platform == 'both')
+    if: needs.gate.outputs.should_run == 'true' && needs.gate.outputs.run_android_play == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -369,7 +276,7 @@ jobs:
             exit 1
           fi
           if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
-            echo "❌ Missing required Android keystore secret"
+            echo "❌ Missing required secret: ANDROID_KEYSTORE_BASE64"
             exit 1
           fi
           if [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
@@ -447,22 +354,6 @@ jobs:
           export GOOGLE_PLAY_JSON_KEY_PATH="/tmp/play-service-account.json"
           fastlane internal
 
-      - name: Verify Google Play internal release
-        env:
-          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
-        run: |
-          set -euo pipefail
-          ANDROID_VERSION_NAME="$(sed -n 's/.*versionName = \"\([^\"]*\)\"/\1/p' native-android/app/build.gradle.kts | head -1)"
-          python scripts/verify_release.py --platform android --track internal --version-code "${{ github.run_number }}" --version "$ANDROID_VERSION_NAME" --wait --timeout 900 --json-out /tmp/android-release-verification.json
-
-      - name: Upload Android release verification
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: internal-distribution-verification-android
-          path: /tmp/android-release-verification.json
-          if-no-files-found: warn
-
       - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -479,10 +370,7 @@ jobs:
   android-firebase-internal:
     name: Android Firebase App Distribution (Internal)
     needs: [gate]
-    if: >-
-      needs.gate.outputs.should_run == 'true' &&
-      (needs.gate.outputs.platform == 'android' ||
-      needs.gate.outputs.platform == 'both')
+    if: needs.gate.outputs.should_run == 'true' && needs.gate.outputs.run_android_firebase == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -496,17 +384,11 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
-          FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
-          normalize_csv() {
-            printf '%s' "${1-}" \
-              | tr $'\n\r;' ',' \
-              | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[,[:space:]]+//; s/[,[:space:]]+$//; s/,+/,/g'
-          }
           for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64; do
             if [ -z "${!name:-}" ]; then
               echo "❌ Missing required secret: $name"
@@ -520,21 +402,6 @@ jobs:
           if [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ] && [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
             echo "INFO: No Firebase audience configured. Falling back to upload-only mode."
           fi
-          REQUIRED_TESTER="$(printf '%s' "${FIREBASE_REQUIRED_TESTER_EMAIL:-}" | tr '[:upper:]' '[:lower:]' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
-          TESTERS_NORMALIZED="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}" | tr '[:upper:]' '[:lower:]')"
-          if [ -z "$REQUIRED_TESTER" ]; then
-            echo "❌ Missing required secret: FIREBASE_REQUIRED_TESTER_EMAIL"
-            exit 1
-          fi
-          case ",$TESTERS_NORMALIZED," in
-            *",$REQUIRED_TESTER,"*)
-              echo "Required Firebase tester is configured."
-              ;;
-            *)
-              echo "❌ FIREBASE_INTERNAL_TESTERS must include required tester: $REQUIRED_TESTER"
-              exit 1
-              ;;
-          esac
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -570,14 +437,19 @@ jobs:
             exit 1
           fi
 
-          RESOLVED_APP_ID="$APP_ID_FROM_FILE"
-          RESOLUTION_SOURCE="google-services.json"
-          if [ -n "$APP_ID_FROM_SECRET" ]; then
-            RESOLVED_APP_ID="$APP_ID_FROM_SECRET"
-            RESOLUTION_SOURCE="FIREBASE_ANDROID_APP_ID secret"
-            if [ -n "$APP_ID_FROM_FILE" ] && [ "$APP_ID_FROM_SECRET" != "$APP_ID_FROM_FILE" ]; then
-              echo "::warning::FIREBASE_ANDROID_APP_ID secret does not match google-services.json mobilesdk_app_id; using secret value."
+          if [ -n "$APP_ID_FROM_FILE" ]; then
+            RESOLVED_APP_ID="$APP_ID_FROM_FILE"
+            RESOLUTION_SOURCE="google-services.json"
+            if [ -n "$APP_ID_FROM_SECRET" ] && [ "$APP_ID_FROM_SECRET" != "$APP_ID_FROM_FILE" ]; then
+              echo "❌ FIREBASE_ANDROID_APP_ID secret does not match google-services.json mobilesdk_app_id."
+              echo "google-services.json suffix: ...${APP_ID_FROM_FILE: -8}"
+              echo "secret suffix: ...${APP_ID_FROM_SECRET: -8}"
+              echo "Refusing to distribute to prevent uploading to the wrong Firebase app."
+              exit 1
             fi
+          else
+            RESOLVED_APP_ID="$APP_ID_FROM_SECRET"
+            RESOLUTION_SOURCE="FIREBASE_ANDROID_APP_ID secret (fallback)"
           fi
 
           echo "firebase_android_app_id=$RESOLVED_APP_ID" >> "$GITHUB_OUTPUT"
@@ -629,6 +501,7 @@ jobs:
           FIREBASE_ANDROID_APP_ID: ${{ steps.resolve_firebase_app_id.outputs.firebase_android_app_id }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -Eeuo pipefail
@@ -676,10 +549,21 @@ jobs:
 
           TESTERS="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}")"
           DIST_GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
+          REQUIRED_TESTER="$(normalize_csv "${FIREBASE_REQUIRED_TESTER_EMAIL:-}")"
           APK_PATH="native-android/app/build/outputs/apk/release/app-release.apk"
           if [ ! -f "$APK_PATH" ]; then
             echo "❌ APK not found at $APK_PATH"
             exit 1
+          fi
+          if [ -n "$REQUIRED_TESTER" ] && [ -n "$TESTERS" ]; then
+            case ",$TESTERS," in
+              *",$REQUIRED_TESTER,"*) ;;
+              *)
+                echo "❌ FIREBASE_REQUIRED_TESTER_EMAIL is not present in FIREBASE_INTERNAL_TESTERS."
+                echo "required tester: $REQUIRED_TESTER"
+                exit 1
+                ;;
+            esac
           fi
           TESTER_COUNT="$(csv_count "$TESTERS")"
           GROUP_COUNT="$(csv_count "$DIST_GROUPS")"
