@@ -54,63 +54,68 @@ struct ContentView: View {
             guard didApplyUITestSeed == false else { return }
             didApplyUITestSeed = true
 
-            let args = ProcessInfo.processInfo.arguments
-            guard let index = args.firstIndex(of: "-ui-test-state"),
-                  args.indices.contains(index + 1) else { return }
+            Task {
+                // Short delay to ensure environment is fully ready
+                try? await Task.sleep(for: .seconds(0.5))
+                
+                let args = ProcessInfo.processInfo.arguments
+                guard let index = args.firstIndex(of: "-ui-test-state"),
+                      args.indices.contains(index + 1) else { return }
 
-            let stateArg = args[index + 1].lowercased()
+                let stateArg = args[index + 1].lowercased()
 
-            switch stateArg {
-            case "running":
-                let config = TimerConfig()
-                let seededState = TimerState(
-                    config: config,
-                    targetDuration: 195,
-                    remainingDuration: 135,
-                    status: .running,
-                    alarmTimeRemaining: 0,
-                    alarmStartedAt: nil
-                )
-                timerManager._setTimerStateForTesting(seededState)
+                switch stateArg {
+                case "running":
+                    let config = TimerConfig()
+                    let seededState = TimerState(
+                        config: config,
+                        targetDuration: 195,
+                        remainingDuration: 135,
+                        status: .running,
+                        alarmTimeRemaining: 0,
+                        alarmStartedAt: nil
+                    )
+                    timerManager._setTimerStateForTesting(seededState)
 
-            case "paused":
-                let config = TimerConfig()
-                let seededState = TimerState(
-                    config: config,
-                    targetDuration: 195,
-                    remainingDuration: 135,
-                    status: .paused,
-                    alarmTimeRemaining: 0,
-                    alarmStartedAt: nil
-                )
-                timerManager._setTimerStateForTesting(seededState)
+                case "paused":
+                    let config = TimerConfig()
+                    let seededState = TimerState(
+                        config: config,
+                        targetDuration: 195,
+                        remainingDuration: 135,
+                        status: .paused,
+                        alarmTimeRemaining: 0,
+                        alarmStartedAt: nil
+                    )
+                    timerManager._setTimerStateForTesting(seededState)
 
-            case "alarm":
-                let config = TimerConfig()
-                let seededState = TimerState(
-                    config: config,
-                    targetDuration: 5,
-                    remainingDuration: 0,
-                    status: .alarm,
-                    alarmTimeRemaining: TimeInterval(config.alarmDuration),
-                    alarmStartedAt: Date()
-                )
-                timerManager._setTimerStateForTesting(seededState)
+                case "alarm":
+                    let config = TimerConfig()
+                    let seededState = TimerState(
+                        config: config,
+                        targetDuration: 5,
+                        remainingDuration: 0,
+                        status: .alarm,
+                        alarmTimeRemaining: TimeInterval(config.alarmDuration),
+                        alarmStartedAt: Date()
+                    )
+                    timerManager._setTimerStateForTesting(seededState)
 
-            case "complete":
-                let config = TimerConfig()
-                let seededState = TimerState(
-                    config: config,
-                    targetDuration: 5,
-                    remainingDuration: 0,
-                    status: .complete,
-                    alarmTimeRemaining: 0,
-                    alarmStartedAt: nil
-                )
-                timerManager._setTimerStateForTesting(seededState)
+                case "complete":
+                    let config = TimerConfig()
+                    let seededState = TimerState(
+                        config: config,
+                        targetDuration: 5,
+                        remainingDuration: 0,
+                        status: .complete,
+                        alarmTimeRemaining: 0,
+                        alarmStartedAt: nil
+                    )
+                    timerManager._setTimerStateForTesting(seededState)
 
-            default:
-                break
+                default:
+                    break
+                }
             }
 #endif
         }

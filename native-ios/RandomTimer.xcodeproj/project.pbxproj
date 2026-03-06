@@ -47,7 +47,6 @@
 		D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */; };
 		D8BFD3BC04A1001EE7329508 /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4045FE32D7D1E2F9D4C423C /* StorageService.swift */; };
 		D91C11A4CCFA99B1AF1AEA34 /* RandomTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */; };
-		DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
 		E1DD7FFA2F3044B7A5F461C1 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */; };
 		E479E3D609A46B2F93C1BD2C /* RangeSliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */; };
 		PH00112233445566778899AA /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = PH00112233445566778899BB /* PostHog */; };
@@ -541,7 +540,6 @@
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
-				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,
 				840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

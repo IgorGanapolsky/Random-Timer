@@ -186,13 +186,13 @@ fun ActiveTimerScreen(
                         Modifier
                             .size(circleSize)
                             .then(
-                                if (state.status == TimerStatus.ALARM) {
+                                if (isComplete) {
                                     Modifier.clickable(
                                         indication = null,
                                         interactionSource = remember { MutableInteractionSource() },
                                     ) {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onSilence()
+                                        onDismissAlarm()
                                     }
                                 } else {
                                     Modifier

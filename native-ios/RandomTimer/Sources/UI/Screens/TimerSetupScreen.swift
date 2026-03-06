@@ -299,6 +299,7 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
+        .accessibilityIdentifier("setupScreen")
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {

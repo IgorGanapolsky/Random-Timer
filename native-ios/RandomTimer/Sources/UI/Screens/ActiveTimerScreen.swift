@@ -4,7 +4,8 @@ import SwiftUI
 struct ActiveTimerScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var loopEnabled: Bool = false // Default to LOOP OFF
+    
+    @State private var loopEnabled: Bool = false
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
 
@@ -13,33 +14,20 @@ struct ActiveTimerScreen: View {
     }
 
     private var isComplete: Bool {
-        state?.status == .complete || state?.status == .alarm
+        state?.status == .alarm || state?.status == .complete
     }
 
     private var isPaused: Bool {
         state?.status == .paused
     }
 
-    private var rangeText: String {
-        guard let config = state?.config else { return "" }
-        return formatRangeText(minSeconds: config.minSeconds, maxSeconds: config.maxSeconds)
-    }
-
     private var isLandscape: Bool {
         verticalSizeClass == .compact
     }
 
-    private func formatRangeText(minSeconds: Int, maxSeconds: Int) -> String {
-        func formatTime(_ seconds: Int) -> String {
-            if seconds >= 60 {
-                let mins = seconds / 60
-                let secs = seconds % 60
-                return secs > 0 ? "\(mins)m \(secs)s" : "\(mins)m"
-            } else {
-                return "\(seconds)s"
-            }
-        }
-        return "\(formatTime(minSeconds)) - \(formatTime(maxSeconds))"
+    private var rangeText: String {
+        guard let config = state?.config else { return "" }
+        return formatTimeRange(min: config.minSeconds, max: config.maxSeconds)
     }
 
     var body: some View {
@@ -49,17 +37,19 @@ struct ActiveTimerScreen: View {
             if let state = state {
                 Group {
                     if isLandscape {
-                        HStack(spacing: 24) {
+                        HStack(spacing: 32) {
                             VStack(spacing: 16) {
+                                // Loop badge at top - fixed height placeholder
                                 Group {
-                                    if isComplete {
-                                        Color.clear.frame(height: 36)
-                                    } else {
+                                    if !isComplete {
                                         loopBadge
+                                    } else {
+                                        Color.clear
                                     }
                                 }
                                 .frame(height: 36)
 
+                                // Status text - fixed height placeholder
                                 statusText(for: state)
                                     .frame(height: 28)
 
@@ -70,33 +60,22 @@ struct ActiveTimerScreen: View {
                                 )
                                 .accessibilityIdentifier("activeTimerCircle")
                                 .onTapGesture {
-                                    guard state.status == .alarm else { return }
-                                    timerManager.silenceAlarm()
+                                    guard isComplete else { return }
+                                    Task {
+                                        await timerManager.dismissAlarm()
+                                    }
                                 }
-                                .accessibilityElement(children: .ignore)
-                                .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
-                                .accessibilityValue(isPaused ? "Paused" : (isComplete ? "Complete" : "Active"))
 
+                                // Info message - fixed height placeholder
                                 Group {
                                     if showResetFeedback {
                                         Text("Timer restarted")
-                                            .font(.subheadline)
+                                            .font(.body)
                                             .foregroundColor(.accentPrimary)
                                     } else if isComplete {
-                                        Text("Went off after \(state.targetDuration.formattedDuration)")
-                                            .font(.subheadline)
+                                        Text("Went off after \(TimeInterval(state.targetDuration).formattedDuration)")
+                                            .font(.body)
                                             .foregroundColor(.textSecondary)
-                                    } else {
-                                        Text("You don't know when it will go off...")
-                                            .font(.subheadline)
-                                            .foregroundColor(isPaused ? .textSecondary : .textMuted)
-                                    }
-                                }
-                                .frame(height: 20)
-
-                                Group {
-                                    if state.status == .alarm {
-                                        loopBadge
                                     } else {
                                         Color.clear
                                     }
@@ -139,8 +118,10 @@ struct ActiveTimerScreen: View {
                             )
                             .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {
-                                guard state.status == .alarm else { return }
-                                timerManager.silenceAlarm()
+                                guard isComplete else { return }
+                                Task {
+                                    await timerManager.dismissAlarm()
+                                }
                             }
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
@@ -150,29 +131,24 @@ struct ActiveTimerScreen: View {
                             Group {
                                 if showResetFeedback {
                                     Text("Timer restarted")
-                                        .font(.subheadline)
+                                        .font(.body)
                                         .foregroundColor(.accentPrimary)
                                 } else if isComplete {
-                                    Text("Went off after \(state.targetDuration.formattedDuration)")
-                                        .font(.subheadline)
+                                    Text("Went off after \(TimeInterval(state.targetDuration).formattedDuration)")
+                                        .font(.body)
                                         .foregroundColor(.textSecondary)
                                 } else {
                                     Text("You don't know when it will go off...")
-                                        .font(.subheadline)
+                                        .font(.body)
                                         .foregroundColor(isPaused ? .textSecondary : .textMuted)
                                 }
                             }
-                            .frame(height: 20)
-
-                            // Alarm state: show loop toggle (fixed position)
-                            Group {
-                                if state.status == .alarm {
-                                    loopBadge
-                                } else {
-                                    Color.clear
-                                }
-                            }
                             .frame(height: 36)
+
+                            // Alarm loop toggle (only shown during alarm)
+                            if state.status == .alarm {
+                                loopBadge
+                            }
 
                             Spacer()
 
@@ -181,11 +157,11 @@ struct ActiveTimerScreen: View {
                                 .padding(.horizontal, 24)
                                 .padding(.bottom, 32)
                         }
-                        .padding(.top, 48)
                     }
                 }
             }
         }
+        .accessibilityIdentifier("activeTimerScreen")
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
@@ -200,40 +176,38 @@ struct ActiveTimerScreen: View {
                 loopEnabled = newValue
             }
         }
-        .onDisappear {
-            resetFeedbackTask?.cancel()
-            resetFeedbackTask = nil
-            showResetFeedback = false
-        }
     }
+
+    // MARK: - Components
 
     private var loopBadge: some View {
-        Button {
+        Button(action: {
             loopEnabled.toggle()
-            updateLoopConfig()
-        } label: {
-            Label(loopEnabled ? "LOOP" : "LOOP OFF", systemImage: "repeat")
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(loopEnabled ? .accentPrimary : .textMuted)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.glassBackground)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
-                )
+            updateConfigLoop()
+        }) {
+            HStack(spacing: 6) {
+                Text("🔁")
+                    .font(.body)
+                Text(loopEnabled ? "LOOP" : "LOOP OFF")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.glassBackground)
+            .foregroundColor(loopEnabled ? .accentPrimary : .textMuted)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
+            )
         }
-        .accessibilityLabel(loopEnabled ? "Loop enabled" : "Loop disabled")
-        .accessibilityHint("Double-tap to toggle repeat timer")
+        .buttonStyle(.plain)
     }
 
-    private func updateLoopConfig() {
-        var config = timerManager.config
-        config = TimerConfig(
+    private func updateConfigLoop() {
+        guard let config = state?.config else { return }
+        let newConfig = TimerConfig(
             minSeconds: config.minSeconds,
             maxSeconds: config.maxSeconds,
             alarmDuration: config.alarmDuration,
@@ -242,26 +216,23 @@ struct ActiveTimerScreen: View {
             soundType: config.soundType,
             volume: config.volume
         )
-        timerManager.updateConfig(config)
+        timerManager.updateConfig(newConfig)
     }
 
     @ViewBuilder
     private func statusText(for state: TimerState) -> some View {
-        // Completion text is now shown inside the CircularTimerView
-        // Only show status text for running/paused states
-        Group {
-            if state.status == .alarm || state.status == .complete {
-                // Empty - completion message is inside the circle
-                EmptyView()
-            } else if isPaused {
+        ZStack {
+            if isPaused {
                 Text("Paused")
                     .font(.title3)
                     .foregroundColor(.textSecondary)
+                    .accessibilityIdentifier("statusLabel")
                     .transition(.opacity)
             } else {
                 Text(statusMessage(for: state.status))
                     .font(.title3)
                     .foregroundColor(.textSecondary)
+                    .accessibilityIdentifier("statusLabel")
                     .transition(.opacity)
             }
         }
@@ -299,42 +270,53 @@ struct ActiveTimerScreen: View {
                 }
             } else {
                 // Pause / Resume
-                PrimaryButton(
-                    title: isPaused ? "Resume" : "Pause",
-                    action: {
-                        if isPaused {
-                            timerManager.resumeTimer()
-                        } else {
-                            timerManager.pauseTimer()
-                        }
-                    }
-                )
-
-                // Reset (restart with same duration)
-                SecondaryButton(title: "Reset") {
-                    Task {
-                        await timerManager.resetTimer()
-                        await MainActor.run {
-                            triggerResetFeedback()
-                        }
+                PrimaryButton(title: isPaused ? "Resume" : "Pause") {
+                    if isPaused {
+                        timerManager.resumeTimer()
+                    } else {
+                        timerManager.pauseTimer()
                     }
                 }
 
-                // Stop (go back to home screen)
-                SecondaryButton(title: "Stop") {
-                    Task {
-                        await timerManager.cancelTimer()
+                HStack(spacing: 12) {
+                    // Reset
+                    SecondaryButton(title: "Reset") {
+                        Task {
+                            await timerManager.resetTimer()
+                            await MainActor.run {
+                                triggerResetFeedback()
+                            }
+                        }
+                    }
+
+                    // Stop
+                    SecondaryButton(title: "Stop") {
+                        Task {
+                            await timerManager.cancelTimer()
+                        }
                     }
                 }
             }
         }
     }
 
+    private func formatTimeRange(min: Int, max: Int) -> String {
+        func format(seconds: Int) -> String {
+            if seconds >= 60 {
+                let mins = seconds / 60
+                let secs = seconds % 60
+                return secs > 0 ? "\(mins)m \(secs)s" : "\(mins)m"
+            }
+            return "\(seconds)s"
+        }
+        return "\(format(seconds: min)) - \(format(seconds: max))"
+    }
+
     private func triggerResetFeedback() {
         resetFeedbackTask?.cancel()
         showResetFeedback = true
         resetFeedbackTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.2))
+            try? await Task.sleep(for: .seconds(2.0))
             showResetFeedback = false
         }
     }

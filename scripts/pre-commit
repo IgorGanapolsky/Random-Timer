@@ -62,8 +62,11 @@ if [ -n "$STAGED_KT" ]; then
     fi
 
     # Ban MediaSession (stripped in Feb 2026 audit — not for timer apps)
-    if grep -n 'MediaSession\|MediaMetadata\|PlaybackState\|MediaStyle' "$file" | grep -v '//' > /dev/null 2>&1; then
-      err "$file: Uses MediaSession — not appropriate for timer apps (use specialUse FGS)"
+    # Exception: TimerForegroundService allowed for Bluetooth headset support
+    if [[ "$file" != *"TimerForegroundService.kt"* ]]; then
+      if grep -n 'MediaSession\|MediaMetadata\|PlaybackState\|MediaStyle' "$file" | grep -v '//' > /dev/null 2>&1; then
+        err "$file: Uses MediaSession — not appropriate for timer apps (use specialUse FGS)"
+      fi
     fi
 
     # Ban WARNING_THRESHOLD / DANGER_THRESHOLD — leaks timing through status

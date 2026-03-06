@@ -25,7 +25,7 @@ This file is the task source-of-truth for iterative agent work.
     - `make run-android-emulator` + `maestro test -p android --device emulator-5554 .maestro/smoke-test.yaml .maestro/persistence-test.yaml`
     - `make run-ios-sim` + `maestro test -p ios --device <SIM_UDID> .maestro/ios-smoke-test.yaml`
 
-- [ ] **Bluetooth Headset Button Stops Alarm**
+- [x] **Bluetooth Headset Button Stops Alarm**
   - Acceptance:
     - When alarm is ringing, pressing a Bluetooth headset media button stops the alarm (sound + vibration).
     - Works on **Android + iOS**.
@@ -33,7 +33,7 @@ This file is the task source-of-truth for iterative agent work.
     - Android unit tests for media-button handling logic.
     - iOS unit tests for NotificationService media session wiring (as feasible).
 
-- [ ] **Tap Timer Circle = Stop (When Alarm Has Gone Off)**
+- [x] **Tap Timer Circle = Stop (When Alarm Has Gone Off)**
   - Acceptance:
     - When status is `ALARM` or `COMPLETE`, tapping the timer circle has the same effect as the Stop button.
     - Works on **Android + iOS**.
