@@ -107,11 +107,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
 
     public init(
-        minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        minSeconds: Int = 10,
+        maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
-        repeatEnabled: Bool = false, // Default to LOOP OFF
+        repeatEnabled: Bool = true, // Default to LOOP ON
         soundType: SoundType = .intense,
         volume: Float = 0.5, // Default to 50%
         vibrationEnabled: Bool = false
@@ -191,11 +191,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_time],
-            defaultValue: 0
+            defaultValue: 10
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_time],
-            defaultValue: 300
+            defaultValue: 30
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -207,7 +207,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let repeatEnabled = container.decodeFirstBool(
             forKeys: [.repeatEnabled, .repeat_enabled, .loopEnabled],
-            defaultValue: false
+            defaultValue: true
         )
         let volume = container.decodeFirstFloat(
             forKeys: [.volume, .soundVolume],
@@ -223,11 +223,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: .intense
         )
 
-        let clampedMin = max(0, rawMin)
-        let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
-        let clampedMax = max(clampedMin, cappedMax)
-        let clampedAlarm = max(1, rawAlarm)
-        let clampedVolume = min(max(volume, 0), 1)
+        let clampedMin = Swift.max(0, rawMin)
+        let cappedMax = Swift.min(rawMax, TimerConfig.maxSecondsPro)
+        let clampedMax = Swift.max(clampedMin, cappedMax)
+        let clampedAlarm = Swift.max(1, rawAlarm)
+        let clampedVolume = Swift.min(Swift.max(volume, 0), 1)
 
         self.init(
             minSeconds: clampedMin,
@@ -257,8 +257,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     /// Call this at deserialization time to enforce feature gating after subscription expiry.
     public func clamped(isPro: Bool) -> TimerConfig {
         let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
-        let clampedMax = min(maxSeconds, maxAllowed)
-        let clampedMin = min(minSeconds, clampedMax)
+        let clampedMax = Swift.min(maxSeconds, maxAllowed)
+        let clampedMin = Swift.min(minSeconds, clampedMax)
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
         let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
         return TimerConfig(
@@ -284,7 +284,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
     static let defaultMaxSecondsLimit = 36000
-    static let defaultMinGapSeconds = 30
+    static let defaultMinGapSeconds = 0
     static func adjustForMinChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,
@@ -436,7 +436,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         )
         let targetDuration = container.decodeFirstTimeInterval(
             forKeys: [.targetDuration, .target_duration],
-            defaultValue: max(TimeInterval(config.maxSeconds), 1)
+            defaultValue: Swift.max(TimeInterval(config.maxSeconds), 1)
         )
         let startedAt = container.decodeFirstDate(
             forKeys: [.startedAt, .started_at],
@@ -460,11 +460,11 @@ public struct TimerState: Codable, Sendable, Equatable {
 
         self.init(
             config: config,
-            targetDuration: max(targetDuration, 1),
+            targetDuration: Swift.max(targetDuration, 1),
             startedAt: startedAt,
-            remainingDuration: max(remainingDuration, 0),
+            remainingDuration: Swift.max(remainingDuration, 0),
             status: status,
-            alarmTimeRemaining: max(alarmTimeRemaining, 0),
+            alarmTimeRemaining: Swift.max(alarmTimeRemaining, 0),
             alarmStartedAt: alarmStartedAt
         )
     }
@@ -492,7 +492,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         let elapsed = Date().timeIntervalSince(startedAt)
         let maxDuration = Double(config.maxSeconds)
         guard maxDuration > 0 else { return 0 }
-        return min(0.98, elapsed / maxDuration)
+        return Swift.min(0.98, elapsed / maxDuration)
     }
 
     public var isComplete: Bool {
@@ -510,7 +510,7 @@ public struct TimerState: Codable, Sendable, Equatable {
 
     /// Time remaining in seconds (for display)
     public var timeRemainingSeconds: Int {
-        Int(max(0, remainingDuration))
+        Int(Swift.max(0, remainingDuration))
     }
 
     // MARK: - Sanitized Live Activity Properties
@@ -581,7 +581,7 @@ public let timerPendingActionKey = "pendingTimerAction"
 extension TimeInterval {
     /// Format as "MM:SS"
     public var formattedMMSS: String {
-        let totalSeconds = Int(max(0, self))
+        let totalSeconds = Int(Swift.max(0, self))
         let minutes = totalSeconds / 60
         let seconds = totalSeconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
@@ -589,7 +589,7 @@ extension TimeInterval {
 
     /// Format as human-readable duration (e.g., "1m 30s", "45s")
     public var formattedDuration: String {
-        let totalSeconds = Int(max(0, self))
+        let totalSeconds = Int(Swift.max(0, self))
         let mins = totalSeconds / 60
         let secs = totalSeconds % 60
         if mins > 0 {

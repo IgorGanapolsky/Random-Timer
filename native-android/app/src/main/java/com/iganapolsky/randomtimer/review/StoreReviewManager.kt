@@ -26,7 +26,7 @@ class StoreReviewManager
             private const val KEY_LAST_REVIEW_VERSION = "last_review_version"
             private const val KEY_PENDING_REVIEW = "pending_review"
 
-            private const val COMPLETIONS_BEFORE_REVIEW = 3
+            private const val COMPLETIONS_BEFORE_REVIEW = 1
             private const val MIN_DAYS_BETWEEN_REQUESTS = 30L
         }
 

@@ -17,11 +17,10 @@ class GenerateIosStoreCreativesTests(unittest.TestCase):
             img.save(shots_dir / filename, format="PNG")
         return shots_dir
 
-    def test_generate_writes_report_and_preserves_dimensions(self):
+    def test_generate_writes_report_and_renders_to_target_resolution(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             shots_dir = self._seed_screenshots(repo, size=(300, 600))
-            original_bytes = (shots_dir / "1_setup.png").read_bytes()
 
             report = creatives.generate(repo, "en-US")
 
@@ -39,18 +38,28 @@ class GenerateIosStoreCreativesTests(unittest.TestCase):
             self.assertTrue(backup_dir.is_dir())
             self.assertTrue((backup_dir / "1_setup.png").is_file())
 
+            # iPhone screenshots render to RESOLUTION_IPHONE
             out = Image.open(shots_dir / "1_setup.png")
-            self.assertEqual(out.size, (300, 600))
-            self.assertNotEqual(original_bytes, (shots_dir / "1_setup.png").read_bytes())
+            self.assertEqual(out.size, creatives.RESOLUTION_IPHONE)
 
-    def test_generate_fails_when_required_source_is_missing(self):
+            # iPad screenshots render to RESOLUTION_IPAD
+            out_ipad = Image.open(shots_dir / "5_ipad_setup.png")
+            self.assertEqual(out_ipad.size, creatives.RESOLUTION_IPAD)
+
+    def test_generate_skips_missing_source(self):
+        """Script skips missing sources instead of raising."""
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             shots_dir = self._seed_screenshots(repo)
             (shots_dir / "7_ipad_stopped.png").unlink()
 
-            with self.assertRaises(FileNotFoundError):
-                creatives.generate(repo, "en-US")
+            report = creatives.generate(repo, "en-US")
+
+            # Should succeed but with one fewer file written
+            self.assertEqual(
+                len(report["written_files"]),
+                len(creatives.CREATIVE_COPY) - 1,
+            )
 
 
 if __name__ == "__main__":

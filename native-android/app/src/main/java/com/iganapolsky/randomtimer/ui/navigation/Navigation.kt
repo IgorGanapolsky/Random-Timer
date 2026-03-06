@@ -55,8 +55,7 @@ fun RandomTimerNavHost(
     val activity = LocalContext.current as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
-    var basePrice by remember { mutableStateOf("$7.99") }
-    var elitePrice by remember { mutableStateOf("$4.99") }
+    var elitePrice by remember { mutableStateOf("$29.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
@@ -107,6 +106,7 @@ fun RandomTimerNavHost(
                 onStartTimer = viewModel::startTimer,
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
+                onVoiceCalloutPreview = viewModel::previewVoiceCallout,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
@@ -114,7 +114,6 @@ fun RandomTimerNavHost(
                 isElite = isElite,
                 onUpgradeTap = {
                     scope.launch {
-                        basePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
                         elitePrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
@@ -182,7 +181,6 @@ fun RandomTimerNavHost(
 
     if (showPaywall) {
         PaywallSheet(
-            basePrice = basePrice,
             elitePrice = elitePrice,
             onPurchase = { productID ->
                 scope.launch {
