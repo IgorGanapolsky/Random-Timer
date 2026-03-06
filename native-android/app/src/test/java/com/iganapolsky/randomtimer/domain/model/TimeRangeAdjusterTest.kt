@@ -22,13 +22,35 @@ class TimeRangeAdjusterTest {
         val (min, max) =
             TimeRangeAdjuster.adjustForMinChange(
                 currentMinSeconds = 0,
-                currentMaxSeconds = 60,
-                newMinSeconds = 60,
+                currentMaxSeconds = 10,
+                newMinSeconds = 15,
             )
 
-        assertThat(min).isEqualTo(60)
-        assertThat(max).isEqualTo(60 + TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(15)
+        assertThat(max).isEqualTo(15)
+    }
+
+    @Test
+    fun `reported bug zero to thirty range is possible`() {
+        // User sets min to 0
+        val (min1, max1) =
+            TimeRangeAdjuster.adjustForMinChange(
+                currentMinSeconds = 10,
+                currentMaxSeconds = 30,
+                newMinSeconds = 0,
+            )
+        assertThat(min1).isEqualTo(0)
+        assertThat(max1).isEqualTo(30)
+
+        // User sets max to 30
+        val (min2, max2) =
+            TimeRangeAdjuster.adjustForMaxChange(
+                currentMinSeconds = 0,
+                currentMaxSeconds = 30,
+                newMaxSeconds = 30,
+            )
+        assertThat(min2).isEqualTo(0)
+        assertThat(max2).isEqualTo(30)
     }
 
     @Test
@@ -38,13 +60,12 @@ class TimeRangeAdjusterTest {
             TimeRangeAdjuster.adjustForMinChange(
                 currentMinSeconds = 250,
                 currentMaxSeconds = 300,
-                newMinSeconds = 299 + TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS,
-                maxSecondsLimit = cap
+                newMinSeconds = 305,
+                maxSecondsLimit = cap,
             )
 
-        assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(cap)
         assertThat(max).isEqualTo(cap)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
     }
 
     @Test
@@ -69,9 +90,8 @@ class TimeRangeAdjusterTest {
                 newMaxSeconds = 50,
             )
 
-        assertThat(min).isEqualTo(50 - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(50)
         assertThat(max).isEqualTo(50)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
     }
 
     @Test
@@ -80,12 +100,11 @@ class TimeRangeAdjusterTest {
             TimeRangeAdjuster.adjustForMaxChange(
                 currentMinSeconds = 10,
                 currentMaxSeconds = 40,
-                newMaxSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS - 1,
+                newMaxSeconds = 0,
             )
 
-        assertThat(min).isEqualTo(TimeRangeAdjuster.DEFAULT_MIN_SECONDS)
-        assertThat(max).isEqualTo(TimeRangeAdjuster.DEFAULT_MIN_SECONDS + TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(0)
+        assertThat(max).isEqualTo(0)
     }
 
     @Test
@@ -100,8 +119,7 @@ class TimeRangeAdjusterTest {
             )
 
         assertThat(max).isEqualTo(cap)
-        assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(cap)
     }
 
     @Test
@@ -116,7 +134,6 @@ class TimeRangeAdjusterTest {
             )
 
         assertThat(max).isEqualTo(cap)
-        assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
-        assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+        assertThat(min).isEqualTo(cap)
     }
 }
