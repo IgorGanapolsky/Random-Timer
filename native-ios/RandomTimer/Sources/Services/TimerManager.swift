@@ -178,7 +178,9 @@ final class TimerManager: ObservableObject {
     func silenceAlarm() {
         guard timerState?.status == .alarm else { return }
         notificationService.silenceAlarm()
-        isAlarmSilenced = true
+        if timerState?.status == .alarm {
+            isAlarmSilenced = true
+        }
     }
 
     func pauseTimer() {

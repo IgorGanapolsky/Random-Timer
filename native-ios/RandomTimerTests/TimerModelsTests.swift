@@ -140,7 +140,8 @@ final class TimeRangeAdjusterTests: XCTestCase {
             currentMinSeconds: 298,
             currentMaxSeconds: 299,
             newMinSeconds: 299,
-            maxSecondsLimit: 300
+            maxSecondsLimit: 300,
+            minGapSeconds: 1
         )
 
         XCTAssertEqual(adjusted.min, 299)
@@ -152,7 +153,8 @@ final class TimeRangeAdjusterTests: XCTestCase {
             currentMinSeconds: 290,
             currentMaxSeconds: 300,
             newMinSeconds: 305,
-            maxSecondsLimit: 300
+            maxSecondsLimit: 300,
+            minGapSeconds: 1
         )
 
         XCTAssertEqual(adjusted.min, 299)
