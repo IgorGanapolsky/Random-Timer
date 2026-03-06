@@ -307,6 +307,44 @@ if [ -n "$STAGED_SWIFT" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
+# TACTICAL UX PARITY (2026 STANDARDS)
+# ═══════════════════════════════════════════════════════════════════
+
+# Enforce Sliders with Nudge Buttons in setup screens
+if [ -n "$STAGED_ALL" ]; then
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if echo "$file" | grep -qi 'TimerSetupScreen'; then
+      
+      # iOS Parity Check
+      if [[ "$file" == *.swift ]]; then
+        SLIDER_COUNT=$(grep -c 'Slider(' "$file" || true)
+        if [ "$SLIDER_COUNT" -gt 0 ]; then
+          NUDGE_COUNT=$(grep -c 'StepAdjustButton(' "$file" || true)
+          EXPECTED_NUDGE=$((SLIDER_COUNT * 2))
+          if [ "$NUDGE_COUNT" -lt "$EXPECTED_NUDGE" ]; then
+            err "$file: iOS Tactical Parity — Sliders in setup screen must have +/- StepAdjustButtons (found $NUDGE_COUNT, expected $EXPECTED_NUDGE)"
+          fi
+        fi
+      fi
+
+      # Android Parity Check
+      if [[ "$file" == *.kt ]]; then
+        # Check for VolumeSlider and core Sliders
+        if grep -q 'VolumeSlider\|Slider(' "$file"; then
+          NUDGE_COUNT=$(grep -c 'NudgeButton(' "$file" || true)
+          # Expect 6 nudges: 2 for min, 2 for max, 2 inside VolumeSlider definition
+          if [ "$NUDGE_COUNT" -lt 6 ]; then
+            err "$file: Android Tactical Parity — Setup screen missing +/- NudgeButtons (found $NUDGE_COUNT, expected at least 6)"
+          fi
+        fi
+      fi
+
+    fi
+  done <<< "$STAGED_ALL"
+fi
+
+# ═══════════════════════════════════════════════════════════════════
 # RESULT
 # ═══════════════════════════════════════════════════════════════════
 
