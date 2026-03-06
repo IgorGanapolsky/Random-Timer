@@ -446,6 +446,10 @@ final class TimerManager: ObservableObject {
         )
     }
 
+    func previewVoiceCallout() {
+        AIVoiceCalloutService.shared.preview()
+    }
+
     /// Test-only hook for setting timer state without waiting on async countdowns.
     func _setTimerStateForTesting(_ state: TimerState?) {
         timerState = state

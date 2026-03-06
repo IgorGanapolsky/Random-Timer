@@ -118,6 +118,7 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
+    onVoiceCalloutPreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
@@ -343,6 +344,12 @@ fun TimerSetupScreen(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
+                                        .clickable {
+                                            if (isElite) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onVoiceCalloutPreview()
+                                            }
+                                        }
                                         .padding(vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
@@ -368,26 +375,47 @@ fun TimerSetupScreen(
                                         color = TimerColors.AccentPrimary,
                                     )
                                 } else {
-                                    Surface(
-                                        onClick = onUpgradeTap,
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onVoiceCalloutPreview()
+                                            },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
                                             Text(
-                                                text = "ELITE ",
+                                                text = "Preview",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TimerColors.AccentPrimary,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             )
-                                            Text(
-                                                text = "\uD83D\uDD12",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = TimerColors.AccentPrimary,
-                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Surface(
+                                            onClick = onUpgradeTap,
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "ELITE ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                                Text(
+                                                    text = "\uD83D\uDD12",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -990,6 +1018,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
+            onVoiceCalloutPreview = {},
         )
     }
 }
