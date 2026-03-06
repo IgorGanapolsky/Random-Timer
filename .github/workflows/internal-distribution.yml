@@ -300,14 +300,13 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_ANDROID_APP_ID; do
+          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64; do
             if [ -z "${!name:-}" ]; then
               echo "❌ Missing required secret: $name"
               exit 1
@@ -339,6 +338,27 @@ jobs:
         run: |
           set -euo pipefail
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+
+      - name: Resolve Firebase Android app id
+        id: resolve_firebase_app_id
+        working-directory: native-android
+        env:
+          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+        run: |
+          set -euo pipefail
+          APP_ID_FROM_FILE="$(python -c 'import json; print(json.load(open("app/google-services.json")).get("client", [{}])[0].get("client_info", {}).get("mobilesdk_app_id", ""))')"
+
+          if [ -z "$APP_ID_FROM_FILE" ]; then
+            echo "❌ Could not resolve mobilesdk_app_id from native-android/app/google-services.json"
+            exit 1
+          fi
+
+          if [ -n "${FIREBASE_ANDROID_APP_ID:-}" ] && [ "$FIREBASE_ANDROID_APP_ID" != "$APP_ID_FROM_FILE" ]; then
+            echo "::warning::FIREBASE_ANDROID_APP_ID secret does not match google-services.json mobilesdk_app_id; using file value."
+          fi
+
+          echo "firebase_android_app_id=$APP_ID_FROM_FILE" >> "$GITHUB_OUTPUT"
+          echo "Resolved Firebase app id suffix: ...${APP_ID_FROM_FILE: -8}"
 
       - name: Decode keystore
         env:
@@ -375,7 +395,7 @@ jobs:
       - name: Distribute APK to Firebase App Distribution
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
-          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_ANDROID_APP_ID: ${{ steps.resolve_firebase_app_id.outputs.firebase_android_app_id }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
         run: |
@@ -393,6 +413,8 @@ jobs:
             "$APK_PATH"
             --app "$FIREBASE_ANDROID_APP_ID"
             --release-notes "Internal CI build ${GITHUB_SHA}"
+            --non-interactive
+            --debug
           )
 
           run_dist() {
@@ -410,7 +432,7 @@ jobs:
               echo "Firebase attempt '$label' failed with exit code $dist_rc"
               if [ -s "$log_file" ]; then
                 echo "Firebase CLI output (tail):"
-                tail -n 80 "$log_file"
+                tail -n 200 "$log_file"
               else
                 echo "Firebase CLI produced no output."
               fi
