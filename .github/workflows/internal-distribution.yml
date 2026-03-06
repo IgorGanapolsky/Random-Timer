@@ -440,6 +440,9 @@ jobs:
           AUTH_MODE="service-account"
           if [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
             echo "Firebase auth mode: service-account-file"
+            # firebase-tools auto-reads FIREBASE_TOKEN from env even without --token.
+            # Clear it to force ADC/service-account auth for this path.
+            unset FIREBASE_TOKEN
           elif [ -n "${FIREBASE_TOKEN:-}" ]; then
             AUTH_MODE="token"
             unset GOOGLE_APPLICATION_CREDENTIALS
