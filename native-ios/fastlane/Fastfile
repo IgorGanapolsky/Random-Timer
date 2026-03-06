@@ -8,6 +8,14 @@ platform :ios do
     false
   end
 
+  def testflight_upload_limit_reached_error?(error)
+    msg = error.to_s
+    return true if msg.include?("Upload limit reached")
+    return true if msg.include?("Please wait 1 day and try again")
+    return true if msg.include?("Validation failed (409)")
+    false
+  end
+
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_ci if ENV["CI"] == "true"
@@ -102,10 +110,17 @@ platform :ios do
     end
 
     # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: false,
-      api_key: defined?(api_key) ? api_key : nil
-    )
+    begin
+      upload_to_testflight(
+        skip_waiting_for_build_processing: false,
+        api_key: defined?(api_key) ? api_key : nil
+      )
+    rescue => e
+      if testflight_upload_limit_reached_error?(e)
+        UI.user_error!("IOS_UPLOAD_LIMIT_REACHED: #{e}")
+      end
+      raise
+    end
   end
 
   desc "Create app in App Store Connect"
