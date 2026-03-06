@@ -388,13 +388,14 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
-          if [ -n "${FIREBASE_TOKEN:-}" ]; then
-            echo "Firebase token provided; skipping service account key file."
-            rm -f /tmp/firebase-service-account.json
-          elif [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+          # Prefer service-account auth because firebase --token is legacy and often less reliable in CI.
+          if [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
             echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > /tmp/firebase-service-account.json
           elif [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
             echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          elif [ -n "${FIREBASE_TOKEN:-}" ]; then
+            echo "Firebase token provided; no service account key file will be written."
+            rm -f /tmp/firebase-service-account.json
           else
             echo "No service account payload provided; expecting token auth."
             rm -f /tmp/firebase-service-account.json
@@ -437,12 +438,12 @@ jobs:
           fi
 
           AUTH_MODE="service-account"
-          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+          if [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+            echo "Firebase auth mode: service-account-file"
+          elif [ -n "${FIREBASE_TOKEN:-}" ]; then
             AUTH_MODE="token"
             unset GOOGLE_APPLICATION_CREDENTIALS
             echo "Firebase auth mode: token"
-          elif [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
-            echo "Firebase auth mode: service-account-file"
           else
             echo "❌ No usable Firebase auth mode: missing token and service account file."
             exit 1
@@ -467,7 +468,7 @@ jobs:
             --non-interactive
             --debug
           )
-          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+          if [ "$AUTH_MODE" = "token" ]; then
             BASE_CMD+=(--token "$FIREBASE_TOKEN")
             echo "Using Firebase token authentication."
           fi
