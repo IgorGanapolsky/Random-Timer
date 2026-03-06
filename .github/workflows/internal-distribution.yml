@@ -13,8 +13,8 @@ on:
         type: string
 
 concurrency:
-  group: internal-distribution-${{ github.event_name }}-${{ github.event.workflow_run.head_branch || inputs.ref || github.ref_name }}
-  cancel-in-progress: true
+  group: internal-distribution-${{ github.event_name }}-${{ github.event.workflow_run.head_branch || inputs.ref || github.ref_name }}-${{ github.event.workflow_run.conclusion || 'manual' }}
+  cancel-in-progress: ${{ github.event_name == 'workflow_dispatch' }}
 
 jobs:
   gate:
@@ -302,11 +302,17 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
+          normalize_csv() {
+            printf '%s' "${1-}" \
+              | tr $'\n\r;' ',' \
+              | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[,[:space:]]+//; s/[,[:space:]]+$//; s/,+/,/g'
+          }
           for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64; do
             if [ -z "${!name:-}" ]; then
               echo "❌ Missing required secret: $name"
@@ -320,6 +326,21 @@ jobs:
           if [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ] && [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
             echo "INFO: No Firebase audience configured. Falling back to upload-only mode."
           fi
+          REQUIRED_TESTER="$(printf '%s' "${FIREBASE_REQUIRED_TESTER_EMAIL:-}" | tr '[:upper:]' '[:lower:]' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+          TESTERS_NORMALIZED="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}" | tr '[:upper:]' '[:lower:]')"
+          if [ -z "$REQUIRED_TESTER" ]; then
+            echo "❌ Missing required secret: FIREBASE_REQUIRED_TESTER_EMAIL"
+            exit 1
+          fi
+          case ",$TESTERS_NORMALIZED," in
+            *",$REQUIRED_TESTER,"*)
+              echo "Required Firebase tester is configured."
+              ;;
+            *)
+              echo "❌ FIREBASE_INTERNAL_TESTERS must include required tester: $REQUIRED_TESTER"
+              exit 1
+              ;;
+          esac
 
       - name: Setup Java
         uses: actions/setup-java@v4
