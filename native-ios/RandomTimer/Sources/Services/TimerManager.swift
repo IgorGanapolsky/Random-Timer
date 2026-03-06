@@ -112,19 +112,22 @@ final class TimerManager: ObservableObject {
 
         // Stop any preview sound
         notificationService.stopPreview()
+// Generate random duration with a 1s safety floor
+let randomDuration = Swift.max(1.0, generateRandomDuration(
+    min: config.minDuration,
+    max: config.maxDuration
+))
 
-        // Generate random duration
-        let randomDuration = generateRandomDuration(
-            min: config.minDuration,
-            max: config.maxDuration
-        )
+// Atomic update of state with fresh timestamp
+let state = TimerState(
+    config: config,
+    targetDuration: randomDuration,
+    startedAt: Date() 
+)
+self.timerState = state
 
-        let state = TimerState(
-            config: config,
-            targetDuration: randomDuration
-        )
-
-        timerState = state
+// Start countdown
+startCountdown()
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,
