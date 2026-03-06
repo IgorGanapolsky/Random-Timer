@@ -5,9 +5,32 @@ set -euo pipefail
 
 MODE="ci"
 ERRORS=0
+HAS_RG=0
+if command -v rg >/dev/null 2>&1; then
+  HAS_RG=1
+fi
 
 pass() { echo "✅ $1"; }
 fail() { echo "❌ $1"; ERRORS=$((ERRORS + 1)); }
+
+matches_expr() {
+  local expr="$1"
+  if [[ "$HAS_RG" -eq 1 ]]; then
+    rg -q "$expr"
+  else
+    grep -Eq "$expr"
+  fi
+}
+
+file_has_pattern() {
+  local path="$1"
+  local expr="$2"
+  if [[ "$HAS_RG" -eq 1 ]]; then
+    rg -q "$expr" "$path"
+  else
+    grep -Eq "$expr" "$path"
+  fi
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -33,7 +56,7 @@ if [[ "$MODE" == "staged" ]]; then
     echo "No staged files found. Skipping AI mobile guardrails."
     exit 0
   fi
-  if ! echo "$STAGED" | rg -q '^(native-android/|native-ios/|\.github/workflows/|scripts/|\.maestro/|docs/AI_AGENT_MOBILE_BEST_PRACTICES\.md)'; then
+  if ! echo "$STAGED" | matches_expr '^(native-android/|native-ios/|\.github/workflows/|scripts/|\.maestro/|docs/AI_AGENT_MOBILE_BEST_PRACTICES\.md)'; then
     echo "No staged mobile/guardrail files changed. Skipping AI mobile guardrails."
     exit 0
   fi
@@ -57,7 +80,7 @@ require_pattern() {
     fail "$label (file missing: $path)"
     return
   fi
-  if rg -q "$pattern" "$path"; then
+  if file_has_pattern "$path" "$pattern"; then
     pass "$label"
   else
     fail "$label"
@@ -104,4 +127,3 @@ if [[ "$ERRORS" -gt 0 ]]; then
 fi
 
 echo "AI mobile guardrails passed."
-

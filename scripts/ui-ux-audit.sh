@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET_SCREEN="$ROOT_DIR/native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 WITH_LINT=0
+HAS_RG=0
+if command -v rg >/dev/null 2>&1; then
+  HAS_RG=1
+fi
 
 for arg in "$@"; do
   case "$arg" in
@@ -31,19 +35,48 @@ pass() {
   echo "✅ $1"
 }
 
+pattern_exists() {
+  local pattern="$1"
+  local path="$2"
+  if [[ "$HAS_RG" -eq 1 ]]; then
+    rg -q "$pattern" "$path"
+  else
+    grep -Eq "$pattern" "$path"
+  fi
+}
+
+pattern_count() {
+  local pattern="$1"
+  local path="$2"
+  if [[ "$HAS_RG" -eq 1 ]]; then
+    rg -n "$pattern" "$path" | wc -l | tr -d ' '
+  else
+    grep -En "$pattern" "$path" | wc -l | tr -d ' '
+  fi
+}
+
+extract_nudge_size() {
+  local path="$1"
+  if [[ "$HAS_RG" -eq 1 ]]; then
+    rg -N -o 'val nudgeSize = [0-9]+\.dp' "$path" | head -n1 | rg -o '[0-9]+' | head -n1
+  else
+    grep -Eo 'val nudgeSize = [0-9]+\.dp' "$path" | head -n1 | grep -Eo '[0-9]+' | head -n1
+  fi
+}
+
 if [[ ! -f "$TARGET_SCREEN" ]]; then
   fail "Missing expected file: $TARGET_SCREEN"
 fi
 
 if [[ $ERRORS -eq 0 ]]; then
-  if ! rg -q "private enum class NudgeType" "$TARGET_SCREEN"; then
+  if ! pattern_exists "private enum class NudgeType" "$TARGET_SCREEN"; then
     fail "Nudge button contract missing enum-backed icon type."
   else
     pass "Nudge type enum found."
   fi
 
-  decrement_count="$(rg -n "type = NudgeType.Decrement" "$TARGET_SCREEN" | wc -l | tr -d ' ')"
-  increment_count="$(rg -n "type = NudgeType.Increment" "$TARGET_SCREEN" | wc -l | tr -d ' ')"
+  decrement_count="$(pattern_count "type = NudgeType.Decrement" "$TARGET_SCREEN")"
+  increment_count="$(pattern_count "type = NudgeType.Increment" "$TARGET_SCREEN")"
   if [[ "${decrement_count:-0}" -lt 3 ]]; then
     fail "Expected at least 3 decrement nudge controls (min/max/volume); found $decrement_count."
   else
@@ -55,19 +88,19 @@ if [[ $ERRORS -eq 0 ]]; then
     pass "Increment nudge controls present ($increment_count)."
   fi
 
-  if rg -q "label = \"\\+\"|label = \"−\"|label = \"\\\\u2212\"" "$TARGET_SCREEN"; then
+  if pattern_exists "label = \"\\+\"|label = \"−\"|label = \"\\\\u2212\"" "$TARGET_SCREEN"; then
     fail "Text glyph +/- controls detected; icon/drawn nudge controls required."
   else
     pass "No text-glyph +/- nudge controls detected."
   fi
 
-  if ! rg -q "modifier = modifier.size\\(width = width, height = height\\)" "$TARGET_SCREEN"; then
+  if ! pattern_exists "modifier = modifier.size\\(width = width, height = height\\)" "$TARGET_SCREEN"; then
     fail "NudgeButton must explicitly honor both width and height."
   else
     pass "NudgeButton size contract found."
   fi
 
-  nudge_size="$(rg -N -o 'val nudgeSize = [0-9]+\.dp' "$TARGET_SCREEN" | head -n1 | rg -o '[0-9]+' | head -n1)"
+  nudge_size="$(extract_nudge_size "$TARGET_SCREEN")"
   if [[ -z "${nudge_size:-}" ]]; then
     fail "Could not resolve timer nudge button size."
   elif [[ "$nudge_size" -lt 36 ]]; then
