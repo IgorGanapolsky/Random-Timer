@@ -249,8 +249,16 @@ jobs:
             -storepass "$KEYSTORE_PASSWORD" \
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
+      - name: Set unique Android version code
+        run: |
+          set -euo pipefail
+          VERSION_CODE="$(date +%s)"
+          echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "Using ANDROID_VERSION_CODE=$VERSION_CODE"
+
       - name: Build release AAB
         env:
+          ANDROID_VERSION_CODE: ${{ env.ANDROID_VERSION_CODE }}
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
