@@ -22,7 +22,7 @@ jobs:
       - name: Check if retry is required
         id: check
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
           ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
         run: |
           set -euo pipefail
@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Dispatch Internal Distribution (iOS only)
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           gh workflow run internal-distribution.yml \
