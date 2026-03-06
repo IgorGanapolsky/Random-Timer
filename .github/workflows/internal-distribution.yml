@@ -304,6 +304,7 @@ jobs:
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
           for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64; do
@@ -312,8 +313,8 @@ jobs:
               exit 1
             fi
           done
-          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
-            echo "❌ Missing credentials: set FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_PLAY_JSON_KEY"
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ] && [ -z "${FIREBASE_TOKEN:-}" ]; then
+            echo "❌ Missing credentials: set FIREBASE_SERVICE_ACCOUNT_JSON, GOOGLE_PLAY_JSON_KEY, or FIREBASE_TOKEN/GMSAAS_APITOKEN"
             exit 1
           fi
           if [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ] && [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
@@ -381,6 +382,7 @@ jobs:
           ./gradlew assembleRelease --no-daemon
 
       - name: Write Firebase service account key
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' || secrets.GOOGLE_PLAY_JSON_KEY != '' }}
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
@@ -398,6 +400,7 @@ jobs:
           FIREBASE_ANDROID_APP_ID: ${{ steps.resolve_firebase_app_id.outputs.firebase_android_app_id }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
           set -euo pipefail
           normalize_csv() {
@@ -416,6 +419,10 @@ jobs:
             --non-interactive
             --debug
           )
+          if [ -n "${FIREBASE_TOKEN:-}" ]; then
+            BASE_CMD+=(--token "$FIREBASE_TOKEN")
+            echo "Using Firebase token authentication fallback."
+          fi
 
           run_dist() {
             local label="$1"
