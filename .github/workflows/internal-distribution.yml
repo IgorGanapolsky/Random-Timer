@@ -382,7 +382,6 @@ jobs:
           ./gradlew assembleRelease --no-daemon
 
       - name: Write Firebase service account key
-        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' || secrets.GOOGLE_PLAY_JSON_KEY != '' }}
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
