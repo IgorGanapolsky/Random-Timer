@@ -408,14 +408,31 @@ jobs:
           FIREBASE_INTERNAL_GROUPS: ${{ secrets.FIREBASE_INTERNAL_GROUPS }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN || secrets.GMSAAS_APITOKEN }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          trap 'rc=$?; echo "❌ Firebase distribution script failed at line ${LINENO}: ${BASH_COMMAND} (rc=${rc})"; exit ${rc}' ERR
 
           normalize_csv() {
-            python -c 'import re,sys; raw=sys.argv[1] if len(sys.argv)>1 else ""; parts=[p.strip() for p in re.split(r"[,;\n\r]+", raw) if p.strip()]; print(",".join(parts))' "$1"
+            # Normalize comma/semicolon/newline-separated values to a compact CSV list.
+            printf '%s' "${1-}" \
+              | tr $'\n\r;' ',' \
+              | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[,[:space:]]+//; s/[,[:space:]]+$//; s/,+/,/g'
+          }
+
+          csv_count() {
+            local value="${1-}"
+            if [ -z "$value" ]; then
+              echo 0
+              return 0
+            fi
+            awk -F',' '{print NF}' <<< "$value"
           }
 
           if ! command -v npx >/dev/null 2>&1; then
             echo "❌ npx not found; cannot run firebase-tools."
+            exit 1
+          fi
+          if ! command -v awk >/dev/null 2>&1 || ! command -v sed >/dev/null 2>&1 || ! command -v tr >/dev/null 2>&1; then
+            echo "❌ Missing required shell utilities (awk/sed/tr)."
             exit 1
           fi
 
@@ -432,14 +449,14 @@ jobs:
           fi
 
           TESTERS="$(normalize_csv "${FIREBASE_INTERNAL_TESTERS:-}")"
-          GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
+          DIST_GROUPS="$(normalize_csv "${FIREBASE_INTERNAL_GROUPS:-}")"
           APK_PATH="native-android/app/build/outputs/apk/release/app-release.apk"
           if [ ! -f "$APK_PATH" ]; then
             echo "❌ APK not found at $APK_PATH"
             exit 1
           fi
-          TESTER_COUNT="$(python -c 'import sys; value=sys.argv[1] if len(sys.argv)>1 else ""; print(0 if not value else len([x for x in value.split(",") if x]))' "$TESTERS")"
-          GROUP_COUNT="$(python -c 'import sys; value=sys.argv[1] if len(sys.argv)>1 else ""; print(0 if not value else len([x for x in value.split(",") if x]))' "$GROUPS")"
+          TESTER_COUNT="$(csv_count "$TESTERS")"
+          GROUP_COUNT="$(csv_count "$DIST_GROUPS")"
           echo "Firebase audience normalized: testers=$TESTER_COUNT groups=$GROUP_COUNT"
 
           BASE_CMD=(
@@ -484,16 +501,16 @@ jobs:
           if [ -n "$TESTERS" ]; then
             ATTEMPT1_ARGS+=(--testers "$TESTERS")
           fi
-          if [ -n "$GROUPS" ]; then
-            ATTEMPT1_ARGS+=(--groups "$GROUPS")
+          if [ -n "$DIST_GROUPS" ]; then
+            ATTEMPT1_ARGS+=(--groups "$DIST_GROUPS")
           fi
 
           if run_dist "audience-targeted" /tmp/firebase-distribute-attempt1.log "${ATTEMPT1_ARGS[@]}"; then
             exit 0
           fi
 
-          if [ -n "$TESTERS" ] && [ -n "$GROUPS" ]; then
-            if run_dist "groups-only-retry" /tmp/firebase-distribute-attempt2.log --groups "$GROUPS"; then
+          if [ -n "$TESTERS" ] && [ -n "$DIST_GROUPS" ]; then
+            if run_dist "groups-only-retry" /tmp/firebase-distribute-attempt2.log --groups "$DIST_GROUPS"; then
               exit 0
             fi
           fi
