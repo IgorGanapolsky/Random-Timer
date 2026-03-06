@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.play_publish import _is_failed_precondition, _release_payload
+from scripts.play_publish import _is_deleted_edit_error, _is_failed_precondition, _release_payload
 
 
 class PlayPublishTests(unittest.TestCase):
@@ -25,6 +25,24 @@ class PlayPublishTests(unittest.TestCase):
     def test_does_not_false_positive_without_precondition(self):
         self.assertFalse(
             _is_failed_precondition(
+                "HttpError 403",
+                '{"error":{"status":"PERMISSION_DENIED","message":"No permission"}}',
+                403,
+            )
+        )
+
+    def test_detects_deleted_edit_error(self):
+        self.assertTrue(
+            _is_deleted_edit_error(
+                "HttpError 400",
+                '{"error":{"status":"FAILED_PRECONDITION","message":"This Edit has been deleted."}}',
+                400,
+            )
+        )
+
+    def test_ignores_unrelated_error_for_deleted_edit(self):
+        self.assertFalse(
+            _is_deleted_edit_error(
                 "HttpError 403",
                 '{"error":{"status":"PERMISSION_DENIED","message":"No permission"}}',
                 403,
