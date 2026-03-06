@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Overhauled result-first App Store screenshot generator.
+"""Tactical-grade App Store screenshot generator.
 
-Transitions from generic templates to high-contrast tactical creatives
-focused on outcome-first messaging and professional utility standards.
+Produces high-impact, outcome-focused creatives with:
+- Linear gradient depth backgrounds
+- Soft-drop shadows for UI elevation
+- Standardized Pro Max and iPad Pro resolutions
+- High-contrast typography and tactical badges
 """
 
 from __future__ import annotations
@@ -15,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Tuple
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 
 
 Color = Tuple[int, int, int]
@@ -66,15 +69,19 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
     ),
 }
 
-# Fixed SOURCE_MAP to avoid nested compositions.
+# Standardized target resolutions
+RESOLUTION_IPHONE = (1290, 2796)
+RESOLUTION_IPAD = (2048, 2732)
+
+# Source map pointing to originals to avoid nested framing
 SOURCE_MAP: Dict[str, str] = {
-    "1_setup.png": "1_setup.png",
-    "2_active.png": "2_active.png",
-    "3_alarm.png": "3_alarm.png",
-    "4_running.png": "4_running.png",
-    "5_ipad_setup.png": "5_ipad_setup.png",
-    "6_ipad_running.png": "6_ipad_running.png",
-    "7_ipad_stopped.png": "7_ipad_stopped.png",
+    "1_setup.png": "originals/1_setup.png",
+    "2_active.png": "originals/2_active.png",
+    "3_alarm.png": "originals/3_alarm.png",
+    "4_running.png": "originals/4_running.png",
+    "5_ipad_setup.png": "originals/5_ipad_setup.png",
+    "6_ipad_running.png": "originals/6_ipad_running.png",
+    "7_ipad_stopped.png": "originals/7_ipad_stopped.png",
 }
 
 
@@ -91,12 +98,22 @@ def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
     return ImageFont.load_default()
 
 
-def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
-    w, h = source.size
+def _draw_gradient(draw: ImageDraw.Draw, size: Tuple[int, int], top_color: Color, bottom_color: Color):
+    w, h = size
+    for y in range(h):
+        r = top_color[0] + (bottom_color[0] - top_color[0]) * y // h
+        g = top_color[1] + (bottom_color[1] - top_color[1]) * y // h
+        b = top_color[2] + (bottom_color[2] - top_color[2]) * y // h
+        draw.line([(0, y), (w, y)], fill=(r, g, b))
+
+
+def _render_one(source: Image.Image, text: CreativeText, is_ipad: bool = False) -> Image.Image:
+    w, h = RESOLUTION_IPAD if is_ipad else RESOLUTION_IPHONE
     
-    # Background: Solid high-contrast Tactical Black
-    base = Image.new("RGB", (w, h), (10, 12, 18))
+    # Background: Deep Tactical Gradient
+    base = Image.new("RGB", (w, h))
     draw = ImageDraw.Draw(base)
+    _draw_gradient(draw, (w, h), (25, 30, 42), (10, 12, 18))
 
     # Outcome-First Header Section
     title_font = _load_font(max(72, int(h * 0.045)), bold=True)
@@ -104,11 +121,8 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     
     title_bbox = draw.textbbox((0, 0), text.title, font=title_font)
     title_w = title_bbox[2] - title_bbox[0]
-    
-    # Draw large headline
     draw.text(((w - title_w) // 2, int(h * 0.06)), text.title, font=title_font, fill=(255, 255, 255))
     
-    # Draw outcome subtitle
     subtitle_bbox = draw.textbbox((0, 0), text.subtitle, font=subtitle_font)
     subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
     draw.text(((w - subtitle_w) // 2, int(h * 0.12)), text.subtitle, font=subtitle_font, fill=(180, 190, 210))
@@ -123,25 +137,48 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     by1 = int(h * 0.165)
     bx2, by2 = bx1 + bw + pad_x * 2, by1 + bh + pad_y * 2
     
-    # Tactical Red Badge
     draw.rounded_rectangle((bx1, by1, bx2, by2), radius=8, fill=(220, 38, 38))
     draw.text((bx1 + pad_x, by1 + pad_y - 2), text.badge, font=badge_font, fill=(255, 255, 255))
 
-    # App UI Placement: Full-Bleed Offset (High Trust)
-    # We crop the source to show the most relevant parts of the UI without muddy framing.
+    # App UI Placement
     ui_top = int(h * 0.24)
-    ui_margin = int(w * 0.05)
+    ui_margin = int(w * 0.06)
     target_w = w - (ui_margin * 2)
-    target_h = h - ui_top
+    target_h = h - ui_top + 100 # bleed off the bottom
     
-    # Fit source into the remaining space
-    ui_frame = ImageOps.fit(source, (target_w, target_h), method=Image.Resampling.LANCZOS)
+    # Scale source to fit target_w while maintaining aspect ratio
+    src_w, src_h = source.size
+    scale = target_w / src_w
+    render_w = int(src_w * scale)
+    render_h = int(src_h * scale)
     
-    # Paste directly with sharp high-contrast border
-    draw.rectangle((ui_margin - 2, ui_top - 2, w - ui_margin + 2, h + 2), outline=(40, 50, 70), width=2)
-    base.paste(ui_frame, (ui_margin, ui_top))
+    ui_frame = source.resize((render_w, render_h), Image.Resampling.LANCZOS)
+    
+    # Create shadow
+    shadow_offset = 20
+    shadow_blur = 30
+    shadow = Image.new("RGBA", (render_w + shadow_blur * 2, render_h + shadow_blur * 2), (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    shadow_draw.rounded_rectangle(
+        (shadow_blur, shadow_blur, shadow_blur + render_w, shadow_blur + render_h),
+        radius=int(20 * scale),
+        fill=(0, 0, 0, 180)
+    )
+    shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
+    
+    # Paste shadow then UI
+    base_rgba = base.convert("RGBA")
+    ui_x = (w - render_w) // 2
+    base_rgba.alpha_composite(shadow, (ui_x - shadow_blur + 5, ui_top - shadow_blur + shadow_offset))
+    
+    # Paste UI (rounded corners)
+    mask = Image.new("L", (render_w, render_h), 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.rounded_rectangle((0, 0, render_w, render_h), radius=int(40 * scale), fill=255)
+    
+    base_rgba.paste(ui_frame, (ui_x, ui_top), mask=mask)
 
-    return base
+    return base_rgba.convert("RGB")
 
 
 def generate(repo_root: Path, locale: str) -> Dict[str, object]:
@@ -159,16 +196,26 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
     for filename, text in CREATIVE_COPY.items():
         source_path = screenshots_dir / SOURCE_MAP.get(filename, filename)
         if not source_path.is_file():
-            raise FileNotFoundError(f"Source screenshot not found: {source_path}")
+            # Fallback if originals don't exist for some reason
+            source_path = screenshots_dir / filename
+            if not source_path.is_file():
+                print(f"⚠️ Source screenshot not found: {source_path}, skipping.")
+                continue
 
         # If target file exists, move to backup
         target = screenshots_dir / filename
-        if target.exists():
+        if target.exists() and not str(target).endswith("originals/" + filename):
             backup_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(target, backup_dir / filename)
 
         source = Image.open(source_path).convert("RGB")
-        out = _render_one(source, text)
+        
+        # Handle orientation for 3_alarm if it's landscape by mistake
+        if source.width > source.height:
+            source = source.rotate(90, expand=True)
+
+        is_ipad = "ipad" in filename
+        out = _render_one(source, text, is_ipad=is_ipad)
         
         out.save(target, format="PNG", optimize=True)
         written.append(str(target))

@@ -209,7 +209,7 @@ class TimerStateFlowTest {
         assertThat(timerState.value?.remainingDuration).isEqualTo(2.minutes - 3.seconds)
     }
 
-    // -- Default loop state is OFF --
+    // -- Default loop state is ON --
 
     @Test
     fun `default config has loop disabled`() {
@@ -228,8 +228,8 @@ class TimerStateFlowTest {
     }
 
     @Test
-    fun `TimerConfig DEFAULT has loop disabled`() {
-        assertThat(TimerConfig.DEFAULT.repeatEnabled).isFalse()
+    fun `TimerConfig DEFAULT has loop enabled`() {
+        assertThat(TimerConfig.DEFAULT.repeatEnabled).isTrue()
     }
 
     // -- Remaining duration decrements correctly --

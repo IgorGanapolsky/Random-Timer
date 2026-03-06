@@ -45,7 +45,6 @@ class ProManager
         private val externalScope: CoroutineScope,
     ) : PurchasesUpdatedListener {
         companion object {
-            const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
 
             internal fun canUseDebugUnlock(@Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true): Boolean = true
@@ -124,14 +123,6 @@ class ProManager
                 return false
             }
 
-            // Check In-App (BASE)
-            val inAppParams =
-                QueryPurchasesParams
-                    .newBuilder()
-                    .setProductType(BillingClient.ProductType.INAPP)
-                    .build()
-            val inAppResult = billingClient.queryPurchasesAsync(inAppParams)
-
             // Check Subs (ELITE)
             val subsParams =
                 QueryPurchasesParams
@@ -146,17 +137,11 @@ class ProManager
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
 
-            val hasBase =
-                inAppResult.purchasesList.any { purchase ->
-                    purchase.products.contains(BASE_PRODUCT_ID) &&
-                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-
             val level =
-                when {
-                    hasElite -> EntitlementLevel.ELITE
-                    hasBase -> EntitlementLevel.BASE
-                    else -> EntitlementLevel.NONE
+                if (hasElite) {
+                    EntitlementLevel.ELITE
+                } else {
+                    EntitlementLevel.NONE
                 }
 
             _entitlementLevel.value = level
@@ -166,8 +151,8 @@ class ProManager
                     success = level.isPro,
                     source = source,
                     entryPoint = entryPoint,
-                    responseCode = if (hasElite) subsResult.billingResult.responseCode else inAppResult.billingResult.responseCode,
-                    debugMessage = if (hasElite) subsResult.billingResult.debugMessage else inAppResult.billingResult.debugMessage,
+                    responseCode = subsResult.billingResult.responseCode,
+                    debugMessage = subsResult.billingResult.debugMessage,
                 )
             }
             return level.isPro
@@ -242,17 +227,11 @@ class ProManager
         }
 
         private suspend fun fetchAllProductDetails() {
-            fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
-            val productType =
-                if (productID == ELITE_PRODUCT_ID) {
-                    BillingClient.ProductType.SUBS
-                } else {
-                    BillingClient.ProductType.INAPP
-                }
+            val productType = BillingClient.ProductType.SUBS
 
             val productList =
                 listOf(
@@ -279,17 +258,13 @@ class ProManager
 
         suspend fun getFormattedPrice(productID: String): String {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
-            return if (productID == ELITE_PRODUCT_ID) {
-                details
-                    ?.subscriptionOfferDetails
-                    ?.firstOrNull()
-                    ?.pricingPhases
-                    ?.pricingPhaseList
-                    ?.firstOrNull()
-                    ?.formattedPrice ?: "$4.99"
-            } else {
-                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
-            }
+            return details
+                ?.subscriptionOfferDetails
+                ?.firstOrNull()
+                ?.pricingPhases
+                ?.pricingPhaseList
+                ?.firstOrNull()
+                ?.formattedPrice ?: "$4.99"
         }
 
         override fun onPurchasesUpdated(
@@ -319,10 +294,6 @@ class ProManager
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
             if (purchase.products.contains(ELITE_PRODUCT_ID)) {
                 _entitlementLevel.value = EntitlementLevel.ELITE
-            } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
-                if (_entitlementLevel.value == EntitlementLevel.NONE) {
-                    _entitlementLevel.value = EntitlementLevel.BASE
-                }
             }
         }
 
@@ -397,12 +368,12 @@ class ProManager
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         fun forcePro() {
-            // Cycle: NONE → BASE → ELITE → NONE
+            // Cycle: NONE → ELITE → NONE
             val next =
-                when (_entitlementLevel.value) {
-                    EntitlementLevel.NONE -> EntitlementLevel.BASE
-                    EntitlementLevel.BASE -> EntitlementLevel.ELITE
-                    EntitlementLevel.ELITE -> EntitlementLevel.NONE
+                if (_entitlementLevel.value == EntitlementLevel.NONE) {
+                    EntitlementLevel.ELITE
+                } else {
+                    EntitlementLevel.NONE
                 }
             _entitlementLevel.value = next
             context

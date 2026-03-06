@@ -107,11 +107,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
 
     public init(
-        minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        minSeconds: Int = 10,
+        maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
-        repeatEnabled: Bool = false, // Default to LOOP OFF
+        repeatEnabled: Bool = true, // Default to LOOP ON
         soundType: SoundType = .intense,
         volume: Float = 0.5, // Default to 50%
         vibrationEnabled: Bool = false
@@ -191,11 +191,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_time],
-            defaultValue: 0
+            defaultValue: 10
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_time],
-            defaultValue: 300
+            defaultValue: 30
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -207,7 +207,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let repeatEnabled = container.decodeFirstBool(
             forKeys: [.repeatEnabled, .repeat_enabled, .loopEnabled],
-            defaultValue: false
+            defaultValue: true
         )
         let volume = container.decodeFirstFloat(
             forKeys: [.volume, .soundVolume],

@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "generated_at": "2026-03-06T20:44:15.149295+00:00",
+  "locale": "en-US",
+  "written_files": [
+    "native-ios/fastlane/screenshots/en-US/1_setup.png",
+    "native-ios/fastlane/screenshots/en-US/2_active.png",
+    "native-ios/fastlane/screenshots/en-US/3_alarm.png",
+    "native-ios/fastlane/screenshots/en-US/4_running.png",
+    "native-ios/fastlane/screenshots/en-US/5_ipad_setup.png",
+    "native-ios/fastlane/screenshots/en-US/6_ipad_running.png",
+    "native-ios/fastlane/screenshots/en-US/7_ipad_stopped.png"
+  ],
+  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260306_204413",
+  "report_path": "native-ios/fastlane/screenshots/en-US/report.json"
+}

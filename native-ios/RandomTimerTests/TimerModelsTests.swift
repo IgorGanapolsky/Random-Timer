@@ -7,8 +7,8 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 0)
-        XCTAssertEqual(config.maxSeconds, 300)
+        XCTAssertEqual(config.minSeconds, 10)
+        XCTAssertEqual(config.maxSeconds, 30)
         XCTAssertEqual(config.alarmDuration, 10)
     }
 
@@ -242,7 +242,8 @@ final class TimerManagerSilenceTests: XCTestCase {
         )
 
         let config = TimerConfig(
-            minSeconds: 5, maxSeconds: 10, alarmDuration: 30
+            minSeconds: 5, maxSeconds: 10, alarmDuration: 30,
+            repeatEnabled: false
         )
         let state = TimerState(
             config: config, targetDuration: 5,
