@@ -555,7 +555,12 @@ jobs:
             echo "❌ APK not found at $APK_PATH"
             exit 1
           fi
-          if [ -n "$REQUIRED_TESTER" ] && [ -n "$TESTERS" ]; then
+          if [ -n "$REQUIRED_TESTER" ]; then
+            if [ -z "$TESTERS" ]; then
+              echo "❌ FIREBASE_REQUIRED_TESTER_EMAIL is set but FIREBASE_INTERNAL_TESTERS is empty."
+              echo "required tester: $REQUIRED_TESTER"
+              exit 1
+            fi
             case ",$TESTERS," in
               *",$REQUIRED_TESTER,"*) ;;
               *)
