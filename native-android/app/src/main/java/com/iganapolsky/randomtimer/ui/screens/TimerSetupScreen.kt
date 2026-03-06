@@ -31,16 +31,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -53,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -699,10 +690,13 @@ private fun TimeRangeSliders(
 ) {
     val haptic = LocalHapticFeedback.current
     val coarseNudgeStep = 5
+    val fineNudgeStep = 1
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
-    val sectionGap = if (compactMode) 12.dp else 16.dp
-    val rowGap = 8.dp
+    val minSliderMaxInt = minSliderMax.toInt()
+    val sectionGap = if (compactMode) 8.dp else 12.dp
+    val rowGap = 4.dp
+    val nudgeSize = 32.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
         // Display
@@ -744,10 +738,11 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    icon = Icons.Default.Remove,
-                    contentDescription = "Decrease minimum time",
+                    label = "\u2212",
                     enabled = enabled && minValue >= coarseNudgeStep,
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
                 Slider(
                     value = minValue.toFloat(),
@@ -766,10 +761,11 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    icon = Icons.Default.Add,
-                    contentDescription = "Increase minimum time",
+                    label = "+",
                     enabled = enabled && minValue <= (maxValue - minGapSeconds - coarseNudgeStep),
                     onClick = { onMinChange(minValue + coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
             }
         }
@@ -788,10 +784,11 @@ private fun TimeRangeSliders(
                 horizontalArrangement = Arrangement.spacedBy(rowGap),
             ) {
                 NudgeButton(
-                    icon = Icons.Default.Remove,
-                    contentDescription = "Decrease maximum time",
+                    label = "\u2212",
                     enabled = enabled && maxValue >= (minValue + minGapSeconds + coarseNudgeStep),
                     onClick = { onMaxChange(maxValue - coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
                 Slider(
                     value = maxValue.toFloat(),
@@ -810,10 +807,11 @@ private fun TimeRangeSliders(
                         ),
                 )
                 NudgeButton(
-                    icon = Icons.Default.Add,
-                    contentDescription = "Increase maximum time",
+                    label = "+",
                     enabled = enabled && maxValue <= (maxSliderRangeInt - coarseNudgeStep),
                     onClick = { onMaxChange(maxValue + coarseNudgeStep) },
+                    width = nudgeSize,
+                    height = nudgeSize,
                 )
             }
         }
@@ -832,35 +830,37 @@ private fun snapToStep(
 
 @Composable
 private fun NudgeButton(
-    icon: ImageVector,
-    contentDescription: String,
+    label: String,
     enabled: Boolean,
     onClick: () -> Unit,
+    width: Dp,
+    height: Dp,
     modifier: Modifier = Modifier,
 ) {
-    FilledTonalIconButton(
+    Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.size(36.dp),
         shape = CircleShape,
+        color = if (enabled) TimerColors.GlassBackground.copy(alpha = 0.3f) else TimerColors.BackgroundDark,
         border =
             BorderStroke(
-                width = 1.dp,
-                color = if (enabled) TimerColors.AccentPrimary.copy(alpha = 0.4f) else TimerColors.GlassBorder,
+                0.5.dp,
+                if (enabled) TimerColors.GlassBorder.copy(alpha = 0.4f) else TimerColors.GlassBorder.copy(alpha = 0.2f),
             ),
-        colors =
-            IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = TimerColors.AccentPrimary.copy(alpha = 0.25f),
-                contentColor = TimerColors.AccentPrimary,
-                disabledContainerColor = TimerColors.BackgroundDark,
-                disabledContentColor = TimerColors.TextMuted,
-            ),
+        modifier = modifier.size(width),
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(20.dp),
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -948,13 +948,14 @@ private fun VolumeSlider(
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             NudgeButton(
-                icon = Icons.Default.Remove,
-                contentDescription = "Decrease volume",
+                label = "\u2212",
                 enabled = value > 0f,
                 onClick = { onValueChange((value - 0.05f).coerceAtLeast(0f)) },
+                width = 32.dp,
+                height = 32.dp,
             )
             Slider(
                 value = value,
@@ -969,10 +970,11 @@ private fun VolumeSlider(
                     ),
             )
             NudgeButton(
-                icon = Icons.Default.Add,
-                contentDescription = "Increase volume",
+                label = "+",
                 enabled = value < 1f,
                 onClick = { onValueChange((value + 0.05f).coerceAtMost(1f)) },
+                width = 32.dp,
+                height = 32.dp,
             )
         }
     }

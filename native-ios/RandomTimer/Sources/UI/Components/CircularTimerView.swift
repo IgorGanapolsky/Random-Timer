@@ -41,21 +41,21 @@ struct CircularTimerView: View {
     }
 
     var body: some View {
-        // Cap at 60fps to match Android's typical display refresh.
-        // We do NOT pause the TimelineView itself because we want to maintain 
-        // a smooth visual transition even when the "timer" logic is paused.
-        TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
-            // Calculate elapsed time from the persistent start date.
-            // This ensures shimmer/pulse cycles are continuous and don't "jump"
-            // when the status changes.
-            let elapsed = timeline.date.timeIntervalSince(animationStartDate)
+        // Cap at 60fps to match Android's typical display refresh and prevent
+        // ProMotion 120Hz from making animations appear 2x faster perceptually.
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: shouldPauseAnimations)) { timeline in
+            let elapsed = shouldPauseAnimations ? 0.0 : timeline.date.timeIntervalSince(animationStartDate)
 
+            // Ball orbit: 5.0s per full rotation on iOS.
+            // Android uses tween(3000ms) but ProMotion displays + SwiftUI TimelineView
+            // make identical durations appear perceptually faster. Tuned to match visually.
             let shimmerFraction = elapsed.truncatingRemainder(dividingBy: 5.0) / 5.0
+
+            // Circle pulse: 5.0s full cycle on iOS (vs Android 3.0s).
+            // Same perceptual tuning as shimmer orbit above.
             let pulseCycle = elapsed.truncatingRemainder(dividingBy: 5.0) / 5.0
             let pulseT = Self.computePulseT(pulseCycle)
-            
-            // Subtle alpha change when paused, but the pulse logic stays continuous
-            let trackAlpha = isComplete ? 0.15 : (isPaused ? 0.40 : 0.3 + 0.4 * pulseT)
+            let trackAlpha = isComplete ? 0.15 : (isPaused ? 0.45 : 0.3 + 0.4 * pulseT)
 
             ZStack {
                 Canvas { context, size in
@@ -63,36 +63,52 @@ struct CircularTimerView: View {
                     let radius = diameter / 2
                     let strokePx = strokeWidth
                     let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                    // Inset arc so the shimmer ball's outer glow (2.5*strokePx)
+                    // stays within the Canvas bounds and doesn't get clipped.
                     let glowInset = strokePx * 2.5
                     let arcRadius = radius - glowInset
 
-                    // 1. Background track
-                    let trackPath = Path(ellipseIn: CGRect(
+                    // 1. Background track with pulse
+                    let trackRect = CGRect(
                         x: center.x - arcRadius,
                         y: center.y - arcRadius,
                         width: arcRadius * 2,
                         height: arcRadius * 2
-                    ))
+                    )
+                    let trackPath = Path { p in
+                        p.addEllipse(in: trackRect)
+                    }
                     context.stroke(
                         trackPath,
                         with: .color(.white.opacity(trackAlpha)),
                         style: StrokeStyle(lineWidth: strokePx, lineCap: .round)
                     )
 
-                    // 2. Shimmer highlight - always orbiting for "alive" feel
-                    let shimmerAngleRad = shimmerFraction * 2.0 * .pi - .pi / 2
-                    let shimmerX = center.x + arcRadius * cos(shimmerAngleRad)
-                    let shimmerY = center.y + arcRadius * sin(shimmerAngleRad)
-                    let shimmerPoint = CGPoint(x: shimmerX, y: shimmerY)
+                    // 2. Shimmer highlight — orbiting bright spot
+                    if !shouldPauseAnimations {
+                        let shimmerAngleRad = shimmerFraction * 2.0 * .pi - .pi / 2
+                        let shimmerX = center.x + arcRadius * cos(shimmerAngleRad)
+                        let shimmerY = center.y + arcRadius * sin(shimmerAngleRad)
+                        let shimmerPoint = CGPoint(x: shimmerX, y: shimmerY)
 
-                    context.fill(
-                        Path(ellipseIn: CGRect(x: shimmerPoint.x - strokePx * 2.5, y: shimmerPoint.y - strokePx * 2.5, width: strokePx * 5, height: strokePx * 5)),
-                        with: .color(.white.opacity(isPaused ? 0.05 : 0.15))
-                    )
-                    context.fill(
-                        Path(ellipseIn: CGRect(x: shimmerPoint.x - strokePx, y: shimmerPoint.y - strokePx, width: strokePx * 2, height: strokePx * 2)),
-                        with: .color(.white.opacity(isPaused ? 0.2 : 0.5))
-                    )
+                        // Outer glow (large, soft)
+                        let outerGlow = Path(ellipseIn: CGRect(
+                            x: shimmerPoint.x - strokePx * 2.5,
+                            y: shimmerPoint.y - strokePx * 2.5,
+                            width: strokePx * 5,
+                            height: strokePx * 5
+                        ))
+                        context.fill(outerGlow, with: .color(.white.opacity(0.15)))
+
+                        // Inner bright spot
+                        let innerGlow = Path(ellipseIn: CGRect(
+                            x: shimmerPoint.x - strokePx,
+                            y: shimmerPoint.y - strokePx,
+                            width: strokePx * 2,
+                            height: strokePx * 2
+                        ))
+                        context.fill(innerGlow, with: .color(.white.opacity(0.5)))
+                    }
 
                     // 3. Progress arc
                     if progress > 0 {
@@ -116,53 +132,65 @@ struct CircularTimerView: View {
                         let tipAngle = (-90.0 + 360.0 * progress) * .pi / 180.0
                         let tipX = center.x + arcRadius * cos(tipAngle)
                         let tipY = center.y + arcRadius * sin(tipAngle)
-                        context.fill(
-                            Path(ellipseIn: CGRect(x: tipX - strokePx, y: tipY - strokePx, width: strokePx * 2, height: strokePx * 2)),
-                            with: .color(status.color.opacity(0.6))
-                        )
+                        let tipGlow = Path(ellipseIn: CGRect(
+                            x: tipX - strokePx,
+                            y: tipY - strokePx,
+                            width: strokePx * 2,
+                            height: strokePx * 2
+                        ))
+                        context.fill(tipGlow, with: .color(status.color.opacity(0.6)))
                     }
 
-                    // 4. Tracking dot at start
+                    // 4. Tracking dot at start of progress arc (matches Android)
                     if progress > 0 && progress < 1 {
                         let startAngleRad = -Double.pi / 2
                         let trackDotX = center.x + arcRadius * cos(startAngleRad)
                         let trackDotY = center.y + arcRadius * sin(startAngleRad)
-                        context.fill(
-                            Path(ellipseIn: CGRect(x: trackDotX - strokePx * 1.5, y: trackDotY - strokePx * 1.5, width: strokePx * 3, height: strokePx * 3)),
-                            with: .color(status.color.opacity(0.3))
-                        )
-                        context.fill(
-                            Path(ellipseIn: CGRect(x: trackDotX - strokePx * 0.8, y: trackDotY - strokePx * 0.8, width: strokePx * 1.6, height: strokePx * 1.6)),
-                            with: .color(status.color.opacity(0.6))
-                        )
+                        let trackDotPoint = CGPoint(x: trackDotX, y: trackDotY)
+
+                        // Outer glow
+                        let outerDot = Path(ellipseIn: CGRect(
+                            x: trackDotPoint.x - strokePx * 1.5,
+                            y: trackDotPoint.y - strokePx * 1.5,
+                            width: strokePx * 3,
+                            height: strokePx * 3
+                        ))
+                        context.fill(outerDot, with: .color(status.color.opacity(0.3)))
+
+                        // Inner dot
+                        let innerDot = Path(ellipseIn: CGRect(
+                            x: trackDotPoint.x - strokePx * 0.8,
+                            y: trackDotPoint.y - strokePx * 0.8,
+                            width: strokePx * 1.6,
+                            height: strokePx * 1.6
+                        ))
+                        context.fill(innerDot, with: .color(status.color.opacity(0.6)))
                     }
                 }
 
-                // Center display with fixed size to prevent jitter
-                ZStack {
-                    if isComplete {
-                        Text("Complete!")
-                            .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
-                            .foregroundColor(.timerComplete)
-                    } else if !rangeText.isEmpty {
-                        VStack(spacing: 4) {
-                            Text("Range")
-                                .font(.subheadline)
-                                .foregroundColor(isPaused ? .textSecondary : .textMuted)
-                            Text(rangeText)
-                                .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
-                                .foregroundColor(.textPrimary)
-                                .opacity(pulseOpacity)
-                        }
-                    } else {
-                        Text("...")
+                // Center display (text overlay)
+                if isComplete {
+                    Text("Complete!")
+                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
+                        .foregroundColor(.timerComplete)
+                        .minimumScaleFactor(0.7)
+                } else if !rangeText.isEmpty {
+                    VStack(spacing: 4) {
+                        Text("Range")
+                            .font(.subheadline)
+                            .foregroundColor(isPaused ? .textSecondary : .textMuted)
+                        Text(rangeText)
                             .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
                             .foregroundColor(.textPrimary)
                             .opacity(pulseOpacity)
+                            .minimumScaleFactor(0.7)
                     }
+                } else {
+                    Text("...")
+                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
+                        .foregroundColor(.textPrimary)
+                        .opacity(pulseOpacity)
                 }
-                .frame(width: timerSize * 0.8, height: timerSize * 0.4)
-                .minimumScaleFactor(0.5)
             }
         }
         .frame(width: min(timerSize, 380), height: min(timerSize, 380))

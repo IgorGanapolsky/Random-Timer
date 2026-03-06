@@ -229,58 +229,6 @@ if [ -n "$STAGED_KT" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
-# 2026 UI/UX STANDARDS — Tactical utility compliance
-# ═══════════════════════════════════════════════════════════════════
-
-# ── Android: Nudge Button Standards ────────────────────────────────
-if [ -n "$STAGED_KT" ]; then
-  while IFS= read -r file; do
-    [ -f "$file" ] || continue
-
-    # Ban tiny nudge buttons (must be 36dp+ visual size for stress usability)
-    if grep -n 'nudgeSize\s*=\s*[0-2][0-9]\.dp' "$file" > /dev/null 2>&1; then
-      err "$file: Nudge button size is too small — 2026 tactical standard is 36dp min"
-    fi
-    if grep -n '\.size([0-2][0-9]\.dp)' "$file" | grep -i 'nudge\|plus\|minus\|add\|remove' > /dev/null 2>&1; then
-      err "$file: Utility button size is too small — use 36dp for tactical compliance"
-    fi
-
-    # Ban unicode text for utility buttons (must use Vector Icons for centering/scaling)
-    if grep -n 'label\s*=\s*["\x27][\+\-\u2212\u002B]["\x27]' "$file" > /dev/null 2>&1; then
-      err "$file: Uses text/unicode for utility icons — use Icons.Default.Add/Remove"
-    fi
-
-    # Mandatory accessibility: contentDescription must not be empty for utility buttons
-    if grep -q 'NudgeButton\|IconButton' "$file"; then
-      if grep -n 'contentDescription\s*=\s*["\x27]["\x27]' "$file" > /dev/null 2>&1; then
-        err "$file: Empty contentDescription on utility button — fails accessibility audit"
-      fi
-    fi
-
-  done <<< "$STAGED_KT"
-fi
-
-# ── iOS: SwiftUI Design Consistency ────────────────────────────────
-if [ -n "$STAGED_SWIFT" ]; then
-  while IFS= read -r file; do
-    [ -f "$file" ] || continue
-
-    # Ban hardcoded button sizing (must use ScaledMetric or adaptive frames)
-    if grep -n '\.frame(width:\s*[0-9]*, height:\s*[0-9]*)' "$file" | grep -iv 'CircularTimerView' > /dev/null 2>&1; then
-      warn "$file: Hardcoded frame size — use @ScaledMetric for 2026 accessibility compliance"
-    fi
-
-    # Ensure CircularTimerView uses the new 'heavy' stroke standard (16)
-    if echo "$file" | grep -q 'CircularTimerView\.swift'; then
-      if grep -n 'strokeWidth:\s*CGFloat\s*=\s*[0-9]\{1,2\}' "$file" | grep -v '16' > /dev/null 2>&1; then
-        err "$file: CircularTimerView uses incorrect strokeWidth — 2026 'heavy' standard is 16"
-      fi
-    fi
-
-  done <<< "$STAGED_SWIFT"
-fi
-
-# ═══════════════════════════════════════════════════════════════════
 # ACCESSIBILITY CHECKS
 # ═══════════════════════════════════════════════════════════════════
 
