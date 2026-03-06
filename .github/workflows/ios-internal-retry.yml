@@ -1,0 +1,80 @@
+---
+name: iOS Internal Retry
+
+"on":
+  schedule:
+    - cron: "35 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    outputs:
+      should_retry: ${{ steps.check.outputs.should_retry }}
+      reason: ${{ steps.check.outputs.reason }}
+    steps:
+      - name: Check if retry is required
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+          ISSUE_TITLE: "iOS internal distribution deferred: Apple upload cap"
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_retry=true" >> "$GITHUB_OUTPUT"
+            echo "reason=manual_dispatch" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ISSUE_NUMBER="$(
+            gh issue list --repo "$GITHUB_REPOSITORY" \
+              --state open \
+              --search "\"$ISSUE_TITLE\" in:title" \
+              --json number,title \
+              --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' \
+              | head -1
+          )"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "should_retry=true" >> "$GITHUB_OUTPUT"
+            echo "reason=open_blocker_issue_${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_retry=false" >> "$GITHUB_OUTPUT"
+            echo "reason=no_open_blocker_issue" >> "$GITHUB_OUTPUT"
+          fi
+
+  dispatch-ios-retry:
+    needs: [gate]
+    if: needs.gate.outputs.should_retry == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch Internal Distribution (iOS only)
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run internal-distribution.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref develop \
+            -f ref=develop \
+            -f platform=ios
+          MSG="✅ Dispatched internal-distribution.yml for iOS retry."
+          MSG="$MSG reason=${{ needs.gate.outputs.reason }}"
+          echo "$MSG"
+
+  skip:
+    needs: [gate]
+    if: needs.gate.outputs.should_retry != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip retry
+        run: echo "Skipping iOS retry. reason=${{ needs.gate.outputs.reason }}"
