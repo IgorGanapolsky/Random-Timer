@@ -385,9 +385,12 @@ final class TimerManager: ObservableObject {
 
     func resetTimer() async {
         AnalyticsService.shared.track(AnalyticsEvents.timerReset)
-        // Reset to the SAME duration (restart from beginning)
+        // Reset should reroll a fresh random duration within the configured range.
         guard let currentState = timerState else { return }
-        let sameDuration = currentState.targetDuration
+        let rerolledDuration = generateRandomDuration(
+            min: currentState.config.minDuration,
+            max: currentState.config.maxDuration
+        )
 
         // Reset silence flag for new timer
         isAlarmSilenced = false
@@ -400,10 +403,10 @@ final class TimerManager: ObservableObject {
         await endLiveActivity()
         await notificationService.cancelPendingNotifications()
 
-        // Create new state with same duration
+        // Create new state with a rerolled duration.
         let newState = TimerState(
             config: currentState.config,
-            targetDuration: sameDuration
+            targetDuration: rerolledDuration
         )
 
         timerState = newState

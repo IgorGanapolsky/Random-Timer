@@ -16,6 +16,7 @@ import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -37,6 +38,8 @@ import kotlin.time.Duration.Companion.seconds
 class TimerViewModelAnalyticsTest {
     private val testDispatcher = StandardTestDispatcher()
 
+    private lateinit var repository: TimerRepository
+    private lateinit var startTimerUseCase: StartTimerUseCase
     private lateinit var analyticsService: AnalyticsService
     private lateinit var serviceController: TimerServiceController
     private lateinit var viewModel: TimerViewModel
@@ -49,8 +52,8 @@ class TimerViewModelAnalyticsTest {
         val mockPrefs = mockk<SharedPreferences>(relaxed = true)
         every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
 
-        val repository = mockk<TimerRepository>()
-        val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
+        repository = mockk()
+        startTimerUseCase = mockk(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
@@ -60,6 +63,7 @@ class TimerViewModelAnalyticsTest {
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
+        coEvery { repository.saveTimerConfig(any()) } just runs
         coEvery { repository.clearActiveTimer() } just runs
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
@@ -163,6 +167,39 @@ class TimerViewModelAnalyticsTest {
         verify(exactly = 0) { analyticsService.track(AnalyticsEvents.TIMER_STOPPED, any()) }
         verify(exactly = 0) { analyticsService.track(AnalyticsEvents.TIMER_ABANDONED, any()) }
         verify(exactly = 1) { serviceController.stopTimer() }
+    }
+
+    @Test
+    fun `resetTimer tracks reset event and delegates reroll to service`() {
+        viewModel.resetTimer()
+
+        verify(exactly = 1) { analyticsService.track(AnalyticsEvents.TIMER_RESET) }
+        verify(exactly = 1) { serviceController.resetTimer() }
+    }
+
+    @Test
+    fun `startTimer uses latest in-memory config after immediate slider update`() {
+        val updatedConfig =
+            TimerConfig.DEFAULT.copy(
+                minSeconds = 0,
+                maxSeconds = 30,
+            )
+        val startedState =
+            TimerState(
+                config = updatedConfig,
+                targetDuration = 15.seconds,
+                remainingDuration = 15.seconds,
+                status = TimerStatus.RUNNING,
+            )
+        coEvery { startTimerUseCase(updatedConfig) } returns startedState
+        every { serviceController.startTimer(any()) } just runs
+
+        viewModel.updateConfig(updatedConfig)
+        viewModel.startTimer()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { startTimerUseCase(updatedConfig) }
+        verify(exactly = 1) { serviceController.startTimer(startedState) }
     }
 
     private fun timerState(status: TimerStatus): TimerState =
