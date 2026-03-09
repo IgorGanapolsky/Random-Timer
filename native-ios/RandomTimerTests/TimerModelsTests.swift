@@ -358,6 +358,50 @@ final class TimerManagerTests: XCTestCase {
 
         XCTAssertTrue(manager.timerState?.config.repeatEnabled ?? false)
     }
+
+    @MainActor
+    func testResetTimerRerollsDurationWithinConfiguredRange() async {
+        let manager = TimerManager(
+            storageService: MockStorageService(),
+            notificationService: MockNotificationService(),
+            liveActivityService: MockLiveActivityService()
+        )
+        let config = TimerConfig(minSeconds: 0, maxSeconds: 30)
+        let state = TimerState(config: config, targetDuration: 30, remainingDuration: 12, status: .running)
+        manager._setTimerStateForTesting(state)
+
+        await manager.resetTimer()
+
+        guard let rerolled = manager.timerState else {
+            XCTFail("Expected timer state after reset")
+            return
+        }
+
+        XCTAssertGreaterThanOrEqual(rerolled.targetDuration, Double(config.minSeconds))
+        XCTAssertLessThanOrEqual(rerolled.targetDuration, Double(config.maxSeconds))
+        XCTAssertEqual(rerolled.remainingDuration, rerolled.targetDuration, accuracy: 0.0001)
+    }
+
+    @MainActor
+    func testResetTimerUsesExactDurationWhenRangeCollapsed() async {
+        let manager = TimerManager(
+            storageService: MockStorageService(),
+            notificationService: MockNotificationService(),
+            liveActivityService: MockLiveActivityService()
+        )
+        let config = TimerConfig(minSeconds: 30, maxSeconds: 30)
+        let state = TimerState(config: config, targetDuration: 10, remainingDuration: 3, status: .running)
+        manager._setTimerStateForTesting(state)
+
+        await manager.resetTimer()
+
+        guard let rerolled = manager.timerState else {
+            XCTFail("Expected timer state after reset")
+            return
+        }
+        XCTAssertEqual(rerolled.targetDuration, 30, accuracy: 0.0001)
+        XCTAssertEqual(rerolled.remainingDuration, 30, accuracy: 0.0001)
+    }
 }
 
 final class TimerStateTests: XCTestCase {

@@ -260,7 +260,7 @@ struct ActiveTimerScreen: View {
                     }
                 }
 
-                // Reset - restart with same duration
+                // Reset - reroll a new random duration in the configured range
                 SecondaryButton(title: "Reset") {
                     Task {
                         await timerManager.resetTimer()
