@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ class SoundPreviewManagerImpl
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        private val voiceCalloutManager: AIVoiceCalloutManager,
         private val scope: CoroutineScope,
     ) : SoundPreviewManager {
         private var player: MediaPlayer? = null
@@ -39,22 +41,26 @@ class SoundPreviewManagerImpl
             scheduleStop(maxDurationMs)
         }
 
-        override fun previewVolume(
-            soundType: SoundType,
-            volume: Float,
-        ) {
+    override fun previewVolume(
+        soundType: SoundType,
+        volume: Float,
+    ) {
             if (currentlyPreviewing != soundType || player?.isPlaying != true) {
                 startPreview(soundType, volume)
             } else {
                 player?.setVolume(volume, volume)
-            }
-            scheduleStop(volumeStopDelayMs)
         }
+        scheduleStop(volumeStopDelayMs)
+    }
 
-        override fun stop() {
-            stopJob?.cancel()
-            stopJob = null
-            player?.stop()
+    override fun previewVoiceCallout() {
+        voiceCalloutManager.preview()
+    }
+
+    override fun stop() {
+        stopJob?.cancel()
+        stopJob = null
+        player?.stop()
             player?.release()
             player = null
             currentlyPreviewing = null

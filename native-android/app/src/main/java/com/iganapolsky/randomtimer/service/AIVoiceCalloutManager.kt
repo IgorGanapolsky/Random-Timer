@@ -46,6 +46,21 @@ class AIVoiceCalloutManager
             nextChaosCueAt = 0
         }
 
+        fun preview() {
+            val previewCues =
+                listOf(
+                    "Thirty seconds remaining. Hold your position.",
+                    "Ten seconds. Prepare for impact.",
+                    "Switch stance!",
+                    "Move! Move! Move!",
+                    "Stay sharp!",
+                    "Explode!",
+                    "Check your six!",
+                    "Eyes up!",
+                )
+            speak(previewCues[Random.nextInt(previewCues.size)])
+        }
+
         fun triggerCallout(remainingSeconds: Int) {
             // Fixed countdown callouts
             val countdownCallouts =

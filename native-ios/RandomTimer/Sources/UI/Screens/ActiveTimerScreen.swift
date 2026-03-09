@@ -163,12 +163,22 @@ struct ActiveTimerScreen: View {
             }
         }
         .accessibilityIdentifier("activeTimerScreen")
-        .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
             // Initialize loop state from config (only on first appear)
             if let state = state {
                 loopEnabled = state.config.repeatEnabled
+            }
+        }
+        .onDisappear {
+            guard timerManager.timerState != nil else { return }
+            let shouldDismissAlarm = isComplete
+            Task {
+                if shouldDismissAlarm {
+                    await timerManager.dismissAlarm()
+                } else {
+                    await timerManager.cancelTimer()
+                }
             }
         }
         .onChange(of: state?.config.repeatEnabled) { _, newValue in
