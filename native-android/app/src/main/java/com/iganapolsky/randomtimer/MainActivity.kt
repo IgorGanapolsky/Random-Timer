@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
             val silenceIntent =
                 Intent(this, TimerForegroundService::class.java).apply {
                     action = TimerForegroundService.ACTION_SILENCE_ALARM
-            }
+                }
             startService(silenceIntent)
             intent.removeExtra(TimerForegroundService.EXTRA_FROM_ALARM_NOTIFICATION)
         }
