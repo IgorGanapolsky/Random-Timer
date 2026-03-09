@@ -118,6 +118,7 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
+    onVoiceCalloutPreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
@@ -338,56 +339,80 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // AI Voice Callouts (Elite Feature)
+                            // Voice Callouts (Pro feature)
                             Row(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
+                                        .clickable(enabled = isElite) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onVoiceCalloutPreview()
+                                        }.padding(vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Voice prompts during countdown",
+                                        text = "Spoken 30s/10s/5s cues plus random drill commands.",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
                                 }
-                                if (isElite) {
-                                    Text(
-                                        text = "ENABLED",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TimerColors.AccentPrimary,
-                                    )
-                                } else {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     Surface(
-                                        onClick = onUpgradeTap,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onVoiceCalloutPreview()
+                                        },
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                     ) {
-                                        Row(
+                                        Text(
+                                            text = "Preview",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    if (isElite) {
+                                        Text(
+                                            text = "ON",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    } else {
+                                        Surface(
+                                            onClick = onUpgradeTap,
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
-                                            Text(
-                                                text = "ELITE ",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                            )
-                                            Text(
-                                                text = "\uD83D\uDD12",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = TimerColors.AccentPrimary,
-                                            )
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "PRO ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                                Text(
+                                                    text = "\uD83D\uDD12",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -990,6 +1015,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
+            onVoiceCalloutPreview = {},
         )
     }
 }

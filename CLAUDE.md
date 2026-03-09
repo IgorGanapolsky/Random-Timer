@@ -67,6 +67,8 @@ cd native-ios && pod deintegrate && pod install  # Fix pod failures
 ### Worktree Discipline
 - **All subagents MUST use `isolation: "worktree"`** for code modifications
 - **Never commit directly to the user's active branch** from any agent
+- **Before opening a PR from a worktree, verify the branch ancestry against `origin/develop` (or the intended base) and do not open PRs from misbased branches.**
+- **If a clean replacement PR supersedes a misbased or duplicate PR, close the superseded PR and remove only clean worktrees; never delete dirty worktrees.**
 - Worktrees auto-clean on session start via `.claude/hooks/worktree-cleanup.sh`
 - Cleanup is safe: only removes orphaned dirs, never touches active worktrees from other agents/LLMs
 - `.claude/worktrees/` is gitignored — never shows in git status
