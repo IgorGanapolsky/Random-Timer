@@ -449,6 +449,11 @@ final class TimerManager: ObservableObject {
         )
     }
 
+    func previewVoiceCallout() {
+        AIVoiceCalloutService.shared.resetSession()
+        AIVoiceCalloutService.shared.speak("Thirty seconds remaining. Hold your position.")
+    }
+
     /// Test-only hook for setting timer state without waiting on async countdowns.
     func _setTimerStateForTesting(_ state: TimerState?) {
         timerState = state

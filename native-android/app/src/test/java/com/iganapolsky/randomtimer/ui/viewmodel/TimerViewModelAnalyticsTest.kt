@@ -13,6 +13,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
+import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.coEvery
@@ -42,6 +43,7 @@ class TimerViewModelAnalyticsTest {
     private lateinit var startTimerUseCase: StartTimerUseCase
     private lateinit var analyticsService: AnalyticsService
     private lateinit var serviceController: TimerServiceController
+    private lateinit var voiceCalloutManager: AIVoiceCalloutManager
     private lateinit var viewModel: TimerViewModel
 
     @Before
@@ -55,6 +57,7 @@ class TimerViewModelAnalyticsTest {
         repository = mockk()
         startTimerUseCase = mockk(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
+        voiceCalloutManager = mockk(relaxed = true)
         serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
@@ -74,6 +77,7 @@ class TimerViewModelAnalyticsTest {
                 repository = repository,
                 startTimerUseCase = startTimerUseCase,
                 soundPreviewManager = soundPreviewManager,
+                voiceCalloutManager = voiceCalloutManager,
                 serviceController = serviceController,
                 analyticsService = analyticsService,
                 storeReviewManager = storeReviewManager,
@@ -175,6 +179,13 @@ class TimerViewModelAnalyticsTest {
 
         verify(exactly = 1) { analyticsService.track(AnalyticsEvents.TIMER_RESET) }
         verify(exactly = 1) { serviceController.resetTimer() }
+    }
+
+    @Test
+    fun `previewVoiceCallout delegates to voice callout manager`() {
+        viewModel.previewVoiceCallout()
+
+        verify(exactly = 1) { voiceCalloutManager.speak("Thirty seconds remaining. Hold your position.") }
     }
 
     @Test

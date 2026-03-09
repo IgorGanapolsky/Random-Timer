@@ -18,6 +18,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
+import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
@@ -38,6 +39,7 @@ class TimerViewModel
         private val repository: TimerRepository,
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
+        private val voiceCalloutManager: AIVoiceCalloutManager,
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
@@ -262,6 +264,10 @@ class TimerViewModel
 
         fun previewVolume(volume: Float) {
             soundPreviewManager.previewVolume(config.value.soundType, volume)
+        }
+
+        fun previewVoiceCallout() {
+            voiceCalloutManager.speak("Thirty seconds remaining. Hold your position.")
         }
 
         private fun stopSoundPreview() {

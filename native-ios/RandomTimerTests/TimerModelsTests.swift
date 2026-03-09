@@ -316,6 +316,13 @@ final class TimerManagerTests: XCTestCase {
     }
 
     @MainActor
+    func testPreviewVoiceCalloutDoesNotCrash() {
+        let manager = TimerManager()
+
+        manager.previewVoiceCallout()
+    }
+
+    @MainActor
     func testStartTimerSetsTimerState() async {
         let manager = TimerManager()
         await manager.startTimer()
