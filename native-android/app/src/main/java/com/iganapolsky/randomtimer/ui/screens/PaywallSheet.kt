@@ -55,6 +55,12 @@ fun PaywallSheet(
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
+                modifier =
+                    if (onDebugUnlock != null) {
+                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                    } else {
+                        Modifier
+                    },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -83,12 +89,6 @@ fun PaywallSheet(
             PrimaryButton(
                 text = "Unlock Pro \u2022 $proPrice",
                 onClick = { onPurchase("elite_tactical") },
-                modifier =
-                    if (onDebugUnlock != null) {
-                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
-                    } else {
-                        Modifier
-                    },
             )
 
             Spacer(modifier = Modifier.height(24.dp))

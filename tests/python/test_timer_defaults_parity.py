@@ -10,9 +10,11 @@ ANDROID_SETUP_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/
 ANDROID_FOREGROUND_SERVICE = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt"
 ANDROID_PAYWALL = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/PaywallSheet.kt"
 ANDROID_NAVIGATION = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
+ANDROID_VOICE_SERVICE = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
 IOS_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_SETUP_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 IOS_PAYWALL = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/PaywallSheet.swift"
+IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
 
 
 def _normalize_name(name: str) -> str:
@@ -105,7 +107,33 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     android_navigation = ANDROID_NAVIGATION.read_text(encoding="utf-8")
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
-    assert "holdForHiddenUnlock(holdDurationMs = 8_000L" in android_paywall
-    assert ".onLongPressGesture(minimumDuration: 8.0)" in ios_paywall
+    assert re.search(r'Text\(\s*text = "Upgrade to Pro".*?holdForHiddenUnlock\(holdDurationMs = 8_000L', android_paywall, re.S)
+    assert re.search(r'Text\("Upgrade to Pro"\).*?\.onLongPressGesture\(minimumDuration: 8\.0\)', ios_paywall, re.S)
     assert "unlockProForDebug(paywallEntryPoint)" in android_navigation
     assert "proManager.unlockProForDebug()" in ios_paywall
+
+
+def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
+    android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
+    ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
+
+    for snippet in [
+        "Countdown",
+        "Drill",
+        "Switch stance",
+        "Check your six",
+    ]:
+        assert snippet in android_setup
+        assert snippet in ios_setup
+
+
+def test_tactical_voice_profile_is_defined_on_both_platforms():
+    android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
+    ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
+
+    assert "TACTICAL_PITCH" in android_voice_service
+    assert "TACTICAL_RATE" in android_voice_service
+    assert "preferredVoiceNames" in android_voice_service
+    assert "tacticalPitch" in ios_voice_service
+    assert "tacticalRate" in ios_voice_service
+    assert "preferredVoiceNames" in ios_voice_service

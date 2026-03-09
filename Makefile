@@ -136,11 +136,11 @@ verify-ios-ui:
 
 maestro-android:
 	@echo "==> Maestro: Android flows (requires emulator/device + maestro CLI)"
-	@maestro test .maestro/smoke-test.yaml
+	@maestro test -p android .maestro/smoke-test.yaml
 
 maestro-ios:
 	@echo "==> Maestro: iOS flows (requires simulator + maestro CLI)"
-	@maestro test .maestro/ios-smoke-test.yaml
+	@maestro test -p ios .maestro/ios-smoke-test.yaml
 
 playwright-install:
 	@echo "==> Playwright: install dependencies + chromium"

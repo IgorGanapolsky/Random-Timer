@@ -15,6 +15,12 @@ class AIVoiceCalloutManager
     constructor(
         @ApplicationContext private val context: Context,
     ) : TextToSpeech.OnInitListener {
+        companion object {
+            private val preferredVoiceNames = listOf("male", "alex", "reed", "nathan", "tom", "fred")
+            private const val TACTICAL_PITCH = 0.82f
+            private const val TACTICAL_RATE = 0.90f
+        }
+
         private var tts: TextToSpeech? = null
         private var isReady = false
         private var lastChaosCueTime = 0
@@ -28,6 +34,9 @@ class AIVoiceCalloutManager
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(Locale.US)
                 if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts?.setPitch(TACTICAL_PITCH)
+                    tts?.setSpeechRate(TACTICAL_RATE)
+                    selectPreferredVoice()
                     isReady = true
                     Log.d("AIVoiceCallout", "TTS Ready")
                 }
@@ -47,18 +56,21 @@ class AIVoiceCalloutManager
         }
 
         fun preview() {
+            previewCountdownCue()
+        }
+
+        fun previewCountdownCue() {
             val previewCues =
                 listOf(
                     "Thirty seconds remaining. Hold your position.",
                     "Ten seconds. Prepare for impact.",
-                    "Switch stance!",
-                    "Move! Move! Move!",
-                    "Stay sharp!",
-                    "Explode!",
-                    "Check your six!",
-                    "Eyes up!",
+                    "Five. Four. Three. Two. One.",
                 )
             speak(previewCues[Random.nextInt(previewCues.size)])
+        }
+
+        fun previewDrillCommand() {
+            speak(randomChaosCue())
         }
 
         fun triggerCallout(remainingSeconds: Int) {
@@ -111,6 +123,21 @@ class AIVoiceCalloutManager
                     "Push through it!",
                 )
             return cues[Random.nextInt(cues.size)]
+        }
+
+        private fun selectPreferredVoice() {
+            val matchingVoice =
+                tts?.voices
+                    ?.filter { it.locale.language == Locale.US.language }
+                    ?.firstOrNull { voice ->
+                        preferredVoiceNames.any { candidate ->
+                            voice.name.contains(candidate, ignoreCase = true)
+                        }
+                    }
+
+            if (matchingVoice != null) {
+                tts?.setVoice(matchingVoice)
+            }
         }
 
         fun shutdown() {

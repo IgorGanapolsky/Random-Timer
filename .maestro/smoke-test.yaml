@@ -1,24 +1,25 @@
 appId: com.iganapolsky.randomtimer
 ---
 # Smoke test: Verify app launches and timer flow works
-- launchApp
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
 
-# Verify main screen elements are visible
-- assertVisible: 'Random Tactical Timer'
-- assertVisible:
-    text: '.*Goes Off In This Range.*'
+# Verify setup screen is visible
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 30000
 - assertVisible:
     text: '.*Minimum:.*'
 - assertVisible:
     text: '.*Maximum:.*'
-- assertVisible:
-    text: '.*Alarm Sound Duration.*'
-- assertVisible: 'Start Timer'
 
 # Start the timer
 - tapOn: 'Start Timer'
 
-# Verify timer screen is shown (pause button should be visible)
-- assertVisible:
-    text: 'Pause'
-    optional: true
+# Verify timer screen is shown
+- assertVisible: 'Pause'
+- tapOn: 'Stop'
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 10000

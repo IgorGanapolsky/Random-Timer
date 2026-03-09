@@ -6,6 +6,9 @@ import Security
 @MainActor
 final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
+    private static let preferredVoiceNames = ["Alex", "Reed", "Eddy", "Nathan", "Tom", "Fred"]
+    private static let tacticalPitch: Float = 0.82
+    private static let tacticalRate: Float = 0.46
 
     private let synthesizer = AVSpeechSynthesizer()
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
@@ -16,8 +19,9 @@ final class AIVoiceCalloutService {
 
     func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.5
+        utterance.voice = preferredVoice()
+        utterance.pitchMultiplier = Self.tacticalPitch
+        utterance.rate = Self.tacticalRate
 
         Self.log.info("Voice Callout: \(text)")
         synthesizer.speak(utterance)
@@ -29,18 +33,21 @@ final class AIVoiceCalloutService {
     }
 
     func preview() {
+        previewCountdownCue()
+    }
+
+    func previewCountdownCue() {
         let previewCues = [
             "Thirty seconds remaining. Hold your position.",
             "Ten seconds. Prepare for impact.",
-            "Switch stance!",
-            "Move! Move! Move!",
-            "Stay sharp!",
-            "Explode!",
-            "Check your six!",
-            "Eyes up!"
+            "Five. Four. Three. Two. One."
         ]
         let index = secureRandomInt(in: 0...(previewCues.count - 1))
         speak(previewCues[index])
+    }
+
+    func previewDrillCommand() {
+        speak(randomChaosCue())
     }
 
     func triggerCallout(remainingSeconds: Int) {
@@ -92,6 +99,18 @@ final class AIVoiceCalloutService {
         ]
         let index = secureRandomInt(in: 0...(cues.count - 1))
         return cues[index]
+    }
+
+    private func preferredVoice() -> AVSpeechSynthesisVoice? {
+        let voices = AVSpeechSynthesisVoice.speechVoices().filter {
+            $0.language.hasPrefix("en-US") || $0.language.hasPrefix("en-")
+        }
+        for name in Self.preferredVoiceNames {
+            if let voice = voices.first(where: { $0.name.localizedCaseInsensitiveContains(name) }) {
+                return voice
+            }
+        }
+        return AVSpeechSynthesisVoice(language: "en-US") ?? voices.first
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {

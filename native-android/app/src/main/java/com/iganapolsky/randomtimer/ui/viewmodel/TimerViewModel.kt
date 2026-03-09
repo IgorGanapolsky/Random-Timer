@@ -268,6 +268,10 @@ class TimerViewModel
             soundPreviewManager.previewVoiceCallout()
         }
 
+        fun previewDrillCommand() {
+            soundPreviewManager.previewDrillCommand()
+        }
+
         private fun stopSoundPreview() {
             soundPreviewManager.stop()
         }

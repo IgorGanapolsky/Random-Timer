@@ -1,31 +1,27 @@
 appId: com.igorganapolsky.randomtimer
 ---
 # iOS Smoke test: Verify app launches and timer flow works
-- launchApp
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
 
-# Verify main screen elements are visible
-- assertVisible: 'Random Tactical Timer'
-- assertVisible:
-    text: '.*Goes Off In This Range.*'
-- assertVisible: 'Start Timer'
+# Verify setup screen is visible
+- scrollUntilVisible:
+    element: 'Start Timer'
+    direction: DOWN
+    timeout: 10000
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 30000
 
 # Start the timer
 - tapOn: 'Start Timer'
 
 # Verify timer screen is shown
-- assertVisible:
-    text: '.*Timer running.*'
-    optional: true
-- assertVisible:
-    text: '.*Range.*'
-    optional: true
+- assertVisible: 'Pause'
 
-# Verify Pause button is visible (timer is running)
-- assertVisible:
-    text: 'Pause'
-    optional: true
-
-# Go back - stop timer
-- tapOn:
-    text: 'Stop'
-    optional: true
+# Stop timer and return home
+- tapOn: 'Stop'
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 10000

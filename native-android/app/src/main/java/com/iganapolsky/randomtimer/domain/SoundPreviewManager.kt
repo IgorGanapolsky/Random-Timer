@@ -15,5 +15,7 @@ interface SoundPreviewManager {
 
     fun previewVoiceCallout()
 
+    fun previewDrillCommand()
+
     fun stop()
 }

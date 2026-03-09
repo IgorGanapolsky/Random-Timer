@@ -119,6 +119,7 @@ fun TimerSetupScreen(
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
     onVoiceCalloutPreview: () -> Unit,
+    onDrillCommandPreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
@@ -358,7 +359,7 @@ fun TimerSetupScreen(
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Spoken 30s/10s/5s cues plus random drill commands.",
+                                        text = "Spoken 30s/10s/5s countdown cues plus drill commands like \"Switch stance\" and \"Check your six\".",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
@@ -373,7 +374,26 @@ fun TimerSetupScreen(
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                     ) {
                                         Text(
-                                            text = "Preview",
+                                            text = "Countdown",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Surface(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onDrillCommandPreview()
+                                        },
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                    ) {
+                                        Text(
+                                            text = "Drill",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = TimerColors.AccentPrimary,
@@ -1015,6 +1035,7 @@ private fun TimerSetupScreenPreview() {
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
             onVoiceCalloutPreview = {},
+            onDrillCommandPreview = {},
         )
     }
 }

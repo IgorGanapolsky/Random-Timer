@@ -93,54 +93,64 @@ struct TimerSetupScreen: View {
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
 
-                                Text("Spoken 30s/10s/5s cues plus random drill commands.")
+                                Text("Spoken 30s/10s/5s countdown cues plus drill commands like \"Switch stance\" and \"Check your six\".")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
 
                             Spacer()
 
-                            Button {
-                                timerManager.previewVoiceCallout()
-                            } label: {
-                                Text("Preview")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            if proManager.isPro {
-                                Text("ON")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
-                            } else {
-                                Button {
-                                    presentPaywall(entryPoint: .soundGate)
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Text("PRO")
-                                        Image(systemName: "lock.fill")
+                            VStack(alignment: .trailing, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Button {
+                                        timerManager.previewVoiceCallout()
+                                    } label: {
+                                        Text("Countdown")
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.accentPrimary.opacity(0.1))
+                                            .foregroundColor(.accentPrimary)
+                                            .cornerRadius(4)
                                     }
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
+
+                                    Button {
+                                        timerManager.previewDrillCommand()
+                                    } label: {
+                                        Text("Drill")
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.accentPrimary.opacity(0.1))
+                                            .foregroundColor(.accentPrimary)
+                                            .cornerRadius(4)
+                                    }
+                                }
+
+                                if proManager.isPro {
+                                    Text("ON")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.accentPrimary)
+                                } else {
+                                    Button {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text("PRO")
+                                            Image(systemName: "lock.fill")
+                                        }
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                    }
                                 }
                             }
                         }
                         .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if proManager.isPro {
-                                timerManager.previewVoiceCallout()
-                            }
-                        }
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
