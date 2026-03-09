@@ -31,8 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    basePrice: String,
-    elitePrice: String = "",
+    proPrice: String,
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -51,7 +50,7 @@ fun PaywallSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Unlock Pro",
+                text = "Upgrade to Pro",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
@@ -61,7 +60,13 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "One-time purchase. Yours forever.",
+                text = "One premium plan.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextSecondary,
+            )
+
+            Text(
+                text = "Yearly auto-renewing subscription. Cancel anytime.",
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
             )
@@ -70,15 +75,14 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Timer presets library")
-            ProFeatureRow(text = "Full workout history")
-            ProFeatureRow(text = "All future updates included")
+            ProFeatureRow(text = "Spoken countdown cues + drill callouts")
+            ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = "Unlock Pro \u2022 $basePrice",
-                onClick = { onPurchase("pro_base") },
+                text = "Unlock Pro \u2022 $proPrice",
+                onClick = { onPurchase("elite_tactical") },
                 modifier =
                     if (onDebugUnlock != null) {
                         Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
@@ -86,44 +90,6 @@ fun PaywallSheet(
                         Modifier
                     },
             )
-
-            if (elitePrice.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(20.dp))
-
-                HorizontalDivider(color = TimerColors.TextSecondary.copy(alpha = 0.3f))
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = "Elite Tactical",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TimerColors.TextPrimary,
-                    textAlign = TextAlign.Center,
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Monthly subscription",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TimerColors.TextSecondary,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ProFeatureRow(text = "Unlimited custom sounds (upload your own)")
-                ProFeatureRow(text = "Up to 4 hours timer duration")
-                ProFeatureRow(text = "Unlimited presets + cloud sync")
-                ProFeatureRow(text = "Priority feature requests")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                PrimaryButton(
-                    text = "Unlock Elite \u2022 $elitePrice/mo",
-                    onClick = { onPurchase("elite_tactical") },
-                )
-            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

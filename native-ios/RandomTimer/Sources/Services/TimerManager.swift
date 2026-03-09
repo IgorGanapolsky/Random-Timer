@@ -202,6 +202,10 @@ final class TimerManager: ObservableObject {
         startCountdown()
     }
 
+    func previewVoiceCallout() {
+        AIVoiceCalloutService.shared.preview()
+    }
+
     func restartTimer() async {
         // Restart with a NEW random duration (used after alarm completes with loop)
         notificationService.stopAlarmSound()
