@@ -72,19 +72,21 @@ def _extract_response_text(error: Exception) -> str:
     return str(raw).strip()
 
 
-def _is_failed_precondition(message: str, response_text: str, http_status: int | None) -> bool:
-    combined = f"{message}\n{response_text}".lower()
-    if any(marker in combined for marker in FAILED_PRECONDITION_MARKERS):
-        return True
-    return http_status == 400 and "precondition" in combined
-
-
 def _is_deleted_edit_error(message: str, response_text: str, http_status: int | None) -> bool:
     combined = f"{message}\n{response_text}".lower()
     if not any(marker in combined for marker in EDIT_DELETED_MARKERS):
         return False
-    # Google Play returns this as HTTP 400/FAILED_PRECONDITION; treat any 4xx/5xx as retryable.
+    # Google Play reports deleted edits as FAILED_PRECONDITION/400.
     return http_status is None or http_status >= 400
+
+
+def _is_failed_precondition(message: str, response_text: str, http_status: int | None) -> bool:
+    if _is_deleted_edit_error(message, response_text, http_status):
+        return False
+    combined = f"{message}\n{response_text}".lower()
+    if any(marker in combined for marker in FAILED_PRECONDITION_MARKERS):
+        return True
+    return http_status == 400 and "precondition" in combined
 
 
 def _is_transient_http(http_status: int | None, message: str) -> bool:
@@ -313,7 +315,12 @@ def _publish_to_track(
                 )
                 time.sleep(sleep_for)
                 continue
-            raise PublishError(message=message, http_status=status, response_text=response_text, attempt=attempt)
+            raise PublishError(
+                message=message,
+                http_status=status,
+                response_text=response_text,
+                attempt=attempt,
+            ) from error
         except Exception as error:
             message = str(error)
             if _is_transient_http(None, message) and int(deadline - time.time()) > 0:
@@ -326,7 +333,7 @@ def _publish_to_track(
                 )
                 time.sleep(sleep_for)
                 continue
-            raise PublishError(message=message, http_status=None, response_text="", attempt=attempt)
+            raise PublishError(message=message, http_status=None, response_text="", attempt=attempt) from error
 
 
 def _parse_args() -> argparse.Namespace:

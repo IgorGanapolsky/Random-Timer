@@ -40,12 +40,12 @@ class PlayPublishTests(unittest.TestCase):
             )
         )
 
-    def test_ignores_unrelated_error_for_deleted_edit(self):
+    def test_deleted_edit_error_does_not_trigger_precondition_fallback(self):
         self.assertFalse(
-            _is_deleted_edit_error(
-                "HttpError 403",
-                '{"error":{"status":"PERMISSION_DENIED","message":"No permission"}}',
-                403,
+            _is_failed_precondition(
+                "HttpError 400",
+                '{"error":{"status":"FAILED_PRECONDITION","message":"This Edit has been deleted."}}',
+                400,
             )
         )
 
