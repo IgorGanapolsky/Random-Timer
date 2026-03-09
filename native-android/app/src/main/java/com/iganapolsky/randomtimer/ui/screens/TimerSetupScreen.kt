@@ -347,8 +347,7 @@ fun TimerSetupScreen(
                                         .clickable(enabled = isElite) {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             onVoiceCalloutPreview()
-                                        }
-                                        .padding(vertical = 8.dp),
+                                        }.padding(vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {

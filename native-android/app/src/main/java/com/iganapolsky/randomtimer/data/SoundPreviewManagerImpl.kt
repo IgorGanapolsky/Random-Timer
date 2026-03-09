@@ -41,26 +41,26 @@ class SoundPreviewManagerImpl
             scheduleStop(maxDurationMs)
         }
 
-    override fun previewVolume(
-        soundType: SoundType,
-        volume: Float,
-    ) {
+        override fun previewVolume(
+            soundType: SoundType,
+            volume: Float,
+        ) {
             if (currentlyPreviewing != soundType || player?.isPlaying != true) {
                 startPreview(soundType, volume)
             } else {
                 player?.setVolume(volume, volume)
+            }
+            scheduleStop(volumeStopDelayMs)
         }
-        scheduleStop(volumeStopDelayMs)
-    }
 
-    override fun previewVoiceCallout() {
-        voiceCalloutManager.preview()
-    }
+        override fun previewVoiceCallout() {
+            voiceCalloutManager.preview()
+        }
 
-    override fun stop() {
-        stopJob?.cancel()
-        stopJob = null
-        player?.stop()
+        override fun stop() {
+            stopJob?.cancel()
+            stopJob = null
+            player?.stop()
             player?.release()
             player = null
             currentlyPreviewing = null
