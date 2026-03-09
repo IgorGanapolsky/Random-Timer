@@ -127,7 +127,8 @@ class AIVoiceCalloutManager
 
         private fun selectPreferredVoice() {
             val matchingVoice =
-                tts?.voices
+                tts
+                    ?.voices
                     ?.filter { it.locale.language == Locale.US.language }
                     ?.firstOrNull { voice ->
                         preferredVoiceNames.any { candidate ->
