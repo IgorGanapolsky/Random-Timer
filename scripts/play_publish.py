@@ -29,6 +29,11 @@ FAILED_PRECONDITION_MARKERS = (
     "failed_precondition",
     "precondition check failed",
 )
+EDIT_DELETED_MARKERS = (
+    "this edit has been deleted",
+    "edit has been deleted",
+    "edit was deleted",
+)
 
 
 @dataclass
@@ -67,7 +72,17 @@ def _extract_response_text(error: Exception) -> str:
     return str(raw).strip()
 
 
+def _is_deleted_edit_error(message: str, response_text: str, http_status: int | None) -> bool:
+    combined = f"{message}\n{response_text}".lower()
+    if not any(marker in combined for marker in EDIT_DELETED_MARKERS):
+        return False
+    # Google Play reports deleted edits as FAILED_PRECONDITION/400.
+    return http_status is None or http_status >= 400
+
+
 def _is_failed_precondition(message: str, response_text: str, http_status: int | None) -> bool:
+    if _is_deleted_edit_error(message, response_text, http_status):
+        return False
     combined = f"{message}\n{response_text}".lower()
     if any(marker in combined for marker in FAILED_PRECONDITION_MARKERS):
         return True
@@ -282,10 +297,17 @@ def _publish_to_track(
             response_text = _extract_response_text(error)
             status = getattr(getattr(error, "resp", None), "status", None)
             is_recent_reset = RESET_ERROR_FRAGMENT in f"{message}\n{response_text}".lower()
-            if (is_recent_reset or _is_transient_http(status, message)) and int(deadline - time.time()) > 0:
+            is_deleted_edit = _is_deleted_edit_error(message, response_text, status)
+            if (is_recent_reset or _is_transient_http(status, message) or is_deleted_edit) and int(
+                deadline - time.time()
+            ) > 0:
                 remaining = int(deadline - time.time())
-                sleep_for = min(retry_interval_seconds, remaining)
-                reason = "key reset propagation" if is_recent_reset else f"transient HTTP {status}"
+                if is_deleted_edit:
+                    sleep_for = min(5, max(1, remaining))
+                    reason = "stale/deleted Play edit"
+                else:
+                    sleep_for = min(retry_interval_seconds, remaining)
+                    reason = "key reset propagation" if is_recent_reset else f"transient HTTP {status}"
                 print(
                     f"⚠️ Play upload retry due to {reason} (track={track}, attempt={attempt}). "
                     f"Retrying in {sleep_for}s (remaining window: {remaining}s)...",
@@ -293,7 +315,12 @@ def _publish_to_track(
                 )
                 time.sleep(sleep_for)
                 continue
-            raise PublishError(message=message, http_status=status, response_text=response_text, attempt=attempt)
+            raise PublishError(
+                message=message,
+                http_status=status,
+                response_text=response_text,
+                attempt=attempt,
+            ) from error
         except Exception as error:
             message = str(error)
             if _is_transient_http(None, message) and int(deadline - time.time()) > 0:
@@ -306,7 +333,7 @@ def _publish_to_track(
                 )
                 time.sleep(sleep_for)
                 continue
-            raise PublishError(message=message, http_status=None, response_text="", attempt=attempt)
+            raise PublishError(message=message, http_status=None, response_text="", attempt=attempt) from error
 
 
 def _parse_args() -> argparse.Namespace:
