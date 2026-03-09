@@ -542,7 +542,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newValue),
+            newMaxSeconds: Swift.max(1, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }

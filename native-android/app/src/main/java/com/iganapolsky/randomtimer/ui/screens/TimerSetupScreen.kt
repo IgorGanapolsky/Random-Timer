@@ -123,7 +123,6 @@ fun TimerSetupScreen(
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
-    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -344,7 +343,7 @@ fun TimerSetupScreen(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .clickable(enabled = isElite) {
+                                        .clickable(enabled = isPro) {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             onVoiceCalloutPreview()
                                         }.padding(vertical = 8.dp),
@@ -356,7 +355,7 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
                                         text = "Spoken 30s/10s/5s cues plus random drill commands.",
@@ -384,7 +383,7 @@ fun TimerSetupScreen(
 
                                     Spacer(modifier = Modifier.width(8.dp))
 
-                                    if (isElite) {
+                                    if (isPro) {
                                         Text(
                                             text = "ON",
                                             style = MaterialTheme.typography.labelSmall,

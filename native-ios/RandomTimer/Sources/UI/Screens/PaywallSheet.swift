@@ -69,7 +69,7 @@ struct PaywallSheet: View {
                 }
             }
             .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.unlockEliteForDebug()
+                proManager.unlockProForDebug()
                 hasTrackedDismiss = true
                 dismiss()
             }

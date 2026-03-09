@@ -6,7 +6,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
         let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
-            maxSeconds: 36000,
+            maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -57,9 +57,9 @@ final class TimerConfigProClampingTests: XCTestCase {
                        "Free soundType must be retained after clamping")
     }
 
-    func testActiveProUser_maxSecondsUpTo36000_isRetained() {
+    func testActiveProUser_maxSecondsUpTo3600_isRetained() {
         let proConfig = TimerConfig(            minSeconds: 0,
-            maxSeconds: 36000,
+            maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -70,8 +70,8 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         let clamped = proConfig.clamped(isPro: true)
 
-        XCTAssertEqual(clamped.maxSeconds, 36000,
-                       "Active Pro user must retain maxSeconds = 36000")
+        XCTAssertEqual(clamped.maxSeconds, 3600,
+                       "Active Pro user must retain maxSeconds = 3600")
     }
 
     func testActiveProUser_proSoundType_isRetained() {
