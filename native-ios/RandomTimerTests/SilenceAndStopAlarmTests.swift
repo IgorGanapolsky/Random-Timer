@@ -199,6 +199,18 @@ final class NotificationServiceMediaButtonBehaviorTests: XCTestCase {
         XCTAssertTrue(didStop)
     }
 
+    func testNotificationDismissActionSetsTapFlagAndInvokesStopCallback() {
+        let service = NotificationService()
+        var didStop = false
+
+        service.onNotificationStop = { didStop = true }
+
+        service.handleNotificationDismissAction()
+
+        XCTAssertTrue(service.didTapAlarmNotification)
+        XCTAssertTrue(didStop)
+    }
+
     func testNotificationSilenceActionInvokesSilenceCallback() {
         let service = NotificationService()
         var didSilence = false

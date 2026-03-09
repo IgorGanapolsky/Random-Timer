@@ -28,6 +28,21 @@ final class AIVoiceCalloutService {
         nextChaosCueAt = 0
     }
 
+    func preview() {
+        let previewCues = [
+            "Thirty seconds remaining. Hold your position.",
+            "Ten seconds. Prepare for impact.",
+            "Switch stance!",
+            "Move! Move! Move!",
+            "Stay sharp!",
+            "Explode!",
+            "Check your six!",
+            "Eyes up!"
+        ]
+        let index = secureRandomInt(in: 0...(previewCues.count - 1))
+        speak(previewCues[index])
+    }
+
     func triggerCallout(remainingSeconds: Int) {
         // Fixed countdown callouts
         let countdownCallouts: [Int: String] = [
