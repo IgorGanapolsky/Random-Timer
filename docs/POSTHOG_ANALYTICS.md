@@ -47,7 +47,7 @@ Screens emitted on both platforms:
 Run parity and analytics-related tests:
 
 ```bash
-python3 -m unittest scripts.tests.test_mobile_analytics_parity
+python3 -m pytest -q scripts/tests/test_mobile_analytics_parity.py
 cd native-android && ./gradlew testDebugUnitTest --tests "*TimerViewModelAnalyticsTest"
 ```
 

@@ -13,7 +13,9 @@ interface SoundPreviewManager {
         volume: Float,
     )
 
-    fun previewVoiceCallout()
+    fun previewCountdownCue()
+
+    fun previewDrillCommand()
 
     fun stop()
 }

@@ -28,6 +28,21 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
+private fun Modifier.holdForHiddenUnlock(
+    holdDurationMs: Long,
+    onHoldComplete: () -> Unit,
+): Modifier =
+    pointerInput(holdDurationMs, onHoldComplete) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
+            if (releasedBeforeHold == null) {
+                onHoldComplete()
+                waitForUpOrCancellation()
+            }
+        }
+    }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
@@ -55,6 +70,12 @@ fun PaywallSheet(
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
+                modifier =
+                    if (onDebugUnlock != null) {
+                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                    } else {
+                        Modifier
+                    },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -83,12 +104,6 @@ fun PaywallSheet(
             PrimaryButton(
                 text = "Unlock Pro \u2022 $proPrice",
                 onClick = { onPurchase("elite_tactical") },
-                modifier =
-                    if (onDebugUnlock != null) {
-                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
-                    } else {
-                        Modifier
-                    },
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -117,21 +132,6 @@ fun PaywallSheet(
         }
     }
 }
-
-private fun Modifier.holdForHiddenUnlock(
-    holdDurationMs: Long,
-    onHoldComplete: () -> Unit,
-): Modifier =
-    pointerInput(holdDurationMs, onHoldComplete) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
-            if (releasedBeforeHold == null) {
-                onHoldComplete()
-                waitForUpOrCancellation()
-            }
-        }
-    }
 
 @Composable
 private fun ProFeatureRow(text: String) {

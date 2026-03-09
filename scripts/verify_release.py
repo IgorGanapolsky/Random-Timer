@@ -16,12 +16,14 @@ Usage:
 """
 
 import argparse
+import datetime as dt
 import json
 import os
 import sys
 import tempfile
 import time
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Set
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -448,11 +450,26 @@ def print_results(results: list[dict]):
     return all_passed
 
 
+def write_json_report(path: Path, results: list[dict]) -> Path:
+    payload = {
+        "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "all_passed": all(item.get("passed") for item in results),
+        "results": results,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def write_results_json(results: list[dict], path: Path) -> Path:
+    return write_json_report(path, results)
+
+
 # ---------------------------------------------------------------------------
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
+def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: Optional[Set[str]] = None) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
@@ -531,6 +548,10 @@ def parse_args() -> argparse.Namespace:
             "Fail verification if the App Store version is still NOT_SUBMITTED. "
             "Use this after a submit-for-review automation step."
         ),
+    )
+    parser.add_argument(
+        "--json-out",
+        help="Optional path to write machine-readable verification results",
     )
     return parser.parse_args()
 
@@ -617,6 +638,8 @@ def main():
 
     # --- Results ---
     all_passed = print_results(results)
+    if args.json_out:
+        write_json_report(Path(args.json_out).resolve(), results)
     sys.exit(0 if all_passed else 1)
 
 

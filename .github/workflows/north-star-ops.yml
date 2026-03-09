@@ -1,0 +1,39 @@
+name: North Star Ops
+
+on:
+  schedule:
+    - cron: "25 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: north-star-ops
+  cancel-in-progress: true
+
+jobs:
+  north-star-ops:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build North Star ops report
+        run: |
+          python scripts/north_star_ops.py --repo-root .
+
+      - name: Upload North Star ops report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: north-star-ops-report
+          path: |
+            marketing/data/north_star_ops.json
+            marketing/data/north_star_ops.md
+          retention-days: 14

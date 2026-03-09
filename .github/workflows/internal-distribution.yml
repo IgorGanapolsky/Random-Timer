@@ -304,6 +304,29 @@ jobs:
             --comment "$COMMENT"
           echo "Closed blocker issue #$ISSUE_NUMBER"
 
+      - name: Install iOS release verification dependencies
+        if: steps.fastlane_beta.outputs.result == 'success'
+        run: python -m pip install pyjwt==2.10.1 cryptography==44.0.2 requests==2.32.5
+
+      - name: Verify TestFlight processing
+        if: steps.fastlane_beta.outputs.result == 'success'
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IOS_VERSION="$(sed -n 's/.*MARKETING_VERSION = \([^;]*\);/\1/p' native-ios/RandomTimer.xcodeproj/project.pbxproj | head -1)"
+          python scripts/verify_release.py --platform ios --version "$IOS_VERSION" --wait --timeout 900 --json-out /tmp/ios-release-verification.json
+
+      - name: Upload iOS release verification
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: internal-distribution-verification-ios
+          path: /tmp/ios-release-verification.json
+          if-no-files-found: warn
+
       - name: Upload Fastlane beta log
         uses: actions/upload-artifact@v4
         if: always()
@@ -423,6 +446,22 @@ jobs:
           set -euo pipefail
           export GOOGLE_PLAY_JSON_KEY_PATH="/tmp/play-service-account.json"
           fastlane internal
+
+      - name: Verify Google Play internal release
+        env:
+          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
+        run: |
+          set -euo pipefail
+          ANDROID_VERSION_NAME="$(sed -n 's/.*versionName = \"\([^\"]*\)\"/\1/p' native-android/app/build.gradle.kts | head -1)"
+          python scripts/verify_release.py --platform android --track internal --version-code "${{ github.run_number }}" --version "$ANDROID_VERSION_NAME" --wait --timeout 900 --json-out /tmp/android-release-verification.json
+
+      - name: Upload Android release verification
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: internal-distribution-verification-android
+          path: /tmp/android-release-verification.json
+          if-no-files-found: warn
 
       - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4

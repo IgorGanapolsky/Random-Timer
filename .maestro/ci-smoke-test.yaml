@@ -5,7 +5,14 @@ appId: com.iganapolsky.randomtimer
 - launchApp
 - waitForAnimationToEnd
 
-# "Start Timer" button is always visible regardless of viewport height
+# Core setup card copy should match the live UI before we scroll to the CTA
+- assertVisible: 'Timer Range'
+- assertVisible: 'Alarm Sound'
+
+# Start button can sit below the fold on compact devices
+- scrollUntilVisible:
+    element: 'Start Timer'
+    direction: DOWN
 - extendedWaitUntil:
     visible: 'Start Timer'
     timeout: 30000

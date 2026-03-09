@@ -45,7 +45,6 @@ fun RandomTimerNavHost(
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val isPro by viewModel.proManager.isPro.collectAsStateWithLifecycle()
-    val isElite by viewModel.proManager.isElite.collectAsStateWithLifecycle()
     val currentRoute =
         navController
             .currentBackStackEntryAsState()
@@ -106,12 +105,12 @@ fun RandomTimerNavHost(
                 onStartTimer = viewModel::startTimer,
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
-                onVoiceCalloutPreview = viewModel::previewVoiceCallout,
+                onCountdownCuePreview = viewModel::previewCountdownCue,
+                onDrillCommandPreview = viewModel::previewDrillCommand,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
-                isElite = isElite,
                 onUpgradeTap = {
                     scope.launch {
                         proPrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)

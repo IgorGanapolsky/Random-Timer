@@ -35,6 +35,7 @@ open RandomTimer.xcodeproj
 - Write tests for new features
 - Keep PRs focused on a single change
 - All CI checks must pass before merge
+- Follow the repo proof contract in [`docs/workflow.md`](docs/workflow.md) for agent-driven or automation-driven changes
 
 ## Reporting Issues
 
