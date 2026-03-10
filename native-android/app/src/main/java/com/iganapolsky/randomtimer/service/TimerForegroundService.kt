@@ -293,8 +293,7 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    // Trigger AI Voice Callout for ELITE users
-                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
+                    if (proManager.entitlementLevel.value.isPro) {
                         voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
                     }
 

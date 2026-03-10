@@ -39,6 +39,13 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 8.0) {
+                    proManager.unlockProForDebug()
+                    hasTrackedDismiss = true
+                    dismiss()
+                }
 
             VStack(spacing: 4) {
                 Text("One premium plan.")
@@ -67,11 +74,6 @@ struct PaywallSheet: View {
                         await purchase(productID: ProManager.eliteProductID)
                     }
                 }
-            }
-            .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.unlockEliteForDebug()
-                hasTrackedDismiss = true
-                dismiss()
             }
 
             Button("Restore purchase") {

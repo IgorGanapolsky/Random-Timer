@@ -41,6 +41,20 @@ jobs:
             --enforce-guardrail \
             --require-posthog-when-active
 
+      - name: Refresh attribution funnel snapshot
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/attribution_feedback.py \
+            --repo-root . \
+            --days 30
+
+      - name: Build North Star ops report
+        run: |
+          python scripts/north_star_ops.py \
+            --repo-root .
+
       - name: Assert no-scale lock schema
         run: |
           python - <<'PY'
@@ -64,10 +78,15 @@ jobs:
           print("no_scale_lock schema ok")
           PY
 
-      - name: Upload north star snapshot
+      - name: Upload north star ops artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: north-star-snapshot
-          path: marketing/data/north_star.json
+          path: |
+            marketing/data/north_star.json
+            marketing/data/content_feedback.json
+            marketing/data/attribution-report.md
+            marketing/data/north_star_ops.json
+            marketing/data/north_star_ops.md
           retention-days: 14

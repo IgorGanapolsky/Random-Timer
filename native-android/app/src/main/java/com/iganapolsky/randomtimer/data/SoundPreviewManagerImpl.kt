@@ -53,8 +53,12 @@ class SoundPreviewManagerImpl
             scheduleStop(volumeStopDelayMs)
         }
 
-        override fun previewVoiceCallout() {
-            voiceCalloutManager.preview()
+        override fun previewCountdownCue() {
+            voiceCalloutManager.previewCountdownCue()
+        }
+
+        override fun previewDrillCommand() {
+            voiceCalloutManager.previewDrillCommand()
         }
 
         override fun stop() {

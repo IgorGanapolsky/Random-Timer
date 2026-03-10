@@ -264,8 +264,12 @@ class TimerViewModel
             soundPreviewManager.previewVolume(config.value.soundType, volume)
         }
 
-        fun previewVoiceCallout() {
-            soundPreviewManager.previewVoiceCallout()
+        fun previewCountdownCue() {
+            soundPreviewManager.previewCountdownCue()
+        }
+
+        fun previewDrillCommand() {
+            soundPreviewManager.previewDrillCommand()
         }
 
         private fun stopSoundPreview() {

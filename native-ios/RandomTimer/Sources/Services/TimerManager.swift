@@ -202,8 +202,12 @@ final class TimerManager: ObservableObject {
         startCountdown()
     }
 
-    func previewVoiceCallout() {
-        AIVoiceCalloutService.shared.preview()
+    func previewCountdownCue() {
+        AIVoiceCalloutService.shared.previewCountdownCue()
+    }
+
+    func previewDrillCommand() {
+        AIVoiceCalloutService.shared.previewDrillCommand()
     }
 
     func restartTimer() async {

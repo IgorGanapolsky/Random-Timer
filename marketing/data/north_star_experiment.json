@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-03-09T20:05:42+00:00",
+  "status": "proposed",
+  "primary_focus": "activation",
+  "recommended_next_action": "Ship the default 0s to 30s timer range and verify first-session completion improves.",
+  "experiment": {
+    "slug": "activation-default-range-0-30",
+    "target_metric": "open_to_completed_rate",
+    "current_metric_value": 0.023,
+    "target_metric_value": 0.25,
+    "hypothesis": "Starting every user at 0s to 30s reduces setup friction and increases first completion rate.",
+    "owner": "product"
+  },
+  "measurement_plan": {
+    "metric": "open_to_completed_rate",
+    "baseline": 0.023,
+    "target": 0.25,
+    "gap": 0.227,
+    "window_days": 30
+  },
+  "implementation_checklist": [
+    "Keep launch defaults at 0s to 30s on both platforms.",
+    "Keep setup-screen previews visible for countdown and drill voice cues.",
+    "Verify first-session setup and start flow with smoke evidence on iOS and Android."
+  ],
+  "proof_commands": [
+    "python3 -m pytest -q scripts/tests/",
+    "cd native-android && ./gradlew testDebugUnitTest",
+    "cd native-ios && xcodebuild test -project RandomTimer.xcodeproj -scheme RandomTimer -destination 'platform=iOS Simulator,id=<SIMULATOR_ID>' -skip-testing:RandomTimerUITests -quiet CODE_SIGNING_ALLOWED=NO"
+  ],
+  "warnings": []
+}

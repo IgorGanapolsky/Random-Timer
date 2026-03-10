@@ -13,8 +13,6 @@ final class ProManager: ObservableObject {
     @Published private(set) var products: [Product] = []
 
     var isPro: Bool { entitlementLevel.isPro }
-    var isElite: Bool { entitlementLevel == .elite }
-
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
     private var transactionListener: Task<Void, Never>?
@@ -168,11 +166,6 @@ final class ProManager: ObservableObject {
     func unlockProForDebug() {
         entitlementLevel = .base
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
-    }
-    
-    func unlockEliteForDebug() {
-        entitlementLevel = .elite
-        Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
     }
 }
 

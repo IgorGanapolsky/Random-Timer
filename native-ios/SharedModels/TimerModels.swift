@@ -108,7 +108,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -142,7 +142,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public var alarmDurationInterval: TimeInterval { TimeInterval(alarmDuration) }
 
     public static let maxSecondsFree = 300
-    public static let maxSecondsPro = 36000
+    public static let maxSecondsPro = 3600
 
     public static let `default` = TimerConfig()
 
@@ -195,7 +195,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_time],
-            defaultValue: 300
+            defaultValue: 30
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -283,8 +283,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
-    static let defaultMaxSecondsLimit = 36000
-    static let defaultMinGapSeconds = 30
+    static let defaultMaxSecondsLimit = 3600
+    static let defaultMinGapSeconds = 1
     static func adjustForMinChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,

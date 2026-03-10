@@ -91,9 +91,9 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                    .foregroundColor(.textPrimary)
 
-                                Text("Spoken 30s/10s/5s cues plus random drill commands.")
+                                Text("Spoken 30s/10s/5s countdown cues plus drill commands like \"Switch stance\" and \"Check your six\".")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
@@ -101,9 +101,21 @@ struct TimerSetupScreen: View {
                             Spacer()
 
                             Button {
-                                timerManager.previewVoiceCallout()
+                                timerManager.previewCountdownCue()
                             } label: {
-                                Text("Preview")
+                                Text("Countdown")
+                                    .font(.caption2.weight(.bold))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.accentPrimary.opacity(0.1))
+                                    .foregroundColor(.accentPrimary)
+                                    .cornerRadius(4)
+                            }
+
+                            Button {
+                                timerManager.previewDrillCommand()
+                            } label: {
+                                Text("Drill")
                                     .font(.caption2.weight(.bold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
@@ -136,11 +148,6 @@ struct TimerSetupScreen: View {
                         }
                         .padding(.vertical, 8)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            if proManager.isPro {
-                                timerManager.previewVoiceCallout()
-                            }
-                        }
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
@@ -542,7 +549,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newValue),
+            newMaxSeconds: Swift.max(1, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
