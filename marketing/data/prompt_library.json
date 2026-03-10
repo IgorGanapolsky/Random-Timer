@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "owner": "growth-ops",
+  "prompts": [
+    {
+      "id": "aso_copy",
+      "title": "ASO Copy",
+      "path": "docs/prompt-library/aso-copy.md",
+      "primary_metric": "open_to_completed_rate",
+      "when_to_use": "Store descriptions, subtitles, short descriptions, keyword refreshes"
+    },
+    {
+      "id": "ad_creative_briefs",
+      "title": "Ad Creative Briefs",
+      "path": "docs/prompt-library/ad-creative-briefs.md",
+      "primary_metric": "paid_distinct_users_30d",
+      "when_to_use": "Apple Ads, paid social, referral assets, and hooks"
+    },
+    {
+      "id": "app_store_screenshot_prompts",
+      "title": "App Store Screenshot Prompts",
+      "path": "docs/prompt-library/app-store-screenshot-prompts.md",
+      "primary_metric": "store_product_page_conversion",
+      "when_to_use": "Screenshot captions, compositions, and localization variants"
+    },
+    {
+      "id": "incident_summary_prompts",
+      "title": "Incident Summary Prompts",
+      "path": "docs/prompt-library/incident-summary-prompts.md",
+      "primary_metric": "release_reliability",
+      "when_to_use": "Sentry, Crashlytics, CI failures, and user-facing regression summaries"
+    },
+    {
+      "id": "release_notes_and_review_response_prompts",
+      "title": "Release Notes and Review Response Prompts",
+      "path": "docs/prompt-library/release-notes-and-review-response-prompts.md",
+      "primary_metric": "retention_and_rating_quality",
+      "when_to_use": "Release notes, store replies, and support triage responses"
+    }
+  ]
+}

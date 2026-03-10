@@ -117,6 +117,12 @@ This generates content and metrics locally without posting to external APIs.
 - `marketing/data/bot_traffic_summary.md`
 - `marketing/site/` (deployed pages artifact)
 
+## Prompt library
+
+Reusable prompt packs for ASO, creative briefs, screenshot copy, incident summaries, and release notes live in `docs/prompt-library/README.md`.
+
+Use them when the workflow needs copy generation but the repo must stay aligned to live product truth and the North Star metric.
+
 ## Notes
 
 - The script never commits secrets.
