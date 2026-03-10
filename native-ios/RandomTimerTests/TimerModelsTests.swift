@@ -21,7 +21,7 @@ final class TimerConfigTests: XCTestCase {
     func testConfigClampingForFreeUser() {
         let proConfig = TimerConfig(
             minSeconds: 0,
-            maxSeconds: 36000,
+            maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,
@@ -40,7 +40,7 @@ final class TimerConfigTests: XCTestCase {
         let payload = """
         {
           "min_time": -5,
-          "max_time": 9000,
+          "max_time": 3600,
           "alarm_duration": 0,
           "hidden_mode": "true",
           "repeat_enabled": "1",
@@ -53,7 +53,7 @@ final class TimerConfigTests: XCTestCase {
         let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
 
         XCTAssertEqual(decoded.minSeconds, 0)
-        XCTAssertEqual(decoded.maxSeconds, 9000)
+        XCTAssertEqual(decoded.maxSeconds, 3600)
         XCTAssertEqual(decoded.alarmDuration, 1)
         XCTAssertTrue(decoded.hiddenMode)
         XCTAssertTrue(decoded.repeatEnabled)
