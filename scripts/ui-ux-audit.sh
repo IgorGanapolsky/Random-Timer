@@ -109,7 +109,7 @@ if [[ $ERRORS -eq 0 ]]; then
     pass "Timer nudge size is ${nudge_size}dp."
   fi
 
-  volume_block="$(awk '/private fun VolumeSlider\(/,/^}/' "$TARGET_SCREEN")"
+  volume_block="$(awk '/private fun VolumeSlider\(/,/^\s*}/' "$TARGET_SCREEN")"
   if ! grep -q "contentDescription = \"Decrease volume\"" <<< "$volume_block"; then
     fail "Volume control is missing explicit decrease button."
   else
@@ -121,7 +121,7 @@ if [[ $ERRORS -eq 0 ]]; then
     pass "Volume increase button present."
   fi
 
-  nudge_block="$(awk '/private fun NudgeButton\(/,/^}/' "$TARGET_SCREEN")"
+  nudge_block="$(awk '/private fun NudgeButton\(/,/^\s*}/' "$TARGET_SCREEN")"
   if grep -q "TimerColors.BackgroundDark" <<< "$nudge_block"; then
     fail "NudgeButton disabled state uses hard dark fill; use glass style for visual consistency."
   else

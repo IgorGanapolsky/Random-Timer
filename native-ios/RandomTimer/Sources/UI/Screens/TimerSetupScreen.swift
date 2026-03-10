@@ -627,6 +627,7 @@ private struct VolumeSliderView: View {
     var onSliding: ((Float) -> Void)? = nil
     var systemImage: String = "speaker.wave.3.fill"
     private let volumeStep: Float = 0.05
+    @State private var liveValue: Float? = nil
 
     var body: some View {
         VStack {
@@ -655,14 +656,20 @@ private struct VolumeSliderView: View {
 
                 Slider(
                     value: Binding(
-                        get: { Double(value) },
+                        get: { Double(liveValue ?? value) },
                         set: { newValue in
                             let next = Float(newValue)
+                            liveValue = next
                             onSliding?(next)
-                            onChanged(next)
                         }
                     ),
-                    in: 0...1
+                    in: 0...1,
+                    onEditingChanged: { isEditing in
+                        guard !isEditing else { return }
+                        let next = liveValue ?? value
+                        liveValue = nil
+                        onChanged(next)
+                    }
                 )
                 .tint(.accentPrimary)
                 .accessibilityLabel("Volume slider")
