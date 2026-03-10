@@ -16,16 +16,16 @@ class AIVoiceCalloutManager
         @ApplicationContext private val context: Context,
     ) : TextToSpeech.OnInitListener {
         companion object {
-            private const val TACTICAL_PITCH = 0.85f
-            private const val TACTICAL_RATE = 0.9f
+            private const val TACTICAL_PITCH = 0.72f
+            private const val TACTICAL_RATE = 0.82f
             private val preferredVoiceNames =
-                listOf("en-us-x-sfg#male_1-local", "en-us-x-iol-local", "en-us-language")
+                listOf("male", "en-us-x-sfg#male_1-local", "en-us-x-sfg", "en-us-x-iol-local", "en-us-language")
         }
 
         private var tts: TextToSpeech? = null
         private var isReady = false
-        private var lastChaosCueTime = 0
-        private var nextChaosCueAt = 0
+        private var lastCommandCueTime = 0
+        private var nextCommandCueAt = 0
 
         init {
             tts = TextToSpeech(context, this)
@@ -62,30 +62,30 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
-            lastChaosCueTime = 0
-            nextChaosCueAt = 0
+            lastCommandCueTime = 0
+            nextCommandCueAt = 0
         }
 
         fun previewCountdownCue() {
             val previewCues =
                 listOf(
-                    "Thirty seconds remaining. Hold your position.",
-                    "Ten seconds. Prepare for impact.",
+                    "Thirty seconds. Stay ready.",
+                    "Ten seconds. Stand by.",
                     "Five. Four. Three. Two. One.",
                 )
             speak(previewCues[Random.nextInt(previewCues.size)])
         }
 
-        fun previewDrillCommand() {
-            speak(randomChaosCue())
+        fun previewCommandCue() {
+            speak(randomCommandCue())
         }
 
         fun triggerCallout(remainingSeconds: Int) {
             // Fixed countdown callouts
             val countdownCallouts =
                 mapOf(
-                    30 to "Thirty seconds remaining. Hold your position.",
-                    10 to "Ten seconds. Prepare for impact.",
+                    30 to "Thirty seconds. Stay ready.",
+                    10 to "Ten seconds. Stand by.",
                     5 to "Five. Four. Three. Two. One.",
                 )
 
@@ -94,40 +94,40 @@ class AIVoiceCalloutManager
                 return
             }
 
-            // Chaos Drill: randomized tactical cues at unpredictable intervals
-            if (remainingSeconds > 30 && shouldFireChaosCue(remainingSeconds)) {
-                speak(randomChaosCue())
-                lastChaosCueTime = remainingSeconds
-                nextChaosCueAt = remainingSeconds - Random.nextInt(8, 20)
+            // Randomized command cues break predictability during longer timers.
+            if (remainingSeconds > 30 && shouldFireCommandCue(remainingSeconds)) {
+                speak(randomCommandCue())
+                lastCommandCueTime = remainingSeconds
+                nextCommandCueAt = remainingSeconds - Random.nextInt(8, 20)
             }
         }
 
-        private fun shouldFireChaosCue(remainingSeconds: Int): Boolean {
-            if (nextChaosCueAt == 0) {
+        private fun shouldFireCommandCue(remainingSeconds: Int): Boolean {
+            if (nextCommandCueAt == 0) {
                 // First cue: fire within first 5-15 seconds of the timer running
-                nextChaosCueAt = remainingSeconds - Random.nextInt(5, 16)
+                nextCommandCueAt = remainingSeconds - Random.nextInt(5, 16)
             }
-            return remainingSeconds <= nextChaosCueAt
+            return remainingSeconds <= nextCommandCueAt
         }
 
-        private fun randomChaosCue(): String {
+        private fun randomCommandCue(): String {
             val cues =
                 listOf(
-                    "Switch stance!",
-                    "Move! Move! Move!",
-                    "Breathe. Reset.",
-                    "Double up!",
-                    "Change levels!",
-                    "Check your six!",
-                    "Pick up the pace!",
-                    "Stay sharp!",
-                    "Dig deeper!",
-                    "Eyes up!",
-                    "Recover now!",
-                    "Explode!",
-                    "Control the center!",
-                    "Tighten up!",
-                    "Push through it!",
+                    "Move now.",
+                    "Stay sharp.",
+                    "Eyes front.",
+                    "Hands up.",
+                    "Reset. Breathe.",
+                    "Push the pace.",
+                    "Explode.",
+                    "Recover. Then go.",
+                    "Hold the line.",
+                    "Drive forward.",
+                    "Keep pressure.",
+                    "Stand by.",
+                    "Lock in.",
+                    "Finish strong.",
+                    "Breathe and move.",
                 )
             return cues[Random.nextInt(cues.size)]
         }

@@ -75,7 +75,7 @@ object ReengagementScheduler {
             24 * 3600 * 1000L,
             1001,
             "Keep your streak alive",
-            "Train for chaos, not comfort. Your next random drill is waiting.",
+            "Train for chaos, not comfort. Your next random session is waiting.",
         )
         // 72h reminder
         scheduleOne(

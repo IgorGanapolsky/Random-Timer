@@ -378,7 +378,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         // 24-hour reminder
         let content24 = UNMutableNotificationContent()
         content24.title = "Keep your streak alive"
-        content24.body = "Train for chaos, not comfort. Your next random drill is waiting."
+        content24.body = "Train for chaos, not comfort. Your next random session is waiting."
         content24.sound = .default
 
         let trigger24 = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false)

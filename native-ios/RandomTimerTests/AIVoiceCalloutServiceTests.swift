@@ -23,8 +23,8 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.previewCountdownCue()
     }
 
-    func testPreviewDrillCommandDoesNotCrash() {
-        sut.previewDrillCommand()
+    func testPreviewCommandCueDoesNotCrash() {
+        sut.previewCommandCue()
     }
 
     func testResetSession() {
