@@ -142,7 +142,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public var alarmDurationInterval: TimeInterval { TimeInterval(alarmDuration) }
 
     public static let maxSecondsFree = 300
-    public static let maxSecondsPro = 36000
+    public static let maxSecondsPro = 3600
 
     public static let `default` = TimerConfig()
 
@@ -283,7 +283,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
-    static let defaultMaxSecondsLimit = 36000
+    static let defaultMaxSecondsLimit = 3600
     static let defaultMinGapSeconds = 0
     static func adjustForMinChange(
         currentMinSeconds: Int,
