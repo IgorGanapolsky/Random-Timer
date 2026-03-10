@@ -86,13 +86,15 @@ SOURCE_MAP: Dict[str, str] = {
 
 
 def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    # On modern macOS, Avenir Next is in /System/Library/Fonts/Avenir Next.ttc
+    # We use index 13 for Bold, 0 for Regular usually, but PIL can handle the .ttc
     font_candidates = [
-        "/System/Library/Fonts/Supplemental/Avenir Next Condensed Heavy.ttf" if bold else "/System/Library/Fonts/Supplemental/Avenir Next.ttc",
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf",
+        ("/System/Library/Fonts/Avenir Next.ttc", 13 if bold else 0),
+        ("/System/Library/Fonts/Helvetica.ttc", 1 if bold else 0),
     ]
-    for path in font_candidates:
+    for path, index in font_candidates:
         try:
-            return ImageFont.truetype(path, size=size)
+            return ImageFont.truetype(path, size=size, index=index)
         except OSError:
             continue
     return ImageFont.load_default()
@@ -101,50 +103,64 @@ def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
 def _draw_gradient(draw: ImageDraw.Draw, size: Tuple[int, int], top_color: Color, bottom_color: Color):
     w, h = size
     for y in range(h):
-        r = top_color[0] + (bottom_color[0] - top_color[0]) * y // h
-        g = top_color[1] + (bottom_color[1] - top_color[1]) * y // h
-        b = top_color[2] + (bottom_color[2] - top_color[2]) * y // h
+        # Quadratic easing for smoother dark-to-black transition
+        ratio = (y / h) ** 1.2
+        r = int(top_color[0] + (bottom_color[0] - top_color[0]) * ratio)
+        g = int(top_color[1] + (bottom_color[1] - top_color[1]) * ratio)
+        b = int(top_color[2] + (bottom_color[2] - top_color[2]) * ratio)
         draw.line([(0, y), (w, y)], fill=(r, g, b))
 
 
 def _render_one(source: Image.Image, text: CreativeText, is_ipad: bool = False) -> Image.Image:
     w, h = RESOLUTION_IPAD if is_ipad else RESOLUTION_IPHONE
     
-    # Background: Deep Tactical Gradient
+    # Background: Tactical Abyss (Deep Grey to True Black)
     base = Image.new("RGB", (w, h))
     draw = ImageDraw.Draw(base)
-    _draw_gradient(draw, (w, h), (25, 30, 42), (10, 12, 18))
+    _draw_gradient(draw, (w, h), (18, 18, 22), (2, 2, 4))
 
+    # Add a subtle "tactical" red glow at the top
+    glow_h = int(h * 0.3)
+    glow = Image.new("RGBA", (w, glow_h), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
+    for y in range(glow_h):
+        alpha = int(40 * (1 - (y / glow_h)))
+        glow_draw.line([(0, y), (w, y)], fill=(220, 38, 38, alpha))
+    
     # Outcome-First Header Section
-    title_font = _load_font(max(72, int(h * 0.045)), bold=True)
-    subtitle_font = _load_font(max(32, int(h * 0.018)), bold=False)
+    title_size = max(84, int(h * 0.052))
+    subtitle_size = max(38, int(h * 0.022))
+    title_font = _load_font(title_size, bold=True)
+    subtitle_font = _load_font(subtitle_size, bold=False)
     
     title_bbox = draw.textbbox((0, 0), text.title, font=title_font)
     title_w = title_bbox[2] - title_bbox[0]
-    draw.text(((w - title_w) // 2, int(h * 0.06)), text.title, font=title_font, fill=(255, 255, 255))
+    # Use high-contrast white for title
+    draw.text(((w - title_w) // 2, int(h * 0.07)), text.title, font=title_font, fill=(255, 255, 255))
     
     subtitle_bbox = draw.textbbox((0, 0), text.subtitle, font=subtitle_font)
     subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
-    draw.text(((w - subtitle_w) // 2, int(h * 0.12)), text.subtitle, font=subtitle_font, fill=(180, 190, 210))
+    # Use muted but readable grey for subtitle
+    draw.text(((w - subtitle_w) // 2, int(h * 0.135)), text.subtitle, font=subtitle_font, fill=(161, 161, 170))
 
-    # Badge (Result)
-    badge_font = _load_font(max(28, int(h * 0.015)), bold=True)
+    # Badge: High-Vis Operational Result
+    badge_font = _load_font(max(32, int(h * 0.016)), bold=True)
     badge_bbox = draw.textbbox((0, 0), text.badge, font=badge_font)
     bw, bh = badge_bbox[2] - badge_bbox[0], badge_bbox[3] - badge_bbox[1]
     
-    pad_x, pad_y = 24, 12
+    pad_x, pad_y = 32, 16
     bx1 = (w - (bw + pad_x * 2)) // 2
-    by1 = int(h * 0.165)
+    by1 = int(h * 0.19)
     bx2, by2 = bx1 + bw + pad_x * 2, by1 + bh + pad_y * 2
     
-    draw.rounded_rectangle((bx1, by1, bx2, by2), radius=8, fill=(220, 38, 38))
+    # Tactical Red Badge
+    draw.rounded_rectangle((bx1, by1, bx2, by2), radius=12, fill=(220, 38, 38))
     draw.text((bx1 + pad_x, by1 + pad_y - 2), text.badge, font=badge_font, fill=(255, 255, 255))
 
-    # App UI Placement
-    ui_top = int(h * 0.24)
-    ui_margin = int(w * 0.06)
+    # App UI Placement with Elevation Shadow
+    ui_top = int(h * 0.27)
+    ui_margin = int(w * 0.08)
     target_w = w - (ui_margin * 2)
-    target_h = h - ui_top + 100 # bleed off the bottom
     
     # Scale source to fit target_w while maintaining aspect ratio
     src_w, src_h = source.size
@@ -154,27 +170,29 @@ def _render_one(source: Image.Image, text: CreativeText, is_ipad: bool = False) 
     
     ui_frame = source.resize((render_w, render_h), Image.Resampling.LANCZOS)
     
-    # Create shadow
-    shadow_offset = 20
-    shadow_blur = 30
+    # Create Deep elevation shadow
+    shadow_blur = 60
     shadow = Image.new("RGBA", (render_w + shadow_blur * 2, render_h + shadow_blur * 2), (0, 0, 0, 0))
     shadow_draw = ImageDraw.Draw(shadow)
     shadow_draw.rounded_rectangle(
         (shadow_blur, shadow_blur, shadow_blur + render_w, shadow_blur + render_h),
-        radius=int(20 * scale),
-        fill=(0, 0, 0, 180)
+        radius=int(40 * scale),
+        fill=(0, 0, 0, 200)
     )
     shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
     
-    # Paste shadow then UI
+    # Composition
     base_rgba = base.convert("RGBA")
-    ui_x = (w - render_w) // 2
-    base_rgba.alpha_composite(shadow, (ui_x - shadow_blur + 5, ui_top - shadow_blur + shadow_offset))
+    base_rgba.alpha_composite(glow, (0, 0))
     
-    # Paste UI (rounded corners)
+    ui_x = (w - render_w) // 2
+    # Shadow offset for light-from-top-down feel
+    base_rgba.alpha_composite(shadow, (ui_x - shadow_blur, ui_top - shadow_blur + 25))
+    
+    # Paste UI (rounded corners like a real device)
     mask = Image.new("L", (render_w, render_h), 0)
     mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle((0, 0, render_w, render_h), radius=int(40 * scale), fill=255)
+    mask_draw.rounded_rectangle((0, 0, render_w, render_h), radius=int(60 * scale), fill=255)
     
     base_rgba.paste(ui_frame, (ui_x, ui_top), mask=mask)
 
