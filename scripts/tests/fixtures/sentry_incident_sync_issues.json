@@ -1,0 +1,34 @@
+[
+  {
+    "id": "101",
+    "shortId": "RANDOM-TIMER-101",
+    "title": "BillingException when upgrading to Pro",
+    "level": "error",
+    "count": "3",
+    "userCount": "2",
+    "firstSeen": "2026-03-09T10:00:00Z",
+    "lastSeen": "2026-03-10T10:05:00Z",
+    "culprit": "PaywallSheet.handleUpgradeTap",
+    "permalink": "https://example.sentry.io/issues/RANDOM-TIMER-101/",
+    "metadata": {
+      "type": "BillingException",
+      "value": "Failed purchase flow"
+    }
+  },
+  {
+    "id": "102",
+    "shortId": "RANDOM-TIMER-102",
+    "title": "New error from QA Menu",
+    "level": "error",
+    "count": "5",
+    "userCount": "1",
+    "firstSeen": "2026-03-09T11:00:00Z",
+    "lastSeen": "2026-03-10T11:05:00Z",
+    "culprit": "CrashTestingScreen.qaMenuButton",
+    "permalink": "https://example.sentry.io/issues/RANDOM-TIMER-102/",
+    "metadata": {
+      "type": "Error",
+      "value": "qa menu crash test"
+    }
+  }
+]

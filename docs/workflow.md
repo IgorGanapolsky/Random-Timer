@@ -49,6 +49,15 @@ xcodebuild test -project RandomTimer.xcodeproj -scheme RandomTimer -destination 
 - If release automation changes: run `python3 scripts/verify_release.py --help` or the touched verification path directly.
 - Workflow changes must parse with Ruby YAML read-back.
 
+### Incident Sync
+
+- If Sentry incident automation changes: run `python3 -m pytest -q scripts/tests/test_sentry_incident_sync.py`.
+- Dry-run the sync with fixture evidence before merge:
+
+```bash
+python3 scripts/sentry_incident_sync.py --dry-run --issues-json scripts/tests/fixtures/sentry_incident_sync_issues.json --github-repo IgorGanapolsky/Random-Timer --json-out /tmp/sentry-incident-sync.json
+```
+
 ## Done Criteria
 
 - The requested behavior is implemented on both iOS and Android when parity is expected.

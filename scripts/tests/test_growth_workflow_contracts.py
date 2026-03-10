@@ -7,6 +7,7 @@ INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
+SENTRY_INCIDENT_SYNC_WORKFLOW = ROOT / ".github/workflows/sentry-incident-sync.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
 
 
@@ -62,6 +63,14 @@ def test_weekly_experiment_workflow_builds_a_single_experiment_brief():
     assert "python scripts/north_star_experiment.py" in source
     assert "marketing/data/north_star_experiment.json" in source
     assert "marketing/data/north_star_experiment.md" in source
+
+
+def test_sentry_incident_sync_workflow_exists_and_writes_machine_readable_report():
+    source = SENTRY_INCIDENT_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python3 scripts/sentry_incident_sync.py" in source
+    assert "sentry-incident-sync-report" in source
+    assert "issues: write" in source
 
 
 def test_workflow_contract_exists_and_points_at_canonical_proof_commands():

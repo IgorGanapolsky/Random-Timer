@@ -1,0 +1,65 @@
+name: Sentry Incident Sync
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      sentry_org:
+        description: "Override Sentry organization slug"
+        required: false
+        type: string
+      sentry_project:
+        description: "Override Sentry project slug"
+        required: false
+        type: string
+      dry_run:
+        description: "Run without writing GitHub incidents"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync Sentry incidents into GitHub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync Sentry incidents
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SENTRY_ORG: ${{ inputs.sentry_org || vars.SENTRY_INCIDENT_ORG }}
+          SENTRY_PROJECT: ${{ inputs.sentry_project || vars.SENTRY_INCIDENT_PROJECT }}
+          SENTRY_INCIDENT_LOOKBACK_DAYS: ${{ vars.SENTRY_INCIDENT_LOOKBACK_DAYS }}
+          SENTRY_INCIDENT_MIN_EVENTS: ${{ vars.SENTRY_INCIDENT_MIN_EVENTS }}
+          SENTRY_INCIDENT_MIN_USERS: ${{ vars.SENTRY_INCIDENT_MIN_USERS }}
+          SENTRY_INCIDENT_MAX_ISSUES: ${{ vars.SENTRY_INCIDENT_MAX_ISSUES }}
+        run: |
+          set -euo pipefail
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run || 'false' }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          python3 scripts/sentry_incident_sync.py \
+            ${DRY_RUN_FLAG} \
+            --json-out /tmp/sentry-incident-sync.json
+
+      - name: Upload Sentry incident sync report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sentry-incident-sync-report
+          path: /tmp/sentry-incident-sync.json
+          if-no-files-found: warn
