@@ -9,6 +9,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
 
+internal data class VoiceCandidate(
+    val name: String,
+    val locale: Locale,
+)
+
+internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandidate? =
+    candidates
+        .filter { candidate -> candidate.locale.language.equals(Locale.US.language, ignoreCase = true) }
+        .firstOrNull { candidate ->
+            AIVoiceCalloutManager.preferredVoiceNames.any { preferred ->
+                candidate.name.contains(preferred, ignoreCase = true)
+            }
+        }
+
 @Singleton
 class AIVoiceCalloutManager
     @Inject
@@ -18,7 +32,7 @@ class AIVoiceCalloutManager
         companion object {
             private const val TACTICAL_PITCH = 0.72f
             private const val TACTICAL_RATE = 0.82f
-            private val preferredVoiceNames =
+            internal val preferredVoiceNames =
                 listOf("male", "en-us-x-sfg#male_1-local", "en-us-x-sfg", "en-us-x-iol-local", "en-us-language")
         }
 
@@ -38,13 +52,19 @@ class AIVoiceCalloutManager
                     tts?.setPitch(TACTICAL_PITCH)
                     tts?.setSpeechRate(TACTICAL_RATE)
                     val preferredVoice =
-                        tts
-                            ?.voices
-                            ?.firstOrNull { voice ->
-                                preferredVoiceNames.any { preferred ->
-                                    voice.name.contains(preferred, ignoreCase = true)
-                                }
+                        selectPreferredVoice(
+                            tts
+                                ?.voices
+                                ?.mapNotNull { voice ->
+                                    val locale = voice.locale ?: return@mapNotNull null
+                                    VoiceCandidate(name = voice.name, locale = locale)
+                                }.orEmpty(),
+                        )?.let { selected ->
+                            tts?.voices?.firstOrNull { voice ->
+                                voice.name == selected.name &&
+                                    voice.locale?.toLanguageTag() == selected.locale.toLanguageTag()
                             }
+                        }
                     if (preferredVoice != null) {
                         tts?.voice = preferredVoice
                     }
