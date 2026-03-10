@@ -1,7 +1,9 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import sentry_incident_sync as sis
 
@@ -106,6 +108,22 @@ class SentryIncidentSyncTests(unittest.TestCase):
             self.assertTrue(out.exists())
             payload = json.loads(out.read_text(encoding="utf-8"))
             self.assertEqual(payload["summary"]["eligible"], 1)
+
+    def test_parse_args_uses_defaults_when_env_values_are_empty_strings(self):
+        env = {
+            "SENTRY_INCIDENT_LOOKBACK_DAYS": "",
+            "SENTRY_INCIDENT_MIN_EVENTS": "",
+            "SENTRY_INCIDENT_MIN_USERS": "",
+            "SENTRY_INCIDENT_MAX_ISSUES": "",
+        }
+        with mock.patch.dict(os.environ, env, clear=False):
+            with mock.patch("sys.argv", ["sentry_incident_sync.py"]):
+                args = sis.parse_args()
+
+        self.assertEqual(args.lookback_days, sis.DEFAULT_LOOKBACK_DAYS)
+        self.assertEqual(args.min_events, sis.DEFAULT_MIN_EVENTS)
+        self.assertEqual(args.min_users, sis.DEFAULT_MIN_USERS)
+        self.assertEqual(args.max_issues, sis.DEFAULT_MAX_ISSUES)
 
 
 if __name__ == "__main__":
