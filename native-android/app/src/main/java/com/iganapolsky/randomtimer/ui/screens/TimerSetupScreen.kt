@@ -367,8 +367,10 @@ fun TimerSetupScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Surface(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onVoiceCalloutPreview()
+                                            if (isPro) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onVoiceCalloutPreview()
+                                            }
                                         },
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -386,8 +388,10 @@ fun TimerSetupScreen(
 
                                     Surface(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onDrillCommandPreview()
+                                            if (isPro) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onDrillCommandPreview()
+                                            }
                                         },
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),

@@ -113,6 +113,7 @@ struct TimerSetupScreen: View {
                                             .foregroundColor(.accentPrimary)
                                             .cornerRadius(4)
                                     }
+                                    .disabled(!proManager.isPro)
 
                                     Button {
                                         timerManager.previewDrillCommand()
@@ -125,6 +126,7 @@ struct TimerSetupScreen: View {
                                             .foregroundColor(.accentPrimary)
                                             .cornerRadius(4)
                                     }
+                                    .disabled(!proManager.isPro)
                                 }
 
                                 if proManager.isPro {

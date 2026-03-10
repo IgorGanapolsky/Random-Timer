@@ -100,6 +100,9 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     assert "if (isPro) {" in android_setup
     assert "proManager.entitlementLevel.value.isPro" in android_service
     assert "if proManager.isPro {" in ios_setup
+    assert ".disabled(!proManager.isPro)" in ios_setup
+    assert "if (isPro) {" in android_setup and "onVoiceCalloutPreview()" in android_setup
+    assert "if (isPro) {" in android_setup and "onDrillCommandPreview()" in android_setup
 
 
 def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
