@@ -118,9 +118,8 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
 
     for snippet in [
         "Countdown",
-        "Drill",
-        "Switch stance",
-        "Check your six",
+        "Commands",
+        "command cues fired at random times during longer timers",
     ]:
         assert snippet in android_setup
         assert snippet in ios_setup

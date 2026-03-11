@@ -93,7 +93,7 @@ struct TimerSetupScreen: View {
                                     .fontWeight(.semibold)
                                     .foregroundColor(.textPrimary)
 
-                                Text("Spoken 30s/10s/5s countdown cues plus drill commands like \"Switch stance\" and \"Check your six\".")
+                                Text("Spoken 30s/10s/5s countdowns plus short command cues fired at random times during longer timers.")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
@@ -113,9 +113,9 @@ struct TimerSetupScreen: View {
                             }
 
                             Button {
-                                timerManager.previewDrillCommand()
+                                timerManager.previewCommandCue()
                             } label: {
-                                Text("Drill")
+                                Text("Commands")
                                     .font(.caption2.weight(.bold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
