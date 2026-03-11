@@ -878,6 +878,7 @@ private fun snapToStep(
 }
 
 @Composable
+// NudgeButton renders tactical step controls: \u2212 (decrement) and + (increment)
 private fun NudgeButton(
     type: NudgeType,
     enabled: Boolean,
