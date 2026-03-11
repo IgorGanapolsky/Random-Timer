@@ -294,7 +294,8 @@ class TimerForegroundService : Service() {
                     updateNotification(state)
 
                     if (proManager.entitlementLevel.value.isPro) {
-                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                        val elapsedSec = (state.targetDuration - newRemaining).inWholeSeconds.toInt()
+                        voiceCalloutManager.triggerCallout(elapsedSec)
                     }
 
                     if (newStatus == TimerStatus.COMPLETE) {

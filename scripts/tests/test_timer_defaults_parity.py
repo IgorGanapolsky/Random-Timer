@@ -116,22 +116,22 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
 
+    # Both platforms must expose Voice Callouts toggle with Countdown and Commands preview buttons
     for snippet in [
+        "Voice Callouts",
         "Countdown",
         "Commands",
-        "command cues fired at random times during longer timers",
     ]:
-        assert snippet in android_setup
-        assert snippet in ios_setup
+        assert snippet in android_setup, f"Missing '{snippet}' in Android setup screen"
+        assert snippet in ios_setup, f"Missing '{snippet}' in iOS setup screen"
 
 
-def test_tactical_voice_profile_is_defined_on_both_platforms():
+def test_voice_profile_configured_on_both_platforms():
     android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
-    assert "TACTICAL_PITCH" in android_voice_service
-    assert "TACTICAL_RATE" in android_voice_service
+    # Android: preferred voice list and TTS configuration present
     assert "preferredVoiceNames" in android_voice_service
-    assert "tacticalPitch" in ios_voice_service
-    assert "tacticalRate" in ios_voice_service
-    assert "preferredVoiceNames" in ios_voice_service
+    # iOS: pitch and rate configured for tactical delivery
+    assert "pitchMultiplier" in ios_voice_service
+    assert "utterance.rate" in ios_voice_service

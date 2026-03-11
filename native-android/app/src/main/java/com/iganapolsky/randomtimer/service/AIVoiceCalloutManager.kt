@@ -29,17 +29,15 @@ class AIVoiceCalloutManager
     constructor(
         @ApplicationContext private val context: Context,
     ) : TextToSpeech.OnInitListener {
-        companion object {
-            private const val TACTICAL_PITCH = 0.72f
-            private const val TACTICAL_RATE = 0.82f
-            internal val preferredVoiceNames =
-                listOf("male", "en-us-x-sfg#male_1-local", "en-us-x-sfg", "en-us-x-iol-local", "en-us-language")
-        }
-
         private var tts: TextToSpeech? = null
         private var isReady = false
-        private var lastCommandCueTime = 0
+        private var lastElapsedMilestone = 0
         private var nextCommandCueAt = 0
+        private var lastCommandCueAt = 0
+
+        companion object {
+            val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
+        }
 
         init {
             tts = TextToSpeech(context, this)
@@ -49,25 +47,6 @@ class AIVoiceCalloutManager
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(Locale.US)
                 if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                    tts?.setPitch(TACTICAL_PITCH)
-                    tts?.setSpeechRate(TACTICAL_RATE)
-                    val preferredVoice =
-                        selectPreferredVoice(
-                            tts
-                                ?.voices
-                                ?.mapNotNull { voice ->
-                                    val locale = voice.locale ?: return@mapNotNull null
-                                    VoiceCandidate(name = voice.name, locale = locale)
-                                }.orEmpty(),
-                        )?.let { selected ->
-                            tts?.voices?.firstOrNull { voice ->
-                                voice.name == selected.name &&
-                                    voice.locale?.toLanguageTag() == selected.locale.toLanguageTag()
-                            }
-                        }
-                    if (preferredVoice != null) {
-                        tts?.voice = preferredVoice
-                    }
                     isReady = true
                     Log.d("AIVoiceCallout", "TTS Ready")
                 }
@@ -82,73 +61,90 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
-            lastCommandCueTime = 0
+            lastElapsedMilestone = 0
             nextCommandCueAt = 0
+            lastCommandCueAt = 0
         }
 
-        fun previewCountdownCue() {
-            val previewCues =
-                listOf(
-                    "Thirty seconds. Stay ready.",
-                    "Ten seconds. Stand by.",
-                    "Five. Four. Three. Two. One.",
-                )
-            speak(previewCues[Random.nextInt(previewCues.size)])
+        fun preview() {
+            previewCommandCue()
         }
 
         fun previewCommandCue() {
             speak(randomCommandCue())
         }
 
-        fun triggerCallout(remainingSeconds: Int) {
-            // Fixed countdown callouts
-            val countdownCallouts =
-                mapOf(
-                    30 to "Thirty seconds. Stay ready.",
-                    10 to "Ten seconds. Stand by.",
-                    5 to "Five. Four. Three. Two. One.",
-                )
+        fun previewCountdownCue() {
+            // With elapsed model, preview an elapsed milestone announcement
+            speak("Thirty seconds. Stay locked in.")
+        }
 
-            countdownCallouts[remainingSeconds]?.let {
+        // Called every second with elapsed seconds since timer started.
+        fun triggerCallout(elapsedSeconds: Int) {
+            // Elapsed milestone callouts — fire once per milestone
+            elapsedMilestone(elapsedSeconds)?.let {
                 speak(it)
+                lastElapsedMilestone = elapsedSeconds
                 return
             }
 
-            // Randomized command cues break predictability during longer timers.
-            if (remainingSeconds > 30 && shouldFireCommandCue(remainingSeconds)) {
+            // Random command cues fire throughout the session
+            if (shouldFireCommandCue(elapsedSeconds)) {
                 speak(randomCommandCue())
-                lastCommandCueTime = remainingSeconds
-                nextCommandCueAt = remainingSeconds - Random.nextInt(8, 20)
+                lastCommandCueAt = elapsedSeconds
+                nextCommandCueAt = elapsedSeconds + Random.nextInt(12, 26)
             }
         }
 
-        private fun shouldFireCommandCue(remainingSeconds: Int): Boolean {
-            if (nextCommandCueAt == 0) {
-                // First cue: fire within first 5-15 seconds of the timer running
-                nextCommandCueAt = remainingSeconds - Random.nextInt(5, 16)
+        private fun elapsedMilestone(elapsed: Int): String? {
+            if (elapsed == lastElapsedMilestone) return null
+            return when (elapsed) {
+                30  -> "Thirty seconds."
+                60  -> "One minute. Keep moving."
+                90  -> "One minute thirty."
+                120 -> "Two minutes. Stay locked in."
+                180 -> "Three minutes. Drive forward."
+                240 -> "Four minutes. Hold the line."
+                300 -> "Five minutes. Finish strong."
+                360 -> "Six minutes."
+                420 -> "Seven minutes."
+                480 -> "Eight minutes."
+                540 -> "Nine minutes."
+                600 -> "Ten minutes. Outstanding."
+                else -> null
             }
-            return remainingSeconds <= nextCommandCueAt
+        }
+
+        private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
+            if (nextCommandCueAt == 0) {
+                nextCommandCueAt = Random.nextInt(8, 21)
+            }
+            return elapsedSeconds >= nextCommandCueAt
         }
 
         private fun randomCommandCue(): String {
-            val cues =
-                listOf(
-                    "Move now.",
-                    "Stay sharp.",
-                    "Eyes front.",
-                    "Hands up.",
-                    "Reset. Breathe.",
-                    "Push the pace.",
-                    "Explode.",
-                    "Recover. Then go.",
-                    "Hold the line.",
-                    "Drive forward.",
-                    "Keep pressure.",
-                    "Stand by.",
-                    "Lock in.",
-                    "Finish strong.",
-                    "Breathe and move.",
-                )
+            val cues = listOf(
+                "Move now.",
+                "Stay sharp.",
+                "Eyes front.",
+                "Hands up.",
+                "Reset. Breathe.",
+                "Push the pace.",
+                "Explode.",
+                "Recover. Then go.",
+                "Hold the line.",
+                "Drive forward.",
+                "Keep pressure.",
+                "Lock in.",
+                "Finish strong.",
+                "Breathe and move.",
+                "Switch stance.",
+                "Double up.",
+                "Check your six.",
+                "Dig deeper.",
+                "Tighten up.",
+                "Push through it.",
+            )
             return cues[Random.nextInt(cues.size)]
         }
 

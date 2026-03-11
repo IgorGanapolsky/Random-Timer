@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -92,10 +92,6 @@ struct TimerSetupScreen: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.textPrimary)
-
-                                Text("Spoken 30s/10s/5s countdowns plus short command cues fired at random times during longer timers.")
-                                    .font(.caption2)
-                                    .foregroundColor(.textMuted)
                             }
 
                             Spacer()
@@ -230,14 +226,14 @@ struct TimerSetupScreen: View {
                                 presentPaywall(entryPoint: .soundGate)
                             }
                         }
-                    
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-                        
+
                         Spacer()
-                        
+
                         Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
@@ -650,7 +646,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)? = nil
+    var onSliding: ((Float) -> Void)?
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {
