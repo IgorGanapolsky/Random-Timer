@@ -106,7 +106,7 @@ fun RandomTimerNavHost(
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
                 onCountdownCuePreview = viewModel::previewCountdownCue,
-                onDrillCommandPreview = viewModel::previewDrillCommand,
+                onCommandCuePreview = viewModel::previewCommandCue,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,

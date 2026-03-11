@@ -57,8 +57,8 @@ class SoundPreviewManagerImpl
             voiceCalloutManager.previewCountdownCue()
         }
 
-        override fun previewDrillCommand() {
-            voiceCalloutManager.previewDrillCommand()
+        override fun previewCommandCue() {
+            voiceCalloutManager.previewCommandCue()
         }
 
         override fun stop() {

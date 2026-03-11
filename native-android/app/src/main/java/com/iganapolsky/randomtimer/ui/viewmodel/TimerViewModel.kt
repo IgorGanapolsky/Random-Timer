@@ -268,8 +268,8 @@ class TimerViewModel
             soundPreviewManager.previewCountdownCue()
         }
 
-        fun previewDrillCommand() {
-            soundPreviewManager.previewDrillCommand()
+        fun previewCommandCue() {
+            soundPreviewManager.previewCommandCue()
         }
 
         private fun stopSoundPreview() {

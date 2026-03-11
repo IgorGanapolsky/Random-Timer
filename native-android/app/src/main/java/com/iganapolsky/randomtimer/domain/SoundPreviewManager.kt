@@ -15,7 +15,7 @@ interface SoundPreviewManager {
 
     fun previewCountdownCue()
 
-    fun previewDrillCommand()
+    fun previewCommandCue()
 
     fun stop()
 }
