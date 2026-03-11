@@ -1,6 +1,5 @@
 package com.iganapolsky.randomtimer.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -80,14 +79,6 @@ fun ActiveTimerScreen(
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
     var showResetFeedback by remember { mutableStateOf(false) }
     var resetFeedbackCounter by remember { mutableStateOf(0) }
-
-    BackHandler {
-        if (isComplete) {
-            onDismissAlarm()
-        } else {
-            onStop()
-        }
-    }
 
     LaunchedEffect(resetFeedbackCounter) {
         if (resetFeedbackCounter == 0) return@LaunchedEffect

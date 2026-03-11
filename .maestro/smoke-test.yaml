@@ -5,11 +5,14 @@ appId: com.iganapolsky.randomtimer
 
 # Verify main screen elements are visible
 - assertVisible: 'Random Tactical Timer'
-- assertVisible: 'Timer Range'
-- assertVisible: 'Alarm Sound'
-- scrollUntilVisible:
-    element: 'Start Timer'
-    direction: DOWN
+- assertVisible:
+    text: '.*Goes Off In This Range.*'
+- assertVisible:
+    text: '.*Minimum:.*'
+- assertVisible:
+    text: '.*Maximum:.*'
+- assertVisible:
+    text: '.*Alarm Sound Duration.*'
 - assertVisible: 'Start Timer'
 
 # Start the timer

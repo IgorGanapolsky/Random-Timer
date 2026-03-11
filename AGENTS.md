@@ -138,8 +138,6 @@ These standards are enforced automatically by `scripts/hygiene-check.sh` and the
 2. **Never commit directly to `develop`, `main`, or the user's active branch.**
 3. Push worktree branch to origin, then create a PR for review/merge.
 4. After work is pushed, the worktree is cleaned up automatically on next session start.
-5. **Before opening a PR, verify the worktree branch is based on the intended remote base (`origin/develop`, `origin/main`, etc.), not just the local branch of the same name.**
-6. **If a clean replacement PR supersedes a misbased or duplicate PR, close the superseded PR and only delete worktrees that are clean.**
 
 ### Multi-Agent Safety
 - Other agents (Claude, Gemini, GPT, Cursor) may have active worktrees concurrently.

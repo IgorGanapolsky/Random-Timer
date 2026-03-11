@@ -293,7 +293,8 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    if (proManager.entitlementLevel.value.isPro) {
+                    // Trigger AI Voice Callout for ELITE users
+                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
                         voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
                     }
 
@@ -375,18 +376,9 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         _timerState.value?.let { state ->
-            val minMs = state.config.minSeconds * 1000L
-            val maxMs = state.config.maxSeconds * 1000L
-            val rerolledTargetMs =
-                if (minMs == maxMs) {
-                    minMs
-                } else {
-                    kotlin.random.Random.nextLong(minMs, maxMs + 1)
-                }
             val resetState =
                 state.copy(
-                    targetDuration = rerolledTargetMs.milliseconds,
-                    remainingDuration = rerolledTargetMs.milliseconds,
+                    remainingDuration = state.targetDuration,
                     status = TimerStatus.RUNNING,
                     alarmTimeRemaining = kotlin.time.Duration.ZERO,
                     startedAt = System.currentTimeMillis(),
@@ -539,7 +531,10 @@ class TimerForegroundService : Service() {
         // Generate new random duration
         val minMs = currentConfig.minSeconds * 1000L
         val maxMs = currentConfig.maxSeconds * 1000L
-        val randomMs = kotlin.random.Random.nextLong(minMs, maxMs + 1)
+        val randomMs =
+            kotlin.random.Random
+                .nextLong(minMs, maxMs + 1)
+                .coerceAtLeast(1000L)
 
         val newState =
             TimerState(
@@ -649,7 +644,7 @@ class TimerForegroundService : Service() {
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
-                createDismissIntent(),
+                createStopFromAlarmNotificationIntent(),
             )
             builder.addAction(
                 R.drawable.ic_refresh,
@@ -697,9 +692,7 @@ class TimerForegroundService : Service() {
             .setContentTitle("Time's Up!")
             .setContentText("Your random timer has finished")
             .setContentIntent(alarmTapIntent)
-            .setOngoing(false)
-            .setAutoCancel(true)
-            .setDeleteIntent(createDismissIntent())
+            .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -711,7 +704,7 @@ class TimerForegroundService : Service() {
             ).addAction(
                 R.drawable.ic_stop,
                 "Stop",
-                createDismissIntent(),
+                createStopFromAlarmNotificationIntent(),
             ).build()
     }
 
@@ -848,6 +841,22 @@ class TimerForegroundService : Service() {
         return PendingIntent.getService(
             this,
             2,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createStopFromAlarmNotificationIntent(): PendingIntent {
+        // Open the app so the user lands back on the setup screen after stopping.
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(EXTRA_FROM_ALARM_STOP_ACTION, true)
+            }
+
+        return PendingIntent.getActivity(
+            this,
+            8,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -1018,6 +1027,7 @@ class TimerForegroundService : Service() {
         const val EXTRA_VOLUME = "volume"
         const val EXTRA_VIBRATION_ENABLED = "vibration_enabled"
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
+        const val EXTRA_FROM_ALARM_STOP_ACTION = "from_alarm_stop_action"
 
         private const val STOP_SOURCE_APP = "app"
         private const val STOP_SOURCE_NOTIFICATION = "notification"

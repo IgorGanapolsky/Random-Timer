@@ -39,13 +39,6 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onLongPressGesture(minimumDuration: 8.0) {
-                    proManager.unlockProForDebug()
-                    hasTrackedDismiss = true
-                    dismiss()
-                }
 
             VStack(spacing: 4) {
                 Text("One premium plan.")
@@ -62,7 +55,7 @@ struct PaywallSheet: View {
                         .foregroundColor(.accentPrimary)
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
-                    ProFeatureRow(text: "Spoken countdown cues + drill callouts")
+                    ProFeatureRow(text: "Voice callouts during countdown")
                     ProFeatureRow(text: "Support independent development")
                 }
             }
@@ -74,6 +67,11 @@ struct PaywallSheet: View {
                         await purchase(productID: ProManager.eliteProductID)
                     }
                 }
+            }
+            .onLongPressGesture(minimumDuration: 8.0) {
+                proManager.unlockEliteForDebug()
+                hasTrackedDismiss = true
+                dismiss()
             }
 
             Button("Restore purchase") {

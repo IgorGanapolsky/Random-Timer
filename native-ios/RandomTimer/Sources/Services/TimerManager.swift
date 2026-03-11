@@ -113,18 +113,19 @@ final class TimerManager: ObservableObject {
         // Stop any preview sound
         notificationService.stopPreview()
 
-        // Generate random duration
-        let randomDuration = generateRandomDuration(
+        // Generate random duration with a 1s safety floor
+        let randomDuration = Swift.max(1.0, generateRandomDuration(
             min: config.minDuration,
             max: config.maxDuration
-        )
+        ))
 
+        // Atomic update of state with fresh timestamp
         let state = TimerState(
             config: config,
-            targetDuration: randomDuration
+            targetDuration: randomDuration,
+            startedAt: Date()
         )
-
-        timerState = state
+        self.timerState = state
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,
@@ -200,14 +201,6 @@ final class TimerManager: ObservableObject {
         )
         timerState = state
         startCountdown()
-    }
-
-    func previewCountdownCue() {
-        AIVoiceCalloutService.shared.previewCountdownCue()
-    }
-
-    func previewDrillCommand() {
-        AIVoiceCalloutService.shared.previewDrillCommand()
     }
 
     func restartTimer() async {
@@ -393,12 +386,9 @@ final class TimerManager: ObservableObject {
 
     func resetTimer() async {
         AnalyticsService.shared.track(AnalyticsEvents.timerReset)
-        // Reset should reroll a fresh random duration within the configured range.
+        // Reset to the SAME duration (restart from beginning)
         guard let currentState = timerState else { return }
-        let rerolledDuration = generateRandomDuration(
-            min: currentState.config.minDuration,
-            max: currentState.config.maxDuration
-        )
+        let sameDuration = currentState.targetDuration
 
         // Reset silence flag for new timer
         isAlarmSilenced = false
@@ -411,10 +401,10 @@ final class TimerManager: ObservableObject {
         await endLiveActivity()
         await notificationService.cancelPendingNotifications()
 
-        // Create new state with a rerolled duration.
+        // Create new state with same duration
         let newState = TimerState(
             config: currentState.config,
-            targetDuration: rerolledDuration
+            targetDuration: sameDuration
         )
 
         timerState = newState
@@ -455,6 +445,10 @@ final class TimerManager: ObservableObject {
             type: config.soundType,
             volume: config.volume
         )
+    }
+
+    func previewVoiceCallout() {
+        AIVoiceCalloutService.shared.preview()
     }
 
     /// Test-only hook for setting timer state without waiting on async countdowns.

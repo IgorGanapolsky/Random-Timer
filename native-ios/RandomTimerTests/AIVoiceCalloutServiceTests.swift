@@ -19,14 +19,6 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.triggerCallout(remainingSeconds: 5)
     }
 
-    func testPreviewCountdownCueDoesNotCrash() {
-        sut.previewCountdownCue()
-    }
-
-    func testPreviewDrillCommandDoesNotCrash() {
-        sut.previewDrillCommand()
-    }
-
     func testResetSession() {
         sut.triggerCallout(remainingSeconds: 100)
         sut.resetSession()

@@ -9,61 +9,18 @@ final class AIVoiceCalloutService {
 
     private let synthesizer = AVSpeechSynthesizer()
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
-    private let tacticalPitch: Float = 0.8
-    private let tacticalRate: Float = 0.42
-    private let preferredVoiceNames = [
-        "Siri Voice 4",
-        "Daniel",
-        "Aaron",
-        "Nathan"
-    ]
     private var lastChaosCueTime = 0
     private var nextChaosCueAt = 0
-    private let countdownPreviewCues = [
-        "Thirty seconds remaining. Hold your position.",
-        "Ten seconds. Prepare for impact.",
-        "Five. Four. Three. Two. One."
-    ]
-    private let drillCommands = [
-        "Switch stance!",
-        "Move! Move! Move!",
-        "Breathe. Reset.",
-        "Double up!",
-        "Change levels!",
-        "Check your six!",
-        "Pick up the pace!",
-        "Stay sharp!",
-        "Dig deeper!",
-        "Eyes up!",
-        "Recover now!",
-        "Explode!",
-        "Control the center!",
-        "Tighten up!",
-        "Push through it!"
-    ]
 
     private init() {}
 
     func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = preferredVoice()
-        utterance.rate = tacticalRate
-        utterance.pitchMultiplier = tacticalPitch
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.5
 
         Self.log.info("Voice Callout: \(text)")
         synthesizer.speak(utterance)
-    }
-
-    private func preferredVoice() -> AVSpeechSynthesisVoice? {
-        let voices = AVSpeechSynthesisVoice.speechVoices()
-        if let namedVoice = voices.first(where: { voice in
-            preferredVoiceNames.contains(where: { preferred in
-                voice.name.localizedCaseInsensitiveContains(preferred)
-            })
-        }) {
-            return namedVoice
-        }
-        return AVSpeechSynthesisVoice(language: "en-US")
     }
 
     func resetSession() {
@@ -71,13 +28,19 @@ final class AIVoiceCalloutService {
         nextChaosCueAt = 0
     }
 
-    func previewCountdownCue() {
-        let index = secureRandomInt(in: 0...(countdownPreviewCues.count - 1))
-        speak(countdownPreviewCues[index])
-    }
-
-    func previewDrillCommand() {
-        speak(randomChaosCue())
+    func preview() {
+        let previewCues = [
+            "Thirty seconds remaining. Hold your position.",
+            "Ten seconds. Prepare for impact.",
+            "Switch stance!",
+            "Move! Move! Move!",
+            "Stay sharp!",
+            "Explode!",
+            "Check your six!",
+            "Eyes up!"
+        ]
+        let index = Int.random(in: 0..<previewCues.count)
+        speak(previewCues[index])
     }
 
     func triggerCallout(remainingSeconds: Int) {
@@ -110,8 +73,25 @@ final class AIVoiceCalloutService {
     }
 
     private func randomChaosCue() -> String {
-        let index = secureRandomInt(in: 0...(drillCommands.count - 1))
-        return drillCommands[index]
+        let cues = [
+            "Switch stance!",
+            "Move! Move! Move!",
+            "Breathe. Reset.",
+            "Double up!",
+            "Change levels!",
+            "Check your six!",
+            "Pick up the pace!",
+            "Stay sharp!",
+            "Dig deeper!",
+            "Eyes up!",
+            "Recover now!",
+            "Explode!",
+            "Control the center!",
+            "Tighten up!",
+            "Push through it!"
+        ]
+        let index = secureRandomInt(in: 0...(cues.count - 1))
+        return cues[index]
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {

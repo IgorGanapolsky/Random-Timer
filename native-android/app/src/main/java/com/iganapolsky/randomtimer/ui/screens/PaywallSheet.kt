@@ -28,25 +28,10 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
-private fun Modifier.holdForHiddenUnlock(
-    holdDurationMs: Long,
-    onHoldComplete: () -> Unit,
-): Modifier =
-    pointerInput(holdDurationMs, onHoldComplete) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
-            if (releasedBeforeHold == null) {
-                onHoldComplete()
-                waitForUpOrCancellation()
-            }
-        }
-    }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    proPrice: String,
+    elitePrice: String,
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -65,45 +50,41 @@ fun PaywallSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Upgrade to Pro",
+                text = "Elite Tactical Pro",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Full access. Yearly subscription.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextSecondary,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ProFeatureRow(text = "10+ alarm sounds (vs 2 free)")
+            ProFeatureRow(text = "Extended range up to 4 hours")
+            ProFeatureRow(text = "Unlimited presets + cloud sync")
+            ProFeatureRow(text = "AI Voice Callouts & Chaos Mode")
+            ProFeatureRow(text = "Full workout history & stats")
+            ProFeatureRow(text = "Priority feature requests")
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            PrimaryButton(
+                text = "Unlock Elite \u2022 $elitePrice/year",
+                onClick = { onPurchase("elite_tactical") },
                 modifier =
                     if (onDebugUnlock != null) {
                         Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
                     } else {
                         Modifier
                     },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "One premium plan.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-            )
-
-            Text(
-                text = "Yearly auto-renewing subscription. Cancel anytime.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Spoken countdown cues + drill callouts")
-            ProFeatureRow(text = "Support independent development")
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(
-                text = "Unlock Pro \u2022 $proPrice",
-                onClick = { onPurchase("elite_tactical") },
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -132,6 +113,21 @@ fun PaywallSheet(
         }
     }
 }
+
+private fun Modifier.holdForHiddenUnlock(
+    holdDurationMs: Long,
+    onHoldComplete: () -> Unit,
+): Modifier =
+    pointerInput(holdDurationMs, onHoldComplete) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
+            if (releasedBeforeHold == null) {
+                onHoldComplete()
+                waitForUpOrCancellation()
+            }
+        }
+    }
 
 @Composable
 private fun ProFeatureRow(text: String) {

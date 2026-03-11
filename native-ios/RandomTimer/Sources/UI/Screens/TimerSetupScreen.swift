@@ -91,45 +91,33 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.textPrimary)
-
-                                Text("Spoken 30s/10s/5s countdown cues plus drill commands like \"Switch stance\" and \"Check your six\".")
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                
+                                Text("Voice prompts during countdown")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-
+                            
                             Spacer()
-
-                            Button {
-                                timerManager.previewCountdownCue()
-                            } label: {
-                                Text("Countdown")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            Button {
-                                timerManager.previewDrillCommand()
-                            } label: {
-                                Text("Drill")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
+                            
                             if proManager.isPro {
-                                Text("ON")
+                                Text("ENABLED")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.accentPrimary)
                             } else {
+                                Button {
+                                    timerManager.previewVoiceCallout()
+                                } label: {
+                                    Text("Preview")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                }
+
                                 Button {
                                     presentPaywall(entryPoint: .soundGate)
                                 } label: {
@@ -148,6 +136,11 @@ struct TimerSetupScreen: View {
                         }
                         .padding(.vertical, 8)
                         .contentShape(Rectangle())
+                        .onTapGesture {
+                            if proManager.isPro {
+                                timerManager.previewVoiceCallout()
+                            }
+                        }
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
@@ -549,7 +542,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(1, newValue),
+            newMaxSeconds: Swift.max(30, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }

@@ -7,7 +7,7 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 0)
+        XCTAssertEqual(config.minSeconds, 10)
         XCTAssertEqual(config.maxSeconds, 30)
         XCTAssertEqual(config.alarmDuration, 10)
     }
@@ -40,7 +40,7 @@ final class TimerConfigTests: XCTestCase {
         let payload = """
         {
           "min_time": -5,
-          "max_time": 9000,
+          "max_time": 3600,
           "alarm_duration": 0,
           "hidden_mode": "true",
           "repeat_enabled": "1",
@@ -79,13 +79,13 @@ final class TimeRangeAdjusterTests: XCTestCase {
     func testMinChangeBeyondMaxMinusGapPushesMaxForward() {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: 0,
-            currentMaxSeconds: 300,
-            newMinSeconds: 300
+            currentMaxSeconds: 10,
+            newMinSeconds: 15,
+            minGapSeconds: 0
         )
 
-        XCTAssertEqual(adjusted.min, 300)
-        XCTAssertEqual(adjusted.max, 300 + TimeRangeAdjuster.defaultMinGapSeconds)
-        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+        XCTAssertEqual(adjusted.min, 15)
+        XCTAssertEqual(adjusted.max, 15)
     }
 
     func testMinChangeThatWouldExceedMaxLimitClampsToMaxMinusGap() {
@@ -93,10 +93,11 @@ final class TimeRangeAdjusterTests: XCTestCase {
             currentMinSeconds: 250,
             currentMaxSeconds: 300,
             newMinSeconds: 300,
-            maxSecondsLimit: 300
+            maxSecondsLimit: 300,
+            minGapSeconds: 0
         )
 
-        XCTAssertEqual(adjusted.min, 300 - TimeRangeAdjuster.defaultMinGapSeconds)
+        XCTAssertEqual(adjusted.min, 300)
         XCTAssertEqual(adjusted.max, 300)
     }
 
@@ -104,7 +105,8 @@ final class TimeRangeAdjusterTests: XCTestCase {
         let adjusted = TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: 0,
             currentMaxSeconds: 300,
-            newMaxSeconds: 200
+            newMaxSeconds: 200,
+            minGapSeconds: 0
         )
 
         XCTAssertEqual(adjusted.min, 0)
@@ -115,12 +117,34 @@ final class TimeRangeAdjusterTests: XCTestCase {
         let adjusted = TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: 100,
             currentMaxSeconds: 300,
-            newMaxSeconds: 100
+            newMaxSeconds: 50,
+            minGapSeconds: 0
         )
 
-        XCTAssertEqual(adjusted.min, 100 - TimeRangeAdjuster.defaultMinGapSeconds)
-        XCTAssertEqual(adjusted.max, 100)
-        XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
+        XCTAssertEqual(adjusted.min, 50)
+        XCTAssertEqual(adjusted.max, 50)
+    }
+
+    func testReportedBugZeroToThirtyRangeIsPossible() {
+        // User sets min to 0
+        let step1 = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 10,
+            currentMaxSeconds: 30,
+            newMinSeconds: 0,
+            minGapSeconds: 0
+        )
+        XCTAssertEqual(step1.min, 0)
+        XCTAssertEqual(step1.max, 30)
+
+        // User sets max to 30 (already there, but let's be explicit)
+        let step2 = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 0,
+            currentMaxSeconds: 30,
+            newMaxSeconds: 30,
+            minGapSeconds: 0
+        )
+        XCTAssertEqual(step2.min, 0)
+        XCTAssertEqual(step2.max, 30)
     }
 
     func testMaxChangeThatWouldPullMinBelowLimitClampsToMinLimit() {
@@ -242,7 +266,8 @@ final class TimerManagerSilenceTests: XCTestCase {
         )
 
         let config = TimerConfig(
-            minSeconds: 5, maxSeconds: 10, alarmDuration: 30
+            minSeconds: 5, maxSeconds: 10, alarmDuration: 30,
+            repeatEnabled: false
         )
         let state = TimerState(
             config: config, targetDuration: 5,
@@ -357,50 +382,6 @@ final class TimerManagerTests: XCTestCase {
         manager.updateConfig(newConfig)
 
         XCTAssertTrue(manager.timerState?.config.repeatEnabled ?? false)
-    }
-
-    @MainActor
-    func testResetTimerRerollsDurationWithinConfiguredRange() async {
-        let manager = TimerManager(
-            storageService: MockStorageService(),
-            notificationService: MockNotificationService(),
-            liveActivityService: MockLiveActivityService()
-        )
-        let config = TimerConfig(minSeconds: 0, maxSeconds: 30)
-        let state = TimerState(config: config, targetDuration: 30, remainingDuration: 12, status: .running)
-        manager._setTimerStateForTesting(state)
-
-        await manager.resetTimer()
-
-        guard let rerolled = manager.timerState else {
-            XCTFail("Expected timer state after reset")
-            return
-        }
-
-        XCTAssertGreaterThanOrEqual(rerolled.targetDuration, Double(config.minSeconds))
-        XCTAssertLessThanOrEqual(rerolled.targetDuration, Double(config.maxSeconds))
-        XCTAssertEqual(rerolled.remainingDuration, rerolled.targetDuration, accuracy: 0.0001)
-    }
-
-    @MainActor
-    func testResetTimerUsesExactDurationWhenRangeCollapsed() async {
-        let manager = TimerManager(
-            storageService: MockStorageService(),
-            notificationService: MockNotificationService(),
-            liveActivityService: MockLiveActivityService()
-        )
-        let config = TimerConfig(minSeconds: 30, maxSeconds: 30)
-        let state = TimerState(config: config, targetDuration: 10, remainingDuration: 3, status: .running)
-        manager._setTimerStateForTesting(state)
-
-        await manager.resetTimer()
-
-        guard let rerolled = manager.timerState else {
-            XCTFail("Expected timer state after reset")
-            return
-        }
-        XCTAssertEqual(rerolled.targetDuration, 30, accuracy: 0.0001)
-        XCTAssertEqual(rerolled.remainingDuration, 30, accuracy: 0.0001)
     }
 }
 

@@ -292,11 +292,6 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         onNotificationStop?()
     }
 
-    func handleNotificationDismissAction() {
-        didTapAlarmNotification = true
-        onNotificationStop?()
-    }
-
     func handleNotificationSilenceAction() {
         onNotificationSilence?()
     }
@@ -510,9 +505,6 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         case "STOP_ACTION":
             // User tapped "Stop" — dismiss alarm and return to the app
             handleNotificationStopAction()
-        case UNNotificationDismissActionIdentifier:
-            // Swiping away the alarm notification should stop the alarm, not just hide it.
-            handleNotificationDismissAction()
         case "SILENCE_ACTION":
             // User tapped "Silence" — stop sound but keep alarm UI
             handleNotificationSilenceAction()

@@ -8,6 +8,7 @@ import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
@@ -44,7 +45,6 @@ class ProManager
         private val externalScope: CoroutineScope,
     ) : PurchasesUpdatedListener {
         companion object {
-            const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
 
             internal fun canUseDebugUnlock(
@@ -59,6 +59,11 @@ class ProManager
             _entitlementLevel
                 .map { it.isPro }
                 .stateIn(externalScope, SharingStarted.Eagerly, _entitlementLevel.value.isPro)
+
+        val isElite: StateFlow<Boolean> =
+            _entitlementLevel
+                .map { it == EntitlementLevel.ELITE }
+                .stateIn(externalScope, SharingStarted.Eagerly, _entitlementLevel.value == EntitlementLevel.ELITE)
 
         private var billingClient: BillingClient =
             BillingClient
@@ -120,14 +125,6 @@ class ProManager
                 return false
             }
 
-            // Check In-App (BASE)
-            val inAppParams =
-                QueryPurchasesParams
-                    .newBuilder()
-                    .setProductType(BillingClient.ProductType.INAPP)
-                    .build()
-            val inAppResult = billingClient.queryPurchasesAsync(inAppParams)
-
             // Check Subs (ELITE)
             val subsParams =
                 QueryPurchasesParams
@@ -142,17 +139,11 @@ class ProManager
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
 
-            val hasBase =
-                inAppResult.purchasesList.any { purchase ->
-                    purchase.products.contains(BASE_PRODUCT_ID) &&
-                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-
             val level =
-                when {
-                    hasElite -> EntitlementLevel.ELITE
-                    hasBase -> EntitlementLevel.BASE
-                    else -> EntitlementLevel.NONE
+                if (hasElite) {
+                    EntitlementLevel.ELITE
+                } else {
+                    EntitlementLevel.NONE
                 }
 
             _entitlementLevel.value = level
@@ -162,8 +153,8 @@ class ProManager
                     success = level.isPro,
                     source = source,
                     entryPoint = entryPoint,
-                    responseCode = if (hasElite) subsResult.billingResult.responseCode else inAppResult.billingResult.responseCode,
-                    debugMessage = if (hasElite) subsResult.billingResult.debugMessage else inAppResult.billingResult.debugMessage,
+                    responseCode = subsResult.billingResult.responseCode,
+                    debugMessage = subsResult.billingResult.debugMessage,
                 )
             }
             return level.isPro
@@ -202,32 +193,16 @@ class ProManager
             }
             cachedProductDetails[productID] = productDetails
 
-            val selectedOffer =
-                if (productID == ELITE_PRODUCT_ID) {
-                    selectPreferredSubscriptionOffer(productDetails.toSubscriptionOffers())
-                } else {
-                    null
-                }
-            if (productID == ELITE_PRODUCT_ID && selectedOffer == null) {
-                trackPurchaseResult(
-                    success = false,
-                    source = MonetizationSources.PAYWALL,
-                    entryPoint = entryPoint,
-                    responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
-                    debugMessage = "subscription_offer_unavailable",
-                )
-                pendingPurchaseEntryPoint = null
-                return false
-            }
-
             val productDetailsParamsList =
                 listOf(
                     BillingFlowParams.ProductDetailsParams
                         .newBuilder()
                         .setProductDetails(productDetails)
                         .apply {
-                            if (selectedOffer != null) {
-                                setOfferToken(selectedOffer.offerToken)
+                            if (productID == ELITE_PRODUCT_ID) {
+                                productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken?.let {
+                                    setOfferToken(it)
+                                }
                             }
                         }.build(),
                 )
@@ -254,17 +229,11 @@ class ProManager
         }
 
         private suspend fun fetchAllProductDetails() {
-            fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
-            val productType =
-                if (productID == ELITE_PRODUCT_ID) {
-                    BillingClient.ProductType.SUBS
-                } else {
-                    BillingClient.ProductType.INAPP
-                }
+            val productType = BillingClient.ProductType.SUBS
 
             val productList =
                 listOf(
@@ -291,12 +260,13 @@ class ProManager
 
         suspend fun getFormattedPrice(productID: String): String {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
-            return if (productID == ELITE_PRODUCT_ID) {
-                selectPreferredSubscriptionOffer(details?.toSubscriptionOffers().orEmpty())
-                    ?.displayPrice ?: "$29.99"
-            } else {
-                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
-            }
+            return details
+                ?.subscriptionOfferDetails
+                ?.firstOrNull()
+                ?.pricingPhases
+                ?.pricingPhaseList
+                ?.firstOrNull()
+                ?.formattedPrice ?: "$4.99"
         }
 
         override fun onPurchasesUpdated(
@@ -326,10 +296,6 @@ class ProManager
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
             if (purchase.products.contains(ELITE_PRODUCT_ID)) {
                 _entitlementLevel.value = EntitlementLevel.ELITE
-            } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
-                if (_entitlementLevel.value == EntitlementLevel.NONE) {
-                    _entitlementLevel.value = EntitlementLevel.BASE
-                }
             }
         }
 
@@ -404,12 +370,12 @@ class ProManager
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         fun forcePro() {
-            // Cycle: NONE → BASE → ELITE → NONE
+            // Cycle: NONE → ELITE → NONE
             val next =
-                when (_entitlementLevel.value) {
-                    EntitlementLevel.NONE -> EntitlementLevel.BASE
-                    EntitlementLevel.BASE -> EntitlementLevel.ELITE
-                    EntitlementLevel.ELITE -> EntitlementLevel.NONE
+                if (_entitlementLevel.value == EntitlementLevel.NONE) {
+                    EntitlementLevel.ELITE
+                } else {
+                    EntitlementLevel.NONE
                 }
             _entitlementLevel.value = next
             context
@@ -443,37 +409,6 @@ class ProManager
             return true
         }
     }
-
-internal data class SubscriptionPricingPhase(
-    val formattedPrice: String,
-    val billingPeriod: String,
-)
-
-internal data class SubscriptionOffer(
-    val offerToken: String,
-    val pricingPhases: List<SubscriptionPricingPhase>,
-) {
-    val displayPrice: String?
-        get() = pricingPhases.lastOrNull()?.formattedPrice ?: pricingPhases.firstOrNull()?.formattedPrice
-}
-
-internal fun selectPreferredSubscriptionOffer(offers: List<SubscriptionOffer>): SubscriptionOffer? =
-    offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == "P1Y" } } ?: offers.firstOrNull()
-
-private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers(): List<SubscriptionOffer> =
-    subscriptionOfferDetails
-        ?.map { offer ->
-            SubscriptionOffer(
-                offerToken = offer.offerToken,
-                pricingPhases =
-                    offer.pricingPhases.pricingPhaseList.map { phase ->
-                        SubscriptionPricingPhase(
-                            formattedPrice = phase.formattedPrice,
-                            billingPeriod = phase.billingPeriod,
-                        )
-                    },
-            )
-        }.orEmpty()
 
 internal object MonetizationSources {
     const val PAYWALL = "paywall"
@@ -526,3 +461,8 @@ internal object MonetizationAnalyticsPayload {
             AnalyticsProperties.DEBUG_MESSAGE to (debugMessage ?: ""),
         )
 }
+
+internal data class SubscriptionPricingPhase(val formattedPrice: String, val billingPeriod: String)
+internal data class SubscriptionOffer(val offerToken: String, val pricingPhases: List<SubscriptionPricingPhase>) { val displayPrice: String? get() = pricingPhases.lastOrNull()?.formattedPrice ?: pricingPhases.firstOrNull()?.formattedPrice }
+internal fun selectPreferredSubscriptionOffer(offers: List<SubscriptionOffer>): SubscriptionOffer? = offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == "P1Y" } } ?: offers.firstOrNull()
+private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers(): List<SubscriptionOffer> = subscriptionOfferDetails?.map { offer -> SubscriptionOffer(offerToken = offer.offerToken, pricingPhases = offer.pricingPhases.pricingPhaseList.map { phase -> SubscriptionPricingPhase(formattedPrice = phase.formattedPrice, billingPeriod = phase.billingPeriod) }) }.orEmpty()

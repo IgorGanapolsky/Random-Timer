@@ -32,7 +32,7 @@ export default defineConfig({
     },
     {
       name: "store-console",
-      testMatch: /specs\/store\/.*\.spec\.ts$/,
+      testMatch: /specs\/.*(store|resolve_rejection)\/.*\.spec\.ts$|specs\/resolve_rejection\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
       },

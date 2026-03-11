@@ -10,17 +10,17 @@ class TimerConfigTest {
     fun `default config has valid range`() {
         val config = TimerConfig.DEFAULT
 
-        assertThat(config.minSeconds).isEqualTo(0)
+        assertThat(config.minSeconds).isEqualTo(10)
         assertThat(config.maxSeconds).isEqualTo(30)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
     }
 
     @Test
-    fun `default config has loop OFF`() {
+    fun `default config has loop ON`() {
         val config = TimerConfig.DEFAULT
 
-        assertThat(config.repeatEnabled).isFalse()
+        assertThat(config.repeatEnabled).isTrue()
     }
 
     @Test

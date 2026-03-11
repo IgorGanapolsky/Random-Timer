@@ -50,21 +50,21 @@ class TimerRepositoryImpl
         override fun getTimerConfig(): Flow<TimerConfig> =
             dataStore.data.map { preferences ->
                 TimerConfig(
-                    minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                    alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                    hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                    repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
+                    minSeconds = preferences[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
+                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: TimerConfig.DEFAULT.maxSeconds,
+                    alarmDuration = preferences[KEY_ALARM_DURATION] ?: TimerConfig.DEFAULT.alarmDuration,
+                    hiddenMode = preferences[KEY_HIDDEN_MODE] ?: TimerConfig.DEFAULT.hiddenMode,
+                    repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: TimerConfig.DEFAULT.repeatEnabled,
                     soundType =
                         preferences[KEY_SOUND_TYPE]?.let {
                             try {
                                 SoundType.valueOf(it)
                             } catch (_: Exception) {
-                                SoundType.INTENSE
+                                TimerConfig.DEFAULT.soundType
                             }
-                        } ?: SoundType.INTENSE,
-                    volume = preferences[KEY_VOLUME] ?: 0.5f,
-                    vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                        } ?: TimerConfig.DEFAULT.soundType,
+                    volume = preferences[KEY_VOLUME] ?: TimerConfig.DEFAULT.volume,
+                    vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: TimerConfig.DEFAULT.vibrationEnabled,
                 ).clampedForPro()
             }
 
@@ -90,21 +90,21 @@ class TimerRepositoryImpl
 
                 val config =
                     TimerConfig(
-                        minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                        alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                        hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                        repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
+                        minSeconds = preferences[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
+                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: TimerConfig.DEFAULT.maxSeconds,
+                        alarmDuration = preferences[KEY_ALARM_DURATION] ?: TimerConfig.DEFAULT.alarmDuration,
+                        hiddenMode = preferences[KEY_HIDDEN_MODE] ?: TimerConfig.DEFAULT.hiddenMode,
+                        repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: TimerConfig.DEFAULT.repeatEnabled,
                         soundType =
                             preferences[KEY_SOUND_TYPE]?.let {
                                 try {
                                     SoundType.valueOf(it)
                                 } catch (_: Exception) {
-                                    SoundType.INTENSE
+                                    TimerConfig.DEFAULT.soundType
                                 }
-                            } ?: SoundType.INTENSE,
-                        volume = preferences[KEY_VOLUME] ?: 0.5f,
-                        vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                            } ?: TimerConfig.DEFAULT.soundType,
+                        volume = preferences[KEY_VOLUME] ?: TimerConfig.DEFAULT.volume,
+                        vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: TimerConfig.DEFAULT.vibrationEnabled,
                     ).clampedForPro()
 
                 TimerState(
