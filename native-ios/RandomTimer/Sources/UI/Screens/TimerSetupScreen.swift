@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -92,14 +92,14 @@ struct TimerSetupScreen: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                
-                                Text("Voice prompts during countdown")
+
+                                Text("Voice prompts during Countdown")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-                            
+
                             Spacer()
-                            
+
                             if proManager.isPro {
                                 Text("ENABLED")
                                     .font(.caption2)
@@ -205,14 +205,14 @@ struct TimerSetupScreen: View {
                                 presentPaywall(entryPoint: .soundGate)
                             }
                         }
-                    
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-                        
+
                         Spacer()
-                        
+
                         Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
@@ -523,7 +523,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newValue),
+            newMaxSeconds: Swift.max(1, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -624,10 +624,10 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)? = nil
+    var onSliding: ((Float) -> Void)?
     var systemImage: String = "speaker.wave.3.fill"
     private let volumeStep: Float = 0.05
-    @State private var liveValue: Float? = nil
+    @State private var liveValue: Float?
 
     var body: some View {
         VStack {

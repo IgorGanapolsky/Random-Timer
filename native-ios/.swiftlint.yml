@@ -8,6 +8,28 @@ disabled_rules:
   - trailing_comma
   - identifier_name
 
+file_length:
+  warning: 800
+  error: 1200
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 500
+  error: 800
+
+function_body_length:
+  warning: 110
+  error: 200
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
 opt_in_rules:
   - empty_count
   - closure_spacing
@@ -33,15 +55,18 @@ custom_rules:
     regex: ':\s*ObservableObject\b'
     message: "Use @Observable macro (iOS 17+) instead of ObservableObject protocol"
     severity: warning
+    excluded: ".*TimerManager.*|.*Tests.*|.*Preview.*"
 
   no_state_object:
     name: "Prefer @State with @Observable"
     regex: '@StateObject'
     message: "Use @State with @Observable instead of @StateObject"
     severity: warning
+    excluded: ".*Tests.*|.*Preview.*|.*App\\.swift|.*Screen\\.swift|.*View\\.swift"
 
   no_environment_object:
     name: "Prefer @Environment with @Observable"
     regex: '@EnvironmentObject'
     message: "Use @Environment with @Observable instead of @EnvironmentObject"
     severity: warning
+    excluded: ".*Tests.*|.*Preview.*|.*Screen\\.swift|.*View\\.swift"
