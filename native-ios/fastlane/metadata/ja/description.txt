@@ -1,0 +1,42 @@
+Stop training in predictable patterns.
+
+Real fights aren't timed in neat 3-minute rounds. They explode without warning.
+
+Random Tactical Timer creates unpredictable interval alerts so you can train reaction, awareness, and stress response under pressure. This is stress inoculation — the same method used by military, law enforcement, and combat athletes to build composure under fire.
+
+Set your range. Press start. React when it hits. You never know when.
+
+PERFECT FOR:
+• Boxing reaction drills
+• BJJ scramble rounds and pattern interrupts
+• Wall work and clinch training
+• Self-defense scenario drills
+• Law enforcement defensive tactics
+• Stress inoculation workouts
+• HIIT and combat conditioning
+
+WHY RANDOM TIMING?
+Predictable timers create predictable brains. This app forces you to:
+• React without anticipation
+• Stay mentally present
+• Adapt under uncertainty
+• Build composure under stress
+
+KEY FEATURES:
+• Custom time ranges — set your minimum and maximum duration
+• Hidden countdown — remove anticipation bias
+• Loop mode — automatically restarts with a new random duration each time
+• Live Activity — track state from the iPhone lock screen
+• Multiple alarm sounds — choose between intense and gentle alerts
+• Adjustable volume and vibration controls
+• Pause, resume, and reset at any time
+• Runs reliably in the background with push notifications
+
+HOW IT WORKS:
+1. Set your minimum and maximum time (e.g., 30 seconds to 5 minutes)
+2. Tap Start — the app picks a random duration in that range
+3. Go about your activity — the timer counts down in the background
+4. When time's up, a full-screen alarm fires with sound and vibration
+5. Optionally loop to automatically start a new random interval
+
+Train for chaos. Not comfort.

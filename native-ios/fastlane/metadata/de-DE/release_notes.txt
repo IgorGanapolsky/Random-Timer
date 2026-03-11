@@ -1,0 +1,2 @@
+- Verbesserte App-Store-Screenshots mit Marketing-Überschriften
+- Visuelle Konsistenz bei allen Listing-Bildern

@@ -1,0 +1,2 @@
+- Capturas de tela da App Store melhoradas com cabeçalhos de marketing
+- Consistência visual em todas as imagens da listagem

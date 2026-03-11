@@ -1,0 +1,1 @@
+Metadata-only cleanup release to replace outdated live creative. Please review this update as soon as possible: it removes duplicated screenshots from the public listing and updates subtitle to 'Train Reaction Under Stress'. No risky behavior changes; build already validated in TestFlight.

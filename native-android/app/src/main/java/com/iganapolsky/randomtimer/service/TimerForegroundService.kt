@@ -531,7 +531,10 @@ class TimerForegroundService : Service() {
         // Generate new random duration
         val minMs = currentConfig.minSeconds * 1000L
         val maxMs = currentConfig.maxSeconds * 1000L
-        val randomMs = kotlin.random.Random.nextLong(minMs, maxMs + 1).coerceAtLeast(1000L)
+        val randomMs =
+            kotlin.random.Random
+                .nextLong(minMs, maxMs + 1)
+                .coerceAtLeast(1000L)
 
         val newState =
             TimerState(
