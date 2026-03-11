@@ -1,1 +1,1 @@
-Combat reaction timer. Train under pressure — boxing, BJJ, tactical drills.
+Random interval timer for HIIT, boxing, BJJ, MMA & dry-fire training.

@@ -1,1 +1,1 @@
-tactical,random,dry fire,boxing,mma,reaction,interval,hiit,shooting,range,workout,training,drills
+dry fire,boxing,mma,bjj,reaction,interval,shooting,sparring,conditioning,grappling,combat
