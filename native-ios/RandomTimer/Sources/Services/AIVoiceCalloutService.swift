@@ -8,21 +8,71 @@ final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
 
     private let synthesizer = AVSpeechSynthesizer()
+    private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueAt = 0
 
-    private init() {}
+    private init() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            Self.log.error("Audio session setup failed: \(error.localizedDescription)")
+        }
+    }
 
-    func speak(_ text: String) {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.52
-        utterance.pitchMultiplier = 0.85
+    private func speak(_ text: String) {
+        let filename = textToFilename(text)
+        guard !filename.isEmpty,
+              let url = Bundle.main.url(forResource: filename, withExtension: "mp3") else {
+            // Fallback to system TTS
+            let utterance = AVSpeechUtterance(string: text)
+            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+            utterance.rate = 0.52
+            utterance.pitchMultiplier = 0.85
+            synthesizer.speak(utterance)
+            return
+        }
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.volume = 1.0
+            audioPlayer?.play()
+        } catch {
+            Self.log.error("Audio playback failed: \(error.localizedDescription)")
+        }
+    }
 
-        Self.log.info("Voice Callout: \(text)")
-        synthesizer.speak(utterance)
+    private func textToFilename(_ text: String) -> String {
+        elapsedFilename(text) ?? commandFilename(text) ?? ""
+    }
+
+    private func elapsedFilename(_ text: String) -> String? {
+        switch text {
+        case "Thirty seconds.":                  return "elapsed_30s"
+        case "One minute. Keep moving.":         return "elapsed_60s"
+        case "One minute thirty.":               return "elapsed_90s"
+        case "Two minutes. Stay locked in.":     return "elapsed_120s"
+        case "Three minutes. Drive forward.":    return "elapsed_180s"
+        case "Five minutes. Finish strong.":     return "elapsed_300s"
+        case "Ten minutes. Outstanding.":        return "elapsed_600s"
+        case "Thirty seconds. Stay locked in.":  return "preview_elapsed"
+        default:                                 return nil
+        }
+    }
+
+    private func commandFilename(_ text: String) -> String? {
+        switch text {
+        case "Move now.":        return "cmd_move_now"
+        case "Stay sharp.":      return "cmd_stay_sharp"
+        case "Reset. Breathe.":  return "cmd_reset_breathe"
+        case "Push the pace.":   return "cmd_push_pace"
+        case "Drive forward.":   return "cmd_drive_forward"
+        case "Keep pressure.":   return "cmd_keep_pressure"
+        case "Push through it.": return "cmd_push_through"
+        default:                 return nil
+        }
     }
 
     func resetSession() {
