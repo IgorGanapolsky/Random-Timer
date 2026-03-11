@@ -164,6 +164,7 @@ jobs:
       effective_track: ${{ steps.play_result.outputs.effective_track }}
       fallback_used: ${{ steps.play_result.outputs.fallback_used }}
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
+      version_code: ${{ steps.android_version.outputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
@@ -250,9 +251,11 @@ jobs:
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
       - name: Set unique Android version code
+        id: android_version
         run: |
           set -euo pipefail
           VERSION_CODE="$(date +%s)"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           echo "Using ANDROID_VERSION_CODE=$VERSION_CODE"
 
@@ -441,9 +444,9 @@ jobs:
           ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
           if [ "${{ needs.android-release.result }}" = "success" ]; then
             ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
-          fi
-          if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
-            ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
+            if [ -n "${{ needs.android-release.outputs.version_code }}" ]; then
+              ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"
+            fi
           fi
           if [ -n "${{ steps.versions.outputs.ios_version }}" ]; then
             ARGS="$ARGS --version ${{ steps.versions.outputs.ios_version }}"
