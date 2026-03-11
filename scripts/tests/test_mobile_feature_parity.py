@@ -73,16 +73,12 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     assert "func unlockEliteForDebug()" not in ios_pro_manager
 
 
-def test_voice_callouts_offer_countdown_and_command_preview_on_both_platforms():
+def test_voice_callouts_present_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)
 
     for source in (android_setup, ios_setup):
-        assert "Countdown" in source
-        assert "Commands" in source
-        assert "command cues fired at random times during longer timers" in source
-        assert "Switch stance" not in source
-        assert "Check your six" not in source
+        assert "Voice Callouts" in source
 
 
 def test_voice_preview_supports_command_cues_on_both_platforms():

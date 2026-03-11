@@ -350,15 +350,10 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 Voice Callouts",
+                                        text = "Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = TimerColors.TextPrimary,
-                                    )
-                                    Text(
-                                        text = "Spoken 30s/10s/5s countdowns plus short command cues fired at random times during longer timers.",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TimerColors.TextMuted,
                                     )
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {

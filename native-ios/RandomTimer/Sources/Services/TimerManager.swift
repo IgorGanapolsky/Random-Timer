@@ -551,7 +551,8 @@ final class TimerManager: ObservableObject {
 
         // Trigger voice callouts for Pro users
         if ProManager.shared.isPro {
-            AIVoiceCalloutService.shared.triggerCallout(remainingSeconds: Int(state.remainingDuration))
+            let elapsed = Int(state.targetDuration - state.remainingDuration)
+            AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: elapsed)
         }
 
         if state.remainingDuration <= 0 {
