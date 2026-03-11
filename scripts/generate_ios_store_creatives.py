@@ -116,6 +116,46 @@ def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
     return ImageFont.load_default()
 
 
+def _wrap_text(text: str, font: ImageFont.FreeTypeFont | ImageFont.ImageFont, max_width: int) -> List[str]:
+    """Wrap text to fit within max_width pixels."""
+    words = text.split()
+    lines: List[str] = []
+    current = ""
+    for word in words:
+        test = f"{current} {word}".strip()
+        bbox = font.getbbox(test)
+        if bbox[2] - bbox[0] <= max_width:
+            current = test
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def _draw_text_wrapped(
+    draw: ImageDraw.Draw,
+    text: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    canvas_w: int,
+    y: int,
+    fill: tuple,
+    margin: int = 60,
+) -> int:
+    """Draw word-wrapped centered text. Returns y coordinate after last line."""
+    max_w = canvas_w - margin * 2
+    lines = _wrap_text(text, font, max_w)
+    line_spacing = int(font.size * 1.2) if hasattr(font, "size") else 40
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        lw = bbox[2] - bbox[0]
+        draw.text(((canvas_w - lw) // 2, y), line, font=font, fill=fill)
+        y += line_spacing
+    return y
+
+
 def _draw_gradient(draw: ImageDraw.Draw, size: Tuple[int, int], top_color: Color, bottom_color: Color) -> None:
     w, h = size
     for y in range(h):
@@ -142,33 +182,32 @@ def _render_one(source: Image.Image, text: CreativeText, is_ipad: bool = False) 
         alpha = int(40 * (1 - (y / glow_h)))
         glow_draw.line([(0, y), (w, y)], fill=(220, 38, 38, alpha))
 
-    # Header text
+    # Header text — flow-based layout so wrapping never causes overlap
     title_size = max(84, int(h * 0.052))
-    subtitle_size = max(38, int(h * 0.022))
+    subtitle_size = max(36, int(h * 0.020))
     title_font = _load_font(title_size, bold=True)
     subtitle_font = _load_font(subtitle_size, bold=False)
+    badge_font = _load_font(max(30, int(h * 0.015)), bold=True)
 
-    title_bbox = draw.textbbox((0, 0), text.title, font=title_font)
-    title_w = title_bbox[2] - title_bbox[0]
-    draw.text(((w - title_w) // 2, int(h * 0.07)), text.title, font=title_font, fill=(255, 255, 255))
-
-    subtitle_bbox = draw.textbbox((0, 0), text.subtitle, font=subtitle_font)
-    subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
-    draw.text(((w - subtitle_w) // 2, int(h * 0.135)), text.subtitle, font=subtitle_font, fill=(161, 161, 170))
+    y = int(h * 0.06)
+    y = _draw_text_wrapped(draw, text.title, title_font, w, y, (255, 255, 255))
+    y += int(h * 0.012)
+    y = _draw_text_wrapped(draw, text.subtitle, subtitle_font, w, y, (161, 161, 170))
+    y += int(h * 0.018)
 
     # Tactical Red Badge
-    badge_font = _load_font(max(32, int(h * 0.016)), bold=True)
     badge_bbox = draw.textbbox((0, 0), text.badge, font=badge_font)
     bw, bh = badge_bbox[2] - badge_bbox[0], badge_bbox[3] - badge_bbox[1]
-    pad_x, pad_y = 32, 16
+    pad_x, pad_y = 32, 14
     bx1 = (w - (bw + pad_x * 2)) // 2
-    by1 = int(h * 0.19)
+    by1 = y
     bx2, by2 = bx1 + bw + pad_x * 2, by1 + bh + pad_y * 2
     draw.rounded_rectangle((bx1, by1, bx2, by2), radius=12, fill=(220, 38, 38))
     draw.text((bx1 + pad_x, by1 + pad_y - 2), text.badge, font=badge_font, fill=(255, 255, 255))
+    y = by2 + int(h * 0.02)
 
     # App UI Placement: fit source into available space below header WITHOUT clipping
-    ui_top = int(h * 0.27)
+    ui_top = y
     ui_margin = int(w * 0.06)
     target_w = w - (ui_margin * 2)
     available_h = h - ui_top - int(h * 0.02)  # 2% bottom padding
