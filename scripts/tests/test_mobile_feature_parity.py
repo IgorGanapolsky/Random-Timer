@@ -73,18 +73,19 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     assert "func unlockEliteForDebug()" not in ios_pro_manager
 
 
-def test_voice_callouts_offer_countdown_and_drill_preview_on_both_platforms():
+def test_voice_callouts_offer_countdown_and_command_preview_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)
 
     for source in (android_setup, ios_setup):
         assert "Countdown" in source
-        assert "Drill" in source
-        assert "Switch stance" in source
-        assert "Check your six" in source
+        assert "Commands" in source
+        assert "command cues fired at random times during longer timers" in source
+        assert "Switch stance" not in source
+        assert "Check your six" not in source
 
 
-def test_voice_preview_supports_drill_commands_on_both_platforms():
+def test_voice_preview_supports_command_cues_on_both_platforms():
     android_preview = _read(ANDROID_SOUND_PREVIEW)
     android_preview_impl = _read(ANDROID_SOUND_PREVIEW_IMPL)
     android_viewmodel = _read(ANDROID_VIEWMODEL)
@@ -92,11 +93,11 @@ def test_voice_preview_supports_drill_commands_on_both_platforms():
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
     ios_voice_service = _read(IOS_VOICE_SERVICE)
 
-    assert "fun previewDrillCommand()" in android_preview
-    assert "previewDrillCommand()" in android_preview_impl
-    assert "fun previewDrillCommand()" in android_viewmodel
-    assert "onDrillCommandPreview = viewModel::previewDrillCommand" in android_nav
+    assert "fun previewCommandCue()" in android_preview
+    assert "previewCommandCue()" in android_preview_impl
+    assert "fun previewCommandCue()" in android_viewmodel
+    assert "onCommandCuePreview = viewModel::previewCommandCue" in android_nav
 
-    assert "func previewDrillCommand()" in ios_timer_manager
-    assert "func previewDrillCommand()" in ios_voice_service
+    assert "func previewCommandCue()" in ios_timer_manager
+    assert "func previewCommandCue()" in ios_voice_service
     assert "func previewCountdownCue()" in ios_voice_service

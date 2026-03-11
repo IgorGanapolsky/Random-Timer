@@ -62,7 +62,7 @@ struct PaywallSheet: View {
                         .foregroundColor(.accentPrimary)
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
-                    ProFeatureRow(text: "Spoken countdown cues + drill callouts")
+                    ProFeatureRow(text: "Spoken countdown cues + command callouts")
                     ProFeatureRow(text: "Support independent development")
                 }
             }
