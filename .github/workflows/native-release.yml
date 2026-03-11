@@ -164,6 +164,7 @@ jobs:
       effective_track: ${{ steps.play_result.outputs.effective_track }}
       fallback_used: ${{ steps.play_result.outputs.fallback_used }}
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
+      version_code: ${{ steps.version_code.outputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
@@ -250,10 +251,12 @@ jobs:
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
       - name: Set unique Android version code
+        id: version_code
         run: |
           set -euo pipefail
           VERSION_CODE="$(date +%s)"
           echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "Using ANDROID_VERSION_CODE=$VERSION_CODE"
 
       - name: Build release AAB
@@ -369,8 +372,8 @@ jobs:
       - name: Extract version info
         id: versions
         run: |
-          # Android versionCode from build.gradle.kts
-          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' native-android/app/build.gradle.kts || echo "")
+          # Android versionCode from android-release job output (actual CI timestamp code)
+          VERSION_CODE="${{ needs.android-release.outputs.version_code }}"
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
 
           # iOS version from project.pbxproj
