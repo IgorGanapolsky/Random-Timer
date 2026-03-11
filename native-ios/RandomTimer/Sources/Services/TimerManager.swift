@@ -107,7 +107,7 @@ final class TimerManager: ObservableObject {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
-        // Reset voice callout session for fresh chaos drill timing
+        // Reset voice callout timing so each timer gets a fresh command-cue schedule.
         AIVoiceCalloutService.shared.resetSession()
 
         // Stop any preview sound
@@ -206,8 +206,8 @@ final class TimerManager: ObservableObject {
         AIVoiceCalloutService.shared.previewCountdownCue()
     }
 
-    func previewDrillCommand() {
-        AIVoiceCalloutService.shared.previewDrillCommand()
+    func previewCommandCue() {
+        AIVoiceCalloutService.shared.previewCommandCue()
     }
 
     func restartTimer() async {
