@@ -1,0 +1,96 @@
+name: X Auto-Post
+
+# Posts one tweet per day from the queue at 7 AM UTC (2 AM ET / 11 PM PT)
+# Requires X_API_KEY secret and X API Basic tier ($100/mo) to be active.
+
+on:
+  schedule:
+    - cron: '0 11 * * 1-5'   # Mon–Fri 11 AM UTC (7 AM ET) — peak fitness audience
+  workflow_dispatch:
+    inputs:
+      tweet_id:
+        description: 'Specific tweet ID from queue (1-30), or leave blank for today'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (print tweet but do not post)'
+        type: boolean
+        default: false
+
+jobs:
+  post-tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install tweepy requests
+
+      - name: Post tweet from queue
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          TWEET_ID: ${{ github.event.inputs.tweet_id }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, tweepy
+          from datetime import datetime, timezone
+
+          queue_path = ".claude/marketing/tweet_queue.json"
+          with open(queue_path) as f:
+              tweets = json.load(f)
+
+          tweet_id_override = os.environ.get("TWEET_ID", "").strip()
+          dry_run = os.environ.get("DRY_RUN", "false").lower() == "true"
+
+          if tweet_id_override:
+              tweet = next((t for t in tweets if str(t["id"]) == tweet_id_override), None)
+              if not tweet:
+                  print(f"Tweet ID {tweet_id_override} not found in queue.")
+                  exit(1)
+          else:
+              # Post tweet based on week day number (cycles through queue)
+              day_of_year = datetime.now(timezone.utc).timetuple().tm_yday
+              idx = (day_of_year - 1) % len(tweets)
+              tweet = tweets[idx]
+
+          print(f"Tweet #{tweet['id']} [{tweet['audience']}]:")
+          print(tweet['text'])
+          print(f"Length: {len(tweet['text'])} chars")
+
+          if dry_run:
+              print("DRY RUN — not posting.")
+              exit(0)
+
+          client = tweepy.Client(
+              consumer_key=os.environ["X_API_KEY"],
+              consumer_secret=os.environ["X_API_SECRET"],
+              access_token=os.environ["X_ACCESS_TOKEN"],
+              access_token_secret=os.environ["X_ACCESS_TOKEN_SECRET"]
+          )
+
+          response = client.create_tweet(text=tweet['text'])
+          tweet_url = f"https://x.com/IgorGanapolsky/status/{response.data['id']}"
+          print(f"✅ Posted: {tweet_url}")
+          PYEOF
+
+      - name: Generate next week's content via Perplexity (Monday only)
+        if: github.event_name == 'schedule'
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: |
+          python3 -c "
+          from datetime import datetime, timezone
+          day = datetime.now(timezone.utc).weekday()
+          if day == 0:  # Monday
+              print('Monday: research new trends for next week')
+          else:
+              print('Not Monday, skipping trend research')
+          "
