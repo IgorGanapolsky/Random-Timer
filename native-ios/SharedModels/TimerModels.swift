@@ -107,7 +107,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
 
     public init(
-        minSeconds: Int = 10,
+        minSeconds: Int = 0,
         maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
