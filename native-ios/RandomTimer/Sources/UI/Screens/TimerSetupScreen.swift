@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -91,45 +91,33 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.textPrimary)
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
 
-                                Text("Spoken 30s/10s/5s countdowns plus short command cues fired at random times during longer timers.")
+                                Text("Voice prompts during countdown")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
 
                             Spacer()
 
-                            Button {
-                                timerManager.previewCountdownCue()
-                            } label: {
-                                Text("Countdown")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            Button {
-                                timerManager.previewCommandCue()
-                            } label: {
-                                Text("Commands")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
                             if proManager.isPro {
-                                Text("ON")
+                                Text("ENABLED")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.accentPrimary)
                             } else {
+                                Button {
+                                    timerManager.previewVoiceCallout()
+                                } label: {
+                                    Text("Preview")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                }
+
                                 Button {
                                     presentPaywall(entryPoint: .soundGate)
                                 } label: {
@@ -148,6 +136,11 @@ struct TimerSetupScreen: View {
                         }
                         .padding(.vertical, 8)
                         .contentShape(Rectangle())
+                        .onTapGesture {
+                            if proManager.isPro {
+                                timerManager.previewVoiceCallout()
+                            }
+                        }
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
@@ -230,14 +223,14 @@ struct TimerSetupScreen: View {
                                 presentPaywall(entryPoint: .soundGate)
                             }
                         }
-                    
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-                        
+
                         Spacer()
-                        
+
                         Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
@@ -549,7 +542,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(1, newValue),
+            newMaxSeconds: Swift.max(30, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -650,7 +643,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)? = nil
+    var onSliding: ((Float) -> Void)?
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {

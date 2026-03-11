@@ -84,6 +84,21 @@ final class AIVoiceCalloutService {
         speak(randomCommandCue())
     }
 
+    func preview() {
+        let previewCues = [
+            "Thirty seconds remaining. Hold your position.",
+            "Ten seconds. Prepare for impact.",
+            "Switch stance!",
+            "Move! Move! Move!",
+            "Stay sharp!",
+            "Explode!",
+            "Check your six!",
+            "Eyes up!"
+        ]
+        let index = Int.random(in: 0..<previewCues.count)
+        speak(previewCues[index])
+    }
+
     func triggerCallout(remainingSeconds: Int) {
         // Fixed countdown callouts
         let countdownCallouts: [Int: String] = [
@@ -122,7 +137,7 @@ final class AIVoiceCalloutService {
         let count = range.upperBound - range.lowerBound + 1
         var randomValue: UInt32 = 0
         let status = SecRandomCopyBytes(kSecRandomDefault, MemoryLayout<UInt32>.size, &randomValue)
-        
+
         if status == errSecSuccess {
             return range.lowerBound + Int(randomValue % UInt32(count))
         } else {

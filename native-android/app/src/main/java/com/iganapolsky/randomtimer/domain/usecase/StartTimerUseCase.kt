@@ -39,12 +39,13 @@ class StartTimerUseCase
             min: Duration,
             max: Duration,
         ): Duration {
-            if (min == max) return min
+            if (min == max) return min.coerceAtLeast(1.milliseconds * 1000)
 
             val minMillis = min.inWholeMilliseconds
             val maxMillis = max.inWholeMilliseconds
             val randomMillis = random.nextLong(minMillis, maxMillis + 1)
 
-            return randomMillis.milliseconds
+            // Apply 1s safety floor to prevent "instant" alarms
+            return randomMillis.coerceAtLeast(1000L).milliseconds
         }
     }

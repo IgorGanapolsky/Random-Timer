@@ -74,11 +74,11 @@ data class TimerConfig(
 
         val DEFAULT =
             TimerConfig(
-                minSeconds = 0,
+                minSeconds = 10,
                 maxSeconds = 30,
                 alarmDuration = 10,
                 hiddenMode = false,
-                repeatEnabled = false,
+                repeatEnabled = true,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
                 vibrationEnabled = false,
@@ -140,7 +140,6 @@ enum class TimerStatus {
 
 enum class EntitlementLevel {
     NONE,
-    BASE,
     ELITE,
     ;
 

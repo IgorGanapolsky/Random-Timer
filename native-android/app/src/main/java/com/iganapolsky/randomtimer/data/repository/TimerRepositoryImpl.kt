@@ -47,26 +47,27 @@ class TimerRepositoryImpl
             )
         }
 
+        private fun Preferences.toTimerConfig(): TimerConfig =
+            TimerConfig(
+                minSeconds = this[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
+                maxSeconds = this[KEY_MAX_SECONDS] ?: TimerConfig.DEFAULT.maxSeconds,
+                alarmDuration = this[KEY_ALARM_DURATION] ?: TimerConfig.DEFAULT.alarmDuration,
+                hiddenMode = this[KEY_HIDDEN_MODE] ?: TimerConfig.DEFAULT.hiddenMode,
+                repeatEnabled = this[KEY_REPEAT_ENABLED] ?: TimerConfig.DEFAULT.repeatEnabled,
+                soundType =
+                    this[KEY_SOUND_TYPE]?.let {
+                        try {
+                            SoundType.valueOf(it)
+                        } catch (_: Exception) {
+                            TimerConfig.DEFAULT.soundType
+                        }
+                    } ?: TimerConfig.DEFAULT.soundType,
+                volume = this[KEY_VOLUME] ?: TimerConfig.DEFAULT.volume,
+                vibrationEnabled = this[KEY_VIBRATION_ENABLED] ?: TimerConfig.DEFAULT.vibrationEnabled,
+            ).clampedForPro()
+
         override fun getTimerConfig(): Flow<TimerConfig> =
-            dataStore.data.map { preferences ->
-                TimerConfig(
-                    minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                    alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                    hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                    repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                    soundType =
-                        preferences[KEY_SOUND_TYPE]?.let {
-                            try {
-                                SoundType.valueOf(it)
-                            } catch (_: Exception) {
-                                SoundType.INTENSE
-                            }
-                        } ?: SoundType.INTENSE,
-                    volume = preferences[KEY_VOLUME] ?: 0.5f,
-                    vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                ).clampedForPro()
-            }
+            dataStore.data.map { preferences -> preferences.toTimerConfig() }
 
         override suspend fun saveTimerConfig(config: TimerConfig) {
             dataStore.edit { preferences ->
@@ -88,24 +89,7 @@ class TimerRepositoryImpl
                 val statusStr = preferences[KEY_ACTIVE_STATUS] ?: return@map null
                 val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@map null
 
-                val config =
-                    TimerConfig(
-                        minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                        alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                        hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                        repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                        soundType =
-                            preferences[KEY_SOUND_TYPE]?.let {
-                                try {
-                                    SoundType.valueOf(it)
-                                } catch (_: Exception) {
-                                    SoundType.INTENSE
-                                }
-                            } ?: SoundType.INTENSE,
-                        volume = preferences[KEY_VOLUME] ?: 0.5f,
-                        vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                    ).clampedForPro()
+                val config = preferences.toTimerConfig()
 
                 TimerState(
                     config = config,

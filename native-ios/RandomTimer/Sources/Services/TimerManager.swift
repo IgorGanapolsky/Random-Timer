@@ -113,18 +113,19 @@ final class TimerManager: ObservableObject {
         // Stop any preview sound
         notificationService.stopPreview()
 
-        // Generate random duration
-        let randomDuration = generateRandomDuration(
+        // Generate random duration with a 1s safety floor
+        let randomDuration = Swift.max(1.0, generateRandomDuration(
             min: config.minDuration,
             max: config.maxDuration
-        )
+        ))
 
+        // Atomic update of state with fresh timestamp
         let state = TimerState(
             config: config,
-            targetDuration: randomDuration
+            targetDuration: randomDuration,
+            startedAt: Date()
         )
-
-        timerState = state
+        self.timerState = state
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,
@@ -455,6 +456,10 @@ final class TimerManager: ObservableObject {
             type: config.soundType,
             volume: config.volume
         )
+    }
+
+    func previewVoiceCallout() {
+        AIVoiceCalloutService.shared.preview()
     }
 
     /// Test-only hook for setting timer state without waiting on async countdowns.
