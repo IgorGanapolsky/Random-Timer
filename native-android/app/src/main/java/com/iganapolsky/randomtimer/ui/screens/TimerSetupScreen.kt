@@ -747,7 +747,7 @@ private fun TimeRangeSliders(
                 Slider(
                     value = minValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, fineNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
+                        val snapped = snapToStep(raw, coarseNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
                         onMinChange(snapped)
                     },
                     enabled = enabled,
@@ -793,7 +793,7 @@ private fun TimeRangeSliders(
                 Slider(
                     value = maxValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, fineNudgeStep, minGapSeconds, maxSliderRangeInt)
+                        val snapped = snapToStep(raw, coarseNudgeStep, minGapSeconds, maxSliderRangeInt)
                         onMaxChange(snapped)
                     },
                     enabled = enabled,
