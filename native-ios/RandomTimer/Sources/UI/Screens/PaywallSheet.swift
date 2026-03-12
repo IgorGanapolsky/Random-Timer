@@ -41,6 +41,8 @@ struct PaywallSheet: View {
                 .foregroundColor(.textPrimary)
                 .contentShape(Rectangle())
                 .onLongPressGesture(minimumDuration: 8.0) {
+                    let generator = UIImpactFeedbackGenerator(style: .heavy)
+                    generator.impactOccurred()
                     proManager.unlockProForDebug()
                     hasTrackedDismiss = true
                     dismiss()

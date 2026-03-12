@@ -284,7 +284,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
     static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
-    static let defaultMinGapSeconds = 1
+    static let defaultMinGapSeconds = 5
 
     static func adjustForMinChange(
         currentMinSeconds: Int,
