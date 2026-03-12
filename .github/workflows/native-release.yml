@@ -518,7 +518,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           PREFERRED_VERSION: ${{ steps.versions.outputs.ios_version }}
         run: |
-          python scripts/asc_resolve_version.py \
+          PYTHONPATH=. python scripts/asc_resolve_version.py \
             --preferred-version "$PREFERRED_VERSION" \
             --create-if-needed \
             --json-out /tmp/asc_version.json
@@ -571,14 +571,14 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
-          python scripts/asc_verify_ready.py \
+          PYTHONPATH=. python scripts/asc_verify_ready.py \
             --version "${{ steps.asc_version.outputs.selected_version }}" \
             --json /tmp/asc_ready.json
 
       - name: Enforce delegation contract (submit gate)
         if: steps.gate.outputs.enabled == 'true'
         run: |
-          python scripts/delegation_contract.py \
+          PYTHONPATH=. python scripts/delegation_contract.py \
             --operation ios_submit_for_review \
             --asc-ready-json /tmp/asc_ready.json \
             --intent "${{ steps.gate.outputs.submit_review }}" \
