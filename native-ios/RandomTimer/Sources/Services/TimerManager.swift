@@ -429,6 +429,10 @@ final class TimerManager: ObservableObject {
         )
     }
 
+    func previewCommandCue() {
+        AIVoiceCalloutService.shared.previewCommandCue()
+    }
+
     func updatePreviewVolume() {
         notificationService.updatePreviewVolume(config.volume)
     }

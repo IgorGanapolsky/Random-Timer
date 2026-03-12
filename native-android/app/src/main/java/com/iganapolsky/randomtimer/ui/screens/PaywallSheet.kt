@@ -56,7 +56,11 @@ fun PaywallSheet(
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 modifier = if (onDebugUnlock != null) {
-                    Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                    Modifier.holdForHiddenUnlock(
+                        holdDurationMs = 8_000L,
+                        haptic = haptic,
+                        onHoldComplete = onDebugUnlock,
+                    )
                 } else {
                     Modifier
                 },
@@ -152,6 +156,7 @@ fun PaywallSheet(
 
 private fun Modifier.holdForHiddenUnlock(
     holdDurationMs: Long,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     onHoldComplete: () -> Unit,
 ): Modifier =
     pointerInput(holdDurationMs, onHoldComplete) {
@@ -159,6 +164,7 @@ private fun Modifier.holdForHiddenUnlock(
             awaitFirstDown(requireUnconsumed = false)
             val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
             if (releasedBeforeHold == null) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onHoldComplete()
                 waitForUpOrCancellation()
             }

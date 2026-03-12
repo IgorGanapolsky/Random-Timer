@@ -76,6 +76,10 @@ class AIVoiceCalloutManager
             return remainingSeconds <= nextChaosCueAt
         }
 
+        fun previewCommandCue() {
+            speak(randomChaosCue())
+        }
+
         private fun randomChaosCue(): String {
             val cues =
                 listOf(

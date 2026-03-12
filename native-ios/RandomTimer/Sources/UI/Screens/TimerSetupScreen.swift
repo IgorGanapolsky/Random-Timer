@@ -100,25 +100,40 @@ struct TimerSetupScreen: View {
                             
                             Spacer()
                             
-                            if proManager.isPro {
-                                Text("ENABLED")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
-                            } else {
+                            HStack(spacing: 8) {
+                                // Preview Button (always enabled)
                                 Button {
-                                    presentPaywall(entryPoint: .soundGate)
+                                    timerManager.previewCommandCue()
                                 } label: {
-                                    HStack(spacing: 4) {
-                                        Text("PRO")
-                                        Image(systemName: "lock.fill")
+                                    Text("PREVIEW")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                }
+
+                                if proManager.isPro {
+                                    Text("ENABLED")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.accentPrimary)
+                                } else {
+                                    Button {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text("PRO")
+                                            Image(systemName: "lock.fill")
+                                        }
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
                                     }
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
                                 }
                             }
                         }
@@ -542,7 +557,7 @@ private struct StepAdjustButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            Image(systemImage: systemImage)
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundColor(enabled ? .accentPrimary : .textMuted)
@@ -665,6 +680,6 @@ private struct VolumeSliderView: View {
     NavigationStack {
         TimerSetupScreen()
             .environmentObject(TimerManager())
-            .environmentObject(ProManager.shared)
+            .environmentObject(proManager.shared)
     }
 }
