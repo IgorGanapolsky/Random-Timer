@@ -680,6 +680,6 @@ private struct VolumeSliderView: View {
     NavigationStack {
         TimerSetupScreen()
             .environmentObject(TimerManager())
-            .environmentObject(proManager.shared)
+            .environmentObject(ProManager.shared)
     }
 }
