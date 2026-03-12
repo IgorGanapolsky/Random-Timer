@@ -72,9 +72,14 @@ fun PaywallSheet(
                 textAlign = TextAlign.Center,
                 modifier =
                     if (onDebugUnlock != null) {
-                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
                     } else {
                         Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
                     },
             )
 

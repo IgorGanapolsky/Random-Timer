@@ -112,6 +112,16 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     assert "proManager.unlockProForDebug()" in ios_paywall
 
 
+def test_android_hidden_debug_unlock_uses_full_width_hold_target():
+    android_paywall = ANDROID_PAYWALL.read_text(encoding="utf-8")
+
+    assert re.search(
+        r'Text\(\s*text = "Upgrade to Pro".*?Modifier\s*\.\s*fillMaxWidth\(\)\s*\.\s*padding\(vertical = 8\.dp\)\s*\.\s*holdForHiddenUnlock',
+        android_paywall,
+        re.S,
+    )
+
+
 def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
