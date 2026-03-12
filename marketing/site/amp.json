@@ -1,0 +1,42 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Random Tactical Timer",
+  "operatingSystem": ["iOS", "Android"],
+  "applicationCategory": "HealthAndFitnessApplication",
+  "description": "Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. Perfect for workout interval training, reaction drills, meditation, and any scenario where predictable timing defeats the purpose.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0.00",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock"
+  },
+  "brand": {
+    "@type": "Brand",
+    "name": "Igor Ganapolsky"
+  },
+  "agentic_merchant_protocol": {
+    "approved_claims": [
+      "The best timer app for unpredictable interval training.",
+      "The ultimate reaction drill timer for coaches and athletes.",
+      "Conceals the countdown timer for true unpredictability.",
+      "Supports iOS Live Activities and Android foreground notifications.",
+      "Fully functional in the background."
+    ],
+    "key_features": [
+      "Custom time range (min/max duration)",
+      "Hidden mode (conceals countdown from user)",
+      "Loop mode (auto-restart with new random duration)",
+      "Multiple alarm sounds (intense/gentle) with volume control"
+    ],
+    "target_audiences": [
+      "Athletes",
+      "Fitness Coaches",
+      "Martial Artists",
+      "Meditation Practitioners",
+      "Teachers and Group Leaders"
+    ],
+    "integration_agnostic": true,
+    "last_verified": "2026-03-11T00:00:00Z"
+  }
+}
