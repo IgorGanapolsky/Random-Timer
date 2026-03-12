@@ -118,12 +118,11 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
-    onCountdownCuePreview: () -> Unit,
-    onCommandCuePreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
+    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -191,7 +190,7 @@ fun TimerSetupScreen(
                 contentPadding =
                     PaddingValues(
                         top = spacing.listTop,
-                        bottom = 32.dp,
+                        bottom = spacing.listBottom,
                     ),
             ) {
                 // Training Stats
@@ -339,7 +338,7 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Voice Callouts (Pro feature)
+                            // AI Voice Callouts (Elite Feature)
                             Row(
                                 modifier =
                                     Modifier
@@ -350,80 +349,45 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Voice Callouts",
+                                        text = "\uD83D\uDCE2 AI Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = TimerColors.TextPrimary,
+                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                    )
+                                    Text(
+                                        text = "Voice prompts during countdown",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
                                     )
                                 }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (isElite) {
+                                    Text(
+                                        text = "ENABLED",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TimerColors.AccentPrimary,
+                                    )
+                                } else {
                                     Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCountdownCuePreview()
-                                        },
+                                        onClick = onUpgradeTap,
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                     ) {
-                                        Text(
-                                            text = "Countdown",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
+                                        Row(
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCommandCuePreview()
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                    ) {
-                                        Text(
-                                            text = "Commands",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    if (isPro) {
-                                        Text(
-                                            text = "ON",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                        )
-                                    } else {
-                                        Surface(
-                                            onClick = onUpgradeTap,
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                Text(
-                                                    text = "PRO ",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
-                                                Text(
-                                                    text = "\uD83D\uDD12",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
-                                            }
+                                            Text(
+                                                text = "ELITE ",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                            Text(
+                                                text = "\uD83D\uDD12",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TimerColors.AccentPrimary,
+                                            )
                                         }
                                     }
                                 }
@@ -1026,8 +990,6 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
-            onCountdownCuePreview = {},
-            onCommandCuePreview = {},
         )
     }
 }

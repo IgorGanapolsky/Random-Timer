@@ -27,12 +27,10 @@ jobs:
       - name: Check if retry is required
         id: gate
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
           ISSUE_TITLE: Android production publish blocked by Play FAILED_PRECONDITION
           FORCE_RETRY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_retry || 'false' }}
         run: |
-          set -euo pipefail
-
           if [ "$FORCE_RETRY" = "true" ]; then
             echo "should_retry=true" >> "$GITHUB_OUTPUT"
             echo "reason=manual_force_retry" >> "$GITHUB_OUTPUT"
@@ -58,10 +56,8 @@ jobs:
     steps:
       - name: Dispatch Native App Release (Android production)
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
         run: |
-          set -euo pipefail
-
           gh workflow run native-release.yml \
             --repo "$GITHUB_REPOSITORY" \
             --ref develop \

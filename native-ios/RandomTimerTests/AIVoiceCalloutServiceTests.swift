@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
-    var sut: AIVoiceCalloutService! // swiftlint:disable:this implicitly_unwrapped_optional
+    var sut: AIVoiceCalloutService!
 
     override func setUp() {
         super.setUp()
@@ -11,29 +11,17 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.resetSession()
     }
 
-    func testTriggerCalloutElapsedMilestones() {
-        // Verify elapsed milestones don't crash and session state evolves
-        sut.triggerCallout(elapsedSeconds: 30)
-        sut.triggerCallout(elapsedSeconds: 60)
-        sut.triggerCallout(elapsedSeconds: 90)
-        sut.triggerCallout(elapsedSeconds: 120)
-    }
-
-    func testPreviewDoesNotCrash() {
-        sut.preview()
+    func testTriggerCalloutFixedCountdown() {
+        // This is tricky to test because it calls 'speak' which calls AVSpeechSynthesizer.
+        // But we can at least verify it doesn't crash and session state evolves.
+        sut.triggerCallout(remainingSeconds: 30)
+        sut.triggerCallout(remainingSeconds: 10)
+        sut.triggerCallout(remainingSeconds: 5)
     }
 
     func testResetSession() {
-        sut.triggerCallout(elapsedSeconds: 30)
+        sut.triggerCallout(remainingSeconds: 100)
         sut.resetSession()
-        // Reset clears lastElapsedMilestone — next call to 30s should not be skipped
-        sut.triggerCallout(elapsedSeconds: 30)
-    }
-
-    func testCommandCueFiredAtRandomInterval() {
-        // Command cues should fire without crashing across many ticks
-        for elapsed in 1...120 {
-            sut.triggerCallout(elapsedSeconds: elapsed)
-        }
+        // verify internal state reset if possible via reflection or mock
     }
 }

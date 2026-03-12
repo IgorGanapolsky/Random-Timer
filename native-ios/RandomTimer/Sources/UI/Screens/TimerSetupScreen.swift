@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-
+                
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-
+                            
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -91,37 +91,17 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.textPrimary)
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                
+                                Text("Voice prompts during countdown")
+                                    .font(.caption2)
+                                    .foregroundColor(.textMuted)
                             }
-
+                            
                             Spacer()
-
-                            Button {
-                                timerManager.previewCountdownCue()
-                            } label: {
-                                Text("Countdown")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            Button {
-                                timerManager.previewCommandCue()
-                            } label: {
-                                Text("Commands")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
+                            
                             if proManager.isPro {
-                                Text("ON")
+                                Text("ENABLED")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.accentPrimary)
@@ -143,7 +123,6 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .contentShape(Rectangle())
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
@@ -226,14 +205,14 @@ struct TimerSetupScreen: View {
                                 presentPaywall(entryPoint: .soundGate)
                             }
                         }
-
+                    
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-
+                        
                         Spacer()
-
+                        
                         Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
@@ -320,7 +299,6 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
-        .accessibilityIdentifier("setupScreen")
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -545,7 +523,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(1, newValue),
+            newMaxSeconds: Swift.max(30, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -646,7 +624,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)?
+    var onSliding: ((Float) -> Void)? = nil
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {
@@ -663,41 +641,21 @@ private struct VolumeSliderView: View {
                     .foregroundColor(.textPrimary)
             }
 
-            HStack(spacing: 12) {
-                StepAdjustButton(
-                    systemImage: "minus.circle.fill",
-                    enabled: value > 0,
-                    accessibilityLabel: "Decrease volume"
-                ) {
-                    onChanged(Swift.max(0, value - 0.05))
-                }
-
-                Slider(
-                    value: Binding(
-                        get: { Double(value) },
-                        set: { newValue in
-                            onSliding?(Float(newValue))
-                        }
-                    ),
-                    in: 0...1,
-                    onEditingChanged: { editing in
-                        if !editing {
-                            onChanged(value)
-                        }
+            Slider(
+                value: Binding(
+                    get: { Double(value) },
+                    set: { newValue in
+                        onSliding?(Float(newValue))
                     }
-                )
-                .tint(.accentPrimary)
-                .accessibilityLabel("Volume slider")
-                .accessibilityValue("\(Int(value * 100))%")
-
-                StepAdjustButton(
-                    systemImage: "plus.circle.fill",
-                    enabled: value < 1,
-                    accessibilityLabel: "Increase volume"
-                ) {
-                    onChanged(Swift.min(1, value + 0.05))
+                ),
+                in: 0...1,
+                onEditingChanged: { editing in
+                    if !editing {
+                        onChanged(value)
+                    }
                 }
-            }
+            )
+            .tint(.accentPrimary)
         }
         .transaction { $0.animation = nil } // Completely disable all animations
     }

@@ -9,20 +9,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
 
-internal data class VoiceCandidate(
-    val name: String,
-    val locale: Locale,
-)
-
-internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandidate? =
-    candidates
-        .filter { candidate -> candidate.locale.language.equals(Locale.US.language, ignoreCase = true) }
-        .firstOrNull { candidate ->
-            AIVoiceCalloutManager.preferredVoiceNames.any { preferred ->
-                candidate.name.contains(preferred, ignoreCase = true)
-            }
-        }
-
 @Singleton
 class AIVoiceCalloutManager
     @Inject
@@ -31,13 +17,8 @@ class AIVoiceCalloutManager
     ) : TextToSpeech.OnInitListener {
         private var tts: TextToSpeech? = null
         private var isReady = false
-        private var lastElapsedMilestone = 0
-        private var nextCommandCueAt = 0
-        private var lastCommandCueAt = 0
-
-        companion object {
-            val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
-        }
+        private var lastChaosCueTime = 0
+        private var nextChaosCueAt = 0
 
         init {
             tts = TextToSpeech(context, this)
@@ -61,90 +42,59 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
-            lastElapsedMilestone = 0
-            nextCommandCueAt = 0
-            lastCommandCueAt = 0
+            lastChaosCueTime = 0
+            nextChaosCueAt = 0
         }
 
-        fun preview() {
-            previewCommandCue()
-        }
+        fun triggerCallout(remainingSeconds: Int) {
+            // Fixed countdown callouts
+            val countdownCallouts =
+                mapOf(
+                    30 to "Thirty seconds remaining. Hold your position.",
+                    10 to "Ten seconds. Prepare for impact.",
+                    5 to "Five. Four. Three. Two. One.",
+                )
 
-        fun previewCommandCue() {
-            speak(randomCommandCue())
-        }
-
-        fun previewCountdownCue() {
-            // With elapsed model, preview an elapsed milestone announcement
-            speak("Thirty seconds. Stay locked in.")
-        }
-
-        // Called every second with elapsed seconds since timer started.
-        fun triggerCallout(elapsedSeconds: Int) {
-            // Elapsed milestone callouts — fire once per milestone
-            elapsedMilestone(elapsedSeconds)?.let {
+            countdownCallouts[remainingSeconds]?.let {
                 speak(it)
-                lastElapsedMilestone = elapsedSeconds
                 return
             }
 
-            // Random command cues fire throughout the session
-            if (shouldFireCommandCue(elapsedSeconds)) {
-                speak(randomCommandCue())
-                lastCommandCueAt = elapsedSeconds
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(12, 26)
+            // Chaos Drill: randomized tactical cues at unpredictable intervals
+            if (remainingSeconds > 30 && shouldFireChaosCue(remainingSeconds)) {
+                speak(randomChaosCue())
+                lastChaosCueTime = remainingSeconds
+                nextChaosCueAt = remainingSeconds - Random.nextInt(8, 20)
             }
         }
 
-        private fun elapsedMilestone(elapsed: Int): String? {
-            if (elapsed == lastElapsedMilestone) return null
-            return when (elapsed) {
-                30  -> "Thirty seconds."
-                60  -> "One minute. Keep moving."
-                90  -> "One minute thirty."
-                120 -> "Two minutes. Stay locked in."
-                180 -> "Three minutes. Drive forward."
-                240 -> "Four minutes. Hold the line."
-                300 -> "Five minutes. Finish strong."
-                360 -> "Six minutes."
-                420 -> "Seven minutes."
-                480 -> "Eight minutes."
-                540 -> "Nine minutes."
-                600 -> "Ten minutes. Outstanding."
-                else -> null
+        private fun shouldFireChaosCue(remainingSeconds: Int): Boolean {
+            if (nextChaosCueAt == 0) {
+                // First cue: fire within first 5-15 seconds of the timer running
+                nextChaosCueAt = remainingSeconds - Random.nextInt(5, 16)
             }
+            return remainingSeconds <= nextChaosCueAt
         }
 
-        private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
-            if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(8, 21)
-            }
-            return elapsedSeconds >= nextCommandCueAt
-        }
-
-        private fun randomCommandCue(): String {
-            val cues = listOf(
-                "Move now.",
-                "Stay sharp.",
-                "Eyes front.",
-                "Hands up.",
-                "Reset. Breathe.",
-                "Push the pace.",
-                "Explode.",
-                "Recover. Then go.",
-                "Hold the line.",
-                "Drive forward.",
-                "Keep pressure.",
-                "Lock in.",
-                "Finish strong.",
-                "Breathe and move.",
-                "Switch stance.",
-                "Double up.",
-                "Check your six.",
-                "Dig deeper.",
-                "Tighten up.",
-                "Push through it.",
-            )
+        private fun randomChaosCue(): String {
+            val cues =
+                listOf(
+                    "Switch stance!",
+                    "Move! Move! Move!",
+                    "Breathe. Reset.",
+                    "Double up!",
+                    "Change levels!",
+                    "Check your six!",
+                    "Pick up the pace!",
+                    "Stay sharp!",
+                    "Dig deeper!",
+                    "Eyes up!",
+                    "Recover now!",
+                    "Explode!",
+                    "Control the center!",
+                    "Tighten up!",
+                    "Push through it!",
+                )
             return cues[Random.nextInt(cues.size)]
         }
 

@@ -45,6 +45,7 @@ fun RandomTimerNavHost(
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val isPro by viewModel.proManager.isPro.collectAsStateWithLifecycle()
+    val isElite by viewModel.proManager.isElite.collectAsStateWithLifecycle()
     val currentRoute =
         navController
             .currentBackStackEntryAsState()
@@ -54,7 +55,8 @@ fun RandomTimerNavHost(
     val activity = LocalContext.current as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
-    var proPrice by remember { mutableStateOf("$29.99") }
+    var basePrice by remember { mutableStateOf("$7.99") }
+    var elitePrice by remember { mutableStateOf("$4.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
@@ -105,15 +107,15 @@ fun RandomTimerNavHost(
                 onStartTimer = viewModel::startTimer,
                 onSoundPreview = viewModel::previewSound,
                 onVolumePreview = viewModel::previewVolume,
-                onCountdownCuePreview = viewModel::previewCountdownCue,
-                onCommandCuePreview = viewModel::previewCommandCue,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
+                isElite = isElite,
                 onUpgradeTap = {
                     scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
+                        basePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
+                        elitePrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }
@@ -180,7 +182,8 @@ fun RandomTimerNavHost(
 
     if (showPaywall) {
         PaywallSheet(
-            proPrice = proPrice,
+            basePrice = basePrice,
+            elitePrice = elitePrice,
             onPurchase = { productID ->
                 scope.launch {
                     activity?.let { viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint) }

@@ -56,4 +56,3 @@ object TimeRangeAdjuster {
         return min to max
     }
 }
-

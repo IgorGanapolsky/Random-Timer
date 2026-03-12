@@ -1,6 +1,5 @@
 package com.iganapolsky.randomtimer.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -28,9 +27,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -81,14 +78,6 @@ fun ActiveTimerScreen(
     var showResetFeedback by remember { mutableStateOf(false) }
     var resetFeedbackCounter by remember { mutableStateOf(0) }
 
-    BackHandler {
-        if (isComplete) {
-            onDismissAlarm()
-        } else {
-            onStop()
-        }
-    }
-
     LaunchedEffect(resetFeedbackCounter) {
         if (resetFeedbackCounter == 0) return@LaunchedEffect
         showResetFeedback = true
@@ -116,12 +105,7 @@ fun ActiveTimerScreen(
                     .padding(24.dp),
         ) {
             val isLandscape = maxWidth > maxHeight
-            val circleSize =
-                if (isLandscape) {
-                    if (maxHeight < 400.dp) 180.dp else 220.dp
-                } else {
-                    280.dp
-                }
+            val circleSize = if (isLandscape) 220.dp else 280.dp
 
             @Composable
             fun ActionButtons(modifier: Modifier = Modifier) {
@@ -202,13 +186,13 @@ fun ActiveTimerScreen(
                         Modifier
                             .size(circleSize)
                             .then(
-                                if (isComplete) {
+                                if (state.status == TimerStatus.ALARM) {
                                     Modifier.clickable(
                                         indication = null,
                                         interactionSource = remember { MutableInteractionSource() },
                                     ) {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onDismissAlarm()
+                                        onSilence()
                                     }
                                 } else {
                                     Modifier
@@ -298,8 +282,7 @@ fun ActiveTimerScreen(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .fillMaxHeight()
-                                .verticalScroll(rememberScrollState()),
+                                .fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {

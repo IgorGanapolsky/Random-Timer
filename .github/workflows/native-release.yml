@@ -164,7 +164,6 @@ jobs:
       effective_track: ${{ steps.play_result.outputs.effective_track }}
       fallback_used: ${{ steps.play_result.outputs.fallback_used }}
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
-      version_code: ${{ steps.android_version.outputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
@@ -224,7 +223,7 @@ jobs:
 
       - name: Verify Google Play API access
         env:
-          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
         run: |
           python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
           python scripts/check_store_access.py --platform android
@@ -250,18 +249,8 @@ jobs:
             -storepass "$KEYSTORE_PASSWORD" \
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
-      - name: Set unique Android version code
-        id: android_version
-        run: |
-          set -euo pipefail
-          VERSION_CODE="$(date +%s)"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
-          echo "Using ANDROID_VERSION_CODE=$VERSION_CODE"
-
       - name: Build release AAB
         env:
-          ANDROID_VERSION_CODE: ${{ env.ANDROID_VERSION_CODE }}
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -272,20 +261,20 @@ jobs:
 
       - name: Upload to Google Play (track)
         env:
-          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
           PLAY_FALLBACK_TRACK: alpha
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
-          if [ ! -f "$GOOGLE_PLAY_JSON_KEY_PATH" ]; then
-            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY_PATH"
+          if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
             exit 1
           fi
           pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
           python scripts/play_publish.py \
-            --service-account-json "$GOOGLE_PLAY_JSON_KEY_PATH" \
+            --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
             --package com.iganapolsky.randomtimer \
             --aab-path native-android/app/build/outputs/bundle/release/app-release.aab \
             --requested-track "$PLAY_TRACK" \
@@ -444,9 +433,9 @@ jobs:
           ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
           if [ "${{ needs.android-release.result }}" = "success" ]; then
             ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
-            if [ -n "${{ needs.android-release.outputs.version_code }}" ]; then
-              ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"
-            fi
+          fi
+          if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
+            ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
           fi
           if [ -n "${{ steps.versions.outputs.ios_version }}" ]; then
             ARGS="$ARGS --version ${{ steps.versions.outputs.ios_version }}"
@@ -502,7 +491,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         id: versions
         run: |
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
           if [ -z "$IOS_VERSION" ]; then
             echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
             exit 1
@@ -518,7 +507,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           PREFERRED_VERSION: ${{ steps.versions.outputs.ios_version }}
         run: |
-          PYTHONPATH=. python scripts/asc_resolve_version.py \
+          python scripts/asc_resolve_version.py \
             --preferred-version "$PREFERRED_VERSION" \
             --create-if-needed \
             --json-out /tmp/asc_version.json
@@ -571,14 +560,14 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
-          PYTHONPATH=. python scripts/asc_verify_ready.py \
+          python scripts/asc_verify_ready.py \
             --version "${{ steps.asc_version.outputs.selected_version }}" \
             --json /tmp/asc_ready.json
 
       - name: Enforce delegation contract (submit gate)
         if: steps.gate.outputs.enabled == 'true'
         run: |
-          PYTHONPATH=. python scripts/delegation_contract.py \
+          python scripts/delegation_contract.py \
             --operation ios_submit_for_review \
             --asc-ready-json /tmp/asc_ready.json \
             --intent "${{ steps.gate.outputs.submit_review }}" \

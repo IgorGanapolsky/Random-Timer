@@ -292,11 +292,6 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         onNotificationStop?()
     }
 
-    func handleNotificationDismissAction() {
-        didTapAlarmNotification = true
-        onNotificationStop?()
-    }
-
     func handleNotificationSilenceAction() {
         onNotificationSilence?()
     }
@@ -378,7 +373,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         // 24-hour reminder
         let content24 = UNMutableNotificationContent()
         content24.title = "Keep your streak alive"
-        content24.body = "Train for chaos, not comfort. Your next random session is waiting."
+        content24.body = "Train for chaos, not comfort. Your next random drill is waiting."
         content24.sound = .default
 
         let trigger24 = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false)
@@ -510,9 +505,6 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         case "STOP_ACTION":
             // User tapped "Stop" — dismiss alarm and return to the app
             handleNotificationStopAction()
-        case UNNotificationDismissActionIdentifier:
-            // Swiping away the alarm notification should stop the alarm, not just hide it.
-            handleNotificationDismissAction()
         case "SILENCE_ACTION":
             // User tapped "Silence" — stop sound but keep alarm UI
             handleNotificationSilenceAction()

@@ -9,108 +9,71 @@ final class AIVoiceCalloutService {
 
     private let synthesizer = AVSpeechSynthesizer()
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
-    private var lastElapsedMilestone = 0
-    private var nextCommandCueAt = 0
-    private var lastCommandCueAt = 0
+    private var lastChaosCueTime = 0
+    private var nextChaosCueAt = 0
 
     private init() {}
 
     func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.52
-        utterance.pitchMultiplier = 0.85
+        utterance.rate = 0.5
 
         Self.log.info("Voice Callout: \(text)")
         synthesizer.speak(utterance)
     }
 
     func resetSession() {
-        lastElapsedMilestone = 0
-        nextCommandCueAt = 0
-        lastCommandCueAt = 0
+        lastChaosCueTime = 0
+        nextChaosCueAt = 0
     }
 
-    func preview() {
-        previewCommandCue()
-    }
+    func triggerCallout(remainingSeconds: Int) {
+        // Fixed countdown callouts
+        let countdownCallouts: [Int: String] = [
+            30: "Thirty seconds remaining. Hold your position.",
+            10: "Ten seconds. Prepare for impact.",
+            5: "Five. Four. Three. Two. One."
+        ]
 
-    func previewCommandCue() {
-        speak(randomCommandCue())
-    }
-
-    func previewCountdownCue() {
-        // With elapsed model, preview an elapsed milestone announcement
-        speak("Thirty seconds. Stay locked in.")
-    }
-
-    // Called every second with elapsed seconds since timer started.
-    func triggerCallout(elapsedSeconds: Int) {
-        // Elapsed milestone callouts — fire once per milestone
-        if let callout = elapsedMilestone(for: elapsedSeconds) {
+        if let callout = countdownCallouts[remainingSeconds] {
             speak(callout)
-            lastElapsedMilestone = elapsedSeconds
             return
         }
 
-        // Random command cues fire throughout the session
-        if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
-            speak(randomCommandCue())
-            lastCommandCueAt = elapsedSeconds
-            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
+        // Chaos Drill: randomized tactical cues at unpredictable intervals
+        if remainingSeconds > 30, shouldFireChaosCue(remainingSeconds: remainingSeconds) {
+            speak(randomChaosCue())
+            lastChaosCueTime = remainingSeconds
+            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 8...19)
         }
     }
 
-    private func elapsedMilestone(for elapsed: Int) -> String? {
-        // Fire each milestone exactly once
-        let milestones: [Int: String] = [
-            30: "Thirty seconds.",
-            60: "One minute. Keep moving.",
-            90: "One minute thirty.",
-            120: "Two minutes. Stay locked in.",
-            180: "Three minutes. Drive forward.",
-            240: "Four minutes. Hold the line.",
-            300: "Five minutes. Finish strong.",
-            360: "Six minutes.",
-            420: "Seven minutes.",
-            480: "Eight minutes.",
-            540: "Nine minutes.",
-            600: "Ten minutes. Outstanding."
-        ]
-        guard let text = milestones[elapsed], elapsed != lastElapsedMilestone else { return nil }
-        return text
-    }
-
-    private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
-        if nextCommandCueAt == 0 {
-            // First cue fires between 8–20s in
-            nextCommandCueAt = secureRandomInt(in: 8...20)
+    private func shouldFireChaosCue(remainingSeconds: Int) -> Bool {
+        if nextChaosCueAt == 0 {
+            // First cue: fire within first 5-15 seconds of timer running
+            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 5...15)
         }
-        return elapsedSeconds >= nextCommandCueAt
+        return remainingSeconds <= nextChaosCueAt
     }
 
-    private func randomCommandCue() -> String {
+    private func randomChaosCue() -> String {
         let cues = [
-            "Move now.",
-            "Stay sharp.",
-            "Eyes front.",
-            "Hands up.",
-            "Reset. Breathe.",
-            "Push the pace.",
-            "Explode.",
-            "Recover. Then go.",
-            "Hold the line.",
-            "Drive forward.",
-            "Keep pressure.",
-            "Lock in.",
-            "Finish strong.",
-            "Breathe and move.",
-            "Switch stance.",
-            "Double up.",
-            "Check your six.",
-            "Dig deeper.",
-            "Tighten up.",
-            "Push through it."
+            "Switch stance!",
+            "Move! Move! Move!",
+            "Breathe. Reset.",
+            "Double up!",
+            "Change levels!",
+            "Check your six!",
+            "Pick up the pace!",
+            "Stay sharp!",
+            "Dig deeper!",
+            "Eyes up!",
+            "Recover now!",
+            "Explode!",
+            "Control the center!",
+            "Tighten up!",
+            "Push through it!"
         ]
         let index = secureRandomInt(in: 0...(cues.count - 1))
         return cues[index]
@@ -120,6 +83,7 @@ final class AIVoiceCalloutService {
         let count = range.upperBound - range.lowerBound + 1
         var randomValue: UInt32 = 0
         let status = SecRandomCopyBytes(kSecRandomDefault, MemoryLayout<UInt32>.size, &randomValue)
+        
         if status == errSecSuccess {
             return range.lowerBound + Int(randomValue % UInt32(count))
         } else {

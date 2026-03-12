@@ -25,7 +25,7 @@ object AlarmAudioFocusRequestFactory {
      */
     internal fun spec(): Spec =
         Spec(
-            focusGain = AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+            focusGain = AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
             willPauseWhenDucked = false,
             // Keep USAGE_ALARM so volume stream + routing are alarm-like.
             usage = AudioAttributes.USAGE_ALARM,

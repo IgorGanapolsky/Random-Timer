@@ -58,7 +58,8 @@ final class TimerConfigProClampingTests: XCTestCase {
     }
 
     func testActiveProUser_maxSecondsUpTo3600_isRetained() {
-        let proConfig = TimerConfig(            minSeconds: 0,
+        let proConfig = RandomTimer.TimerConfig(
+            minSeconds: 0,
             maxSeconds: 3600,
             alarmDuration: 10,
             hiddenMode: false,

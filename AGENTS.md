@@ -119,18 +119,6 @@ Do not infer progress from draft campaign configs.
 - Treat every App Store rejection as a preventable failure. Anticipate review issues before submission.
 - When something fails, diagnose the root cause from the actual error response before retrying.
 
-## 2026 Tactical UI/UX Standards (MANDATORY)
-
-All agents must adhere to these tactical design standards to maintain "Heavy/Pro" military-grade aesthetics and UX consistency.
-
-1. **Circular Timer Stroke (iOS)**: Must use **16pt** stroke width for the main timer circle (8pt for small previews).
-2. **Nudge Buttons (Android)**: MUST use tactical symbols `\u2212` (MINUS) and `+` instead of Material Icons.
-3. **Button Height**: All primary/secondary buttons MUST be exactly **56dp/pt** height for maximum tap accessibility under stress.
-4. **Labeling**: Use **"Stop"** instead of "Dismiss" for all alarm-ending actions.
-5. **Ducking (Android)**: Alarm audio must request transient focus with ducking (`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`).
-
-These standards are enforced automatically by `scripts/hygiene-check.sh` and the pre-commit hook.
-
 ## Worktree & Branch Protocol
 
 ### Mandatory for ALL Agents
@@ -138,8 +126,6 @@ These standards are enforced automatically by `scripts/hygiene-check.sh` and the
 2. **Never commit directly to `develop`, `main`, or the user's active branch.**
 3. Push worktree branch to origin, then create a PR for review/merge.
 4. After work is pushed, the worktree is cleaned up automatically on next session start.
-5. **Before opening a PR, verify the worktree branch is based on the intended remote base (`origin/develop`, `origin/main`, etc.), not just the local branch of the same name.**
-6. **If a clean replacement PR supersedes a misbased or duplicate PR, close the superseded PR and only delete worktrees that are clean.**
 
 ### Multi-Agent Safety
 - Other agents (Claude, Gemini, GPT, Cursor) may have active worktrees concurrently.

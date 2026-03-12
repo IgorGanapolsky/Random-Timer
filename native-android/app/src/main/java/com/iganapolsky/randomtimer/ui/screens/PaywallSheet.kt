@@ -28,25 +28,11 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
-private fun Modifier.holdForHiddenUnlock(
-    holdDurationMs: Long,
-    onHoldComplete: () -> Unit,
-): Modifier =
-    pointerInput(holdDurationMs, onHoldComplete) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
-            if (releasedBeforeHold == null) {
-                onHoldComplete()
-                waitForUpOrCancellation()
-            }
-        }
-    }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    proPrice: String,
+    basePrice: String,
+    elitePrice: String = "",
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -66,28 +52,20 @@ fun PaywallSheet(
         ) {
             Text(
                 text = "Upgrade to Pro",
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-                textAlign = TextAlign.Center,
-                modifier =
-                    if (onDebugUnlock != null) {
-                        Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
-                    } else {
-                        Modifier
-                    },
+                modifier = if (onDebugUnlock != null) {
+                    Modifier.holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                } else {
+                    Modifier
+                },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "One premium plan.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-            )
-
-            Text(
-                text = "Yearly auto-renewing subscription. Cancel anytime.",
+                text = "One-time purchase. Yours forever.",
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
             )
@@ -96,15 +74,54 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Spoken countdown cues + command callouts")
-            ProFeatureRow(text = "Support independent development")
+            ProFeatureRow(text = "Timer presets library")
+            ProFeatureRow(text = "Full workout history")
+            ProFeatureRow(text = "All future updates included")
 
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = "Unlock Pro \u2022 $proPrice",
-                onClick = { onPurchase("elite_tactical") },
+                text = "Unlock Pro \u2022 $basePrice",
+                onClick = { onPurchase("pro_base") },
             )
+
+            if (elitePrice.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(20.dp))
+
+                HorizontalDivider(color = TimerColors.TextSecondary.copy(alpha = 0.3f))
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "Elite Tactical",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Monthly subscription",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ProFeatureRow(text = "Unlimited custom sounds (upload your own)")
+                ProFeatureRow(text = "Up to 4 hours timer duration")
+                ProFeatureRow(text = "Unlimited presets + cloud sync")
+                ProFeatureRow(text = "Priority feature requests")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                PrimaryButton(
+                    text = "Unlock Elite \u2022 $elitePrice/mo",
+                    onClick = { onPurchase("elite_tactical") },
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -132,6 +149,21 @@ fun PaywallSheet(
         }
     }
 }
+
+private fun Modifier.holdForHiddenUnlock(
+    holdDurationMs: Long,
+    onHoldComplete: () -> Unit,
+): Modifier =
+    pointerInput(holdDurationMs, onHoldComplete) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
+            if (releasedBeforeHold == null) {
+                onHoldComplete()
+                waitForUpOrCancellation()
+            }
+        }
+    }
 
 @Composable
 private fun ProFeatureRow(text: String) {

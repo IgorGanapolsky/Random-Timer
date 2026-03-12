@@ -1,1 +1,1 @@
-tactical,random,dry fire,boxing,mma,reaction,interval,hiit,shooting,range,workout,training,drills
+tactical timer,random timer,dry fire timer,boxing timer,mma timer,reaction timer,interval timer,hiit timer,shooting timer,range timer,workout timer,randomized timer,tactical training,stress training,reaction drills

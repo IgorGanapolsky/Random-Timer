@@ -18,8 +18,7 @@ final class RandomTimerUITests: XCTestCase {
     }
 
     private func dismissSystemAlertsIfNeeded(_ app: XCUIApplication) {
-        // Tap near the top-left corner to avoid hitting the central Timer Circle
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap()
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allowButton = springboard.buttons["Allow"]
         if allowButton.waitForExistence(timeout: 1.5) {
@@ -45,23 +44,11 @@ final class RandomTimerUITests: XCTestCase {
         ensureSetupScreen(app)
     }
 
-    private func waitForScreen(_ identifier: String, timeout: TimeInterval = 10.0) {
-        let screen = XCUIApplication().otherElements[identifier]
-        XCTAssertTrue(screen.waitForExistence(timeout: timeout), "Screen \(identifier) should appear")
-    }
-
     func testRunningStateShowsRunningLabelAndPauseAction() {
         let app = launchApp(withState: "running")
-        
-        waitForScreen("activeTimerScreen")
-        
-        let pauseButton = app.buttons["Pause"]
-        XCTAssertTrue(pauseButton.waitForExistence(timeout: 7.0), "Pause button should appear in running state")
-        
-        let statusText = app.staticTexts["Timer running..."]
-        XCTAssertTrue(statusText.waitForExistence(timeout: 5.0), "Timer running status should be visible")
-        
-        XCTAssertFalse(app.buttons["Start Timer"].exists, "Setup screen should not be visible")
+        XCTAssertTrue(app.staticTexts["Timer running..."].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 2.0))
+        XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
     func testPausedStateShowsPausedLabelAndResumeAction() {
@@ -101,7 +88,7 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(restartedLabel.waitForExistence(timeout: 2.0))
     }
 
-    func testTappingTimerCircleStopsAlarmAndGoesHome() {
+    func testTappingTimerCircleSilencesAlarmAndStaysOnScreen() {
         let app = XCUIApplication()
         app.launchArguments += ["-ui-test-state", "alarm"]
         app.launch()
@@ -112,25 +99,11 @@ final class RandomTimerUITests: XCTestCase {
         // Tap center screen (same as user tapping timer circle area in alarm mode).
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
 
-        // After tap, alarm should be stopped and we should be back on the setup screen.
-        let startButton = app.buttons["Start Timer"]
-        XCTAssertTrue(startButton.waitForExistence(timeout: 5.0), "Should navigate back to setup screen after tapping timer circle")
-    }
-
-    func testTappingTimerCircleInCompleteStateGoesHome() {
-        let app = XCUIApplication()
-        app.launchArguments += ["-ui-test-state", "complete"]
-        app.launch()
-
-        let stopButton = app.buttons["Stop"]
-        XCTAssertTrue(stopButton.waitForExistence(timeout: 5.0), "Expected complete seed to show active timer controls")
-
-        // Tap center screen (same as user tapping timer circle area in complete mode).
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-
-        // After tap, should be back on the setup screen.
-        let startButton = app.buttons["Start Timer"]
-        XCTAssertTrue(startButton.waitForExistence(timeout: 5.0), "Should navigate back to setup screen after tapping timer circle in complete state")
+        // After tap, alarm silenced — user stays on timer screen with Stop/Reset buttons.
+        XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.buttons["Reset"].waitForExistence(timeout: 2.0))
+        // Should NOT navigate back to setup.
+        XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
     // MARK: - Screenshot Capture (run manually for App Store screenshots)

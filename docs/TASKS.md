@@ -25,7 +25,7 @@ This file is the task source-of-truth for iterative agent work.
     - `make run-android-emulator` + `maestro test -p android --device emulator-5554 .maestro/smoke-test.yaml .maestro/persistence-test.yaml`
     - `make run-ios-sim` + `maestro test -p ios --device <SIM_UDID> .maestro/ios-smoke-test.yaml`
 
-- [x] **Bluetooth Headset Button Stops Alarm**
+- [ ] **Bluetooth Headset Button Stops Alarm**
   - Acceptance:
     - When alarm is ringing, pressing a Bluetooth headset media button stops the alarm (sound + vibration).
     - Works on **Android + iOS**.
@@ -33,7 +33,7 @@ This file is the task source-of-truth for iterative agent work.
     - Android unit tests for media-button handling logic.
     - iOS unit tests for NotificationService media session wiring (as feasible).
 
-- [x] **Tap Timer Circle = Stop (When Alarm Has Gone Off)**
+- [ ] **Tap Timer Circle = Stop (When Alarm Has Gone Off)**
   - Acceptance:
     - When status is `ALARM` or `COMPLETE`, tapping the timer circle has the same effect as the Stop button.
     - Works on **Android + iOS**.
@@ -41,20 +41,20 @@ This file is the task source-of-truth for iterative agent work.
     - Android instrumentation test or Maestro flow verifying tap stops.
     - iOS UI test or Maestro flow verifying tap stops.
 
-- [x] **Android: Duck Other Audio Instead of Pausing**
+- [ ] **Android: Duck Other Audio Instead of Pausing**
   - Acceptance:
     - Alarm audio requests transient focus with ducking (navigation-app style).
     - Other audio should duck rather than stop when possible.
   - Tests:
     - Unit test for focus-request configuration helper (API-level behavior guarded).
 
-- [x] **Landscape Layout Fix**
+- [ ] **Landscape Layout Fix**
   - Acceptance:
     - Action buttons are visible and tappable in landscape on both platforms.
   - Tests:
     - Maestro flow(s) that run in landscape (or equivalent platform UI tests).
 
-- [x] **Alarm Notification Stop Action**
+- [ ] **Alarm Notification Stop Action**
   - Acceptance:
     - When alarm is ringing, notification action is labeled **Stop** (not Dismiss).
     - Action stops alarm and returns the user to the app home/setup screen (or device home where appropriate).

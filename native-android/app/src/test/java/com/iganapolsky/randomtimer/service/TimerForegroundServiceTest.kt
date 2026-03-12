@@ -12,6 +12,7 @@ import org.junit.Test
  * - Notification hides countdown value
  */
 class TimerForegroundServiceTest {
+
     @Test
     fun `action constants are defined`() {
         assertThat(TimerForegroundService.ACTION_PAUSE)
@@ -40,18 +41,5 @@ class TimerForegroundServiceTest {
     fun `notification does not expose remaining countdown`() {
         // Document expected behavior: no visible countdown timer in the notification
         assertThat(true).isTrue()
-    }
-
-    @Test
-    fun `Bluetooth headset support actions are supported`() {
-        // Document expected behavior: Play/Pause/Stop media buttons should silence the alarm
-        // This is handled via MediaSessionCompat callbacks.
-        val supportedActions =
-            listOf(
-                "ACTION_PLAY_PAUSE",
-                "ACTION_PAUSE",
-                "ACTION_STOP",
-            )
-        assertThat(supportedActions).contains("ACTION_PLAY_PAUSE")
     }
 }

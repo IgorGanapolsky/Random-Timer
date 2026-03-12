@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   check_suite:
-    types: [completed]
+    types: [requested, rerequested, completed]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -164,20 +164,7 @@ jobs:
             }
 
             function evaluateContext(contextName, checkRunMap, statusContextMap) {
-              // Try exact match first
-              let checkRun = checkRunMap.get(contextName);
-              
-              // Fallback to fuzzy match (strip common CI prefixes/suffixes)
-              if (!checkRun) {
-                for (const [runName, runData] of checkRunMap.entries()) {
-                  const normalizedRun = runName.replace(/^CI\s*\/\s*/, "").replace(/\s*\(pull_request\)$/, "").trim();
-                  if (normalizedRun === contextName) {
-                    checkRun = runData;
-                    break;
-                  }
-                }
-              }
-
+              const checkRun = checkRunMap.get(contextName);
               if (checkRun) {
                 if (checkRun.status !== "completed") {
                   return { outcome: "pending", source: "check_run", detailsUrl: checkRun.details_url || checkRun.html_url || "" };
