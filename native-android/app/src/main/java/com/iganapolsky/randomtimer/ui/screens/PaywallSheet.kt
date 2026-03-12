@@ -58,15 +58,19 @@ fun PaywallSheet(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
-                modifier = if (onDebugUnlock != null) {
-                    Modifier.holdForHiddenUnlock(
-                        holdDurationMs = 8_000L,
-                        haptic = haptic,
-                        onHoldComplete = onDebugUnlock,
-                    )
-                } else {
-                    Modifier
-                },
+                textAlign = TextAlign.Center,
+                modifier =
+                    Modifier.fillMaxWidth().then(
+                        if (onDebugUnlock != null) {
+                            Modifier.holdForHiddenUnlock(
+                                holdDurationMs = 8_000L,
+                                haptic = haptic,
+                                onHoldComplete = onDebugUnlock,
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
             )
 
             Spacer(modifier = Modifier.height(8.dp))

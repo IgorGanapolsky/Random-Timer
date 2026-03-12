@@ -39,6 +39,7 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
+                .contentShape(Rectangle())
                 .onLongPressGesture(minimumDuration: 8.0) {
                     proManager.unlockProForDebug()
                     hasTrackedDismiss = true

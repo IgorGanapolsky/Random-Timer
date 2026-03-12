@@ -1,26 +1,28 @@
 {
-  "generated_at": "2026-02-26T18:29:01+00:00",
+  "generated_at": "2026-03-12T14:42:48+00:00",
   "window_days": 30,
   "source": "posthog",
-  "status": "ok",
+  "status": "degraded",
   "status_reason": "",
   "ios": {
-    "downloads_30d": 18
+    "downloads_30d": 4
   },
   "android": {
-    "downloads_30d": 0,
+    "downloads_30d": 139,
     "active_installs": 0
   },
   "combined": {
-    "downloads_30d": 18
+    "downloads_30d": 143
   },
   "active_users": {
-    "dau": 3,
-    "wau": 18,
-    "mau": 141
+    "dau": 26,
+    "wau": 142,
+    "mau": 144
   },
   "query_diagnostics": {
-    "errors": []
+    "errors": [
+      "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)"
+    ]
   },
   "snapshots": [
     {
@@ -32,6 +34,16 @@
       "dau": 3,
       "wau": 18,
       "mau": 141
+    },
+    {
+      "timestamp": "2026-03-12T14:42:48+00:00",
+      "ios_downloads_30d": 4,
+      "android_downloads_30d": 139,
+      "combined_downloads_30d": 143,
+      "android_active_installs": 0,
+      "dau": 26,
+      "wau": 142,
+      "mau": 144
     }
   ]
 }
