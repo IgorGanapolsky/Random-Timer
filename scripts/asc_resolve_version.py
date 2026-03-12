@@ -112,6 +112,24 @@ def _pick_highest_editable_version(versions: List[Dict[str, Any]]) -> Optional[D
     return None
 
 
+def _pick_highest_existing_version(versions: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    parsed_versions: List[Tuple[Tuple[int, int, int], Dict[str, Any]]] = []
+    fallback: List[Dict[str, Any]] = []
+    for item in versions:
+        fallback.append(item)
+        attrs = item.get("attributes") or {}
+        parsed = _semver_or_none(str(attrs.get("versionString") or ""))
+        if parsed is not None:
+            parsed_versions.append((parsed, item))
+
+    if parsed_versions:
+        parsed_versions.sort(key=lambda x: x[0], reverse=True)
+        return parsed_versions[0][1]
+    if fallback:
+        return fallback[0]
+    return None
+
+
 def _create_ios_version(client: ASCClient, app_id: str, version: str) -> Dict[str, Any]:
     payload = client.request(
         "POST",
@@ -128,6 +146,10 @@ def _create_ios_version(client: ASCClient, app_id: str, version: str) -> Dict[st
     if not isinstance(data, dict):
         die(f"Failed to create App Store version {version}: malformed response", code=2)
     return data
+
+
+def _is_http_409(exc: BaseException) -> bool:
+    return "HTTP 409" in str(exc)
 
 
 @dataclass
@@ -195,10 +217,11 @@ def resolve_version(
                     )
                 try:
                     created = _create_ios_version(client, app_id, candidate)
-                except RuntimeError as exc:
-                    if "409" in str(exc):
-                        # ASC won't allow creating new versions while another is in review.
-                        # Return the preferred version as-is so downstream steps can check its state.
+                except AscClientError as exc:
+                    if _is_http_409(exc):
+                        # ASC won't allow creating new versions while another version is locked.
+                        # Return the existing preferred version so downstream verification can
+                        # read back the actual blocking state instead of crashing early.
                         info(f"Cannot create {candidate} (HTTP 409). Returning preferred {preferred_version} (state={state}).")
                         return Resolution(
                             selected_version=preferred_version,
@@ -247,7 +270,29 @@ def resolve_version(
     if not create_if_needed:
         die(f"Preferred App Store version {preferred_version} does not exist and create_if_needed is disabled.", code=1)
 
-    created = _create_ios_version(client, app_id, preferred_version)
+    try:
+        created = _create_ios_version(client, app_id, preferred_version)
+    except AscClientError as exc:
+        if _is_http_409(exc):
+            highest_existing = _pick_highest_existing_version(versions)
+            if highest_existing:
+                highest_attrs = highest_existing.get("attributes") or {}
+                highest_version = str(highest_attrs.get("versionString") or "")
+                highest_state = str(highest_attrs.get("appStoreState") or "UNKNOWN")
+                info(
+                    f"Cannot create preferred {preferred_version} (HTTP 409). "
+                    f"Reusing highest existing version {highest_version} (state={highest_state})."
+                )
+                return Resolution(
+                    selected_version=highest_version,
+                    selected_state=highest_state,
+                    created=False,
+                    reason="preferred_missing_create_blocked_409_reused_highest_existing",
+                    selected_id=str(highest_existing.get("id") or ""),
+                    preferred_version=preferred_version,
+                )
+        raise
+
     created_state = str((created.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
     return Resolution(
         selected_version=preferred_version,
