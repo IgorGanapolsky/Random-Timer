@@ -101,9 +101,12 @@ class GrowthContentPipelineTests(unittest.TestCase):
             index_text = (root / "site" / "index.html").read_text(encoding="utf-8")
             self.assertEqual(summary["post_count"], 1)
             self.assertIn("Sample", index_text)
+            self.assertIn("Start the 7-day challenge", index_text)
+            self.assertIn("Train reaction under stress", index_text)
             self.assertTrue((root / "site" / "llms.txt").is_file())
             self.assertTrue((root / "site" / "agents.md").is_file())
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
+            self.assertTrue((root / "site" / "download" / "index.html").is_file())
 
     def test_build_site_writes_social_meta_structured_data_and_robots(self):
         with tempfile.TemporaryDirectory() as td:
@@ -133,6 +136,7 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertIn('application/ld+json', post_html)
             self.assertIn('rel="canonical"', post_html)
             self.assertIn('property="og:type" content="website"', index_html)
+            self.assertIn("Random Tactical Timer | Train Reaction Under Stress", index_html)
             self.assertIn("Sitemap: https://example.com/blog/sitemap.xml", robots)
 
     def test_build_site_prefers_png_social_image_for_cards_when_available(self):
@@ -161,6 +165,66 @@ class GrowthContentPipelineTests(unittest.TestCase):
             post_html = (root / "site" / "posts" / "2026-02-19-sample.html").read_text(encoding="utf-8")
             self.assertIn("https://example.com/blog/assets/social-preview.png", post_html)
             self.assertTrue((root / "site" / "assets" / "social-preview.png").is_file())
+
+    def test_build_site_creates_smart_download_page(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/blog"}, clear=False):
+                summary = pipeline.build_site(root)
+
+            download_html = (root / "site" / "download" / "index.html").read_text(encoding="utf-8")
+            self.assertEqual(summary["download_url"], "https://example.com/blog/download")
+            self.assertIn("randomtimer://open", download_html)
+            self.assertIn("Continue to App Store", download_html)
+            self.assertIn("Continue to Google Play", download_html)
+            self.assertIn("window.location.replace(deepLink)", download_html)
+
+    def test_build_site_mirrors_public_pages_for_marketing_output(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            marketing_root = repo_root / "marketing"
+            (marketing_root / "posts").mkdir(parents=True, exist_ok=True)
+            (marketing_root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (marketing_root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (marketing_root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/app"}, clear=False):
+                summary = pipeline.build_site(marketing_root)
+
+            self.assertEqual(summary["public_root"], str(repo_root))
+            self.assertTrue((repo_root / "index.html").is_file())
+            self.assertTrue((repo_root / "download" / "index.html").is_file())
+            self.assertTrue((repo_root / "posts" / "2026-02-19-sample.html").is_file())
+            self.assertTrue((repo_root / "styles.css").is_file())
+
+            public_index = (repo_root / "index.html").read_text(encoding="utf-8")
+            public_download = (repo_root / "download" / "index.html").read_text(encoding="utf-8")
+            self.assertIn("Start the 7-day challenge", public_index)
+            self.assertIn("randomtimer://open", public_download)
+            self.assertIn("Continue to App Store", public_download)
 
     def test_publish_post_uses_channel_specific_utm_links(self):
         with tempfile.TemporaryDirectory() as td:
@@ -239,7 +303,7 @@ class GrowthContentPipelineTests(unittest.TestCase):
             resolved = pipeline.resolve_blog_base_url(Path("marketing"))
         self.assertEqual(
             resolved,
-            "https://igorganapolsky.github.io/Random-Timer/marketing/site",
+            "https://igorganapolsky.github.io/Random-Timer",
         )
 
     def test_resolve_blog_base_url_respects_env_override(self):
