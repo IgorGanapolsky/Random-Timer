@@ -111,7 +111,7 @@ struct TimerSetupScreen: View {
                             Button {
                                 timerManager.previewCommandCue()
                             } label: {
-                                Text("Commands")
+                                Text("Focus")
                                     .font(.caption2.weight(.bold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
@@ -380,6 +380,8 @@ private struct TimeRangeSliders: View {
     private let fineStep = 1
     private let coarseStep = 5
     private let minGap = TimeRangeAdjuster.defaultMinGapSeconds
+    private var usesPrecisionSlider: Bool { maxSecondsLimit > TimerConfig.maxSecondsFree }
+    private var sliderDragStep: Int { usesPrecisionSlider ? fineStep : coarseStep }
 
     private var minSliderUpperBound: Int {
         Swift.max(0, maxValue - minGap)
@@ -390,15 +392,11 @@ private struct TimeRangeSliders: View {
     }
 
     private var minSliderRange: ClosedRange<Double> {
-        let lower = 0.0
-        let upper = Double(minSliderUpperBound)
-        return lower < upper ? lower...upper : lower...(lower + 1)
+        usesPrecisionSlider ? 0...1 : linearSliderRange(min: 0, max: minSliderUpperBound)
     }
 
     private var maxSliderRange: ClosedRange<Double> {
-        let lower = Double(maxSliderLowerBound)
-        let upper = Double(maxSecondsLimit)
-        return lower < upper ? lower...upper : lower...(lower + 1)
+        usesPrecisionSlider ? 0...1 : linearSliderRange(min: maxSliderLowerBound, max: maxSecondsLimit)
     }
 
     var body: some View {
@@ -439,9 +437,20 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
+                            get: {
+                                sliderVisualValue(
+                                    for: minValue,
+                                    min: 0,
+                                    max: minSliderUpperBound
+                                )
+                            },
                             set: { newValue in
-                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                let snapped = sliderSeconds(
+                                    from: newValue,
+                                    min: 0,
+                                    max: minSliderUpperBound,
+                                    step: sliderDragStep
+                                )
                                 adjustMin(to: snapped)
                             }
                         ),
@@ -478,9 +487,20 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                            get: {
+                                sliderVisualValue(
+                                    for: maxValue,
+                                    min: maxSliderLowerBound,
+                                    max: maxSecondsLimit
+                                )
+                            },
                             set: { newValue in
-                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                let snapped = sliderSeconds(
+                                    from: newValue,
+                                    min: maxSliderLowerBound,
+                                    max: maxSecondsLimit,
+                                    step: sliderDragStep
+                                )
                                 adjustMax(to: snapped)
                             }
                         ),
@@ -553,6 +573,37 @@ private struct TimeRangeSliders: View {
     private func applyAdjustedRangeIfChanged(_ adjusted: (min: Int, max: Int)) {
         guard adjusted.min != minValue || adjusted.max != maxValue else { return }
         onRangeChange(adjusted.min, adjusted.max)
+    }
+
+    private func linearSliderRange(min: Int, max: Int) -> ClosedRange<Double> {
+        let lower = Double(min)
+        let upper = Double(max)
+        return lower < upper ? lower...upper : lower...(lower + 1)
+    }
+
+    private func sliderVisualValue(for value: Int, min: Int, max: Int) -> Double {
+        let clamped = Swift.min(Swift.max(value, min), max)
+        guard usesPrecisionSlider else { return Double(clamped) }
+
+        let span = Swift.max(max - min, 1)
+        let normalized = Double(clamped - min) / Double(span)
+        return Foundation.sqrt(Swift.min(Swift.max(normalized, 0), 1))
+    }
+
+    private func sliderSeconds(from visualValue: Double, min: Int, max: Int, step: Int) -> Int {
+        guard usesPrecisionSlider else {
+            return snapSeconds(Int((visualValue / Double(step)).rounded()) * step, min: min, max: max)
+        }
+
+        let span = Swift.max(max - min, 1)
+        let normalized = Swift.min(Swift.max(visualValue, 0), 1)
+        let raw = min + Int((normalized * normalized * Double(span)).rounded())
+        return snapSeconds(raw, min: min, max: max, step: step)
+    }
+
+    private func snapSeconds(_ value: Int, min: Int, max: Int, step: Int = 1) -> Int {
+        let snapped = Int((Double(value) / Double(step)).rounded()) * step
+        return Swift.min(Swift.max(snapped, min), max)
     }
 }
 

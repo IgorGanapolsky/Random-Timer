@@ -1,0 +1,11 @@
+appId: com.iganapolsky.randomtimer
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "Voice Callouts"
+    direction: DOWN
+- assertVisible: "Voice Callouts"
+- assertVisible: "Countdown"
+- assertVisible: "Focus"
+- takeScreenshot: evidence/android-voice-focus

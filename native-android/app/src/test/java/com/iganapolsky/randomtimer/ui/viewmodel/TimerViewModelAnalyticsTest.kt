@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import kotlin.time.Duration.Companion.seconds
@@ -200,6 +201,19 @@ class TimerViewModelAnalyticsTest {
 
         coVerify(exactly = 1) { startTimerUseCase(updatedConfig) }
         verify(exactly = 1) { serviceController.startTimer(startedState) }
+    }
+
+    @Test
+    fun `updateConfig publishes config immediately before repository save completes`() {
+        val updatedConfig =
+            TimerConfig.DEFAULT.copy(
+                minSeconds = 5,
+                maxSeconds = 45,
+            )
+
+        viewModel.updateConfig(updatedConfig)
+
+        assertEquals(updatedConfig, viewModel.config.value)
     }
 
     private fun timerState(status: TimerStatus): TimerState =
