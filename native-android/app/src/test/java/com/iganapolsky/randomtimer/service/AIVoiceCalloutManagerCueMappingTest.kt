@@ -14,19 +14,16 @@ class AIVoiceCalloutManagerCueMappingTest {
     }
 
     @Test
-    fun `every command cue used by runtime has bundled audio`() {
-        val allCommandCueResIds = COMMAND_VOICE_CUES.map(::voiceResIdForText)
-
-        assertThat(allCommandCueResIds).doesNotContain(null)
+    fun `preview command cue has bundled audio`() {
+        assertThat(voiceResIdForText(PREVIEW_COMMAND_CUE)).isEqualTo(R.raw.cmd_stay_sharp)
     }
 
     @Test
-    fun `runtime command cues stay neutral and non prescriptive`() {
-        assertThat(COMMAND_VOICE_CUES)
-            .containsExactly(
-                "Stay sharp.",
-                "Reset. Breathe.",
-            ).inOrder()
+    fun `runtime callouts are elapsed milestones only`() {
+        assertThat(runtimeVoiceCueForElapsedSecond(elapsedSeconds = 18, lastElapsedMilestone = 0)).isNull()
+        assertThat(runtimeVoiceCueForElapsedSecond(elapsedSeconds = 30, lastElapsedMilestone = 0))
+            .isEqualTo("Thirty seconds.")
+        assertThat(runtimeVoiceCueForElapsedSecond(elapsedSeconds = 30, lastElapsedMilestone = 30)).isNull()
     }
 
     @Test

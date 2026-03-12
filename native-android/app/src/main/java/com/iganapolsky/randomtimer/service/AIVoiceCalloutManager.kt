@@ -9,7 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.random.Random
 
 internal data class VoiceCandidate(
     val name: String,
@@ -26,6 +25,7 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
         }
 
 internal const val PREVIEW_ELAPSED_CUE = "Thirty seconds. Stay locked in."
+internal const val PREVIEW_COMMAND_CUE = "Stay sharp."
 
 internal val ELAPSED_VOICE_CUES_BY_SECOND =
     mapOf(
@@ -38,13 +38,15 @@ internal val ELAPSED_VOICE_CUES_BY_SECOND =
         600 to "Ten minutes. Outstanding.",
     )
 
-internal val COMMAND_VOICE_CUES =
-    listOf(
-        "Stay sharp.",
-        "Reset. Breathe.",
-    )
+internal const val DEFAULT_VOICE_FALLBACK_CUE = PREVIEW_COMMAND_CUE
 
-internal const val DEFAULT_VOICE_FALLBACK_CUE = "Stay sharp."
+internal fun runtimeVoiceCueForElapsedSecond(
+    elapsedSeconds: Int,
+    lastElapsedMilestone: Int,
+): String? {
+    if (elapsedSeconds == lastElapsedMilestone) return null
+    return ELAPSED_VOICE_CUES_BY_SECOND[elapsedSeconds]
+}
 
 internal fun voiceResIdForText(text: String): Int? =
     when (text) {
@@ -56,13 +58,7 @@ internal fun voiceResIdForText(text: String): Int? =
         "Five minutes. Finish strong." -> R.raw.elapsed_300s
         "Ten minutes. Outstanding." -> R.raw.elapsed_600s
         PREVIEW_ELAPSED_CUE -> R.raw.preview_elapsed
-        "Move now." -> R.raw.cmd_move_now
-        "Stay sharp." -> R.raw.cmd_stay_sharp
-        "Reset. Breathe." -> R.raw.cmd_reset_breathe
-        "Push the pace." -> R.raw.cmd_push_pace
-        "Drive forward." -> R.raw.cmd_drive_forward
-        "Keep pressure." -> R.raw.cmd_keep_pressure
-        "Push through it." -> R.raw.cmd_push_through
+        PREVIEW_COMMAND_CUE -> R.raw.cmd_stay_sharp
         else -> null
     }
 
@@ -75,8 +71,6 @@ class AIVoiceCalloutManager
         @ApplicationContext private val context: Context,
     ) {
         private var lastElapsedMilestone = 0
-        private var nextCommandCueAt = 0
-        private var lastCommandCueAt = 0
 
         companion object {
             val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
@@ -113,8 +107,6 @@ class AIVoiceCalloutManager
 
         fun resetSession() {
             lastElapsedMilestone = 0
-            nextCommandCueAt = 0
-            lastCommandCueAt = 0
         }
 
         fun preview() {
@@ -122,7 +114,7 @@ class AIVoiceCalloutManager
         }
 
         fun previewCommandCue() {
-            speak(randomCommandCue())
+            speak(PREVIEW_COMMAND_CUE)
         }
 
         fun previewCountdownCue() {
@@ -132,34 +124,11 @@ class AIVoiceCalloutManager
 
         // Called every second with elapsed seconds since timer started.
         fun triggerCallout(elapsedSeconds: Int) {
-            // Elapsed milestone callouts — fire once per milestone
-            elapsedMilestone(elapsedSeconds)?.let {
+            runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone)?.let {
                 speak(it)
                 lastElapsedMilestone = elapsedSeconds
-                return
-            }
-
-            // Random command cues fire throughout the session
-            if (shouldFireCommandCue(elapsedSeconds)) {
-                speak(randomCommandCue())
-                lastCommandCueAt = elapsedSeconds
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(12, 26)
             }
         }
-
-        private fun elapsedMilestone(elapsed: Int): String? {
-            if (elapsed == lastElapsedMilestone) return null
-            return ELAPSED_VOICE_CUES_BY_SECOND[elapsed]
-        }
-
-        private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
-            if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(8, 21)
-            }
-            return elapsedSeconds >= nextCommandCueAt
-        }
-
-        private fun randomCommandCue(): String = COMMAND_VOICE_CUES[Random.nextInt(COMMAND_VOICE_CUES.size)]
 
         fun shutdown() {
             // No-op: drill sergeant callouts use bundled audio clips instead of system TTS.

@@ -92,6 +92,15 @@ struct TimerSetupScreen: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.textPrimary)
+
+                                if !proManager.isPro {
+                                    Text(
+                                        "Free preview: tap Countdown or Focus to hear sample clips. "
+                                        + "Pro adds timed callouts during training."
+                                    )
+                                        .font(.caption2)
+                                        .foregroundColor(.textMuted)
+                                }
                             }
 
                             Spacer()
@@ -144,7 +153,6 @@ struct TimerSetupScreen: View {
                         }
                         .padding(.vertical, 8)
                         .contentShape(Rectangle())
-                        .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
 
