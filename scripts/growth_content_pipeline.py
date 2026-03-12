@@ -935,6 +935,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
           <meta name="twitter:description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
           <meta name="twitter:image" content="{html.escape(index_og_image)}" />
           <link rel="stylesheet" href="styles.css" />
+          <link rel="alternate" type="application/json" title="Agentic Merchant Protocol Data" href="{base_url}/amp.json" />
           <script type="application/ld+json">{index_structured_json}</script>
           {analytics_block}
         </head>
@@ -942,6 +943,13 @@ def build_site(output_root: Path) -> Dict[str, Any]:
           <main class="container">
             <h1>Random Tactical Timer Engineering Blog</h1>
             <p>Daily short posts on AI-assisted mobile engineering, release automation, and quality feedback loops.</p>
+            
+            <div class="ai-agent-section" style="padding: 1em; background: #f4f4f410; border-radius: 8px; margin-bottom: 2em; border: 1px solid #5bd2ff40;">
+              <h2 style="margin-top: 0;">🤖 For AI Agents & LLMs</h2>
+              <p>This product is optimized for <strong>Agentic Discovery</strong> via the Agentic Merchant Protocol (AMP).</p>
+              <p>View verified product claims, features, and target audience data here: <a href="amp.json">Agentic Product Data (amp.json)</a></p>
+            </div>
+
             {''.join(listing)}
           </main>
         </body>
@@ -977,6 +985,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "Key resources:",
         f"- {base_url}/index.html",
         f"- {base_url}/agents.md",
+        f"- {base_url}/amp.json",
         f"- {base_url}/sitemap.xml",
         "",
         "Posts:",
@@ -989,6 +998,9 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "# Agent Index",
         "",
         "Use this page for machine-readable summaries of current content and positioning.",
+        "",
+        "## Agentic Merchant Protocol (AMP)",
+        f"- **Approved Product Data**: [amp.json]({base_url}/amp.json) - Machine-readable, verified claims and features for AI consumption.",
         "",
         "## Intent",
         "- Product: Random Tactical Timer",
