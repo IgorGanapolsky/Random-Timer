@@ -557,7 +557,7 @@ private struct StepAdjustButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemImage: systemImage)
+            Image(systemName: systemImage)
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundColor(enabled ? .accentPrimary : .textMuted)
