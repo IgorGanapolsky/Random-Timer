@@ -31,12 +31,10 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.triggerCallout(elapsedSeconds: 30)
     }
 
-    func testCommandCueFiredAtRandomInterval() {
-        // Command cues should fire without crashing across many ticks
-        let sut = makeSut()
-        for elapsed in 1...120 {
-            sut.triggerCallout(elapsedSeconds: elapsed)
-        }
+    func testRuntimeCalloutsAreElapsedMilestonesOnly() {
+        XCTAssertNil(runtimeVoiceCue(for: 18, lastElapsedMilestone: 0))
+        XCTAssertEqual(runtimeVoiceCue(for: 30, lastElapsedMilestone: 0), "Thirty seconds.")
+        XCTAssertNil(runtimeVoiceCue(for: 30, lastElapsedMilestone: 30))
     }
 
     func testEveryRuntimeElapsedCueHasBundledFilename() {
@@ -44,15 +42,12 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertTrue(elapsedVoiceCuesBySecond.values.allSatisfy { voiceFilename(for: $0) != nil })
     }
 
-    func testEveryRuntimeCommandCueHasBundledFilename() {
-        XCTAssertTrue(commandVoiceCues.allSatisfy { voiceFilename(for: $0) != nil })
+    func testPreviewCommandCueHasBundledFilename() {
+        XCTAssertEqual(voiceFilename(for: previewCommandVoiceCue), "cmd_stay_sharp")
     }
 
-    func testRuntimeCommandCuesStayNeutralAndNonPrescriptive() {
-        XCTAssertEqual(commandVoiceCues, [
-            "Stay sharp.",
-            "Reset. Breathe."
-        ])
+    func testPreviewCommandCueStaysDeterministic() {
+        XCTAssertEqual(previewCommandVoiceCue, "Stay sharp.")
     }
 
     func testBundledVoiceAudioResolvesFromMainBundle() {
@@ -61,7 +56,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
                 [previewElapsedCue]
                     .compactMap(voiceFilename(for:))
                     + elapsedVoiceCuesBySecond.values.compactMap(voiceFilename(for:))
-                    + commandVoiceCues.compactMap(voiceFilename(for:))
+                    + [previewCommandVoiceCue].compactMap(voiceFilename(for:))
             )
 
         let missing = filenames.filter { voiceAudioURL(for: $0, bundle: .main) == nil }.sorted()
