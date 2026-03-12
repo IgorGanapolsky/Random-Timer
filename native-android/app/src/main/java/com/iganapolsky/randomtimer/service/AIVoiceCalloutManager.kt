@@ -1,109 +1,136 @@
 package com.iganapolsky.randomtimer.service
 
 import android.content.Context
-import android.speech.tts.TextToSpeech
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.util.Log
+import com.iganapolsky.randomtimer.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.random.Random
+
+internal data class VoiceCandidate(
+    val name: String,
+    val locale: Locale,
+)
+
+internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandidate? =
+    candidates
+        .filter { candidate -> candidate.locale.language.equals(Locale.US.language, ignoreCase = true) }
+        .firstOrNull { candidate ->
+            AIVoiceCalloutManager.preferredVoiceNames.any { preferred ->
+                candidate.name.contains(preferred, ignoreCase = true)
+            }
+        }
+
+internal const val PREVIEW_ELAPSED_CUE = "Thirty seconds. Stay locked in."
+internal const val PREVIEW_COMMAND_CUE = "Stay sharp."
+
+internal val ELAPSED_VOICE_CUES_BY_SECOND =
+    mapOf(
+        30 to "Thirty seconds.",
+        60 to "One minute. Keep moving.",
+        90 to "One minute thirty.",
+        120 to "Two minutes. Stay locked in.",
+        180 to "Three minutes. Drive forward.",
+        300 to "Five minutes. Finish strong.",
+        600 to "Ten minutes. Outstanding.",
+    )
+
+internal const val DEFAULT_VOICE_FALLBACK_CUE = PREVIEW_COMMAND_CUE
+
+internal fun runtimeVoiceCueForElapsedSecond(
+    elapsedSeconds: Int,
+    lastElapsedMilestone: Int,
+): String? {
+    if (elapsedSeconds == lastElapsedMilestone) return null
+    return ELAPSED_VOICE_CUES_BY_SECOND[elapsedSeconds]
+}
+
+internal fun voiceResIdForText(text: String): Int? =
+    when (text) {
+        "Thirty seconds." -> R.raw.elapsed_30s
+        "One minute. Keep moving." -> R.raw.elapsed_60s
+        "One minute thirty." -> R.raw.elapsed_90s
+        "Two minutes. Stay locked in." -> R.raw.elapsed_120s
+        "Three minutes. Drive forward." -> R.raw.elapsed_180s
+        "Five minutes. Finish strong." -> R.raw.elapsed_300s
+        "Ten minutes. Outstanding." -> R.raw.elapsed_600s
+        PREVIEW_ELAPSED_CUE -> R.raw.preview_elapsed
+        PREVIEW_COMMAND_CUE -> R.raw.cmd_stay_sharp
+        else -> null
+    }
+
+internal fun voiceResIdOrFallback(text: String): Int = voiceResIdForText(text) ?: R.raw.cmd_stay_sharp
 
 @Singleton
 class AIVoiceCalloutManager
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-    ) : TextToSpeech.OnInitListener {
-        private var tts: TextToSpeech? = null
-        private var isReady = false
-        private var lastChaosCueTime = 0
-        private var nextChaosCueAt = 0
+    ) {
+        private var lastElapsedMilestone = 0
 
-        init {
-            tts = TextToSpeech(context, this)
-        }
-
-        override fun onInit(status: Int) {
-            if (status == TextToSpeech.SUCCESS) {
-                val result = tts?.setLanguage(Locale.US)
-                if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                    isReady = true
-                    Log.d("AIVoiceCallout", "TTS Ready")
-                }
-            }
+        companion object {
+            val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
         }
 
         fun speak(text: String) {
-            if (isReady) {
-                Log.d("AIVoiceCallout", "Speaking: $text")
-                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+            Log.d("AIVoiceCallout", "Speaking: $text")
+            val mappedResId = voiceResIdForText(text)
+            val resId = mappedResId ?: voiceResIdOrFallback(text)
+            if (mappedResId == null) {
+                Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
+            }
+            try {
+                val attrs =
+                    AudioAttributes
+                        .Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                val mp =
+                    MediaPlayer().apply {
+                        setAudioAttributes(attrs)
+                        val afd = context.resources.openRawResourceFd(resId)
+                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                        afd.close()
+                        prepare()
+                    }
+                mp.setOnCompletionListener { it.release() }
+                mp.start()
+            } catch (e: Exception) {
+                android.util.Log.e("AIVoice", "Audio playback failed: ${e.message}")
             }
         }
 
         fun resetSession() {
-            lastChaosCueTime = 0
-            nextChaosCueAt = 0
+            lastElapsedMilestone = 0
         }
 
-        fun triggerCallout(remainingSeconds: Int) {
-            // Fixed countdown callouts
-            val countdownCallouts =
-                mapOf(
-                    30 to "Thirty seconds remaining. Hold your position.",
-                    10 to "Ten seconds. Prepare for impact.",
-                    5 to "Five. Four. Three. Two. One.",
-                )
-
-            countdownCallouts[remainingSeconds]?.let {
-                speak(it)
-                return
-            }
-
-            // Chaos Drill: randomized tactical cues at unpredictable intervals
-            if (remainingSeconds > 30 && shouldFireChaosCue(remainingSeconds)) {
-                speak(randomChaosCue())
-                lastChaosCueTime = remainingSeconds
-                nextChaosCueAt = remainingSeconds - Random.nextInt(8, 20)
-            }
-        }
-
-        private fun shouldFireChaosCue(remainingSeconds: Int): Boolean {
-            if (nextChaosCueAt == 0) {
-                // First cue: fire within first 5-15 seconds of the timer running
-                nextChaosCueAt = remainingSeconds - Random.nextInt(5, 16)
-            }
-            return remainingSeconds <= nextChaosCueAt
+        fun preview() {
+            previewCommandCue()
         }
 
         fun previewCommandCue() {
-            speak(randomChaosCue())
+            speak(PREVIEW_COMMAND_CUE)
         }
 
-        private fun randomChaosCue(): String {
-            val cues =
-                listOf(
-                    "Switch stance!",
-                    "Move! Move! Move!",
-                    "Breathe. Reset.",
-                    "Double up!",
-                    "Change levels!",
-                    "Check your six!",
-                    "Pick up the pace!",
-                    "Stay sharp!",
-                    "Dig deeper!",
-                    "Eyes up!",
-                    "Recover now!",
-                    "Explode!",
-                    "Control the center!",
-                    "Tighten up!",
-                    "Push through it!",
-                )
-            return cues[Random.nextInt(cues.size)]
+        fun previewCountdownCue() {
+            // With elapsed model, preview an elapsed milestone announcement
+            speak(PREVIEW_ELAPSED_CUE)
+        }
+
+        // Called every second with elapsed seconds since timer started.
+        fun triggerCallout(elapsedSeconds: Int) {
+            runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone)?.let {
+                speak(it)
+                lastElapsedMilestone = elapsedSeconds
+            }
         }
 
         fun shutdown() {
-            tts?.stop()
-            tts?.shutdown()
+            // No-op: drill sergeant callouts use bundled audio clips instead of system TTS.
         }
     }

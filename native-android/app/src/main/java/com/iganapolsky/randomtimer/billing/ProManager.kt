@@ -8,7 +8,6 @@ import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
-import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
@@ -208,16 +207,32 @@ class ProManager
             }
             cachedProductDetails[productID] = productDetails
 
+            val selectedOffer =
+                if (productID == ELITE_PRODUCT_ID) {
+                    selectPreferredSubscriptionOffer(productDetails.toSubscriptionOffers())
+                } else {
+                    null
+                }
+            if (productID == ELITE_PRODUCT_ID && selectedOffer == null) {
+                trackPurchaseResult(
+                    success = false,
+                    source = MonetizationSources.PAYWALL,
+                    entryPoint = entryPoint,
+                    responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
+                    debugMessage = "subscription_offer_unavailable",
+                )
+                pendingPurchaseEntryPoint = null
+                return false
+            }
+
             val productDetailsParamsList =
                 listOf(
                     BillingFlowParams.ProductDetailsParams
                         .newBuilder()
                         .setProductDetails(productDetails)
                         .apply {
-                            if (productID == ELITE_PRODUCT_ID) {
-                                productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken?.let {
-                                    setOfferToken(it)
-                                }
+                            if (selectedOffer != null) {
+                                setOfferToken(selectedOffer.offerToken)
                             }
                         }.build(),
                 )
@@ -282,13 +297,8 @@ class ProManager
         suspend fun getFormattedPrice(productID: String): String {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
             return if (productID == ELITE_PRODUCT_ID) {
-                details
-                    ?.subscriptionOfferDetails
-                    ?.firstOrNull()
-                    ?.pricingPhases
-                    ?.pricingPhaseList
-                    ?.firstOrNull()
-                    ?.formattedPrice ?: "$4.99"
+                selectPreferredSubscriptionOffer(details?.toSubscriptionOffers().orEmpty())
+                    ?.displayPrice ?: "$29.99"
             } else {
                 details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
             }
@@ -438,6 +448,37 @@ class ProManager
             return true
         }
     }
+
+internal data class SubscriptionPricingPhase(
+    val formattedPrice: String,
+    val billingPeriod: String,
+)
+
+internal data class SubscriptionOffer(
+    val offerToken: String,
+    val pricingPhases: List<SubscriptionPricingPhase>,
+) {
+    val displayPrice: String?
+        get() = pricingPhases.lastOrNull()?.formattedPrice ?: pricingPhases.firstOrNull()?.formattedPrice
+}
+
+internal fun selectPreferredSubscriptionOffer(offers: List<SubscriptionOffer>): SubscriptionOffer? =
+    offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == "P1Y" } } ?: offers.firstOrNull()
+
+private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers(): List<SubscriptionOffer> =
+    subscriptionOfferDetails
+        ?.map { offer ->
+            SubscriptionOffer(
+                offerToken = offer.offerToken,
+                pricingPhases =
+                    offer.pricingPhases.pricingPhaseList.map { phase ->
+                        SubscriptionPricingPhase(
+                            formattedPrice = phase.formattedPrice,
+                            billingPeriod = phase.billingPeriod,
+                        )
+                    },
+            )
+        }.orEmpty()
 
 internal object MonetizationSources {
     const val PAYWALL = "paywall"
