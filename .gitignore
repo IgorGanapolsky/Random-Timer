@@ -109,3 +109,6 @@ native-ios/RandomTimer.app.dSYM.zip
 apple_*.png
 artifacts_*.png
 apple_status.json
+native-ios/fastlane/screenshots/**/_backup/
+native-ios/fastlane/screenshots/**/report.json
+native-ios/fastlane/screenshots/**/agent-device-dimensions.txt

@@ -2,6 +2,11 @@ import XCTest
 
 @MainActor
 final class RandomTimerUITests: XCTestCase {
+    private enum ScreenshotDeviceClass: String {
+        case iphone
+        case ipad
+    }
+
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -50,17 +55,29 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(screen.waitForExistence(timeout: timeout), "Screen \(identifier) should appear")
     }
 
+    private func screenshotDeviceClass(for app: XCUIApplication) -> ScreenshotDeviceClass {
+        let width = app.windows.firstMatch.frame.width
+        return width >= 700 ? .ipad : .iphone
+    }
+
+    private func capture(_ app: XCUIApplication, named filename: String, outputDir: String) {
+        let screenshot = app.windows.firstMatch.screenshot()
+        let path = "\(outputDir)/\(filename)"
+        let data = screenshot.pngRepresentation
+        _ = FileManager.default.createFile(atPath: path, contents: data)
+    }
+
     func testRunningStateShowsRunningLabelAndPauseAction() {
         let app = launchApp(withState: "running")
-        
+
         waitForScreen("activeTimerScreen")
-        
+
         let pauseButton = app.buttons["Pause"]
         XCTAssertTrue(pauseButton.waitForExistence(timeout: 7.0), "Pause button should appear in running state")
-        
+
         let statusText = app.staticTexts["Timer running..."]
         XCTAssertTrue(statusText.waitForExistence(timeout: 5.0), "Timer running status should be visible")
-        
+
         XCTAssertFalse(app.buttons["Start Timer"].exists, "Setup screen should not be visible")
     }
 
@@ -130,16 +147,23 @@ final class RandomTimerUITests: XCTestCase {
 
         // After tap, should be back on the setup screen.
         let startButton = app.buttons["Start Timer"]
-        XCTAssertTrue(startButton.waitForExistence(timeout: 5.0), "Should navigate back to setup screen after tapping timer circle in complete state")
+        XCTAssertTrue(
+            startButton.waitForExistence(timeout: 5.0),
+            "Should navigate back to setup screen after tapping timer circle in complete state"
+        )
     }
 
-    // MARK: - Screenshot Capture (run manually for App Store screenshots)
+    // MARK: - Screenshot Capture (manual App Store asset generation)
 
-    func testCaptureScreenshots() {
-        let app = XCUIApplication()
+    func testCaptureAppStoreScreenshots() throws {
         let outputDir = "/tmp/appstore_screenshots"
 
-        // Helper to dismiss system alerts (notification permission)
+        try FileManager.default.createDirectory(
+            atPath: outputDir,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+
         addUIInterruptionMonitor(withDescription: "Notification Permission") { alert in
             let allowButton = alert.buttons["Allow"]
             if allowButton.exists {
@@ -149,62 +173,56 @@ final class RandomTimerUITests: XCTestCase {
             return false
         }
 
-        // 1. Setup screen
-        app.launch()
-        sleep(2)
-        let setupScreenshot = app.windows.firstMatch.screenshot()
-        let setupData = setupScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/1_setup.png", contents: setupData)
+        var app = launchApp()
+        ensureSetupScreen(app)
+        dismissSystemAlertsIfNeeded(app)
+        let deviceClass = screenshotDeviceClass(for: app)
 
-        // 2. Running timer — dismiss notification dialog first
-        let startButton = app.buttons["Start Timer"]
-        if !startButton.waitForExistence(timeout: 3.0) {
-            let stopButton = app.buttons["Stop"]
-            if stopButton.waitForExistence(timeout: 2.0) {
-                stopButton.tap()
+        switch deviceClass {
+        case .iphone:
+            capture(app, named: "iphone_setup_raw.png", outputDir: outputDir)
+
+            app.swipeUp()
+            capture(app, named: "iphone_sound_raw.png", outputDir: outputDir)
+            app.swipeDown()
+
+            let startButton = app.buttons["Start Timer"]
+            XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
+            startButton.tap()
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            let allowButton = springboard.buttons["Allow"]
+            if allowButton.waitForExistence(timeout: 2.0) {
+                allowButton.tap()
             }
-        }
-        XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
-        startButton.tap()
-        sleep(1)
-        // Tap anywhere to trigger the interruption monitor
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        sleep(1)
-        // Handle alert manually if interruption monitor didn't catch it
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let allowBtn = springboard.buttons["Allow"]
-        if allowBtn.waitForExistence(timeout: 2.0) {
-            allowBtn.tap()
-        }
-        sleep(2)
-        let runningScreenshot = app.windows.firstMatch.screenshot()
-        let runningData = runningScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/2_running.png", contents: runningData)
+            let pauseButton = app.buttons["Pause"]
+            XCTAssertTrue(pauseButton.waitForExistence(timeout: 5.0))
+            capture(app, named: "iphone_running_raw.png", outputDir: outputDir)
 
-        // Stop the timer
-        let stopButton = app.buttons["Stop"]
-        if stopButton.waitForExistence(timeout: 2.0) {
-            stopButton.tap()
+            pauseButton.tap()
+            XCTAssertTrue(app.staticTexts["Paused"].waitForExistence(timeout: 5.0))
+            capture(app, named: "iphone_paused_raw.png", outputDir: outputDir)
+
+        case .ipad:
+            capture(app, named: "ipad_setup_raw.png", outputDir: outputDir)
+
+            app.swipeUp()
+            capture(app, named: "ipad_sound_raw.png", outputDir: outputDir)
+            app.swipeDown()
+
+            let startButton = app.buttons["Start Timer"]
+            XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
+            startButton.tap()
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            let allowButton = springboard.buttons["Allow"]
+            if allowButton.waitForExistence(timeout: 2.0) {
+                allowButton.tap()
+            }
+            let pauseButton = app.buttons["Pause"]
+            XCTAssertTrue(pauseButton.waitForExistence(timeout: 5.0))
+            capture(app, named: "ipad_running_raw.png", outputDir: outputDir)
         }
-        sleep(1)
-
-        // 3. Alarm state (timer just went off — shows Silence button)
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "alarm"]
-        app.launch()
-        sleep(2)
-        let alarmScreenshot = app.windows.firstMatch.screenshot()
-        let alarmData = alarmScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/3_alarm.png", contents: alarmData)
-
-        // 4. Paused state
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "paused"]
-        app.launch()
-        sleep(2)
-        let pausedScreenshot = app.windows.firstMatch.screenshot()
-        let pausedData = pausedScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/5_paused.png", contents: pausedData)
     }
 
     func testLandscapeShowsActionButtons() {
