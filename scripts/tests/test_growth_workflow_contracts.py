@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -16,6 +17,14 @@ def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
     assert "python -m pytest scripts/tests/ -q" in source
     assert "pytest -q tests/python" not in source
     assert "No tests/python directory found; skipping legacy pytest suite." not in source
+
+
+def test_ci_workflow_only_fails_north_star_on_real_guardrail_enforcement_conditions():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "--enforce-guardrail" in source
+    assert "--require-posthog-when-active" in source
+    assert re.search(r"(?<!-when-active)\b--require-posthog\b", source) is None
 
 
 def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evidence():
