@@ -5,6 +5,9 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   check_suite:
     types: [completed]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -12,7 +15,7 @@ on:
         required: false
 
 concurrency:
-  group: pr-state-machine-${{ github.event.pull_request.number || github.event.check_suite.pull_requests[0].number || github.event.check_suite.head_sha || github.run_id }}
+  group: pr-state-machine-${{ github.event.pull_request.number || github.event.check_suite.pull_requests[0].number || github.event.workflow_run.pull_requests[0].number || github.event.check_suite.head_sha || github.event.workflow_run.head_sha || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -488,8 +491,27 @@ jobs:
                   }
                 }
               }
+            } else if (context.eventName === "workflow_run") {
+              const workflowRun = context.payload.workflow_run || {};
+              for (const pr of workflowRun.pull_requests || []) {
+                prCandidates.push(pr.number);
+              }
+
+              if (prCandidates.length === 0 && workflowRun.head_sha) {
+                const associatedPrs = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+                  owner,
+                  repo,
+                  commit_sha: workflowRun.head_sha,
+                  per_page: 100
+                });
+                for (const pr of associatedPrs) {
+                  if (pr.state === "open") {
+                    prCandidates.push(pr.number);
+                  }
+                }
+              }
             } else if (context.eventName === "workflow_dispatch") {
-              const raw = core.getInput("pr_number");
+              const raw = context.payload.inputs?.pr_number ?? "";
               if (raw && raw.trim()) {
                 const parsed = Number.parseInt(raw, 10);
                 if (Number.isInteger(parsed) && parsed > 0) {
