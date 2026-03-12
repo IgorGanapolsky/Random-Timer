@@ -164,7 +164,20 @@ jobs:
             }
 
             function evaluateContext(contextName, checkRunMap, statusContextMap) {
-              const checkRun = checkRunMap.get(contextName);
+              // Try exact match first
+              let checkRun = checkRunMap.get(contextName);
+              
+              // Fallback to fuzzy match (strip common CI prefixes/suffixes)
+              if (!checkRun) {
+                for (const [runName, runData] of checkRunMap.entries()) {
+                  const normalizedRun = runName.replace(/^CI\s*\/\s*/, "").replace(/\s*\(pull_request\)$/, "").trim();
+                  if (normalizedRun === contextName) {
+                    checkRun = runData;
+                    break;
+                  }
+                }
+              }
+
               if (checkRun) {
                 if (checkRun.status !== "completed") {
                   return { outcome: "pending", source: "check_run", detailsUrl: checkRun.details_url || checkRun.html_url || "" };
