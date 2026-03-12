@@ -117,8 +117,8 @@ jobs:
           SHOULD_RUN="true"
           REASON="manual_dispatch_budget_ack"
 
-          if [[ "$REF" != "develop" ]]; then
-            echo "❌ Budget-safe guard: internal distribution is restricted to ref=develop."
+          if [[ "$REF" != "develop" && ! "$REF" =~ ^release/ && ! "$REF" =~ ^hotfix/ ]]; then
+            echo "❌ Budget-safe guard: internal distribution is restricted to develop, release/*, or hotfix/* refs."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
             echo "ref=" >> "$GITHUB_OUTPUT"
             echo "sha=" >> "$GITHUB_OUTPUT"
