@@ -172,14 +172,14 @@ private fun Modifier.holdForHiddenUnlock(
             while (true) {
                 awaitFirstDown(requireUnconsumed = false)
                 val success = withTimeoutOrNull(holdDurationMs) {
-                    // Just wait for any event that is an UP event
-                    // or until the scope is cancelled by timeout
-                    while (true) {
+                    var released = false
+                    while (!released) {
                         val event = awaitPointerEvent()
                         if (event.changes.any { it.changedToUp() }) {
-                            return@withTimeoutOrNull false
+                            released = true
                         }
                     }
+                    false // Released before timeout
                 } ?: true
                 
                 if (success) {
