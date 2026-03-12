@@ -432,7 +432,7 @@ class ProManager
             if (!canUseDebugUnlock()) {
                 return false
             }
-            _entitlementLevel.value = EntitlementLevel.ELITE
+            _entitlementLevel.value = EntitlementLevel.BASE
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,
