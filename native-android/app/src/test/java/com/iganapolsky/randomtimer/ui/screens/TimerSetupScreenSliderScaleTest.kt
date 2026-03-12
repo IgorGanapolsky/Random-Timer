@@ -6,9 +6,26 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.abs
 
-private val visualForTest = ::sliderVisualValue
-private val actualForTest = ::actualValueFromSlider
-private val precisionEnabledForTest = ::usesPrecisionSlider
+private val rawVisualForTest = ::sliderVisualValue
+private val rawActualForTest = ::actualValueFromSlider
+private val rawPrecisionForTest = ::usesPrecisionSlider
+
+private fun visualForTest(
+    value: Int,
+    min: Int,
+    max: Int,
+    precisionMode: Boolean,
+): Float = rawVisualForTest(value, min, max, precisionMode)
+
+private fun actualForTest(
+    sliderValue: Float,
+    min: Int,
+    max: Int,
+    stepSize: Int,
+    precisionMode: Boolean,
+): Int = rawActualForTest(sliderValue, min, max, stepSize, precisionMode)
+
+private fun precisionEnabledForTest(maxRangeSeconds: Int): Boolean = rawPrecisionForTest(maxRangeSeconds)
 
 class TimerSetupScreenSliderScaleTest {
     @Test
