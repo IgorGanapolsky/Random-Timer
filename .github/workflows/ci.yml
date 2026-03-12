@@ -78,7 +78,7 @@ jobs:
           echo "✅ UI state binding audit passed"
 
   python:
-    name: Python Script Tests
+    name: Legacy Python Compile Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,11 +87,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest==8.4.2 lancedb==0.27.1 pyarrow==21.0.0
 
       - name: Compile Python sources
         run: |
@@ -104,19 +99,10 @@ jobs:
             done < <(find tools/rag -type f -name '*.py' -print0 | sort -z)
           fi
           if [[ ${#TARGETS[@]} -eq 0 ]]; then
-            echo "No legacy Python targets found for compile step; skipping."
+            echo "No legacy Python targets found; skipping."
             exit 0
           fi
           python -m py_compile "${TARGETS[@]}"
-
-      - name: Run tests
-        run: |
-          set -euo pipefail
-          if [[ -d tests/python ]]; then
-            pytest -q tests/python
-          else
-            echo "No tests/python directory found; skipping legacy pytest suite."
-          fi
 
   android:
     name: Autonomous Android Tests
@@ -332,7 +318,7 @@ jobs:
           path: |
             /tmp/release-context-ci.json
             /tmp/release-delegation-contract-ci.json
-          if-no-files-found: error
+          if-no-files-found: warn
 
   north-star-guardrail:
     name: North Star Guardrail

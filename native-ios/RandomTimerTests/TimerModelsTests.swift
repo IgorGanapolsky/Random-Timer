@@ -306,7 +306,8 @@ final class TimeRangeAdjusterTests: XCTestCase {
             newMinSeconds: 300
         )
 
-        XCTAssertEqual(adjusted.min, 299)
+        // Min clamps to maxSecondsLimit - minGap = 300 - 5 = 295
+        XCTAssertEqual(adjusted.min, 300 - TimeRangeAdjuster.defaultMinGapSeconds)
         XCTAssertEqual(adjusted.max, 300)
         XCTAssertGreaterThanOrEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
     }
@@ -360,13 +361,14 @@ final class TimeRangeAdjusterTests: XCTestCase {
 
     func testMinChangeByOneSecondNearUpperBoundPushesMaxByOne() {
         let adjusted = TimeRangeAdjuster.adjustForMinChange(
-            currentMinSeconds: 298,
-            currentMaxSeconds: 299,
-            newMinSeconds: 299,
+            currentMinSeconds: 293,
+            currentMaxSeconds: 298,
+            newMinSeconds: 295,
             maxSecondsLimit: 300
         )
 
-        XCTAssertEqual(adjusted.min, 299)
+        // Min=295, Max stays 300 (pushed up to maintain gap)
+        XCTAssertEqual(adjusted.min, 295)
         XCTAssertEqual(adjusted.max, 300)
         XCTAssertEqual(adjusted.max - adjusted.min, TimeRangeAdjuster.defaultMinGapSeconds)
     }

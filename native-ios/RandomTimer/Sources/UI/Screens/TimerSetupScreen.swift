@@ -100,25 +100,40 @@ struct TimerSetupScreen: View {
                             
                             Spacer()
                             
-                            if proManager.isPro {
-                                Text("ENABLED")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
-                            } else {
+                            HStack(spacing: 8) {
+                                // Preview Button (always enabled)
                                 Button {
-                                    presentPaywall(entryPoint: .soundGate)
+                                    timerManager.previewCommandCue()
                                 } label: {
-                                    HStack(spacing: 4) {
-                                        Text("PRO")
-                                        Image(systemName: "lock.fill")
+                                    Text("PREVIEW")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                }
+
+                                if proManager.isPro {
+                                    Text("ENABLED")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.accentPrimary)
+                                } else {
+                                    Button {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text("PRO")
+                                            Image(systemName: "lock.fill")
+                                        }
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
                                     }
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
                                 }
                             }
                         }
@@ -456,7 +471,7 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                            get: { Double(Swift.min(Swift.max(maxValue, maxSliderLowerBound), maxSecondsLimit)) },
                             set: { newValue in
                                 let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
                                 adjustMax(to: snapped)
@@ -523,7 +538,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newValue),
+            newMaxSeconds: Swift.max(minGap, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }

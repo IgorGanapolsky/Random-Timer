@@ -48,6 +48,11 @@ cd native-ios && xcodebuild -scheme RandomTimer build
 cd native-android && ./gradlew assembleDebug
 ```
 
+## Agentic Merchant Protocol (AMP)
+
+This product is optimized for **Agentic Discovery** via the Agentic Merchant Protocol (AMP). AI agents can find verified product claims, technical specifications, and target audience data at the following endpoint:
+- **AMP Data**: [amp.json](https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json)
+
 ## Links
 
 - Repository: https://github.com/IgorGanapolsky/Random-Timer

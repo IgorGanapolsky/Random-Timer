@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-03-09T20:05:42+00:00",
+  "primary_focus": "activation",
+  "primary_metric": "open_to_completed_rate",
+  "current_value": 0.023,
+  "target_value": 0.25,
+  "gap": 0.227,
+  "priority_score": 252,
+  "next_experiment": {
+    "slug": "activation-default-range-0-30",
+    "target_metric": "open_to_completed_rate",
+    "current_metric_value": 0.023,
+    "target_metric_value": 0.25,
+    "hypothesis": "Starting every user at 0s to 30s reduces setup friction and increases first completion rate.",
+    "owner": "product"
+  },
+  "recommended_next_action": "Ship the default 0s to 30s timer range and verify first-session completion improves.",
+  "warnings": [],
+  "inputs": {
+    "north_star": "marketing/data/north_star.json",
+    "content_feedback": "marketing/data/content_feedback.json",
+    "cro_experiments": "marketing/data/cro_experiments.json",
+    "paid_campaigns": "marketing/data/paid_campaigns.json",
+    "apple_ads_live_metrics": "marketing/data/apple_ads_live_metrics.json"
+  }
+}

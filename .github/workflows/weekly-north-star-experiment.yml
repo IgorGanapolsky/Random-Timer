@@ -1,0 +1,69 @@
+name: Weekly North Star Experiment
+
+on:
+  schedule:
+    - cron: "40 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-north-star-experiment
+  cancel-in-progress: true
+
+jobs:
+  weekly-experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests==2.32.5
+
+      - name: Compute and enforce north star guardrail
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/north_star_guardrail.py \
+            --repo-root . \
+            --lookback-days 30 \
+            --wqtu-window-days 7 \
+            --enforce-guardrail \
+            --require-posthog-when-active
+
+      - name: Refresh attribution funnel snapshot
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          python scripts/attribution_feedback.py \
+            --repo-root . \
+            --days 30
+
+      - name: Build daily North Star ops input
+        run: |
+          python scripts/north_star_ops.py --repo-root .
+
+      - name: Build weekly experiment brief
+        run: |
+          python scripts/north_star_experiment.py --repo-root .
+
+      - name: Upload experiment artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-north-star-experiment
+          path: |
+            marketing/data/north_star_ops.json
+            marketing/data/north_star_ops.md
+            marketing/data/north_star_experiment.json
+            marketing/data/north_star_experiment.md
+          retention-days: 14

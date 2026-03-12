@@ -28,6 +28,10 @@ final class AIVoiceCalloutService {
         nextChaosCueAt = 0
     }
 
+    func previewCommandCue() {
+        speak(randomChaosCue())
+    }
+
     func triggerCallout(remainingSeconds: Int) {
         // Fixed countdown callouts
         let countdownCallouts: [Int: String] = [

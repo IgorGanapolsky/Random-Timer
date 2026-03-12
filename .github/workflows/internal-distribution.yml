@@ -256,7 +256,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
-          export SUP_JSON_KEY_PATH="play-store-key.json"
+          export GOOGLE_PLAY_JSON_KEY_PATH="$(pwd)/play-store-key.json"
           fastlane internal
 
       - name: Upload Android AAB artifact

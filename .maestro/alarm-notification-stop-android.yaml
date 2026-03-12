@@ -1,0 +1,14 @@
+appId: com.iganapolsky.randomtimer
+---
+- clearState
+- launchApp:
+    arguments:
+      -ui-test-state: alarm
+- assertVisible: "Stop"
+- assertVisible: "Silence"
+- stopApp
+- openNotifications
+- assertVisible: "Stop"
+- assertVisible: "Silence"
+- tapOn: "Stop"
+- assertVisible: "Start Timer"

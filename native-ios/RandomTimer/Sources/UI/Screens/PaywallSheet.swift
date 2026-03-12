@@ -39,6 +39,14 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 8.0, maximumDistance: 100) {
+                    let generator = UIImpactFeedbackGenerator(style: .heavy)
+                    generator.impactOccurred()
+                    proManager.unlockProForDebug()
+                    hasTrackedDismiss = true
+                    dismiss()
+                }
 
             VStack(spacing: 4) {
                 Text("One premium plan.")
@@ -67,11 +75,6 @@ struct PaywallSheet: View {
                         await purchase(productID: ProManager.eliteProductID)
                     }
                 }
-            }
-            .onLongPressGesture(minimumDuration: 8.0) {
-                proManager.unlockEliteForDebug()
-                hasTrackedDismiss = true
-                dismiss()
             }
 
             Button("Restore purchase") {

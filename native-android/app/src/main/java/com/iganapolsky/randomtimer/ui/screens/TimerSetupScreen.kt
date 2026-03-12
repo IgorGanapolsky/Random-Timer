@@ -118,6 +118,7 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
+    onCommandCuePreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
@@ -360,34 +361,56 @@ fun TimerSetupScreen(
                                         color = TimerColors.TextMuted,
                                     )
                                 }
-                                if (isElite) {
-                                    Text(
-                                        text = "ENABLED",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TimerColors.AccentPrimary,
-                                    )
-                                } else {
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Preview Button (always enabled to sell the feature)
                                     Surface(
-                                        onClick = onUpgradeTap,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onCommandCuePreview()
+                                        },
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        modifier = Modifier.padding(end = 8.dp),
                                     ) {
-                                        Row(
+                                        Text(
+                                            text = "PREVIEW",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
+                                        )
+                                    }
+
+                                    if (isElite) {
+                                        Text(
+                                            text = "ENABLED",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    } else {
+                                        Surface(
+                                            onClick = onUpgradeTap,
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
-                                            Text(
-                                                text = "ELITE ",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                            )
-                                            Text(
-                                                text = "\uD83D\uDD12",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = TimerColors.AccentPrimary,
-                                            )
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "ELITE ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                                Text(
+                                                    text = "\uD83D\uDD12",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -990,6 +1013,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
+            onCommandCuePreview = {},
         )
     }
 }
