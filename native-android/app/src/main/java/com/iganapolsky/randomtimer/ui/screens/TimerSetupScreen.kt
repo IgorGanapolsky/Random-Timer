@@ -390,6 +390,14 @@ fun TimerSetupScreen(
                                         fontWeight = FontWeight.SemiBold,
                                         color = TimerColors.TextPrimary,
                                     )
+                                    if (!isPro) {
+                                        Text(
+                                            text = "Free preview: tap Countdown or Focus to hear sample clips. Pro adds timed callouts during training.",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.TextMuted,
+                                            modifier = Modifier.padding(top = 2.dp, end = 8.dp),
+                                        )
+                                    }
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Surface(

@@ -126,6 +126,21 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
         assert snippet in ios_setup, f"Missing '{snippet}' in iOS setup screen"
 
 
+def test_voice_runtime_callouts_are_elapsed_only_on_both_platforms():
+    android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
+    ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
+
+    assert "runtimeVoiceCueForElapsedSecond" in android_voice_service
+    assert "shouldFireCommandCue" not in android_voice_service
+    assert "Random.nextInt(" not in android_voice_service
+    assert "PREVIEW_COMMAND_CUE" in android_voice_service
+
+    assert "runtimeVoiceCue(for elapsedSeconds:" in ios_voice_service
+    assert "shouldFireCommandCue" not in ios_voice_service
+    assert "secureRandomInt" not in ios_voice_service
+    assert "previewCommandVoiceCue" in ios_voice_service
+
+
 def test_voice_profile_configured_on_both_platforms():
     android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")

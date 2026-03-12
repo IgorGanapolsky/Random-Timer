@@ -1,10 +1,10 @@
 import Foundation
 import AVFoundation
 import os
-import Security
 
 internal let previewElapsedCue = "Thirty seconds. Stay locked in."
-internal let defaultFallbackVoiceCue = "Stay sharp."
+internal let previewCommandVoiceCue = "Stay sharp."
+internal let defaultFallbackVoiceCue = previewCommandVoiceCue
 
 internal let elapsedVoiceCuesBySecond: [Int: String] = [
     30: "Thirty seconds.",
@@ -16,11 +16,6 @@ internal let elapsedVoiceCuesBySecond: [Int: String] = [
     600: "Ten minutes. Outstanding."
 ]
 
-internal let commandVoiceCues = [
-    "Stay sharp.",
-    "Reset. Breathe."
-]
-
 internal let voiceFilenamesByText: [String: String] = [
     "Thirty seconds.": "elapsed_30s",
     "One minute. Keep moving.": "elapsed_60s",
@@ -30,13 +25,7 @@ internal let voiceFilenamesByText: [String: String] = [
     "Five minutes. Finish strong.": "elapsed_300s",
     "Ten minutes. Outstanding.": "elapsed_600s",
     previewElapsedCue: "preview_elapsed",
-    "Move now.": "cmd_move_now",
-    "Stay sharp.": "cmd_stay_sharp",
-    "Reset. Breathe.": "cmd_reset_breathe",
-    "Push the pace.": "cmd_push_pace",
-    "Drive forward.": "cmd_drive_forward",
-    "Keep pressure.": "cmd_keep_pressure",
-    "Push through it.": "cmd_push_through",
+    previewCommandVoiceCue: "cmd_stay_sharp",
 ]
 
 internal func voiceFilename(for text: String) -> String? {
@@ -52,6 +41,11 @@ internal func voiceFilenameOrFallback(for text: String) -> String {
     voiceFilename(for: text) ?? voiceFilename(for: defaultFallbackVoiceCue) ?? "cmd_stay_sharp"
 }
 
+internal func runtimeVoiceCue(for elapsedSeconds: Int, lastElapsedMilestone: Int) -> String? {
+    guard elapsedSeconds != lastElapsedMilestone else { return nil }
+    return elapsedVoiceCuesBySecond[elapsedSeconds]
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
@@ -59,8 +53,6 @@ final class AIVoiceCalloutService {
     private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private var lastElapsedMilestone = 0
-    private var nextCommandCueAt = 0
-    private var lastCommandCueAt = 0
 
     private init() {
         do {
@@ -93,8 +85,6 @@ final class AIVoiceCalloutService {
 
     func resetSession() {
         lastElapsedMilestone = 0
-        nextCommandCueAt = 0
-        lastCommandCueAt = 0
     }
 
     func preview() {
@@ -102,7 +92,7 @@ final class AIVoiceCalloutService {
     }
 
     func previewCommandCue() {
-        speak(randomCommandCue())
+        speak(previewCommandVoiceCue)
     }
 
     func previewCountdownCue() {
@@ -112,48 +102,9 @@ final class AIVoiceCalloutService {
 
     // Called every second with elapsed seconds since timer started.
     func triggerCallout(elapsedSeconds: Int) {
-        // Elapsed milestone callouts — fire once per milestone
-        if let callout = elapsedMilestone(for: elapsedSeconds) {
+        if let callout = runtimeVoiceCue(for: elapsedSeconds, lastElapsedMilestone: lastElapsedMilestone) {
             speak(callout)
             lastElapsedMilestone = elapsedSeconds
-            return
-        }
-
-        // Random command cues fire throughout the session
-        if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
-            speak(randomCommandCue())
-            lastCommandCueAt = elapsedSeconds
-            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
-        }
-    }
-
-    private func elapsedMilestone(for elapsed: Int) -> String? {
-        // Fire each milestone exactly once
-        guard let text = elapsedVoiceCuesBySecond[elapsed], elapsed != lastElapsedMilestone else { return nil }
-        return text
-    }
-
-    private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
-        if nextCommandCueAt == 0 {
-            // First cue fires between 8–20s in
-            nextCommandCueAt = secureRandomInt(in: 8...20)
-        }
-        return elapsedSeconds >= nextCommandCueAt
-    }
-
-    private func randomCommandCue() -> String {
-        let index = secureRandomInt(in: 0...(commandVoiceCues.count - 1))
-        return commandVoiceCues[index]
-    }
-
-    private func secureRandomInt(in range: ClosedRange<Int>) -> Int {
-        let count = range.upperBound - range.lowerBound + 1
-        var randomValue: UInt32 = 0
-        let status = SecRandomCopyBytes(kSecRandomDefault, MemoryLayout<UInt32>.size, &randomValue)
-        if status == errSecSuccess {
-            return range.lowerBound + Int(randomValue % UInt32(count))
-        } else {
-            return Int.random(in: range)
         }
     }
 }
