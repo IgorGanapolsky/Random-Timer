@@ -14,6 +14,7 @@ import html
 import json
 import os
 import re
+import shutil
 import subprocess
 import textwrap
 import time
@@ -50,6 +51,14 @@ DEFAULT_SITE_DESCRIPTION = (
     "Daily engineering posts about AI-assisted app development, automation, "
     "testing, and release quality."
 )
+DEFAULT_LANDING_DESCRIPTION = (
+    "Train reaction under stress with random interval drills on iPhone and Android. "
+    "Start the 7-day challenge: complete 3 drills this week."
+)
+DEFAULT_APP_STORE_URL = "https://apps.apple.com/us/app/random-tactical-timer/id6758355312"
+DEFAULT_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer"
+DEFAULT_IOS_REVIEW_URL = f"{DEFAULT_APP_STORE_URL}?action=write-review"
+DEFAULT_ANDROID_REVIEW_URL = f"{DEFAULT_PLAY_STORE_URL}&reviewId=0"
 LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 AB_PILOT_WINDOW_DAYS = 14
 
@@ -227,10 +236,7 @@ def resolve_blog_base_url(output_root: Path) -> str:
     configured = os.getenv("BLOG_BASE_URL", "").strip()
     if configured:
         return configured.rstrip("/")
-    base = DEFAULT_BLOG_BASE_URL.rstrip("/")
-    if output_root.name == "marketing":
-        return f"{base}{LEGACY_MARKETING_SITE_SEGMENT}"
-    return base
+    return DEFAULT_BLOG_BASE_URL.rstrip("/")
 
 
 def _safe_numeric_id(value: Any) -> Optional[str]:
@@ -546,6 +552,22 @@ def add_utm(
 DEEP_LINK_BASE = "https://igorganapolsky.github.io/Random-Timer/download"
 
 
+def app_store_url() -> str:
+    return os.getenv("APP_STORE_URL", DEFAULT_APP_STORE_URL)
+
+
+def play_store_url() -> str:
+    return os.getenv("PLAY_STORE_URL", DEFAULT_PLAY_STORE_URL)
+
+
+def ios_review_url() -> str:
+    return os.getenv("IOS_REVIEW_URL", DEFAULT_IOS_REVIEW_URL)
+
+
+def android_review_url() -> str:
+    return os.getenv("ANDROID_REVIEW_URL", DEFAULT_ANDROID_REVIEW_URL)
+
+
 def compose_markdown(
     *,
     title: str,
@@ -728,6 +750,52 @@ def markdown_to_html(markdown_text: str) -> str:
     return "\n".join(rendered)
 
 
+def mirror_public_site(site_root: Path, public_root: Path) -> None:
+    file_names = [
+        "index.html",
+        "styles.css",
+        "sitemap.xml",
+        "robots.txt",
+        "amp.json",
+    ]
+    directory_names = [
+        "posts",
+        "md",
+        "diagrams",
+        "download",
+        "assets",
+    ]
+
+    for name in file_names:
+        src = site_root / name
+        dst = public_root / name
+        if src.is_file():
+            ensure_dir(dst.parent)
+            dst.write_bytes(src.read_bytes())
+        elif dst.exists():
+            dst.unlink()
+
+    for name in directory_names:
+        src = site_root / name
+        dst = public_root / name
+        if dst.exists():
+            if dst.is_dir():
+                shutil.rmtree(dst)
+            else:
+                dst.unlink()
+        if src.is_dir():
+            shutil.copytree(src, dst)
+
+    public_index = public_root / "index.html"
+    if public_index.is_file():
+        public_index.write_text(
+            public_index
+            .read_text(encoding="utf-8")
+            .replace('href="agents.md"', 'href="marketing/site/agents.md"'),
+            encoding="utf-8",
+        )
+
+
 def build_site(output_root: Path) -> Dict[str, Any]:
     site_root = output_root / "site"
     posts_src = output_root / "posts"
@@ -859,34 +927,229 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     style = textwrap.dedent(
         """
         :root {
-          --bg: #071426;
-          --surface: #102946;
+          --bg: #08111d;
+          --surface: rgba(12, 25, 40, 0.82);
+          --surface-strong: rgba(17, 34, 53, 0.95);
+          --stroke: rgba(91, 210, 255, 0.18);
+          --stroke-strong: rgba(91, 210, 255, 0.36);
           --text: #f4f8ff;
-          --muted: #b6cbea;
-          --accent: #5bd2ff;
+          --muted: #9bb2cc;
+          --accent: #ff5a4f;
+          --accent-alt: #5bd2ff;
+          --success: #7fe6a2;
+          --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
         }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
           margin: 0;
-          font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-          background: radial-gradient(circle at 20% -20%, #173e67 0%, #071426 55%);
+          font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+          background:
+            radial-gradient(circle at top left, rgba(91, 210, 255, 0.18), transparent 28%),
+            radial-gradient(circle at top right, rgba(255, 90, 79, 0.18), transparent 22%),
+            linear-gradient(180deg, #09111b 0%, #060c14 100%);
           color: var(--text);
           min-height: 100vh;
           line-height: 1.6;
         }
-        .container { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
-        h1 { line-height: 1.2; }
-        a { color: var(--accent); text-decoration: none; }
+        a { color: var(--accent-alt); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .post-card {
-          background: rgba(16, 41, 70, 0.82);
-          border: 1px solid rgba(91, 210, 255, 0.26);
-          border-radius: 14px;
-          padding: 16px;
-          margin: 14px 0;
+        .container { max-width: 1120px; margin: 0 auto; padding: 32px 20px 72px; }
+        .eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(127, 230, 162, 0.25);
+          background: rgba(127, 230, 162, 0.08);
+          color: var(--success);
+          font-size: 0.82rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
+        .hero {
+          display: grid;
+          grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+          gap: 24px;
+          align-items: stretch;
+          margin: 24px 0 36px;
+        }
+        .hero-copy,
+        .hero-panel,
+        .section-card,
+        .post-card {
+          background: var(--surface);
+          border: 1px solid var(--stroke);
+          border-radius: 24px;
+          box-shadow: var(--shadow);
+        }
+        .hero-copy {
+          padding: 28px;
+        }
+        .hero h1 {
+          font-size: clamp(2.6rem, 5vw, 4.6rem);
+          line-height: 0.98;
+          margin: 14px 0 16px;
+          max-width: 10ch;
+        }
+        .hero-lead {
+          max-width: 60ch;
+          color: #d7e3f3;
+          font-size: 1.08rem;
+        }
+        .cta-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin: 24px 0 18px;
+        }
+        .button,
+        .button-secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 56px;
+          padding: 0 18px;
+          border-radius: 16px;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+          text-decoration: none;
+          transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+        .button:hover,
+        .button-secondary:hover {
+          text-decoration: none;
+          transform: translateY(-1px);
+        }
+        .button {
+          background: linear-gradient(135deg, #ff695d 0%, #ff4335 100%);
+          color: #fff8f7;
+          border: 1px solid rgba(255, 105, 93, 0.8);
+        }
+        .button-secondary {
+          background: rgba(91, 210, 255, 0.08);
+          color: var(--accent-alt);
+          border: 1px solid rgba(91, 210, 255, 0.28);
+        }
+        .helper {
+          color: var(--muted);
+          font-size: 0.95rem;
+          margin: 0;
+        }
+        .hero-panel {
+          padding: 24px;
+          position: relative;
+          overflow: hidden;
+        }
+        .hero-panel::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(91, 210, 255, 0.08), transparent 45%);
+          pointer-events: none;
+        }
+        .hero-panel h2,
+        .section-card h2 {
+          margin-top: 0;
+          font-size: 1.4rem;
+        }
+        .challenge-steps,
+        .proof-list,
+        .faq-list,
+        .agent-list,
+        .post-list {
+          display: grid;
+          gap: 12px;
+          padding: 0;
+          margin: 0;
+          list-style: none;
+        }
+        .challenge-steps li,
+        .proof-list li,
+        .faq-list li,
+        .agent-list li {
+          padding: 14px 16px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .challenge-steps strong,
+        .faq-list strong,
+        .proof-list strong {
+          display: block;
+          margin-bottom: 4px;
+          color: var(--text);
+        }
+        .section-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
+          margin: 0 0 18px;
+        }
+        .section-card {
+          padding: 22px;
+        }
+        .agent-box {
+          border-radius: 18px;
+          border: 1px solid var(--stroke-strong);
+          background: rgba(91, 210, 255, 0.08);
+          padding: 18px;
+          margin-bottom: 18px;
+        }
+        .agent-box p { margin-bottom: 0; }
+        .posts-heading {
+          display: flex;
+          align-items: end;
+          justify-content: space-between;
+          gap: 16px;
+          margin: 36px 0 14px;
+        }
+        .post-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .post-card {
+          padding: 18px;
+        }
+        .post-card h3 { margin-top: 0; margin-bottom: 6px; }
         .meta { color: var(--muted); font-size: 0.95rem; }
         .back { display: inline-block; margin-bottom: 18px; }
+        .download-shell {
+          min-height: 100vh;
+          display: grid;
+          place-items: center;
+          padding: 24px;
+        }
+        .download-card {
+          width: min(100%, 560px);
+          background: var(--surface-strong);
+          border: 1px solid var(--stroke-strong);
+          border-radius: 24px;
+          box-shadow: var(--shadow);
+          padding: 28px;
+        }
+        .download-card code {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: rgba(91, 210, 255, 0.08);
+          color: var(--accent-alt);
+        }
+        .store-links {
+          display: grid;
+          gap: 12px;
+          margin-top: 18px;
+        }
         img { max-width: 100%; border-radius: 10px; }
+        @media (max-width: 900px) {
+          .hero,
+          .section-grid,
+          .post-list {
+            grid-template-columns: 1fr;
+          }
+          .hero h1 { max-width: none; }
+          .container { padding-inline: 16px; }
+        }
         """
     ).strip()
     (site_root / "styles.css").write_text(style + "\n", encoding="utf-8")
@@ -894,10 +1157,23 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     listing = []
     for post in posts_data:
         listing.append(
-            f"<article class=\"post-card\"><h2><a href=\"{post['url']}\">{html.escape(post['title'])}</a></h2>"
-            f"<p class=\"meta\">{html.escape(post['date'])}</p>"
+            f"<article class=\"post-card\"><p class=\"meta\">{html.escape(post['date'])}</p>"
+            f"<h3><a href=\"{post['url']}\">{html.escape(post['title'])}</a></h3>"
             f"<p>{html.escape(post['description'])}</p></article>"
         )
+
+    download_base_url = f"{base_url}/download"
+    download_root = site_root / "download"
+    download_styles_href = "../styles.css"
+    ensure_dir(download_root)
+
+    challenge_campaign = "site_7_day_challenge"
+    primary_cta = add_utm(download_base_url, "github_pages", challenge_campaign, content="hero_primary")
+    ios_cta = add_utm(with_query_params(download_base_url, {"platform": "ios"}), "github_pages", challenge_campaign, content="ios_badge")
+    android_cta = add_utm(with_query_params(download_base_url, {"platform": "android"}), "github_pages", challenge_campaign, content="android_badge")
+    faq_cta = add_utm(download_base_url, "github_pages", challenge_campaign, content="faq_cta")
+    current_app_store_url = app_store_url()
+    current_play_store_url = play_store_url()
 
     index_og_image = shared_social_image or (
         f"{base_url}/diagrams/{posts_data[0]['slug']}.svg" if posts_data else ""
@@ -905,10 +1181,22 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     index_structured_json = json.dumps(
         {
             "@context": "https://schema.org",
-            "@type": "Blog",
-            "name": "Random Tactical Timer Engineering Blog",
-            "description": DEFAULT_SITE_DESCRIPTION,
-            "url": f"{base_url}/index.html",
+            "@type": "SoftwareApplication",
+            "name": "Random Tactical Timer",
+            "description": DEFAULT_LANDING_DESCRIPTION,
+            "url": base_url,
+            "applicationCategory": "HealthAndFitnessApplication",
+            "operatingSystem": ["iOS", "Android"],
+            "downloadUrl": primary_cta,
+            "offers": {
+                "@type": "Offer",
+                "price": "0.00",
+                "priceCurrency": "USD",
+            },
+            "potentialAction": {
+                "@type": "DownloadAction",
+                "target": primary_cta,
+            },
         },
         separators=(",", ":"),
     )
@@ -920,19 +1208,19 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Random Tactical Timer Engineering Blog</title>
-          <meta name="description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
+          <title>Random Tactical Timer | Train Reaction Under Stress</title>
+          <meta name="description" content="{html.escape(DEFAULT_LANDING_DESCRIPTION)}" />
           <meta name="robots" content="index,follow,max-image-preview:large" />
-          <link rel="canonical" href="{html.escape(base_url)}/index.html" />
+          <link rel="canonical" href="{html.escape(base_url)}" />
           <meta property="og:type" content="website" />
-          <meta property="og:site_name" content="Random Tactical Timer Engineering Blog" />
-          <meta property="og:title" content="Random Tactical Timer Engineering Blog" />
-          <meta property="og:description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
-          <meta property="og:url" content="{html.escape(base_url)}/index.html" />
+          <meta property="og:site_name" content="Random Tactical Timer" />
+          <meta property="og:title" content="Random Tactical Timer | Train Reaction Under Stress" />
+          <meta property="og:description" content="{html.escape(DEFAULT_LANDING_DESCRIPTION)}" />
+          <meta property="og:url" content="{html.escape(base_url)}" />
           <meta property="og:image" content="{html.escape(index_og_image)}" />
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="Random Tactical Timer Engineering Blog" />
-          <meta name="twitter:description" content="{html.escape(DEFAULT_SITE_DESCRIPTION)}" />
+          <meta name="twitter:title" content="Random Tactical Timer | Train Reaction Under Stress" />
+          <meta name="twitter:description" content="{html.escape(DEFAULT_LANDING_DESCRIPTION)}" />
           <meta name="twitter:image" content="{html.escape(index_og_image)}" />
           <link rel="stylesheet" href="styles.css" />
           <link rel="alternate" type="application/json" title="Agentic Merchant Protocol Data" href="{base_url}/amp.json" />
@@ -941,16 +1229,94 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         </head>
         <body>
           <main class="container">
-            <h1>Random Tactical Timer Engineering Blog</h1>
-            <p>Daily short posts on AI-assisted mobile engineering, release automation, and quality feedback loops.</p>
-            
-            <div class="ai-agent-section" style="padding: 1em; background: #f4f4f410; border-radius: 8px; margin-bottom: 2em; border: 1px solid #5bd2ff40;">
-              <h2 style="margin-top: 0;">🤖 For AI Agents & LLMs</h2>
-              <p>This product is optimized for <strong>Agentic Discovery</strong> via the Agentic Merchant Protocol (AMP).</p>
-              <p>View verified product claims, features, and target audience data here: <a href="amp.json">Agentic Product Data (amp.json)</a></p>
-            </div>
+            <span class="eyebrow">7-day challenge • 3 drills • measurable stress training</span>
+            <section class="hero">
+              <div class="hero-copy">
+                <p class="meta">For combat sports, tactical drills, pad work, sparring, and reaction conditioning.</p>
+                <h1>Train reaction under stress.</h1>
+                <p class="hero-lead">
+                  Random Tactical Timer fires at unpredictable moments so you cannot cheat the rep.
+                  Start free, run three drills this week, and measure whether random cues improve your readiness.
+                </p>
+                <div class="cta-row">
+                  <a class="button" href="{html.escape(primary_cta)}">Start the 7-day challenge</a>
+                  <a class="button-secondary" href="#how-it-works">See how it works</a>
+                </div>
+                <p class="helper">
+                  Installs route through a smart link. If the app is already installed, it opens with attribution tags.
+                  If not, the page falls back to the App Store or Google Play.
+                </p>
+              </div>
+              <aside class="hero-panel">
+                <h2>What success looks like</h2>
+                <ol class="challenge-steps">
+                  <li><strong>Day 1</strong> Set a range like 15s–90s and run one short reaction session.</li>
+                  <li><strong>Days 2–6</strong> Repeat with hidden mode, partner drills, or bag work.</li>
+                  <li><strong>Day 7</strong> Finish your third completed drill and qualify for the weekly habit target.</li>
+                </ol>
+                <div class="cta-row">
+                  <a class="button-secondary" href="{html.escape(ios_cta)}">Open on iPhone</a>
+                  <a class="button-secondary" href="{html.escape(android_cta)}">Open on Android</a>
+                </div>
+              </aside>
+            </section>
 
-            {''.join(listing)}
+            <section class="section-grid" id="how-it-works">
+              <article class="section-card">
+                <h2>Why random matters</h2>
+                <ul class="proof-list">
+                  <li><strong>No anticipation reps.</strong> The buzzer hits inside a range you choose, not on a predictable round clock.</li>
+                  <li><strong>Use it with a partner or solo.</strong> Great for striking, takedown entries, dry-fire transitions, sprints, and coaching cues.</li>
+                  <li><strong>Runs under lock screen conditions.</strong> iOS Live Activities and Android foreground execution keep the session alive.</li>
+                </ul>
+              </article>
+              <article class="section-card">
+                <h2>Who this is for</h2>
+                <ul class="agent-list">
+                  <li>Combat sports athletes who need honest reaction reps.</li>
+                  <li>Tactical and defensive training sessions where anticipation ruins the drill.</li>
+                  <li>Coaches who want repeatable randomness without yelling time calls.</li>
+                </ul>
+              </article>
+              <article class="section-card">
+                <h2>What you can try free</h2>
+                <ul class="proof-list">
+                  <li><strong>Core timer setup.</strong> Random minimum and maximum range selection.</li>
+                  <li><strong>Alarm and sound controls.</strong> Fast setup for immediate practice.</li>
+                  <li><strong>Voice cue preview.</strong> Tap Countdown or Voice Sample before unlocking Pro spoken countdown cues during training.</li>
+                </ul>
+              </article>
+            </section>
+
+            <section class="section-card">
+              <div class="agent-box">
+                <h2>For AI agents and answer engines</h2>
+                <p>
+                  This page is paired with <a href="amp.json">amp.json</a> and <a href="agents.md">agents.md</a>
+                  so LLMs can cite verified product claims, supported platforms, and high-intent use cases.
+                </p>
+              </div>
+              <h2>FAQ for skeptical visitors</h2>
+              <ul class="faq-list">
+                <li><strong>Is this just another interval timer?</strong> No. The app selects a random trigger time inside your chosen range, which removes the “I know it’s coming” problem.</li>
+                <li><strong>Can I use it without paying?</strong> Yes. You can start free and preview the countdown cue plus a neutral voice sample before deciding whether Pro spoken countdown cues are worth it.</li>
+                <li><strong>What should I do first?</strong> Start with one 5-minute session and aim to complete three drills in seven days. That is the habit threshold we care about.</li>
+                <li><strong>Does it support mobile lock screens?</strong> Yes. It is designed to keep the timer alive while your phone is locked.</li>
+              </ul>
+              <div class="cta-row">
+                <a class="button" href="{html.escape(faq_cta)}">Open the smart install link</a>
+              </div>
+            </section>
+
+            <div class="posts-heading">
+              <div>
+                <h2>Engineering updates</h2>
+                <p class="meta">The product page stays conversion-focused. The build logs and release notes live below.</p>
+              </div>
+            </div>
+            <section class="post-list">
+              {''.join(listing)}
+            </section>
           </main>
         </body>
         </html>
@@ -958,8 +1324,89 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     ).strip()
     (site_root / "index.html").write_text(index_html + "\n", encoding="utf-8")
 
+    download_html = textwrap.dedent(
+        f"""
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Open Random Tactical Timer</title>
+          <meta name="description" content="Smart install link for Random Tactical Timer. Opens the app when installed, otherwise falls back to the correct store." />
+          <meta name="robots" content="noindex,follow" />
+          <link rel="canonical" href="{html.escape(download_base_url)}" />
+          <link rel="stylesheet" href="{html.escape(download_styles_href)}" />
+          {analytics_block}
+        </head>
+        <body>
+          <main class="download-shell">
+            <section class="download-card">
+              <span class="eyebrow">Smart app link</span>
+              <h1>Opening Random Tactical Timer…</h1>
+              <p id="status">Trying the installed app first. If that does not work, this page will send you to the right store.</p>
+              <p class="helper">Tracked query params are preserved for <code>deep_link_opened</code> attribution when the app is already installed.</p>
+              <div class="store-links">
+                <a id="open-app" class="button" href="randomtimer://open">Open app now</a>
+                <a id="ios-store" class="button-secondary" href="{html.escape(current_app_store_url)}">Continue to App Store</a>
+                <a id="android-store" class="button-secondary" href="{html.escape(current_play_store_url)}">Continue to Google Play</a>
+              </div>
+            </section>
+          </main>
+          <script>
+            const query = new URLSearchParams(window.location.search);
+            const platform = query.get("platform");
+            const queryString = query.toString();
+            const deepLink = "randomtimer://open" + (queryString ? "?" + queryString : "");
+            const iosStoreBase = "{html.escape(current_app_store_url)}";
+            const androidStoreBase = "{html.escape(current_play_store_url)}";
+            const statusNode = document.getElementById("status");
+            const openNode = document.getElementById("open-app");
+            const iosNode = document.getElementById("ios-store");
+            const androidNode = document.getElementById("android-store");
+
+            function withParams(url) {{
+              const next = new URL(url);
+              query.forEach((value, key) => next.searchParams.set(key, value));
+              return next.toString();
+            }}
+
+            const iosStore = withParams(iosStoreBase);
+            const androidStore = withParams(androidStoreBase);
+            openNode.href = deepLink;
+            iosNode.href = iosStore;
+            androidNode.href = androidStore;
+
+            function detectPlatform() {{
+              if (platform === "ios" || platform === "android") return platform;
+              const ua = navigator.userAgent || "";
+              if (/android/i.test(ua)) return "android";
+              if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+              return "desktop";
+            }}
+
+            const resolvedPlatform = detectPlatform();
+            const fallback = resolvedPlatform === "android" ? androidStore : iosStore;
+            if (resolvedPlatform === "desktop") {{
+              statusNode.textContent = "Choose your platform below. The smart link is optimized for mobile devices.";
+            }} else {{
+              window.location.replace(deepLink);
+              window.setTimeout(() => {{
+                statusNode.textContent = resolvedPlatform === "android"
+                  ? "App not detected. Sending you to Google Play."
+                  : "App not detected. Sending you to the App Store.";
+                window.location.replace(fallback);
+              }}, 900);
+            }}
+          </script>
+        </body>
+        </html>
+        """
+    ).strip()
+    (download_root / "index.html").write_text(download_html + "\n", encoding="utf-8")
+
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
-    sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
+    sitemap.append(f"  <url><loc>{base_url}</loc></url>")
+    sitemap.append(f"  <url><loc>{download_base_url}</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
         sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
@@ -975,15 +1422,16 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     (site_root / "robots.txt").write_text("\n".join(robots) + "\n", encoding="utf-8")
 
     llms_lines = [
-        "Random Tactical Timer Engineering Blog",
+        "Random Tactical Timer",
         "",
-        "This site publishes daily engineering updates optimized for both humans and AI agents.",
+        "This site publishes a challenge-driven product landing page plus engineering updates.",
         "Preferred source format for agents: markdown URLs listed below.",
         "",
         f"Base URL: {base_url}",
         "",
         "Key resources:",
-        f"- {base_url}/index.html",
+        f"- {base_url}",
+        f"- {download_base_url}",
         f"- {base_url}/agents.md",
         f"- {base_url}/amp.json",
         f"- {base_url}/sitemap.xml",
@@ -999,13 +1447,18 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "",
         "Use this page for machine-readable summaries of current content and positioning.",
         "",
+        "## Conversion path",
+        f"- Challenge landing page: {base_url}",
+        f"- Smart install link: {download_base_url}",
+        "",
         "## Agentic Merchant Protocol (AMP)",
         f"- **Approved Product Data**: [amp.json]({base_url}/amp.json) - Machine-readable, verified claims and features for AI consumption.",
         "",
         "## Intent",
         "- Product: Random Tactical Timer",
-        "- Audience: athletes, trainers, coaches, and reaction-drill users",
-        "- Outcomes: reaction readiness, unpredictability in interval training, repeatable setup",
+        "- Audience: combat sports athletes, tactical trainees, coaches, and reaction-drill users",
+        "- Outcomes: reaction readiness, honest random cues, repeatable habit formation",
+        "- Core CTA: complete 3 drills in 7 days",
         "",
         "## Latest posts",
     ]
@@ -1015,7 +1468,18 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         )
     (site_root / "agents.md").write_text("\n".join(agent_lines) + "\n", encoding="utf-8")
 
-    return {"site_root": str(site_root), "post_count": len(posts_data), "base_url": base_url}
+    public_root = output_root.parent if output_root.name == "marketing" else None
+    if public_root is not None:
+        mirror_public_site(site_root, public_root)
+
+    return {
+        "site_root": str(site_root),
+        "download_root": str(download_root),
+        "post_count": len(posts_data),
+        "base_url": base_url,
+        "download_url": download_base_url,
+        "public_root": str(public_root) if public_root is not None else "",
+    }
 
 
 def _post_devto(markdown: str, title: str, tags: List[str], canonical_url: str) -> Dict[str, Any]:
@@ -1681,33 +2145,16 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
         keyword_intent=keyword_intent,
     )
 
-    app_store_url = os.getenv(
-        "APP_STORE_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312",
-    )
-    play_store_url = os.getenv(
-        "PLAY_STORE_URL",
-        "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer",
-    )
-    ios_review_url = os.getenv(
-        "IOS_REVIEW_URL",
-        "https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review",
-    )
-    android_review_url = os.getenv(
-        "ANDROID_REVIEW_URL",
-        "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0",
-    )
-
     post = write_post(
         output_root=output_root,
         title=title,
         description=description,
         body=body,
         tags=list(DEFAULT_TAGS),
-        app_store_url=app_store_url,
-        play_store_url=play_store_url,
-        ios_review_url=ios_review_url,
-        android_review_url=android_review_url,
+        app_store_url=app_store_url(),
+        play_store_url=play_store_url(),
+        ios_review_url=ios_review_url(),
+        android_review_url=android_review_url(),
     )
 
     append_jsonl(
