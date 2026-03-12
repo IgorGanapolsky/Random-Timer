@@ -1013,6 +1013,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
+            onCommandCuePreview = {},
         )
     }
 }
