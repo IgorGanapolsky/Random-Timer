@@ -24,9 +24,8 @@ import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -54,14 +53,8 @@ class TimerViewModel
             prefs.edit().putBoolean("hasCompletedFirstTimer", true).apply()
         }
 
-        val config: StateFlow<TimerConfig> =
-            repository
-                .getTimerConfig()
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = TimerConfig.DEFAULT,
-                )
+        private val _config = MutableStateFlow(TimerConfig.DEFAULT)
+        val config: StateFlow<TimerConfig> = _config.asStateFlow()
 
         private val _timerState = MutableStateFlow<TimerState?>(null)
         val timerState: StateFlow<TimerState?> = _timerState
@@ -99,6 +92,17 @@ class TimerViewModel
 
         init {
             serviceController.bindService(serviceConnection)
+            viewModelScope.launch {
+                repository
+                    .getTimerConfig()
+                    .collect { storedConfig ->
+                        val pendingOverride = latestConfigOverride
+                        if (pendingOverride == null || pendingOverride == storedConfig) {
+                            latestConfigOverride = null
+                            _config.value = storedConfig
+                        }
+                    }
+            }
         }
 
         override fun onCleared() {
@@ -111,6 +115,7 @@ class TimerViewModel
 
         fun updateConfig(newConfig: TimerConfig) {
             latestConfigOverride = newConfig
+            _config.value = newConfig
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(

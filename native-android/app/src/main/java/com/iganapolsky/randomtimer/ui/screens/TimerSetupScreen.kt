@@ -72,6 +72,7 @@ import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 private data class SetupSpacingValues(
     val outerHorizontal: Dp,
@@ -108,6 +109,41 @@ private object SetupSpacing {
             chipGap = 6.dp,
             startButtonTop = 8.dp,
         )
+}
+
+internal fun usesPrecisionSlider(maxSecondsLimit: Int): Boolean = maxSecondsLimit > TimerConfig.MAX_SECONDS_FREE
+
+internal fun sliderVisualValue(
+    value: Int,
+    min: Int,
+    max: Int,
+    precisionMode: Boolean,
+): Float {
+    val clampedValue = value.coerceIn(min, max)
+    if (!precisionMode) {
+        return clampedValue.toFloat()
+    }
+
+    val span = (max - min).coerceAtLeast(1)
+    val normalized = (clampedValue - min).toFloat() / span.toFloat()
+    return sqrt(normalized.coerceIn(0f, 1f))
+}
+
+internal fun actualValueFromSlider(
+    sliderValue: Float,
+    min: Int,
+    max: Int,
+    stepSize: Int,
+    precisionMode: Boolean,
+): Int {
+    if (!precisionMode) {
+        return snapToStep(sliderValue, stepSize, min, max)
+    }
+
+    val span = (max - min).coerceAtLeast(1)
+    val normalized = sliderValue.coerceIn(0f, 1f)
+    val actual = min + (normalized * normalized * span.toFloat()).roundToInt()
+    return snapToStep(actual.toFloat(), stepSize, min, max)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -255,7 +291,6 @@ fun TimerSetupScreen(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
                                 maxSliderRange = maxRange.toFloat(),
-                                minSliderMax = maxRange - 30f,
                                 compactMode = isCompactHeight,
                                 onMinChange = { newMin ->
                                     val (min, max) =
@@ -385,7 +420,7 @@ fun TimerSetupScreen(
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                     ) {
                                         Text(
-                                            text = "Commands",
+                                            text = "Focus",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = TimerColors.AccentPrimary,
@@ -718,21 +753,21 @@ private fun TimeRangeSliders(
     minValue: Int,
     maxValue: Int,
     maxSliderRange: Float = TimerConfig.MAX_SECONDS_FREE.toFloat(),
-    minSliderMax: Float = maxSliderRange - 30f,
     compactMode: Boolean = false,
     enabled: Boolean = true,
     onMinChange: (Int) -> Unit,
     onMaxChange: (Int) -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
     val coarseNudgeStep = 5
     val fineNudgeStep = 1
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
-    val minSliderMaxInt = minSliderMax.toInt()
+    val minSliderCeiling = maxSliderRangeInt - minGapSeconds
+    val precisionMode = usesPrecisionSlider(maxSliderRangeInt)
+    val dragStep = if (precisionMode) fineNudgeStep else coarseNudgeStep
     val sectionGap = if (compactMode) 8.dp else 12.dp
     val rowGap = 4.dp
-    val nudgeSize = 32.dp
+    val nudgeSize = 36.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
         // Display
@@ -781,13 +816,20 @@ private fun TimeRangeSliders(
                     height = nudgeSize,
                 )
                 Slider(
-                    value = minValue.toFloat(),
+                    value = sliderVisualValue(minValue, 0, minSliderCeiling, precisionMode),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, coarseNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
+                        val snapped =
+                            actualValueFromSlider(
+                                sliderValue = raw,
+                                min = 0,
+                                max = minSliderCeiling,
+                                stepSize = dragStep,
+                                precisionMode = precisionMode,
+                            )
                         onMinChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
+                    valueRange = if (precisionMode) 0f..1f else 0f..minSliderCeiling.toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
                     colors =
                         SliderDefaults.colors(
@@ -827,13 +869,20 @@ private fun TimeRangeSliders(
                     height = nudgeSize,
                 )
                 Slider(
-                    value = maxValue.toFloat(),
+                    value = sliderVisualValue(maxValue, minGapSeconds, maxSliderRangeInt, precisionMode),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, coarseNudgeStep, minGapSeconds, maxSliderRangeInt)
+                        val snapped =
+                            actualValueFromSlider(
+                                sliderValue = raw,
+                                min = minGapSeconds,
+                                max = maxSliderRangeInt,
+                                stepSize = dragStep,
+                                precisionMode = precisionMode,
+                            )
                         onMaxChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = minGapSeconds.toFloat()..maxSliderRange,
+                    valueRange = if (precisionMode) 0f..1f else minGapSeconds.toFloat()..maxSliderRange,
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
                     colors =
                         SliderDefaults.colors(

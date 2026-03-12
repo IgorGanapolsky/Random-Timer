@@ -1,0 +1,9 @@
+appId: com.igorganapolsky.randomtimer
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Minimum: 0s"
+- takeScreenshot: evidence/ios-upper-plus-before
+- tapOn: "Increase minimum"
+- assertVisible: "Minimum: 5s"
+- takeScreenshot: evidence/ios-upper-plus-after

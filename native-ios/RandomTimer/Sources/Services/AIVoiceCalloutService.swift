@@ -3,11 +3,59 @@ import AVFoundation
 import os
 import Security
 
+internal let previewElapsedCue = "Thirty seconds. Stay locked in."
+internal let defaultFallbackVoiceCue = "Stay sharp."
+
+internal let elapsedVoiceCuesBySecond: [Int: String] = [
+    30: "Thirty seconds.",
+    60: "One minute. Keep moving.",
+    90: "One minute thirty.",
+    120: "Two minutes. Stay locked in.",
+    180: "Three minutes. Drive forward.",
+    300: "Five minutes. Finish strong.",
+    600: "Ten minutes. Outstanding."
+]
+
+internal let commandVoiceCues = [
+    "Stay sharp.",
+    "Reset. Breathe."
+]
+
+internal let voiceFilenamesByText: [String: String] = [
+    "Thirty seconds.": "elapsed_30s",
+    "One minute. Keep moving.": "elapsed_60s",
+    "One minute thirty.": "elapsed_90s",
+    "Two minutes. Stay locked in.": "elapsed_120s",
+    "Three minutes. Drive forward.": "elapsed_180s",
+    "Five minutes. Finish strong.": "elapsed_300s",
+    "Ten minutes. Outstanding.": "elapsed_600s",
+    previewElapsedCue: "preview_elapsed",
+    "Move now.": "cmd_move_now",
+    "Stay sharp.": "cmd_stay_sharp",
+    "Reset. Breathe.": "cmd_reset_breathe",
+    "Push the pace.": "cmd_push_pace",
+    "Drive forward.": "cmd_drive_forward",
+    "Keep pressure.": "cmd_keep_pressure",
+    "Push through it.": "cmd_push_through",
+]
+
+internal func voiceFilename(for text: String) -> String? {
+    voiceFilenamesByText[text]
+}
+
+internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
+    bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Audio")
+        ?? bundle.url(forResource: filename, withExtension: "mp3")
+}
+
+internal func voiceFilenameOrFallback(for text: String) -> String {
+    voiceFilename(for: text) ?? voiceFilename(for: defaultFallbackVoiceCue) ?? "cmd_stay_sharp"
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
 
-    private let synthesizer = AVSpeechSynthesizer()
     private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private var lastElapsedMilestone = 0
@@ -24,16 +72,15 @@ final class AIVoiceCalloutService {
     }
 
     private func speak(_ text: String) {
-        let filename = textToFilename(text)
-        guard !filename.isEmpty,
-              let url = Bundle.main.url(forResource: filename, withExtension: "mp3") else {
-            // Fallback to system TTS
-            let utterance = AVSpeechUtterance(string: text)
-            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-            utterance.rate = 0.52
-            utterance.pitchMultiplier = 0.85
-            synthesizer.speak(utterance)
+        let mappedFilename = voiceFilename(for: text)
+        let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
+
+        guard let url = voiceAudioURL(for: filename) else {
+            Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
             return
+        }
+        if mappedFilename == nil {
+            Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
         }
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
@@ -41,37 +88,6 @@ final class AIVoiceCalloutService {
             audioPlayer?.play()
         } catch {
             Self.log.error("Audio playback failed: \(error.localizedDescription)")
-        }
-    }
-
-    private func textToFilename(_ text: String) -> String {
-        elapsedFilename(text) ?? commandFilename(text) ?? ""
-    }
-
-    private func elapsedFilename(_ text: String) -> String? {
-        switch text {
-        case "Thirty seconds.":                  return "elapsed_30s"
-        case "One minute. Keep moving.":         return "elapsed_60s"
-        case "One minute thirty.":               return "elapsed_90s"
-        case "Two minutes. Stay locked in.":     return "elapsed_120s"
-        case "Three minutes. Drive forward.":    return "elapsed_180s"
-        case "Five minutes. Finish strong.":     return "elapsed_300s"
-        case "Ten minutes. Outstanding.":        return "elapsed_600s"
-        case "Thirty seconds. Stay locked in.":  return "preview_elapsed"
-        default:                                 return nil
-        }
-    }
-
-    private func commandFilename(_ text: String) -> String? {
-        switch text {
-        case "Move now.":        return "cmd_move_now"
-        case "Stay sharp.":      return "cmd_stay_sharp"
-        case "Reset. Breathe.":  return "cmd_reset_breathe"
-        case "Push the pace.":   return "cmd_push_pace"
-        case "Drive forward.":   return "cmd_drive_forward"
-        case "Keep pressure.":   return "cmd_keep_pressure"
-        case "Push through it.": return "cmd_push_through"
-        default:                 return nil
         }
     }
 
@@ -91,7 +107,7 @@ final class AIVoiceCalloutService {
 
     func previewCountdownCue() {
         // With elapsed model, preview an elapsed milestone announcement
-        speak("Thirty seconds. Stay locked in.")
+        speak(previewElapsedCue)
     }
 
     // Called every second with elapsed seconds since timer started.
@@ -113,21 +129,7 @@ final class AIVoiceCalloutService {
 
     private func elapsedMilestone(for elapsed: Int) -> String? {
         // Fire each milestone exactly once
-        let milestones: [Int: String] = [
-            30: "Thirty seconds.",
-            60: "One minute. Keep moving.",
-            90: "One minute thirty.",
-            120: "Two minutes. Stay locked in.",
-            180: "Three minutes. Drive forward.",
-            240: "Four minutes. Hold the line.",
-            300: "Five minutes. Finish strong.",
-            360: "Six minutes.",
-            420: "Seven minutes.",
-            480: "Eight minutes.",
-            540: "Nine minutes.",
-            600: "Ten minutes. Outstanding."
-        ]
-        guard let text = milestones[elapsed], elapsed != lastElapsedMilestone else { return nil }
+        guard let text = elapsedVoiceCuesBySecond[elapsed], elapsed != lastElapsedMilestone else { return nil }
         return text
     }
 
@@ -140,30 +142,8 @@ final class AIVoiceCalloutService {
     }
 
     private func randomCommandCue() -> String {
-        let cues = [
-            "Move now.",
-            "Stay sharp.",
-            "Eyes front.",
-            "Hands up.",
-            "Reset. Breathe.",
-            "Push the pace.",
-            "Explode.",
-            "Recover. Then go.",
-            "Hold the line.",
-            "Drive forward.",
-            "Keep pressure.",
-            "Lock in.",
-            "Finish strong.",
-            "Breathe and move.",
-            "Switch stance.",
-            "Double up.",
-            "Check your six.",
-            "Dig deeper.",
-            "Tighten up.",
-            "Push through it."
-        ]
-        let index = secureRandomInt(in: 0...(cues.count - 1))
-        return cues[index]
+        let index = secureRandomInt(in: 0...(commandVoiceCues.count - 1))
+        return commandVoiceCues[index]
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {

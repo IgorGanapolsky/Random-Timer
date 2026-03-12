@@ -116,11 +116,11 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
 
-    # Both platforms must expose Voice Callouts toggle with Countdown and Commands preview buttons
+    # Both platforms must expose Voice Callouts toggle with Countdown and Focus preview buttons
     for snippet in [
         "Voice Callouts",
         "Countdown",
-        "Commands",
+        "Focus",
     ]:
         assert snippet in android_setup, f"Missing '{snippet}' in Android setup screen"
         assert snippet in ios_setup, f"Missing '{snippet}' in iOS setup screen"
@@ -130,8 +130,9 @@ def test_voice_profile_configured_on_both_platforms():
     android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
-    # Android: preferred voice list and TTS configuration present
+    # Both platforms should use bundled audio only, not runtime TTS synthesis.
     assert "preferredVoiceNames" in android_voice_service
-    # iOS: pitch and rate configured for tactical delivery
-    assert "pitchMultiplier" in ios_voice_service
-    assert "utterance.rate" in ios_voice_service
+    assert "voiceResIdOrFallback" in android_voice_service
+    assert "TextToSpeech" not in android_voice_service
+    assert "voiceFilenameOrFallback" in ios_voice_service
+    assert "AVSpeechSynthesizer" not in ios_voice_service
