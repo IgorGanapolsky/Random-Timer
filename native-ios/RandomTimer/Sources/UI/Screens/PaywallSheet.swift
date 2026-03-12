@@ -40,16 +40,13 @@ struct PaywallSheet: View {
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
                 .contentShape(Rectangle())
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 8.0, maximumDistance: 50)
-                        .onEnded { _ in
-                            let generator = UIImpactFeedbackGenerator(style: .heavy)
-                            generator.impactOccurred()
-                            proManager.unlockProForDebug()
-                            hasTrackedDismiss = true
-                            dismiss()
-                        }
-                )
+                .onLongPressGesture(minimumDuration: 8.0, maximumDistance: 100) {
+                    let generator = UIImpactFeedbackGenerator(style: .heavy)
+                    generator.impactOccurred()
+                    proManager.unlockProForDebug()
+                    hasTrackedDismiss = true
+                    dismiss()
+                }
 
             VStack(spacing: 4) {
                 Text("One premium plan.")

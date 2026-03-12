@@ -170,29 +170,25 @@ private fun Modifier.holdForHiddenUnlock(
     pointerInput(holdDurationMs, onHoldComplete) {
         awaitPointerEventScope {
             while (true) {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                val startTime = System.currentTimeMillis()
-                var isReleased = false
-                
-                // Track the touch until it's released or the duration passes
-                while (!isReleased) {
-                    val event = awaitPointerEvent()
-                    val currentTime = System.currentTimeMillis()
-                    
-                    if (event.changes.any { it.changedToUp() }) {
-                        isReleased = true
-                    } else if (currentTime - startTime >= holdDurationMs) {
-                        // Success!
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onHoldComplete()
-                        // Wait for release before allowing another hold
-                        while (!isReleased) {
-                            val releaseEvent = awaitPointerEvent()
-                            if (releaseEvent.changes.any { it.changedToUp() }) {
-                                isReleased = true
-                            }
+                awaitFirstDown(requireUnconsumed = false)
+                val success = withTimeoutOrNull(holdDurationMs) {
+                    // Just wait for any event that is an UP event
+                    // or until the scope is cancelled by timeout
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.changes.any { it.changedToUp() }) {
+                            return@withTimeoutOrNull false
                         }
-                        return@awaitPointerEventScope
+                    }
+                } ?: true
+                
+                if (success) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onHoldComplete()
+                    // Wait for the final up event before allowing next hold
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.changes.any { it.changedToUp() }) break
                     }
                 }
             }
