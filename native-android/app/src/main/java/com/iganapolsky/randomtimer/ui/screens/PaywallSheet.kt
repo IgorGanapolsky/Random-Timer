@@ -167,13 +167,33 @@ private fun Modifier.holdForHiddenUnlock(
     onHoldComplete: () -> Unit,
 ): Modifier =
     pointerInput(holdDurationMs, onHoldComplete) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
-            if (releasedBeforeHold == null) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onHoldComplete()
-                waitForUpOrCancellation()
+        awaitPointerEventScope {
+            while (true) {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val startTime = System.currentTimeMillis()
+                var isReleased = false
+                
+                // Track the touch until it's released or the duration passes
+                while (!isReleased) {
+                    val event = awaitPointerEvent()
+                    val currentTime = System.currentTimeMillis()
+                    
+                    if (event.changes.any { it.changedToUp() }) {
+                        isReleased = true
+                    } else if (currentTime - startTime >= holdDurationMs) {
+                        // Success!
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onHoldComplete()
+                        // Wait for release before allowing another hold
+                        while (!isReleased) {
+                            val releaseEvent = awaitPointerEvent()
+                            if (releaseEvent.changes.any { it.changedToUp() }) {
+                                isReleased = true
+                            }
+                        }
+                        return@awaitPointerEventScope
+                    }
+                }
             }
         }
     }
