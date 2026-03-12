@@ -113,21 +113,28 @@ def _pick_highest_editable_version(versions: List[Dict[str, Any]]) -> Optional[D
 
 
 def _create_ios_version(client: ASCClient, app_id: str, version: str) -> Dict[str, Any]:
-    payload = client.request(
-        "POST",
-        "/appStoreVersions",
-        payload={
-            "data": {
-                "type": "appStoreVersions",
-                "attributes": {"platform": "IOS", "versionString": version},
-                "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
-            }
-        },
-    )
-    data = payload.get("data")
-    if not isinstance(data, dict):
-        die(f"Failed to create App Store version {version}: malformed response", code=2)
-    return data
+    try:
+        payload = client.request(
+            "POST",
+            "/appStoreVersions",
+            payload={
+                "data": {
+                    "type": "appStoreVersions",
+                    "attributes": {"platform": "IOS", "versionString": version},
+                    "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                }
+            },
+        )
+        data = payload.get("data")
+        if not isinstance(data, dict):
+            die(f"Failed to create App Store version {version}: malformed response", code=2)
+        return data
+    except AscClientError as exc:
+        if "409" in str(exc):
+            # Special case for "cannot create new version in current state"
+            # Return a dummy dict with an error marker that resolve_version can check.
+            return {"attributes": {"appStoreState": "CONFLICT_409"}, "id": "none"}
+        raise
 
 
 @dataclass
@@ -165,10 +172,40 @@ def resolve_version(
             )
 
         if not auto_next_patch:
-            die(
-                f"Preferred App Store version {preferred_version} exists but is not editable (state={state}). "
-                "Provide an editable version or enable --auto-next-patch.",
-                code=1,
+            info(f"Preferred version {preferred_version} is not editable (state={state}).")
+            if not create_if_needed:
+                die(
+                    f"Preferred App Store version {preferred_version} exists but is not editable (state={state}). "
+                    "Provide an editable version or enable --auto-next-patch.",
+                    code=1,
+                )
+
+            # If we're here, we need an editable version but the preferred one is locked.
+            # We can't auto-bump (auto_next_patch is False), so we must try to use highest_editable or error.
+            if highest_editable:
+                editable_attrs = highest_editable.get("attributes") or {}
+                editable_version = str(editable_attrs.get("versionString") or "")
+                editable_state = str(editable_attrs.get("appStoreState") or "UNKNOWN")
+                info(f"Using highest available editable version instead: {editable_version}")
+                return Resolution(
+                    selected_version=editable_version,
+                    selected_state=editable_state,
+                    created=False,
+                    reason=f"preferred_non_editable_{state}_reused_highest_editable",
+                    selected_id=str(highest_editable.get("id") or ""),
+                    preferred_version=preferred_version,
+                )
+
+            # No editable version exists at all. Return the non-editable preferred version
+            # as a fallback so downstream validation can decide if this is a hard stop.
+            info(f"No editable versions found. Returning locked preferred version {preferred_version}.")
+            return Resolution(
+                selected_version=preferred_version,
+                selected_state=state,
+                created=False,
+                reason=f"preferred_non_editable_{state}_no_alternatives",
+                selected_id=str(current.get("id") or ""),
+                preferred_version=preferred_version,
             )
 
         if highest_editable:
