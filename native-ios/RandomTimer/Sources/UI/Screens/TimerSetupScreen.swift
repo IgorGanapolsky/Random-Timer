@@ -419,7 +419,7 @@ private struct TimeRangeSliders: View {
                         value: Binding(
                             get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
                             set: { newValue in
-                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                let snapped = Int(newValue.rounded())
                                 adjustMin(to: snapped)
                             }
                         ),
@@ -456,9 +456,9 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(Swift.max(Swift.min(maxValue, maxSecondsLimit), maxSliderLowerBound)) },
+                            get: { Double(Swift.min(Swift.max(maxValue, maxSliderLowerBound), maxSecondsLimit)) },
                             set: { newValue in
-                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
+                                let snapped = Int(newValue.rounded())
                                 adjustMax(to: snapped)
                             }
                         ),
@@ -523,7 +523,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(30, newValue),
+            newMaxSeconds: Swift.max(minGap, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
