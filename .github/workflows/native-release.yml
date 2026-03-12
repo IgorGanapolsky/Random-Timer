@@ -502,7 +502,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         id: versions
         run: |
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
           if [ -z "$IOS_VERSION" ]; then
             echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
             exit 1
