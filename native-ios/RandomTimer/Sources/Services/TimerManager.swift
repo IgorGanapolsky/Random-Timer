@@ -436,6 +436,7 @@ final class TimerManager: ObservableObject {
 
     func updatePreviewVolume() {
         notificationService.updatePreviewVolume(config.volume)
+        AIVoiceCalloutService.shared.setVolume(config.volume)
     }
 
     func previewVolume() {

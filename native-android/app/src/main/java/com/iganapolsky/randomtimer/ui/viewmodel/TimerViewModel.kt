@@ -107,6 +107,9 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
+            if (newConfig.volume != config.value.volume) {
+                voiceCalloutManager.setVolume(newConfig.volume)
+            }
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(
