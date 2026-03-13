@@ -75,18 +75,22 @@ final class AIVoiceCalloutService {
         let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
 
         guard let url = voiceAudioURL(for: filename) else {
-            Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
+            Self.log.error("Voice asset missing for cue: \(text, privacy: .public) (filename: \(filename, privacy: .public))")
             return
         }
         if mappedFilename == nil {
-            Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
+            Self.log.info("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
         }
+        
+        Self.log.info("Playing voice asset: \(filename, privacy: .public) for text: \(text, privacy: .public)")
+        
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.volume = volume
+            audioPlayer?.prepareToPlay()
             audioPlayer?.play()
         } catch {
-            Self.log.error("Audio playback failed: \(error.localizedDescription)")
+            Self.log.error("Audio playback failed for \(filename): \(error.localizedDescription)")
         }
     }
 

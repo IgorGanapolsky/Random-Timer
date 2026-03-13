@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DB1EBBA93EBDF4138B /* cmd_drive_forward.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA44E813025EFC /* cmd_drive_forward.mp3 */; };
+		DB1EBB55B7261D1D1C /* cmd_keep_pressure.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBAC240587258E9 /* cmd_keep_pressure.mp3 */; };
+		DB1EBBB1A2DAD41052 /* cmd_move_now.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA40761767CB43 /* cmd_move_now.mp3 */; };
+		DB1EBB3E2943E8A2E5 /* cmd_push_pace.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBADD3D2D839F8C /* cmd_push_pace.mp3 */; };
+		DB1EBB40CD33A4262F /* cmd_push_through.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBAB7B6CE1875DB /* cmd_push_through.mp3 */; };
+		DB1EBB663F2B51F306 /* cmd_reset_breathe.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA43E079147C44 /* cmd_reset_breathe.mp3 */; };
+		DB1EBB4B7303188442 /* cmd_stay_sharp.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA26EC4174DCFB /* cmd_stay_sharp.mp3 */; };
+		DB1EBB1318263ECF73 /* elapsed_120s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBAB6D88A68DE12 /* elapsed_120s.mp3 */; };
+		DB1EBB19331BA27C04 /* elapsed_180s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBAECA47D1E3C9E /* elapsed_180s.mp3 */; };
+		DB1EBB6A781B0F1613 /* elapsed_300s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA679ED1B67290 /* elapsed_300s.mp3 */; };
+		DB1EBB4DCA1302EEE2 /* elapsed_30s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA653096519605 /* elapsed_30s.mp3 */; };
+		DB1EBBCC5F7304F7D1 /* elapsed_600s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA98540F72D29B /* elapsed_600s.mp3 */; };
+		DB1EBB5AA5B5683E4A /* elapsed_60s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA3D806B06989D /* elapsed_60s.mp3 */; };
+		DB1EBBAA09B41B6854 /* elapsed_90s.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA2828DB1F29B7 /* elapsed_90s.mp3 */; };
+		DB1EBBBCAA1CE6CB7E /* preview_elapsed.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA77BF392A1A4E /* preview_elapsed.mp3 */; };
 		DB1EBBE03F84108E8E /* cmd_drive_forward.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBAA7F78D62487F /* cmd_drive_forward.mp3 */; };
 		DB1EBBF5893202430E /* cmd_keep_pressure.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA628FD8FCDC6B /* cmd_keep_pressure.mp3 */; };
 		DB1EBBFF001EB9D033 /* cmd_move_now.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = DB1EBA9B02CB9129ED /* cmd_move_now.mp3 */; };
@@ -109,6 +124,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DB1EBA44E813025EFC /* cmd_drive_forward.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_drive_forward.mp3; sourceTree = "<group>"; };
+		DB1EBAC240587258E9 /* cmd_keep_pressure.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_keep_pressure.mp3; sourceTree = "<group>"; };
+		DB1EBA40761767CB43 /* cmd_move_now.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_move_now.mp3; sourceTree = "<group>"; };
+		DB1EBADD3D2D839F8C /* cmd_push_pace.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_push_pace.mp3; sourceTree = "<group>"; };
+		DB1EBAB7B6CE1875DB /* cmd_push_through.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_push_through.mp3; sourceTree = "<group>"; };
+		DB1EBA43E079147C44 /* cmd_reset_breathe.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_reset_breathe.mp3; sourceTree = "<group>"; };
+		DB1EBA26EC4174DCFB /* cmd_stay_sharp.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_stay_sharp.mp3; sourceTree = "<group>"; };
+		DB1EBAB6D88A68DE12 /* elapsed_120s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_120s.mp3; sourceTree = "<group>"; };
+		DB1EBAECA47D1E3C9E /* elapsed_180s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_180s.mp3; sourceTree = "<group>"; };
+		DB1EBA679ED1B67290 /* elapsed_300s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_300s.mp3; sourceTree = "<group>"; };
+		DB1EBA653096519605 /* elapsed_30s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_30s.mp3; sourceTree = "<group>"; };
+		DB1EBA98540F72D29B /* elapsed_600s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_600s.mp3; sourceTree = "<group>"; };
+		DB1EBA3D806B06989D /* elapsed_60s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_60s.mp3; sourceTree = "<group>"; };
+		DB1EBA2828DB1F29B7 /* elapsed_90s.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = elapsed_90s.mp3; sourceTree = "<group>"; };
+		DB1EBA77BF392A1A4E /* preview_elapsed.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = preview_elapsed.mp3; sourceTree = "<group>"; };
 		DB1EBAA7F78D62487F /* cmd_drive_forward.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_drive_forward.mp3; sourceTree = "<group>"; };
 		DB1EBA628FD8FCDC6B /* cmd_keep_pressure.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_keep_pressure.mp3; sourceTree = "<group>"; };
 		DB1EBA9B02CB9129ED /* cmd_move_now.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cmd_move_now.mp3; sourceTree = "<group>"; };
@@ -321,6 +351,21 @@
 		DB1EB0493351D1D4C087065E /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				DB1EBA44E813025EFC /* cmd_drive_forward.mp3 */,
+				DB1EBAC240587258E9 /* cmd_keep_pressure.mp3 */,
+				DB1EBA40761767CB43 /* cmd_move_now.mp3 */,
+				DB1EBADD3D2D839F8C /* cmd_push_pace.mp3 */,
+				DB1EBAB7B6CE1875DB /* cmd_push_through.mp3 */,
+				DB1EBA43E079147C44 /* cmd_reset_breathe.mp3 */,
+				DB1EBA26EC4174DCFB /* cmd_stay_sharp.mp3 */,
+				DB1EBAB6D88A68DE12 /* elapsed_120s.mp3 */,
+				DB1EBAECA47D1E3C9E /* elapsed_180s.mp3 */,
+				DB1EBA679ED1B67290 /* elapsed_300s.mp3 */,
+				DB1EBA653096519605 /* elapsed_30s.mp3 */,
+				DB1EBA98540F72D29B /* elapsed_600s.mp3 */,
+				DB1EBA3D806B06989D /* elapsed_60s.mp3 */,
+				DB1EBA2828DB1F29B7 /* elapsed_90s.mp3 */,
+				DB1EBA77BF392A1A4E /* preview_elapsed.mp3 */,
 				3063864498ABB31478972EDD /* alarm.mp3 */,
 				91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */,
 				01D20814587EFDB22A275849 /* klaxon.mp3 */,
@@ -501,6 +546,21 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB1EBBA93EBDF4138B /* cmd_drive_forward.mp3 in Resources */,
+				DB1EBB55B7261D1D1C /* cmd_keep_pressure.mp3 in Resources */,
+				DB1EBBB1A2DAD41052 /* cmd_move_now.mp3 in Resources */,
+				DB1EBB3E2943E8A2E5 /* cmd_push_pace.mp3 in Resources */,
+				DB1EBB40CD33A4262F /* cmd_push_through.mp3 in Resources */,
+				DB1EBB663F2B51F306 /* cmd_reset_breathe.mp3 in Resources */,
+				DB1EBB4B7303188442 /* cmd_stay_sharp.mp3 in Resources */,
+				DB1EBB1318263ECF73 /* elapsed_120s.mp3 in Resources */,
+				DB1EBB19331BA27C04 /* elapsed_180s.mp3 in Resources */,
+				DB1EBB6A781B0F1613 /* elapsed_300s.mp3 in Resources */,
+				DB1EBB4DCA1302EEE2 /* elapsed_30s.mp3 in Resources */,
+				DB1EBBCC5F7304F7D1 /* elapsed_600s.mp3 in Resources */,
+				DB1EBB5AA5B5683E4A /* elapsed_60s.mp3 in Resources */,
+				DB1EBBAA09B41B6854 /* elapsed_90s.mp3 in Resources */,
+				DB1EBBBCAA1CE6CB7E /* preview_elapsed.mp3 in Resources */,
 				56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */,
 				4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */,
 				AABB001122334455DEADBEE0 /* Assets.xcassets in Resources */,
@@ -623,7 +683,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 180;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RandomTimer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -644,7 +704,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 180;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RandomTimerWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -733,7 +793,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 180;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RandomTimer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -754,7 +814,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 180;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RandomTimerWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;

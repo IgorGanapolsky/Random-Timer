@@ -1,9 +1,7 @@
 import os
 import re
-import uuid
 
 project_path = "native-ios/RandomTimer.xcodeproj/project.pbxproj"
-audio_dir = "native-ios/RandomTimer/Resources/Sounds"
 
 files = [
     "cmd_drive_forward.mp3",
@@ -26,82 +24,66 @@ files = [
 with open(project_path, 'r') as f:
     content = f.read()
 
-# 1. Create PBXFileReference for each file
-# Find the start of the PBXFileReference section
-file_ref_section_match = re.search(r'/\* Begin PBXFileReference section \*/', content)
-if not file_ref_section_match:
-    print("Could not find PBXFileReference section")
-    exit(1)
-
-# Map filenames to UUIDs (using deterministic ones based on filename for idempotency)
+# Map filenames to UUIDs (deterministic)
 file_uuids = {}
-for f in files:
-    # Use a consistent prefix but randomized enough to not collide
-    # Xcode UUIDs are 24 chars.
-    h = hash(f) & 0xFFFFFFFFFFFF
-    u = f"DB1EBA{h:012X}"[:24]
-    file_uuids[f] = u
-
-new_file_refs = ""
-for f, u in file_uuids.items():
-    if u not in content:
-        new_file_refs += f'\t\t{u} /* {f} */ = {{isa = PBXFileReference; lastKnownFileType = audio.mp3; path = {f}; sourceTree = "<group>"; }};\n'
-
-if new_file_refs:
-    content = content.replace('/* Begin PBXFileReference section */', '/* Begin PBXFileReference section */\n' + new_file_refs)
-
-# 2. Add to "Sounds" PBXGroup
-# Find the Sounds group
-sounds_group_match = re.search(r'([0-9A-F]{24}) /\* Sounds \*/ = \{[^{]*isa = PBXGroup;[^{]*children = \(', content)
-if not sounds_group_match:
-    print("Could not find Sounds group")
-    exit(1)
-
-new_children = ""
-for f, u in file_uuids.items():
-    if u not in content:
-        new_children += f'\t\t\t\t{u} /* {f} */,\n'
-
-if new_children:
-    insertion_point = sounds_group_match.end()
-    content = content[:insertion_point] + '\n' + new_children + content[insertion_point:]
-
-# 3. Add to PBXResourcesBuildPhase
-# Find the main target's resources build phase
-# Main target is RandomTimer
-resources_phase_match = re.search(r'([0-9A-F]{24}) /\* Resources \*/ = \{[^{]*isa = PBXResourcesBuildPhase;[^{]*files = \(', content)
-if not resources_phase_match:
-    print("Could not find PBXResourcesBuildPhase section")
-    exit(1)
-
-# We also need PBXBuildFile entries for each file reference
-build_file_section_match = re.search(r'/\* Begin PBXBuildFile section \*/', content)
-if not build_file_section_match:
-    print("Could not find PBXBuildFile section")
-    exit(1)
-
 build_uuids = {}
-new_build_files = ""
+for f in files:
+    h = hash(f) & 0xFFFFFFFFFFFF
+    file_uuids[f] = f"DB1EBA{h:012X}"[:24]
+    bh = hash(f + "_build") & 0xFFFFFFFFFFFF
+    build_uuids[f] = f"DB1EBB{bh:012X}"[:24]
+
+# 1. PBXFileReference
+new_refs = ""
 for f, u in file_uuids.items():
-    # Another set of UUIDs for the build files
-    h = hash(f + "_build") & 0xFFFFFFFFFFFF
-    bu = f"DB1EBB{h:012X}"[:24]
-    build_uuids[f] = bu
-    if bu not in content:
-        new_build_files += f'\t\t{bu} /* {f} in Resources */ = {{isa = PBXBuildFile; fileRef = {u} /* {f} */; }};\n'
+    if u not in content:
+        new_refs += f'\t\t{u} /* {f} */ = {{isa = PBXFileReference; lastKnownFileType = audio.mp3; path = {f}; sourceTree = "<group>"; }};\n'
+if new_refs:
+    content = content.replace('/* Begin PBXFileReference section */\n', '/* Begin PBXFileReference section */\n' + new_refs)
 
-if new_build_files:
-    content = content.replace('/* Begin PBXBuildFile section */', '/* Begin PBXBuildFile section */\n' + new_build_files)
-
-# Now add build files to the resources phase
-new_resource_entries = ""
+# 2. PBXBuildFile
+new_build_files = ""
 for f, bu in build_uuids.items():
     if bu not in content:
-        new_resource_entries += f'\t\t\t\t{bu} /* {f} in Resources */,\n'
+        u = file_uuids[f]
+        new_build_files += f'\t\t{bu} /* {f} in Resources */ = {{isa = PBXBuildFile; fileRef = {u} /* {f} */; }};\n'
+if new_build_files:
+    content = content.replace('/* Begin PBXBuildFile section */\n', '/* Begin PBXBuildFile section */\n' + new_build_files)
 
-if new_resource_entries:
-    insertion_point = resources_phase_match.end()
-    content = content[:insertion_point] + '\n' + new_resource_entries + content[insertion_point:]
+# 3. Sounds PBXGroup children
+# Find the line: DB1EB0493351D1D4C087065E /* Sounds */ = {
+# Then find the children = ( line after it.
+group_start = content.find('DB1EB0493351D1D4C087065E /* Sounds */ = {')
+if group_start != -1:
+    children_line = content.find('children = (', group_start)
+    if children_line != -1:
+        insertion_point = content.find('\n', children_line) + 1
+        new_children = ""
+        for f, u in file_uuids.items():
+            if u not in content: # This check is weak because u might be in PBXFileReference
+                pass
+            # Better check if the UUID is already in the children list of THIS group
+            group_end = content.find(');', insertion_point)
+            if u not in content[insertion_point:group_end]:
+                new_children += f'\t\t\t\t{u} /* {f} */,\n'
+        if new_children:
+            content = content[:insertion_point] + new_children + content[insertion_point:]
+
+# 4. Resources PBXResourcesBuildPhase files
+# Find the line: C860582E5E34407E753D7F99 /* Resources */ = {
+# Then find the files = ( line after it.
+phase_start = content.find('C860582E5E34407E753D7F99 /* Resources */ = {')
+if phase_start != -1:
+    files_line = content.find('files = (', phase_start)
+    if files_line != -1:
+        insertion_point = content.find('\n', files_line) + 1
+        new_resource_entries = ""
+        for f, bu in build_uuids.items():
+            phase_end = content.find(');', insertion_point)
+            if bu not in content[insertion_point:phase_end]:
+                new_resource_entries += f'\t\t\t\t{bu} /* {f} in Resources */,\n'
+        if new_resource_entries:
+            content = content[:insertion_point] + new_resource_entries + content[insertion_point:]
 
 with open(project_path, 'w') as f:
     f.write(content)

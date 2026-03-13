@@ -91,35 +91,25 @@ class AIVoiceCalloutManager
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
             try {
-                // Stop and release previous player if still active
-                mediaPlayer?.let {
-                    if (it.isPlaying) it.stop()
-                    it.release()
-                }
-
-                val attrs =
-                    AudioAttributes
-                        .Builder()
-                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build()
-
-                mediaPlayer =
-                    MediaPlayer().apply {
-                        setAudioAttributes(attrs)
-                        val afd = context.resources.openRawResourceFd(resId)
-                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                        afd.close()
-                        prepare()
-                        setVolume(currentVolume, currentVolume)
-                        setOnCompletionListener {
-                            it.release()
-                            if (mediaPlayer == it) {
-                                mediaPlayer = null
-                            }
+                mediaPlayer?.release()
+                mediaPlayer = MediaPlayer.create(context, resId)
+                mediaPlayer?.apply {
+                    setAudioAttributes(
+                        AudioAttributes
+                            .Builder()
+                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build(),
+                    )
+                    setVolume(currentVolume, currentVolume)
+                    setOnCompletionListener { 
+                        it.release()
+                        if (mediaPlayer == it) {
+                            mediaPlayer = null
                         }
-                        start()
                     }
+                    start()
+                }
             } catch (e: Exception) {
                 Log.e("AIVoice", "Audio playback failed: ${e.message}", e)
             }
@@ -151,6 +141,7 @@ class AIVoiceCalloutManager
         }
 
         fun shutdown() {
-            // No-op: drill sergeant callouts use bundled audio clips instead of system TTS.
+            mediaPlayer?.release()
+            mediaPlayer = null
         }
     }
