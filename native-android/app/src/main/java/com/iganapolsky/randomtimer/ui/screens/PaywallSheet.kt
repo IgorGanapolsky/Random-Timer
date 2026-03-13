@@ -1,9 +1,7 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -20,7 +17,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,15 +30,34 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 private fun Modifier.holdForHiddenUnlock(
     holdDurationMs: Long,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     onHoldComplete: () -> Unit,
 ): Modifier =
     pointerInput(holdDurationMs, onHoldComplete) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
-            if (releasedBeforeHold == null) {
-                onHoldComplete()
-                waitForUpOrCancellation()
+        awaitPointerEventScope {
+            while (true) {
+                awaitFirstDown(requireUnconsumed = false)
+                val success =
+                    withTimeoutOrNull(holdDurationMs) {
+                        var released = false
+                        while (!released) {
+                            val event = awaitPointerEvent()
+                            if (event.changes.any { it.changedToUp() }) {
+                                released = true
+                            }
+                        }
+                        false // Released before timeout
+                    } ?: true
+
+                if (success) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onHoldComplete()
+                    // Wait for the final up event before allowing next hold
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.changes.any { it.changedToUp() }) break
+                    }
+                }
             }
         }
     }
@@ -52,6 +71,7 @@ fun PaywallSheet(
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
 ) {
+    val haptic = LocalHapticFeedback.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -75,7 +95,11 @@ fun PaywallSheet(
                         Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
-                            .holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                            .holdForHiddenUnlock(
+                                holdDurationMs = 8_000L,
+                                haptic = haptic,
+                                onHoldComplete = onDebugUnlock,
+                            )
                     } else {
                         Modifier
                             .fillMaxWidth()
