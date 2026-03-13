@@ -33,7 +33,7 @@ internal func voiceFilename(for text: String) -> String? {
 }
 
 internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
-    bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Audio")
+    bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Sounds")
         ?? bundle.url(forResource: filename, withExtension: "mp3")
 }
 
