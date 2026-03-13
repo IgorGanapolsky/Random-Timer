@@ -12,7 +12,13 @@ struct TimerSetupScreen: View {
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
 
-    private var maxSliderRange: Double { Double(proManager.maxSecondsLimit) }
+    private var maxSliderRange: Double {
+        if proManager.isPro && config.useExtendedRange {
+            return Double(TimerConfig.maxSecondsPro)
+        } else {
+            return Double(TimerConfig.maxSecondsFree)
+        }
+    }
     private var minSliderMax: Double { maxSliderRange - 30 }
 
     var body: some View {
@@ -36,8 +42,35 @@ struct TimerSetupScreen: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
                             
-                            if !proManager.isPro {
-                                Spacer()
+                            Spacer()
+
+                            if proManager.isPro {
+                                Button {
+                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                    generator.impactOccurred()
+                                    let newExtended = !config.useExtendedRange
+                                    if !newExtended && config.maxSeconds > TimerConfig.maxSecondsFree {
+                                        // Clamp if shrinking
+                                        let clampedMax = TimerConfig.maxSecondsFree
+                                        let clampedMin = Swift.min(config.minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds)
+                                        updateConfig(maxSeconds: clampedMax, minSeconds: clampedMin, useExtendedRange: false)
+                                    } else {
+                                        updateConfig(useExtendedRange: newExtended)
+                                    }
+                                } label: {
+                                    Text(config.useExtendedRange ? "60M MODE" : "5M MODE")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
+                                        .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
+                                        .cornerRadius(4)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 0.5)
+                                        )
+                                }
+                            } else {
                                 Text("PRO: 1H \u{1F512}")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
@@ -52,7 +85,7 @@ struct TimerSetupScreen: View {
                         TimeRangeSliders(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
-                            maxSecondsLimit: proManager.maxSecondsLimit,
+                            maxSecondsLimit: Int(maxSliderRange),
                             onRangeChange: { newMin, newMax in
                                 updateConfig(minSeconds: newMin, maxSeconds: newMax)
                             }
@@ -339,7 +372,8 @@ struct TimerSetupScreen: View {
         alarmDuration: Int? = nil,
         soundType: SoundType? = nil,
         volume: Float? = nil,
-        vibrationEnabled: Bool? = nil
+        vibrationEnabled: Bool? = nil,
+        useExtendedRange: Bool? = nil
     ) {
         let newConfig = TimerConfig(
             minSeconds: minSeconds ?? config.minSeconds,
@@ -349,7 +383,8 @@ struct TimerSetupScreen: View {
             repeatEnabled: config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
-            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
+            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
+            useExtendedRange: useExtendedRange ?? config.useExtendedRange
         )
         timerManager.updateConfig(newConfig)
     }

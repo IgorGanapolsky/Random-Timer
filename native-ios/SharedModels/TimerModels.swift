@@ -105,6 +105,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let volume: Float
     /// Whether vibration is enabled
     public let vibrationEnabled: Bool
+    /// Whether to use the extended 60-minute range (Pro only)
+    public let useExtendedRange: Bool
 
     public init(
         minSeconds: Int = 0,
@@ -114,11 +116,13 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         repeatEnabled: Bool = false, // Default to LOOP OFF
         soundType: SoundType = .intense,
         volume: Float = 0.5, // Default to 50%
-        vibrationEnabled: Bool = false
+        vibrationEnabled: Bool = false,
+        useExtendedRange: Bool = false
     ) {
         precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
         precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
-        precondition(maxSeconds <= TimerConfig.maxSecondsPro, "Maximum seconds cannot exceed \(TimerConfig.maxSecondsPro)")
+        let maxAllowed = useExtendedRange ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
+        precondition(maxSeconds <= maxAllowed, "Maximum seconds cannot exceed \(maxAllowed)")
         precondition(alarmDuration > 0, "Alarm duration must be positive")
         precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
 
@@ -130,6 +134,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         self.soundType = soundType
         self.volume = volume
         self.vibrationEnabled = vibrationEnabled
+        self.useExtendedRange = useExtendedRange
     }
 
     /// Minimum as TimeInterval
@@ -157,6 +162,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundType
         case volume
         case vibrationEnabled
+        case useExtendedRange
 
         // Legacy / compatibility keys
         case minDuration
@@ -184,6 +190,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundType
         case volume
         case vibrationEnabled
+        case useExtendedRange
     }
 
     public init(from decoder: Decoder) throws {
@@ -217,6 +224,10 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             forKeys: [.vibrationEnabled, .vibration_enabled, .vibration],
             defaultValue: false
         )
+        let useExtendedRange = container.decodeFirstBool(
+            forKeys: [.useExtendedRange],
+            defaultValue: false
+        )
 
         let soundType = container.decodeFirstSoundType(
             forKeys: [.soundType, .sound_type, .alarmSound, .sound],
@@ -237,7 +248,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatEnabled: repeatEnabled,
             soundType: soundType,
             volume: clampedVolume,
-            vibrationEnabled: vibrationEnabled
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: useExtendedRange
         )
     }
 
@@ -251,12 +263,13 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         try container.encode(soundType, forKey: .soundType)
         try container.encode(volume, forKey: .volume)
         try container.encode(vibrationEnabled, forKey: .vibrationEnabled)
+        try container.encode(useExtendedRange, forKey: .useExtendedRange)
     }
 
     /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
     /// Call this at deserialization time to enforce feature gating after subscription expiry.
     public func clamped(isPro: Bool) -> TimerConfig {
-        let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
+        let maxAllowed = (isPro && useExtendedRange) ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
         let clampedMax = min(maxSeconds, maxAllowed)
         let clampedMin = min(minSeconds, clampedMax)
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
@@ -269,7 +282,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatEnabled: repeatEnabled,
             soundType: clampedSound,
             volume: volume,
-            vibrationEnabled: vibrationEnabled
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: isPro ? useExtendedRange : false
         )
     }
 }
