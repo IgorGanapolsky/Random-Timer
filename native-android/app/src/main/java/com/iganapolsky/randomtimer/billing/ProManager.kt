@@ -54,6 +54,7 @@ class ProManager
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
         val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel.asStateFlow()
+        private var debugOverrideActive = false
 
         val isPro: StateFlow<Boolean> =
             _entitlementLevel
@@ -160,7 +161,9 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            _entitlementLevel.value = level
+            if (!debugOverrideActive) {
+                _entitlementLevel.value = level
+            }
 
             if (trackResult) {
                 trackRestoreResult(
@@ -437,6 +440,7 @@ class ProManager
             if (!canUseDebugUnlock()) {
                 return false
             }
+            debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             trackPurchaseResult(
                 success = true,
