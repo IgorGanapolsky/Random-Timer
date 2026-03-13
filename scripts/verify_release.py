@@ -382,8 +382,14 @@ class AppStoreVerifier:
                 "details": f"App Store Connect API error: {e}",
             }
 
-    def verify_app_store_version(self, version: str) -> dict:
-        """Check the App Store version submission state."""
+    def verify_app_store_version(self, version: str, require_submission: bool = False) -> dict:
+        """Check the App Store version submission state.
+
+        Before submission, editable states like REJECTED / DEVELOPER_REJECTED are
+        acceptable because the release workflow still needs to push metadata and
+        resubmit that exact version. After submission, callers can set
+        require_submission=True to demand a submitted state.
+        """
         try:
             app_id = self._get_app_id()
 
@@ -399,15 +405,18 @@ class AppStoreVerifier:
             versions = data.get("data", [])
             if not versions:
                 return {
-                    "passed": True,  # Not submitted yet is OK for TestFlight
+                    "passed": not require_submission,
                     "status": "NOT_SUBMITTED",
                     "details": f"No App Store version '{version}' submitted (TestFlight only)",
                 }
 
             attrs = versions[0].get("attributes", {})
             state = attrs.get("appStoreState", "UNKNOWN")
+            failed_states = {"REMOVED_FROM_SALE", "DEVELOPER_REMOVED_FROM_SALE"}
+            if require_submission:
+                failed_states |= {"REJECTED", "DEVELOPER_REJECTED"}
             return {
-                "passed": state not in ("REJECTED", "REMOVED_FROM_SALE", "DEVELOPER_REMOVED_FROM_SALE"),
+                "passed": state not in failed_states,
                 "status": state,
                 "details": f"App Store version {version}: appStoreState={state}",
             }
@@ -452,7 +461,12 @@ def print_results(results: list[dict]):
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
+def poll_until_done(
+    verify_fn,
+    poll_interval: int,
+    timeout: int,
+    terminal_statuses: Optional[set[str]] = None,
+) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
@@ -598,7 +612,10 @@ def main():
         })
 
         # Also check App Store version state
-        asv = asc.verify_app_store_version(args.version)
+        asv = asc.verify_app_store_version(
+            args.version,
+            require_submission=args.require_appstore_submission,
+        )
         if args.require_appstore_submission and asv.get("status") == "NOT_SUBMITTED":
             asv = {
                 "passed": False,
