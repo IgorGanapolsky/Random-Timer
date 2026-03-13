@@ -169,6 +169,7 @@ final class ProManager: ObservableObject {
     }
 
     func unlockProForDebug() {
+        debugOverrideActive = true
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
     }
