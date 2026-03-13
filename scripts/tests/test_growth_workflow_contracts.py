@@ -45,6 +45,14 @@ def test_internal_distribution_workflow_emits_platform_specific_release_artifact
     assert "android-release-verification" in source
 
 
+def test_ios_metadata_sync_can_remove_locked_waiting_for_review_version_and_upload_evidence():
+    source = (ROOT / ".github/workflows/ios-metadata-sync.yml").read_text(encoding="utf-8")
+
+    assert "remove_from_review_if_locked" in source
+    assert "python scripts/asc_remove_from_review.py" in source
+    assert "asc-remove-from-review" in source
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
