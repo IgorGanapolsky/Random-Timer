@@ -63,6 +63,13 @@ final class AIVoiceCalloutService {
         }
     }
 
+    private(set) var volume: Float = 1.0
+
+    func setVolume(_ newVolume: Float) {
+        volume = newVolume
+        audioPlayer?.volume = newVolume
+    }
+
     private func speak(_ text: String) {
         let mappedFilename = voiceFilename(for: text)
         let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
@@ -76,7 +83,7 @@ final class AIVoiceCalloutService {
         }
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.volume = 1.0
+            audioPlayer?.volume = volume
             audioPlayer?.play()
         } catch {
             Self.log.error("Audio playback failed: \(error.localizedDescription)")

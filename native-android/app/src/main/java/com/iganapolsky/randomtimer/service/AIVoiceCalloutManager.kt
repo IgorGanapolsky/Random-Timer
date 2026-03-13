@@ -71,9 +71,16 @@ class AIVoiceCalloutManager
         @ApplicationContext private val context: Context,
     ) {
         private var lastElapsedMilestone = 0
+        private var mediaPlayer: MediaPlayer? = null
+        private var currentVolume: Float = 1.0f
 
         companion object {
             val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
+        }
+
+        fun setVolume(volume: Float) {
+            currentVolume = volume.coerceIn(0f, 1f)
+            mediaPlayer?.setVolume(currentVolume, currentVolume)
         }
 
         fun speak(text: String) {
@@ -84,24 +91,37 @@ class AIVoiceCalloutManager
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
             try {
+                // Stop and release previous player if still active
+                mediaPlayer?.let {
+                    if (it.isPlaying) it.stop()
+                    it.release()
+                }
+
                 val attrs =
                     AudioAttributes
                         .Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build()
-                val mp =
+
+                mediaPlayer =
                     MediaPlayer().apply {
                         setAudioAttributes(attrs)
                         val afd = context.resources.openRawResourceFd(resId)
                         setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                         afd.close()
                         prepare()
+                        setVolume(currentVolume, currentVolume)
+                        setOnCompletionListener {
+                            it.release()
+                            if (mediaPlayer == it) {
+                                mediaPlayer = null
+                            }
+                        }
+                        start()
                     }
-                mp.setOnCompletionListener { it.release() }
-                mp.start()
             } catch (e: Exception) {
-                android.util.Log.e("AIVoice", "Audio playback failed: ${e.message}")
+                Log.e("AIVoice", "Audio playback failed: ${e.message}", e)
             }
         }
 
