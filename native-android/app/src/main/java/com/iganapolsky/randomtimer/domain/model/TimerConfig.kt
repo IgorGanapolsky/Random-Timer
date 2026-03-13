@@ -50,11 +50,14 @@ data class TimerConfig(
     val volume: Float,
     /** Whether vibration is enabled */
     val vibrationEnabled: Boolean = false,
+    /** Whether to use the extended 60-minute range (Pro only) */
+    val useExtendedRange: Boolean = false,
 ) {
     init {
         require(minSeconds >= 0) { "Minimum seconds cannot be negative" }
         require(maxSeconds >= minSeconds) { "Maximum seconds must be >= minimum seconds" }
-        require(maxSeconds <= MAX_SECONDS_PRO) { "Maximum seconds cannot exceed $MAX_SECONDS_PRO" }
+        val maxAllowed = if (useExtendedRange) MAX_SECONDS_PRO else MAX_SECONDS_FREE
+        require(maxSeconds <= maxAllowed) { "Maximum seconds cannot exceed $maxAllowed" }
         require(alarmDuration > 0) { "Alarm duration must be positive" }
         require(volume in 0f..1f) { "Volume must be between 0 and 1" }
     }
@@ -82,6 +85,7 @@ data class TimerConfig(
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
                 vibrationEnabled = false,
+                useExtendedRange = false,
             )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)

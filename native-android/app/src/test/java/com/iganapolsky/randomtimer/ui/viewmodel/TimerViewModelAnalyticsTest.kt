@@ -6,6 +6,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
+import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -70,6 +71,7 @@ class TimerViewModelAnalyticsTest {
                 repository = repository,
                 startTimerUseCase = startTimerUseCase,
                 soundPreviewManager = soundPreviewManager,
+                voiceCalloutManager = mockk<AIVoiceCalloutManager>(relaxed = true),
                 serviceController = serviceController,
                 analyticsService = analyticsService,
                 storeReviewManager = storeReviewManager,

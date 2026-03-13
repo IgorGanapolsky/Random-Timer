@@ -139,6 +139,7 @@ fun TimerSetupScreen(
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
+        useExtendedRange: Boolean = config.useExtendedRange,
     ) {
         onConfigChange(
             config.copy(
@@ -150,6 +151,7 @@ fun TimerSetupScreen(
                 soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                useExtendedRange = useExtendedRange,
             ),
         )
     }
@@ -229,8 +231,34 @@ fun TimerSetupScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
                                 )
-                                if (!isPro) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                Spacer(modifier = Modifier.weight(1f))
+                                if (isPro) {
+                                    Surface(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            val newExtended = !config.useExtendedRange
+                                            if (!newExtended && config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) {
+                                                // Clamp if shrinking
+                                                val clampedMax = TimerConfig.MAX_SECONDS_FREE
+                                                val clampedMin = minOf(config.minSeconds, clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+                                                updateConfig(useExtendedRange = false, minSeconds = clampedMin, maxSeconds = clampedMax)
+                                            } else {
+                                                updateConfig(useExtendedRange = newExtended)
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = if (config.useExtendedRange) TimerColors.AccentPrimary.copy(alpha = 0.2f) else TimerColors.GlassBackground,
+                                        border = BorderStroke(0.5.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
+                                    ) {
+                                        Text(
+                                            text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                } else {
                                     Text(
                                         text = "PRO: 1H \uD83D\uDD12",
                                         style = MaterialTheme.typography.labelSmall,
@@ -250,7 +278,7 @@ fun TimerSetupScreen(
                             }
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
-                            val maxRange = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                            val maxRange = if (isPro && config.useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
                             TimeRangeSliders(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
