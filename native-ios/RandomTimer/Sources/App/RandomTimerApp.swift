@@ -1,4 +1,12 @@
 import SwiftUI
+import UIKit
+
+// swiftlint:disable no_environment_object
+@MainActor
+func shouldKeepScreenAwake(timerState: TimerState?) -> Bool {
+    guard let timerState else { return false }
+    return timerState.status != .idle && timerState.status != .complete
+}
 
 @main
 struct RandomTimerApp: App {
@@ -22,6 +30,7 @@ struct RandomTimerApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
+                UIApplication.shared.isIdleTimerDisabled = shouldKeepScreenAwake(timerState: timerManager.timerState)
                 Task {
                     await timerManager.handleForeground()
                 }
@@ -57,6 +66,7 @@ struct ContentView: View {
         }
         .onAppear {
             syncNavigationState()
+            updateIdleTimerState()
 #if DEBUG
             guard didApplyUITestSeed == false else { return }
             didApplyUITestSeed = true
@@ -64,7 +74,7 @@ struct ContentView: View {
             Task {
                 // Short delay to ensure environment is fully ready
                 try? await Task.sleep(for: .seconds(0.5))
-                
+
                 let args = ProcessInfo.processInfo.arguments
                 guard let index = args.firstIndex(of: "-ui-test-state"),
                       args.indices.contains(index + 1) else { return }
@@ -128,6 +138,10 @@ struct ContentView: View {
         }
         .onChange(of: timerManager.timerState?.status) { _, _ in
             syncNavigationState()
+            updateIdleTimerState()
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
 
@@ -148,6 +162,10 @@ struct ContentView: View {
         hadActiveTimer = hasActiveTimer
         previousTimerStatus = currentStatus
     }
+
+    private func updateIdleTimerState() {
+        UIApplication.shared.isIdleTimerDisabled = shouldKeepScreenAwake(timerState: timerManager.timerState)
+    }
 }
 
 #Preview {
@@ -155,3 +173,4 @@ struct ContentView: View {
         .environmentObject(TimerManager())
         .environmentObject(ProManager.shared)
 }
+// swiftlint:enable no_environment_object

@@ -171,7 +171,7 @@ final class SilenceAndStopAlarmTests: XCTestCase {
 }
 
 @MainActor
-final class NotificationServiceMediaButtonBehaviorTests: XCTestCase {
+final class NotificationMediaButtonTests: XCTestCase {
 
     func testMediaButtonSilenceActionInvokesSilenceCallbackOnly() {
         let service = NotificationService()
@@ -220,5 +220,53 @@ final class NotificationServiceMediaButtonBehaviorTests: XCTestCase {
         service.handleNotificationSilenceAction()
 
         XCTAssertTrue(didSilence)
+    }
+}
+
+@MainActor
+final class ScreenWakePolicyTests: XCTestCase {
+
+    func testKeepsScreenAwakeDuringActiveTimerStatuses() {
+        let activeState = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 30,
+            remainingDuration: 10,
+            status: .running
+        )
+
+        XCTAssertTrue(shouldKeepScreenAwake(timerState: activeState))
+        XCTAssertTrue(shouldKeepScreenAwake(timerState: activeState.withStatus(.paused)))
+        XCTAssertTrue(shouldKeepScreenAwake(timerState: activeState.withStatus(.alarm)))
+        XCTAssertTrue(shouldKeepScreenAwake(timerState: activeState.withStatus(.warning)))
+        XCTAssertTrue(shouldKeepScreenAwake(timerState: activeState.withStatus(.danger)))
+    }
+
+    func testAllowsScreenSleepWhenTimerIsComplete() {
+        let completeState = RandomTimer.TimerState(
+            config: .default,
+            targetDuration: 30,
+            remainingDuration: 0,
+            status: .complete
+        )
+
+        XCTAssertFalse(shouldKeepScreenAwake(timerState: completeState))
+    }
+
+    func testAllowsScreenSleepWhenTimerIsAbsent() {
+        XCTAssertFalse(shouldKeepScreenAwake(timerState: nil))
+    }
+}
+
+private extension RandomTimer.TimerState {
+    func withStatus(_ status: RandomTimer.TimerStatus) -> RandomTimer.TimerState {
+        RandomTimer.TimerState(
+            config: config,
+            targetDuration: targetDuration,
+            startedAt: startedAt,
+            remainingDuration: remainingDuration,
+            status: status,
+            alarmTimeRemaining: alarmTimeRemaining,
+            alarmStartedAt: alarmStartedAt
+        )
     }
 }

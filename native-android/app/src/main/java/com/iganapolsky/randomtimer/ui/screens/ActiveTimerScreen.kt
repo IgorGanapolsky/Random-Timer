@@ -35,7 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,6 +65,9 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+internal fun shouldKeepScreenAwake(state: TimerState?): Boolean =
+    state != null && state.status != TimerStatus.IDLE && state.status != TimerStatus.COMPLETE
+
 @Composable
 fun ActiveTimerScreen(
     state: TimerState,
@@ -75,6 +81,7 @@ fun ActiveTimerScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
@@ -88,7 +95,14 @@ fun ActiveTimerScreen(
             onStop()
         }
     }
-
+    SideEffect {
+        view.keepScreenOn = shouldKeepScreenAwake(state)
+    }
+    DisposableEffect(view) {
+        onDispose {
+            view.keepScreenOn = false
+        }
+    }
     LaunchedEffect(resetFeedbackCounter) {
         if (resetFeedbackCounter == 0) return@LaunchedEffect
         showResetFeedback = true
