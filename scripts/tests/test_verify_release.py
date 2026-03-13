@@ -63,3 +63,63 @@ def test_print_results_returns_true_only_when_all_pass():
     assert vr.print_results([
         {"platform": "Android", "track": "alpha", "version": "1", "passed": False, "status": "bad", "details": "x"}
     ]) is False
+
+
+def test_appstore_rejected_state_is_allowed_before_submission(monkeypatch):
+    asc = vr.AppStoreVerifier()
+    monkeypatch.setattr(asc, "_get_app_id", lambda: "app123")
+    monkeypatch.setattr(
+        asc,
+        "_request",
+        lambda *_a, **_k: {
+            "data": [
+                {
+                    "attributes": {
+                        "versionString": "1.2.6",
+                        "appStoreState": "REJECTED",
+                    }
+                }
+            ]
+        },
+    )
+
+    result = asc.verify_app_store_version("1.2.6")
+    assert result["passed"] is True
+    assert result["status"] == "REJECTED"
+
+
+def test_appstore_rejected_state_fails_when_submission_required(monkeypatch):
+    asc = vr.AppStoreVerifier()
+    monkeypatch.setattr(asc, "_get_app_id", lambda: "app123")
+    monkeypatch.setattr(
+        asc,
+        "_request",
+        lambda *_a, **_k: {
+            "data": [
+                {
+                    "attributes": {
+                        "versionString": "1.2.6",
+                        "appStoreState": "REJECTED",
+                    }
+                }
+            ]
+        },
+    )
+
+    result = asc.verify_app_store_version("1.2.6", require_submission=True)
+    assert result["passed"] is False
+    assert result["status"] == "REJECTED"
+
+
+def test_appstore_missing_version_only_fails_when_submission_required(monkeypatch):
+    asc = vr.AppStoreVerifier()
+    monkeypatch.setattr(asc, "_get_app_id", lambda: "app123")
+    monkeypatch.setattr(asc, "_request", lambda *_a, **_k: {"data": []})
+
+    pre_submit = asc.verify_app_store_version("1.2.6")
+    post_submit = asc.verify_app_store_version("1.2.6", require_submission=True)
+
+    assert pre_submit["passed"] is True
+    assert pre_submit["status"] == "NOT_SUBMITTED"
+    assert post_submit["passed"] is False
+    assert post_submit["status"] == "NOT_SUBMITTED"
