@@ -403,6 +403,19 @@ def attach_build(client: ASCClient, version_id: str, build_id: str) -> None:
         payload={"data": {"type": "builds", "id": build_id}},
     )
 
+
+def _pick_primary_app_info(app_infos: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for ai in app_infos:
+        if not isinstance(ai, dict):
+            continue
+        if (ai.get("attributes") or {}).get("platform") == "IOS":
+            return ai
+    for ai in app_infos:
+        if isinstance(ai, dict):
+            return ai
+    return None
+
+
 def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, Any]:
     # App Info holds category + localized strings/URLs like privacy policy/support URL.
     #
@@ -423,18 +436,7 @@ def verify_app_info(client: ASCClient, app_id: str, locale: str) -> dict[str, An
         die("Missing app info. Complete App Information in App Store Connect.")
 
     # Prefer the iOS appInfo if multiple platforms exist; otherwise fall back to first dict.
-    app_info: dict[str, Any] | None = None
-    for ai in app_infos:
-        if not isinstance(ai, dict):
-            continue
-        if (ai.get("attributes") or {}).get("platform") == "IOS":
-            app_info = ai
-            break
-    if not app_info:
-        for ai in app_infos:
-            if isinstance(ai, dict):
-                app_info = ai
-                break
+    app_info = _pick_primary_app_info(app_infos)
     if not app_info:
         die("Missing app info object. Complete App Information in App Store Connect.")
 
@@ -675,10 +677,35 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
 
 
 def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
-    # Current ASC API exposes a unified AgeRatingDeclaration relationship on the App Store Version:
-    #   GET /v1/appStoreVersions/{id}/ageRatingDeclaration
-    # Some older code paths used app/appInfo relationships which may not exist on newer APIs.
+    # Apple’s current ASC docs place age rating at the app-info layer.
+    # Try appInfos first, then fall back to the older appStoreVersion path for
+    # compatibility with older API behavior.
     errors: list[str] = []
+    try:
+        data = client.request(
+            "GET",
+            f"/apps/{app_id}/appInfos",
+            params={"include": "primaryCategory", "limit": 50},
+        )
+        app_infos = data.get("data") or []
+        app_info = _pick_primary_app_info(app_infos)
+        app_info_id = str((app_info or {}).get("id") or "").strip()
+        if app_info_id:
+            for path in (
+                f"/appInfos/{app_info_id}/ageRatingDeclaration",
+                f"/appInfos/{app_info_id}/relationships/ageRatingDeclaration",
+            ):
+                try:
+                    data = client.request("GET", path)
+                    if data.get("data"):
+                        return
+                except Exception as e:
+                    errors.append(f"appInfo {path}: {e}")
+        else:
+            errors.append("appInfo id missing (cannot verify age rating declaration).")
+    except Exception as e:
+        errors.append(f"appInfo lookup /apps/{app_id}/appInfos: {e}")
+
     if version_id:
         try:
             data = client.request("GET", f"/appStoreVersions/{version_id}/ageRatingDeclaration")
