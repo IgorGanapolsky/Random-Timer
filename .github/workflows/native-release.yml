@@ -267,6 +267,9 @@ jobs:
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
+          PLAY_PRODUCTION_COUNTRY_CODES: US
+          PLAY_PRODUCTION_COUNTRY_USER_FRACTION: "0.99"
+          PLAY_PRODUCTION_COUNTRY_INCLUDE_REST_OF_WORLD: "false"
         run: |
           if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
             echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
@@ -282,6 +285,9 @@ jobs:
             --release-status "$PLAY_RELEASE_STATUS" \
             --retry-window-seconds "$PLAY_UPLOAD_RETRY_WINDOW_SECONDS" \
             --retry-interval-seconds "$PLAY_UPLOAD_RETRY_INTERVAL_SECONDS" \
+            --production-country-codes "$PLAY_PRODUCTION_COUNTRY_CODES" \
+            --production-country-user-fraction "$PLAY_PRODUCTION_COUNTRY_USER_FRACTION" \
+            --production-country-include-rest-of-world "$PLAY_PRODUCTION_COUNTRY_INCLUDE_REST_OF_WORLD" \
             --result-json /tmp/play-upload-result.json \
             --error-json /tmp/play-upload-error.json
 

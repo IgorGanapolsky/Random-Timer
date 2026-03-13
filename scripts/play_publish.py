@@ -29,6 +29,10 @@ FAILED_PRECONDITION_MARKERS = (
     "failed_precondition",
     "precondition check failed",
 )
+NO_COUNTRY_TARGETING_MARKERS = (
+    "release in track targeting no countries",
+    "track targeting no countries",
+)
 
 
 @dataclass
@@ -72,6 +76,15 @@ def _is_failed_precondition(message: str, response_text: str, http_status: int |
     if any(marker in combined for marker in FAILED_PRECONDITION_MARKERS):
         return True
     return http_status == 400 and "precondition" in combined
+
+
+def _is_no_country_targeting_error(
+    message: str,
+    response_text: str,
+    http_status: int | None,
+) -> bool:
+    combined = f"{message}\n{response_text}".lower()
+    return http_status == 403 and any(marker in combined for marker in NO_COUNTRY_TARGETING_MARKERS)
 
 
 def _is_transient_http(http_status: int | None, message: str) -> bool:
@@ -192,6 +205,8 @@ def _release_payload(
     release_status: str,
     release_notes: str,
     user_fraction_raw: str,
+    country_codes: list[str] | None = None,
+    include_rest_of_world: bool = False,
 ) -> dict[str, Any]:
     release: dict[str, Any] = {
         "versionCodes": [str(version_code)],
@@ -210,6 +225,11 @@ def _release_payload(
         if user_fraction >= 1.0:
             user_fraction = 0.1
         release["userFraction"] = user_fraction
+        if country_codes:
+            release["countryTargeting"] = {
+                "countries": country_codes,
+                "includeRestOfWorld": include_rest_of_world,
+            }
 
     return release
 
@@ -227,6 +247,8 @@ def _publish_to_track(
     changelog_dir: Path,
     credentials_path: Path,
     user_fraction_raw: str,
+    country_codes: list[str] | None = None,
+    include_rest_of_world: bool = False,
 ) -> dict[str, Any]:
     from googleapiclient.errors import HttpError
     from googleapiclient.http import MediaFileUpload
@@ -263,6 +285,8 @@ def _publish_to_track(
                 release_status=release_status,
                 release_notes=release_notes,
                 user_fraction_raw=user_fraction_raw,
+                country_codes=country_codes,
+                include_rest_of_world=include_rest_of_world,
             )
 
             service.edits().tracks().update(
@@ -334,7 +358,40 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--result-json", default="/tmp/play-upload-result.json")
     parser.add_argument("--error-json", default="/tmp/play-upload-error.json")
     parser.add_argument("--user-fraction", default=os.getenv("PLAY_USER_FRACTION", "0.1"))
+    parser.add_argument(
+        "--production-country-codes",
+        default=os.getenv("PLAY_PRODUCTION_COUNTRY_CODES", ""),
+        help="Comma-separated CLDR country codes for production no-country recovery (example: US,CA).",
+    )
+    parser.add_argument(
+        "--production-country-user-fraction",
+        default=os.getenv("PLAY_PRODUCTION_COUNTRY_USER_FRACTION", "0.99"),
+        help="Staged rollout user fraction to use for production country-targeting recovery.",
+    )
+    parser.add_argument(
+        "--production-country-include-rest-of-world",
+        default=os.getenv("PLAY_PRODUCTION_COUNTRY_INCLUDE_REST_OF_WORLD", "false"),
+        help='Whether country-targeting recovery should also include "rest of world" (true/false).',
+    )
     return parser.parse_args()
+
+
+def _parse_country_codes(raw: str) -> list[str]:
+    codes: list[str] = []
+    seen: set[str] = set()
+    for part in (raw or "").split(","):
+        code = part.strip().upper()
+        if not code:
+            continue
+        if code in seen:
+            continue
+        seen.add(code)
+        codes.append(code)
+    return codes
+
+
+def _parse_bool(raw: str) -> bool:
+    return (raw or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def main() -> int:
@@ -362,6 +419,11 @@ def main() -> int:
     result_json_path = Path(args.result_json)
     error_json_path = Path(args.error_json)
     release_status = (args.release_status or "completed").strip() or "completed"
+    production_country_codes = _parse_country_codes(args.production_country_codes)
+    production_country_include_rest_of_world = _parse_bool(
+        args.production_country_include_rest_of_world
+    )
+    production_country_recovery_attempted = False
 
     precondition_error_payload: dict[str, Any] | None = None
     for idx, track in enumerate(tracks):
@@ -389,6 +451,7 @@ def main() -> int:
                 "version_code": outcome["version_code"],
                 "attempt": outcome["attempt"],
                 "fallback_reason": "FAILED_PRECONDITION" if fallback_used else "",
+                "country_targeting_applied": False,
             }
             if precondition_error_payload:
                 result_payload["production_precondition_error"] = precondition_error_payload
@@ -410,6 +473,96 @@ def main() -> int:
                 "response": error.response_text,
             }
             _write_json(error_json_path, payload)
+            is_no_country_targeting = (
+                idx == 0
+                and track == "production"
+                and not production_country_recovery_attempted
+                and bool(production_country_codes)
+                and _is_no_country_targeting_error(
+                    error.message, error.response_text, error.http_status
+                )
+            )
+            if is_no_country_targeting:
+                production_country_recovery_attempted = True
+                recovery_status = "inProgress"
+                recovery_fraction = args.production_country_user_fraction
+                print(
+                    "⚠️ Production publish blocked because the track targets no countries. "
+                    f"Retrying production as {recovery_status} with countryTargeting={production_country_codes} "
+                    f"includeRestOfWorld={production_country_include_rest_of_world} "
+                    f"userFraction={recovery_fraction}.",
+                    file=sys.stderr,
+                )
+                try:
+                    outcome = _publish_to_track(
+                        package=package,
+                        aab_path=aab_path,
+                        track=track,
+                        release_status=recovery_status,
+                        retry_window_seconds=args.retry_window_seconds,
+                        retry_interval_seconds=args.retry_interval_seconds,
+                        metadata_dir=metadata_dir,
+                        ios_support_url_path=ios_support_url_path,
+                        changelog_dir=changelog_dir,
+                        credentials_path=service_account_json,
+                        user_fraction_raw=recovery_fraction,
+                        country_codes=production_country_codes,
+                        include_rest_of_world=production_country_include_rest_of_world,
+                    )
+                    result_payload = {
+                        "requested_track": requested_track,
+                        "effective_track": track,
+                        "fallback_used": False,
+                        "precondition_blocked": bool(precondition_error_payload),
+                        "release_status": recovery_status,
+                        "version_code": outcome["version_code"],
+                        "attempt": outcome["attempt"],
+                        "fallback_reason": "",
+                        "country_targeting_applied": True,
+                        "country_targeting": {
+                            "countries": production_country_codes,
+                            "includeRestOfWorld": production_country_include_rest_of_world,
+                            "userFraction": recovery_fraction,
+                        },
+                        "initial_production_error": payload,
+                    }
+                    _write_json(result_json_path, result_payload)
+                    print(
+                        f"✅ Uploaded version code {outcome['version_code']} to '{track}' track "
+                        f"(requested={requested_track}, status={recovery_status}, "
+                        "country_targeting_applied=true)"
+                    )
+                    return 0
+                except PublishError as recovery_error:
+                    payload = {
+                        "package": package,
+                        "requested_track": requested_track,
+                        "track": track,
+                        "release_status": recovery_status,
+                        "attempt": recovery_error.attempt,
+                        "http_status": recovery_error.http_status,
+                        "error": recovery_error.message,
+                        "response": recovery_error.response_text,
+                        "country_targeting": {
+                            "countries": production_country_codes,
+                            "includeRestOfWorld": production_country_include_rest_of_world,
+                            "userFraction": recovery_fraction,
+                        },
+                        "initial_production_error": payload,
+                    }
+                    _write_json(error_json_path, payload)
+                    if recovery_error.response_text:
+                        print(
+                            f"❌ Google Play production recovery failed: {recovery_error.message}\n\n"
+                            f"Response:\n{recovery_error.response_text}",
+                            file=sys.stderr,
+                        )
+                    else:
+                        print(
+                            f"❌ Google Play production recovery failed: {recovery_error.message}",
+                            file=sys.stderr,
+                        )
+                    return 1
             is_production_precondition = (
                 idx == 0
                 and track == "production"
