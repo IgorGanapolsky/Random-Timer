@@ -125,7 +125,7 @@ fun TimerSetupScreen(
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
-    onSecretUnlock: () -> Unit = {},
+    onSecretUnlock: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -158,6 +158,18 @@ fun TimerSetupScreen(
         val isCompactHeight = TimerSetupLayoutPolicy.isCompactHeightViewport(maxHeight.value.toInt())
         val spacing = if (isCompactHeight) SetupSpacing.compact else SetupSpacing.regular
         var showArsenalSheet by remember(isCompactHeight) { mutableStateOf(false) }
+        val handleArsenalTap = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            if (isPro) {
+                if (isCompactHeight) {
+                    showArsenalSheet = true
+                } else {
+                    showArsenal = !showArsenal
+                }
+            } else {
+                onUpgradeTap()
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -240,10 +252,13 @@ fun TimerSetupScreen(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
                                                 onClick = { onUpgradeTap() },
-                                                onLongClick = {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    onSecretUnlock()
-                                                },
+                                                onLongClick =
+                                                    onSecretUnlock?.let {
+                                                        {
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            it()
+                                                        }
+                                                    },
                                             ),
                                     )
                                 }
@@ -517,28 +532,21 @@ fun TimerSetupScreen(
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
                             modifier =
-                                Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isPro) {
-                                                if (isCompactHeight) {
-                                                    showArsenalSheet = true
-                                                } else {
-                                                    showArsenal = !showArsenal
+                                if (onSecretUnlock != null) {
+                                    Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = { handleArsenalTap() },
+                                            onPress = {
+                                                val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
+                                                if (released == null) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onSecretUnlock()
                                                 }
-                                            } else {
-                                                onUpgradeTap()
-                                            }
-                                        },
-                                        onPress = {
-                                            val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
-                                            if (released == null) {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onSecretUnlock()
-                                            }
-                                        },
-                                    )
+                                            },
+                                        )
+                                    }
+                                } else {
+                                    Modifier.clickable { handleArsenalTap() }
                                 },
                         )
 

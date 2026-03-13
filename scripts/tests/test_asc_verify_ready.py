@@ -22,7 +22,7 @@ class _FakeAscClient:
                     "type": "appStoreVersionLocalizations",
                     "attributes": {
                         "locale": "en-US",
-                        "description": "desc",
+                        "description": "desc\nTerms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n",
                         "keywords": "a,b",
                         "supportUrl": "https://example.com/support",
                     },
@@ -159,6 +159,42 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(report["screenshot_counts"]["APP_IPHONE_67"], 3)
         self.assertEqual(report["screenshot_counts"]["APP_IPAD_PRO_3GEN_129"], 3)
+        eula_check = next(c for c in report["checks"] if c["name"] == "Subscription EULA Link")
+        self.assertTrue(eula_check["passed"])
+
+    def test_verify_ready_fails_when_description_omits_eula_link(self):
+        from scripts import asc_verify_ready
+
+        fake = _FakeAscClient(
+            app_screenshots_by_set={
+                "set_iphone": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "ph"),
+                "set_ipad": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "pd"),
+            }
+        )
+
+        original_get = fake.get
+
+        def patched_get(path, params=None):
+            payload = original_get(path, params)
+            if path == "/apps/app1/appStoreVersions":
+                payload["included"][0 if not fake.include_build else 1]["attributes"]["description"] = "desc without eula"
+            return payload
+
+        fake.get = patched_get
+
+        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+            passed, report = asc_verify_ready.verify_ready(
+                bundle_id="com.igorganapolsky.randomtimer",
+                version="1.1.1",
+                locale="en-US",
+                min_iphone=3,
+                min_ipad=3,
+                require_build=True,
+            )
+
+        self.assertFalse(passed)
+        eula_check = next(c for c in report["checks"] if c["name"] == "Subscription EULA Link")
+        self.assertFalse(eula_check["passed"])
 
     def test_verify_ready_can_skip_build_requirement(self):
         passed, report = self._run_verify(

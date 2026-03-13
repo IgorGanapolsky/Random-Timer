@@ -2,6 +2,7 @@ import os
 import StoreKit
 
 @MainActor
+// swiftlint:disable:next no_observable_object
 final class ProManager: ObservableObject {
     static let shared = ProManager()
 
@@ -41,7 +42,8 @@ final class ProManager: ObservableObject {
     }
 
     func formattedPrice(for productID: String) -> String {
-        products.first(where: { $0.id == productID })?.displayPrice ?? (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99")
+        products.first(where: { $0.id == productID })?.displayPrice ??
+            (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99")
     }
 
     // MARK: - Purchase
@@ -51,11 +53,11 @@ final class ProManager: ObservableObject {
         if products.isEmpty {
             await fetchProduct()
         }
-        
+
         guard let product = products.first(where: { $0.id == productID }) else {
             return .productUnavailable
         }
-        
+
         return await doPurchase(product)
     }
 
@@ -101,7 +103,7 @@ final class ProManager: ObservableObject {
         let wasPro = isPro
         guard !debugOverrideActive else { return wasPro ? .alreadyUnlocked : .notFound }
         entitlementLevel = highestLevel
-        
+
         if isPro && !wasPro {
             return .restored
         } else if isPro {
@@ -130,7 +132,6 @@ final class ProManager: ObservableObject {
 
     private func updateEntitlement(for productID: String) {
         let newLevel = levelFor(productID: productID)
-        // Only upgrade, don't downgrade via this path (downgrades handled by restore/currentEntitlements)
         if newLevel == .elite {
             entitlementLevel = .elite
         } else if newLevel == .base && entitlementLevel == .none {
@@ -169,14 +170,19 @@ final class ProManager: ObservableObject {
     }
 
     func unlockProForDebug() {
+#if DEBUG
         debugOverrideActive = true
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
+#endif
     }
-    
+
     func unlockEliteForDebug() {
+#if DEBUG
+        debugOverrideActive = true
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
+#endif
     }
 }
 

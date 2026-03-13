@@ -215,11 +215,18 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
   header "iOS Store Listing"
 
   IOS_META="$PROJECT_ROOT/native-ios/fastlane/metadata/en-US"
+  IOS_STANDARD_EULA_URL="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
 
   # Required text files
   for f in name.txt subtitle.txt description.txt keywords.txt release_notes.txt; do
     check_file_nonempty "$IOS_META/$f" "iOS $f"
   done
+
+  if [[ -f "$IOS_META/description.txt" ]]; then
+    if ! grep -Fq "$IOS_STANDARD_EULA_URL" "$IOS_META/description.txt"; then
+      err "iOS description.txt must include the Apple standard EULA URL ($IOS_STANDARD_EULA_URL)"
+    fi
+  fi
 
   # Privacy URL (required by App Store)
   if check_file_nonempty "$IOS_META/privacy_url.txt" "iOS privacy_url.txt"; then
