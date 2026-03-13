@@ -219,6 +219,7 @@ platform :ios do
       skip_screenshots: options.key?(:skip_screenshots) ? options[:skip_screenshots] : true,
       skip_metadata: options.key?(:skip_metadata) ? options[:skip_metadata] : true,
       force: true,
+      reject_if_possible: true,
       api_key: defined?(api_key) ? api_key : nil,
       submission_information: {
         export_compliance_uses_encryption: false,
