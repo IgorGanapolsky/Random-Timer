@@ -54,7 +54,7 @@ struct TimerSetupScreen: View {
                                             // Clamp if shrinking
                                             let clampedMax = TimerConfig.maxSecondsFree
                                             let clampedMin = Swift.min(config.minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds)
-                                            updateConfig(maxSeconds: clampedMax, minSeconds: clampedMin, useExtendedRange: false)
+                                            updateConfig(minSeconds: clampedMin, maxSeconds: clampedMax, useExtendedRange: false)
                                         } else {
                                             updateConfig(useExtendedRange: newExtended)
                                         }
