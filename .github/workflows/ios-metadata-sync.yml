@@ -22,11 +22,6 @@ on:
         required: true
         type: boolean
         default: true
-      remove_from_review_if_locked:
-        description: "If the selected version is waiting for review, remove it from review before metadata sync."
-        required: true
-        type: boolean
-        default: false
 
 concurrency:
   group: ios-metadata-sync-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
@@ -41,7 +36,6 @@ jobs:
       IOS_METADATA_LOCALE: ${{ inputs.locale }}
       IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
       IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
-      IOS_REMOVE_FROM_REVIEW_IF_LOCKED: ${{ inputs.remove_from_review_if_locked }}
     steps:
       - uses: actions/checkout@v4
 
@@ -109,14 +103,6 @@ jobs:
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
           echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
 
-      - name: Inventory App Store versions
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
-        run: |
-          python scripts/asc_list_versions.py --json-out /tmp/asc_versions.json
-
       - name: Resolve editable App Store version
         id: asc_version
         env:
@@ -133,21 +119,6 @@ jobs:
           SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "Using editable App Store version: $SELECTED_VERSION"
-
-      - name: Remove App Store version from review when locked
-        if: ${{ inputs.remove_from_review_if_locked }}
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
-          SELECTED_VERSION: ${{ steps.asc_version.outputs.selected_version }}
-        run: |
-          python scripts/asc_remove_from_review.py \
-            --version "$SELECTED_VERSION" \
-            --wait \
-            --timeout 300 \
-            --poll-interval 10 \
-            --json-out /tmp/asc_remove_from_review.json
 
       - name: Strict screenshot replacement + metadata upload
         env:
@@ -199,21 +170,6 @@ jobs:
           name: asc-version-resolution
           path: /tmp/asc_version.json
 
-      - name: Upload remove-from-review report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: asc-remove-from-review
-          path: /tmp/asc_remove_from_review.json
-          if-no-files-found: ignore
-
-      - name: Upload version inventory report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: asc-version-inventory
-          path: /tmp/asc_versions.json
-
       - name: Cleanup secrets
         if: always()
-        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json /tmp/asc_screenshot_sync.json /tmp/asc_versions.json /tmp/asc_remove_from_review.json
+        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json /tmp/asc_screenshot_sync.json

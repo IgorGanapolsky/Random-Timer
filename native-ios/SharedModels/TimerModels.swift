@@ -108,7 +108,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public init(
         minSeconds: Int = 0,
-        maxSeconds: Int = 30,
+        maxSeconds: Int = 300,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -118,7 +118,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     ) {
         precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
         precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
-        precondition(maxSeconds <= TimerConfig.maxSecondsPro, "Maximum seconds cannot exceed \(TimerConfig.maxSecondsPro)")
+        let maxPro = TimerConfig.maxSecondsPro
+        precondition(maxSeconds <= maxPro, "Maximum seconds cannot exceed \(maxPro)")
         precondition(alarmDuration > 0, "Alarm duration must be positive")
         precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
 
@@ -195,7 +196,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_time],
-            defaultValue: 30
+            defaultValue: 300
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -223,7 +224,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: .intense
         )
 
-        let clampedMin = max(0, rawMin)
+        let clampedMin = min(max(0, rawMin), TimerConfig.maxSecondsPro)
         let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
         let clampedMax = max(clampedMin, cappedMax)
         let clampedAlarm = max(1, rawAlarm)
@@ -283,8 +284,9 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
     static let defaultMinSecondsLimit = 0
-    static let defaultMaxSecondsLimit = 3600
-    static let defaultMinGapSeconds = 1
+    static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
+    static let defaultMinGapSeconds = 5
+
     static func adjustForMinChange(
         currentMinSeconds: Int,
         currentMaxSeconds: Int,
@@ -546,7 +548,12 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(
+        timerName: String = "Random Tactical Timer",
+        endDate: Date,
+        minSeconds: Int = 30,
+        maxSeconds: Int = 120
+    ) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds
@@ -708,11 +715,11 @@ private extension KeyedDecodingContainer {
 
     func decodeFirstDate(forKeys keys: [Key], defaultValue: Date) -> Date {
         for key in keys {
-            if let seconds = try? decodeIfPresent(Double.self, forKey: key) {
-                return Date(timeIntervalSince1970: seconds)
+            if let value = try? decodeIfPresent(Date.self, forKey: key) {
+                return value
             }
-            if let date = try? decodeIfPresent(Date.self, forKey: key) {
-                return date
+            if let value = try? decodeIfPresent(TimeInterval.self, forKey: key) {
+                return Date(timeIntervalSince1970: value)
             }
             if let value = decodeFirstString(forKeys: [key]) {
                 if let date = ISO8601DateFormatter().date(from: value) {

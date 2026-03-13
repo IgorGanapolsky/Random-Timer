@@ -35,118 +35,85 @@ struct RandomTimerApp: App {
 }
 
 struct ContentView: View {
-    private enum Route: Hashable {
-        case activeTimer
-    }
-
     @EnvironmentObject var timerManager: TimerManager
     @State private var didApplyUITestSeed: Bool = false
-    @State private var navigationPath: [Route] = []
-    @State private var hadActiveTimer = false
-    @State private var previousTimerStatus: TimerStatus?
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            TimerSetupScreen()
-                .navigationDestination(for: Route.self) { route in
-                    switch route {
-                    case .activeTimer:
-                        ActiveTimerScreen()
-                    }
+        NavigationStack {
+            Group {
+                if timerManager.timerState != nil {
+                    ActiveTimerScreen()
+                } else {
+                    TimerSetupScreen()
                 }
+            }
+            .animation(.easeInOut(duration: 0.3), value: timerManager.timerState != nil)
         }
         .onAppear {
-            syncNavigationState()
 #if DEBUG
             guard didApplyUITestSeed == false else { return }
             didApplyUITestSeed = true
 
-            Task {
-                // Short delay to ensure environment is fully ready
-                try? await Task.sleep(for: .seconds(0.5))
-                
-                let args = ProcessInfo.processInfo.arguments
-                guard let index = args.firstIndex(of: "-ui-test-state"),
-                      args.indices.contains(index + 1) else { return }
+            let args = ProcessInfo.processInfo.arguments
+            guard let index = args.firstIndex(of: "-ui-test-state"),
+                  args.indices.contains(index + 1) else { return }
 
-                let stateArg = args[index + 1].lowercased()
+            let stateArg = args[index + 1].lowercased()
 
-                switch stateArg {
-                case "running":
-                    let config = TimerConfig()
-                    let seededState = TimerState(
-                        config: config,
-                        targetDuration: 195,
-                        remainingDuration: 135,
-                        status: .running,
-                        alarmTimeRemaining: 0,
-                        alarmStartedAt: nil
-                    )
-                    timerManager._setTimerStateForTesting(seededState)
+            switch stateArg {
+            case "running":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 195,
+                    remainingDuration: 135,
+                    status: .running,
+                    alarmTimeRemaining: 0,
+                    alarmStartedAt: nil
+                )
+                timerManager._setTimerStateForTesting(seededState)
 
-                case "paused":
-                    let config = TimerConfig()
-                    let seededState = TimerState(
-                        config: config,
-                        targetDuration: 195,
-                        remainingDuration: 135,
-                        status: .paused,
-                        alarmTimeRemaining: 0,
-                        alarmStartedAt: nil
-                    )
-                    timerManager._setTimerStateForTesting(seededState)
+            case "paused":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 195,
+                    remainingDuration: 135,
+                    status: .paused,
+                    alarmTimeRemaining: 0,
+                    alarmStartedAt: nil
+                )
+                timerManager._setTimerStateForTesting(seededState)
 
-                case "alarm":
-                    let config = TimerConfig()
-                    let seededState = TimerState(
-                        config: config,
-                        targetDuration: 5,
-                        remainingDuration: 0,
-                        status: .alarm,
-                        alarmTimeRemaining: TimeInterval(config.alarmDuration),
-                        alarmStartedAt: Date()
-                    )
-                    timerManager._setTimerStateForTesting(seededState)
+            case "alarm":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 5,
+                    remainingDuration: 0,
+                    status: .alarm,
+                    alarmTimeRemaining: TimeInterval(config.alarmDuration),
+                    alarmStartedAt: Date()
+                )
+                timerManager._setTimerStateForTesting(seededState)
 
-                case "complete":
-                    let config = TimerConfig()
-                    let seededState = TimerState(
-                        config: config,
-                        targetDuration: 5,
-                        remainingDuration: 0,
-                        status: .complete,
-                        alarmTimeRemaining: 0,
-                        alarmStartedAt: nil
-                    )
-                    timerManager._setTimerStateForTesting(seededState)
+            case "complete":
+                let config = TimerConfig()
+                let seededState = TimerState(
+                    config: config,
+                    targetDuration: 5,
+                    remainingDuration: 0,
+                    status: .complete,
+                    alarmTimeRemaining: 0,
+                    alarmStartedAt: nil
+                )
+                timerManager._setTimerStateForTesting(seededState)
 
-                default:
-                    break
-                }
+            default:
+                break
             }
 #endif
         }
-        .onChange(of: timerManager.timerState?.status) { _, _ in
-            syncNavigationState()
-        }
-    }
-
-    private func syncNavigationState() {
-        let currentStatus = timerManager.timerState?.status
-        let hasActiveTimer = currentStatus != nil
-        let startedTimer = !hadActiveTimer && hasActiveTimer
-        let enteredAlarm = currentStatus == .alarm && previousTimerStatus != .alarm
-
-        if startedTimer || enteredAlarm {
-            if navigationPath.last != .activeTimer {
-                navigationPath = [.activeTimer]
-            }
-        } else if !hasActiveTimer {
-            navigationPath.removeAll()
-        }
-
-        hadActiveTimer = hasActiveTimer
-        previousTimerStatus = currentStatus
     }
 }
 

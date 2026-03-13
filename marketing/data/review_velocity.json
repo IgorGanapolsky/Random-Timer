@@ -8,6 +8,15 @@
       "android_total": 0,
       "android_rating": 0.0,
       "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-03-12T14:42:56.495304+00:00",
+      "ios_total": 0,
+      "ios_rating": 0.0,
+      "ios_recent_7d": 0,
+      "android_total": 0,
+      "android_rating": 0.0,
+      "android_recent_7d": 0
     }
   ],
   "alerts": [],
@@ -21,7 +30,8 @@
   },
   "latest_velocity": {
     "ios_velocity": 0.0,
-    "android_velocity": 0.0
+    "android_velocity": 0.0,
+    "window_days": 19
   },
   "review_prompt_config": {
     "completions_before_prompt": 3,

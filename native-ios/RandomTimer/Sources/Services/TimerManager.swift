@@ -107,7 +107,7 @@ final class TimerManager: ObservableObject {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
-        // Reset voice callout timing so each timer gets a fresh command-cue schedule.
+        // Reset voice callout session for fresh chaos drill timing
         AIVoiceCalloutService.shared.resetSession()
 
         // Stop any preview sound
@@ -176,7 +176,6 @@ final class TimerManager: ObservableObject {
 
     /// Stops sound and vibration but keeps alarm state and countdown active
     func silenceAlarm() {
-        guard timerState?.status == .alarm else { return }
         notificationService.silenceAlarm()
         if timerState?.status == .alarm {
             isAlarmSilenced = true
@@ -200,14 +199,6 @@ final class TimerManager: ObservableObject {
         )
         timerState = state
         startCountdown()
-    }
-
-    func previewCountdownCue() {
-        AIVoiceCalloutService.shared.previewCountdownCue()
-    }
-
-    func previewCommandCue() {
-        AIVoiceCalloutService.shared.previewCommandCue()
     }
 
     func restartTimer() async {
@@ -330,20 +321,16 @@ final class TimerManager: ObservableObject {
                 notificationService.stopAlarmSound()
                 notificationService.stopVibration()
                 await notificationService.cancelPendingNotifications()
-                await endLiveActivity()
+                notificationService.clearNotificationTapFlag()
+                    await endLiveActivity()
 
                 if state.config.repeatEnabled {
-                    notificationService.clearNotificationTapFlag()
                     await restartTimer()
                 } else {
                     state.remainingDuration = 0
                     state.status = .complete
                     state.alarmTimeRemaining = 0
                     state.alarmStartedAt = alarmStartDate
-                    if notificationService.didTapAlarmNotification {
-                        isAlarmSilenced = true
-                    }
-                    notificationService.clearNotificationTapFlag()
                     timerState = state
                 }
                 return
@@ -360,7 +347,6 @@ final class TimerManager: ObservableObject {
             let wasNotificationTap = notificationService.didTapAlarmNotification
             if wasNotificationTap {
                 isAlarmSilenced = true
-                notificationService.clearNotificationTapFlag()
             }
             timerState = state
 
@@ -393,12 +379,9 @@ final class TimerManager: ObservableObject {
 
     func resetTimer() async {
         AnalyticsService.shared.track(AnalyticsEvents.timerReset)
-        // Reset should reroll a fresh random duration within the configured range.
+        // Reset to the SAME duration (restart from beginning)
         guard let currentState = timerState else { return }
-        let rerolledDuration = generateRandomDuration(
-            min: currentState.config.minDuration,
-            max: currentState.config.maxDuration
-        )
+        let sameDuration = currentState.targetDuration
 
         // Reset silence flag for new timer
         isAlarmSilenced = false
@@ -411,10 +394,10 @@ final class TimerManager: ObservableObject {
         await endLiveActivity()
         await notificationService.cancelPendingNotifications()
 
-        // Create new state with a rerolled duration.
+        // Create new state with same duration
         let newState = TimerState(
             config: currentState.config,
-            targetDuration: rerolledDuration
+            targetDuration: sameDuration
         )
 
         timerState = newState
@@ -444,6 +427,10 @@ final class TimerManager: ObservableObject {
             type: type,
             volume: config.volume
         )
+    }
+
+    func previewCommandCue() {
+        AIVoiceCalloutService.shared.previewCommandCue()
     }
 
     func updatePreviewVolume() {
@@ -551,8 +538,7 @@ final class TimerManager: ObservableObject {
 
         // Trigger voice callouts for Pro users
         if ProManager.shared.isPro {
-            let elapsed = Int(state.targetDuration - state.remainingDuration)
-            AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: elapsed)
+            AIVoiceCalloutService.shared.triggerCallout(remainingSeconds: Int(state.remainingDuration))
         }
 
         if state.remainingDuration <= 0 {

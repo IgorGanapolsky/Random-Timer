@@ -1,1 +1,1 @@
-reaction,random timer,drill,dry fire,boxing,mma,hiit,interval,shooting,range,draw timer
+tactical,random,timer,dry fire,boxing,mma,reaction,hiit,shooting,range,workout,training,drills

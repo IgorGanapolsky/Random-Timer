@@ -153,7 +153,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - ✅ At 0:00, notification changes to "Time's Up!" (alarm notification)
 - ✅ Alarm sound plays
 - ✅ Vibration starts (if enabled)
-- ✅ Chronometer replaced with "Stop" button
+- ✅ Chronometer replaced with "Dismiss" button
 - ✅ High-priority alarm notification shown
 
 **Screenshots needed**:

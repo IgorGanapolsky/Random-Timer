@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-
+                
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-
+                            
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -91,68 +91,54 @@ struct TimerSetupScreen: View {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.textPrimary)
-
-                                if !proManager.isPro {
-                                    Text(
-                                        "Free preview: tap Countdown or Focus to hear sample clips. "
-                                        + "Pro adds timed callouts during training."
-                                    )
-                                        .font(.caption2)
-                                        .foregroundColor(.textMuted)
-                                }
-                            }
-
-                            Spacer()
-
-                            Button {
-                                timerManager.previewCountdownCue()
-                            } label: {
-                                Text("Countdown")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            Button {
-                                timerManager.previewCommandCue()
-                            } label: {
-                                Text("Focus")
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
-                            }
-
-                            if proManager.isPro {
-                                Text("ON")
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                
+                                Text("Voice prompts during countdown")
                                     .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
-                            } else {
+                                    .foregroundColor(.textMuted)
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 8) {
+                                // Preview Button (always enabled)
                                 Button {
-                                    presentPaywall(entryPoint: .soundGate)
+                                    timerManager.previewCommandCue()
                                 } label: {
-                                    HStack(spacing: 4) {
-                                        Text("PRO")
-                                        Image(systemName: "lock.fill")
+                                    Text("PREVIEW")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                }
+
+                                if proManager.isPro {
+                                    Text("ENABLED")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.accentPrimary)
+                                } else {
+                                    Button {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text("PRO")
+                                            Image(systemName: "lock.fill")
+                                        }
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
                                     }
-                                    .font(.caption2.weight(.bold))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentPrimary.opacity(0.1))
-                                    .foregroundColor(.accentPrimary)
-                                    .cornerRadius(4)
                                 }
                             }
                         }
                         .padding(.vertical, 8)
-                        .contentShape(Rectangle())
+                        .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
 
@@ -234,14 +220,14 @@ struct TimerSetupScreen: View {
                                 presentPaywall(entryPoint: .soundGate)
                             }
                         }
-
+                    
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-
+                        
                         Spacer()
-
+                        
                         Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
@@ -328,7 +314,6 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
-        .accessibilityIdentifier("setupScreen")
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -388,8 +373,6 @@ private struct TimeRangeSliders: View {
     private let fineStep = 1
     private let coarseStep = 5
     private let minGap = TimeRangeAdjuster.defaultMinGapSeconds
-    private var usesPrecisionSlider: Bool { maxSecondsLimit > TimerConfig.maxSecondsFree }
-    private var sliderDragStep: Int { usesPrecisionSlider ? fineStep : coarseStep }
 
     private var minSliderUpperBound: Int {
         Swift.max(0, maxValue - minGap)
@@ -400,11 +383,15 @@ private struct TimeRangeSliders: View {
     }
 
     private var minSliderRange: ClosedRange<Double> {
-        usesPrecisionSlider ? 0...1 : linearSliderRange(min: 0, max: minSliderUpperBound)
+        let lower = 0.0
+        let upper = Double(minSliderUpperBound)
+        return lower < upper ? lower...upper : lower...(lower + 1)
     }
 
     private var maxSliderRange: ClosedRange<Double> {
-        usesPrecisionSlider ? 0...1 : linearSliderRange(min: maxSliderLowerBound, max: maxSecondsLimit)
+        let lower = Double(maxSliderLowerBound)
+        let upper = Double(maxSecondsLimit)
+        return lower < upper ? lower...upper : lower...(lower + 1)
     }
 
     var body: some View {
@@ -445,20 +432,9 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: {
-                                sliderVisualValue(
-                                    for: minValue,
-                                    min: 0,
-                                    max: minSliderUpperBound
-                                )
-                            },
+                            get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
                             set: { newValue in
-                                let snapped = sliderSeconds(
-                                    from: newValue,
-                                    min: 0,
-                                    max: minSliderUpperBound,
-                                    step: sliderDragStep
-                                )
+                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
                                 adjustMin(to: snapped)
                             }
                         ),
@@ -495,20 +471,9 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: {
-                                sliderVisualValue(
-                                    for: maxValue,
-                                    min: maxSliderLowerBound,
-                                    max: maxSecondsLimit
-                                )
-                            },
+                            get: { Double(Swift.min(Swift.max(maxValue, maxSliderLowerBound), maxSecondsLimit)) },
                             set: { newValue in
-                                let snapped = sliderSeconds(
-                                    from: newValue,
-                                    min: maxSliderLowerBound,
-                                    max: maxSecondsLimit,
-                                    step: sliderDragStep
-                                )
+                                let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
                                 adjustMax(to: snapped)
                             }
                         ),
@@ -573,7 +538,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(1, newValue),
+            newMaxSeconds: Swift.max(minGap, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -581,37 +546,6 @@ private struct TimeRangeSliders: View {
     private func applyAdjustedRangeIfChanged(_ adjusted: (min: Int, max: Int)) {
         guard adjusted.min != minValue || adjusted.max != maxValue else { return }
         onRangeChange(adjusted.min, adjusted.max)
-    }
-
-    private func linearSliderRange(min: Int, max: Int) -> ClosedRange<Double> {
-        let lower = Double(min)
-        let upper = Double(max)
-        return lower < upper ? lower...upper : lower...(lower + 1)
-    }
-
-    private func sliderVisualValue(for value: Int, min: Int, max: Int) -> Double {
-        let clamped = Swift.min(Swift.max(value, min), max)
-        guard usesPrecisionSlider else { return Double(clamped) }
-
-        let span = Swift.max(max - min, 1)
-        let normalized = Double(clamped - min) / Double(span)
-        return Foundation.sqrt(Swift.min(Swift.max(normalized, 0), 1))
-    }
-
-    private func sliderSeconds(from visualValue: Double, min: Int, max: Int, step: Int) -> Int {
-        guard usesPrecisionSlider else {
-            return snapSeconds(Int((visualValue / Double(step)).rounded()) * step, min: min, max: max)
-        }
-
-        let span = Swift.max(max - min, 1)
-        let normalized = Swift.min(Swift.max(visualValue, 0), 1)
-        let raw = min + Int((normalized * normalized * Double(span)).rounded())
-        return snapSeconds(raw, min: min, max: max, step: step)
-    }
-
-    private func snapSeconds(_ value: Int, min: Int, max: Int, step: Int = 1) -> Int {
-        let snapped = Int((Double(value) / Double(step)).rounded()) * step
-        return Swift.min(Swift.max(snapped, min), max)
     }
 }
 
@@ -705,7 +639,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)?
+    var onSliding: ((Float) -> Void)? = nil
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {
@@ -722,41 +656,21 @@ private struct VolumeSliderView: View {
                     .foregroundColor(.textPrimary)
             }
 
-            HStack(spacing: 12) {
-                StepAdjustButton(
-                    systemImage: "minus.circle.fill",
-                    enabled: value > 0,
-                    accessibilityLabel: "Decrease volume"
-                ) {
-                    onChanged(Swift.max(0, value - 0.05))
-                }
-
-                Slider(
-                    value: Binding(
-                        get: { Double(value) },
-                        set: { newValue in
-                            onSliding?(Float(newValue))
-                        }
-                    ),
-                    in: 0...1,
-                    onEditingChanged: { editing in
-                        if !editing {
-                            onChanged(value)
-                        }
+            Slider(
+                value: Binding(
+                    get: { Double(value) },
+                    set: { newValue in
+                        onSliding?(Float(newValue))
                     }
-                )
-                .tint(.accentPrimary)
-                .accessibilityLabel("Volume slider")
-                .accessibilityValue("\(Int(value * 100))%")
-
-                StepAdjustButton(
-                    systemImage: "plus.circle.fill",
-                    enabled: value < 1,
-                    accessibilityLabel: "Increase volume"
-                ) {
-                    onChanged(Swift.min(1, value + 0.05))
+                ),
+                in: 0...1,
+                onEditingChanged: { editing in
+                    if !editing {
+                        onChanged(value)
+                    }
                 }
-            }
+            )
+            .tint(.accentPrimary)
         }
         .transaction { $0.animation = nil } // Completely disable all animations
     }

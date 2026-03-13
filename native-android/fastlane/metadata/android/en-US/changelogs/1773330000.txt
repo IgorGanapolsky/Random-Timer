@@ -1,0 +1,3 @@
+- Fixed "Upgrade to Pro" backdoor gesture.
+- Implemented Agentic Merchant Protocol (AMP) for AI discovery.
+- Improved stability and performance.

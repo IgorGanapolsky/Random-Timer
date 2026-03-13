@@ -16,7 +16,6 @@ import org.junit.Test
  * on the JVM without requiring a device or Robolectric.
  */
 class TrainingStatsServiceTest {
-
     private lateinit var service: TrainingStatsService
     private lateinit var fakePrefs: FakeSharedPreferences
 
@@ -78,13 +77,14 @@ class TrainingStatsServiceTest {
 
     @Test
     fun `recordWorkoutSession stores a single session`() {
-        val session = WorkoutSession(
-            id = "abc-123",
-            timestamp = 1_000_000L,
-            targetDurationSeconds = 60,
-            soundType = SoundType.INTENSE,
-            completed = true,
-        )
+        val session =
+            WorkoutSession(
+                id = "abc-123",
+                timestamp = 1_000_000L,
+                targetDurationSeconds = 60,
+                soundType = SoundType.INTENSE,
+                completed = true,
+            )
 
         service.recordWorkoutSession(session)
 
@@ -97,20 +97,22 @@ class TrainingStatsServiceTest {
 
     @Test
     fun `recordWorkoutSession prepends new sessions (most recent first)`() {
-        val first = WorkoutSession(
-            id = "first",
-            timestamp = 1_000L,
-            targetDurationSeconds = 30,
-            soundType = SoundType.GENTLE,
-            completed = true,
-        )
-        val second = WorkoutSession(
-            id = "second",
-            timestamp = 2_000L,
-            targetDurationSeconds = 60,
-            soundType = SoundType.INTENSE,
-            completed = false,
-        )
+        val first =
+            WorkoutSession(
+                id = "first",
+                timestamp = 1_000L,
+                targetDurationSeconds = 30,
+                soundType = SoundType.GENTLE,
+                completed = true,
+            )
+        val second =
+            WorkoutSession(
+                id = "second",
+                timestamp = 2_000L,
+                targetDurationSeconds = 60,
+                soundType = SoundType.INTENSE,
+                completed = false,
+            )
 
         service.recordWorkoutSession(first)
         service.recordWorkoutSession(second)
@@ -122,13 +124,14 @@ class TrainingStatsServiceTest {
 
     @Test
     fun `recordWorkoutSession preserves all SoundType values`() {
-        val session = WorkoutSession(
-            id = "gong-session",
-            timestamp = 500L,
-            targetDurationSeconds = 90,
-            soundType = SoundType.GONG,
-            completed = true,
-        )
+        val session =
+            WorkoutSession(
+                id = "gong-session",
+                timestamp = 500L,
+                targetDurationSeconds = 90,
+                soundType = SoundType.GONG,
+                completed = true,
+            )
 
         service.recordWorkoutSession(session)
 
@@ -168,7 +171,7 @@ class TrainingStatsServiceTest {
                     targetDurationSeconds = 30,
                     soundType = SoundType.INTENSE,
                     completed = true,
-                )
+                ),
             )
         }
 
@@ -186,7 +189,7 @@ class TrainingStatsServiceTest {
                     targetDurationSeconds = 30,
                     soundType = SoundType.INTENSE,
                     completed = true,
-                )
+                ),
             )
         }
 
@@ -207,10 +210,10 @@ class TrainingStatsServiceTest {
     @Test
     fun `getTotalTrainingTimeSeconds sums completed session durations`() {
         service.recordWorkoutSession(
-            WorkoutSession(id = "a", timestamp = 1L, targetDurationSeconds = 120, soundType = SoundType.INTENSE, completed = true)
+            WorkoutSession(id = "a", timestamp = 1L, targetDurationSeconds = 120, soundType = SoundType.INTENSE, completed = true),
         )
         service.recordWorkoutSession(
-            WorkoutSession(id = "b", timestamp = 2L, targetDurationSeconds = 180, soundType = SoundType.GENTLE, completed = true)
+            WorkoutSession(id = "b", timestamp = 2L, targetDurationSeconds = 180, soundType = SoundType.GENTLE, completed = true),
         )
 
         assertThat(service.getTotalTrainingTimeSeconds()).isEqualTo(300L)
@@ -219,10 +222,10 @@ class TrainingStatsServiceTest {
     @Test
     fun `getTotalTrainingTimeSeconds excludes incomplete sessions`() {
         service.recordWorkoutSession(
-            WorkoutSession(id = "done", timestamp = 1L, targetDurationSeconds = 60, soundType = SoundType.INTENSE, completed = true)
+            WorkoutSession(id = "done", timestamp = 1L, targetDurationSeconds = 60, soundType = SoundType.INTENSE, completed = true),
         )
         service.recordWorkoutSession(
-            WorkoutSession(id = "abandoned", timestamp = 2L, targetDurationSeconds = 300, soundType = SoundType.INTENSE, completed = false)
+            WorkoutSession(id = "abandoned", timestamp = 2L, targetDurationSeconds = 300, soundType = SoundType.INTENSE, completed = false),
         )
 
         assertThat(service.getTotalTrainingTimeSeconds()).isEqualTo(60L)
@@ -238,7 +241,7 @@ class TrainingStatsServiceTest {
                     targetDurationSeconds = 90,
                     soundType = SoundType.INTENSE,
                     completed = false,
-                )
+                ),
             )
         }
 
@@ -253,41 +256,96 @@ class TrainingStatsServiceTest {
  * Avoids a Robolectric dependency while keeping tests fast.
  */
 private class FakeSharedPreferences : SharedPreferences {
-
     private val data = mutableMapOf<String, Any?>()
 
     /** Bypass the normal put APIs to inject raw strings (for error-path tests). */
-    fun rawPut(key: String, value: String) {
+    fun rawPut(
+        key: String,
+        value: String,
+    ) {
         data[key] = value
     }
 
     override fun getAll(): Map<String, *> = data.toMap()
-    override fun getString(key: String, defValue: String?) = data[key] as? String ?: defValue
-    override fun getStringSet(key: String, defValues: Set<String>?) = data[key] as? Set<String> ?: defValues
-    override fun getInt(key: String, defValue: Int) = (data[key] as? Int) ?: defValue
-    override fun getLong(key: String, defValue: Long) = (data[key] as? Long) ?: defValue
-    override fun getFloat(key: String, defValue: Float) = (data[key] as? Float) ?: defValue
-    override fun getBoolean(key: String, defValue: Boolean) = (data[key] as? Boolean) ?: defValue
+
+    override fun getString(
+        key: String,
+        defValue: String?,
+    ) = data[key] as? String ?: defValue
+
+    override fun getStringSet(
+        key: String,
+        defValues: Set<String>?,
+    ) = data[key] as? Set<String> ?: defValues
+
+    override fun getInt(
+        key: String,
+        defValue: Int,
+    ) = (data[key] as? Int) ?: defValue
+
+    override fun getLong(
+        key: String,
+        defValue: Long,
+    ) = (data[key] as? Long) ?: defValue
+
+    override fun getFloat(
+        key: String,
+        defValue: Float,
+    ) = (data[key] as? Float) ?: defValue
+
+    override fun getBoolean(
+        key: String,
+        defValue: Boolean,
+    ) = (data[key] as? Boolean) ?: defValue
+
     override fun contains(key: String) = data.containsKey(key)
 
     override fun edit(): SharedPreferences.Editor = FakeEditor(data)
 
     override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) = Unit
+
     override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) = Unit
 }
 
-private class FakeEditor(private val data: MutableMap<String, Any?>) : SharedPreferences.Editor {
+private class FakeEditor(
+    private val data: MutableMap<String, Any?>,
+) : SharedPreferences.Editor {
     private val pending = mutableMapOf<String, Any?>()
     private val removals = mutableSetOf<String>()
     private var clearAll = false
 
-    override fun putString(key: String, value: String?) = apply { pending[key] = value }
-    override fun putStringSet(key: String, values: Set<String>?) = apply { pending[key] = values }
-    override fun putInt(key: String, value: Int) = apply { pending[key] = value }
-    override fun putLong(key: String, value: Long) = apply { pending[key] = value }
-    override fun putFloat(key: String, value: Float) = apply { pending[key] = value }
-    override fun putBoolean(key: String, value: Boolean) = apply { pending[key] = value }
+    override fun putString(
+        key: String,
+        value: String?,
+    ) = apply { pending[key] = value }
+
+    override fun putStringSet(
+        key: String,
+        values: Set<String>?,
+    ) = apply { pending[key] = values }
+
+    override fun putInt(
+        key: String,
+        value: Int,
+    ) = apply { pending[key] = value }
+
+    override fun putLong(
+        key: String,
+        value: Long,
+    ) = apply { pending[key] = value }
+
+    override fun putFloat(
+        key: String,
+        value: Float,
+    ) = apply { pending[key] = value }
+
+    override fun putBoolean(
+        key: String,
+        value: Boolean,
+    ) = apply { pending[key] = value }
+
     override fun remove(key: String) = apply { removals.add(key) }
+
     override fun clear() = apply { clearAll = true }
 
     override fun commit(): Boolean {

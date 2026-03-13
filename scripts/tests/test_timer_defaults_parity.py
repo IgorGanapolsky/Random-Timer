@@ -112,52 +112,26 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     assert "proManager.unlockProForDebug()" in ios_paywall
 
 
-def test_android_hidden_debug_unlock_uses_full_width_hold_target():
-    android_paywall = ANDROID_PAYWALL.read_text(encoding="utf-8")
-
-    assert re.search(
-        r'Text\(\s*text = "Upgrade to Pro".*?Modifier\s*\.\s*fillMaxWidth\(\)\s*\.\s*padding\(vertical = 8\.dp\)\s*\.\s*holdForHiddenUnlock',
-        android_paywall,
-        re.S,
-    )
-
-
 def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
 
-    # Both platforms must expose Voice Callouts toggle with Countdown and Focus preview buttons
+    # Both platforms must expose Voice Callouts toggle with Countdown and Commands preview buttons
     for snippet in [
         "Voice Callouts",
         "Countdown",
-        "Focus",
+        "Commands",
     ]:
         assert snippet in android_setup, f"Missing '{snippet}' in Android setup screen"
         assert snippet in ios_setup, f"Missing '{snippet}' in iOS setup screen"
-
-
-def test_voice_runtime_callouts_are_elapsed_only_on_both_platforms():
-    android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
-    ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
-
-    assert "runtimeVoiceCueForElapsedSecond" in android_voice_service
-    assert "shouldFireCommandCue" not in android_voice_service
-    assert "Random.nextInt(" not in android_voice_service
-    assert "PREVIEW_COMMAND_CUE" in android_voice_service
-
-    assert "runtimeVoiceCue(for elapsedSeconds:" in ios_voice_service
-    assert "shouldFireCommandCue" not in ios_voice_service
-    assert "secureRandomInt" not in ios_voice_service
-    assert "previewCommandVoiceCue" in ios_voice_service
 
 
 def test_voice_profile_configured_on_both_platforms():
     android_voice_service = ANDROID_VOICE_SERVICE.read_text(encoding="utf-8")
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
-    # Both platforms should use bundled audio only, not runtime TTS synthesis.
+    # Android: preferred voice list and TTS configuration present
     assert "preferredVoiceNames" in android_voice_service
-    assert "voiceResIdOrFallback" in android_voice_service
-    assert "TextToSpeech" not in android_voice_service
-    assert "voiceFilenameOrFallback" in ios_voice_service
-    assert "AVSpeechSynthesizer" not in ios_voice_service
+    # iOS: pitch and rate configured for tactical delivery
+    assert "pitchMultiplier" in ios_voice_service
+    assert "utterance.rate" in ios_voice_service

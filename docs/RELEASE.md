@@ -220,24 +220,16 @@ native-ios/fastlane/screenshots/en-US/
 ├── 4_running.png
 ├── 5_ipad_setup.png       # Required iPad screenshots
 ├── 6_ipad_running.png
-├── 7_ipad_stopped.png
-└── originals/
-    ├── iphone_setup_raw.png
-    ├── iphone_running_raw.png
-    ├── iphone_sound_raw.png
-    ├── iphone_paused_raw.png
-    ├── ipad_setup_raw.png
-    ├── ipad_running_raw.png
-    └── ipad_sound_raw.png
+└── 7_ipad_stopped.png
 ```
 
 Metadata is synced via fastlane `deliver` (metadata lane) and `submit_review` lane.
 
-Regenerate clean raw captures, then compose the store creatives:
+Regenerate screenshot creatives before metadata sync:
 
 ```bash
-./scripts/capture_ios_store_screenshots.sh --repo-root . --locale en-US
 python scripts/generate_ios_store_creatives.py --repo-root . --locale en-US
+python scripts/refresh_ios_screenshot_creatives.py
 ```
 
 ## Git Tags

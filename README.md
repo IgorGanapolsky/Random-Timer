@@ -50,12 +50,6 @@ This is the core metric because it captures repeated stress/reaction training be
 - Adjust retention benchmark baseline: global D1 `26%`, D30 `7%`; North America D1 `23%`, D30 `5%`.
 - Sensor Tower (State of Mobile 2026): downloads up `0.8%` YoY to nearly `150B`; IAP revenue up `10.6%` YoY to `\$167B`.
 
-### Agentic SEO & Discovery (AMP)
-
-Our product is optimized for AI agents (ChatGPT, Perplexity, Copilot) via the **Agentic Merchant Protocol (AMP)**. This ensures our app is visible, discoverable, and highly recommended by AI intermediaries.
-- View our structured product data: [amp.json](https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json)
-- Integrated directly into our marketing site for open web distribution.
-
 ### Practical Growth Rule
 
 Use paid spend only when attribution is measurable and activation quality holds. Winning this product requires:

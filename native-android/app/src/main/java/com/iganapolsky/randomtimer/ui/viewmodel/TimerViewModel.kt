@@ -24,8 +24,9 @@ import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -53,14 +54,17 @@ class TimerViewModel
             prefs.edit().putBoolean("hasCompletedFirstTimer", true).apply()
         }
 
-        private val _config = MutableStateFlow(TimerConfig.DEFAULT)
-        val config: StateFlow<TimerConfig> = _config.asStateFlow()
+        val config: StateFlow<TimerConfig> =
+            repository
+                .getTimerConfig()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = TimerConfig.DEFAULT,
+                )
 
         private val _timerState = MutableStateFlow<TimerState?>(null)
         val timerState: StateFlow<TimerState?> = _timerState
-
-        // Immediate in-memory config mirror to avoid DataStore propagation lag when starting.
-        private var latestConfigOverride: TimerConfig? = null
 
         private var service: TimerForegroundService? = null
         private var bound = false
@@ -92,17 +96,6 @@ class TimerViewModel
 
         init {
             serviceController.bindService(serviceConnection)
-            viewModelScope.launch {
-                repository
-                    .getTimerConfig()
-                    .collect { storedConfig ->
-                        val pendingOverride = latestConfigOverride
-                        if (pendingOverride == null || pendingOverride == storedConfig) {
-                            latestConfigOverride = null
-                            _config.value = storedConfig
-                        }
-                    }
-            }
         }
 
         override fun onCleared() {
@@ -114,8 +107,6 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
-            latestConfigOverride = newConfig
-            _config.value = newConfig
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(
@@ -134,15 +125,14 @@ class TimerViewModel
             stopSoundPreview()
 
             viewModelScope.launch {
-                val effectiveConfig = latestConfigOverride ?: config.value
-                val state = startTimerUseCase(effectiveConfig)
+                val state = startTimerUseCase(config.value)
                 _timerState.value = state
                 serviceController.startTimer(state)
                 analyticsService.track(
                     AnalyticsEvents.TIMER_STARTED,
                     mapOf(
-                        "min_duration" to effectiveConfig.minSeconds,
-                        "max_duration" to effectiveConfig.maxSeconds,
+                        "min_duration" to config.value.minSeconds,
+                        "max_duration" to config.value.maxSeconds,
                         "target_duration" to state.targetDuration.inWholeSeconds,
                     ),
                 )
@@ -188,14 +178,20 @@ class TimerViewModel
 
         fun resetTimer() {
             analyticsService.track(AnalyticsEvents.TIMER_RESET)
-            // Service owns the authoritative reset/reroll state. Avoid showing an optimistic
-            // stale target locally before the service emits the updated timer state.
+            _timerState.value?.let { current ->
+                _timerState.value =
+                    current.copy(
+                        remainingDuration = current.targetDuration,
+                        status = TimerStatus.RUNNING,
+                        alarmTimeRemaining = kotlin.time.Duration.ZERO,
+                        startedAt = System.currentTimeMillis(),
+                    )
+            }
             serviceController.resetTimer()
         }
 
         fun updateLoopSetting(enabled: Boolean) {
-            val updatedConfig = (latestConfigOverride ?: config.value).copy(repeatEnabled = enabled)
-            latestConfigOverride = updatedConfig
+            val updatedConfig = config.value.copy(repeatEnabled = enabled)
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(
@@ -267,10 +263,6 @@ class TimerViewModel
 
         fun previewVolume(volume: Float) {
             soundPreviewManager.previewVolume(config.value.soundType, volume)
-        }
-
-        fun previewCountdownCue() {
-            soundPreviewManager.previewCountdownCue()
         }
 
         fun previewCommandCue() {

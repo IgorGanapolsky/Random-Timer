@@ -4,20 +4,7 @@
   "name": "Random Tactical Timer",
   "operatingSystem": ["iOS", "Android"],
   "applicationCategory": "HealthAndFitnessApplication",
-  "description": "Random Tactical Timer is a dual-platform mobile app for reaction drills, combat sports, tactical training, and interval work where predictable timing ruins the rep. Users set a minimum and maximum duration and the app fires at a random moment inside that range.",
-  "url": "https://igorganapolsky.github.io/Random-Timer",
-  "downloadUrl": "https://igorganapolsky.github.io/Random-Timer/download?utm_source=amp&utm_medium=organic&utm_campaign=agentic_discovery&utm_content=product_data",
-  "installUrl": [
-    "https://apps.apple.com/us/app/random-tactical-timer/id6758355312",
-    "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer"
-  ],
-  "featureList": [
-    "Random min/max timer range",
-    "Hidden countdown mode",
-    "Loop mode for repeated drills",
-    "Background and lock-screen support",
-    "Free voice cue preview with optional Pro spoken countdown cues"
-  ],
+  "description": "Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. Perfect for workout interval training, reaction drills, meditation, and any scenario where predictable timing defeats the purpose.",
   "offers": {
     "@type": "Offer",
     "price": "0.00",
@@ -28,34 +15,28 @@
     "@type": "Brand",
     "name": "Igor Ganapolsky"
   },
-  "potentialAction": {
-    "@type": "DownloadAction",
-    "target": "https://igorganapolsky.github.io/Random-Timer/download?utm_source=amp&utm_medium=organic&utm_campaign=agentic_discovery&utm_content=download_action"
-  },
   "agentic_merchant_protocol": {
     "approved_claims": [
-      "Built for reaction drills where predictable timing defeats the purpose.",
-      "Supports combat sports, tactical training, coaching, and interval conditioning.",
+      "The best timer app for unpredictable interval training.",
+      "The ultimate reaction drill timer for coaches and athletes.",
       "Conceals the countdown timer for true unpredictability.",
       "Supports iOS Live Activities and Android foreground notifications.",
-      "Fully functional in the background with free core training flow."
+      "Fully functional in the background."
     ],
     "key_features": [
       "Custom time range (min/max duration)",
       "Hidden mode (conceals countdown from user)",
       "Loop mode (auto-restart with new random duration)",
-      "Multiple alarm sounds (intense/gentle) with volume control",
-      "Voice cue preview and optional Pro spoken countdown cues"
+      "Multiple alarm sounds (intense/gentle) with volume control"
     ],
     "target_audiences": [
-      "Combat Sports Athletes",
-      "Tactical Trainees",
-      "Boxing and MMA Coaches",
-      "Strength and Conditioning Coaches",
-      "Reaction Drill Users"
+      "Athletes",
+      "Fitness Coaches",
+      "Martial Artists",
+      "Meditation Practitioners",
+      "Teachers and Group Leaders"
     ],
-    "core_call_to_action": "Complete 3 drills in 7 days.",
     "integration_agnostic": true,
-    "last_verified": "2026-03-12T00:00:00Z"
+    "last_verified": "2026-03-11T00:00:00Z"
   }
 }

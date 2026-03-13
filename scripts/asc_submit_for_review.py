@@ -675,43 +675,10 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
 
 
 def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
-    # Apple's current ASC docs expose Age Rating under App Info:
-    #   GET /v1/appInfos/{id}/relationships/ageRatingDeclaration
-    # Keep a legacy fallback to the older version-scoped read path because some older
-    # automation/tests still model it there.
+    # Current ASC API exposes a unified AgeRatingDeclaration relationship on the App Store Version:
+    #   GET /v1/appStoreVersions/{id}/ageRatingDeclaration
+    # Some older code paths used app/appInfo relationships which may not exist on newer APIs.
     errors: list[str] = []
-    try:
-        app_infos = client.request(
-            "GET",
-            f"/apps/{app_id}/appInfos",
-            params={"limit": 50},
-        ).get("data") or []
-        app_info: dict[str, Any] | None = None
-        for item in app_infos:
-            if not isinstance(item, dict):
-                continue
-            if (item.get("attributes") or {}).get("platform") == "IOS":
-                app_info = item
-                break
-        if not app_info:
-            for item in app_infos:
-                if isinstance(item, dict):
-                    app_info = item
-                    break
-        app_info_id = str((app_info or {}).get("id") or "")
-        if app_info_id:
-            data = client.request("GET", f"/appInfos/{app_info_id}/relationships/ageRatingDeclaration")
-            rel_data = data.get("data") or {}
-            if isinstance(rel_data, dict) and rel_data.get("id"):
-                return
-            errors.append(
-                f"appInfo /appInfos/{app_info_id}/relationships/ageRatingDeclaration returned no data"
-            )
-        else:
-            errors.append("appInfo id missing (cannot verify ageRatingDeclaration).")
-    except Exception as e:
-        errors.append(f"appInfo ageRatingDeclaration relationship: {e}")
-
     if version_id:
         try:
             data = client.request("GET", f"/appStoreVersions/{version_id}/ageRatingDeclaration")

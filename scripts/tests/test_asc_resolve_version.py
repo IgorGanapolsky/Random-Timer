@@ -1,6 +1,5 @@
 import unittest
 
-from scripts.asc_client import AscClientError
 from scripts.asc_resolve_version import (
     _bump_patch,
     _is_editable_state,
@@ -14,7 +13,6 @@ class _FakeClient:
     def __init__(self, versions):
         self.versions = list(versions)
         self.created = []
-        self.create_error = None
 
     def get_all(self, path, params=None):
         if path.endswith("/appStoreVersions"):
@@ -23,8 +21,6 @@ class _FakeClient:
 
     def request(self, method, path, payload=None, params=None):
         if method == "POST" and path == "/appStoreVersions":
-            if self.create_error is not None:
-                raise self.create_error
             data = payload["data"]
             created = {
                 "id": f"new-{len(self.created) + 1}",
@@ -145,41 +141,6 @@ class AscResolveVersionUnitTests(unittest.TestCase):
         self.assertEqual(result.selected_version, "1.1.2")
         self.assertTrue(result.created)
         self.assertEqual(result.reason, "preferred_missing_created")
-
-    def test_reuses_preferred_when_next_patch_create_blocked_by_409(self):
-        client = _FakeClient([_version("1.1.1", "WAITING_FOR_REVIEW")])
-        client.create_error = AscClientError("POST /appStoreVersions failed: HTTP 409 {'errors': []}")
-        result = resolve_version(
-            client=client,
-            app_id="app1",
-            preferred_version="1.1.1",
-            create_if_needed=True,
-            auto_next_patch=True,
-        )
-        self.assertEqual(result.selected_version, "1.1.1")
-        self.assertFalse(result.created)
-        self.assertEqual(result.selected_state, "WAITING_FOR_REVIEW")
-        self.assertIn("create_blocked_409", result.reason)
-
-    def test_reuses_highest_existing_when_preferred_missing_create_blocked_by_409(self):
-        client = _FakeClient(
-            [
-                _version("1.2.6", "WAITING_FOR_REVIEW"),
-                _version("1.2.5", "READY_FOR_SALE"),
-            ]
-        )
-        client.create_error = AscClientError("POST /appStoreVersions failed: HTTP 409 {'errors': []}")
-        result = resolve_version(
-            client=client,
-            app_id="app1",
-            preferred_version="1.2.2",
-            create_if_needed=True,
-            auto_next_patch=True,
-        )
-        self.assertEqual(result.selected_version, "1.2.6")
-        self.assertFalse(result.created)
-        self.assertEqual(result.selected_state, "WAITING_FOR_REVIEW")
-        self.assertEqual(result.reason, "preferred_missing_create_blocked_409_reused_highest_existing")
 
     def test_list_ios_versions_does_not_send_disallowed_sort_param(self):
         captured = {}

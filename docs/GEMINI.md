@@ -77,8 +77,6 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 ### Worktree Rules (MANDATORY)
 - **Always use isolated worktrees for code changes.** Never modify files on the user's active branch.
 - **Never touch another agent's active worktree.** Check `git worktree list` before cleanup.
-- **Before opening a PR from a worktree, verify the branch ancestry against the intended remote base (`origin/develop`, `origin/main`, etc.).**
-- **If a clean replacement PR supersedes a misbased or duplicate PR, close the superseded PR and only remove clean worktrees.**
 - Worktree cleanup runs automatically on session start. Only orphaned (unregistered, no .git link, no lock, clean) directories are removed.
 - `.claude/worktrees/` is gitignored.
 

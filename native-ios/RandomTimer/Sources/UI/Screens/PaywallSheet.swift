@@ -39,9 +39,10 @@ struct PaywallSheet: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.textPrimary)
-                .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
-                .onLongPressGesture(minimumDuration: 8.0) {
+                .onLongPressGesture(minimumDuration: 8.0, maximumDistance: 100) {
+                    let generator = UIImpactFeedbackGenerator(style: .heavy)
+                    generator.impactOccurred()
                     proManager.unlockProForDebug()
                     hasTrackedDismiss = true
                     dismiss()
@@ -62,7 +63,7 @@ struct PaywallSheet: View {
                         .foregroundColor(.accentPrimary)
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
-                    ProFeatureRow(text: "Spoken countdown cues + command callouts")
+                    ProFeatureRow(text: "Voice callouts during countdown")
                     ProFeatureRow(text: "Support independent development")
                 }
             }

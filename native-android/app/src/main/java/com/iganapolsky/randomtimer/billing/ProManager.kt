@@ -60,6 +60,11 @@ class ProManager
                 .map { it.isPro }
                 .stateIn(externalScope, SharingStarted.Eagerly, _entitlementLevel.value.isPro)
 
+        val isElite: StateFlow<Boolean> =
+            _entitlementLevel
+                .map { it == EntitlementLevel.ELITE }
+                .stateIn(externalScope, SharingStarted.Eagerly, _entitlementLevel.value == EntitlementLevel.ELITE)
+
         private var billingClient: BillingClient =
             BillingClient
                 .newBuilder(context)

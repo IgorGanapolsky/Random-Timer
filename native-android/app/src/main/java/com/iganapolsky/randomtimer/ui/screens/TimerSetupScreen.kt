@@ -72,7 +72,6 @@ import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 private data class SetupSpacingValues(
     val outerHorizontal: Dp,
@@ -111,41 +110,6 @@ private object SetupSpacing {
         )
 }
 
-internal fun usesPrecisionSlider(maxSecondsLimit: Int): Boolean = maxSecondsLimit > TimerConfig.MAX_SECONDS_FREE
-
-internal fun sliderVisualValue(
-    value: Int,
-    min: Int,
-    max: Int,
-    precisionMode: Boolean,
-): Float {
-    val clampedValue = value.coerceIn(min, max)
-    if (!precisionMode) {
-        return clampedValue.toFloat()
-    }
-
-    val span = (max - min).coerceAtLeast(1)
-    val normalized = (clampedValue - min).toFloat() / span.toFloat()
-    return sqrt(normalized.coerceIn(0f, 1f))
-}
-
-internal fun actualValueFromSlider(
-    sliderValue: Float,
-    min: Int,
-    max: Int,
-    stepSize: Int,
-    precisionMode: Boolean,
-): Int {
-    if (!precisionMode) {
-        return snapToStep(sliderValue, stepSize, min, max)
-    }
-
-    val span = (max - min).coerceAtLeast(1)
-    val normalized = sliderValue.coerceIn(0f, 1f)
-    val actual = min + (normalized * normalized * span.toFloat()).roundToInt()
-    return snapToStep(actual.toFloat(), stepSize, min, max)
-}
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TimerSetupScreen(
@@ -154,12 +118,12 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
-    onCountdownCuePreview: () -> Unit,
     onCommandCuePreview: () -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
+    isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -227,7 +191,7 @@ fun TimerSetupScreen(
                 contentPadding =
                     PaddingValues(
                         top = spacing.listTop,
-                        bottom = 32.dp,
+                        bottom = spacing.listBottom,
                     ),
             ) {
                 // Training Stats
@@ -291,6 +255,7 @@ fun TimerSetupScreen(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
                                 maxSliderRange = maxRange.toFloat(),
+                                minSliderMax = maxRange - 30f,
                                 compactMode = isCompactHeight,
                                 onMinChange = { newMin ->
                                     val (min, max) =
@@ -374,7 +339,7 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Voice Callouts (Pro feature)
+                            // AI Voice Callouts (Elite Feature)
                             Row(
                                 modifier =
                                     Modifier
@@ -385,40 +350,20 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Voice Callouts",
+                                        text = "\uD83D\uDCE2 AI Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = TimerColors.TextPrimary,
+                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
-                                    if (!isPro) {
-                                        Text(
-                                            text = "Free preview: tap Countdown or Focus to hear sample clips. Pro adds timed callouts during training.",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = TimerColors.TextMuted,
-                                            modifier = Modifier.padding(top = 2.dp, end = 8.dp),
-                                        )
-                                    }
+                                    Text(
+                                        text = "Voice prompts during countdown",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.TextMuted,
+                                    )
                                 }
+
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCountdownCuePreview()
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                    ) {
-                                        Text(
-                                            text = "Countdown",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
+                                    // Preview Button (always enabled to sell the feature)
                                     Surface(
                                         onClick = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -426,9 +371,10 @@ fun TimerSetupScreen(
                                         },
                                         shape = RoundedCornerShape(4.dp),
                                         color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        modifier = Modifier.padding(end = 8.dp),
                                     ) {
                                         Text(
-                                            text = "Focus",
+                                            text = "PREVIEW",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = TimerColors.AccentPrimary,
@@ -436,11 +382,9 @@ fun TimerSetupScreen(
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    if (isPro) {
+                                    if (isElite) {
                                         Text(
-                                            text = "ON",
+                                            text = "ENABLED",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = TimerColors.AccentPrimary,
@@ -456,7 +400,7 @@ fun TimerSetupScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "PRO ",
+                                                    text = "ELITE ",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
@@ -761,21 +705,21 @@ private fun TimeRangeSliders(
     minValue: Int,
     maxValue: Int,
     maxSliderRange: Float = TimerConfig.MAX_SECONDS_FREE.toFloat(),
+    minSliderMax: Float = maxSliderRange - 30f,
     compactMode: Boolean = false,
     enabled: Boolean = true,
     onMinChange: (Int) -> Unit,
     onMaxChange: (Int) -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     val coarseNudgeStep = 5
     val fineNudgeStep = 1
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
-    val minSliderCeiling = maxSliderRangeInt - minGapSeconds
-    val precisionMode = usesPrecisionSlider(maxSliderRangeInt)
-    val dragStep = if (precisionMode) fineNudgeStep else coarseNudgeStep
+    val minSliderMaxInt = minSliderMax.toInt()
     val sectionGap = if (compactMode) 8.dp else 12.dp
     val rowGap = 4.dp
-    val nudgeSize = 36.dp
+    val nudgeSize = 32.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
         // Display
@@ -824,20 +768,13 @@ private fun TimeRangeSliders(
                     height = nudgeSize,
                 )
                 Slider(
-                    value = sliderVisualValue(minValue, 0, minSliderCeiling, precisionMode),
+                    value = minValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped =
-                            actualValueFromSlider(
-                                sliderValue = raw,
-                                min = 0,
-                                max = minSliderCeiling,
-                                stepSize = dragStep,
-                                precisionMode = precisionMode,
-                            )
+                        val snapped = snapToStep(raw, coarseNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
                         onMinChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = if (precisionMode) 0f..1f else 0f..minSliderCeiling.toFloat(),
+                    valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
                     colors =
                         SliderDefaults.colors(
@@ -877,20 +814,13 @@ private fun TimeRangeSliders(
                     height = nudgeSize,
                 )
                 Slider(
-                    value = sliderVisualValue(maxValue, minGapSeconds, maxSliderRangeInt, precisionMode),
+                    value = maxValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped =
-                            actualValueFromSlider(
-                                sliderValue = raw,
-                                min = minGapSeconds,
-                                max = maxSliderRangeInt,
-                                stepSize = dragStep,
-                                precisionMode = precisionMode,
-                            )
+                        val snapped = snapToStep(raw, coarseNudgeStep, minGapSeconds, maxSliderRangeInt)
                         onMaxChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = if (precisionMode) 0f..1f else minGapSeconds.toFloat()..maxSliderRange,
+                    valueRange = minGapSeconds.toFloat()..maxSliderRange,
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
                     colors =
                         SliderDefaults.colors(
@@ -1083,7 +1013,6 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
-            onCountdownCuePreview = {},
             onCommandCuePreview = {},
         )
     }

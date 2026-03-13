@@ -1,6 +1,6 @@
 appId: com.iganapolsky.randomtimer
 ---
-# Smoke test: Tapping circle during alarm dismisses and returns to setup screen
+# Smoke test: Tapping circle during alarm silences and stays on timer screen
 - launchApp
 
 # Start timer with minimum range so it fires quickly
@@ -11,15 +11,16 @@ appId: com.iganapolsky.randomtimer
     text: 'Stop'
     timeout: 330000
 
-# Tap the timer circle to dismiss the alarm
+# Tap the timer circle to silence the alarm
 - tapOn:
     text: '.*Timer complete.*'
     optional: true
 
-# Verify we navigated back to the setup screen
+# Verify we stay on the timer screen (not navigated back to setup)
 - assertVisible:
-    text: 'Start Timer'
-- assertNotVisible:
     text: 'Stop'
-- assertNotVisible:
+- assertVisible:
     text: 'Reset'
+- assertNotVisible:
+    text: 'Start Timer'
+    optional: true

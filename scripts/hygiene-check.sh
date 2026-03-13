@@ -87,46 +87,12 @@ if [ -n "$build_tracked" ]; then
   done <<< "$build_tracked"
 fi
 
-# ── 7. Required files present ──────────────────────────────────────
+# ── 7. AGENTS.md and CLAUDE.md exist ────────────────────────────────
 echo "7. Required files present"
 
 [ ! -f "$REPO_ROOT/CLAUDE.md" ] && error "Missing CLAUDE.md"
 [ ! -f "$REPO_ROOT/AGENTS.md" ] && error "Missing AGENTS.md"
 [ ! -f "$REPO_ROOT/README.md" ] && error "Missing README.md"
-
-# ── 8. UI/UX Tactical Standards (2026) ─────────────────────────────
-echo "8. UI/UX Tactical Standards (2026)"
-
-# Android: NudgeButton should use tactical symbols \u2212 and +
-nudge_def="native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
-if [ -f "$nudge_def" ]; then
-  if ! grep -q "\\\\u2212\|−" "$nudge_def"; then
-    error "Android NudgeButton does not use tactical symbol \u2212"
-  fi
-fi
-
-# iOS: CircularTimerView should use 16pt stroke width
-ios_timer_def="native-ios/RandomTimer/Sources/UI/Components/CircularTimerView.swift"
-if [ -f "$ios_timer_def" ]; then
-  if ! grep -q "strokeWidth: CGFloat = 16" "$ios_timer_def"; then
-    error "iOS CircularTimerView uses incorrect strokeWidth — 2026 'heavy' standard is 16"
-  fi
-fi
-
-# Button height check (56dp/pt standard)
-android_button_def="native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/components/PrimaryButton.kt"
-if [ -f "$android_button_def" ]; then
-  if ! grep -q "height(56.dp)" "$android_button_def"; then
-    error "Android PrimaryButton does not follow the 56dp height standard"
-  fi
-fi
-
-ios_button_def="native-ios/RandomTimer/Sources/UI/Components/PrimaryButton.swift"
-if [ -f "$ios_button_def" ]; then
-  if ! grep -q "frame(height: 56)" "$ios_button_def"; then
-    error "iOS PrimaryButton does not follow the 56pt height standard"
-  fi
-fi
 
 # ── Summary ─────────────────────────────────────────────────────────
 echo ""

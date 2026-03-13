@@ -26,7 +26,6 @@ platform :android do
       track: "internal",
       aab: "app/build/outputs/bundle/release/app-release.aab",
       skip_upload_metadata: true,
-      skip_upload_changelogs: true,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
@@ -47,7 +46,7 @@ platform :android do
   desc "Verify release landed on the expected track"
   lane :verify do |options|
     track = options[:track] || "alpha"
-    version_code = options[:version_code] || ENV["ANDROID_VERSION_CODE"] || sh("sed -n 's/.*versionCode *= *//p' ../app/build.gradle.kts").strip
+    version_code = options[:version_code] || sh("sed -n 's/.*versionCode *= *//p' ../app/build.gradle.kts").strip
     sh("python3 #{File.expand_path('../../scripts/verify_release.py', __dir__)} " \
        "--platform android --track #{track} --version-code #{version_code}")
   end

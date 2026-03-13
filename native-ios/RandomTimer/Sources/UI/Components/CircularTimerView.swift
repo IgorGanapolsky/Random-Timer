@@ -8,15 +8,10 @@ struct CircularTimerView: View {
     let status: TimerStatus
     var isHiddenMode: Bool = false
     var rangeText: String = "" // e.g., "30s - 2m"
-    var isLandscape: Bool = false
 
     private let strokeWidth: CGFloat = 16
     @ScaledMetric(relativeTo: .title) private var timerSize: CGFloat = 320
     @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 32
-
-    private var effectiveTimerSize: CGFloat {
-        isLandscape ? 200 : timerSize
-    }
 
     // Animation timing matched to Android CircularTimerAnimationConfig:
     // Android shimmer: tween(3000ms, LinearEasing, Restart) = 3.0s per orbit
@@ -198,7 +193,7 @@ struct CircularTimerView: View {
                 }
             }
         }
-        .frame(width: min(effectiveTimerSize, 380), height: min(effectiveTimerSize, 380))
+        .frame(width: min(timerSize, 380), height: min(timerSize, 380))
         .onAppear {
             animationStartDate = .now
             if Self.shouldBreatheText(for: status) {
