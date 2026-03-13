@@ -720,6 +720,38 @@ def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = N
     die("Age Rating declaration not found. Complete Age Rating in App Store Connect.\n  " + detail)
 
 
+def cleanup_stale_submission(client: ASCClient, version_id: str, *, state: str) -> None:
+    if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
+        return
+
+    try:
+        data = client.request("GET", f"/appStoreVersions/{version_id}/appStoreVersionSubmission")
+    except Exception:
+        return
+
+    submission = data.get("data")
+    if not isinstance(submission, dict):
+        return
+
+    submission_id = str(submission.get("id") or "").strip()
+    if not submission_id:
+        return
+
+    info(f"Removing stale review submission {submission_id} for editable state {state}…")
+    client.request("DELETE", f"/appStoreVersionSubmissions/{submission_id}")
+
+    for _ in range(6):
+        time.sleep(2)
+        try:
+            follow_up = client.request("GET", f"/appStoreVersions/{version_id}/appStoreVersionSubmission")
+        except Exception:
+            return
+        if not isinstance(follow_up.get("data"), dict):
+            return
+
+    die(f"Stale review submission {submission_id} still present after delete.")
+
+
 def submit_for_review(client: ASCClient, version_id: str) -> None:
     # Apple’s public App Store Connect OpenAPI currently exposes:
     # - GET /v1/appStoreVersions/{id}/appStoreVersionSubmission
@@ -765,6 +797,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--version", required=True, help="CFBundleShortVersionString to submit (e.g. 1.1.0).")
     p.add_argument("--locale", default="en-US")
     p.add_argument("--dry-run", action="store_true", help="Run preflight only; do not attach/submit.")
+    p.add_argument(
+        "--cleanup-stale-submission",
+        action="store_true",
+        help="Delete any stale appStoreVersionSubmission when the App Store version is still editable.",
+    )
     p.add_argument("--wait", action="store_true", help="Wait and read back submitted state.")
     p.add_argument("--timeout", type=int, default=900)
     p.add_argument("--poll-interval", type=int, default=20)
@@ -795,6 +832,9 @@ def main() -> int:
     if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
         info(f"Already submitted: {state}")
         return 0
+
+    if args.cleanup_stale_submission:
+        cleanup_stale_submission(client, version_id, state=state)
 
     loc = get_version_localization(client, version_id, args.locale)
     loc_id = loc["id"]

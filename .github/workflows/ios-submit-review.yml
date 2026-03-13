@@ -209,7 +209,11 @@ jobs:
             echo "Already submitted ($STATE); skipping submit_review."
           else
             # Use our ASC preflight script for hard validation, then submit via Fastlane deliver.
-            python scripts/asc_submit_for_review.py --version "$IOS_VERSION" --locale "$LOCALE" --dry-run
+            python scripts/asc_submit_for_review.py \
+              --version "$IOS_VERSION" \
+              --locale "$LOCALE" \
+              --dry-run \
+              --cleanup-stale-submission
 
             cd native-ios
             fastlane submit_review version:"$IOS_VERSION"
