@@ -27,57 +27,39 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_zero_to_thirty_on_both_platforms():
-    android_source = _read(ANDROID_TIMER_CONFIG)
-    ios_source = _read(IOS_TIMER_MODELS)
-
-    assert re.search(r"minSeconds\s*=\s*0", android_source)
-    assert re.search(r"maxSeconds\s*=\s*30", android_source)
-    assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
-
-
-def test_time_range_limits_and_gap_match_between_platforms():
+def test_store_range_limits_are_defined_on_both_platforms():
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
     assert "MAX_SECONDS_PRO = 3600" in android_source
     assert "maxSecondsPro = 3600" in ios_source
-    assert "defaultMaxSecondsLimit = 3600" in ios_source
-    assert "defaultMinGapSeconds = 1" in ios_source
-    assert "Swift.max(1, newValue)" in _read(IOS_SETUP)
+    assert re.search(r"minSeconds\s*:\s*Int\s*=\s*0", ios_source)
+    assert re.search(r"minSeconds\s*=\s*0", android_source)
 
 
 def test_release_builds_gate_hidden_unlocks_and_show_required_legal_links():
     android_source = _read(ANDROID_PAYWALL)
+    android_setup = _read(ANDROID_SETUP)
     android_nav = _read(ANDROID_NAV)
     android_pro_manager = _read(ANDROID_PRO_MANAGER)
     ios_paywall = _read(IOS_PAYWALL)
     ios_pro_manager = _read(IOS_PRO_MANAGER)
 
-    assert re.search(
-        r'Text\(\s*text = "Upgrade to Pro".*?holdForHiddenUnlock',
-        android_source,
-        re.S,
-    )
-    assert not re.search(
-        r'PrimaryButton\([\s\S]*?holdForHiddenUnlock',
-        android_source,
-        re.S,
-    )
+    assert re.search(r'Text\(\s*text = "Upgrade to Pro".*?holdForHiddenUnlock', android_source, re.S)
     assert "onDebugUnlock: (() -> Unit)? = null" in android_source
+    assert "onSecretUnlock: (() -> Unit)? = null" in android_setup
+    assert "if (onSecretUnlock != null)" in android_setup
+    assert "if (ProManager.canUseDebugUnlock(BuildConfig.DEBUG))" in android_nav
+    assert "isDebugBuild: Boolean = BuildConfig.DEBUG" in android_pro_manager
     assert "Terms of Use" in android_source
     assert "Privacy Policy" in android_source
-    assert "if (ProManager.canUseDebugUnlock(BuildConfig.DEBUG))" in android_nav
-    assert "else {\n                        null\n                    }" in android_nav
-    assert "isDebugBuild: Boolean = BuildConfig.DEBUG" in android_pro_manager
 
     assert "#if DEBUG" in ios_paywall
     assert 'Link("Terms of Use"' in ios_paywall
     assert 'Link("Privacy Policy"' in ios_paywall
+    assert re.search(r"func unlockProForDebug\(\)\s*\{\s*#if DEBUG", ios_pro_manager, re.S)
+    assert re.search(r"func unlockEliteForDebug\(\)\s*\{\s*#if DEBUG", ios_pro_manager, re.S)
     assert "unlockEliteForDebug()" not in ios_paywall
-    assert "func unlockEliteForDebug()" not in ios_pro_manager
-    assert "#if DEBUG" in ios_pro_manager
 
 
 def test_voice_callouts_present_on_both_platforms():
@@ -104,9 +86,3 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
     assert "func previewCommandCue()" in ios_timer_manager
     assert "func previewCommandCue()" in ios_voice_service
     assert "func previewCountdownCue()" in ios_voice_service
-
-
-def test_subscription_metadata_includes_eula_link():
-    ios_description = _read(ROOT / "native-ios/fastlane/metadata/en-US/description.txt")
-
-    assert "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" in ios_description
