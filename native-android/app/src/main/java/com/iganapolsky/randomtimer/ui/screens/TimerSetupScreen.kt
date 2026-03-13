@@ -356,7 +356,7 @@ fun TimerSetupScreen(
                                         color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Voice prompts during countdown",
+                                        text = "Prompts during countdown",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
