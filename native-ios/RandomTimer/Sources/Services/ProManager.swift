@@ -11,6 +11,7 @@ final class ProManager: ObservableObject {
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
     @Published private(set) var products: [Product] = []
+    private var debugOverrideActive = false
 
     var isPro: Bool { entitlementLevel.isPro }
     var isElite: Bool { entitlementLevel == .elite }
@@ -98,6 +99,7 @@ final class ProManager: ObservableObject {
         }
 
         let wasPro = isPro
+        guard !debugOverrideActive else { return wasPro ? .alreadyUnlocked : .notFound }
         entitlementLevel = highestLevel
         
         if isPro && !wasPro {
@@ -116,8 +118,9 @@ final class ProManager: ObservableObject {
             for await result in Transaction.updates {
                 if let transaction = try? Self.checkVerified(result) {
                     let productID = transaction.productID
-                    await MainActor.run { [weak self] in 
-                        self?.updateEntitlement(for: productID) 
+                    await MainActor.run { [weak self] in
+                        guard self?.debugOverrideActive != true else { return }
+                        self?.updateEntitlement(for: productID)
                     }
                     await transaction.finish()
                 }
@@ -166,6 +169,7 @@ final class ProManager: ObservableObject {
     }
 
     func unlockProForDebug() {
+        debugOverrideActive = true
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
     }
