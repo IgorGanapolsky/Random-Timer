@@ -538,6 +538,7 @@ final class TimerManager: ObservableObject {
 
         // Trigger voice callouts for Pro users
         if ProManager.shared.isPro {
+            AIVoiceCalloutService.shared.setVolume(state.config.volume)
             AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: Int(state.targetDuration - state.remainingDuration))
         }
 
