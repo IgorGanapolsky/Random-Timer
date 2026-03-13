@@ -17,8 +17,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Boximport androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -245,22 +246,37 @@ fun TimerSetupScreen(
                                                 if (!newExtended && config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) {
                                                     // Clamp if shrinking
                                                     val clampedMax = TimerConfig.MAX_SECONDS_FREE
-                                                    val clampedMin = minOf(config.minSeconds, clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+                                                    val clampedMin =
+                                                        minOf(
+                                                            config.minSeconds,
+                                                            clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS,
+                                                        )
                                                     updateConfig(useExtendedRange = false, minSeconds = clampedMin, maxSeconds = clampedMax)
                                                 } else {
                                                     updateConfig(useExtendedRange = newExtended)
                                                 }
                                             },
                                             shape = RoundedCornerShape(4.dp),
-                                            color = if (config.useExtendedRange) TimerColors.AccentPrimary.copy(alpha = 0.2f) else TimerColors.GlassBackground,
-                                            border = BorderStroke(0.5.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
+                                            color =
+                                                if (config.useExtendedRange) {
+                                                    TimerColors.AccentPrimary.copy(
+                                                        alpha = 0.2f,
+                                                    )
+                                                } else {
+                                                    TimerColors.GlassBackground
+                                                },
+                                            border =
+                                                BorderStroke(
+                                                    0.5.dp,
+                                                    if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+                                                ),
                                         ) {
                                             Text(
                                                 text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             )
                                         }
                                     } else {
@@ -283,7 +299,14 @@ fun TimerSetupScreen(
                                 }
                                 Spacer(modifier = Modifier.height(spacing.headerToContent))
 
-                                val maxRange = if (isPro && config.useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                                val maxRange =
+                                    if (isPro &&
+                                        config.useExtendedRange
+                                    ) {
+                                        TimerConfig.MAX_SECONDS_PRO
+                                    } else {
+                                        TimerConfig.MAX_SECONDS_FREE
+                                    }
                                 TimeRangeSliders(
                                     minValue = config.minSeconds,
                                     maxValue = config.maxSeconds,
