@@ -9,6 +9,7 @@ What it verifies (fail-fast):
   - Target App Store version exists (by versionString)
   - An iOS build is attached to that App Store version AND processingState == VALID
   - Required metadata fields are non-empty (description, keywords, support URL)
+  - Description contains the Apple standard EULA URL for subscriptions
   - Privacy Policy URL is set (from appInfoLocalizations)
   - App Review contact info exists (from appStoreReviewDetails)
   - Screenshots: at least N delivered screenshots (assetDeliveryState=COMPLETE)
@@ -36,6 +37,7 @@ from scripts.asc_client import AscClient, AscClientError
 
 DEFAULT_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 DEFAULT_LOCALE = "en-US"
+APPLE_STANDARD_EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
 
 
 def _die(code: int, msg: str) -> None:
@@ -338,6 +340,21 @@ def verify_ready(
                     "description_len": len(desc),
                     "keywords_len": len(keywords),
                     "supportUrl": support_url,
+                },
+            )
+        )
+        checks.append(
+            Check(
+                name="Subscription EULA Link",
+                passed=APPLE_STANDARD_EULA_URL in desc,
+                details=(
+                    "Apple standard EULA URL present in description"
+                    if APPLE_STANDARD_EULA_URL in desc
+                    else "Apple standard EULA URL missing from description"
+                ),
+                evidence={
+                    "eulaUrl": APPLE_STANDARD_EULA_URL,
+                    "description_contains_eula": APPLE_STANDARD_EULA_URL in desc,
                 },
             )
         )

@@ -13,6 +13,7 @@ ANDROID_VIEWMODEL = ROOT / "native-android/app/src/main/java/com/iganapolsky/ran
 ANDROID_SOUND_PREVIEW = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/domain/SoundPreviewManager.kt"
 ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/SoundPreviewManagerImpl.kt"
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
+ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -47,8 +48,10 @@ def test_time_range_limits_and_gap_match_between_platforms():
     assert "Swift.max(1, newValue)" in _read(IOS_SETUP)
 
 
-def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
+def test_release_builds_gate_hidden_unlocks_and_show_required_legal_links():
     android_source = _read(ANDROID_PAYWALL)
+    android_nav = _read(ANDROID_NAV)
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
     ios_paywall = _read(IOS_PAYWALL)
     ios_pro_manager = _read(IOS_PRO_MANAGER)
 
@@ -62,15 +65,19 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
         android_source,
         re.S,
     )
+    assert "onDebugUnlock: (() -> Unit)? = null" in android_source
+    assert "Terms of Use" in android_source
+    assert "Privacy Policy" in android_source
+    assert "if (ProManager.canUseDebugUnlock(BuildConfig.DEBUG))" in android_nav
+    assert "else {\n                        null\n                    }" in android_nav
+    assert "isDebugBuild: Boolean = BuildConfig.DEBUG" in android_pro_manager
 
-    assert re.search(
-        r'Text\("Upgrade to Pro"\)[\s\S]*?onLongPressGesture\(minimumDuration:\s*8\.0\)',
-        ios_paywall,
-        re.S,
-    )
-    assert "unlockProForDebug()" in ios_paywall
+    assert "#if DEBUG" in ios_paywall
+    assert 'Link("Terms of Use"' in ios_paywall
+    assert 'Link("Privacy Policy"' in ios_paywall
     assert "unlockEliteForDebug()" not in ios_paywall
     assert "func unlockEliteForDebug()" not in ios_pro_manager
+    assert "#if DEBUG" in ios_pro_manager
 
 
 def test_voice_callouts_present_on_both_platforms():
@@ -97,3 +104,9 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
     assert "func previewCommandCue()" in ios_timer_manager
     assert "func previewCommandCue()" in ios_voice_service
     assert "func previewCountdownCue()" in ios_voice_service
+
+
+def test_subscription_metadata_includes_eula_link():
+    ios_description = _read(ROOT / "native-ios/fastlane/metadata/en-US/description.txt")
+
+    assert "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" in ios_description

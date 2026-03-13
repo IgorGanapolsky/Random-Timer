@@ -1,5 +1,17 @@
 import SwiftUI
 
+private enum SubscriptionLegalLinks {
+    static let termsOfUse = legalURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+    static let privacyPolicy = legalURL("https://github.com/IgorGanapolsky/Random-Timer/blob/main/PRIVACY_POLICY.md")
+
+    private static func legalURL(_ raw: String) -> URL {
+        guard let url = URL(string: raw) else {
+            preconditionFailure("Invalid legal URL: \(raw)")
+        }
+        return url
+    }
+}
+
 enum PaywallEntryPoint: String {
     case rangeGate = "range_gate"
     case soundGate = "sound_gate"
@@ -7,6 +19,7 @@ enum PaywallEntryPoint: String {
 }
 
 struct PaywallSheet: View {
+    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
@@ -35,18 +48,7 @@ struct PaywallSheet: View {
                 }
             }
 
-            Text("Upgrade to Pro")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.textPrimary)
-                .contentShape(Rectangle())
-                .onLongPressGesture(minimumDuration: 8.0, maximumDistance: 100) {
-                    let generator = UIImpactFeedbackGenerator(style: .heavy)
-                    generator.impactOccurred()
-                    proManager.unlockProForDebug()
-                    hasTrackedDismiss = true
-                    dismiss()
-                }
+            paywallTitle
 
             VStack(spacing: 4) {
                 Text("One premium plan.")
@@ -63,18 +65,31 @@ struct PaywallSheet: View {
                         .foregroundColor(.accentPrimary)
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
-                    ProFeatureRow(text: "Voice callouts during countdown")
+                    ProFeatureRow(text: "Spoken countdown cues + command callouts")
                     ProFeatureRow(text: "Support independent development")
                 }
             }
             .padding(.horizontal)
 
             VStack(spacing: 12) {
-                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
+                PrimaryButton(title: "Unlock Pro • \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
                     Task {
                         await purchase(productID: ProManager.eliteProductID)
                     }
                 }
+            }
+
+            VStack(spacing: 6) {
+                Text("Subscription terms")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundColor(.textSecondary)
+
+                HStack(spacing: 16) {
+                    Link("Terms of Use", destination: SubscriptionLegalLinks.termsOfUse)
+                    Link("Privacy Policy", destination: SubscriptionLegalLinks.privacyPolicy)
+                }
+                .font(.caption2)
+                .foregroundColor(.accentPrimary)
             }
 
             Button("Restore purchase") {
@@ -124,7 +139,6 @@ struct PaywallSheet: View {
 
         let result = await proManager.purchase(productID: productID)
 
-        // Compatibility event for existing dashboards while canonical events roll out.
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseResult,
             properties: purchaseProperties(productID: productID, result: result)
@@ -161,6 +175,27 @@ struct PaywallSheet: View {
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.dismissMethod: method,
         ])
+    }
+
+    @ViewBuilder
+    private var paywallTitle: some View {
+        let title =
+            Text("Upgrade to Pro")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.textPrimary)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+
+#if DEBUG
+        title.onLongPressGesture(minimumDuration: 8.0) {
+            proManager.unlockProForDebug()
+            hasTrackedDismiss = true
+            dismiss()
+        }
+#else
+        title
+#endif
     }
 }
 

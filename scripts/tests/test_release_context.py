@@ -52,6 +52,10 @@ class ReleaseContextLocalTests(unittest.TestCase):
             (meta / "keywords.txt").write_text("kw1,kw2", encoding="utf-8")
             (meta / "support_url.txt").write_text("https://example.com/support", encoding="utf-8")
             (meta / "privacy_url.txt").write_text("https://example.com/privacy", encoding="utf-8")
+            (meta / "description.txt").write_text(
+                "desc\nTerms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n",
+                encoding="utf-8",
+            )
 
             local = collect_local_context(repo, "en-US")
 
@@ -60,6 +64,7 @@ class ReleaseContextLocalTests(unittest.TestCase):
             self.assertEqual(local["screenshots"]["ipad_large_count"], 3)
             self.assertEqual(local["screenshots"]["missing_required_ipad_files"], [])
             self.assertEqual(local["metadata"]["missing_required_fields"], [])
+            self.assertTrue(local["metadata"]["description_contains_eula"])
 
     def test_collect_local_context_reports_missing_requirements(self):
         with tempfile.TemporaryDirectory() as td:
@@ -82,6 +87,31 @@ class ReleaseContextLocalTests(unittest.TestCase):
             self.assertIn("support_url", local["metadata"]["missing_required_fields"])
             self.assertIn("privacy_url", local["metadata"]["missing_required_fields"])
             self.assertIn("7_ipad_stopped.png", local["screenshots"]["missing_required_ipad_files"])
+
+    def test_collect_local_context_fails_when_description_omits_eula(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            shots = repo / "native-ios" / "fastlane" / "screenshots" / "en-US"
+            meta = repo / "native-ios" / "fastlane" / "metadata" / "en-US"
+            shots.mkdir(parents=True)
+            meta.mkdir(parents=True)
+
+            _write_png(shots / "1_setup.png", 1320, 2868)
+            _write_png(shots / "2_active.png", 1320, 2868)
+            _write_png(shots / "3_alarm.png", 1320, 2868)
+            _write_png(shots / "5_ipad_setup.png", 2064, 2752)
+            _write_png(shots / "6_ipad_running.png", 2064, 2752)
+            _write_png(shots / "7_ipad_stopped.png", 2064, 2752)
+
+            (meta / "description.txt").write_text("desc without eula", encoding="utf-8")
+            (meta / "keywords.txt").write_text("kw1,kw2", encoding="utf-8")
+            (meta / "support_url.txt").write_text("https://example.com/support", encoding="utf-8")
+            (meta / "privacy_url.txt").write_text("https://example.com/privacy", encoding="utf-8")
+
+            local = collect_local_context(repo, "en-US")
+
+            self.assertFalse(local["local_ready"])
+            self.assertFalse(local["metadata"]["description_contains_eula"])
 
 
 class ReleaseContextSummaryTests(unittest.TestCase):

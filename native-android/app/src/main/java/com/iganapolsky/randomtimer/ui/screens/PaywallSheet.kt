@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -20,16 +19,32 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
+
+private const val TERMS_OF_USE_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+private const val PRIVACY_POLICY_URL = "https://github.com/IgorGanapolsky/Random-Timer/blob/main/PRIVACY_POLICY.md"
+
+private fun Modifier.holdForHiddenUnlock(
+    holdDurationMs: Long,
+    onHoldComplete: () -> Unit,
+): Modifier =
+    pointerInput(holdDurationMs, onHoldComplete) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val releasedBeforeHold = withTimeoutOrNull(holdDurationMs) { waitForUpOrCancellation() }
+            if (releasedBeforeHold == null) {
+                onHoldComplete()
+                waitForUpOrCancellation()
+            }
+        }
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +55,7 @@ fun PaywallSheet(
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
 ) {
-    val haptic = LocalHapticFeedback.current
+    val uriHandler = LocalUriHandler.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -54,35 +69,22 @@ fun PaywallSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Not now",
-                style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .align(Alignment.Start)
-                        .clickable(onClick = onDismiss),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
                 text = "Upgrade to Pro",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
                 modifier =
-                    Modifier.fillMaxWidth().then(
-                        if (onDebugUnlock != null) {
-                            Modifier.holdForHiddenUnlock(
-                                holdDurationMs = 8_000L,
-                                haptic = haptic,
-                                onHoldComplete = onDebugUnlock,
-                            )
-                        } else {
-                            Modifier
-                        },
-                    ),
+                    if (onDebugUnlock != null) {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .holdForHiddenUnlock(holdDurationMs = 8_000L, onHoldComplete = onDebugUnlock)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -92,6 +94,7 @@ fun PaywallSheet(
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
             )
+
             Text(
                 text = "Yearly auto-renewing subscription. Cancel anytime.",
                 style = MaterialTheme.typography.bodySmall,
@@ -99,16 +102,6 @@ fun PaywallSheet(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "PRO FEATURES",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.AccentPrimary,
-                modifier = Modifier.align(Alignment.Start),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
@@ -118,11 +111,37 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = "Unlock Pro \u2022 $proPrice",
+                text = "Unlock Pro • $proPrice",
                 onClick = { onPurchase("elite_tactical") },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Subscription terms",
+                style = MaterialTheme.typography.labelSmall,
+                color = TimerColors.TextSecondary,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 6.dp, bottom = 18.dp),
+            ) {
+                Text(
+                    text = "Terms of Use",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.AccentPrimary,
+                    modifier = Modifier.clickable { uriHandler.openUri(TERMS_OF_USE_URL) },
+                )
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.AccentPrimary,
+                    modifier = Modifier.clickable { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                )
+            }
 
             Text(
                 text = "Restore purchase",
@@ -130,11 +149,10 @@ fun PaywallSheet(
                 color = TimerColors.TextSecondary,
                 modifier =
                     Modifier
+                        .padding(bottom = 16.dp)
                         .clickable(onClick = onRestore),
                 textAlign = TextAlign.Center,
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Not now",
@@ -142,47 +160,13 @@ fun PaywallSheet(
                 color = TimerColors.TextSecondary,
                 modifier =
                     Modifier
+                        .padding(bottom = 16.dp)
                         .clickable(onClick = onDismiss),
                 textAlign = TextAlign.Center,
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
-
-private fun Modifier.holdForHiddenUnlock(
-    holdDurationMs: Long,
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    onHoldComplete: () -> Unit,
-): Modifier =
-    pointerInput(holdDurationMs, onHoldComplete) {
-        awaitPointerEventScope {
-            while (true) {
-                awaitFirstDown(requireUnconsumed = false)
-                val success = withTimeoutOrNull(holdDurationMs) {
-                    var released = false
-                    while (!released) {
-                        val event = awaitPointerEvent()
-                        if (event.changes.any { it.changedToUp() }) {
-                            released = true
-                        }
-                    }
-                    false // Released before timeout
-                } ?: true
-                
-                if (success) {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onHoldComplete()
-                    // Wait for the final up event before allowing next hold
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        if (event.changes.any { it.changedToUp() }) break
-                    }
-                }
-            }
-        }
-    }
 
 @Composable
 private fun ProFeatureRow(text: String) {
@@ -195,7 +179,7 @@ private fun ProFeatureRow(text: String) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "\u2713",
+            text = "✓",
             style = MaterialTheme.typography.bodyMedium,
             color = TimerColors.AccentPrimary,
             modifier = Modifier.padding(end = 12.dp),

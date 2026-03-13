@@ -15,6 +15,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -47,9 +48,7 @@ class ProManager
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
 
-            internal fun canUseDebugUnlock(
-                @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
-            ): Boolean = true
+            internal fun canUseDebugUnlock(isDebugBuild: Boolean = BuildConfig.DEBUG): Boolean = isDebugBuild
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -412,6 +411,9 @@ class ProManager
         private fun restoreResultValue(success: Boolean): String = if (success) "restored" else "failed"
 
         fun forcePro() {
+            if (!canUseDebugUnlock()) {
+                return
+            }
             // Cycle: NONE → BASE → ELITE → NONE
             val next =
                 when (_entitlementLevel.value) {

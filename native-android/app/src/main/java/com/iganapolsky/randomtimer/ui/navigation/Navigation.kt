@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
@@ -119,9 +120,14 @@ fun RandomTimerNavHost(
                         showPaywall = true
                     }
                 },
-                onSecretUnlock = {
-                    viewModel.proManager.forcePro()
-                },
+                onSecretUnlock =
+                    if (ProManager.canUseDebugUnlock(BuildConfig.DEBUG)) {
+                        {
+                            viewModel.proManager.forcePro()
+                        }
+                    } else {
+                        null
+                    },
             )
         }
 
@@ -188,11 +194,16 @@ fun RandomTimerNavHost(
                     showPaywall = false
                 }
             },
-            onDebugUnlock = {
-                if (viewModel.proManager.unlockProForDebug(paywallEntryPoint)) {
-                    showPaywall = false
-                }
-            },
+            onDebugUnlock =
+                if (ProManager.canUseDebugUnlock(BuildConfig.DEBUG)) {
+                    {
+                        if (viewModel.proManager.unlockProForDebug(paywallEntryPoint)) {
+                            showPaywall = false
+                        }
+                    }
+                } else {
+                    null
+                },
             onRestore = {
                 scope.launch {
                     val restored = viewModel.proManager.restorePurchasesFromPaywall(paywallEntryPoint)

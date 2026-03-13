@@ -41,6 +41,7 @@ IPAD_LARGE_DIMENSIONS = {
 }
 
 REQUIRED_IPAD_FILES = {"5_ipad_setup.png", "6_ipad_running.png", "7_ipad_stopped.png"}
+APPLE_STANDARD_EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
 
 REQUIRED_METADATA_FILES = {
     "description": "description.txt",
@@ -193,13 +194,19 @@ def collect_metadata_fields(metadata_dir: Path) -> Dict[str, Any]:
             "value": value,
         }
 
+    description_value = fields["description"]["value"]
+    description_contains_eula = APPLE_STANDARD_EULA_URL in description_value
+
     return {
         "directory": str(metadata_dir),
         "required_fields": fields,
         "missing_required_fields": missing_required,
         "passes": {
             "required_fields_non_empty": len(missing_required) == 0,
+            "description_contains_eula": description_contains_eula,
         },
+        "eula_url": APPLE_STANDARD_EULA_URL,
+        "description_contains_eula": description_contains_eula,
     }
 
 
