@@ -50,6 +50,8 @@ data class TimerConfig(
     val volume: Float,
     /** Whether vibration is enabled */
     val vibrationEnabled: Boolean = false,
+    /** Whether timed voice callouts should play during training */
+    val voiceCalloutsEnabled: Boolean = false,
 ) {
     init {
         require(minSeconds >= 0) { "Minimum seconds cannot be negative" }
@@ -82,6 +84,7 @@ data class TimerConfig(
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
                 vibrationEnabled = false,
+                voiceCalloutsEnabled = false,
             )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)

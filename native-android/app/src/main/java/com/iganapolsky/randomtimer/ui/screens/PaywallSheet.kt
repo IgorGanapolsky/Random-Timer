@@ -47,7 +47,7 @@ private fun Modifier.holdForHiddenUnlock(
 @Composable
 fun PaywallSheet(
     proPrice: String,
-    onPurchase: (String) -> Unit,
+    onPurchase: () -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
@@ -101,14 +101,14 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Spoken countdown cues + command callouts")
+            ProFeatureRow(text = "Timed voice callouts during training")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
                 text = "Unlock Pro \u2022 $proPrice",
-                onClick = { onPurchase("elite_tactical") },
+                onClick = onPurchase,
             )
 
             Spacer(modifier = Modifier.height(24.dp))

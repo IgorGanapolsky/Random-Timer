@@ -76,9 +76,31 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
 def test_voice_callouts_present_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)
+    android_timer_config = _read(ANDROID_TIMER_CONFIG)
+    ios_timer_models = _read(IOS_TIMER_MODELS)
 
     for source in (android_setup, ios_setup):
         assert "Voice Callouts" in source
+        assert "Countdown" in source
+        assert "Focus" in source
+
+    assert "voiceCalloutsEnabled" in android_timer_config
+    assert "voiceCalloutsEnabled" in ios_timer_models
+
+
+def test_voice_callouts_use_toggle_when_pro_and_runtime_respects_setting():
+    android_setup = _read(ANDROID_SETUP)
+    android_service = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt")
+    ios_setup = _read(IOS_SETUP)
+    ios_timer_manager = _read(IOS_TIMER_MANAGER)
+
+    assert "checked = config.voiceCalloutsEnabled" in android_setup
+    assert "updateConfig(voiceCalloutsEnabled = enabled)" in android_setup
+    assert "proManager.entitlementLevel.value.isPro && state.config.voiceCalloutsEnabled" in android_service
+
+    assert "config.voiceCalloutsEnabled" in ios_setup
+    assert "updateConfig(voiceCalloutsEnabled: enabled)" in ios_setup
+    assert "ProManager.shared.isPro && state.config.voiceCalloutsEnabled" in ios_timer_manager
 
 
 def test_voice_preview_supports_command_cues_on_both_platforms():

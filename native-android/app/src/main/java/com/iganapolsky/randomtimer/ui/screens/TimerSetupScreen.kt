@@ -175,6 +175,7 @@ fun TimerSetupScreen(
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
+        voiceCalloutsEnabled: Boolean = config.voiceCalloutsEnabled,
     ) {
         onConfigChange(
             config.copy(
@@ -186,6 +187,7 @@ fun TimerSetupScreen(
                 soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                voiceCalloutsEnabled = voiceCalloutsEnabled,
             ),
         )
     }
@@ -439,11 +441,19 @@ fun TimerSetupScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
 
                                     if (isPro) {
-                                        Text(
-                                            text = "ON",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
+                                        Switch(
+                                            checked = config.voiceCalloutsEnabled,
+                                            onCheckedChange = { enabled ->
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                updateConfig(voiceCalloutsEnabled = enabled)
+                                            },
+                                            colors =
+                                                SwitchDefaults.colors(
+                                                    checkedThumbColor = TimerColors.AccentPrimary,
+                                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                    uncheckedThumbColor = TimerColors.TextMuted,
+                                                    uncheckedTrackColor = TimerColors.SliderTrack,
+                                                ),
                                         )
                                     } else {
                                         Surface(

@@ -1,6 +1,5 @@
 import Foundation
 import ActivityKit
-
 // MARK: - Sound Type
 
 public enum SoundType: String, Codable, Sendable, CaseIterable {
@@ -105,6 +104,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let volume: Float
     /// Whether vibration is enabled
     public let vibrationEnabled: Bool
+    /// Whether timed voice callouts should play during training
+    public let voiceCalloutsEnabled: Bool
 
     public init(
         minSeconds: Int = 0,
@@ -114,7 +115,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         repeatEnabled: Bool = false, // Default to LOOP OFF
         soundType: SoundType = .intense,
         volume: Float = 0.5, // Default to 50%
-        vibrationEnabled: Bool = false
+        vibrationEnabled: Bool = false,
+        voiceCalloutsEnabled: Bool = false
     ) {
         precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
         precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
@@ -130,6 +132,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         self.soundType = soundType
         self.volume = volume
         self.vibrationEnabled = vibrationEnabled
+        self.voiceCalloutsEnabled = voiceCalloutsEnabled
     }
 
     /// Minimum as TimeInterval
@@ -157,6 +160,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundType
         case volume
         case vibrationEnabled
+        case voiceCalloutsEnabled
 
         // Legacy / compatibility keys
         case minDuration
@@ -173,6 +177,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundVolume
         case vibration
         case vibration_enabled
+        case voice_callouts_enabled
     }
 
     private enum EncodingKeys: String, CodingKey {
@@ -184,6 +189,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundType
         case volume
         case vibrationEnabled
+        case voiceCalloutsEnabled
     }
 
     public init(from decoder: Decoder) throws {
@@ -217,6 +223,10 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             forKeys: [.vibrationEnabled, .vibration_enabled, .vibration],
             defaultValue: false
         )
+        let voiceCalloutsEnabled = container.decodeFirstBool(
+            forKeys: [.voiceCalloutsEnabled, .voice_callouts_enabled],
+            defaultValue: false
+        )
 
         let soundType = container.decodeFirstSoundType(
             forKeys: [.soundType, .sound_type, .alarmSound, .sound],
@@ -237,7 +247,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatEnabled: repeatEnabled,
             soundType: soundType,
             volume: clampedVolume,
-            vibrationEnabled: vibrationEnabled
+            vibrationEnabled: vibrationEnabled,
+            voiceCalloutsEnabled: voiceCalloutsEnabled
         )
     }
 
@@ -251,6 +262,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         try container.encode(soundType, forKey: .soundType)
         try container.encode(volume, forKey: .volume)
         try container.encode(vibrationEnabled, forKey: .vibrationEnabled)
+        try container.encode(voiceCalloutsEnabled, forKey: .voiceCalloutsEnabled)
     }
 
     /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
@@ -269,7 +281,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatEnabled: repeatEnabled,
             soundType: clampedSound,
             volume: volume,
-            vibrationEnabled: vibrationEnabled
+            vibrationEnabled: vibrationEnabled,
+            voiceCalloutsEnabled: voiceCalloutsEnabled
         )
     }
 }

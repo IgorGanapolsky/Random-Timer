@@ -123,6 +123,7 @@ class TimerViewModel
                     "max_duration" to newConfig.maxSeconds,
                     "sound_type" to newConfig.soundType.name,
                     "repeat_enabled" to newConfig.repeatEnabled,
+                    "voice_callouts_enabled" to newConfig.voiceCalloutsEnabled,
                 ),
             )
             viewModelScope.launch {
@@ -203,6 +204,7 @@ class TimerViewModel
                     "max_duration" to updatedConfig.maxSeconds,
                     "sound_type" to updatedConfig.soundType.name,
                     "repeat_enabled" to updatedConfig.repeatEnabled,
+                    "voice_callouts_enabled" to updatedConfig.voiceCalloutsEnabled,
                 ),
             )
             viewModelScope.launch {

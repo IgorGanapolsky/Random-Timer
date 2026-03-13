@@ -130,10 +130,17 @@ struct TimerSetupScreen: View {
                             }
 
                             if proManager.isPro {
-                                Text("ON")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
+                                Toggle(
+                                    "",
+                                    isOn: Binding(
+                                        get: { config.voiceCalloutsEnabled },
+                                        set: { enabled in
+                                            updateConfig(voiceCalloutsEnabled: enabled)
+                                        }
+                                    )
+                                )
+                                .labelsHidden()
+                                .tint(.accentPrimary)
                             } else {
                                 Button {
                                     presentPaywall(entryPoint: .soundGate)
@@ -354,7 +361,8 @@ struct TimerSetupScreen: View {
         alarmDuration: Int? = nil,
         soundType: SoundType? = nil,
         volume: Float? = nil,
-        vibrationEnabled: Bool? = nil
+        vibrationEnabled: Bool? = nil,
+        voiceCalloutsEnabled: Bool? = nil
     ) {
         let newConfig = TimerConfig(
             minSeconds: minSeconds ?? config.minSeconds,
@@ -364,7 +372,8 @@ struct TimerSetupScreen: View {
             repeatEnabled: config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
-            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
+            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
+            voiceCalloutsEnabled: voiceCalloutsEnabled ?? config.voiceCalloutsEnabled
         )
         timerManager.updateConfig(newConfig)
     }
