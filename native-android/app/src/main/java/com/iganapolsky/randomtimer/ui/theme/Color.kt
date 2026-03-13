@@ -37,6 +37,10 @@ object TimerColors {
     val AccentPrimary = Color(0xFFDC2626) // Crimson red
     val AccentSecondary = Color(0xFFEF4444) // Bright red
 
+    // Primary Action Gradient (March 2026 Standards)
+    val IntensityRed = Color(0xFFDC2626)
+    val TacticalOrange = Color(0xFFF97316)
+
     // Slider
     val SliderTrack = Color(0xFF3F3F46)
     val SliderThumb = Color(0xFFF8FAFC)

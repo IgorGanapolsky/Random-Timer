@@ -22,329 +22,332 @@ struct TimerSetupScreen: View {
     private var minSliderMax: Double { maxSliderRange - 30 }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                
-                // Zone 1: Standard Ops
-                Text("STANDARD OPS")
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.textMuted)
-                    .padding(.top, 16)
-                    .padding(.leading, 4)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    
+                    // Zone 1: Standard Ops
+                    Text("STANDARD OPS")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.textMuted)
+                        .padding(.top, 12)
+                        .padding(.leading, 4)
 
-                // 1. Timer Range Card
-                GlassCard {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Label("Timer Range", systemImage: "timer")
+                    // 1. Timer Range Card
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label("Timer Range", systemImage: "timer")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.textPrimary)
+                                
+                                Spacer()
+
+                                if proManager.isPro {
+                                    Button {
+                                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                                        generator.impactOccurred()
+                                        let newExtended = !config.useExtendedRange
+                                        if !newExtended && config.maxSeconds > TimerConfig.maxSecondsFree {
+                                            // Clamp if shrinking
+                                            let clampedMax = TimerConfig.maxSecondsFree
+                                            let clampedMin = Swift.min(config.minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds)
+                                            updateConfig(maxSeconds: clampedMax, minSeconds: clampedMin, useExtendedRange: false)
+                                        } else {
+                                            updateConfig(useExtendedRange: newExtended)
+                                        }
+                                    } label: {
+                                        Text(config.useExtendedRange ? "60M MODE" : "5M MODE")
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
+                                            .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
+                                            .cornerRadius(4)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 4)
+                                                    .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 0.5)
+                                            )
+                                    }
+                                } else {
+                                    Text("PRO: 1H \u{1F512}")
+                                        .font(.caption2)
+                                        .foregroundColor(.accentPrimary)
+                                        .onTapGesture {
+                                            presentPaywall(entryPoint: .rangeGate)
+                                        }
+                                }
+                            }
+
+                            TimeRangeSliders(
+                                minValue: config.minSeconds,
+                                maxValue: config.maxSeconds,
+                                maxSecondsLimit: Int(maxSliderRange),
+                                onRangeChange: { newMin, newMax in
+                                    updateConfig(minSeconds: newMin, maxSeconds: newMax)
+                                }
+                            )
+                        }
+                    }
+
+                    // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("Alarm Sound", systemImage: "bell.fill")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
-                            Spacer()
 
-                            if proManager.isPro {
-                                Button {
-                                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                                    generator.impactOccurred()
-                                    let newExtended = !config.useExtendedRange
-                                    if !newExtended && config.maxSeconds > TimerConfig.maxSecondsFree {
-                                        // Clamp if shrinking
-                                        let clampedMax = TimerConfig.maxSecondsFree
-                                        let clampedMin = Swift.min(config.minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds)
-                                        updateConfig(maxSeconds: clampedMax, minSeconds: clampedMin, useExtendedRange: false)
-                                    } else {
-                                        updateConfig(useExtendedRange: newExtended)
-                                    }
-                                } label: {
-                                    Text(config.useExtendedRange ? "60M MODE" : "5M MODE")
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
-                                        .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
-                                        .cornerRadius(4)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 0.5)
-                                        )
+                            // Duration Chips
+                            HStack(spacing: 8) {
+                                ForEach(TimerConfig.alarmDurationOptions, id: \.self) { duration in
+                                    DurationChip(
+                                        duration: duration,
+                                        selected: config.alarmDuration == duration,
+                                        onTap: {
+                                            updateConfig(alarmDuration: duration)
+                                        }
+                                    )
                                 }
-                            } else {
-                                Text("PRO: 1H \u{1F512}")
-                                    .font(.caption2)
-                                    .foregroundColor(.accentPrimary)
-                                    .onTapGesture {
-                                        presentPaywall(entryPoint: .rangeGate)
+                            }
+
+                            // Voice Callouts (Pro Feature)
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Label("Voice Callouts", systemImage: "waveform")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                    
+                                    Text("Prompts during countdown")
+                                        .font(.caption2)
+                                        .foregroundColor(.textMuted)
+                                }
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 8) {
+                                    // Preview Button (always enabled)
+                                    Button {
+                                        timerManager.previewCommandCue()
+                                    } label: {
+                                        Text("PREVIEW")
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.accentPrimary.opacity(0.1))
+                                            .foregroundColor(.accentPrimary)
+                                            .cornerRadius(4)
                                     }
+
+                                    if proManager.isPro {
+                                        Text("ENABLED")
+                                            .font(.caption2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.accentPrimary)
+                                    } else {
+                                        Button {
+                                            presentPaywall(entryPoint: .soundGate)
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Text("PRO")
+                                                Image(systemName: "lock.fill")
+                                            }
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.accentPrimary.opacity(0.1))
+                                            .foregroundColor(.accentPrimary)
+                                            .cornerRadius(4)
+                                        }
+                                    }
+                                }
                             }
-                        }
+                            .padding(.vertical, 4)
+                            .opacity(proManager.isPro ? 1.0 : 0.6)
 
-                        Spacer().frame(height: 16)
-
-                        TimeRangeSliders(
-                            minValue: config.minSeconds,
-                            maxValue: config.maxSeconds,
-                            maxSecondsLimit: Int(maxSliderRange),
-                            onRangeChange: { newMin, newMax in
-                                updateConfig(minSeconds: newMin, maxSeconds: newMax)
-                            }
-                        )
-                    }
-                }
-
-                // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
-                GlassCard {
-                    VStack(alignment: .leading) {
-                        Label("Alarm Sound", systemImage: "bell.fill")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.textPrimary)
-
-                        Spacer().frame(height: 12)
-
-                        // Duration Chips
-                        HStack(spacing: 8) {
-                            ForEach(TimerConfig.alarmDurationOptions, id: \.self) { duration in
-                                DurationChip(
-                                    duration: duration,
-                                    selected: config.alarmDuration == duration,
+                            // Core Sounds
+                            HStack(spacing: 12) {
+                                SoundTypeButton(
+                                    label: "Intense",
+                                    systemImage: "flame.fill",
+                                    selected: config.soundType == .intense,
                                     onTap: {
-                                        updateConfig(alarmDuration: duration)
+                                        updateConfig(soundType: .intense)
+                                        timerManager.previewSound()
+                                    }
+                                )
+                                SoundTypeButton(
+                                    label: "Gentle",
+                                    systemImage: "bolt.fill",
+                                    selected: config.soundType == .gentle,
+                                    onTap: {
+                                        updateConfig(soundType: .gentle)
+                                        timerManager.previewSound()
                                     }
                                 )
                             }
-                        }
 
-                        Spacer().frame(height: 20)
+                            // Volume Slider
+                            VolumeSliderView(
+                                value: config.volume,
+                                onChanged: { newVolume in
+                                    updateConfig(volume: newVolume)
+                                },
+                                onSliding: { newVolume in
+                                    updateConfig(volume: newVolume)
+                                    timerManager.previewVolume()
+                                },
+                                systemImage: "speaker.wave.3.fill"
+                            )
 
-                        // Voice Callouts (Pro Feature)
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Label("Voice Callouts", systemImage: "waveform")
+                            // Vibration Toggle
+                            HStack {
+                                Text("Vibration")
                                     .font(.subheadline)
+                                    .foregroundColor(.textSecondary)
+
+                                Spacer()
+
+                                Toggle("Vibration", isOn: Binding(
+                                    get: { config.vibrationEnabled },
+                                    set: { updateConfig(vibrationEnabled: $0) }
+                                ))
+                                .tint(.accentPrimary)
+                                .labelsHidden()
+                            }
+                            .transaction { $0.animation = nil }
+                        }
+                    }
+
+                    // Zone 2: Tactical Expansion (PRO)
+                    HStack {
+                        Text("TACTICAL EXPANSION (PRO)")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                            .onTapGesture {
+                                if !proManager.isPro {
+                                    presentPaywall(entryPoint: .soundGate)
+                                }
+                            }
+                        
+                        if !proManager.isPro {
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                                .foregroundColor(.textMuted)
+                            
+                            Spacer()
+                            
+                            Button {
+                                withAnimation(.spring()) {
+                                    showArsenal.toggle()
+                                }
+                            } label: {
+                                Text(showArsenal ? "Hide Sound Arsenal" : "View Sound Arsenal")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.accentPrimary)
+                            }
+                        }
+                    }
+                    .padding(.top, 4)
+                    .padding(.leading, 4)
+
+                    // Pro Sound Arsenal (Adaptive Visibility)
+                    if proManager.isPro || showArsenal {
+                        GlassCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Label("Sound Arsenal", systemImage: "speaker.wave.3.fill")
+                                    .font(.headline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                
-                                Text("Prompts during countdown")
-                                    .font(.caption2)
-                                    .foregroundColor(.textMuted)
-                            }
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 8) {
-                                // Preview Button (always enabled)
-                                Button {
-                                    timerManager.previewCommandCue()
-                                } label: {
-                                    Text("PREVIEW")
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.accentPrimary.opacity(0.1))
-                                        .foregroundColor(.accentPrimary)
-                                        .cornerRadius(4)
-                                }
 
-                                if proManager.isPro {
-                                    Text("ENABLED")
-                                        .font(.caption2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.accentPrimary)
-                                } else {
-                                    Button {
-                                        presentPaywall(entryPoint: .soundGate)
-                                    } label: {
-                                        HStack(spacing: 4) {
-                                            Text("PRO")
-                                            Image(systemName: "lock.fill")
-                                        }
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.accentPrimary.opacity(0.1))
-                                        .foregroundColor(.accentPrimary)
-                                        .cornerRadius(4)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 8)
-                        .opacity(proManager.isPro ? 1.0 : 0.6)
-
-                        Spacer().frame(height: 20)
-
-                        // Core Sounds
-                        HStack(spacing: 12) {
-                            SoundTypeButton(
-                                label: "Intense",
-                                systemImage: "flame.fill",
-                                selected: config.soundType == .intense,
-                                onTap: {
-                                    updateConfig(soundType: .intense)
-                                    timerManager.previewSound()
-                                }
-                            )
-                            SoundTypeButton(
-                                label: "Gentle",
-                                systemImage: "bolt.fill",
-                                selected: config.soundType == .gentle,
-                                onTap: {
-                                    updateConfig(soundType: .gentle)
-                                    timerManager.previewSound()
-                                }
-                            )
-                        }
-
-                        Spacer().frame(height: 24)
-
-                        // Volume Slider
-                        VolumeSliderView(
-                            value: config.volume,
-                            onChanged: { newVolume in
-                                updateConfig(volume: newVolume)
-                            },
-                            onSliding: { newVolume in
-                                updateConfig(volume: newVolume)
-                                timerManager.previewVolume()
-                            },
-                            systemImage: "speaker.wave.3.fill"
-                        )
-
-                        Spacer().frame(height: 12)
-
-                        // Vibration Toggle
-                        HStack {
-                            Text("Vibration")
-                                .font(.subheadline)
-                                .foregroundColor(.textSecondary)
-
-                            Spacer()
-
-                            Toggle("Vibration", isOn: Binding(
-                                get: { config.vibrationEnabled },
-                                set: { updateConfig(vibrationEnabled: $0) }
-                            ))
-                            .tint(.accentPrimary)
-                            .labelsHidden()
-                        }
-                        .transaction { $0.animation = nil }
-                    }
-                }
-
-                // Start Button
-                PrimaryButton(title: "Start Timer") {
-                    Task {
-                        await timerManager.startTimer()
-                    }
-                }
-                .scaleEffect(1.02)
-                .padding(.vertical, 8)
-
-                // Zone 2: Tactical Expansion (PRO)
-                HStack {
-                    Text("TACTICAL EXPANSION (PRO)")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
-                        .onTapGesture {
-                            if !proManager.isPro {
-                                presentPaywall(entryPoint: .soundGate)
-                            }
-                        }
-                    
-                    if !proManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundColor(.textMuted)
-                        
-                        Spacer()
-                        
-                        Button {
-                            withAnimation(.spring()) {
-                                showArsenal.toggle()
-                            }
-                        } label: {
-                            Text(showArsenal ? "Hide Sound Arsenal" : "View Sound Arsenal")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.accentPrimary)
-                        }
-                    }
-                }
-                .padding(.top, 8)
-                .padding(.leading, 4)
-
-                // Pro Sound Arsenal (Adaptive Visibility)
-                if proManager.isPro || showArsenal {
-                    GlassCard {
-                        VStack(alignment: .leading) {
-                            Label("Sound Arsenal", systemImage: "speaker.wave.3.fill")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-
-                            Spacer().frame(height: 12)
-
-                            let lockSuffix = proManager.isPro ? "" : " \u{1F512}"
-                            let proSounds = SoundType.proSounds
-                            ForEach(Array(stride(from: 0, to: proSounds.count, by: 2)), id: \.self) { i in
-                                HStack(spacing: 12) {
-                                    let sound = proSounds[i]
-                                    SoundTypeButton(
-                                        label: sound.rawValue.capitalized + lockSuffix,
-                                        selected: config.soundType == sound,
-                                        onTap: {
-                                            if proManager.isPro {
-                                                updateConfig(soundType: sound)
-                                                timerManager.previewSound()
-                                            } else {
-                                                timerManager.previewSound(type: sound)
-                                            }
-                                        }
-                                    )
-                                    if i + 1 < proSounds.count {
-                                        let sound2 = proSounds[i + 1]
+                                let lockSuffix = proManager.isPro ? "" : " \u{1F512}"
+                                let proSounds = SoundType.proSounds
+                                ForEach(Array(stride(from: 0, to: proSounds.count, by: 2)), id: \.self) { i in
+                                    HStack(spacing: 12) {
+                                        let sound = proSounds[i]
                                         SoundTypeButton(
-                                            label: sound2.rawValue.capitalized + lockSuffix,
-                                            selected: config.soundType == sound2,
+                                            label: sound.rawValue.capitalized + lockSuffix,
+                                            selected: config.soundType == sound,
                                             onTap: {
-                                            if proManager.isPro {
-                                                updateConfig(soundType: sound2)
-                                                timerManager.previewSound()
-                                            } else {
-                                                timerManager.previewSound(type: sound2)
+                                                if proManager.isPro {
+                                                    updateConfig(soundType: sound)
+                                                    timerManager.previewSound()
+                                                } else {
+                                                    timerManager.previewSound(type: sound)
+                                                }
                                             }
-                                        }
-                                    )
-                                }
-                                }
-                            }
-
-                            if !proManager.isPro {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Tap a sound to preview. Unlock Pro to equip it.")
-                                        .font(.caption2)
-                                        .foregroundColor(.textMuted)
-
-                                    Button("Unlock Pro") {
-                                        presentPaywall(entryPoint: .soundGate)
+                                        )
+                                        if i + 1 < proSounds.count {
+                                            let sound2 = proSounds[i + 1]
+                                            SoundTypeButton(
+                                                label: sound2.rawValue.capitalized + lockSuffix,
+                                                selected: config.soundType == sound2,
+                                                onTap: {
+                                                if proManager.isPro {
+                                                    updateConfig(soundType: sound2)
+                                                    timerManager.previewSound()
+                                                } else {
+                                                    timerManager.previewSound(type: sound2)
+                                                }
+                                            }
+                                        )
                                     }
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundColor(.accentPrimary)
+                                    }
                                 }
-                                .padding(.top, 8)
+
+                                if !proManager.isPro {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text("Tap a sound to preview. Unlock Pro to equip it.")
+                                            .font(.caption2)
+                                            .foregroundColor(.textMuted)
+
+                                        Button("Unlock Pro") {
+                                            presentPaywall(entryPoint: .soundGate)
+                                        }
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundColor(.accentPrimary)
+                                    }
+                                    .padding(.top, 4)
+                                }
                             }
                         }
+                        .opacity(proManager.isPro ? 1.0 : 0.7)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    .opacity(proManager.isPro ? 1.0 : 0.7)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
 
-                Spacer(minLength: 32)
+                    Spacer(minLength: 100) // Space for sticky footer
+                }
+                .padding(.horizontal, 24)
             }
-            .padding(.horizontal, 24)
+
+            // Sticky Bottom Action Bar
+            VStack(spacing: 0) {
+                Divider()
+                    .background(Color.glassBorder)
+                
+                VStack {
+                    PrimaryButton(title: "Start Timer") {
+                        let generator = UIImpactFeedbackGenerator(style: .heavy)
+                        generator.impactOccurred()
+                        Task {
+                            await timerManager.startTimer()
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    .padding(.bottom, 32)
+                }
+                .background(
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .ignoresSafeArea(edges: .bottom)
+                )
+            }
         }
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")

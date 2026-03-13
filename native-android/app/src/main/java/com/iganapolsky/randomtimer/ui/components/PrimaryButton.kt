@@ -63,7 +63,7 @@ fun PrimaryButton(
     val styledModifier = if (useGradient && enabled) {
         baseModifier.background(
             brush = Brush.horizontalGradient(
-                colors = listOf(backgroundColor, TimerColors.AccentSecondary),
+                colors = listOf(TimerColors.IntensityRed, TimerColors.TacticalOrange),
             ),
             shape = ButtonShape,
         )
