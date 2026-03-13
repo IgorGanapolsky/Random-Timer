@@ -32,6 +32,10 @@ extension Color {
     static let accentPrimary = Color(hex: "DC2626")    // Crimson red (matches Android)
     static let accentSecondary = Color(hex: "EF4444")  // Bright red
 
+    // Primary Action Gradient (March 2026 Standards)
+    static let intensityRed = Color(hex: "DC2626")
+    static let tacticalOrange = Color(hex: "F97316")
+
     // MARK: - Helper
 
     init(hex: String) {

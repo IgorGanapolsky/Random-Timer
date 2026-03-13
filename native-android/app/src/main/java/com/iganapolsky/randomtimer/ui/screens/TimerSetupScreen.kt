@@ -88,11 +88,11 @@ private object SetupSpacing {
     val regular =
         SetupSpacingValues(
             outerHorizontal = 16.dp,
-            listItem = 16.dp,
+            listItem = 8.dp,
             listTop = 8.dp,
-            listBottom = 24.dp,
-            cardContent = 16.dp,
-            headerToContent = 8.dp,
+            listBottom = 80.dp, // Leave space for sticky button
+            cardContent = 12.dp,
+            headerToContent = 4.dp,
             chipGap = 8.dp,
             startButtonTop = 16.dp,
         )
@@ -100,11 +100,11 @@ private object SetupSpacing {
     val compact =
         SetupSpacingValues(
             outerHorizontal = 12.dp,
-            listItem = 12.dp,
+            listItem = 6.dp,
             listTop = 4.dp,
-            listBottom = 16.dp,
-            cardContent = 12.dp,
-            headerToContent = 6.dp,
+            listBottom = 70.dp, // Leave space for sticky button
+            cardContent = 10.dp,
+            headerToContent = 2.dp,
             chipGap = 6.dp,
             startButtonTop = 8.dp,
         )
@@ -183,439 +183,454 @@ fun TimerSetupScreen(
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),
         ) { paddingValues ->
-            LazyColumn(
+            Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = spacing.outerHorizontal),
-                verticalArrangement = Arrangement.spacedBy(spacing.listItem),
-                contentPadding =
-                    PaddingValues(
-                        top = spacing.listTop,
-                        bottom = spacing.listBottom,
-                    ),
+                        .padding(paddingValues),
             ) {
-                // Training Stats
-                if (hasCompletedFirstTimer) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "Session #${totalSessions + 1}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TimerColors.TextSecondary,
-                            )
-                            if (currentStreak > 1) {
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = spacing.outerHorizontal),
+                    verticalArrangement = Arrangement.spacedBy(spacing.listItem),
+                    contentPadding =
+                        PaddingValues(
+                            top = spacing.listTop,
+                            bottom = spacing.listBottom,
+                        ),
+                ) {
+                    // Training Stats
+                    if (hasCompletedFirstTimer) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
                                 Text(
-                                    text = "\uD83D\uDD25 $currentStreak day streak",
+                                    text = "Session #${totalSessions + 1}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TimerColors.AccentPrimary,
+                                    color = TimerColors.TextSecondary,
+                                )
+                                if (currentStreak > 1) {
+                                    Text(
+                                        text = "\uD83D\uDD25 $currentStreak day streak",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TimerColors.AccentPrimary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 1. Timer Range Card
+                    item {
+                        GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "\u23F1\uFE0F Timer Range",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TimerColors.TextPrimary,
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    if (isPro) {
+                                        Surface(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                val newExtended = !config.useExtendedRange
+                                                if (!newExtended && config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) {
+                                                    // Clamp if shrinking
+                                                    val clampedMax = TimerConfig.MAX_SECONDS_FREE
+                                                    val clampedMin = minOf(config.minSeconds, clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+                                                    updateConfig(useExtendedRange = false, minSeconds = clampedMin, maxSeconds = clampedMax)
+                                                } else {
+                                                    updateConfig(useExtendedRange = newExtended)
+                                                }
+                                            },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = if (config.useExtendedRange) TimerColors.AccentPrimary.copy(alpha = 0.2f) else TimerColors.GlassBackground,
+                                            border = BorderStroke(0.5.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
+                                        ) {
+                                            Text(
+                                                text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Text(
+                                            text = "PRO: 1H \uD83D\uDD12",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.AccentPrimary,
+                                            modifier =
+                                                Modifier.combinedClickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = null,
+                                                    onClick = { onUpgradeTap() },
+                                                    onLongClick = {
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        onSecretUnlock()
+                                                    },
+                                                ),
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(spacing.headerToContent))
+
+                                val maxRange = if (isPro && config.useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                                TimeRangeSliders(
+                                    minValue = config.minSeconds,
+                                    maxValue = config.maxSeconds,
+                                    maxSliderRange = maxRange.toFloat(),
+                                    minSliderMax = maxRange - 30f,
+                                    compactMode = isCompactHeight,
+                                    onMinChange = { newMin ->
+                                        val (min, max) =
+                                            TimeRangeAdjuster.adjustForMinChange(
+                                                currentMinSeconds = config.minSeconds,
+                                                currentMaxSeconds = config.maxSeconds,
+                                                newMinSeconds = newMin,
+                                                maxSecondsLimit = maxRange,
+                                            )
+                                        updateConfig(minSeconds = min, maxSeconds = max)
+                                    },
+                                    onMaxChange = { newMax ->
+                                        val (adjMin, adjMax) =
+                                            TimeRangeAdjuster.adjustForMaxChange(
+                                                currentMinSeconds = config.minSeconds,
+                                                currentMaxSeconds = config.maxSeconds,
+                                                newMaxSeconds = newMax,
+                                                maxSecondsLimit = maxRange,
+                                            )
+                                        updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
+                                    },
                                 )
                             }
                         }
                     }
-                }
 
-                // 1. Timer Range Card
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
+                    item {
+                        GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
+                            Column {
                                 Text(
-                                    text = "\u23F1\uFE0F Timer Range",
+                                    text = "\uD83D\uDD14 Alarm Sound",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
                                 )
-                                Spacer(modifier = Modifier.weight(1f))
-                                if (isPro) {
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            val newExtended = !config.useExtendedRange
-                                            if (!newExtended && config.maxSeconds > TimerConfig.MAX_SECONDS_FREE) {
-                                                // Clamp if shrinking
-                                                val clampedMax = TimerConfig.MAX_SECONDS_FREE
-                                                val clampedMin = minOf(config.minSeconds, clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
-                                                updateConfig(useExtendedRange = false, minSeconds = clampedMin, maxSeconds = clampedMax)
-                                            } else {
-                                                updateConfig(useExtendedRange = newExtended)
-                                            }
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = if (config.useExtendedRange) TimerColors.AccentPrimary.copy(alpha = 0.2f) else TimerColors.GlassBackground,
-                                        border = BorderStroke(0.5.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
-                                    ) {
-                                        Text(
-                                            text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+
+                                Spacer(modifier = Modifier.height(spacing.headerToContent))
+
+                                // Duration Chips
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.chipGap),
+                                ) {
+                                    TimerConfig.ALARM_DURATION_OPTIONS.forEach { duration ->
+                                        FilterChip(
+                                            selected = config.alarmDuration == duration,
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                updateConfig(alarmDuration = duration)
+                                            },
+                                            label = {
+                                                Text(
+                                                    text = "${duration}s",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color =
+                                                        if (config.alarmDuration ==
+                                                            duration
+                                                        ) {
+                                                            TimerColors.AccentPrimary
+                                                        } else {
+                                                            TimerColors.TextSecondary
+                                                        },
+                                                )
+                                            },
+                                            colors =
+                                                FilterChipDefaults.filterChipColors(
+                                                    containerColor = TimerColors.GlassBackground,
+                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                ),
+                                            border =
+                                                FilterChipDefaults.filterChipBorder(
+                                                    borderColor = TimerColors.GlassBorder,
+                                                    selectedBorderColor = TimerColors.AccentPrimary,
+                                                    enabled = true,
+                                                    selected = config.alarmDuration == duration,
+                                                ),
                                         )
                                     }
-                                } else {
-                                    Text(
-                                        text = "PRO: 1H \uD83D\uDD12",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TimerColors.AccentPrimary,
-                                        modifier =
-                                            Modifier.combinedClickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null,
-                                                onClick = { onUpgradeTap() },
-                                                onLongClick = {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    onSecretUnlock()
-                                                },
-                                            ),
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(spacing.headerToContent))
-
-                            val maxRange = if (isPro && config.useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
-                            TimeRangeSliders(
-                                minValue = config.minSeconds,
-                                maxValue = config.maxSeconds,
-                                maxSliderRange = maxRange.toFloat(),
-                                minSliderMax = maxRange - 30f,
-                                compactMode = isCompactHeight,
-                                onMinChange = { newMin ->
-                                    val (min, max) =
-                                        TimeRangeAdjuster.adjustForMinChange(
-                                            currentMinSeconds = config.minSeconds,
-                                            currentMaxSeconds = config.maxSeconds,
-                                            newMinSeconds = newMin,
-                                            maxSecondsLimit = maxRange,
-                                        )
-                                    updateConfig(minSeconds = min, maxSeconds = max)
-                                },
-                                onMaxChange = { newMax ->
-                                    val (adjMin, adjMax) =
-                                        TimeRangeAdjuster.adjustForMaxChange(
-                                            currentMinSeconds = config.minSeconds,
-                                            currentMaxSeconds = config.maxSeconds,
-                                            newMaxSeconds = newMax,
-                                            maxSecondsLimit = maxRange,
-                                        )
-                                    updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
-                                },
-                            )
-                        }
-                    }
-                }
-
-                // 2. Alarm Sound (Unified: Duration, Sounds, Volume, Vibration)
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
-                        Column {
-                            Text(
-                                text = "\uD83D\uDD14 Alarm Sound",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TimerColors.TextPrimary,
-                            )
-
-                            Spacer(modifier = Modifier.height(spacing.headerToContent))
-
-                            // Duration Chips
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(spacing.chipGap),
-                            ) {
-                                TimerConfig.ALARM_DURATION_OPTIONS.forEach { duration ->
-                                    FilterChip(
-                                        selected = config.alarmDuration == duration,
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            updateConfig(alarmDuration = duration)
-                                        },
-                                        label = {
-                                            Text(
-                                                text = "${duration}s",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color =
-                                                    if (config.alarmDuration ==
-                                                        duration
-                                                    ) {
-                                                        TimerColors.AccentPrimary
-                                                    } else {
-                                                        TimerColors.TextSecondary
-                                                    },
-                                            )
-                                        },
-                                        colors =
-                                            FilterChipDefaults.filterChipColors(
-                                                containerColor = TimerColors.GlassBackground,
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                            ),
-                                        border =
-                                            FilterChipDefaults.filterChipBorder(
-                                                borderColor = TimerColors.GlassBorder,
-                                                selectedBorderColor = TimerColors.AccentPrimary,
-                                                enabled = true,
-                                                selected = config.alarmDuration == duration,
-                                            ),
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // AI Voice Callouts (Elite Feature)
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
-                                    )
-                                    Text(
-                                        text = "Prompts during countdown",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TimerColors.TextMuted,
-                                    )
                                 }
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // Preview Button (always enabled to sell the feature)
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCommandCuePreview()
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                        modifier = Modifier.padding(end = 8.dp),
-                                    ) {
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // AI Voice Callouts (Elite Feature)
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "PREVIEW",
+                                            text = "\uD83D\uDCE2 AI Voice Callouts",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        )
+                                        Text(
+                                            text = "Prompts during countdown",
                                             style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            color = TimerColors.TextMuted,
                                         )
                                     }
 
-                                    if (isElite) {
-                                        Text(
-                                            text = "ENABLED",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                        )
-                                    } else {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        // Preview Button (always enabled to sell the feature)
                                         Surface(
-                                            onClick = onUpgradeTap,
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onCommandCuePreview()
+                                            },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            modifier = Modifier.padding(end = 8.dp),
                                         ) {
-                                            Row(
+                                            Text(
+                                                text = "PREVIEW",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
+                                            )
+                                        }
+
+                                        if (isElite) {
+                                            Text(
+                                                text = "ENABLED",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                        } else {
+                                            Surface(
+                                                onClick = onUpgradeTap,
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                             ) {
-                                                Text(
-                                                    text = "ELITE ",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
-                                                Text(
-                                                    text = "\uD83D\uDD12",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Text(
+                                                        text = "ELITE ",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                    Text(
+                                                        text = "\uD83D\uDD12",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                            // Core Sounds
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                SoundTypeButton(
-                                    label = "\uD83D\uDCAA Intense",
-                                    selected = config.soundType == SoundType.INTENSE,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        updateConfig(soundType = SoundType.INTENSE)
-                                        onSoundPreview(SoundType.INTENSE)
+                                // Core Sounds
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    SoundTypeButton(
+                                        label = "\uD83D\uDCAA Intense",
+                                        selected = config.soundType == SoundType.INTENSE,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            updateConfig(soundType = SoundType.INTENSE)
+                                            onSoundPreview(SoundType.INTENSE)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    SoundTypeButton(
+                                        label = "\u26A1 Gentle",
+                                        selected = config.soundType == SoundType.GENTLE,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            updateConfig(soundType = SoundType.GENTLE)
+                                            onSoundPreview(SoundType.GENTLE)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                // Volume
+                                VolumeSlider(
+                                    value = config.volume,
+                                    onValueChange = {
+                                        updateConfig(volume = it)
+                                        onVolumePreview(it)
                                     },
-                                    modifier = Modifier.weight(1f),
+                                    onValueChangeFinished = { },
                                 )
-                                SoundTypeButton(
-                                    label = "\u26A1 Gentle",
-                                    selected = config.soundType == SoundType.GENTLE,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        updateConfig(soundType = SoundType.GENTLE)
-                                        onSoundPreview(SoundType.GENTLE)
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Vibration
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "\uD83D\uDCF3 Vibration",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = TimerColors.TextSecondary,
+                                    )
+                                    Switch(
+                                        checked = config.vibrationEnabled,
+                                        onCheckedChange = { newValue ->
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onConfigChange(
+                                                config.copy(vibrationEnabled = newValue),
+                                            )
+                                        },
+                                        colors =
+                                            SwitchDefaults.colors(
+                                                checkedThumbColor = TimerColors.AccentPrimary,
+                                                checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                uncheckedThumbColor = TimerColors.TextMuted,
+                                                uncheckedTrackColor = TimerColors.SliderTrack,
+                                            ),
+                                    )
+                                }
                             }
+                        }
+                    }
 
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // Volume
-                            VolumeSlider(
-                                value = config.volume,
-                                onValueChange = {
-                                    updateConfig(volume = it)
-                                    onVolumePreview(it)
-                                },
-                                onValueChangeFinished = { },
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Vibration
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "\uD83D\uDCF3 Vibration",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = TimerColors.TextSecondary,
-                                )
-                                Switch(
-                                    checked = config.vibrationEnabled,
-                                    onCheckedChange = { newValue ->
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onConfigChange(
-                                            config.copy(vibrationEnabled = newValue),
+                    // Zone 2: Tactical Expansion (PRO)
+                    item {
+                        Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = if (isPro) "TACTICAL EXPANSION (PRO) \uD83D\uDD13" else "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                                modifier =
+                                    Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                if (isPro) {
+                                                    if (isCompactHeight) {
+                                                        showArsenalSheet = true
+                                                    } else {
+                                                        showArsenal = !showArsenal
+                                                    }
+                                                } else {
+                                                    onUpgradeTap()
+                                                }
+                                            },
+                                            onPress = {
+                                                val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
+                                                if (released == null) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onSecretUnlock()
+                                                }
+                                            },
                                         )
                                     },
-                                    colors =
-                                        SwitchDefaults.colors(
-                                            checkedThumbColor = TimerColors.AccentPrimary,
-                                            checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
-                                            uncheckedThumbColor = TimerColors.TextMuted,
-                                            uncheckedTrackColor = TimerColors.SliderTrack,
-                                        ),
+                            )
+
+                            val actionLabel =
+                                when {
+                                    isCompactHeight -> "Open Sound Arsenal"
+                                    !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
+                                    else -> "View Sound Arsenal"
+                                }
+                            Text(
+                                text = actionLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TimerColors.AccentPrimary,
+                                fontWeight = FontWeight.Bold,
+                                modifier =
+                                    Modifier.clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (isCompactHeight) {
+                                            showArsenalSheet = true
+                                        } else {
+                                            showArsenal = !showArsenal
+                                        }
+                                    },
+                            )
+                        }
+                    }
+
+                    // Pro Sound Arsenal
+                    item {
+                        if (!isCompactHeight) {
+                            AnimatedVisibility(
+                                visible = showArsenal,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically(),
+                            ) {
+                                SoundArsenalCard(
+                                    config = config,
+                                    isPro = isPro,
+                                    padding = spacing.cardContent,
+                                    headerToContent = spacing.headerToContent,
+                                    onSelectSound = { sound ->
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        updateConfig(soundType = sound)
+                                        onSoundPreview(sound)
+                                    },
+                                    onPreviewSound = onSoundPreview,
+                                    onUpgradeTap = onUpgradeTap,
                                 )
                             }
                         }
                     }
                 }
 
-                // Start Button
-                item {
-                    PrimaryButton(
-                        text = "Start Timer",
-                        onClick = onStartTimer,
+                // Sticky Bottom Action Bar
+                Surface(
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth(),
+                    color = TimerColors.BackgroundDark.copy(alpha = 0.9f),
+                    border = BorderStroke(0.5.dp, TimerColors.GlassBorder),
+                ) {
+                    Column(
                         modifier =
-                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                    )
-                }
-
-                // Zone 2: Tactical Expansion (PRO)
-                item {
-                    Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            Modifier
+                                .padding(horizontal = 24.dp)
+                                .padding(top = 12.dp, bottom = 24.dp),
                     ) {
-                        Text(
-                            text = if (isPro) "TACTICAL EXPANSION (PRO) \uD83D\uDD13" else "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
-                            modifier =
-                                Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isPro) {
-                                                if (isCompactHeight) {
-                                                    showArsenalSheet = true
-                                                } else {
-                                                    showArsenal = !showArsenal
-                                                }
-                                            } else {
-                                                onUpgradeTap()
-                                            }
-                                        },
-                                        onPress = {
-                                            val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
-                                            if (released == null) {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onSecretUnlock()
-                                            }
-                                        },
-                                    )
-                                },
+                        PrimaryButton(
+                            text = "Start Timer",
+                            onClick = onStartTimer,
                         )
-
-                        val actionLabel =
-                            when {
-                                isCompactHeight -> "Open Sound Arsenal"
-                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
-                                else -> "View Sound Arsenal"
-                            }
-                        Text(
-                            text = actionLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TimerColors.AccentPrimary,
-                            fontWeight = FontWeight.Bold,
-                            modifier =
-                                Modifier.clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    if (isCompactHeight) {
-                                        showArsenalSheet = true
-                                    } else {
-                                        showArsenal = !showArsenal
-                                    }
-                                },
-                        )
-                    }
-                }
-
-                // Pro Sound Arsenal
-                item {
-                    if (!isCompactHeight) {
-                        AnimatedVisibility(
-                            visible = showArsenal,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically(),
-                        ) {
-                            SoundArsenalCard(
-                                config = config,
-                                isPro = isPro,
-                                padding = spacing.cardContent,
-                                headerToContent = spacing.headerToContent,
-                                onSelectSound = { sound ->
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    updateConfig(soundType = sound)
-                                    onSoundPreview(sound)
-                                },
-                                onPreviewSound = onSoundPreview,
-                                onUpgradeTap = onUpgradeTap,
-                            )
-                        }
                     }
                 }
             }
