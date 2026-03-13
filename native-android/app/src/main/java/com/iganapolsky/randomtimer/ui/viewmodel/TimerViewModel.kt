@@ -18,6 +18,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
+import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
@@ -38,6 +39,7 @@ class TimerViewModel
         private val repository: TimerRepository,
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
+        private val voiceCalloutManager: AIVoiceCalloutManager,
         private val serviceController: TimerServiceController,
         private val analyticsService: AnalyticsService,
         val storeReviewManager: StoreReviewManager,
@@ -107,9 +109,8 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
-            if (newConfig.volume != config.value.volume) {
-                voiceCalloutManager.setVolume(newConfig.volume)
-            }
+            // Voice callout volume is set via soundPreviewManager.previewCommandCue(volume)
+            // and via TimerForegroundService.setVolume() during countdown
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(

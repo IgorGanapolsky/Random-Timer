@@ -80,11 +80,12 @@ class AIVoiceCalloutManager
 
         fun setVolume(volume: Float) {
             currentVolume = volume.coerceIn(0f, 1f)
+            Log.d("AIVoiceCallout", "setVolume: $currentVolume")
             mediaPlayer?.setVolume(currentVolume, currentVolume)
         }
 
         fun speak(text: String) {
-            Log.d("AIVoiceCallout", "Speaking: $text")
+            Log.d("AIVoiceCallout", "Speaking: $text at volume=$currentVolume")
             val mappedResId = voiceResIdForText(text)
             val resId = mappedResId ?: voiceResIdOrFallback(text)
             if (mappedResId == null) {
