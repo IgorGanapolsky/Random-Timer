@@ -277,14 +277,14 @@ fun CircularTimer(
             )
         } else if (rangeText.isNotEmpty()) {
             val rangeTextStyle =
-                if (rangeText.length >= 14) {
-                    MaterialTheme.typography.titleLarge
-                } else {
-                    MaterialTheme.typography.headlineLarge
+                when {
+                    rangeText.length >= 20 -> MaterialTheme.typography.titleMedium
+                    rangeText.length >= 14 -> MaterialTheme.typography.titleLarge
+                    else -> MaterialTheme.typography.headlineLarge
                 }
 
             Column(
-                modifier = Modifier.fillMaxWidth(0.82f),
+                modifier = Modifier.fillMaxWidth(0.75f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
