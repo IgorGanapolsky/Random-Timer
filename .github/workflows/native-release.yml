@@ -250,11 +250,18 @@ jobs:
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
       - name: Set unique Android version code
+        env:
+          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
         run: |
           set -euo pipefail
-          VERSION_CODE="$(date +%s)"
+          VERSION_CODE="$(python scripts/compute_android_release_version_code.py \
+            --service-account-json "$GOOGLE_PLAY_JSON_KEY_PATH" \
+            --package com.iganapolsky.randomtimer \
+            --gradle-file native-android/app/build.gradle.kts \
+            --json-output /tmp/android-version-code.json)"
           echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           echo "Using ANDROID_VERSION_CODE=$VERSION_CODE"
+          cat /tmp/android-version-code.json
 
       - name: Build release AAB
         env:
@@ -345,10 +352,18 @@ jobs:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
 
+      - name: Upload Android version code proof (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-version-code
+          path: /tmp/android-version-code.json
+          if-no-files-found: ignore
+
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/release.keystore /tmp/play-service-account.json
+          rm -f /tmp/release.keystore /tmp/play-service-account.json /tmp/android-version-code.json
 
   verify-releases:
     needs: [ios-testflight, android-release]
