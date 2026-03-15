@@ -61,6 +61,8 @@ DEFAULT_IOS_REVIEW_URL = f"{DEFAULT_APP_STORE_URL}?action=write-review"
 DEFAULT_ANDROID_REVIEW_URL = f"{DEFAULT_PLAY_STORE_URL}&reviewId=0"
 LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 AB_PILOT_WINDOW_DAYS = 14
+CANONICAL_PRIVACY_POLICY_SEGMENT = "/privacy-policy/"
+LEGACY_PRIVACY_POLICY_SEGMENT = "/PRIVACY_POLICY/"
 
 
 @dataclass
@@ -237,6 +239,10 @@ def resolve_blog_base_url(output_root: Path) -> str:
     if configured:
         return configured.rstrip("/")
     return DEFAULT_BLOG_BASE_URL.rstrip("/")
+
+
+def resolve_public_site_base_url(output_root: Path) -> str:
+    return resolve_blog_base_url(output_root).removesuffix(LEGACY_MARKETING_SITE_SEGMENT)
 
 
 def _safe_numeric_id(value: Any) -> Optional[str]:
@@ -750,6 +756,72 @@ def markdown_to_html(markdown_text: str) -> str:
     return "\n".join(rendered)
 
 
+def resolve_privacy_policy_source(output_root: Path) -> Optional[Path]:
+    candidates = [
+        output_root.parent / "PRIVACY_POLICY.md",
+        output_root / "PRIVACY_POLICY.md",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def build_privacy_policy_page(
+    output_root: Path,
+    site_root: Path,
+    public_base_url: str,
+    analytics_block: str,
+) -> Optional[str]:
+    privacy_source = resolve_privacy_policy_source(output_root)
+    if privacy_source is None:
+        return None
+
+    privacy_markdown = privacy_source.read_text(encoding="utf-8")
+    privacy_html = markdown_to_html(privacy_markdown)
+    canonical_url = f"{public_base_url}{CANONICAL_PRIVACY_POLICY_SEGMENT}"
+
+    page_html = textwrap.dedent(
+        f"""
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Privacy Policy | Random Tactical Timer</title>
+          <meta name="description" content="Privacy policy for Random Tactical Timer." />
+          <meta name="robots" content="index,follow,max-image-preview:large" />
+          <link rel="canonical" href="{html.escape(canonical_url)}" />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Random Tactical Timer" />
+          <meta property="og:title" content="Privacy Policy | Random Tactical Timer" />
+          <meta property="og:description" content="Privacy policy for Random Tactical Timer." />
+          <meta property="og:url" content="{html.escape(canonical_url)}" />
+          <link rel="stylesheet" href="../styles.css" />
+          {analytics_block}
+        </head>
+        <body>
+          <main class="container">
+            <a class="back" href="../index.html">← Back to site</a>
+            <article>
+              {privacy_html}
+            </article>
+          </main>
+        </body>
+        </html>
+        """
+    ).strip()
+
+    canonical_dir = site_root / "privacy-policy"
+    legacy_dir = site_root / "PRIVACY_POLICY"
+    ensure_dir(canonical_dir)
+    ensure_dir(legacy_dir)
+    for target in (canonical_dir / "index.html", legacy_dir / "index.html"):
+        target.write_text(page_html + "\n", encoding="utf-8")
+
+    return canonical_url
+
+
 def mirror_public_site(site_root: Path, public_root: Path) -> None:
     file_names = [
         "index.html",
@@ -812,6 +884,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     clear_generated_files(diagrams_out, "*.svg")
     clear_generated_files(md_out, "*.md")
     base_url = resolve_blog_base_url(output_root)
+    public_base_url = resolve_public_site_base_url(output_root)
     shared_social_image = resolve_social_image_url(output_root, site_root, base_url)
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
@@ -833,6 +906,8 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         )
     if plausible_domain:
         analytics_block += f'<script defer data-domain="{html.escape(plausible_domain)}" src="{html.escape(plausible_src)}"></script>\n'
+
+    privacy_policy_url = build_privacy_policy_page(output_root, site_root, public_base_url, analytics_block)
 
     posts_data: List[Dict[str, Any]] = []
     for md_path in sorted(posts_src.glob("*.md"), reverse=True):
@@ -1223,7 +1298,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
           <meta name="twitter:description" content="{html.escape(DEFAULT_LANDING_DESCRIPTION)}" />
           <meta name="twitter:image" content="{html.escape(index_og_image)}" />
           <link rel="stylesheet" href="styles.css" />
-          <link rel="alternate" type="application/json" title="Agentic Merchant Protocol Data" href="{base_url}/amp.json" />
+          <link rel="alternate" type="application/json" title="Agentic Merchant Protocol Data" href="{html.escape(base_url)}/amp.json" />
           <script type="application/ld+json">{index_structured_json}</script>
           {analytics_block}
         </head>
@@ -1407,6 +1482,9 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
     sitemap.append(f"  <url><loc>{base_url}</loc></url>")
     sitemap.append(f"  <url><loc>{download_base_url}</loc></url>")
+    if privacy_policy_url:
+        sitemap.append(f"  <url><loc>{privacy_policy_url}</loc></url>")
+        sitemap.append(f"  <url><loc>{public_base_url}{LEGACY_PRIVACY_POLICY_SEGMENT}</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
         sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
@@ -1432,6 +1510,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "Key resources:",
         f"- {base_url}",
         f"- {download_base_url}",
+        f"- {public_base_url}{CANONICAL_PRIVACY_POLICY_SEGMENT}",
         f"- {base_url}/agents.md",
         f"- {base_url}/amp.json",
         f"- {base_url}/sitemap.xml",

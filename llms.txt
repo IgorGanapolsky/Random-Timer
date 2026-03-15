@@ -1,56 +1,18 @@
-# Random Tactical Timer
+Random Tactical Timer
 
-> A native iOS + Android timer app that goes off at a random time within a user-defined range.
+This site publishes a challenge-driven product landing page plus engineering updates.
+Preferred source format for agents: markdown URLs listed below.
 
-## Overview
+Base URL: https://igorganapolsky.github.io/Random-Timer
 
-Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. The user never knows exactly when the alarm will sound.
+Key resources:
+- https://igorganapolsky.github.io/Random-Timer
+- https://igorganapolsky.github.io/Random-Timer/download
+- https://igorganapolsky.github.io/Random-Timer/privacy-policy/
+- https://igorganapolsky.github.io/Random-Timer/agents.md
+- https://igorganapolsky.github.io/Random-Timer/amp.json
+- https://igorganapolsky.github.io/Random-Timer/sitemap.xml
 
-## Use Cases
-
-- Workout interval training with unpredictable rest periods
-- Reaction drills and team activities requiring surprise timing
-- Meditation sessions with organic transitions
-- Any scenario where predictable timing defeats the purpose
-
-## Technical Stack
-
-- **iOS**: Swift 6, SwiftUI, Live Activities (Lock Screen/Dynamic Island), MVVM with @Observable
-- **Android**: Kotlin 2.1, Jetpack Compose, Material Design 3, Hilt DI, Foreground Service, MVVM + Clean Architecture
-- **Shared patterns**: Glassmorphism dark UI, purple accent color scheme, persistent settings, alarm with sound + vibration
-
-## Key Features
-
-- Custom time range (min/max duration)
-- Hidden mode (conceals countdown from user)
-- Loop mode (auto-restart with new random duration)
-- Lock screen display (iOS Live Activity, Android notification with controls)
-- Multiple alarm sounds (intense/gentle) with volume control
-- Pause, resume, reset controls
-- Background operation with reliable notifications
-
-## Repository Structure
-
-- `native-ios/` — Swift/SwiftUI iOS app
-- `native-android/` — Kotlin/Compose Android app
-- `screenshots/` — App screenshots and demo GIFs
-- `.maestro/` — E2E test flows
-
-## Building
-
-### iOS
-```
-cd native-ios && xcodebuild -scheme RandomTimer build
-```
-
-### Android
-```
-cd native-android && ./gradlew assembleDebug
-```
-
-## Links
-
-- Repository: https://github.com/IgorGanapolsky/Random-Timer
-- Privacy Policy: https://github.com/IgorGanapolsky/Random-Timer/blob/main/PRIVACY_POLICY.md
-- Issues: https://github.com/IgorGanapolsky/Random-Timer/issues
-- License: MIT
+Posts:
+- How we implemented Agentic Merchant Protocol (AMP) for AI discovery: https://igorganapolsky.github.io/Random-Timer/md/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.md
+- The inspiration behind Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md
