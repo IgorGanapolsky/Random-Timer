@@ -46,8 +46,6 @@ def _extract_release_codes(track_payload: dict[str, Any]) -> list[int]:
 
 
 def _fetch_existing_track_codes(service: Any, package_name: str, tracks: list[str]) -> dict[str, list[int]]:
-    from googleapiclient.errors import HttpError
-
     edits = service.edits()
     edit_id = None
     codes_by_track: dict[str, list[int]] = {}
@@ -64,7 +62,7 @@ def _fetch_existing_track_codes(service: Any, package_name: str, tracks: list[st
                     track=track,
                 ).execute()
                 codes_by_track[track] = _extract_release_codes(payload)
-            except HttpError as error:
+            except Exception as error:
                 status = getattr(getattr(error, "resp", None), "status", None)
                 if status == 404:
                     codes_by_track[track] = []
