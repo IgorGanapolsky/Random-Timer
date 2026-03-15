@@ -11,7 +11,17 @@ struct CircularTimerView: View {
 
     private let strokeWidth: CGFloat = 16
     @ScaledMetric(relativeTo: .title) private var timerSize: CGFloat = 320
-    @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 32
+    @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 28 // Reduced from 32
+
+    private var effectiveRangeTextSize: CGFloat {
+        if rangeText.count >= 20 {
+            return rangeTextSize * 0.75
+        } else if rangeText.count >= 14 {
+            return rangeTextSize * 0.85
+        } else {
+            return rangeTextSize
+        }
+    }
 
     // Animation timing matched to Android CircularTimerAnimationConfig:
     // Android shimmer: tween(3000ms, LinearEasing, Restart) = 3.0s per orbit
@@ -171,7 +181,7 @@ struct CircularTimerView: View {
                 // Center display (text overlay)
                 if isComplete {
                     Text("Complete!")
-                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
+                        .font(.system(size: min(effectiveRangeTextSize, 40), weight: .bold, design: .rounded))
                         .foregroundColor(.timerComplete)
                         .minimumScaleFactor(0.7)
                 } else if !rangeText.isEmpty {
@@ -180,14 +190,16 @@ struct CircularTimerView: View {
                             .font(.subheadline)
                             .foregroundColor(isPaused ? .textSecondary : .textMuted)
                         Text(rangeText)
-                            .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
+                            .font(.system(size: min(effectiveRangeTextSize, 40), weight: .bold, design: .rounded))
                             .foregroundColor(.textPrimary)
                             .opacity(pulseOpacity)
-                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                            .frame(maxWidth: timerSize * 0.75) // Safety margin
                     }
                 } else {
                     Text("...")
-                        .font(.system(size: min(rangeTextSize, 40), weight: .bold, design: .rounded))
+                        .font(.system(size: min(effectiveRangeTextSize, 40), weight: .bold, design: .rounded))
                         .foregroundColor(.textPrimary)
                         .opacity(pulseOpacity)
                 }
