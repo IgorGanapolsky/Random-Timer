@@ -539,7 +539,7 @@ final class TimerManager: ObservableObject {
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
         // Trigger voice callouts for Pro users
-        if ProManager.shared.isPro {
+        if ProManager.shared.isPro && state.config.voiceEnabled {
             AIVoiceCalloutService.shared.setVolume(state.config.volume)
             AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: Int(state.targetDuration - state.remainingDuration))
         }

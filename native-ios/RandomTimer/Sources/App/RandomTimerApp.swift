@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseCrashlytics
 
 @main
 struct RandomTimerApp: App {
@@ -7,6 +8,7 @@ struct RandomTimerApp: App {
 
     init() {
         AnalyticsService.shared.initialize()
+        setupCrashReporting()
     }
 
     var body: some Scene {
@@ -30,6 +32,39 @@ struct RandomTimerApp: App {
             default:
                 break
             }
+        }
+    }
+
+    private func setupCrashReporting() {
+        CrashReportingService.shared.initialize()
+
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+
+        let tracker = AppUpgradeTracker()
+        let info = tracker.evaluateLaunch(currentVersion: version, currentBuild: build)
+
+        // Attach version/build to every crash report.
+        CrashReportingService.shared.setCustomValue(info.toVersion, forKey: "app_version")
+        CrashReportingService.shared.setCustomValue(info.toBuild, forKey: "app_build")
+        CrashReportingService.shared.setCustomValue(info.isFirstLaunch, forKey: "is_first_launch")
+        CrashReportingService.shared.setCustomValue(info.isUpgrade, forKey: "is_upgrade_launch")
+
+        if info.isUpgrade {
+            if let fromVersion = info.fromVersion {
+                CrashReportingService.shared.setCustomValue(fromVersion, forKey: "upgrade_from_version")
+            }
+            if let fromBuild = info.fromBuild {
+                CrashReportingService.shared.setCustomValue(fromBuild, forKey: "upgrade_from_build")
+            }
+            CrashReportingService.shared.log(
+                "App upgraded from \(info.fromVersion ?? "?") (\(info.fromBuild ?? "?")) " +
+                "to \(info.toVersion) (\(info.toBuild))"
+            )
+        } else if info.isFirstLaunch {
+            CrashReportingService.shared.log("First launch for version \(info.toVersion) (\(info.toBuild))")
+        } else {
+            CrashReportingService.shared.log("Repeat launch for version \(info.toVersion) (\(info.toBuild))")
         }
     }
 }

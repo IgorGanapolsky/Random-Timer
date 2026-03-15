@@ -140,6 +140,7 @@ fun TimerSetupScreen(
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
         useExtendedRange: Boolean = config.useExtendedRange,
+        voiceEnabled: Boolean = config.voiceEnabled,
     ) {
         onConfigChange(
             config.copy(
@@ -152,6 +153,7 @@ fun TimerSetupScreen(
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
                 useExtendedRange = useExtendedRange,
+                voiceEnabled = voiceEnabled,
             ),
         )
     }
@@ -416,11 +418,16 @@ fun TimerSetupScreen(
                                         }
 
                                         if (isElite) {
-                                            Text(
-                                                text = "ENABLED",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
+                                            Switch(
+                                                checked = config.voiceEnabled,
+                                                onCheckedChange = {
+                                                    updateConfig(voiceEnabled = it)
+                                                },
+                                                colors =
+                                                    SwitchDefaults.colors(
+                                                        checkedThumbColor = TimerColors.AccentPrimary,
+                                                        checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                    ),
                                             )
                                         } else {
                                             Surface(

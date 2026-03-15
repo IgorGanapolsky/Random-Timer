@@ -143,10 +143,13 @@ struct TimerSetupScreen: View {
                                     }
 
                                     if proManager.isPro {
-                                        Text("ENABLED")
-                                            .font(.caption2)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.accentPrimary)
+                                        Toggle("", isOn: Binding(
+                                            get: { config.voiceEnabled },
+                                            set: { updateConfig(voiceEnabled = $0) }
+                                        ))
+                                        .labelsHidden()
+                                        .tint(.accentPrimary)
+                                        .scaleEffect(0.8)
                                     } else {
                                         Button {
                                             presentPaywall(entryPoint: .soundGate)
@@ -376,7 +379,8 @@ struct TimerSetupScreen: View {
         soundType: SoundType? = nil,
         volume: Float? = nil,
         vibrationEnabled: Bool? = nil,
-        useExtendedRange: Bool? = nil
+        useExtendedRange: Bool? = nil,
+        voiceEnabled: Bool? = nil
     ) {
         let newConfig = TimerConfig(
             minSeconds: minSeconds ?? config.minSeconds,
@@ -387,7 +391,8 @@ struct TimerSetupScreen: View {
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
             vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
-            useExtendedRange: useExtendedRange ?? config.useExtendedRange
+            useExtendedRange: useExtendedRange ?? config.useExtendedRange,
+            voiceEnabled: voiceEnabled ?? config.voiceEnabled
         )
         timerManager.updateConfig(newConfig)
     }
