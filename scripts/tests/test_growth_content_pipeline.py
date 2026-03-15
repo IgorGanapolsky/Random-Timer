@@ -108,6 +108,32 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
             self.assertTrue((root / "site" / "download" / "index.html").is_file())
 
+    def test_build_site_renders_privacy_policy_page_and_legacy_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output_root = repo / "marketing"
+            (output_root / "posts").mkdir(parents=True, exist_ok=True)
+            (output_root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (repo / "PRIVACY_POLICY.md").write_text(
+                "# Privacy Policy\n\nWe do not sell your data.\n",
+                encoding="utf-8",
+            )
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/app"}, clear=False):
+                pipeline.build_site(output_root)
+
+            canonical_page = (output_root / "site" / "privacy-policy" / "index.html").read_text(encoding="utf-8")
+            legacy_page = (output_root / "site" / "PRIVACY_POLICY" / "index.html").read_text(encoding="utf-8")
+            sitemap = (output_root / "site" / "sitemap.xml").read_text(encoding="utf-8")
+            llms = (output_root / "site" / "llms.txt").read_text(encoding="utf-8")
+
+            self.assertIn("Privacy Policy", canonical_page)
+            self.assertIn("We do not sell your data.", canonical_page)
+            self.assertEqual(canonical_page, legacy_page)
+            self.assertIn("https://example.com/app/privacy-policy/", sitemap)
+            self.assertIn("https://example.com/app/PRIVACY_POLICY/", sitemap)
+            self.assertIn("https://example.com/app/privacy-policy/", llms)
+
     def test_build_site_writes_social_meta_structured_data_and_robots(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -199,6 +225,10 @@ class GrowthContentPipelineTests(unittest.TestCase):
             marketing_root = repo_root / "marketing"
             (marketing_root / "posts").mkdir(parents=True, exist_ok=True)
             (marketing_root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (repo_root / "PRIVACY_POLICY.md").write_text(
+                "# Privacy Policy\n\nWe do not sell your data.\n",
+                encoding="utf-8",
+            )
             (marketing_root / "posts" / "2026-02-19-sample.md").write_text(
                 "---\n"
                 "title: Sample\n"
@@ -225,6 +255,51 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertIn("Start the 7-day challenge", public_index)
             self.assertIn("randomtimer://open", public_download)
             self.assertIn("Continue to App Store", public_download)
+
+    def test_resolve_public_site_base_url_strips_legacy_marketing_segment(self):
+        with tempfile.TemporaryDirectory() as td:
+            output_root = Path(td) / "marketing"
+            output_root.mkdir(parents=True, exist_ok=True)
+
+            with patch.dict("os.environ", {}, clear=True):
+                self.assertEqual(
+                    pipeline.resolve_public_site_base_url(output_root),
+                    "https://igorganapolsky.github.io/Random-Timer",
+                )
+
+    def test_build_site_renders_privacy_policy_page_and_legacy_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            marketing_root = repo_root / "marketing"
+            (marketing_root / "posts").mkdir(parents=True, exist_ok=True)
+            (marketing_root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (marketing_root / "posts" / "2026-02-19-sample.md").write_text(
+                "---\n"
+                "title: Sample\n"
+                "description: Desc\n"
+                "date: 2026-02-19\n"
+                "tags: [ai, mobile]\n"
+                "---\n\n"
+                "## Body\n",
+                encoding="utf-8",
+            )
+            (marketing_root / "diagrams" / "2026-02-19-sample.svg").write_text("<svg></svg>", encoding="utf-8")
+            (repo_root / "PRIVACY_POLICY.md").write_text("# Privacy Policy\n\nWe respect your data.\n", encoding="utf-8")
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/marketing/site"}, clear=False):
+                pipeline.build_site(marketing_root)
+
+            canonical_page = (marketing_root / "site" / "privacy-policy" / "index.html").read_text(encoding="utf-8")
+            legacy_page = (marketing_root / "site" / "PRIVACY_POLICY" / "index.html").read_text(encoding="utf-8")
+            sitemap = (marketing_root / "site" / "sitemap.xml").read_text(encoding="utf-8")
+            llms = (marketing_root / "site" / "llms.txt").read_text(encoding="utf-8")
+
+            self.assertIn("Privacy Policy", canonical_page)
+            self.assertIn("We respect your data.", canonical_page)
+            self.assertEqual(canonical_page, legacy_page)
+            self.assertIn("https://example.com/privacy-policy/", sitemap)
+            self.assertIn("https://example.com/PRIVACY_POLICY/", sitemap)
+            self.assertIn("https://example.com/privacy-policy/", llms)
 
     def test_publish_post_uses_channel_specific_utm_links(self):
         with tempfile.TemporaryDirectory() as td:

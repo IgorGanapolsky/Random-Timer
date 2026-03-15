@@ -8,6 +8,7 @@ Base URL: https://igorganapolsky.github.io/Random-Timer
 Key resources:
 - https://igorganapolsky.github.io/Random-Timer
 - https://igorganapolsky.github.io/Random-Timer/download
+- https://igorganapolsky.github.io/Random-Timer/privacy-policy/
 - https://igorganapolsky.github.io/Random-Timer/agents.md
 - https://igorganapolsky.github.io/Random-Timer/amp.json
 - https://igorganapolsky.github.io/Random-Timer/sitemap.xml
