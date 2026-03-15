@@ -52,6 +52,8 @@ data class TimerConfig(
     val vibrationEnabled: Boolean = false,
     /** Whether to use the extended 60-minute range (Pro only) */
     val useExtendedRange: Boolean = false,
+    /** Whether AI voice callouts are enabled (Elite only) */
+    val voiceEnabled: Boolean = true,
 ) {
     init {
         require(minSeconds >= 0) { "Minimum seconds cannot be negative" }
@@ -86,6 +88,7 @@ data class TimerConfig(
                 volume = 0.5f,
                 vibrationEnabled = false,
                 useExtendedRange = false,
+                voiceEnabled = true,
             )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)

@@ -267,7 +267,7 @@ class TimerForegroundService : Service() {
                     updateNotification(state)
 
                     // Trigger AI Voice Callout for ELITE users
-                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
+                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE && state.config.voiceEnabled) {
                         voiceCalloutManager.setVolume(state.config.volume)
                         voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
                     }
