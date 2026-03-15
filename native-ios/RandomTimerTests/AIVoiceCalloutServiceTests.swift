@@ -3,25 +3,23 @@ import XCTest
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
-    var sut: AIVoiceCalloutService!
-
-    override func setUp() {
-        super.setUp()
-        sut = AIVoiceCalloutService.shared
-        sut.resetSession()
+    func testRuntimeVoiceCueUsesCommandCueAtElapsedMilestone() {
+        XCTAssertEqual(runtimeVoiceCue(for: 60, lastElapsedMilestone: 0), "Move now.")
     }
 
-    func testTriggerCalloutFixedCountdown() {
-        // This is tricky to test because it calls 'speak' which calls AVSpeechSynthesizer.
-        // But we can at least verify it doesn't crash and session state evolves.
-        sut.triggerCallout(remainingSeconds: 30)
-        sut.triggerCallout(remainingSeconds: 10)
-        sut.triggerCallout(remainingSeconds: 5)
+    func testRuntimeVoiceCueSuppressesDuplicateElapsedMilestone() {
+        XCTAssertNil(runtimeVoiceCue(for: 120, lastElapsedMilestone: 120))
     }
 
-    func testResetSession() {
-        sut.triggerCallout(remainingSeconds: 100)
-        sut.resetSession()
-        // verify internal state reset if possible via reflection or mock
+    func testVoiceFilenameMapsRuntimeCueToBundledCommandAsset() {
+        XCTAssertEqual(voiceFilename(for: "Drive forward."), "cmd_drive_forward")
+    }
+
+    func testVoiceFilenameFallsBackToBundledCommandAsset() {
+        XCTAssertEqual(voiceFilenameOrFallback(for: "Unexpected cue"), "cmd_stay_sharp")
+    }
+
+    func testBundledCommandVoiceAudioResolvesFromMainBundle() {
+        XCTAssertNotNil(voiceAudioURL(for: "cmd_stay_sharp", bundle: .main))
     }
 }

@@ -6,26 +6,25 @@ internal let previewElapsedCue = "Thirty seconds. Stay locked in."
 internal let previewCommandVoiceCue = "Stay sharp."
 internal let defaultFallbackVoiceCue = previewCommandVoiceCue
 
-internal let elapsedVoiceCuesBySecond: [Int: String] = [
-    30: "Thirty seconds.",
-    60: "One minute. Keep moving.",
-    90: "One minute thirty.",
-    120: "Two minutes. Stay locked in.",
-    180: "Three minutes. Drive forward.",
-    300: "Five minutes. Finish strong.",
-    600: "Ten minutes. Outstanding."
+internal let runtimeCommandCuesByElapsedSecond: [Int: String] = [
+    30: previewCommandVoiceCue,
+    60: "Move now.",
+    90: "Keep pressure.",
+    120: "Drive forward.",
+    180: "Push the pace.",
+    300: "Push through.",
+    600: "Reset and breathe."
 ]
 
 internal let voiceFilenamesByText: [String: String] = [
-    "Thirty seconds.": "elapsed_30s",
-    "One minute. Keep moving.": "elapsed_60s",
-    "One minute thirty.": "elapsed_90s",
-    "Two minutes. Stay locked in.": "elapsed_120s",
-    "Three minutes. Drive forward.": "elapsed_180s",
-    "Five minutes. Finish strong.": "elapsed_300s",
-    "Ten minutes. Outstanding.": "elapsed_600s",
-    previewElapsedCue: "preview_elapsed",
     previewCommandVoiceCue: "cmd_stay_sharp",
+    "Move now.": "cmd_move_now",
+    "Keep pressure.": "cmd_keep_pressure",
+    "Drive forward.": "cmd_drive_forward",
+    "Push the pace.": "cmd_push_pace",
+    "Push through.": "cmd_push_through",
+    "Reset and breathe.": "cmd_reset_breathe",
+    previewElapsedCue: "preview_elapsed",
 ]
 
 internal func voiceFilename(for text: String) -> String? {
@@ -43,7 +42,7 @@ internal func voiceFilenameOrFallback(for text: String) -> String {
 
 internal func runtimeVoiceCue(for elapsedSeconds: Int, lastElapsedMilestone: Int) -> String? {
     guard elapsedSeconds != lastElapsedMilestone else { return nil }
-    return elapsedVoiceCuesBySecond[elapsedSeconds]
+    return runtimeCommandCuesByElapsedSecond[elapsedSeconds]
 }
 
 @MainActor
@@ -75,15 +74,19 @@ final class AIVoiceCalloutService {
         let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
 
         guard let url = voiceAudioURL(for: filename) else {
-            Self.log.error("Voice asset missing for cue: \(text, privacy: .public) (filename: \(filename, privacy: .public))")
+            Self.log.error(
+                "Voice asset missing for cue: \(text, privacy: .public) (filename: \(filename, privacy: .public))"
+            )
             return
         }
         if mappedFilename == nil {
             Self.log.info("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
         }
-        
-        Self.log.info("Playing voice asset: \(filename, privacy: .public) for text: \(text, privacy: .public)")
-        
+
+        Self.log.info(
+            "Playing voice asset: \(filename, privacy: .public) for text: \(text, privacy: .public)"
+        )
+
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.volume = volume
@@ -106,8 +109,7 @@ final class AIVoiceCalloutService {
         speak(previewCommandVoiceCue)
     }
 
-    func previewCountdownCue() {
-        // With elapsed model, preview an elapsed milestone announcement
+    func previewElapsedMilestoneCue() {
         speak(previewElapsedCue)
     }
 

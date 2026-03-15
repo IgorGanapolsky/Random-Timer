@@ -112,7 +112,7 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Spoken countdown cues + command callouts")
+            ProFeatureRow(text = "Spoken command cues during a run")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -160,17 +160,18 @@ private fun Modifier.holdForHiddenUnlock(
         awaitPointerEventScope {
             while (true) {
                 awaitFirstDown(requireUnconsumed = false)
-                val success = withTimeoutOrNull(holdDurationMs) {
-                    var released = false
-                    while (!released) {
-                        val event = awaitPointerEvent()
-                        if (event.changes.any { it.changedToUp() }) {
-                            released = true
+                val success =
+                    withTimeoutOrNull(holdDurationMs) {
+                        var released = false
+                        while (!released) {
+                            val event = awaitPointerEvent()
+                            if (event.changes.any { it.changedToUp() }) {
+                                released = true
+                            }
                         }
-                    }
-                    false // Released before timeout
-                } ?: true
-                
+                        false // Released before timeout
+                    } ?: true
+
                 if (success) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onHoldComplete()

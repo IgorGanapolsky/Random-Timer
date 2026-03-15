@@ -27,15 +27,15 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
 internal const val PREVIEW_ELAPSED_CUE = "Thirty seconds. Stay locked in."
 internal const val PREVIEW_COMMAND_CUE = "Stay sharp."
 
-internal val ELAPSED_VOICE_CUES_BY_SECOND =
+internal val RUNTIME_COMMAND_CUES_BY_ELAPSED_SECOND =
     mapOf(
-        30 to "Thirty seconds.",
-        60 to "One minute. Keep moving.",
-        90 to "One minute thirty.",
-        120 to "Two minutes. Stay locked in.",
-        180 to "Three minutes. Drive forward.",
-        300 to "Five minutes. Finish strong.",
-        600 to "Ten minutes. Outstanding.",
+        30 to PREVIEW_COMMAND_CUE,
+        60 to "Move now.",
+        90 to "Keep pressure.",
+        120 to "Drive forward.",
+        180 to "Push the pace.",
+        300 to "Push through.",
+        600 to "Reset and breathe.",
     )
 
 internal const val DEFAULT_VOICE_FALLBACK_CUE = PREVIEW_COMMAND_CUE
@@ -45,20 +45,19 @@ internal fun runtimeVoiceCueForElapsedSecond(
     lastElapsedMilestone: Int,
 ): String? {
     if (elapsedSeconds == lastElapsedMilestone) return null
-    return ELAPSED_VOICE_CUES_BY_SECOND[elapsedSeconds]
+    return RUNTIME_COMMAND_CUES_BY_ELAPSED_SECOND[elapsedSeconds]
 }
 
 internal fun voiceResIdForText(text: String): Int? =
     when (text) {
-        "Thirty seconds." -> R.raw.elapsed_30s
-        "One minute. Keep moving." -> R.raw.elapsed_60s
-        "One minute thirty." -> R.raw.elapsed_90s
-        "Two minutes. Stay locked in." -> R.raw.elapsed_120s
-        "Three minutes. Drive forward." -> R.raw.elapsed_180s
-        "Five minutes. Finish strong." -> R.raw.elapsed_300s
-        "Ten minutes. Outstanding." -> R.raw.elapsed_600s
-        PREVIEW_ELAPSED_CUE -> R.raw.preview_elapsed
         PREVIEW_COMMAND_CUE -> R.raw.cmd_stay_sharp
+        "Move now." -> R.raw.cmd_move_now
+        "Keep pressure." -> R.raw.cmd_keep_pressure
+        "Drive forward." -> R.raw.cmd_drive_forward
+        "Push the pace." -> R.raw.cmd_push_pace
+        "Push through." -> R.raw.cmd_push_through
+        "Reset and breathe." -> R.raw.cmd_reset_breathe
+        PREVIEW_ELAPSED_CUE -> R.raw.preview_elapsed
         else -> null
     }
 
@@ -93,17 +92,25 @@ class AIVoiceCalloutManager
             }
             try {
                 mediaPlayer?.release()
-                mediaPlayer = MediaPlayer.create(context, resId)
+                mediaPlayer =
+                    MediaPlayer().apply {
+                        val afd =
+                            context.resources.openRawResourceFd(resId)
+                                ?: throw IllegalStateException("Could not open voice resource")
+                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                        afd.close()
+                        setAudioAttributes(
+                            AudioAttributes
+                                .Builder()
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                .build(),
+                        )
+                        prepare()
+                    }
                 mediaPlayer?.apply {
-                    setAudioAttributes(
-                        AudioAttributes
-                            .Builder()
-                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                            .build(),
-                    )
                     setVolume(currentVolume, currentVolume)
-                    setOnCompletionListener { 
+                    setOnCompletionListener {
                         it.release()
                         if (mediaPlayer == it) {
                             mediaPlayer = null
@@ -128,8 +135,7 @@ class AIVoiceCalloutManager
             speak(PREVIEW_COMMAND_CUE)
         }
 
-        fun previewCountdownCue() {
-            // With elapsed model, preview an elapsed milestone announcement
+        fun previewElapsedMilestoneCue() {
             speak(PREVIEW_ELAPSED_CUE)
         }
 

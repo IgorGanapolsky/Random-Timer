@@ -53,6 +53,11 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+internal fun elapsedSecondsForVoiceCallout(
+    targetDuration: kotlin.time.Duration,
+    remainingDuration: kotlin.time.Duration,
+): Int = (targetDuration - remainingDuration).inWholeSeconds.toInt().coerceAtLeast(0)
+
 @AndroidEntryPoint
 class TimerForegroundService : Service() {
     @Inject lateinit var storeReviewManager: StoreReviewManager
@@ -266,10 +271,16 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    // Trigger AI Voice Callout for ELITE users
+                    // Trigger runtime command cues from elapsed time so hidden/random timers never leak time left.
                     if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
                         voiceCalloutManager.setVolume(state.config.volume)
-                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                        voiceCalloutManager.triggerCallout(
+                            elapsedSeconds =
+                                elapsedSecondsForVoiceCallout(
+                                    targetDuration = state.targetDuration,
+                                    remainingDuration = newRemaining,
+                                ),
+                        )
                     }
 
                     if (newStatus == TimerStatus.COMPLETE) {
@@ -522,7 +533,7 @@ class TimerForegroundService : Service() {
     }
 
     /**
-     * Creates Material Design 3 styled timer notification with chronometer countdown.
+     * Creates Material Design 3 styled timer notification for the active random-timer session.
      *
      * Features:
      * - No countdown displayed (random timer)

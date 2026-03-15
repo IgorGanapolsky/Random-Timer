@@ -60,11 +60,12 @@
 		5817A12E9686AD21EAFE028A /* PaywallSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808390B0F0B9EE36AC342E7A /* PaywallSheet.swift */; };
 		5B6F3408CC4B851C6428EAAA /* buzzer.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 8E92FED72459C5B7A18BEE3D /* buzzer.mp3 */; };
 		69A55EE7F47BF51A55C13896 /* RandomTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACBE63218A7CEC69F1E5422 /* RandomTimerLiveActivity.swift */; };
-		7333136EFF1A48ADABA95895 /* bell.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 75387774E2DAB72906B19DCD /* bell.mp3 */; };
-		840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
-		PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRVT001122334455AABB0001 /* ProValidationTests.swift */; };
-		85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
-		AIVC00112233445566778899 /* AIVoiceCalloutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIVC00112233445566778800 /* AIVoiceCalloutService.swift */; };
+			7333136EFF1A48ADABA95895 /* bell.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 75387774E2DAB72906B19DCD /* bell.mp3 */; };
+			840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
+			PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRVT001122334455AABB0001 /* ProValidationTests.swift */; };
+			AIVT00112233445566778801 /* AIVoiceCalloutServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIVT00112233445566778800 /* AIVoiceCalloutServiceTests.swift */; };
+			85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
+			AIVC00112233445566778899 /* AIVoiceCalloutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIVC00112233445566778800 /* AIVoiceCalloutService.swift */; };
 		96771424C44C551B73F7732B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D15E4584476AB7D519E638B /* GlassCard.swift */; };
 		997459C4BEB58C7A5CB1C72F /* gong.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 18EB65CABE2573B583A2913B /* gong.mp3 */; };
 		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
@@ -177,6 +178,7 @@
 		7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModelsTests.swift; sourceTree = "<group>"; };
 		7CA1C5AD670D6527A669A21F /* RangeSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSliderView.swift; sourceTree = "<group>"; };
 		808390B0F0B9EE36AC342E7A /* PaywallSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PaywallSheet.swift; sourceTree = "<group>"; };
+		AIVT00112233445566778800 /* AIVoiceCalloutServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVoiceCalloutServiceTests.swift; sourceTree = "<group>"; };
 		8E92FED72459C5B7A18BEE3D /* buzzer.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = buzzer.mp3; sourceTree = "<group>"; };
 		8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "gentle-chime.mp3"; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 		4A083F7CAA823D4930153B06 /* RandomTimerTests */ = {
 			isa = PBXGroup;
 			children = (
+				AIVT00112233445566778800 /* AIVoiceCalloutServiceTests.swift */,
 				A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */,
 				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
@@ -630,6 +633,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AIVT00112233445566778801 /* AIVoiceCalloutServiceTests.swift in Sources */,
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
