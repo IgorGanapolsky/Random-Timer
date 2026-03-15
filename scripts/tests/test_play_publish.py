@@ -1,6 +1,19 @@
 import unittest
+from unittest.mock import call
+from unittest.mock import Mock
 
-from scripts.play_publish import _is_deleted_edit_error, _is_failed_precondition, _release_payload
+from scripts.play_publish import _commit_edit
+from scripts.play_publish import _is_deleted_edit_error
+from scripts.play_publish import _is_failed_precondition
+from scripts.play_publish import _release_payload
+from scripts.play_publish import _requires_manual_review_submission
+
+
+class _FakeHttpError(Exception):
+    def __init__(self, status: int, content: str, message: str = "HttpError"):
+        super().__init__(message)
+        self.resp = type("Resp", (), {"status": status})()
+        self.content = content.encode("utf-8")
 
 
 class PlayPublishTests(unittest.TestCase):
@@ -68,6 +81,61 @@ class PlayPublishTests(unittest.TestCase):
         )
         self.assertNotIn("userFraction", payload)
         self.assertEqual(payload["releaseNotes"][0]["text"], "notes")
+
+    def test_detects_manual_review_required_marker(self):
+        self.assertTrue(
+            _requires_manual_review_submission(
+                "HttpError 400",
+                '{"error":{"message":"Changes cannot be sent for review automatically. '
+                'Please set the query parameter changesNotSentForReview to true."}}',
+                400,
+            )
+        )
+
+    def test_commit_edit_returns_false_when_normal_commit_succeeds(self):
+        edits_service = Mock()
+        edits_service.commit.return_value.execute.return_value = {}
+
+        result = _commit_edit(edits_service, "pkg", "edit-1")
+
+        self.assertFalse(result)
+        edits_service.commit.assert_called_once_with(packageName="pkg", editId="edit-1")
+
+    def test_commit_edit_retries_with_changes_not_sent_for_review(self):
+        edits_service = Mock()
+        edits_service.commit.side_effect = [
+            Mock(
+                execute=Mock(
+                    side_effect=_FakeHttpError(
+                        400,
+                        '{"error":{"message":"Changes cannot be sent for review automatically. '
+                        'Please set the query parameter changesNotSentForReview to true."}}',
+                    )
+                )
+            ),
+            Mock(execute=Mock(return_value={})),
+        ]
+
+        result = _commit_edit(edits_service, "pkg", "edit-1")
+
+        self.assertTrue(result)
+        self.assertEqual(
+            edits_service.commit.call_args_list,
+            [
+                call(packageName="pkg", editId="edit-1"),
+                call(packageName="pkg", editId="edit-1", changesNotSentForReview=True),
+            ],
+        )
+
+    def test_commit_edit_reraises_unrelated_error(self):
+        edits_service = Mock()
+        edits_service.commit.return_value.execute.side_effect = _FakeHttpError(
+            403,
+            '{"error":{"message":"Permission denied"}}',
+        )
+
+        with self.assertRaises(_FakeHttpError):
+            _commit_edit(edits_service, "pkg", "edit-1")
 
 
 if __name__ == "__main__":
