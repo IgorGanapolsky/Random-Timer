@@ -27,6 +27,17 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
 internal const val PREVIEW_ELAPSED_CUE = "Thirty seconds. Stay locked in."
 internal const val PREVIEW_COMMAND_CUE = "Stay sharp."
 
+internal val COMMAND_VOICE_CUES =
+    listOf(
+        "Stay sharp.",
+        "Push through.",
+        "Move now!",
+        "Drive forward.",
+        "Keep the pressure.",
+        "Push the pace.",
+        "Reset and breathe.",
+    )
+
 internal val ELAPSED_VOICE_CUES_BY_SECOND =
     mapOf(
         30 to "Thirty seconds.",
@@ -57,6 +68,13 @@ internal fun voiceResIdForText(text: String): Int? =
         "Three minutes. Drive forward." -> R.raw.elapsed_180s
         "Five minutes. Finish strong." -> R.raw.elapsed_300s
         "Ten minutes. Outstanding." -> R.raw.elapsed_600s
+        "Stay sharp." -> R.raw.cmd_stay_sharp
+        "Push through." -> R.raw.cmd_push_through
+        "Move now!" -> R.raw.cmd_move_now
+        "Drive forward." -> R.raw.cmd_drive_forward
+        "Keep the pressure." -> R.raw.cmd_keep_pressure
+        "Push the pace." -> R.raw.cmd_push_pace
+        "Reset and breathe." -> R.raw.cmd_reset_breathe
         PREVIEW_ELAPSED_CUE -> R.raw.preview_elapsed
         PREVIEW_COMMAND_CUE -> R.raw.cmd_stay_sharp
         else -> null
@@ -73,6 +91,7 @@ class AIVoiceCalloutManager
         private var lastElapsedMilestone = 0
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
+        private var previewCycleIndex = 0
 
         companion object {
             val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
@@ -125,7 +144,10 @@ class AIVoiceCalloutManager
         }
 
         fun previewCommandCue() {
-            speak(PREVIEW_COMMAND_CUE)
+            // Cycle through available command cues to show variety
+            val cue = COMMAND_VOICE_CUES[previewCycleIndex]
+            speak(cue)
+            previewCycleIndex = (previewCycleIndex + 1) % COMMAND_VOICE_CUES.size
         }
 
         fun previewCountdownCue() {
