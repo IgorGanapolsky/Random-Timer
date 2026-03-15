@@ -6,6 +6,16 @@ internal let previewElapsedCue = "Thirty seconds. Stay locked in."
 internal let previewCommandVoiceCue = "Stay sharp."
 internal let defaultFallbackVoiceCue = previewCommandVoiceCue
 
+internal let commandVoiceCues: [String] = [
+    "Stay sharp.",
+    "Push through.",
+    "Move now!",
+    "Drive forward.",
+    "Keep the pressure.",
+    "Push the pace.",
+    "Reset and breathe."
+]
+
 internal let elapsedVoiceCuesBySecond: [Int: String] = [
     30: "Thirty seconds.",
     60: "One minute. Keep moving.",
@@ -24,6 +34,13 @@ internal let voiceFilenamesByText: [String: String] = [
     "Three minutes. Drive forward.": "elapsed_180s",
     "Five minutes. Finish strong.": "elapsed_300s",
     "Ten minutes. Outstanding.": "elapsed_600s",
+    "Stay sharp.": "cmd_stay_sharp",
+    "Push through.": "cmd_push_through",
+    "Move now!": "cmd_move_now",
+    "Drive forward.": "cmd_drive_forward",
+    "Keep the pressure.": "cmd_keep_pressure",
+    "Push the pace.": "cmd_push_pace",
+    "Reset and breathe.": "cmd_reset_breathe",
     previewElapsedCue: "preview_elapsed",
     previewCommandVoiceCue: "cmd_stay_sharp",
 ]
@@ -53,6 +70,7 @@ final class AIVoiceCalloutService {
     private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private var lastElapsedMilestone = 0
+    private var previewCycleIndex = 0
 
     private init() {
         do {
@@ -103,7 +121,11 @@ final class AIVoiceCalloutService {
     }
 
     func previewCommandCue() {
-        speak(previewCommandVoiceCue)
+        // Cycle through available command cues to show variety
+        // NOTE: Monthly ElevenLabs voice updates will be added to commandVoiceCues list
+        let cue = commandVoiceCues[previewCycleIndex]
+        speak(cue)
+        previewCycleIndex = (previewCycleIndex + 1) % commandVoiceCues.count
     }
 
     func previewCountdownCue() {
