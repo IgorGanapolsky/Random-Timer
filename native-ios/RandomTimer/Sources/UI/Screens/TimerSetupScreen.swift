@@ -59,17 +59,21 @@ struct TimerSetupScreen: View {
                                             updateConfig(useExtendedRange: newExtended)
                                         }
                                     } label: {
-                                        Text(config.useExtendedRange ? "60M MODE" : "5M MODE")
-                                            .font(.caption2.weight(.bold))
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
-                                            .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
-                                            .cornerRadius(4)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 4)
-                                                    .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 0.5)
-                                            )
+                                        HStack(spacing: 4) {
+                                            Text(config.useExtendedRange ? "60M MODE" : "5M MODE")
+                                                .font(.caption2.weight(.bold))
+                                            Text(config.useExtendedRange ? "\u{1F525}" : "\u{23F3}")
+                                                .font(.caption2)
+                                        }
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
+                                        .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
+                                        .cornerRadius(6)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
+                                        )
                                     }
                                 } else {
                                     Text("PRO: 1H \u{1F512}")

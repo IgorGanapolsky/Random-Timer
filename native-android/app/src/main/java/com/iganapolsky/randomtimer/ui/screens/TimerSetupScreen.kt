@@ -253,17 +253,26 @@ fun TimerSetupScreen(
                                                     updateConfig(useExtendedRange = newExtended)
                                                 }
                                             },
-                                            shape = RoundedCornerShape(4.dp),
+                                            shape = RoundedCornerShape(6.dp),
                                             color = if (config.useExtendedRange) TimerColors.AccentPrimary.copy(alpha = 0.2f) else TimerColors.GlassBackground,
-                                            border = BorderStroke(0.5.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
+                                            border = BorderStroke(1.dp, if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.GlassBorder)
                                         ) {
-                                            Text(
-                                                text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                            )
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = if (config.useExtendedRange) "60M MODE" else "5M MODE",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = if (config.useExtendedRange) "\uD83D\uDD25" else "\u23F3",
+                                                    style = MaterialTheme.typography.labelMedium
+                                                )
+                                            }
                                         }
                                     } else {
                                         Text(
