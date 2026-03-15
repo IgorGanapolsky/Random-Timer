@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -15,11 +16,11 @@ ANDROID_PACKAGE_DEFAULT = "com.iganapolsky.randomtimer"
 DEFAULT_TRACKS = ("production", "beta", "alpha", "internal")
 
 
-def _read_gradle_version_code(gradle_file: Path) -> int:
+def _read_gradle_version_code(gradle_file: Path) -> int | None:
     content = gradle_file.read_text(encoding="utf-8")
     match = re.search(r"versionCode\s*=\s*(\d+)", content)
     if not match:
-        raise ValueError(f"Unable to find versionCode in {gradle_file}")
+        return None
     return int(match.group(1))
 
 
@@ -78,12 +79,16 @@ def _fetch_existing_track_codes(service: Any, package_name: str, tracks: list[st
                 pass
 
 
-def compute_next_version_code(base_version_code: int, existing_track_codes: dict[str, list[int]]) -> int:
+def compute_next_version_code(
+    base_version_code: int | None,
+    existing_track_codes: dict[str, list[int]],
+    minimum_floor: int | None = None,
+) -> int:
     highest_existing = max(
         (code for codes in existing_track_codes.values() for code in codes),
         default=0,
     )
-    return max(base_version_code, highest_existing) + 1
+    return max(base_version_code or 0, highest_existing, minimum_floor or 0) + 1
 
 
 def _parse_args() -> argparse.Namespace:
@@ -114,7 +119,12 @@ def main() -> int:
         base_version_code = _read_gradle_version_code(gradle_file)
         service = _load_play_service(service_account_json)
         existing_track_codes = _fetch_existing_track_codes(service, args.package, tracks)
-        next_version_code = compute_next_version_code(base_version_code, existing_track_codes)
+        minimum_floor = int(time.time())
+        next_version_code = compute_next_version_code(
+            base_version_code,
+            existing_track_codes,
+            minimum_floor=minimum_floor,
+        )
     except Exception as error:
         print(f"❌ Failed to compute Android release versionCode: {error}", file=sys.stderr)
         return 1
@@ -124,6 +134,7 @@ def main() -> int:
             "package": args.package,
             "gradle_file": str(gradle_file),
             "base_version_code": base_version_code,
+            "minimum_floor": minimum_floor,
             "tracks": tracks,
             "existing_track_codes": existing_track_codes,
             "next_version_code": next_version_code,

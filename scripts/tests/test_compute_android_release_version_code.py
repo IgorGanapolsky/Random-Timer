@@ -23,6 +23,13 @@ def test_read_gradle_version_code_extracts_integer(tmp_path: Path):
     assert calc._read_gradle_version_code(gradle_file) == 1774400000
 
 
+def test_read_gradle_version_code_returns_none_for_dynamic_expression(tmp_path: Path):
+    gradle_file = tmp_path / "build.gradle.kts"
+    gradle_file.write_text("versionCode = ciVersionCode ?: 11", encoding="utf-8")
+
+    assert calc._read_gradle_version_code(gradle_file) is None
+
+
 def test_extract_release_codes_skips_invalid_values():
     payload = {
         "releases": [
@@ -43,6 +50,7 @@ def test_compute_next_version_code_prefers_higher_play_code():
             "beta": [],
             "internal": [1774399999],
         },
+        minimum_floor=1773596673,
     )
 
     assert next_code == 1774400006
@@ -55,9 +63,23 @@ def test_compute_next_version_code_prefers_higher_gradle_code_when_tracks_lower(
             "production": [1773900000],
             "alpha": [1773899999],
         },
+        minimum_floor=1773596673,
     )
 
     assert next_code == 1774400001
+
+
+def test_compute_next_version_code_uses_time_floor_when_gradle_is_dynamic():
+    next_code = calc.compute_next_version_code(
+        None,
+        {
+            "production": [1773900000],
+            "alpha": [],
+        },
+        minimum_floor=1773901000,
+    )
+
+    assert next_code == 1773901001
 
 
 def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
@@ -116,7 +138,7 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
 
 def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     gradle_file = tmp_path / "build.gradle.kts"
-    gradle_file.write_text("versionCode = 1774400000", encoding="utf-8")
+    gradle_file.write_text("versionCode = ciVersionCode ?: 11", encoding="utf-8")
     service_account = tmp_path / "play.json"
     service_account.write_text("{}", encoding="utf-8")
     json_output = tmp_path / "result.json"
@@ -127,6 +149,7 @@ def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.Cap
         "_fetch_existing_track_codes",
         lambda _service, _package, _tracks: {"production": [1774400002], "beta": []},
     )
+    monkeypatch.setattr(calc.time, "time", lambda: 1774400002)
     monkeypatch.setattr(
         calc,
         "_parse_args",
