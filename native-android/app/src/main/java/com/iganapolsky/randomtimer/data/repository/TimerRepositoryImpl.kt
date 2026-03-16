@@ -49,9 +49,14 @@ class TimerRepositoryImpl
 
         override fun getTimerConfig(): Flow<TimerConfig> =
             dataStore.data.map { preferences ->
+                val storedMin = preferences[KEY_MIN_SECONDS] ?: 0
+                val storedMax = preferences[KEY_MAX_SECONDS] ?: 300
+                val storedUseExtendedRange =
+                    preferences[KEY_USE_EXTENDED_RANGE]
+                        ?: (storedMax > TimerConfig.MAX_SECONDS_FREE)
                 TimerConfig(
-                    minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                    minSeconds = storedMin,
+                    maxSeconds = storedMax,
                     alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                     hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                     repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -65,6 +70,7 @@ class TimerRepositoryImpl
                         } ?: SoundType.INTENSE,
                     volume = preferences[KEY_VOLUME] ?: 0.5f,
                     vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                    useExtendedRange = storedUseExtendedRange,
                 ).clampedForPro()
             }
 
@@ -78,6 +84,7 @@ class TimerRepositoryImpl
                 preferences[KEY_SOUND_TYPE] = config.soundType.name
                 preferences[KEY_VOLUME] = config.volume
                 preferences[KEY_VIBRATION_ENABLED] = config.vibrationEnabled
+                preferences[KEY_USE_EXTENDED_RANGE] = config.useExtendedRange
             }
         }
 
@@ -88,10 +95,15 @@ class TimerRepositoryImpl
                 val statusStr = preferences[KEY_ACTIVE_STATUS] ?: return@map null
                 val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@map null
 
+                val storedMin = preferences[KEY_MIN_SECONDS] ?: 0
+                val storedMax = preferences[KEY_MAX_SECONDS] ?: 300
+                val storedUseExtendedRange =
+                    preferences[KEY_USE_EXTENDED_RANGE]
+                        ?: (storedMax > TimerConfig.MAX_SECONDS_FREE)
                 val config =
                     TimerConfig(
-                        minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
+                        minSeconds = storedMin,
+                        maxSeconds = storedMax,
                         alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
                         hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
                         repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
@@ -105,6 +117,7 @@ class TimerRepositoryImpl
                             } ?: SoundType.INTENSE,
                         volume = preferences[KEY_VOLUME] ?: 0.5f,
                         vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                        useExtendedRange = storedUseExtendedRange,
                     ).clampedForPro()
 
                 TimerState(
@@ -142,6 +155,7 @@ class TimerRepositoryImpl
             private val KEY_ALARM_DURATION = intPreferencesKey("alarm_duration")
             private val KEY_HIDDEN_MODE = booleanPreferencesKey("hidden_mode")
             private val KEY_REPEAT_ENABLED = booleanPreferencesKey("repeat_enabled")
+            private val KEY_USE_EXTENDED_RANGE = booleanPreferencesKey("use_extended_range")
             private val KEY_SOUND_TYPE = stringPreferencesKey("sound_type")
             private val KEY_VOLUME = floatPreferencesKey("volume")
             private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")

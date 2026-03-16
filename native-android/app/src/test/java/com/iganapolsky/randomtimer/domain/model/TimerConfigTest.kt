@@ -112,6 +112,7 @@ class TimerConfigTest {
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
                 vibrationEnabled = false,
+                useExtendedRange = true,
             )
         assertThat(config.maxSeconds).isEqualTo(3600)
     }
