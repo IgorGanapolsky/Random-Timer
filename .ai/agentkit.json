@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "projectName": "Random-Timer",
+  "projectDescription": "A software project.",
+  "responseLanguage": "zh",
+  "framework": "custom",
+  "uiLibrary": "none",
+  "cssFramework": "none",
+  "platforms": [
+    "claude",
+    "codex"
+  ],
+  "workflowPacks": [],
+  "skillPacks": [
+    "security-best-practices"
+  ],
+  "skillBundles": [],
+  "superpowersScope": "project",
+  "detected": {
+    "packageManager": "npm",
+    "primaryLanguage": "JavaScript",
+    "buildTool": "—"
+  },
+  "brownfield": {
+    "strategy": "absorb",
+    "detectedAt": "2026-03-15T17:16:05.666Z",
+    "absorbedFiles": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "calibrated": false
+  }
+}

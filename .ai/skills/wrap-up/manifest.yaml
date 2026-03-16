@@ -1,0 +1,4 @@
+name: wrap-up
+description: End-of-task memory update. Use after completing a feature, bug fix, or significant development session to update all project memory files at once — changelog, ADR (if applicable), memory files, and specs archive.
+user-invocable: true
+argument-hint: "[optional: summary of what was accomplished]"
