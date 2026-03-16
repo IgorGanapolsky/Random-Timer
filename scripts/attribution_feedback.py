@@ -40,6 +40,26 @@ def _requests_module():
         return None
 
 
+def _load_json(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _data_quality(*, generated_at: str, preserved_previous_metrics: bool) -> Dict[str, Any]:
+    return {
+        "is_stale": bool(QUERY_ERRORS) and preserved_previous_metrics,
+        "preserved_previous_metrics": preserved_previous_metrics,
+        "last_attempt_generated_at": generated_at,
+        "last_good_generated_at": "",
+        "reason": QUERY_ERRORS[-1] if QUERY_ERRORS else "",
+    }
+
+
 def posthog_query(query: str, api_key: str, project_id: str) -> Optional[Dict[str, Any]]:
     """Execute a PostHog HogQL query via the API."""
     requests = _requests_module()
@@ -324,14 +344,24 @@ def build_keyword_performance(
 def write_aso_feedback(
     repo_root: Path,
     keyword_performance: Dict[str, int],
+    *,
+    preserved_from: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Write keyword performance data for the ASO rotation script to consume."""
     feedback_path = repo_root / "marketing" / "keywords" / "posthog_feedback.json"
     feedback_path.parent.mkdir(parents=True, exist_ok=True)
+    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     payload = {
-        "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "generated_at": generated_at,
+        "status": "ok" if not QUERY_ERRORS else "degraded",
         "keyword_installs": keyword_performance,
+        "data_quality": _data_quality(
+            generated_at=generated_at,
+            preserved_previous_metrics=bool(preserved_from),
+        ),
     }
+    if preserved_from:
+        payload["data_quality"]["last_good_generated_at"] = str(preserved_from.get("generated_at", ""))
     feedback_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return feedback_path
 
@@ -340,6 +370,8 @@ def write_content_feedback(
     repo_root: Path,
     campaign_installs: List[Dict[str, Any]],
     funnel: Dict[str, Any],
+    *,
+    preserved_from: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Write content performance data for the content pipeline to consume."""
     feedback_path = repo_root / "marketing" / "data" / "content_feedback.json"
@@ -351,11 +383,19 @@ def write_content_feedback(
         key=lambda r: -(r.get("activation_rate") or 0),
     )[:20]
 
+    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     payload = {
-        "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "generated_at": generated_at,
+        "status": "ok" if not QUERY_ERRORS else "degraded",
         "onboarding_funnel": funnel,
         "top_campaigns_by_activation": top_campaigns,
+        "data_quality": _data_quality(
+            generated_at=generated_at,
+            preserved_previous_metrics=bool(preserved_from),
+        ),
     }
+    if preserved_from:
+        payload["data_quality"]["last_good_generated_at"] = str(preserved_from.get("generated_at", ""))
     feedback_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return feedback_path
 
@@ -439,16 +479,23 @@ def run(
     project_id = os.getenv("POSTHOG_PROJECT_ID", "").strip()
     report_path = repo_root / "marketing" / "data" / "attribution-report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    aso_existing_path = repo_root / "marketing" / "keywords" / "posthog_feedback.json"
+    content_existing_path = repo_root / "marketing" / "data" / "content_feedback.json"
+    aso_existing = _load_json(aso_existing_path)
+    content_existing = _load_json(content_existing_path)
 
     if not api_key or not project_id:
         # Generate empty feedback files so downstream scripts don't break
-        empty_kw: Dict[str, int] = {}
-        write_aso_feedback(repo_root, empty_kw)
-        write_content_feedback(repo_root, [], {"window_days": days})
-        report_path.write_text(
-            "# Attribution Feedback Report\n\nNo PostHog query data available: missing API key and/or project id.\n",
-            encoding="utf-8",
-        )
+        keyword_installs = aso_existing.get("keyword_installs", {}) if aso_existing else {}
+        content_funnel = content_existing.get("onboarding_funnel", {"window_days": days}) if content_existing else {"window_days": days}
+        campaigns = content_existing.get("top_campaigns_by_activation", []) if content_existing else []
+        write_aso_feedback(repo_root, keyword_installs, preserved_from=aso_existing or None)
+        write_content_feedback(repo_root, campaigns, content_funnel, preserved_from=content_existing or None)
+        if not report_path.exists():
+            report_path.write_text(
+                "# Attribution Feedback Report\n\nNo PostHog query data available: missing API key and/or project id.\n",
+                encoding="utf-8",
+            )
         return {
             "status": "skipped",
             "reason": "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID",
@@ -460,16 +507,32 @@ def run(
     campaign_installs = fetch_campaign_installs(api_key, project_id, days)
     keyword_performance = build_keyword_performance(attribution, campaign_installs)
 
+    preserved_previous_metrics = bool(QUERY_ERRORS) and (bool(aso_existing) or bool(content_existing))
+    if preserved_previous_metrics:
+        keyword_performance = aso_existing.get("keyword_installs", keyword_performance) if aso_existing else keyword_performance
+        if content_existing:
+            funnel = content_existing.get("onboarding_funnel", funnel)
+            campaign_installs = content_existing.get("top_campaigns_by_activation", campaign_installs)
+
     if not dry_run:
-        aso_path = write_aso_feedback(repo_root, keyword_performance)
-        content_path = write_content_feedback(repo_root, campaign_installs, funnel)
+        aso_path = write_aso_feedback(
+            repo_root,
+            keyword_performance,
+            preserved_from=aso_existing if preserved_previous_metrics else None,
+        )
+        content_path = write_content_feedback(
+            repo_root,
+            campaign_installs,
+            funnel,
+            preserved_from=content_existing if preserved_previous_metrics else None,
+        )
     else:
         aso_path = Path("(dry-run)")
         content_path = Path("(dry-run)")
 
     report = build_report(attribution, funnel, campaign_installs, keyword_performance)
-
-    report_path.write_text(report, encoding="utf-8")
+    if not (preserved_previous_metrics and report_path.exists()):
+        report_path.write_text(report, encoding="utf-8")
 
     # Write to GitHub Actions step summary if available
     summary_file = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
@@ -488,6 +551,7 @@ def run(
         "report": str(report_path),
         "query_errors_count": len(QUERY_ERRORS),
         "last_query_error": QUERY_ERRORS[-1] if QUERY_ERRORS else "",
+        "preserved_previous_metrics": preserved_previous_metrics,
     }
 
 
