@@ -1,5 +1,4 @@
 import SwiftUI
-import FirebaseCrashlytics
 
 @main
 struct RandomTimerApp: App {

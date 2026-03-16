@@ -149,7 +149,7 @@ struct TimerSetupScreen: View {
                                     if proManager.isPro {
                                         Toggle("", isOn: Binding(
                                             get: { config.voiceEnabled },
-                                            set: { updateConfig(voiceEnabled = $0) }
+                                            set: { updateConfig(voiceEnabled: $0) }
                                         ))
                                         .labelsHidden()
                                         .tint(.accentPrimary)
@@ -327,7 +327,7 @@ struct TimerSetupScreen: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    Spacer(minLength: 100) // Space for sticky footer
+                    Spacer(minLength: 140) // Space for sticky footer
                 }
                 .padding(.horizontal, 24)
             }

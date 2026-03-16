@@ -38,6 +38,7 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
 
         val clamped = proConfig.clampedForPro(isPro = false)
@@ -92,6 +93,7 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
 
         val clamped = proConfig.clampedForPro(isPro = true)
@@ -129,6 +131,7 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
         val clamped = proConfig.clampedForPro(isPro = false)
 

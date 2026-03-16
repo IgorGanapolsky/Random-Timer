@@ -91,7 +91,7 @@ private object SetupSpacing {
             outerHorizontal = 16.dp,
             listItem = 8.dp,
             listTop = 8.dp,
-            listBottom = 80.dp, // Leave space for sticky button
+            listBottom = 120.dp, // Leave space for sticky button
             cardContent = 12.dp,
             headerToContent = 4.dp,
             chipGap = 8.dp,
@@ -103,7 +103,7 @@ private object SetupSpacing {
             outerHorizontal = 12.dp,
             listItem = 6.dp,
             listTop = 4.dp,
-            listBottom = 70.dp, // Leave space for sticky button
+            listBottom = 100.dp, // Leave space for sticky button
             cardContent = 10.dp,
             headerToContent = 2.dp,
             chipGap = 6.dp,

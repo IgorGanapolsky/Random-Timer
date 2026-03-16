@@ -141,10 +141,16 @@ struct ExpandedTimerView: View {
             if context.state.status == .complete || context.state.status == .alarm {
                 // Alarm state
                 VStack(spacing: 6) {
-                    Image(systemName: "bell.badge.fill")
-                        .font(.title)
-                        .foregroundColor(Color(hex: "EF4444"))
-                        .symbolEffect(.bounce, options: .repeating)
+                    if #available(iOSApplicationExtension 18.0, *) {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.title)
+                            .foregroundColor(Color(hex: "EF4444"))
+                            .symbolEffect(.bounce, options: .repeating)
+                    } else {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.title)
+                            .foregroundColor(Color(hex: "EF4444"))
+                    }
 
                     Text("Time's up!")
                         .font(.title3.bold())
@@ -232,10 +238,17 @@ struct TimerIconView: View {
             }
 
             // Icon with animation
-            Image(systemName: iconName)
-                .font(.system(size: compact ? 14 : 22, weight: .semibold))
-                .foregroundColor(iconColor)
-                .symbolEffect(.pulse, options: .repeating, value: status == .running)
+            if #available(iOSApplicationExtension 18.0, *) {
+                Image(systemName: iconName)
+                    .font(.system(size: compact ? 14 : 22, weight: .semibold))
+                    .foregroundColor(iconColor)
+                    .symbolEffect(.pulse, options: .repeating, value: status == .running)
+            } else {
+                Image(systemName: iconName)
+                    .font(.system(size: compact ? 14 : 22, weight: .semibold))
+                    .foregroundColor(iconColor)
+                    .symbolEffect(.pulse, value: status == .running)
+            }
         }
         .accessibilityLabel(accessibilityLabel)
     }

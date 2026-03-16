@@ -109,3 +109,18 @@ native-ios/RandomTimer.app.dSYM.zip
 apple_*.png
 artifacts_*.png
 apple_status.json
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
