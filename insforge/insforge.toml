@@ -1,0 +1,20 @@
+[project]
+name = "random-tactical-timer"
+id = "insforge-rtt-dev"
+region = "us-east"
+
+[database]
+schema = "schema.sql"
+type = "postgresql"
+
+[auth]
+providers = ["email", "google", "apple"]
+session_duration = "30d"
+
+[storage]
+buckets = ["training_assets"]
+
+[model_gateway]
+enabled = true
+default_model = "gemini-1.5-pro"
+features = ["dynamic_training_routines"]

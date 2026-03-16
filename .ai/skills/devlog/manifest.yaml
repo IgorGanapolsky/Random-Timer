@@ -1,0 +1,4 @@
+name: devlog
+description: Append a changelog entry to .ai/changelog/. Use after completing a feature, bug fix, refactoring, or any significant code change to record what changed, why, and what to watch out for.
+user-invocable: true
+argument-hint: "[optional: short description of the change]"

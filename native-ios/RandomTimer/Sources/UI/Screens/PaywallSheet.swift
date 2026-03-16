@@ -50,11 +50,13 @@ struct PaywallSheet: View {
 
             VStack(spacing: 4) {
                 Text("One premium plan.")
-                Text("Yearly auto-renewing subscription. Cancel anytime.")
+                Text("Yearly auto-renewing subscription.")
+                Text("Payment will be charged to your iTunes account and will automatically renew unless turned off in account settings at least 24 hours before the end of the current period.")
             }
-            .font(.caption)
+            .font(.system(size: 10))
             .foregroundColor(.textSecondary)
             .multilineTextAlignment(.center)
+            .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -76,6 +78,17 @@ struct PaywallSheet: View {
                     }
                 }
             }
+
+            HStack(spacing: 16) {
+                Link("Privacy Policy", destination: URL(string: "https://github.com/IgorGanapolsky/Random-Timer/blob/main/PRIVACY_POLICY.md")!)
+                
+                Text("\u{2022}")
+                    .foregroundColor(.textMuted)
+                
+                Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            }
+            .font(.caption2)
+            .foregroundColor(.accentPrimary)
 
             Button("Restore purchase") {
                 Task {

@@ -1,0 +1,4 @@
+name: agentkit-calibrate
+description: Scan a brownfield project and calibrate .ai/rules, README, CLAUDE.md, GEMINI.md, and all platform-specific AI config files to match the project's actual tech stack, directory structure, and conventions. Does NOT modify project source code.
+user-invocable: true
+argument-hint: "[optional: specific rules or areas to focus on, e.g. 'only directory structure' or 'only typescript rules']"

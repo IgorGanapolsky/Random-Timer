@@ -1,0 +1,4 @@
+name: adr
+description: Record an Architecture Decision Record (ADR) to .ai/decisions/. Use when a significant technical decision is made during development — technology choice, pattern adoption, trade-off resolution, or approach selection.
+user-invocable: true
+argument-hint: "[optional: short description of the decision]"

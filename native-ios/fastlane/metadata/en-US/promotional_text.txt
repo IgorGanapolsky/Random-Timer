@@ -1,1 +1,1 @@
-Train reaction timing with randomized start cues. Set a min/max window, loop rounds, and use loud alarms plus haptics for pressure drills.
+Now with ElevenLabs AI Voice coaching. Tactical Red UI optimized for high-performance training under stress. 2026 Industry Standard.
