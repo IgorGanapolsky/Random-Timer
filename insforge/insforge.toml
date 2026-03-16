@@ -1,0 +1,7 @@
+[project]
+name = "random-tactical-timer"
+id = "133db63a-7067-4d39-8c12-2404a60b0aac"
+region = "us-east"
+
+[storage]
+buckets = ["training_assets"]

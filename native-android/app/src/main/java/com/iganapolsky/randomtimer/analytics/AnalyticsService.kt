@@ -19,6 +19,8 @@ class AnalyticsService
         private var initialized = false
         private var prefs: SharedPreferences? = null
         private var analyticsContextProperties: Map<String, Any> = emptyMap()
+        private var runtimeContextProperties: Map<String, Any> = emptyMap()
+        private var currentDistinctId: String? = null
 
         fun initialize(application: Application) {
             if (initialized) return
@@ -52,8 +54,9 @@ class AnalyticsService
                     AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
                 )
             initialized = true
+            currentDistinctId = getOrCreateDistinctId(application)
             identify(
-                userId = getOrCreateDistinctId(application),
+                userId = currentDistinctId.orEmpty(),
                 properties = analyticsContextProperties,
             )
             trackApplicationLifecycleEvents()
@@ -93,6 +96,14 @@ class AnalyticsService
         fun flush() {
             if (!initialized) return
             PostHog.flush()
+        }
+
+        fun currentDistinctId(): String? = currentDistinctId
+
+        fun updateRuntimeContext(properties: Map<String, Any>) {
+            runtimeContextProperties = properties
+            val distinctId = currentDistinctId ?: return
+            identify(distinctId)
         }
 
         // --- UTM Attribution ---
@@ -190,9 +201,9 @@ class AnalyticsService
 
         private fun mergeProperties(properties: Map<String, Any>?): Map<String, Any> =
             if (properties.isNullOrEmpty()) {
-                analyticsContextProperties
+                analyticsContextProperties + runtimeContextProperties
             } else {
-                analyticsContextProperties + properties
+                properties + analyticsContextProperties + runtimeContextProperties
             }
 
         private fun buildAudience(): String {
@@ -287,6 +298,8 @@ object AnalyticsProperties {
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"
     const val RUNTIME_TARGET = "runtime_target"
+    const val RUNTIME_CONFIG_SOURCE = "runtime_config_source"
+    const val RUNTIME_CONFIG_VERSION = "runtime_config_version"
 }
 
 object AnalyticsScreens {

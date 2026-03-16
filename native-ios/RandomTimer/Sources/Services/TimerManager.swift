@@ -18,6 +18,8 @@ final class TimerManager: ObservableObject {
     nonisolated private let storageService: TimerStorage
     private let notificationService: TimerNotificationHandling
     private let liveActivityService: TimerLiveActivityHandling
+    private let loadedConfigFromStorageAtLaunch: Bool
+    private var userModifiedConfigSinceLaunch = false
 
     // MARK: - Initialization
 
@@ -32,7 +34,9 @@ final class TimerManager: ObservableObject {
 
         // Load config synchronously from storage to avoid UI flicker.
         // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
-        let rawConfig = storageService.loadConfigSync() ?? .default
+        let storedConfig = storageService.loadConfigSync()
+        self.loadedConfigFromStorageAtLaunch = storedConfig != nil
+        let rawConfig = storedConfig ?? .default
         self.config = rawConfig.clamped(isPro: ProManager.shared.isPro)
 
         // Wire Bluetooth/CarPlay media button and notification action callbacks.
@@ -83,6 +87,7 @@ final class TimerManager: ObservableObject {
     // MARK: - Public Methods
 
     func updateConfig(_ newConfig: TimerConfig) {
+        userModifiedConfigSinceLaunch = true
         config = newConfig
 
         // Sync config into running timer state so alarmTick sees the change
@@ -101,6 +106,18 @@ final class TimerManager: ObservableObject {
         Task {
             await storageService.saveConfig(newConfig)
         }
+    }
+
+    func applyRemoteDefaultsIfNeeded(_ newConfig: TimerConfig) async {
+        guard loadedConfigFromStorageAtLaunch == false else { return }
+        guard userModifiedConfigSinceLaunch == false else { return }
+        guard timerState == nil else { return }
+
+        let clamped = newConfig.clamped(isPro: ProManager.shared.isPro)
+        guard config != clamped else { return }
+
+        config = clamped
+        await storageService.saveConfig(clamped)
     }
 
     func startTimer() async {

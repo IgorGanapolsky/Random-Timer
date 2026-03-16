@@ -15,8 +15,9 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
+import com.iganapolsky.randomtimer.runtime.RuntimeConfigurationService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
@@ -27,6 +28,7 @@ class TimerRepositoryImpl
     constructor(
         private val dataStore: DataStore<Preferences>,
         private val proManager: ProManager,
+        private val runtimeConfigurationService: RuntimeConfigurationService,
     ) : TimerRepository {
         /**
          * Clamps a deserialized config to the current Pro entitlement.
@@ -48,24 +50,8 @@ class TimerRepositoryImpl
         }
 
         override fun getTimerConfig(): Flow<TimerConfig> =
-            dataStore.data.map { preferences ->
-                TimerConfig(
-                    minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                    alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                    hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                    repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                    soundType =
-                        preferences[KEY_SOUND_TYPE]?.let {
-                            try {
-                                SoundType.valueOf(it)
-                            } catch (_: Exception) {
-                                SoundType.INTENSE
-                            }
-                        } ?: SoundType.INTENSE,
-                    volume = preferences[KEY_VOLUME] ?: 0.5f,
-                    vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                ).clampedForPro()
+            combine(dataStore.data, runtimeConfigurationService.snapshot) { preferences, snapshot ->
+                (readStoredConfig(preferences) ?: snapshot.defaultConfig).clampedForPro()
             }
 
         override suspend fun saveTimerConfig(config: TimerConfig) {
@@ -81,31 +67,14 @@ class TimerRepositoryImpl
             }
         }
 
-        override fun getActiveTimer(): Flow<TimerState?> {
-            return dataStore.data.map { preferences ->
-                val targetMs = preferences[KEY_ACTIVE_TARGET] ?: return@map null
-                val remainingMs = preferences[KEY_ACTIVE_REMAINING] ?: return@map null
-                val statusStr = preferences[KEY_ACTIVE_STATUS] ?: return@map null
-                val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@map null
+        override fun getActiveTimer(): Flow<TimerState?> =
+            combine(dataStore.data, runtimeConfigurationService.snapshot) { preferences, snapshot ->
+                val targetMs = preferences[KEY_ACTIVE_TARGET] ?: return@combine null
+                val remainingMs = preferences[KEY_ACTIVE_REMAINING] ?: return@combine null
+                val statusStr = preferences[KEY_ACTIVE_STATUS] ?: return@combine null
+                val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@combine null
 
-                val config =
-                    TimerConfig(
-                        minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 30,
-                        alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                        hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                        repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                        soundType =
-                            preferences[KEY_SOUND_TYPE]?.let {
-                                try {
-                                    SoundType.valueOf(it)
-                                } catch (_: Exception) {
-                                    SoundType.INTENSE
-                                }
-                            } ?: SoundType.INTENSE,
-                        volume = preferences[KEY_VOLUME] ?: 0.5f,
-                        vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                    ).clampedForPro()
+                val config = (readStoredConfig(preferences) ?: snapshot.defaultConfig).clampedForPro()
 
                 TimerState(
                     config = config,
@@ -115,7 +84,6 @@ class TimerRepositoryImpl
                     startedAt = startedAt,
                 )
             }
-        }
 
         override suspend fun saveActiveTimer(state: TimerState) {
             dataStore.edit { preferences ->
@@ -151,5 +119,32 @@ class TimerRepositoryImpl
             private val KEY_ACTIVE_REMAINING = longPreferencesKey("active_remaining_ms")
             private val KEY_ACTIVE_STATUS = stringPreferencesKey("active_status")
             private val KEY_ACTIVE_STARTED_AT = longPreferencesKey("active_started_at")
+        }
+
+        private fun readStoredConfig(preferences: Preferences): TimerConfig? {
+            val hasStoredConfig =
+                preferences[KEY_MIN_SECONDS] != null ||
+                    preferences[KEY_MAX_SECONDS] != null ||
+                    preferences[KEY_ALARM_DURATION] != null ||
+                    preferences[KEY_HIDDEN_MODE] != null ||
+                    preferences[KEY_REPEAT_ENABLED] != null ||
+                    preferences[KEY_SOUND_TYPE] != null ||
+                    preferences[KEY_VOLUME] != null ||
+                    preferences[KEY_VIBRATION_ENABLED] != null
+            if (!hasStoredConfig) return null
+
+            return TimerConfig(
+                minSeconds = preferences[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
+                maxSeconds = preferences[KEY_MAX_SECONDS] ?: TimerConfig.DEFAULT.maxSeconds,
+                alarmDuration = preferences[KEY_ALARM_DURATION] ?: TimerConfig.DEFAULT.alarmDuration,
+                hiddenMode = preferences[KEY_HIDDEN_MODE] ?: TimerConfig.DEFAULT.hiddenMode,
+                repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: TimerConfig.DEFAULT.repeatEnabled,
+                soundType =
+                    preferences[KEY_SOUND_TYPE]?.let {
+                        runCatching { SoundType.valueOf(it) }.getOrDefault(TimerConfig.DEFAULT.soundType)
+                    } ?: TimerConfig.DEFAULT.soundType,
+                volume = preferences[KEY_VOLUME] ?: TimerConfig.DEFAULT.volume,
+                vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: TimerConfig.DEFAULT.vibrationEnabled,
+            )
         }
     }

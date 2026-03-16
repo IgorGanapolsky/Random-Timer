@@ -1,0 +1,22 @@
+{
+  "configVersion": "2026-03-16",
+  "defaultTimerConfig": {
+    "minSeconds": 0,
+    "maxSeconds": 300,
+    "alarmDuration": 10,
+    "hiddenMode": false,
+    "repeatEnabled": false,
+    "soundType": "intense",
+    "volume": 0.5,
+    "vibrationEnabled": false
+  },
+  "experiments": [
+    {
+      "key": "paywall_copy",
+      "variants": [
+        { "key": "control", "rolloutPercent": 50 },
+        { "key": "drill_sergeant", "rolloutPercent": 50 }
+      ]
+    }
+  ]
+}

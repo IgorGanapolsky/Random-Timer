@@ -15,7 +15,7 @@ final class TimerConfigTests: XCTestCase {
     func testConfigInitEnforcesPreconditions() {
         // minSeconds cannot be negative
         // XCTest expect crash is hard, so we just check it doesn't throw if we use valid values
-        let _ = TimerConfig(minSeconds: 0, maxSeconds: 10)
+        _ = TimerConfig(minSeconds: 0, maxSeconds: 10)
     }
 
     func testConfigClampingForFreeUser() {
@@ -37,7 +37,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigDecodingSupportsLegacyKeysAndLooseSoundNames() throws {
-        let payload = """
+        let payload = Data("""
         {
           "min_time": -5,
           "max_time": 9000,
@@ -48,7 +48,7 @@ final class TimerConfigTests: XCTestCase {
           "soundVolume": "1.5",
           "vibration": "yes"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
 
@@ -262,13 +262,19 @@ final class TimerManagerSilenceTests: XCTestCase {
 
 // MARK: - Mocks
 
-final class MockStorageService: TimerStorage {
-    func saveConfig(_ config: TimerConfig) async {}
-    func loadConfig() async -> TimerConfig? { return nil }
+final class MockStorageService: @unchecked Sendable, TimerStorage {
+    var storedConfig: TimerConfig?
+
+    init(initialConfig: TimerConfig? = nil) {
+        self.storedConfig = initialConfig
+    }
+
+    func saveConfig(_ config: TimerConfig) async { storedConfig = config }
+    func loadConfig() async -> TimerConfig? { return storedConfig }
     func saveTimerState(_ state: TimerState) async {}
     func loadTimerState() async -> TimerState? { return nil }
     func clearTimerState() async {}
-    nonisolated func loadConfigSync() -> TimerConfig? { return nil }
+    nonisolated func loadConfigSync() -> TimerConfig? { return storedConfig }
     nonisolated func loadTimerStateSync() -> TimerState? { return nil }
     nonisolated func clearTimerStateSync() {}
 }
@@ -360,6 +366,56 @@ final class TimerManagerTests: XCTestCase {
     }
 
     @MainActor
+    func testApplyRemoteDefaultsPersistsWhenNoStoredConfigExists() async {
+        let storage = MockStorageService()
+        let manager = TimerManager(
+            storageService: storage,
+            notificationService: MockNotificationService(),
+            liveActivityService: MockLiveActivityService()
+        )
+
+        let remoteConfig = TimerConfig(minSeconds: 0, maxSeconds: 300, alarmDuration: 15)
+        await manager.applyRemoteDefaultsIfNeeded(remoteConfig)
+
+        XCTAssertEqual(manager.config, remoteConfig)
+        XCTAssertEqual(storage.storedConfig, remoteConfig)
+    }
+
+    @MainActor
+    func testApplyRemoteDefaultsDoesNotOverrideStoredConfig() async {
+        let stored = TimerConfig(minSeconds: 12, maxSeconds: 42)
+        let storage = MockStorageService(initialConfig: stored)
+        let manager = TimerManager(
+            storageService: storage,
+            notificationService: MockNotificationService(),
+            liveActivityService: MockLiveActivityService()
+        )
+
+        await manager.applyRemoteDefaultsIfNeeded(TimerConfig(minSeconds: 0, maxSeconds: 300))
+
+        XCTAssertEqual(manager.config, stored)
+        XCTAssertEqual(storage.storedConfig, stored)
+    }
+
+    @MainActor
+    func testApplyRemoteDefaultsDoesNotOverrideUserMutation() async {
+        let storage = MockStorageService()
+        let manager = TimerManager(
+            storageService: storage,
+            notificationService: MockNotificationService(),
+            liveActivityService: MockLiveActivityService()
+        )
+        let userConfig = TimerConfig(minSeconds: 5, maxSeconds: 25)
+        manager.updateConfig(userConfig)
+        await Task.yield()
+
+        await manager.applyRemoteDefaultsIfNeeded(TimerConfig(minSeconds: 0, maxSeconds: 300))
+
+        XCTAssertEqual(manager.config, userConfig)
+        XCTAssertEqual(storage.storedConfig, userConfig)
+    }
+
+    @MainActor
     func testResetTimerRerollsDurationWithinConfiguredRange() async {
         let manager = TimerManager(
             storageService: MockStorageService(),
@@ -447,7 +503,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testStateDecodingSupportsLegacyKeysAndStatusNormalization() throws {
-        let payload = """
+        let payload = Data("""
         {
           "config": {},
           "target_duration": 120,
@@ -455,7 +511,7 @@ final class TimerStateTests: XCTestCase {
           "remaining_duration": 60,
           "timerStatus": "PAUSED"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(TimerState.self, from: payload)
 
@@ -463,6 +519,45 @@ final class TimerStateTests: XCTestCase {
         XCTAssertEqual(decoded.startedAt.timeIntervalSince1970, 1600000000)
         XCTAssertEqual(decoded.remainingDuration, 60)
         XCTAssertEqual(decoded.status, .paused)
+    }
+}
+
+final class RuntimeConfigurationServiceTests: XCTestCase {
+    func testRuntimePayloadDecodesAndAssignsDeterministically() throws {
+        let data = Data("""
+        {
+          "configVersion": "2026-03-16",
+          "defaultTimerConfig": {
+            "minSeconds": 0,
+            "maxSeconds": 300,
+            "alarmDuration": 15,
+            "hiddenMode": false,
+            "repeatEnabled": false,
+            "soundType": "gentle",
+            "volume": 0.7,
+            "vibrationEnabled": true
+          },
+          "experiments": [
+            {
+              "key": "paywall_copy",
+              "variants": [
+                { "key": "control", "rolloutPercent": 50 },
+                { "key": "drill_sergeant", "rolloutPercent": 50 }
+              ]
+            }
+          ]
+        }
+        """.utf8)
+
+        let payload = try JSONDecoder().decode(RuntimeConfigurationPayload.self, from: data)
+        let first = payload.toSnapshot(distinctId: "device-123")
+        let second = payload.toSnapshot(distinctId: "device-123")
+
+        XCTAssertEqual(payload.defaultTimerConfig.maxSeconds, 300)
+        XCTAssertEqual(payload.defaultTimerConfig.alarmDuration, 15)
+        XCTAssertTrue(payload.defaultTimerConfig.vibrationEnabled)
+        XCTAssertEqual(first, second)
+        XCTAssertNotNil(first.experiments["paywall_copy"])
     }
 }
 

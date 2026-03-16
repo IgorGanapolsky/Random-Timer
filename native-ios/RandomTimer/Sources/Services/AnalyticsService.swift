@@ -22,6 +22,8 @@ final class AnalyticsService {
     private let hasTrackedApplicationInstalledKey = "has_tracked_application_installed"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
+    private var runtimeContextProperties: [String: Any] = [:]
+    private var currentDistinctIdValue: String?
 
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
@@ -82,8 +84,16 @@ final class AnalyticsService {
     }
 
     private func mergedProperties(_ properties: [String: Any]?) -> [String: Any] {
-        guard var props = properties else { return analyticsContextProperties }
+        guard var props = properties else {
+            return analyticsContextProperties.merging(
+                runtimeContextProperties,
+                uniquingKeysWith: { _, latest in latest }
+            )
+        }
         for (key, value) in analyticsContextProperties {
+            props[key] = value
+        }
+        for (key, value) in runtimeContextProperties {
             props[key] = value
         }
         return props
@@ -105,6 +115,7 @@ final class AnalyticsService {
 #endif
         initialized = true
         let distinctId = getOrCreateDistinctId()
+        currentDistinctIdValue = distinctId
         identify(userId: distinctId, properties: analyticsContextProperties)
         trackApplicationLifecycleEvents()
         logger.info("PostHog initialized")
@@ -150,6 +161,16 @@ final class AnalyticsService {
 #if canImport(PostHog)
         PostHogSDK.shared.flush()
 #endif
+    }
+
+    func currentDistinctId() -> String? {
+        currentDistinctIdValue
+    }
+
+    func updateRuntimeContext(_ properties: [String: Any]) {
+        runtimeContextProperties = properties
+        guard let distinctId = currentDistinctIdValue else { return }
+        identify(userId: distinctId)
     }
 
     // MARK: - UTM Attribution
@@ -205,12 +226,15 @@ final class AnalyticsService {
                 return
             }
 
-            var request = URLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
+            guard let attributionURL = URL(string: "https://api-adservices.apple.com/api/v1/") else {
+                return
+            }
+            var request = URLRequest(url: attributionURL)
             request.httpMethod = "POST"
             request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
             request.httpBody = Data(token.utf8)
 
-            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
                 guard let data = data, error == nil else {
                     self?.logger.error("Apple Ads attribution request failed: \(error?.localizedDescription ?? "unknown")")
                     return
@@ -369,6 +393,8 @@ enum AnalyticsProperties {
     static let buildAudience = "build_audience"
     static let buildType = "build_type"
     static let runtimeTarget = "runtime_target"
+    static let runtimeConfigSource = "runtime_config_source"
+    static let runtimeConfigVersion = "runtime_config_version"
 }
 
 enum AnalyticsValues {

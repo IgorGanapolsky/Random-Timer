@@ -8,6 +8,8 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.runtime.RuntimeConfigurationPayload
+import com.iganapolsky.randomtimer.runtime.RuntimeConfigurationService
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +52,55 @@ class TimerRepositoryImplTest {
         }
 
     @Test
+    fun getTimerConfig_uses_runtime_defaults_when_preferences_are_empty() =
+        runTest {
+            val runtimeConfigurationService = RuntimeConfigurationService()
+            runtimeConfigurationService.applyPayloadForTesting(
+                payload =
+                    RuntimeConfigurationPayload(
+                        configVersion = "2026-03-16",
+                        defaultTimerConfig =
+                            TimerConfig.DEFAULT.copy(
+                                minSeconds = 0,
+                                maxSeconds = 300,
+                                alarmDuration = 15,
+                            ),
+                        experiments = emptyList(),
+                    ),
+                distinctId = "device-1",
+            )
+
+            val repo = createRepository(this, runtimeConfigurationService = runtimeConfigurationService)
+            val config = repo.getTimerConfig().first()
+
+            assertThat(config.minSeconds).isEqualTo(0)
+            assertThat(config.maxSeconds).isEqualTo(300)
+            assertThat(config.alarmDuration).isEqualTo(15)
+        }
+
+    @Test
+    fun getTimerConfig_prefers_saved_config_over_runtime_defaults() =
+        runTest {
+            val runtimeConfigurationService = RuntimeConfigurationService()
+            runtimeConfigurationService.applyPayloadForTesting(
+                payload =
+                    RuntimeConfigurationPayload(
+                        configVersion = "2026-03-16",
+                        defaultTimerConfig = TimerConfig.DEFAULT.copy(maxSeconds = 300),
+                        experiments = emptyList(),
+                    ),
+                distinctId = "device-1",
+            )
+
+            val repo = createRepository(this, runtimeConfigurationService = runtimeConfigurationService)
+            val savedConfig = TimerConfig.DEFAULT.copy(minSeconds = 12, maxSeconds = 42)
+            repo.saveTimerConfig(savedConfig)
+
+            val config = repo.getTimerConfig().first()
+            assertThat(config).isEqualTo(savedConfig)
+        }
+
+    @Test
     fun getActiveTimer_returns_null_when_active_timer_is_not_stored() =
         runTest {
             val repo = createRepository(this)
@@ -75,7 +126,10 @@ class TimerRepositoryImplTest {
             assertThat(restored).isEqualTo(state)
         }
 
-    private fun createRepository(testScope: TestScope): TimerRepositoryImpl {
+    private fun createRepository(
+        testScope: TestScope,
+        runtimeConfigurationService: RuntimeConfigurationService = RuntimeConfigurationService(),
+    ): TimerRepositoryImpl {
         val dataStore =
             PreferenceDataStoreFactory.create(
                 scope = testScope.backgroundScope,
@@ -99,6 +153,6 @@ class TimerRepositoryImplTest {
             if (level.isPro) SoundType.entries.toList() else SoundType.FREE
         }
 
-        return TimerRepositoryImpl(dataStore, proManager)
+        return TimerRepositoryImpl(dataStore, proManager, runtimeConfigurationService)
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct RandomTimerApp: App {
     @StateObject private var timerManager = TimerManager()
+    @State private var runtimeConfigurationService = RuntimeConfigurationService()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -11,12 +12,18 @@ struct RandomTimerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(timerManager: timerManager)
                 .environmentObject(timerManager)
                 .environmentObject(ProManager.shared)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     AnalyticsService.shared.trackDeepLink(url)
+                }
+                .task {
+                    AnalyticsService.shared.updateRuntimeContext(runtimeConfigurationService.snapshot.analyticsProperties)
+                    await runtimeConfigurationService.refreshIfNeeded(distinctId: AnalyticsService.shared.currentDistinctId())
+                    AnalyticsService.shared.updateRuntimeContext(runtimeConfigurationService.snapshot.analyticsProperties)
+                    await timerManager.applyRemoteDefaultsIfNeeded(runtimeConfigurationService.snapshot.defaultConfig)
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -39,7 +46,7 @@ struct ContentView: View {
         case activeTimer
     }
 
-    @EnvironmentObject var timerManager: TimerManager
+    @ObservedObject var timerManager: TimerManager
     @State private var didApplyUITestSeed: Bool = false
     @State private var navigationPath: [Route] = []
     @State private var hadActiveTimer = false
@@ -64,7 +71,7 @@ struct ContentView: View {
             Task {
                 // Short delay to ensure environment is fully ready
                 try? await Task.sleep(for: .seconds(0.5))
-                
+
                 let args = ProcessInfo.processInfo.arguments
                 guard let index = args.firstIndex(of: "-ui-test-state"),
                       args.indices.contains(index + 1) else { return }
@@ -151,7 +158,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(timerManager: TimerManager())
         .environmentObject(TimerManager())
         .environmentObject(ProManager.shared)
 }

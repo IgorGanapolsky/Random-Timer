@@ -52,6 +52,8 @@ android {
 
         // PostHog Analytics - from gradle.properties or CI secret
         buildConfigField("String", "POSTHOG_API_KEY", "\"${System.getenv("POSTHOG_API_KEY") ?: project.findProperty("POSTHOG_API_KEY") ?: ""}\"")
+        buildConfigField("String", "INSFORGE_API_BASE_URL", "\"${System.getenv("INSFORGE_API_BASE_URL") ?: project.findProperty("INSFORGE_API_BASE_URL") ?: ""}\"")
+        buildConfigField("String", "INSFORGE_API_KEY", "\"${System.getenv("INSFORGE_API_KEY") ?: project.findProperty("INSFORGE_API_KEY") ?: ""}\"")
     }
 
     signingConfigs {
