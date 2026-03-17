@@ -191,7 +191,13 @@ class TimerViewModel
         }
 
         fun updateLoopSetting(enabled: Boolean) {
-            val updatedConfig = config.value.copy(repeatEnabled = enabled)
+            val current = config.value
+            val updatedConfig = current.copy(
+                repeatEnabled = enabled,
+                useExtendedRange = current.useExtendedRange,
+                voiceEnabled = current.voiceEnabled,
+                repeatRounds = current.repeatRounds
+            )
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(

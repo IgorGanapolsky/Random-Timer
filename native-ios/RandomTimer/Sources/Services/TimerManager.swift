@@ -103,7 +103,7 @@ final class TimerManager: ObservableObject {
         }
     }
 
-    func startTimer() async {
+    func startTimer(roundCount: Int = 1) async {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
@@ -121,7 +121,8 @@ final class TimerManager: ObservableObject {
 
         let state = TimerState(
             config: config,
-            targetDuration: randomDuration
+            targetDuration: randomDuration,
+            roundCount: roundCount
         )
 
         timerState = state
@@ -202,10 +203,11 @@ final class TimerManager: ObservableObject {
     }
 
     func restartTimer() async {
+        let currentRound = timerState?.roundCount ?? 1
         // Restart with a NEW random duration (used after alarm completes with loop)
         notificationService.stopAlarmSound()
         await cancelTimer()
-        await startTimer()
+        await startTimer(roundCount: currentRound + 1)
     }
 
     /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
@@ -264,7 +266,14 @@ final class TimerManager: ObservableObject {
                     isAlarmSilenced = true
 
                     if state.config.repeatEnabled {
-                        await restartTimer()
+                        let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                        if shouldContinue {
+                            await restartTimer()
+                        } else {
+                            state.status = .complete
+                            state.alarmTimeRemaining = 0
+                            timerState = state
+                        }
                     } else {
                         state.status = .complete
                         state.alarmTimeRemaining = 0
@@ -627,7 +636,14 @@ final class TimerManager: ObservableObject {
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {
-                await restartTimer()
+                let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                if shouldContinue {
+                    await restartTimer()
+                } else {
+                    AnalyticsService.shared.track("loop_limit_reached", properties: [
+                        "rounds": state.roundCount
+                    ])
+                }
             }
         } else {
             timerState = state

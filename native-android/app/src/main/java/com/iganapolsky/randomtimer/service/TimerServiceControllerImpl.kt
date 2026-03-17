@@ -36,6 +36,10 @@ class TimerServiceControllerImpl @Inject constructor(
             putExtra(TimerForegroundService.EXTRA_SOUND_TYPE, state.config.soundType.name)
             putExtra(TimerForegroundService.EXTRA_VOLUME, state.config.volume)
             putExtra(TimerForegroundService.EXTRA_VIBRATION_ENABLED, state.config.vibrationEnabled)
+            putExtra(TimerForegroundService.EXTRA_USE_EXTENDED_RANGE, state.config.useExtendedRange)
+            putExtra(TimerForegroundService.EXTRA_VOICE_ENABLED, state.config.voiceEnabled)
+            putExtra(TimerForegroundService.EXTRA_REPEAT_ROUNDS, state.config.repeatRounds)
+            putExtra(TimerForegroundService.EXTRA_ROUND_COUNT, state.roundCount)
         }
         // Timer starts from the foreground UI, so a regular service start avoids forcing
         // an immediate foreground notification while the app is visible.

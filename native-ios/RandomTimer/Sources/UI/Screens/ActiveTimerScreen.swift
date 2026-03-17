@@ -232,17 +232,21 @@ struct ActiveTimerScreen: View {
     }
 
     private func updateLoopConfig() {
-        var config = timerManager.config
-        config = TimerConfig(
-            minSeconds: config.minSeconds,
-            maxSeconds: config.maxSeconds,
-            alarmDuration: config.alarmDuration,
-            hiddenMode: config.hiddenMode,
+        let current = timerManager.config
+        let newConfig = TimerConfig(
+            minSeconds: current.minSeconds,
+            maxSeconds: current.maxSeconds,
+            alarmDuration: current.alarmDuration,
+            hiddenMode: current.hiddenMode,
             repeatEnabled: loopEnabled,
-            soundType: config.soundType,
-            volume: config.volume
+            soundType: current.soundType,
+            volume: current.volume,
+            vibrationEnabled: current.vibrationEnabled,
+            useExtendedRange: current.useExtendedRange,
+            voiceEnabled: current.voiceEnabled,
+            repeatRounds: current.repeatRounds
         )
-        timerManager.updateConfig(config)
+        timerManager.updateConfig(newConfig)
     }
 
     @ViewBuilder

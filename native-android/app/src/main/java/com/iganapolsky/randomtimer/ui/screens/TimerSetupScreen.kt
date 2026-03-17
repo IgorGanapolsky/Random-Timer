@@ -34,6 +34,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -139,6 +145,9 @@ fun TimerSetupScreen(
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
+        useExtendedRange: Boolean = config.useExtendedRange,
+        voiceEnabled: Boolean = config.voiceEnabled,
+        repeatRounds: Int = config.repeatRounds,
     ) {
         onConfigChange(
             config.copy(
@@ -150,6 +159,9 @@ fun TimerSetupScreen(
                 soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                useExtendedRange = useExtendedRange,
+                voiceEnabled = voiceEnabled,
+                repeatRounds = repeatRounds,
             ),
         )
     }
@@ -383,11 +395,14 @@ fun TimerSetupScreen(
                                     }
 
                                     if (isElite) {
-                                        Text(
-                                            text = "ENABLED",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
+                                        Switch(
+                                            checked = config.voiceEnabled,
+                                            onCheckedChange = { updateConfig(voiceEnabled = it) },
+                                            colors =
+                                                SwitchDefaults.colors(
+                                                    checkedThumbColor = TimerColors.AccentPrimary,
+                                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                ),
                                         )
                                     } else {
                                         Surface(
@@ -486,6 +501,116 @@ fun TimerSetupScreen(
                                             uncheckedTrackColor = TimerColors.SliderTrack,
                                         ),
                                 )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(spacing.listItem))
+
+                    // 3. Loop & Rounds (Pro)
+                    GlassCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                LabelWithIcon(
+                                    text = "Repeat Loop",
+                                    icon = androidx.compose.material.icons.Icons.Filled.Refresh,
+                                    color = TimerColors.TextPrimary,
+                                )
+
+                                Switch(
+                                    checked = config.repeatEnabled,
+                                    onCheckedChange = { updateConfig(repeatEnabled = it) },
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = TimerColors.AccentPrimary,
+                                            checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                        ),
+                                )
+                            }
+
+                            if (config.repeatEnabled) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Round Selection",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        )
+                                        Text(
+                                            text = if (config.repeatRounds == 0) "Infinite Rounds" else "${config.repeatRounds} Rounds",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    }
+
+                                    if (isPro) {
+                                            IconButton(
+                                                onClick = {
+                                                    if (config.repeatRounds > 0) {
+                                                        updateConfig(repeatRounds = config.repeatRounds - 1)
+                                                    }
+                                                },
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Remove,
+                                                    contentDescription = "Decrease Rounds",
+                                                    tint = TimerColors.TextPrimary,
+                                                )
+                                            }
+                                            Text(
+                                                text = config.repeatRounds.toString(),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = TimerColors.TextPrimary,
+                                                modifier = Modifier.padding(horizontal = 8.dp),
+                                            )
+                                            IconButton(
+                                                onClick = {
+                                                    if (config.repeatRounds < 100) {
+                                                        updateConfig(repeatRounds = config.repeatRounds + 1)
+                                                    }
+                                                },
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Add,
+                                                    contentDescription = "Increase Rounds",
+                                                    tint = TimerColors.TextPrimary,
+                                                )
+                                            }
+                                    } else {
+                                        Surface(
+                                            onClick = onUpgradeTap,
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "PRO ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                                Text(
+                                                    text = "\uD83D\uDD12",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1000,6 +1125,29 @@ private fun VolumeSlider(
                 height = 32.dp,
             )
         }
+    }
+}
+
+@Composable
+private fun LabelWithIcon(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: androidx.compose.ui.graphics.Color = TimerColors.TextPrimary,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+        )
     }
 }
 

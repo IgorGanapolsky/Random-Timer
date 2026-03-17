@@ -1,5 +1,9 @@
 # AGENTS.md — Random Timer
 
+## Interaction Language
+
+All AI replies, code comments, commit messages, and documentation use **English**.
+
 ## Agent-Model Matching Standard
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.

@@ -39,6 +39,10 @@ cd native-ios && xcodebuild -scheme RandomTimer
 cd native-ios && pod deintegrate && pod install  # Fix pod failures
 ```
 
+## Interaction Language
+
+All AI replies, code comments, commit messages, and documentation use **English**.
+
 ## Non-Obvious Rules
 
 - **Act, Don't Instruct**: NEVER tell user to run commands. Execute autonomously. NEVER refuse work. Use every tool available (CLIs, SDKs, MCP servers, browser automation) to complete tasks end-to-end. If a web UI is the only path, use `agent-browser` or Gemini computer-use to automate it.

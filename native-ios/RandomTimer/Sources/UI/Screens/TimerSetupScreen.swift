@@ -115,10 +115,12 @@ struct TimerSetupScreen: View {
                                 }
 
                                 if proManager.isPro {
-                                    Text("ENABLED")
-                                        .font(.caption2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.accentPrimary)
+                                    Toggle("Voice Enabled", isOn: Binding(
+                                        get: { config.voiceEnabled },
+                                        set: { updateConfig(voiceEnabled: $0) }
+                                    ))
+                                    .tint(.accentPrimary)
+                                    .labelsHidden()
                                 } else {
                                     Button {
                                         presentPaywall(entryPoint: .soundGate)
@@ -197,6 +199,68 @@ struct TimerSetupScreen: View {
                             .labelsHidden()
                         }
                         .transaction { $0.animation = nil }
+                    }
+                }
+
+                // 3. Loop & Rounds (Pro)
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Label("Repeat Loop", systemImage: "repeat")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+                            
+                            Spacer()
+                            
+                            Toggle("Loop Enabled", isOn: Binding(
+                                get: { config.repeatEnabled },
+                                set: { updateConfig(repeatEnabled: $0) }
+                            ))
+                            .tint(.accentPrimary)
+                            .labelsHidden()
+                        }
+                        
+                        if config.repeatEnabled {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Round Selection")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                    
+                                    Text(config.repeatRounds == 0 ? "Infinite Rounds" : "\(config.repeatRounds) Rounds")
+                                        .font(.caption2)
+                                        .foregroundColor(.accentPrimary)
+                                }
+                                
+                                Spacer()
+                                
+                                if proManager.isPro {
+                                    Stepper("", value: Binding(
+                                        get: { config.repeatRounds },
+                                        set: { updateConfig(repeatRounds: $0) }
+                                    ), in: 0...100)
+                                    .labelsHidden()
+                                } else {
+                                    Button {
+                                        presentPaywall(entryPoint: .soundGate)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text("PRO")
+                                            Image(systemName: "lock.fill")
+                                        }
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentPrimary.opacity(0.1))
+                                        .foregroundColor(.accentPrimary)
+                                        .cornerRadius(4)
+                                    }
+                                }
+                            }
+                            .padding(.top, 8)
+                        }
                     }
                 }
 
@@ -339,7 +403,10 @@ struct TimerSetupScreen: View {
         alarmDuration: Int? = nil,
         soundType: SoundType? = nil,
         volume: Float? = nil,
-        vibrationEnabled: Bool? = nil
+        vibrationEnabled: Bool? = nil,
+        useExtendedRange: Bool? = nil,
+        voiceEnabled: Bool? = nil,
+        repeatRounds: Int? = nil
     ) {
         let newConfig = TimerConfig(
             minSeconds: minSeconds ?? config.minSeconds,
@@ -349,7 +416,10 @@ struct TimerSetupScreen: View {
             repeatEnabled: config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
-            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
+            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
+            useExtendedRange: useExtendedRange ?? config.useExtendedRange,
+            voiceEnabled: voiceEnabled ?? config.voiceEnabled,
+            repeatRounds: repeatRounds ?? config.repeatRounds
         )
         timerManager.updateConfig(newConfig)
     }
