@@ -73,6 +73,8 @@ final class TimerConfigProClampingTests: XCTestCase {
 
         XCTAssertEqual(clamped.maxSeconds, 3600,
                        "Active Pro user must retain maxSeconds = 3600")
+        XCTAssertTrue(clamped.useExtendedRange,
+                      "Active Pro user should normalize legacy extended-range configs")
     }
 
     func testActiveProUser_proSoundType_isRetained() {
