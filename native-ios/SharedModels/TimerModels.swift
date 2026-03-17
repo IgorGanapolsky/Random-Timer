@@ -257,9 +257,10 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
     /// Call this at deserialization time to enforce feature gating after subscription expiry.
     public func clamped(isPro: Bool) -> TimerConfig {
-        let maxAllowed = isPro ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
+        // Respect useExtendedRange toggle for Pro users. If they opted for 5m mode (false), clamp to 5m.
+        let maxAllowed = (isPro && useExtendedRange) ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
         let clampedMax = min(maxSeconds, maxAllowed)
-        let clampedMin = min(minSeconds, clampedMax)
+        let clampedMin = min(minSeconds, Swift.max(0, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds))
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
         let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
         return TimerConfig(
@@ -270,7 +271,9 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatEnabled: repeatEnabled,
             soundType: clampedSound,
             volume: volume,
-            vibrationEnabled: vibrationEnabled
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: isPro ? useExtendedRange : false,
+            voiceEnabled: voiceEnabled
         )
     }
 }

@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -35,15 +36,21 @@ class TimerRepositoryImpl
          */
         private fun TimerConfig.clampedForPro(): TimerConfig {
             val level = proManager.entitlementLevel.value
-            val maxAllowed = proManager.maxSecondsLimit(level)
+            val isPro = level.isPro
+            val maxAllowed = if (isPro && useExtendedRange) {
+                TimerConfig.MAX_SECONDS_PRO
+            } else {
+                TimerConfig.MAX_SECONDS_FREE
+            }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
-            val clampedMin = minSeconds.coerceAtMost(clampedMax)
+            val clampedMin = minSeconds.coerceAtMost((clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS).coerceAtLeast(0))
             val clampedSound = if (soundType in allowedSounds) soundType else SoundType.INTENSE
             return copy(
                 minSeconds = clampedMin,
                 maxSeconds = clampedMax,
                 soundType = clampedSound,
+                useExtendedRange = if (isPro) useExtendedRange else false
             )
         }
 
