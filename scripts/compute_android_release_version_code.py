@@ -5,10 +5,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
+
+try:
+    from scripts.source_versions import VersionParseError, extract_android_version_code
+except ModuleNotFoundError:
+    from source_versions import VersionParseError, extract_android_version_code
 
 
 ANDROID_PACKAGE_DEFAULT = "com.iganapolsky.randomtimer"
@@ -16,11 +20,10 @@ DEFAULT_TRACKS = ("production", "beta", "alpha", "internal")
 
 
 def _read_gradle_version_code(gradle_file: Path) -> int:
-    content = gradle_file.read_text(encoding="utf-8")
-    match = re.search(r"versionCode\s*=\s*(\d+)", content)
-    if not match:
-        raise ValueError(f"Unable to find versionCode in {gradle_file}")
-    return int(match.group(1))
+    try:
+        return extract_android_version_code(gradle_file.read_text(encoding="utf-8"))
+    except VersionParseError as exc:
+        raise ValueError(f"Unable to find versionCode in {gradle_file}") from exc
 
 
 def _load_play_service(service_account_json: Path):
