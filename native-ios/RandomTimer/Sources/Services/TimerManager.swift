@@ -96,7 +96,7 @@ final class TimerManager: ObservableObject {
             "max_duration": newConfig.maxDuration,
             "sound_type": String(describing: newConfig.soundType),
             "repeat_enabled": newConfig.repeatEnabled,
-            "voice_callouts_enabled": newConfig.voiceCalloutsEnabled,
+            "voice_callouts_enabled": newConfig.voiceEnabled,
         ])
 
         Task {

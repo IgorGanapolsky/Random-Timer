@@ -95,10 +95,10 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(decoded.soundType, .drumRoll)
         XCTAssertEqual(decoded.volume, 1.0, accuracy: 0.0001)
         XCTAssertTrue(decoded.vibrationEnabled)
-        XCTAssertFalse(decoded.voiceCalloutsEnabled)
+        XCTAssertTrue(decoded.voiceEnabled)
     }
 
-    func testConfigEncodingRoundTripsVoiceCalloutsFlag() throws {
+    func testConfigEncodingRoundTripsVoiceFlag() throws {
         let config = TimerConfig(
             minSeconds: 15,
             maxSeconds: 45,
@@ -108,7 +108,7 @@ final class TimerConfigTests: XCTestCase {
             soundType: .gentle,
             volume: 0.7,
             vibrationEnabled: true,
-            voiceCalloutsEnabled: true
+            voiceEnabled: true
         )
 
         let encoded = try JSONEncoder().encode(config)
