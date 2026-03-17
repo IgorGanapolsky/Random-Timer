@@ -734,6 +734,52 @@ def markdown_to_html(markdown_text: str) -> str:
     return "\n".join(rendered)
 
 
+def build_privacy_policy_page(
+    output_root: Path,
+    site_root: Path,
+    public_base_url: str,
+    analytics_block: str,
+) -> str:
+    """Build privacy policy HTML from PRIVACY_POLICY.md; create canonical and legacy paths. Returns URL or empty string."""
+    for candidate in (output_root.parent / "PRIVACY_POLICY.md", output_root / "PRIVACY_POLICY.md"):
+        if candidate.is_file():
+            break
+    else:
+        return ""
+
+    raw = candidate.read_text(encoding="utf-8")
+    body_html = markdown_to_html(raw)
+    canonical_dir = site_root / "privacy-policy"
+    legacy_dir = site_root / "PRIVACY_POLICY"
+    canonical_dir.mkdir(parents=True, exist_ok=True)
+    legacy_dir.mkdir(parents=True, exist_ok=True)
+
+    page_html = textwrap.dedent(
+        f"""
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Privacy Policy | Random Tactical Timer</title>
+          <link rel="canonical" href="{html.escape(public_base_url)}{CANONICAL_PRIVACY_POLICY_SEGMENT}" />
+          <link rel="stylesheet" href="../styles.css" />
+          {analytics_block}
+        </head>
+        <body>
+          <main class="container">
+            {body_html}
+          </main>
+        </body>
+        </html>
+        """
+    ).strip()
+
+    (canonical_dir / "index.html").write_text(page_html + "\n", encoding="utf-8")
+    (legacy_dir / "index.html").write_text(page_html + "\n", encoding="utf-8")
+    return f"{public_base_url.rstrip('/')}{CANONICAL_PRIVACY_POLICY_SEGMENT}"
+
+
 def build_site(output_root: Path) -> Dict[str, Any]:
     site_root = output_root / "site"
     posts_src = output_root / "posts"
@@ -961,6 +1007,9 @@ def build_site(output_root: Path) -> Dict[str, Any]:
 
     sitemap = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
     sitemap.append(f"  <url><loc>{base_url}/index.html</loc></url>")
+    if privacy_policy_url:
+        sitemap.append(f"  <url><loc>{privacy_policy_url}</loc></url>")
+        sitemap.append(f"  <url><loc>{base_url}{LEGACY_PRIVACY_POLICY_SEGMENT}</loc></url>")
     for post in posts_data:
         sitemap.append(f"  <url><loc>{base_url}/{post['url']}</loc></url>")
         sitemap.append(f"  <url><loc>{base_url}/{post['markdown_url']}</loc></url>")
@@ -990,6 +1039,8 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "",
         "Posts:",
     ]
+    if privacy_policy_url:
+        llms_lines.insert(-1, f"- {privacy_policy_url}")
     for post in posts_data[:100]:
         llms_lines.append(f"- {post['title']}: {base_url}/{post['markdown_url']}")
     (site_root / "llms.txt").write_text("\n".join(llms_lines) + "\n", encoding="utf-8")

@@ -2,7 +2,21 @@ import unittest
 from unittest.mock import call
 from unittest.mock import Mock
 
-from scripts.play_publish import _is_failed_precondition, _release_payload
+from scripts.play_publish import (
+    _commit_edit,
+    _is_failed_precondition,
+    _release_payload,
+    _requires_manual_review_submission,
+)
+
+
+class _FakeHttpError(Exception):
+    """Minimal HttpError stand-in for tests."""
+
+    def __init__(self, status: int, content: str):
+        super().__init__(f"HttpError {status}: {content}")
+        self.resp = Mock(status=status)
+        self.content = content.encode("utf-8")
 
 
 class PlayPublishTests(unittest.TestCase):

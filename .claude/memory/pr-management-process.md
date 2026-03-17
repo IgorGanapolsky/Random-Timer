@@ -51,3 +51,8 @@ With evidence: branch count before/after, merged PR list, CI status, APK link.
 - Keep required checks deterministic: `Android Tests`, `iOS Build Check`, `Security`, `Seer Code Review`. Keep advisory bot checks non-required to prevent deadlocks.
 - GitHub Rulesets API accepted strict-check updates but rejected `merge_queue` rule for this repository configuration with HTTP 422. Record the exact response and continue with strict-check enforcement instead of blocking the whole rollout.
 - When release PR branch naming policy requires `release/vX.Y.Z`, close superseded non-compliant release PRs and open a compliant replacement branch/PR to avoid persistent policy failures.
+
+## 2026-03-17 Lessons
+
+- **develop divergence**: Local `develop` was ahead 16 / behind 7 vs `origin/develop`. Push rejected (non-fast-forward). Rebase hit conflicts. Do not force-push; resolve divergence via PR or manual conflict resolution first.
+- **No merge-ready PRs**: 20 open PRs; none have `mergeStateStatus: CLEAN`. Merge only when CI green + mergeable + no conflicts.

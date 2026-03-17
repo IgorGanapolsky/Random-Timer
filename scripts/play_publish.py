@@ -29,6 +29,10 @@ FAILED_PRECONDITION_MARKERS = (
     "failed_precondition",
     "precondition check failed",
 )
+MANUAL_REVIEW_REQUIRED_MARKERS = (
+    "changes cannot be sent for review automatically",
+    "changesnotsentforreview",
+)
 
 
 @dataclass
