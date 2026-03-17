@@ -177,6 +177,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         // Legacy / compatibility keys
         case minDuration
         case maxDuration
+        case min_seconds
+        case max_seconds
         case min_time
         case max_time
         case alarm_duration
@@ -210,11 +212,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: DecodingKeys.self)
 
         let rawMin = container.decodeFirstInt(
-            forKeys: [.minSeconds, .minDuration, .min_time],
+            forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
             defaultValue: 0
         )
         let rawMax = container.decodeFirstInt(
-            forKeys: [.maxSeconds, .maxDuration, .max_time],
+            forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
             defaultValue: 300
         )
         let rawAlarm = container.decodeFirstInt(

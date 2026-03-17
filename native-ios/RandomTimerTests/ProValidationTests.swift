@@ -66,7 +66,8 @@ final class TimerConfigProClampingTests: XCTestCase {
             repeatEnabled: false,
             soundType: .intense,
             volume: 0.5,
-            vibrationEnabled: false
+            vibrationEnabled: false,
+            useExtendedRange: true
         )
 
         let clamped = proConfig.clamped(isPro: true)
