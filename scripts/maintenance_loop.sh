@@ -18,18 +18,21 @@ rm -rf .claude/worktrees/*
 rm -rf native-android/app/build/
 rm -rf native-ios/build/
 
-# 2. Tech Debt Audit: Find Redundant Scripts
-echo "🔍 Auditing for redundancy..."
-# Example: If multiple playstore scripts exist, warn.
-PLAY_SCRIPTS=$(ls native-android/complete_*.py 2>/dev/null | wc -l)
-if [ "$PLAY_SCRIPTS" -gt 1 ]; then
-    echo "⚠️ WARNING: Multiple Play Store setup scripts found. Consolidating required."
-fi
+# 2. Tech Debt Audit: Consolidate Redundant Scripts
+echo "🔍 Consolidating redundant scripts..."
+PRIMARY_SCRIPT="native-android/fully_autonomous_setup.py"
+for script in native-android/auto_complete_forms.py native-android/autonomous_playstore_setup.py native-android/complete_all_declarations.py native-android/complete_playstore_declarations.py native-android/complete_playstore_setup.py native-android/playstore_upload_selenium.py; do
+    if [ -f "$script" ]; then
+        echo "🗑️ Deleting redundant script: $script"
+        rm "$script"
+    fi
+done
 
 # 3. Rule Enforcement: English Only
 echo "🇬🇧 Verifying language rules..."
-if grep -r "[[:space:]][\u4e00-\u9fa5]" . --exclude-dir=.git --exclude-dir=node_modules; then
-    echo "❌ ERROR: Non-English characters found in source. Please fix immediately."
+# Find any non-ASCII characters (robust cross-platform method)
+if LC_ALL=C grep -r "[^ -~]" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=logs; then
+    echo "❌ ERROR: Non-English/Non-ASCII characters found in source. Please fix immediately."
 else
     echo "✅ English-only check passed."
 fi

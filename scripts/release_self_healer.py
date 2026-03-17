@@ -49,11 +49,12 @@ def fix_preflight_regex():
         return
     
     content = script_path.read_text()
+    robust_regex = r'ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(?:[^\n]*?\?:\s*)?(\d+)")'
     if 'versionCode\\s*=\\s*(?:[^\\n]*?\\?:\\s*)?(\\d+)' not in content:
         # Re-apply the robust regex we discovered today
         new_content = re.sub(
             r'ANDROID_VERSION_CODE_RE = re.compile\(.*?\)',
-            'ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\\s*=\\s*(?:[^\\n]*?\\?:\\s*)?(\\d+)")',
+            robust_regex.replace('\\', '\\\\'), # Escape backslashes for re.sub
             content
         )
         script_path.write_text(new_content)

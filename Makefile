@@ -191,3 +191,7 @@ self-heal:
 # Internal distribution (Firebase + TestFlight)
 distribute:
 	@gh workflow run internal-distribution.yml --ref develop
+
+# iOS Logic Verification (Sub-target for maintenance)
+verify-ios-logic:
+	xcodebuild -project native-ios/RandomTimer.xcodeproj -scheme RandomTimer -destination "platform=iOS Simulator,name=iPhone 16 Pro Max" test -only-testing:RandomTimerTests/TimerConfigTests

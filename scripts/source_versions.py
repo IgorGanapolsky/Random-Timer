@@ -17,7 +17,7 @@ class VersionParseError(RuntimeError):
 
 
 ANDROID_VERSION_NAME_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
-ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(\d+)")
+ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(?:[^\n]*?\?:\s*)?(\d+)")")
 ANDROID_VERSION_CODE_FALLBACK_RE = re.compile(r"versionCode\s*=\s*[^\n]*?\?:\s*(\d+)")
 IOS_MARKETING_VERSION_RE = re.compile(r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;")
 IOS_BUILD_NUMBER_RE = re.compile(r"CURRENT_PROJECT_VERSION\s*=\s*(\d+)\s*;")
