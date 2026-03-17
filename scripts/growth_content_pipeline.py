@@ -52,6 +52,8 @@ DEFAULT_SITE_DESCRIPTION = (
 )
 LEGACY_MARKETING_SITE_SEGMENT = "/marketing/site"
 AB_PILOT_WINDOW_DAYS = 14
+CANONICAL_PRIVACY_POLICY_SEGMENT = "/privacy-policy/"
+LEGACY_PRIVACY_POLICY_SEGMENT = "/PRIVACY_POLICY/"
 
 
 @dataclass
@@ -231,6 +233,10 @@ def resolve_blog_base_url(output_root: Path) -> str:
     if output_root.name == "marketing":
         return f"{base}{LEGACY_MARKETING_SITE_SEGMENT}"
     return base
+
+
+def resolve_public_site_base_url(output_root: Path) -> str:
+    return resolve_blog_base_url(output_root).removesuffix(LEGACY_MARKETING_SITE_SEGMENT)
 
 
 def _safe_numeric_id(value: Any) -> Optional[str]:
@@ -744,6 +750,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
     clear_generated_files(diagrams_out, "*.svg")
     clear_generated_files(md_out, "*.md")
     base_url = resolve_blog_base_url(output_root)
+    public_base_url = resolve_public_site_base_url(output_root)
     shared_social_image = resolve_social_image_url(output_root, site_root, base_url)
 
     ga4_id = os.getenv("GA4_MEASUREMENT_ID", "").strip()
@@ -765,6 +772,8 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         )
     if plausible_domain:
         analytics_block += f'<script defer data-domain="{html.escape(plausible_domain)}" src="{html.escape(plausible_src)}"></script>\n'
+
+    privacy_policy_url = build_privacy_policy_page(output_root, site_root, public_base_url, analytics_block)
 
     posts_data: List[Dict[str, Any]] = []
     for md_path in sorted(posts_src.glob("*.md"), reverse=True):

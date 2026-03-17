@@ -90,8 +90,12 @@ def main():
         edits.delete(packageName=PACKAGE_NAME, editId=edit_id).execute()
         return
 
-    # Commit edit
-    edits.commit(packageName=PACKAGE_NAME, editId=edit_id).execute()
+    # Commit edit with changesNotSentForReview=true since we can't auto-send for review
+    edits.commit(
+        packageName=PACKAGE_NAME, 
+        editId=edit_id,
+        changesNotSentForReview=True
+    ).execute()
     print(f"Committed edit. Updated {len(updated)} languages: {', '.join(updated)}")
 
 

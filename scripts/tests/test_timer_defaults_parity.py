@@ -95,10 +95,16 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     android_service = ANDROID_FOREGROUND_SERVICE.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
+    ios_timer_manager = (ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift").read_text(encoding="utf-8")
+    android_config = ANDROID_CONFIG.read_text(encoding="utf-8")
+    ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "if (isPro) {" in android_setup
-    assert "proManager.entitlementLevel.value.isPro" in android_service
-    assert "if proManager.isPro {" in ios_setup
+    assert "voiceCalloutsEnabled" in android_config
+    assert "public let voiceCalloutsEnabled: Bool" in ios_models
+    assert "checked = config.voiceCalloutsEnabled" in android_setup
+    assert "config.voiceCalloutsEnabled" in ios_setup
+    assert "proManager.entitlementLevel.value.isPro && state.config.voiceCalloutsEnabled" in android_service
+    assert "ProManager.shared.isPro && state.config.voiceCalloutsEnabled" in ios_timer_manager
 
 
 def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
@@ -124,6 +130,20 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     ]:
         assert snippet in android_setup, f"Missing '{snippet}' in Android setup screen"
         assert snippet in ios_setup, f"Missing '{snippet}' in iOS setup screen"
+
+    assert "timed callouts during training" in android_setup.lower()
+    assert "timed callouts during training" in ios_setup.lower()
+
+
+def test_sound_arsenal_is_expanded_by_default_for_free_users():
+    android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
+    ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
+
+    assert "var showArsenal by remember { mutableStateOf(!isPro) }" in android_setup
+    assert "@State private var showArsenal = true" in ios_setup
+    assert "showArsenal = true" in android_setup
+    assert 'Text("Sound Arsenal")' in ios_setup
+    assert 'text = "Sound Arsenal"' in android_setup
 
 
 def test_voice_profile_configured_on_both_platforms():

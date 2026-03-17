@@ -52,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -135,7 +136,11 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(isPro) }
+    var showArsenal by remember { mutableStateOf(!isPro) }
+
+    LaunchedEffect(isPro) {
+        showArsenal = true
+    }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
@@ -629,7 +634,7 @@ fun TimerSetupScreen(
                     )
                 }
 
-                // Zone 2: Tactical Expansion (PRO)
+                // 3. Sound Arsenal
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(
@@ -638,22 +643,19 @@ fun TimerSetupScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (isPro) "TACTICAL EXPANSION (PRO) \uD83D\uDD13" else "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
+                            text = "Sound Arsenal",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                             modifier =
                                 Modifier.pointerInput(Unit) {
                                     detectTapGestures(
                                         onTap = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isPro) {
-                                                if (isCompactHeight) {
-                                                    showArsenalSheet = true
-                                                } else {
-                                                    showArsenal = !showArsenal
-                                                }
+                                            if (isCompactHeight) {
+                                                showArsenalSheet = true
                                             } else {
-                                                onUpgradeTap()
+                                                showArsenal = !showArsenal
                                             }
                                         },
                                         onPress = {
@@ -669,9 +671,11 @@ fun TimerSetupScreen(
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Sound Arsenal"
-                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
-                                else -> "View Sound Arsenal"
+                                isCompactHeight && isPro -> "Open Sound Arsenal"
+                                isCompactHeight -> "Preview Sounds"
+                                showArsenal -> "Hide Sound Arsenal"
+                                isPro -> "View Sound Arsenal"
+                                else -> "Preview Sounds"
                             }
                         Text(
                             text = actionLabel,
@@ -691,7 +695,7 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // Pro Sound Arsenal
+                // Sound Arsenal
                 item {
                     if (!isCompactHeight) {
                         AnimatedVisibility(

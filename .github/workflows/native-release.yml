@@ -337,10 +337,18 @@ jobs:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
 
+      - name: Upload Android version code proof (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-version-code
+          path: /tmp/android-version-code.json
+          if-no-files-found: ignore
+
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/release.keystore /tmp/play-service-account.json
+          rm -f /tmp/release.keystore /tmp/play-service-account.json /tmp/android-version-code.json
 
   verify-releases:
     needs: [ios-testflight, android-release]
@@ -361,13 +369,9 @@ jobs:
       - name: Extract version info
         id: versions
         run: |
-          # Android versionCode from build.gradle.kts
-          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' native-android/app/build.gradle.kts || echo "")
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-
-          # iOS version from project.pbxproj
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
-          echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          echo "version_code=$ANDROID_VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "ios_version=$IOS_VERSION_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Debug workflow inputs (no secrets)
         run: |
@@ -491,9 +495,10 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         id: versions
         run: |
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          IOS_VERSION="${IOS_VERSION_NAME:-}"
           if [ -z "$IOS_VERSION" ]; then
-            echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
+            echo "❌ Could not read iOS version from source metadata"
             exit 1
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
@@ -635,8 +640,9 @@ jobs:
       - name: Extract version from source
         id: version
         run: |
-          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
-          VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' native-android/app/build.gradle.kts | head -1)
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          VERSION_NAME="$ANDROID_VERSION_NAME"
+          VERSION_CODE="$ANDROID_VERSION_CODE"
           TAG="v${VERSION_NAME}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"

@@ -81,7 +81,7 @@ platform :ios do
         profile_name: widget_profile
       )
 
-      build_app(
+      build_opts = {
         scheme: "RandomTimer",
         export_method: "app-store",
         export_options: {
@@ -91,13 +91,16 @@ platform :ios do
             "com.igorganapolsky.randomtimer.widget" => widget_profile
           }
         }
-      )
+      }
+      build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+      build_app(**build_opts)
     else
       # Local/dev fallback when match is not configured.
+      posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
       build_app(
         scheme: "RandomTimer",
         export_method: "app-store",
-        xcargs: "-allowProvisioningUpdates"
+        xcargs: posthog_xcargs
       )
     end
 

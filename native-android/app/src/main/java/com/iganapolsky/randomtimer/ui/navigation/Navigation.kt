@@ -187,7 +187,7 @@ fun RandomTimerNavHost(
             elitePrice = elitePrice,
             onPurchase = { productID ->
                 scope.launch {
-                    activity?.let { viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint) }
+                    activity?.let { viewModel.proManager.launchProPurchase(it, paywallEntryPoint) }
                     showPaywall = false
                 }
             },

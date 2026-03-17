@@ -22,6 +22,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+try:
+    from scripts.source_versions import VersionParseError, read_source_versions
+except ModuleNotFoundError:
+    from source_versions import VersionParseError, read_source_versions
+
 IPHONE_LARGE_DIMENSIONS = {
     "1320x2868",
     "2868x1320",
@@ -99,15 +104,10 @@ def _safe_output_path(raw_path: str, repo_root: Path) -> Path:
 
 
 def detect_ios_version(repo_root: Path) -> str:
-    pbxproj = repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj"
-    if not pbxproj.is_file():
-        raise ContextError(f"Missing Xcode project file: {pbxproj}")
-
-    text = pbxproj.read_text(encoding="utf-8", errors="replace")
-    match = re.search(r"MARKETING_VERSION\s*=\s*([0-9]+(?:\.[0-9]+){1,2})\s*;", text)
-    if not match:
-        raise ContextError("Could not detect MARKETING_VERSION in project.pbxproj")
-    return match.group(1)
+    try:
+        return str(read_source_versions(repo_root)["ios"]["version_name"])
+    except VersionParseError as exc:
+        raise ContextError(str(exc)) from exc
 
 
 def _classify_dimension(size: str) -> str:

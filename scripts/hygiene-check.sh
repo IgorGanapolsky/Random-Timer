@@ -53,10 +53,10 @@ fi
 # ── 3. No secrets or temp paths ─────────────────────────────────────
 echo "3. No secrets or temp paths"
 
-secret_hits=$(git grep -l 'PRIVATE_KEY\|SECRET_KEY\|password.*=\|/private/tmp/' -- '*.md' '*.sh' '*.yml' '*.yaml' '*.json' '*.kt' '*.swift' 2>/dev/null | grep -v '.gitleaks.toml' | grep -v 'pre-push' | grep -v 'hygiene-check' || true)
+secret_hits=$(git grep -l 'PRIVATE_KEY\|SECRET_KEY\|password.*=\|/private/tmp/\|/tmp/' -- '*.md' '*.sh' '*.yml' '*.yaml' '*.json' '*.kt' '*.swift' 2>/dev/null | grep -v '.gitleaks.toml' | grep -v 'pre-push' | grep -v 'hygiene-check' || true)
 if [ -n "$secret_hits" ]; then
   while IFS= read -r hit; do
-    warn "Possible secret/temp path in: $hit"
+    warn "Possible secret or temp-path leak in: $hit"
   done <<< "$secret_hits"
 fi
 

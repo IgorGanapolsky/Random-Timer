@@ -1,6 +1,5 @@
 import Foundation
 import ActivityKit
-
 // MARK: - Sound Type
 
 public enum SoundType: String, Codable, Sendable, CaseIterable {
@@ -190,6 +189,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundVolume
         case vibration
         case vibration_enabled
+        case voice_callouts_enabled
     }
 
     private enum EncodingKeys: String, CodingKey {

@@ -81,16 +81,21 @@ if [[ ! -f "$GRADLE_FILE" ]]; then
   exit 1
 fi
 
-CURRENT_VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' "$GRADLE_FILE" | head -1)
-CURRENT_VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' "$GRADLE_FILE" | head -1)
-NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
-
 if [[ ! -f "$PBXPROJ" ]]; then
   echo -e "${RED}Error: $PBXPROJ not found${RESET}" >&2
   exit 1
 fi
 
-IOS_CURRENT_VERSION=$(grep -m1 'MARKETING_VERSION' "$PBXPROJ" | sed -n 's/.*= *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
+if ! VERSION_EXPORTS=$(python3 "$PROJECT_ROOT/scripts/source_versions.py" --repo-root "$PROJECT_ROOT" --format shell); then
+  echo -e "${RED}Error: could not resolve current source versions${RESET}" >&2
+  exit 1
+fi
+eval "$VERSION_EXPORTS"
+
+CURRENT_VERSION_NAME="${ANDROID_VERSION_NAME:-}"
+CURRENT_VERSION_CODE="${ANDROID_VERSION_CODE:-}"
+IOS_CURRENT_VERSION="${IOS_VERSION_NAME:-}"
+NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
 
 echo -e "${CYAN}Current state:${RESET}"
 echo "  Android: v${CURRENT_VERSION_NAME} (code ${CURRENT_VERSION_CODE})"
@@ -120,8 +125,44 @@ sed_inplace() {
 
 # ── Android: update build.gradle.kts ─────────────────────────────────────────
 
-sed_inplace "s/versionCode *= *[0-9]*/versionCode = ${NEW_VERSION_CODE}/" "$GRADLE_FILE"
-sed_inplace "s/versionName *= *\"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
+python3 - "$GRADLE_FILE" "$NEW_VERSION" "$NEW_VERSION_CODE" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+gradle_file = Path(sys.argv[1])
+new_version = sys.argv[2]
+new_version_code = sys.argv[3]
+text = gradle_file.read_text(encoding="utf-8")
+
+text, version_name_count = re.subn(
+    r'versionName\s*=\s*"[^"]*"',
+    f'versionName = "{new_version}"',
+    text,
+    count=1,
+)
+if version_name_count != 1:
+    raise SystemExit("Could not update versionName in build.gradle.kts")
+
+text, version_code_count = re.subn(
+    r'(versionCode\s*=\s*[^\n]*?\?:\s*)\d+',
+    rf'\g<1>{new_version_code}',
+    text,
+    count=1,
+)
+if version_code_count == 0:
+    text, version_code_count = re.subn(
+        r'versionCode\s*=\s*\d+',
+        f'versionCode = {new_version_code}',
+        text,
+        count=1,
+    )
+if version_code_count != 1:
+    raise SystemExit("Could not update versionCode in build.gradle.kts")
+
+gradle_file.write_text(text, encoding="utf-8")
+PY
+
 echo -e "${GREEN}✓${RESET} Android build.gradle.kts updated"
 
 # ── iOS: update project.pbxproj (all build configurations) ──────────────────

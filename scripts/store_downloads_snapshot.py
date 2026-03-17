@@ -90,6 +90,74 @@ def query_rows(query: str, api_key: str, project_id: str, errors: List[str]) -> 
     return rows
 
 
+def _load_existing_payload(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _metric_definitions() -> Dict[str, Any]:
+    return {
+        "downloads_30d": {
+            "display_name": "Distinct install users (30d)",
+            "source": "posthog",
+            "semantic_type": "proxy",
+            "description": (
+                "Distinct live-device users with an 'Application Installed' event over the trailing window. "
+                "This is a PostHog proxy metric, not store download truth."
+            ),
+        }
+    }
+
+
+def _data_quality(
+    *,
+    generated_at: str,
+    status: str,
+    errors: List[str],
+    preserved_previous_metrics: bool,
+    last_good_generated_at: str = "",
+) -> Dict[str, Any]:
+    is_stale = status in {"degraded", "skipped"} and preserved_previous_metrics
+    return {
+        "is_stale": is_stale,
+        "preserved_previous_metrics": preserved_previous_metrics,
+        "last_attempt_generated_at": generated_at,
+        "last_good_generated_at": last_good_generated_at,
+        "reason": errors[-1] if errors else "",
+    }
+
+
+def _preserve_previous_metrics(
+    existing: Dict[str, Any],
+    *,
+    generated_at: str,
+    status: str,
+    reason: str,
+    errors: List[str],
+) -> Optional[Dict[str, Any]]:
+    if not existing:
+        return None
+    payload = dict(existing)
+    payload["generated_at"] = generated_at
+    payload["status"] = status
+    payload["status_reason"] = reason
+    payload["metric_definitions"] = _metric_definitions()
+    payload["query_diagnostics"] = {"errors": errors}
+    payload["data_quality"] = _data_quality(
+        generated_at=generated_at,
+        status=status,
+        errors=errors,
+        preserved_previous_metrics=True,
+        last_good_generated_at=str(existing.get("generated_at", "")),
+    )
+    return payload
+
+
 def _empty_snapshot(window_days: int, reason: str = "") -> Dict[str, Any]:
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
@@ -101,6 +169,14 @@ def _empty_snapshot(window_days: int, reason: str = "") -> Dict[str, Any]:
         "android": {"downloads_30d": 0, "active_installs": 0},
         "combined": {"downloads_30d": 0},
         "active_users": {"dau": 0, "wau": 0, "mau": 0},
+        "metric_definitions": _metric_definitions(),
+        "data_quality": {
+            "is_stale": False,
+            "preserved_previous_metrics": False,
+            "last_attempt_generated_at": "",
+            "last_good_generated_at": "",
+            "reason": "",
+        },
         "query_diagnostics": {"errors": []},
         "snapshots": [],
     }
@@ -109,6 +185,8 @@ def _empty_snapshot(window_days: int, reason: str = "") -> Dict[str, Any]:
 def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     output_path = repo_root / "marketing" / "data" / "store_downloads.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    existing = _load_existing_payload(output_path)
+    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
     key = (
         os.getenv("POSTHOG_PERSONAL_API_KEY", "").strip()
@@ -121,8 +199,30 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     payload = _empty_snapshot(days)
 
     if not key or not project_id:
+        payload["generated_at"] = generated_at
         payload["status"] = "skipped"
         payload["status_reason"] = "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID"
+        preserved = _preserve_previous_metrics(
+            existing,
+            generated_at=generated_at,
+            status="skipped",
+            reason=payload["status_reason"],
+            errors=[],
+        )
+        if preserved is not None:
+            output_path.write_text(json.dumps(preserved, indent=2) + "\n", encoding="utf-8")
+            return {
+                "status": "skipped",
+                "output": str(output_path),
+                "reason": payload["status_reason"],
+                "preserved_previous_metrics": True,
+            }
+        payload["data_quality"] = _data_quality(
+            generated_at=generated_at,
+            status="skipped",
+            errors=[],
+            preserved_previous_metrics=False,
+        )
         output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         return {"status": "skipped", "output": str(output_path), "reason": payload["status_reason"]}
 
@@ -202,8 +302,31 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         errors,
     )
 
+    if errors:
+        preserved = _preserve_previous_metrics(
+            existing,
+            generated_at=generated_at,
+            status="degraded",
+            reason="preserved last good metrics after degraded PostHog query",
+            errors=errors,
+        )
+        if preserved is not None:
+            output_path.write_text(json.dumps(preserved, indent=2) + "\n", encoding="utf-8")
+            return {
+                "status": "degraded",
+                "output": str(output_path),
+                "ios_downloads_30d": int(preserved.get("ios", {}).get("downloads_30d", 0) or 0),
+                "android_downloads_30d": int(preserved.get("android", {}).get("downloads_30d", 0) or 0),
+                "combined_downloads_30d": int(preserved.get("combined", {}).get("downloads_30d", 0) or 0),
+                "dau": int(preserved.get("active_users", {}).get("dau", 0) or 0),
+                "wau": int(preserved.get("active_users", {}).get("wau", 0) or 0),
+                "mau": int(preserved.get("active_users", {}).get("mau", 0) or 0),
+                "query_errors_count": len(errors),
+                "preserved_previous_metrics": True,
+            }
+
     payload = {
-        "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "generated_at": generated_at,
         "window_days": days,
         "source": "posthog",
         "status": "ok" if not errors else "degraded",
@@ -215,18 +338,20 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         },
         "combined": {"downloads_30d": ios_downloads + android_downloads},
         "active_users": {"dau": dau, "wau": wau, "mau": mau},
+        "metric_definitions": _metric_definitions(),
+        "data_quality": _data_quality(
+            generated_at=generated_at,
+            status="ok" if not errors else "degraded",
+            errors=errors,
+            preserved_previous_metrics=False,
+        ),
         "query_diagnostics": {"errors": errors},
         "snapshots": [],
     }
 
-    if output_path.exists():
-        try:
-            existing = json.loads(output_path.read_text(encoding="utf-8"))
-            snapshots = existing.get("snapshots", [])
-            if isinstance(snapshots, list):
-                payload["snapshots"] = snapshots
-        except (json.JSONDecodeError, OSError):
-            pass
+    snapshots = existing.get("snapshots", [])
+    if isinstance(snapshots, list):
+        payload["snapshots"] = snapshots
 
     snapshot = {
         "timestamp": payload["generated_at"],
@@ -238,7 +363,8 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         "wau": wau,
         "mau": mau,
     }
-    payload["snapshots"].append(snapshot)
+    if not errors:
+        payload["snapshots"].append(snapshot)
     payload["snapshots"] = payload["snapshots"][-90:]
 
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

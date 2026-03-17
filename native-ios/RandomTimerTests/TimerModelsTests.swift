@@ -72,7 +72,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigDecodingSupportsLegacyKeysAndLooseSoundNames() throws {
-        let payload = """
+        let payload = Data("""
         {
           "min_time": -5,
           "max_time": 9000,
@@ -83,7 +83,7 @@ final class TimerConfigTests: XCTestCase {
           "soundVolume": "1.5",
           "vibration": "yes"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
@@ -95,6 +95,26 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(decoded.soundType, .drumRoll)
         XCTAssertEqual(decoded.volume, 1.0, accuracy: 0.0001)
         XCTAssertTrue(decoded.vibrationEnabled)
+        XCTAssertFalse(decoded.voiceCalloutsEnabled)
+    }
+
+    func testConfigEncodingRoundTripsVoiceCalloutsFlag() throws {
+        let config = TimerConfig(
+            minSeconds: 15,
+            maxSeconds: 45,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: true,
+            soundType: .gentle,
+            volume: 0.7,
+            vibrationEnabled: true,
+            voiceCalloutsEnabled: true
+        )
+
+        let encoded = try JSONEncoder().encode(config)
+        let decoded = try JSONDecoder().decode(TimerConfig.self, from: encoded)
+
+        XCTAssertEqual(decoded, config)
     }
 
     func testConfigDecodingFallsBackToDefaultsWhenFieldsMissing() throws {

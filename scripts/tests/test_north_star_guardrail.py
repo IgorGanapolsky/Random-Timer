@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import sys
 import tempfile
@@ -349,6 +351,67 @@ class NorthStarGuardrailTests(unittest.TestCase):
                 exit_code = nsg.main()
 
             self.assertEqual(exit_code, 1)
+
+    def test_run_preserves_previous_query_metrics_when_posthog_degrades(self):
+        from scripts import north_star_guardrail as nsg
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            data_dir = root / "marketing" / "data"
+            data_dir.mkdir(parents=True, exist_ok=True)
+            self._write_paid_campaigns(root, ["draft"])
+            (data_dir / "north_star.json").write_text(
+                json.dumps(
+                    {
+                        "generated_at": "2026-03-15T10:00:00+00:00",
+                        "status": "ok",
+                        "north_star": {
+                            "wqtu_7d": 5,
+                            "timer_completed_7d": 18,
+                            "completed_users_7d": 6,
+                            "sessions_per_completed_user_7d": 3.0,
+                            "targets": {"checkpoint_2026_03_31": 8, "quarter_2026_06_30": 25},
+                            "on_track_checkpoint": False,
+                            "on_track_quarter": False,
+                        },
+                        "paid": {
+                            "paid_distinct_users_30d": 4,
+                            "paid_events_by_source_30d": [{"source": "apple_ads", "events": 7, "users": 4}],
+                        },
+                        "snapshots": [{"timestamp": "2026-03-15T10:00:00+00:00", "wqtu_7d": 5}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            def degraded_scalar(_sql, _key, _project_id, errors):
+                errors.append("http_504")
+                return 0
+
+            def degraded_rows(_sql, _key, _project_id, errors):
+                errors.append("http_504")
+                return []
+
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "POSTHOG_PERSONAL_API_KEY": "phx_test",
+                    "POSTHOG_PROJECT_ID": "299775",
+                },
+                clear=True,
+            ), mock.patch.object(nsg, "query_scalar", side_effect=degraded_scalar), mock.patch.object(
+                nsg, "query_rows", side_effect=degraded_rows
+            ):
+                result = nsg.run(root)
+
+            self.assertEqual(result["status"], "degraded")
+            self.assertTrue(result["preserved_previous_metrics"])
+            payload = json.loads((data_dir / "north_star.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["north_star"]["wqtu_7d"], 5)
+            self.assertEqual(payload["paid"]["paid_distinct_users_30d"], 4)
+            self.assertTrue(payload["data_quality"]["is_stale"])
+            self.assertEqual(payload["data_quality"]["last_good_generated_at"], "2026-03-15T10:00:00+00:00")
+            self.assertEqual(len(payload["snapshots"]), 1)
 
 
 if __name__ == "__main__":
