@@ -1,0 +1,3 @@
+- Technical debt audit and cleanup.
+- Branch protection and CI check name alignment.
+- Improved stability and performance.
