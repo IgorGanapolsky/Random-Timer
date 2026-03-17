@@ -3,6 +3,9 @@ default_platform(:android)
 platform :android do
   desc "Deploy a new version to the Google Play Store and Firebase App Distribution"
   lane :deploy do
+    # Setup for CI
+    setup_ci if ENV["CI"]
+    
     # Build release APK
     gradle(
       task: "clean assembleRelease",

@@ -56,6 +56,10 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Setup Firebase CLI
+      run: |
+        curl -sL https://firebase.tools | bash
+
     - name: Decode Keystore
       if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'both' }}
       run: |
@@ -83,6 +87,7 @@ jobs:
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        FIREBASE_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
       run: |
         cd native-android
         fastlane deploy
@@ -97,6 +102,8 @@ jobs:
         FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
         FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
         FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        FIREBASE_IOS_APP_ID: ${{ secrets.FIREBASE_IOS_APP_ID }}
       run: |
         cd native-ios
         fastlane deploy
