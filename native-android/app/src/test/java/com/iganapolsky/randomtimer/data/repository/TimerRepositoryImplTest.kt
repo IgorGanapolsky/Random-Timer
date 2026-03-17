@@ -42,7 +42,7 @@ class TimerRepositoryImplTest {
                     soundType = SoundType.GENTLE,
                     volume = 0.8f,
                     vibrationEnabled = true,
-                    voiceCalloutsEnabled = true,
+                    voiceEnabled = true,
                 )
 
             repo.saveTimerConfig(newConfig)
