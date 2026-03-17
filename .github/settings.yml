@@ -24,9 +24,9 @@ branches:
         # Merge queue readiness: keep required checks stable and deterministic.
         # Claude Review is intentionally non-required.
         contexts:
-          - "Android Tests"
-          - "iOS Build Check"
-          - "Security"
+          - "Autonomous Android Tests"
+          - "Autonomous iOS Build Check"
+          - "Autonomous Security"
           - "Seer Code Review"
       enforce_admins: true
       required_pull_request_reviews:
@@ -46,9 +46,9 @@ branches:
         # Merge queue readiness: keep required checks stable and deterministic.
         # Claude Review is intentionally non-required.
         contexts:
-          - "Android Tests"
-          - "iOS Build Check"
-          - "Security"
+          - "Autonomous Android Tests"
+          - "Autonomous iOS Build Check"
+          - "Autonomous Security"
           - "Seer Code Review"
       enforce_admins: true
       required_pull_request_reviews:
