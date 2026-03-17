@@ -180,3 +180,14 @@ device-tests-adb:
 phoneclaw-visual:
 	@echo "==> PhoneClaw: pushing visual test scripts to device"
 	@bash scripts/device-tests/phoneclaw/setup-device.sh
+
+# Forge & Maintenance
+forge-maintenance:
+	@bash scripts/maintenance_loop.sh
+
+self-heal:
+	@python3 scripts/release_self_healer.py
+
+# Internal distribution (Firebase + TestFlight)
+distribute:
+	@gh workflow run internal-distribution.yml --ref develop
