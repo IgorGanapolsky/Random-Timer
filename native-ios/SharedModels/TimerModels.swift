@@ -290,8 +290,10 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public func clamped(isPro: Bool) -> TimerConfig {
         // Respect useExtendedRange toggle for Pro users. If they opted for 5m mode (false), clamp to 5m.
         let maxAllowed = (isPro && useExtendedRange) ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
-        let clampedMax = min(maxSeconds, maxAllowed)
-        let clampedMin = min(minSeconds, Swift.max(0, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds))
+        let clampedMax = Swift.min(maxSeconds, maxAllowed)
+        // Ensure clampedMin is never greater than clampedMax to avoid precondition failure
+        let clampedMin = Swift.min(minSeconds, clampedMax)
+        
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
         let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
         return TimerConfig(

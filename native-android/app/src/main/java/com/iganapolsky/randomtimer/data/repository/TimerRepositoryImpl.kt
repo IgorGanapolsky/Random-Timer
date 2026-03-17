@@ -44,7 +44,7 @@ class TimerRepositoryImpl
             }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
-            val clampedMin = minSeconds.coerceAtMost((clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS).coerceAtLeast(0))
+            val clampedMin = minSeconds.coerceAtMost(clampedMax)
             val clampedSound = if (soundType in allowedSounds) soundType else SoundType.INTENSE
             return copy(
                 minSeconds = clampedMin,

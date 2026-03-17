@@ -1,10 +1,10 @@
 # Aider project-specific configuration for Random Tactical Timer
 
 # Use our local Qwen3-Coder model as the primary fast-edit workhorse
-model: qwen3-coder-local
+model: openrouter/qwen/qwen3-coder
 
-# Use Kimi 2.5 for complex architectural reasoning passes (can be overridden via CLI)
-editor-model: kimi-local
+# Use Kimi K2 for complex architectural reasoning passes (can be overridden via CLI)
+editor-model: openrouter/moonshotai/kimi-k2
 
 # Map features
 map-tokens: 2048
@@ -24,6 +24,4 @@ read:
 # Lint and Test commands for autonomous verification
 lint-cmd:
   - "cd native-android && ./gradlew lint"
-test-cmd:
-  - "cd native-android && ./gradlew testDebugUnitTest"
-  - "make verify-ios"
+test-cmd: "cd native-android && ./gradlew testDebugUnitTest && make verify-ios"
