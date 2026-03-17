@@ -71,3 +71,21 @@ def test_cli_json_output_matches_reader(tmp_path: Path):
     payload = json.loads(result.stdout)
     assert payload["android"]["version_code"] == 11
     assert payload["ios"]["build_number"] == 14
+
+
+def test_repository_android_version_code_has_nonempty_changelog():
+    repo_root = Path(__file__).resolve().parents[2]
+    versions = source_versions.read_source_versions(repo_root)
+    changelog_file = (
+        repo_root
+        / "native-android"
+        / "fastlane"
+        / "metadata"
+        / "android"
+        / "en-US"
+        / "changelogs"
+        / f"{versions['android']['version_code']}.txt"
+    )
+
+    assert changelog_file.is_file()
+    assert changelog_file.read_text(encoding="utf-8").strip()
