@@ -85,13 +85,13 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // Voice Callouts (Pro Feature)
+                        // Voice Callouts (Elite Feature)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+                                    .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
                                 
                                 Text("Voice prompts during countdown")
                                     .font(.caption2)
@@ -140,7 +140,7 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .opacity(proManager.isPro ? 1.0 : 0.6)
+                        .opacity(proManager.isElite ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
 
@@ -273,31 +273,19 @@ struct TimerSetupScreen: View {
                 .scaleEffect(1.02)
                 .padding(.vertical, 8)
 
-                // 3. Sound Arsenal
+                // 4. Sound Arsenal
                 HStack {
-                    Text("Sound Arsenal")
+                    Text("SOUND ARSENAL")
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                        .onTapGesture {
-                            if !proManager.isPro {
-                                presentPaywall(entryPoint: .soundGate)
-                            }
-                        }
                     
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
-                        
-                        Spacer()
-                        
-                        Button {
-                            withAnimation(.spring()) {
-                                showArsenal.toggle()
-                            }
-                        }
-
+                    }
+                    
                     Spacer()
 
                     Button {
@@ -348,15 +336,15 @@ struct TimerSetupScreen: View {
                                             label: sound2.rawValue.capitalized + lockSuffix,
                                             selected: config.soundType == sound2,
                                             onTap: {
-                                            if proManager.isPro {
-                                                updateConfig(soundType: sound2)
-                                                timerManager.previewSound()
-                                            } else {
-                                                timerManager.previewSound(type: sound2)
+                                                if proManager.isPro {
+                                                    updateConfig(soundType: sound2)
+                                                    timerManager.previewSound()
+                                                } else {
+                                                    timerManager.previewSound(type: sound2)
+                                                }
                                             }
-                                        }
-                                    )
-                                }
+                                        )
+                                    }
                                 }
                             }
 

@@ -4,7 +4,6 @@ import SwiftUI
 struct ActiveTimerScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var loopEnabled: Bool = false // Default to LOOP OFF
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
 
@@ -70,8 +69,13 @@ struct ActiveTimerScreen: View {
                                 )
                                 .accessibilityIdentifier("activeTimerCircle")
                                 .onTapGesture {
-                                    guard state.status == .alarm else { return }
-                                    timerManager.silenceAlarm()
+                                    if state.status == .alarm {
+                                        timerManager.silenceAlarm()
+                                    } else if state.status == .complete {
+                                        Task {
+                                            await timerManager.dismissAlarm()
+                                        }
+                                    }
                                 }
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
@@ -139,8 +143,13 @@ struct ActiveTimerScreen: View {
                             )
                             .accessibilityIdentifier("activeTimerCircle")
                             .onTapGesture {
-                                guard state.status == .alarm else { return }
-                                timerManager.silenceAlarm()
+                                if state.status == .alarm {
+                                    timerManager.silenceAlarm()
+                                } else if state.status == .complete {
+                                    Task {
+                                        await timerManager.dismissAlarm()
+                                    }
+                                }
                             }
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel(isComplete ? "Timer complete" : "Timer running, range \(rangeText)")
@@ -189,16 +198,6 @@ struct ActiveTimerScreen: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
-            // Initialize loop state from config (only on first appear)
-            if let state = state {
-                loopEnabled = state.config.repeatEnabled
-            }
-        }
-        .onChange(of: state?.config.repeatEnabled) { _, newValue in
-            // Sync local state when config changes externally
-            if let newValue = newValue {
-                loopEnabled = newValue
-            }
         }
         .onDisappear {
             resetFeedbackTask?.cancel()
@@ -208,14 +207,14 @@ struct ActiveTimerScreen: View {
     }
 
     private var loopBadge: some View {
-        Button {
-            loopEnabled.toggle()
-            updateLoopConfig()
+        let isEnabled = timerManager.config.repeatEnabled
+        return Button {
+            updateLoopConfig(!isEnabled)
         } label: {
-            Label(loopEnabled ? "LOOP" : "LOOP OFF", systemImage: "repeat")
+            Label(isEnabled ? "LOOP" : "LOOP OFF", systemImage: "repeat")
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(loopEnabled ? .accentPrimary : .textMuted)
+                .foregroundColor(isEnabled ? .accentPrimary : .textMuted)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
@@ -224,21 +223,21 @@ struct ActiveTimerScreen: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
+                        .stroke(isEnabled ? .accentPrimary : Color.glassBorder, lineWidth: 1)
                 )
         }
-        .accessibilityLabel(loopEnabled ? "Loop enabled" : "Loop disabled")
+        .accessibilityLabel(isEnabled ? "Loop enabled" : "Loop disabled")
         .accessibilityHint("Double-tap to toggle repeat timer")
     }
 
-    private func updateLoopConfig() {
+    private func updateLoopConfig(_ enabled: Bool) {
         let current = timerManager.config
         let newConfig = TimerConfig(
             minSeconds: current.minSeconds,
             maxSeconds: current.maxSeconds,
             alarmDuration: current.alarmDuration,
             hiddenMode: current.hiddenMode,
-            repeatEnabled: loopEnabled,
+            repeatEnabled: enabled,
             soundType: current.soundType,
             volume: current.volume,
             vibrationEnabled: current.vibrationEnabled,
