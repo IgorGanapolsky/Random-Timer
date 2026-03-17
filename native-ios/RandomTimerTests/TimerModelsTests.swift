@@ -10,12 +10,13 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(config.minSeconds, 0)
         XCTAssertEqual(config.maxSeconds, 30)
         XCTAssertEqual(config.alarmDuration, 10)
+        XCTAssertFalse(config.voiceCalloutsEnabled)
     }
 
     func testConfigInitEnforcesPreconditions() {
         // minSeconds cannot be negative
         // XCTest expect crash is hard, so we just check it doesn't throw if we use valid values
-        let _ = TimerConfig(minSeconds: 0, maxSeconds: 10)
+        _ = TimerConfig(minSeconds: 0, maxSeconds: 10)
     }
 
     func testConfigClampingForFreeUser() {
@@ -37,7 +38,7 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigDecodingSupportsLegacyKeysAndLooseSoundNames() throws {
-        let payload = """
+        let payload = Data("""
         {
           "min_time": -5,
           "max_time": 9000,
@@ -48,7 +49,7 @@ final class TimerConfigTests: XCTestCase {
           "soundVolume": "1.5",
           "vibration": "yes"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(TimerConfig.self, from: payload)
 
@@ -60,6 +61,26 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(decoded.soundType, .drumRoll)
         XCTAssertEqual(decoded.volume, 1.0, accuracy: 0.0001)
         XCTAssertTrue(decoded.vibrationEnabled)
+        XCTAssertFalse(decoded.voiceCalloutsEnabled)
+    }
+
+    func testConfigEncodingRoundTripsVoiceCalloutsFlag() throws {
+        let config = TimerConfig(
+            minSeconds: 15,
+            maxSeconds: 45,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: true,
+            soundType: .gentle,
+            volume: 0.7,
+            vibrationEnabled: true,
+            voiceCalloutsEnabled: true
+        )
+
+        let encoded = try JSONEncoder().encode(config)
+        let decoded = try JSONDecoder().decode(TimerConfig.self, from: encoded)
+
+        XCTAssertEqual(decoded, config)
     }
 }
 
@@ -447,7 +468,7 @@ final class TimerStateTests: XCTestCase {
     }
 
     func testStateDecodingSupportsLegacyKeysAndStatusNormalization() throws {
-        let payload = """
+        let payload = Data("""
         {
           "config": {},
           "target_duration": 120,
@@ -455,7 +476,7 @@ final class TimerStateTests: XCTestCase {
           "remaining_duration": 60,
           "timerStatus": "PAUSED"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(TimerState.self, from: payload)
 

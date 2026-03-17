@@ -4,7 +4,7 @@ import SwiftUI
 struct ActiveTimerScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    
+
     @State private var loopEnabled: Bool = false
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
@@ -195,7 +195,7 @@ struct ActiveTimerScreen: View {
         Button(action: {
             loopEnabled.toggle()
             updateConfigLoop()
-        }) {
+        }, label: {
             HStack(spacing: 6) {
                 Text("🔁")
                     .font(.body)
@@ -212,7 +212,7 @@ struct ActiveTimerScreen: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(loopEnabled ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
             )
-        }
+        })
         .buttonStyle(.plain)
     }
 
@@ -225,7 +225,9 @@ struct ActiveTimerScreen: View {
             hiddenMode: config.hiddenMode,
             repeatEnabled: loopEnabled,
             soundType: config.soundType,
-            volume: config.volume
+            volume: config.volume,
+            vibrationEnabled: config.vibrationEnabled,
+            voiceCalloutsEnabled: config.voiceCalloutsEnabled
         )
         timerManager.updateConfig(newConfig)
     }

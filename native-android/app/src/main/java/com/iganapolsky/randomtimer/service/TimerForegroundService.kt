@@ -152,6 +152,7 @@ class TimerForegroundService : Service() {
                 val soundType = intent.getStringExtra(EXTRA_SOUND_TYPE) ?: "INTENSE"
                 val volume = intent.getFloatExtra(EXTRA_VOLUME, 1.0f)
                 val vibrationEnabled = intent.getBooleanExtra(EXTRA_VIBRATION_ENABLED, true)
+                val voiceCalloutsEnabled = intent.getBooleanExtra(EXTRA_VOICE_CALLOUTS_ENABLED, false)
 
                 if (targetMs > 0) {
                     startTimerFromExtras(
@@ -165,6 +166,7 @@ class TimerForegroundService : Service() {
                         soundType = soundType,
                         volume = volume,
                         vibrationEnabled = vibrationEnabled,
+                        voiceCalloutsEnabled = voiceCalloutsEnabled,
                     )
                 }
             }
@@ -228,6 +230,7 @@ class TimerForegroundService : Service() {
         soundType: String,
         volume: Float,
         vibrationEnabled: Boolean,
+        voiceCalloutsEnabled: Boolean,
     ) {
         val config =
             TimerConfig(
@@ -244,6 +247,7 @@ class TimerForegroundService : Service() {
                     },
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                voiceCalloutsEnabled = voiceCalloutsEnabled,
             )
 
         val initialState =
@@ -293,7 +297,7 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    if (proManager.entitlementLevel.value.isPro) {
+                    if (proManager.entitlementLevel.value.isPro && state.config.voiceCalloutsEnabled) {
                         val elapsedSec = (state.targetDuration - newRemaining).inWholeSeconds.toInt()
                         voiceCalloutManager.triggerCallout(elapsedSec)
                     }
@@ -1018,6 +1022,7 @@ class TimerForegroundService : Service() {
         const val EXTRA_SOUND_TYPE = "sound_type"
         const val EXTRA_VOLUME = "volume"
         const val EXTRA_VIBRATION_ENABLED = "vibration_enabled"
+        const val EXTRA_VOICE_CALLOUTS_ENABLED = "voice_callouts_enabled"
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
 
         private const val STOP_SOURCE_APP = "app"

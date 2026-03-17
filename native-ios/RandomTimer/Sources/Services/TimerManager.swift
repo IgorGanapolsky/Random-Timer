@@ -96,6 +96,7 @@ final class TimerManager: ObservableObject {
             "max_duration": newConfig.maxDuration,
             "sound_type": String(describing: newConfig.soundType),
             "repeat_enabled": newConfig.repeatEnabled,
+            "voice_callouts_enabled": newConfig.voiceCalloutsEnabled,
         ])
 
         Task {
@@ -550,7 +551,7 @@ final class TimerManager: ObservableObject {
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
         // Trigger voice callouts for Pro users
-        if ProManager.shared.isPro {
+        if ProManager.shared.isPro && state.config.voiceCalloutsEnabled {
             let elapsed = Int(state.targetDuration - state.remainingDuration)
             AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: elapsed)
         }

@@ -46,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -165,7 +166,11 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(isPro) }
+    var showArsenal by remember { mutableStateOf(!isPro) }
+
+    LaunchedEffect(isPro) {
+        showArsenal = true
+    }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
@@ -175,6 +180,7 @@ fun TimerSetupScreen(
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
+        voiceCalloutsEnabled: Boolean = config.voiceCalloutsEnabled,
     ) {
         onConfigChange(
             config.copy(
@@ -186,6 +192,7 @@ fun TimerSetupScreen(
                 soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                voiceCalloutsEnabled = voiceCalloutsEnabled,
             ),
         )
     }
@@ -439,11 +446,19 @@ fun TimerSetupScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
 
                                     if (isPro) {
-                                        Text(
-                                            text = "ON",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
+                                        Switch(
+                                            checked = config.voiceCalloutsEnabled,
+                                            onCheckedChange = { enabled ->
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                updateConfig(voiceCalloutsEnabled = enabled)
+                                            },
+                                            colors =
+                                                SwitchDefaults.colors(
+                                                    checkedThumbColor = TimerColors.AccentPrimary,
+                                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                    uncheckedThumbColor = TimerColors.TextMuted,
+                                                    uncheckedTrackColor = TimerColors.SliderTrack,
+                                                ),
                                         )
                                     } else {
                                         Surface(
@@ -560,7 +575,7 @@ fun TimerSetupScreen(
                     )
                 }
 
-                // Zone 2: Tactical Expansion (PRO)
+                // 3. Sound Arsenal
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(
@@ -569,22 +584,19 @@ fun TimerSetupScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (isPro) "TACTICAL EXPANSION (PRO) \uD83D\uDD13" else "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
+                            text = "Sound Arsenal",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                             modifier =
                                 Modifier.pointerInput(Unit) {
                                     detectTapGestures(
                                         onTap = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isPro) {
-                                                if (isCompactHeight) {
-                                                    showArsenalSheet = true
-                                                } else {
-                                                    showArsenal = !showArsenal
-                                                }
+                                            if (isCompactHeight) {
+                                                showArsenalSheet = true
                                             } else {
-                                                onUpgradeTap()
+                                                showArsenal = !showArsenal
                                             }
                                         },
                                         onPress = {
@@ -600,9 +612,11 @@ fun TimerSetupScreen(
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Sound Arsenal"
-                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
-                                else -> "View Sound Arsenal"
+                                isCompactHeight && isPro -> "Open Sound Arsenal"
+                                isCompactHeight -> "Preview Sounds"
+                                showArsenal -> "Hide Sound Arsenal"
+                                isPro -> "View Sound Arsenal"
+                                else -> "Preview Sounds"
                             }
                         Text(
                             text = actionLabel,
@@ -622,7 +636,7 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // Pro Sound Arsenal
+                // Sound Arsenal
                 item {
                     if (!isCompactHeight) {
                         AnimatedVisibility(

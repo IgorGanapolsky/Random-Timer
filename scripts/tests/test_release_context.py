@@ -11,6 +11,7 @@ from scripts.release_context import (
     build_summary,
     collect_local_context,
     collect_remote_context,
+    detect_ios_version,
 )
 
 
@@ -31,6 +32,24 @@ def _write_png(path: Path, width: int, height: int, rgb: tuple[int, int, int] = 
 
 
 class ReleaseContextLocalTests(unittest.TestCase):
+    def test_detect_ios_version_reads_shared_source_metadata(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            ios_project = repo / "native-ios" / "RandomTimer.xcodeproj"
+            android_app = repo / "native-android" / "app"
+            ios_project.mkdir(parents=True)
+            android_app.mkdir(parents=True)
+            (ios_project / "project.pbxproj").write_text(
+                "MARKETING_VERSION = 1.3.7;\nCURRENT_PROJECT_VERSION = 151;\n",
+                encoding="utf-8",
+            )
+            (android_app / "build.gradle.kts").write_text(
+                'android {\n  defaultConfig {\n    versionCode = ciVersionCode ?: 1773900000\n    versionName = "1.3.7"\n  }\n}\n',
+                encoding="utf-8",
+            )
+
+            self.assertEqual(detect_ios_version(repo), "1.3.7")
+
     def test_collect_local_context_marks_ready_when_assets_are_complete(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
