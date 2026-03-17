@@ -1,0 +1,29 @@
+# Aider project-specific configuration for Random Tactical Timer
+
+# Use our local Qwen3-Coder model as the primary fast-edit workhorse
+model: qwen3-coder-local
+
+# Use Kimi 2.5 for complex architectural reasoning passes (can be overridden via CLI)
+editor-model: kimi-local
+
+# Map features
+map-tokens: 2048
+
+# Git settings
+auto-commits: true
+attribute-author: false
+attribute-committer: false
+commit-prompt: "You are an expert software engineer. Write a concise Conventional Commit message for these changes. Do not include markdown formatting or explanations."
+
+# Read all our project mandates into context automatically
+read:
+  - CLAUDE.md
+  - AGENTS.md
+  - docs/GEMINI.md
+
+# Lint and Test commands for autonomous verification
+lint-cmd:
+  - "cd native-android && ./gradlew lint"
+test-cmd:
+  - "cd native-android && ./gradlew testDebugUnitTest"
+  - "make verify-ios"
