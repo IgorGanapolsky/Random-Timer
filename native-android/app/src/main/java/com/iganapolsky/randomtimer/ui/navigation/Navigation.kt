@@ -113,7 +113,7 @@ fun RandomTimerNavHost(
                 isPro = isPro,
                 onUpgradeTap = {
                     scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID)
+                        proPrice = viewModel.proManager.getFormattedProPrice()
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }
@@ -181,9 +181,9 @@ fun RandomTimerNavHost(
     if (showPaywall) {
         PaywallSheet(
             proPrice = proPrice,
-            onPurchase = { productID ->
+            onPurchase = {
                 scope.launch {
-                    activity?.let { viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint) }
+                    activity?.let { viewModel.proManager.launchProPurchase(it, paywallEntryPoint) }
                     showPaywall = false
                 }
             },

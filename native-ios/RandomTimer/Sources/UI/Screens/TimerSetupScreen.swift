@@ -6,7 +6,7 @@ struct TimerSetupScreen: View {
     @EnvironmentObject var proManager: ProManager
     @State private var showPaywall = false
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
-    @State private var showArsenal = false
+    @State private var showArsenal = true
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
 
     // Read directly from timerManager.config to avoid animation issues
@@ -130,10 +130,17 @@ struct TimerSetupScreen: View {
                             }
 
                             if proManager.isPro {
-                                Text("ON")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.accentPrimary)
+                                Toggle(
+                                    "",
+                                    isOn: Binding(
+                                        get: { config.voiceCalloutsEnabled },
+                                        set: { enabled in
+                                            updateConfig(voiceCalloutsEnabled: enabled)
+                                        }
+                                    )
+                                )
+                                .labelsHidden()
+                                .tint(.accentPrimary)
                             } else {
                                 Button {
                                     presentPaywall(entryPoint: .soundGate)
@@ -223,35 +230,29 @@ struct TimerSetupScreen: View {
                 .scaleEffect(1.02)
                 .padding(.vertical, 8)
 
-                // Zone 2: Tactical Expansion (PRO)
+                // 3. Sound Arsenal
                 HStack {
-                    Text("TACTICAL EXPANSION (PRO)")
+                    Text("Sound Arsenal")
                         .font(.caption2)
                         .fontWeight(.bold)
-                        .foregroundColor(proManager.isPro ? .accentPrimary : .textMuted)
+                        .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
                         .onTapGesture {
-                            if !proManager.isPro {
-                                presentPaywall(entryPoint: .soundGate)
-                            }
-                        }
-
-                    if !proManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundColor(.textMuted)
-
-                        Spacer()
-
-                        Button {
                             withAnimation(.spring()) {
                                 showArsenal.toggle()
                             }
-                        } label: {
-                            Text(showArsenal ? "Hide Sound Arsenal" : "View Sound Arsenal")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.accentPrimary)
                         }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring()) {
+                            showArsenal.toggle()
+                        }
+                    } label: {
+                        Text(showArsenal ? "Hide Sound Arsenal" : (proManager.isPro ? "View Sound Arsenal" : "Preview Sounds"))
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.accentPrimary)
                     }
                 }
                 .padding(.top, 8)
@@ -340,9 +341,13 @@ struct TimerSetupScreen: View {
         }
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
-            // Ensure Arsenal state matches Pro status on load
-            if proManager.isPro {
-                showArsenal = true
+            showArsenal = true
+        }
+        .onChange(of: proManager.isPro) { _, isPro in
+            if isPro {
+                withAnimation(.spring()) {
+                    showArsenal = true
+                }
             }
         }
     }
@@ -354,7 +359,8 @@ struct TimerSetupScreen: View {
         alarmDuration: Int? = nil,
         soundType: SoundType? = nil,
         volume: Float? = nil,
-        vibrationEnabled: Bool? = nil
+        vibrationEnabled: Bool? = nil,
+        voiceCalloutsEnabled: Bool? = nil
     ) {
         let newConfig = TimerConfig(
             minSeconds: minSeconds ?? config.minSeconds,
@@ -364,7 +370,8 @@ struct TimerSetupScreen: View {
             repeatEnabled: config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
-            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled
+            vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
+            voiceCalloutsEnabled: voiceCalloutsEnabled ?? config.voiceCalloutsEnabled
         )
         timerManager.updateConfig(newConfig)
     }
