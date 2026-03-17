@@ -136,7 +136,7 @@ class TimerConfigTest {
     }
 
     @Test
-    fun `config can enable voice callouts`() {
+    fun `config can enable voice cues`() {
         val config =
             TimerConfig(
                 minSeconds = 30,
