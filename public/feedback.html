@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Capture</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .feedback-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feedback-btn {
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .thumbs-up {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .thumbs-down {
+            background-color: #f44336;
+            color: white;
+        }
+        .feedback-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .feedback-form {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn:hover {
+            background-color: #0b7dda;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agent Feedback Capture</h1>
+        
+        <div class="feedback-buttons">
+            <button class="feedback-btn thumbs-up" id="thumbsUp">👍 Good</button>
+            <button class="feedback-btn thumbs-down" id="thumbsDown">👎 Needs Improvement</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="feedback-form" id="feedbackForm">
+            <h2>Provide Details</h2>
+            <div class="form-group">
+                <label for="context">What happened?</label>
+                <textarea id="context" placeholder="Describe what the AI did..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="reasoning">Why this feedback? (Reasoning)</label>
+                <textarea id="reasoning" placeholder="Explain your reasoning..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="tags">Tags (comma separated)</label>
+                <input type="text" id="tags" placeholder="e.g., accuracy, creativity, safety">
+            </div>
+            <button class="submit-btn" id="submitFeedback">Submit Feedback</button>
+        </div>
+    </div>
+
+    <script>
+        let currentFeedback = null;
+        
+        document.getElementById('thumbsUp').addEventListener('click', function() {
+            currentFeedback = 'positive';
+            showFeedbackForm();
+        });
+        
+        document.getElementById('thumbsDown').addEventListener('click', function() {
+            currentFeedback = 'negative';
+            showFeedbackForm();
+        });
+        
+        function showFeedbackForm() {
+            document.getElementById('feedbackForm').style.display = 'block';
+            document.getElementById('context').focus();
+        }
+        
+        document.getElementById('submitFeedback').addEventListener('click', function() {
+            const context = document.getElementById('context').value;
+            const reasoning = document.getElementById('reasoning').value;
+            const tags = document.getElementById('tags').value;
+            
+            if (!context.trim()) {
+                showMessage('Please provide context for your feedback', 'error');
+                return;
+            }
+            
+            // In a real implementation, this would call your backend API
+            // For now, we'll simulate the call
+            captureFeedback(currentFeedback, context, reasoning, tags);
+        });
+        
+        function captureFeedback(signal, context, reasoning, tags) {
+            // This would normally make an API call to your backend
+            // which would then call the mcp-memory-gateway
+            console.log('Capturing feedback:', { signal, context, reasoning, tags });
+            
+            // Simulate API call
+            setTimeout(() => {
+                showMessage(
+                    signal === 'positive' 
+                        ? 'Thank you for your positive feedback!' 
+                        : 'Thank you for your feedback. We\'ll work to improve.',
+                    'success'
+                );
+                
+                // Reset form
+                document.getElementById('feedbackForm').style.display = 'none';
+                document.getElementById('context').value = '';
+                document.getElementById('reasoning').value = '';
+                document.getElementById('tags').value = '';
+                currentFeedback = null;
+            }, 500);
+        }
+        
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
