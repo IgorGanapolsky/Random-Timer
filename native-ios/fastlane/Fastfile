@@ -176,6 +176,14 @@ platform :ios do
 
       retry
     end
+    
+    # Also upload to Firebase App Distribution
+    firebase_app_distribution(
+      app: ENV["FIREBASE_IOS_APP_ID"],
+      firebase_cli_token: ENV["FIREBASE_TOKEN"],
+      release_notes: "Automated build from GitHub Actions",
+      groups: "internal-testers"
+    )
   end
 
   desc "Create app in App Store Connect"
@@ -334,35 +342,5 @@ platform :ios do
     else
       UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
     end
-  end
-
-  desc "Deploy a new version to TestFlight and Firebase App Distribution"
-  lane :deploy do
-    # Setup for CI
-    setup_ci if ENV["CI"]
-    
-    # Build and upload to TestFlight
-    build_app(
-      scheme: "RandomTimer",
-      project: "RandomTimer.xcodeproj",
-      export_method: "app-store",
-      output_directory: "build",
-      clean: true
-    )
-    
-    # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: true,
-      username: ENV["FASTLANE_USER"],
-      app_identifier: "com.igorganapolsky.randomtimer"
-    )
-    
-    # Also upload to Firebase App Distribution
-    firebase_app_distribution(
-      app: ENV["FIREBASE_IOS_APP_ID"],
-      firebase_cli_token: ENV["FIREBASE_TOKEN"],
-      release_notes: "Automated build from GitHub Actions",
-      groups: "internal-testers"
-    )
   end
 end

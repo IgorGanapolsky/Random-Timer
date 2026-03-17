@@ -106,4 +106,4 @@ jobs:
         FIREBASE_IOS_APP_ID: ${{ secrets.FIREBASE_IOS_APP_ID }}
       run: |
         cd native-ios
-        fastlane deploy
+        fastlane beta
