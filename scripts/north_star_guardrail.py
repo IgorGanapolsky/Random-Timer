@@ -48,6 +48,33 @@ def _load_paid_campaigns(path: Path) -> Dict[str, Any]:
     return payload
 
 
+def _load_existing_payload(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _data_quality(
+    *,
+    generated_at: str,
+    status: str,
+    errors: List[str],
+    preserved_previous_metrics: bool,
+    last_good_generated_at: str = "",
+) -> Dict[str, Any]:
+    return {
+        "is_stale": status in {"degraded", "skipped"} and preserved_previous_metrics,
+        "preserved_previous_metrics": preserved_previous_metrics,
+        "last_attempt_generated_at": generated_at,
+        "last_good_generated_at": last_good_generated_at,
+        "reason": errors[-1] if errors else "",
+    }
+
+
 def _active_campaigns(campaigns: Sequence[Dict[str, Any]], active_statuses: Set[str]) -> List[Dict[str, Any]]:
     active: List[Dict[str, Any]] = []
     for campaign in campaigns:
@@ -152,6 +179,13 @@ def _empty_payload(lookback_days: int, wqtu_window_days: int, reason: str = "") 
                 "enforceable_status": "not_applicable",
             },
         },
+        "data_quality": {
+            "is_stale": False,
+            "preserved_previous_metrics": False,
+            "last_attempt_generated_at": "",
+            "last_good_generated_at": "",
+            "reason": "",
+        },
         "query_diagnostics": {"errors": []},
         "snapshots": [],
     }
@@ -168,6 +202,8 @@ def run(
 ) -> Dict[str, Any]:
     output_path = repo_root / "marketing" / "data" / "north_star.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    existing = _load_existing_payload(output_path)
+    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
     key = (
         os.getenv("POSTHOG_PERSONAL_API_KEY", "").strip()
@@ -194,6 +230,7 @@ def run(
     """
     errors: List[str] = []
     payload = _empty_payload(lookback_days, wqtu_window_days)
+    payload["generated_at"] = generated_at
     payload["north_star"]["targets"] = {
         "checkpoint_2026_03_31": checkpoint_target,
         "quarter_2026_06_30": quarter_target,
@@ -212,6 +249,28 @@ def run(
     if not key or not project_id:
         payload["status"] = "skipped"
         payload["status_reason"] = "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID"
+        previous_north_star = existing.get("north_star", {}) if isinstance(existing.get("north_star"), dict) else {}
+        previous_paid = existing.get("paid", {}) if isinstance(existing.get("paid"), dict) else {}
+        if previous_north_star:
+            payload["north_star"]["wqtu_7d"] = int(previous_north_star.get("wqtu_7d", 0) or 0)
+            payload["north_star"]["timer_completed_7d"] = int(previous_north_star.get("timer_completed_7d", 0) or 0)
+            payload["north_star"]["completed_users_7d"] = int(previous_north_star.get("completed_users_7d", 0) or 0)
+            payload["north_star"]["sessions_per_completed_user_7d"] = float(
+                previous_north_star.get("sessions_per_completed_user_7d", 0.0) or 0.0
+            )
+            payload["north_star"]["on_track_checkpoint"] = bool(previous_north_star.get("on_track_checkpoint"))
+            payload["north_star"]["on_track_quarter"] = bool(previous_north_star.get("on_track_quarter"))
+        if previous_paid:
+            payload["paid"]["paid_distinct_users_30d"] = int(previous_paid.get("paid_distinct_users_30d", 0) or 0)
+            payload["paid"]["paid_events_by_source_30d"] = previous_paid.get("paid_events_by_source_30d", [])
+        payload["snapshots"] = existing.get("snapshots", []) if isinstance(existing.get("snapshots"), list) else []
+        payload["data_quality"] = _data_quality(
+            generated_at=generated_at,
+            status="skipped",
+            errors=[],
+            preserved_previous_metrics=bool(previous_north_star or previous_paid),
+            last_good_generated_at=str(existing.get("generated_at", "")),
+        )
         lock_active = len(active) > 0
         lock_reasons = ["active campaigns exist but PostHog credentials are missing"] if lock_active else []
         lock_status = "enforceable" if lock_active else "not_applicable"
@@ -304,9 +363,24 @@ def run(
         errors,
     )
 
-    sessions_per_user = 0.0
-    if completed_users_7d > 0:
-        sessions_per_user = round(completions_7d / completed_users_7d, 2)
+    previous_north_star = existing.get("north_star", {}) if isinstance(existing.get("north_star"), dict) else {}
+    previous_paid = existing.get("paid", {}) if isinstance(existing.get("paid"), dict) else {}
+    preserved_previous_metrics = False
+    if errors and (previous_north_star or previous_paid):
+        preserved_previous_metrics = True
+        wqtu = int(previous_north_star.get("wqtu_7d", 0) or 0)
+        completions_7d = int(previous_north_star.get("timer_completed_7d", 0) or 0)
+        completed_users_7d = int(previous_north_star.get("completed_users_7d", 0) or 0)
+        sessions_per_user = float(previous_north_star.get("sessions_per_completed_user_7d", 0.0) or 0.0)
+        paid_distinct_users_30d = int(previous_paid.get("paid_distinct_users_30d", 0) or 0)
+        paid_events_by_source_30d = previous_paid.get("paid_events_by_source_30d", [])
+    else:
+        sessions_per_user = 0.0
+        if completed_users_7d > 0:
+            sessions_per_user = round(completions_7d / completed_users_7d, 2)
+        paid_events_by_source_30d = [
+            {"source": str(row[0]), "events": int(row[1] or 0), "users": int(row[2] or 0)} for row in paid_events_rows
+        ]
 
     payload["status"] = "ok" if not errors else "degraded"
     payload["north_star"]["wqtu_7d"] = wqtu
@@ -317,9 +391,7 @@ def run(
     payload["north_star"]["on_track_quarter"] = wqtu >= quarter_target
 
     payload["paid"]["paid_distinct_users_30d"] = paid_distinct_users_30d
-    payload["paid"]["paid_events_by_source_30d"] = [
-        {"source": str(row[0]), "events": int(row[1] or 0), "users": int(row[2] or 0)} for row in paid_events_rows
-    ]
+    payload["paid"]["paid_events_by_source_30d"] = paid_events_by_source_30d
     now = dt.datetime.now(dt.timezone.utc)
     outside_grace = [c for c in active if _campaign_outside_grace(c, now, campaign_grace_days)]
     payload["paid"]["active_campaigns_outside_grace_count"] = len(outside_grace)
@@ -363,28 +435,31 @@ def run(
     payload["paid"]["guardrail_violated"] = lock_active
     payload["paid"]["guardrail_reason"] = "; ".join(lock_reasons)
 
+    payload["data_quality"] = _data_quality(
+        generated_at=generated_at,
+        status=payload["status"],
+        errors=errors,
+        preserved_previous_metrics=preserved_previous_metrics,
+        last_good_generated_at=str(existing.get("generated_at", "")) if preserved_previous_metrics else "",
+    )
     payload["query_diagnostics"]["errors"] = errors
 
-    if output_path.exists():
-        try:
-            existing = json.loads(output_path.read_text(encoding="utf-8"))
-            snapshots = existing.get("snapshots", [])
-            if isinstance(snapshots, list):
-                payload["snapshots"] = snapshots
-        except (json.JSONDecodeError, OSError):
-            payload["snapshots"] = []
+    snapshots = existing.get("snapshots", [])
+    if isinstance(snapshots, list):
+        payload["snapshots"] = snapshots
 
-    payload["snapshots"].append(
-        {
-            "timestamp": payload["generated_at"],
-            "wqtu_7d": wqtu,
-            "timer_completed_7d": completions_7d,
-            "completed_users_7d": completed_users_7d,
-            "paid_distinct_users_30d": paid_distinct_users_30d,
-            "active_campaign_count": len(active),
-            "guardrail_violated": payload["paid"]["guardrail_violated"],
-        }
-    )
+    if not preserved_previous_metrics:
+        payload["snapshots"].append(
+            {
+                "timestamp": payload["generated_at"],
+                "wqtu_7d": wqtu,
+                "timer_completed_7d": completions_7d,
+                "completed_users_7d": completed_users_7d,
+                "paid_distinct_users_30d": paid_distinct_users_30d,
+                "active_campaign_count": len(active),
+                "guardrail_violated": payload["paid"]["guardrail_violated"],
+            }
+        )
     payload["snapshots"] = payload["snapshots"][-120:]
 
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -401,6 +476,7 @@ def run(
         "no_scale_lock_reasons": payload["paid"]["no_scale_lock"]["reasons"],
         "no_scale_lock_enforceable_status": payload["paid"]["no_scale_lock"]["enforceable_status"],
         "query_errors_count": len(errors),
+        "preserved_previous_metrics": preserved_previous_metrics,
     }
 
 

@@ -23,6 +23,22 @@ def test_read_gradle_version_code_extracts_integer(tmp_path: Path):
     assert calc._read_gradle_version_code(gradle_file) == 1774400000
 
 
+def test_read_gradle_version_code_extracts_elvis_fallback_integer(tmp_path: Path):
+    gradle_file = tmp_path / "build.gradle.kts"
+    gradle_file.write_text(
+        """
+        android {
+            defaultConfig {
+                versionCode = ciVersionCode ?: 1774400000
+            }
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    assert calc._read_gradle_version_code(gradle_file) == 1774400000
+
+
 def test_extract_release_codes_skips_invalid_values():
     payload = {
         "releases": [

@@ -14,40 +14,21 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from scripts.source_versions import (
+        VersionParseError,
+        extract_android_version_name,
+        extract_ios_version_name,
+    )
+except ModuleNotFoundError:
+    from source_versions import VersionParseError, extract_android_version_name, extract_ios_version_name
+
 
 class ValidationError(RuntimeError):
     """Raised when release branch validation fails."""
 
 
 RELEASE_BRANCH_RE = re.compile(r"^(?:release|hotfix)/v(?P<version>\d+\.\d+\.\d+)$")
-ANDROID_VERSION_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
-IOS_VERSION_RE = re.compile(r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;")
-
-
-def _read_text(path: Path) -> str:
-    if not path.is_file():
-        raise ValidationError(f"Missing required file: {path}")
-    return path.read_text(encoding="utf-8", errors="replace")
-
-
-def _extract_android_version(repo_root: Path) -> str:
-    gradle_file = repo_root / "native-android" / "app" / "build.gradle.kts"
-    text = _read_text(gradle_file)
-    match = ANDROID_VERSION_RE.search(text)
-    if not match:
-        raise ValidationError(f"Could not parse Android versionName in {gradle_file}")
-    return match.group(1)
-
-
-def _extract_ios_version(repo_root: Path) -> str:
-    pbxproj_file = repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj"
-    text = _read_text(pbxproj_file)
-    match = IOS_VERSION_RE.search(text)
-    if not match:
-        raise ValidationError(f"Could not parse iOS MARKETING_VERSION in {pbxproj_file}")
-    return match.group(1)
-
-
 def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
     branch_match = RELEASE_BRANCH_RE.match(head_ref.strip())
     if not branch_match:
@@ -56,8 +37,19 @@ def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
         )
 
     expected_version = branch_match.group("version")
-    android_version = _extract_android_version(repo_root)
-    ios_version = _extract_ios_version(repo_root)
+    try:
+        android_text = (repo_root / "native-android" / "app" / "build.gradle.kts").read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
+        ios_text = (repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj").read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
+        android_version = extract_android_version_name(android_text)
+        ios_version = extract_ios_version_name(ios_text)
+    except (OSError, VersionParseError) as exc:
+        raise ValidationError(str(exc)) from exc
 
     if android_version != ios_version:
         raise ValidationError(

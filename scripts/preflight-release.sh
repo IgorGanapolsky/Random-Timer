@@ -114,18 +114,16 @@ ANDROID_VERSION_CODE=""
 IOS_VERSION_NAME=""
 IOS_BUILD_NUMBER=""
 
-GRADLE_FILE="$PROJECT_ROOT/native-android/app/build.gradle.kts"
-if [[ -f "$GRADLE_FILE" ]]; then
-  ANDROID_VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' "$GRADLE_FILE" | head -1)
-  ANDROID_VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' "$GRADLE_FILE" | head -1)
+if VERSION_EXPORTS=$(python3 "$PROJECT_ROOT/scripts/source_versions.py" --repo-root "$PROJECT_ROOT" --format shell 2>/dev/null); then
+  eval "$VERSION_EXPORTS"
+  ANDROID_VERSION_NAME="${ANDROID_VERSION_NAME:-}"
+  ANDROID_VERSION_CODE="${ANDROID_VERSION_CODE:-}"
+  IOS_VERSION_NAME="${IOS_VERSION_NAME:-}"
+  IOS_BUILD_NUMBER="${IOS_BUILD_NUMBER:-}"
   info "Android: v${ANDROID_VERSION_NAME:-?} (code ${ANDROID_VERSION_CODE:-?})"
-fi
-
-PBXPROJ="$PROJECT_ROOT/native-ios/RandomTimer.xcodeproj/project.pbxproj"
-if [[ -f "$PBXPROJ" ]]; then
-  IOS_VERSION_NAME=$(grep -m1 'MARKETING_VERSION' "$PBXPROJ" | sed -n 's/.*= *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' || true)
-  IOS_BUILD_NUMBER=$(grep -m1 'CURRENT_PROJECT_VERSION' "$PBXPROJ" | sed -n 's/.*= *\([0-9]*\).*/\1/p' || true)
   info "iOS:     v${IOS_VERSION_NAME:-?} (build ${IOS_BUILD_NUMBER:-?})"
+else
+  warn "Could not resolve source versions from scripts/source_versions.py"
 fi
 
 # Cross-platform version parity warning
