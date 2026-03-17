@@ -6,7 +6,7 @@ platform :ios do
     # Build and upload to TestFlight
     build_app(
       scheme: "RandomTimer",
-      project: "RandomTimer.xcodeproj",
+      workspace: "RandomTimer.xcworkspace",
       export_method: "app-store",
       output_directory: "build"
     )
