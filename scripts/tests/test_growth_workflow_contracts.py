@@ -51,6 +51,17 @@ def test_ios_metadata_sync_can_remove_locked_waiting_for_review_version_and_uplo
     assert "remove_from_review_if_locked" in source
     assert "python scripts/asc_remove_from_review.py" in source
     assert "asc-remove-from-review" in source
+    assert "python scripts/source_versions.py --repo-root . --format shell" in source
+    assert "grep -m1 'MARKETING_VERSION'" not in source
+
+
+def test_ios_submit_and_native_release_workflows_use_shared_source_version_parser():
+    submit_source = (ROOT / ".github/workflows/ios-submit-review.yml").read_text(encoding="utf-8")
+    native_release_source = (ROOT / ".github/workflows/native-release.yml").read_text(encoding="utf-8")
+
+    assert "python scripts/source_versions.py --repo-root . --format shell" in submit_source
+    assert "grep -m1 'MARKETING_VERSION'" not in submit_source
+    assert "python scripts/source_versions.py --repo-root . --format shell" in native_release_source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

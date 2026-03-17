@@ -65,6 +65,7 @@ class TimerRepositoryImpl
                         } ?: SoundType.INTENSE,
                     volume = preferences[KEY_VOLUME] ?: 0.5f,
                     vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                    voiceCalloutsEnabled = preferences[KEY_VOICE_CALLOUTS_ENABLED] ?: false,
                 ).clampedForPro()
             }
 
@@ -78,6 +79,7 @@ class TimerRepositoryImpl
                 preferences[KEY_SOUND_TYPE] = config.soundType.name
                 preferences[KEY_VOLUME] = config.volume
                 preferences[KEY_VIBRATION_ENABLED] = config.vibrationEnabled
+                preferences[KEY_VOICE_CALLOUTS_ENABLED] = config.voiceCalloutsEnabled
             }
         }
 
@@ -105,6 +107,7 @@ class TimerRepositoryImpl
                             } ?: SoundType.INTENSE,
                         volume = preferences[KEY_VOLUME] ?: 0.5f,
                         vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                        voiceCalloutsEnabled = preferences[KEY_VOICE_CALLOUTS_ENABLED] ?: false,
                     ).clampedForPro()
 
                 TimerState(
@@ -145,6 +148,7 @@ class TimerRepositoryImpl
             private val KEY_SOUND_TYPE = stringPreferencesKey("sound_type")
             private val KEY_VOLUME = floatPreferencesKey("volume")
             private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+            private val KEY_VOICE_CALLOUTS_ENABLED = booleanPreferencesKey("voice_callouts_enabled")
 
             // Active timer keys
             private val KEY_ACTIVE_TARGET = longPreferencesKey("active_target_ms")

@@ -46,6 +46,7 @@ class ProManager
         companion object {
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
+            const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
@@ -298,6 +299,13 @@ class ProManager
                 details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
             }
         }
+
+        suspend fun getFormattedProPrice(): String = getFormattedPrice(PRO_PRODUCT_ID)
+
+        suspend fun launchProPurchase(
+            activity: Activity,
+            entryPoint: String,
+        ): Boolean = launchPurchase(activity, PRO_PRODUCT_ID, entryPoint)
 
         override fun onPurchasesUpdated(
             result: BillingResult,

@@ -94,11 +94,10 @@ jobs:
             echo "ios_version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Info.plist commonly contains build-setting placeholders like $(MARKETING_VERSION).
-          # Read MARKETING_VERSION directly from the Xcode project for a stable X.Y.Z value.
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | sed -n 's/.*= *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' || true)
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          IOS_VERSION="${IOS_VERSION_NAME:-}"
           if [ -z "$IOS_VERSION" ]; then
-            echo "❌ Could not determine iOS version (MARKETING_VERSION) from Xcode project"
+            echo "❌ Could not determine iOS version from source metadata"
             exit 1
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
