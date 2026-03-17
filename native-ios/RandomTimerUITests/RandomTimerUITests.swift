@@ -106,11 +106,15 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
-    // MARK: - Screenshot Capture (run manually for App Store screenshots)
+    // MARK: - App Store Screenshot Capture
 
-    func testCaptureScreenshots() {
+    func testCaptureAppStoreScreenshots() {
         let app = XCUIApplication()
+        // The script expects raw screenshots in /tmp/appstore_screenshots
         let outputDir = "/tmp/appstore_screenshots"
+        
+        // Force Pro/Elite state for screenshots
+        app.launchArguments += ["-ui-test-elite", "true"]
 
         addUIInterruptionMonitor(withDescription: "Notification Permission") { alert in
             let allowButton = alert.buttons["Allow"]
@@ -118,56 +122,43 @@ final class RandomTimerUITests: XCTestCase {
             return false
         }
 
-        // 1. Setup screen
+        // 1. Setup screen (with Round Selection visible)
         app.launch()
+        // Toggle loop on to show round selection
+        let loopToggle = app.switches["Loop Enabled"]
+        if loopToggle.waitForExistence(timeout: 3.0) && loopToggle.value as? String == "0" {
+            loopToggle.tap()
+        }
         sleep(2)
         let setupScreenshot = app.windows.firstMatch.screenshot()
-        let setupData = setupScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/1_setup.png", contents: setupData)
+        FileManager.default.createFile(atPath: "\(outputDir)/1_setup.png", contents: setupScreenshot.pngRepresentation)
 
-        // 2. Running timer
+        // 2. Active timer (running state)
         let startButton = app.buttons["Start Timer"]
-        if !startButton.waitForExistence(timeout: 3.0) {
-            let stopButton = app.buttons["Stop"]
-            if stopButton.waitForExistence(timeout: 2.0) { stopButton.tap() }
-        }
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         startButton.tap()
         sleep(1)
+        // Dismiss notification permission if it appears
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        sleep(1)
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let allowBtn = springboard.buttons["Allow"]
-        if allowBtn.waitForExistence(timeout: 2.0) { allowBtn.tap() }
         sleep(2)
-        let runningScreenshot = app.windows.firstMatch.screenshot()
-        let runningData = runningScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/2_running.png", contents: runningData)
+        let activeScreenshot = app.windows.firstMatch.screenshot()
+        FileManager.default.createFile(atPath: "\(outputDir)/2_active.png", contents: activeScreenshot.pngRepresentation)
 
-        // Stop the timer
-        let stopButton = app.buttons["Stop"]
-        if stopButton.waitForExistence(timeout: 2.0) {
-            stopButton.tap()
-        }
-        sleep(1)
-
-        // 3. Alarm state (timer just went off — shows Silence button)
+        // 3. Alarm state (timer just went off)
         app.terminate()
-        app.launchArguments = ["-ui-test-state", "alarm"]
+        app.launchArguments = ["-ui-test-state", "alarm", "-ui-test-pro", "true"]
         app.launch()
         sleep(2)
         let alarmScreenshot = app.windows.firstMatch.screenshot()
-        let alarmData = alarmScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/3_alarm.png", contents: alarmData)
+        FileManager.default.createFile(atPath: "\(outputDir)/3_alarm.png", contents: alarmScreenshot.pngRepresentation)
 
-        // 4. Paused state
+        // 4. Running timer (different view/state if needed)
         app.terminate()
-        app.launchArguments = ["-ui-test-state", "paused"]
+        app.launchArguments = ["-ui-test-state", "running", "-ui-test-pro", "true"]
         app.launch()
         sleep(2)
-        let pausedScreenshot = app.windows.firstMatch.screenshot()
-        let pausedData = pausedScreenshot.pngRepresentation
-        FileManager.default.createFile(atPath: "\(outputDir)/5_paused.png", contents: pausedData)
+        let runningScreenshot = app.windows.firstMatch.screenshot()
+        FileManager.default.createFile(atPath: "\(outputDir)/4_running.png", contents: runningScreenshot.pngRepresentation)
     }
 
     func testLandscapeShowsActionButtons() {

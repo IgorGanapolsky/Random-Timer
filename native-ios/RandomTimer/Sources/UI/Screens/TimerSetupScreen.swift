@@ -114,7 +114,7 @@ struct TimerSetupScreen: View {
                                         .cornerRadius(4)
                                 }
 
-                                if proManager.isPro {
+                                if proManager.isElite {
                                     Toggle("Voice Enabled", isOn: Binding(
                                         get: { config.voiceEnabled },
                                         set: { updateConfig(voiceEnabled: $0) }
@@ -126,7 +126,7 @@ struct TimerSetupScreen: View {
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
-                                            Text("PRO")
+                                            Text("ELITE")
                                             Image(systemName: "lock.fill")
                                         }
                                         .font(.caption2.weight(.bold))
@@ -401,6 +401,7 @@ struct TimerSetupScreen: View {
         minSeconds: Int? = nil,
         maxSeconds: Int? = nil,
         alarmDuration: Int? = nil,
+        repeatEnabled: Bool? = nil,
         soundType: SoundType? = nil,
         volume: Float? = nil,
         vibrationEnabled: Bool? = nil,
@@ -413,7 +414,7 @@ struct TimerSetupScreen: View {
             maxSeconds: maxSeconds ?? config.maxSeconds,
             alarmDuration: alarmDuration ?? config.alarmDuration,
             hiddenMode: false,
-            repeatEnabled: config.repeatEnabled,
+            repeatEnabled: repeatEnabled ?? config.repeatEnabled,
             soundType: soundType ?? config.soundType,
             volume: volume ?? config.volume,
             vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,

@@ -20,6 +20,14 @@ final class ProManager: ObservableObject {
     private var transactionListener: Task<Void, Never>?
 
     private init() {
+        // UI Test Overrides
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-ui-test-elite") {
+            entitlementLevel = .elite
+        } else if args.contains("-ui-test-pro") {
+            entitlementLevel = .base
+        }
+
         transactionListener = listenForTransactions()
         Task { await restorePurchases() }
     }

@@ -30,9 +30,9 @@ class CreativeText:
 
 CREATIVE_COPY: Dict[str, CreativeText] = {
     "1_setup.png": CreativeText(
-        title="SHARPEN YOUR DRAW",
-        subtitle="Randomized signals for dry-fire and target acquisition.",
-        badge="REACTION SPEED",
+        title="BATTLE-READY ROUNDS",
+        subtitle="Automated training intervals for boxing, MMA, and HIIT.",
+        badge="NEW: ROUND SELECTION",
     ),
     "2_active.png": CreativeText(
         title="STOP PREDICTING",
@@ -40,14 +40,14 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
         badge="ELIMINATE RHYTHM",
     ),
     "3_alarm.png": CreativeText(
-        title="RANGE COMMANDS",
-        subtitle="High-intensity audio arsenal designed for the noise of the gym.",
-        badge="SIGNAL HIT",
+        title="INTENSE COMMANDS",
+        subtitle="AI Voice callouts and alerts designed for noisy environments.",
+        badge="MISSION READY",
     ),
     "4_running.png": CreativeText(
-        title="BATTLE READY",
-        subtitle="Non-stop automated rounds for boxing, MMA, and HIIT.",
-        badge="RUN DRILLS",
+        title="SHARPEN YOUR DRAW",
+        subtitle="Randomized 'Go' signals for dry-fire and reaction drills.",
+        badge="REACTION SPEED",
     ),
     "5_ipad_setup.png": CreativeText(
         title="COACH VIEW",
@@ -94,8 +94,8 @@ def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
 def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     w, h = source.size
     
-    # Background: Solid high-contrast Tactical Black
-    base = Image.new("RGB", (w, h), (10, 12, 18))
+    # Background: Solid high-contrast Tactical Black (matches backgroundDark)
+    base = Image.new("RGB", (w, h), (10, 10, 15))
     draw = ImageDraw.Draw(base)
 
     # Outcome-First Header Section
@@ -106,12 +106,12 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     title_w = title_bbox[2] - title_bbox[0]
     
     # Draw large headline
-    draw.text(((w - title_w) // 2, int(h * 0.06)), text.title, font=title_font, fill=(255, 255, 255))
+    draw.text(((w - title_w) // 2, int(h * 0.06)), text.title, font=title_font, fill=(248, 250, 252)) # textPrimary
     
     # Draw outcome subtitle
     subtitle_bbox = draw.textbbox((0, 0), text.subtitle, font=subtitle_font)
     subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
-    draw.text(((w - subtitle_w) // 2, int(h * 0.12)), text.subtitle, font=subtitle_font, fill=(180, 190, 210))
+    draw.text(((w - subtitle_w) // 2, int(h * 0.12)), text.subtitle, font=subtitle_font, fill=(161, 161, 170)) # textSecondary
 
     # Badge (Result)
     badge_font = _load_font(max(28, int(h * 0.015)), bold=True)
@@ -123,7 +123,7 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     by1 = int(h * 0.165)
     bx2, by2 = bx1 + bw + pad_x * 2, by1 + bh + pad_y * 2
     
-    # Tactical Red Badge
+    # Tactical Red Badge (accentPrimary DC2626)
     draw.rounded_rectangle((bx1, by1, bx2, by2), radius=8, fill=(220, 38, 38))
     draw.text((bx1 + pad_x, by1 + pad_y - 2), text.badge, font=badge_font, fill=(255, 255, 255))
 
