@@ -289,15 +289,20 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           FIREBASE_INTERNAL_TESTERS: ${{ secrets.FIREBASE_INTERNAL_TESTERS }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_ANDROID_APP_ID FIREBASE_INTERNAL_TESTERS GOOGLE_PLAY_JSON_KEY; do
+          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_ANDROID_APP_ID FIREBASE_INTERNAL_TESTERS; do
             if [ -z "${!name:-}" ]; then
               echo "❌ Missing required secret: $name"
               exit 1
             fi
           done
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ] && [ -z "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            echo "❌ Missing required secret: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_PLAY_JSON_KEY"
+            exit 1
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -339,10 +344,15 @@ jobs:
 
       - name: Write Firebase service account key
         env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          if [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > /tmp/firebase-service-account.json
+          else
+            echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/firebase-service-account.json
+          fi
 
       - name: Distribute APK to Firebase App Distribution
         env:
