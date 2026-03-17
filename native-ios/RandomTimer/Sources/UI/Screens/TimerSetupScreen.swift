@@ -18,7 +18,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             if !proManager.isPro {
                                 Spacer()
                                 Text("PRO: 1H \u{1F512}")
@@ -85,23 +85,22 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // Voice Callouts (Elite Feature)
+                        // Voice Callouts (Pro Feature)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
-                                
-                                Text("Voice prompts during countdown")
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
+
+                                Text("Command cues during training")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-                            
+
                             Spacer()
-                            
+
                             HStack(spacing: 8) {
-                                // Preview Button (always enabled)
                                 Button {
                                     timerManager.previewCommandCue()
                                 } label: {
@@ -114,7 +113,7 @@ struct TimerSetupScreen: View {
                                         .cornerRadius(4)
                                 }
 
-                                if proManager.isElite {
+                                if proManager.isPro {
                                     Toggle("Voice Enabled", isOn: Binding(
                                         get: { config.voiceEnabled },
                                         set: { updateConfig(voiceEnabled: $0) }
@@ -126,7 +125,7 @@ struct TimerSetupScreen: View {
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
-                                            Text("ELITE")
+                                            Text("PRO")
                                             Image(systemName: "lock.fill")
                                         }
                                         .font(.caption2.weight(.bold))
@@ -140,7 +139,7 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .opacity(proManager.isElite ? 1.0 : 0.6)
+                        .contentShape(Rectangle())
 
                         Spacer().frame(height: 20)
 
@@ -210,9 +209,9 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             Spacer()
-                            
+
                             Toggle("Loop Enabled", isOn: Binding(
                                 get: { config.repeatEnabled },
                                 set: { updateConfig(repeatEnabled: $0) }
@@ -220,7 +219,7 @@ struct TimerSetupScreen: View {
                             .tint(.accentPrimary)
                             .labelsHidden()
                         }
-                        
+
                         if config.repeatEnabled {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -228,14 +227,14 @@ struct TimerSetupScreen: View {
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                    
+
                                     Text(config.repeatRounds == 0 ? "Infinite Rounds" : "\(config.repeatRounds) Rounds")
                                         .font(.caption2)
                                         .foregroundColor(.accentPrimary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 if proManager.isPro {
                                     Stepper("", value: Binding(
                                         get: { config.repeatRounds },
@@ -273,19 +272,24 @@ struct TimerSetupScreen: View {
                 .scaleEffect(1.02)
                 .padding(.vertical, 8)
 
-                // 4. Sound Arsenal
+                // 3. Sound Arsenal
                 HStack {
-                    Text("SOUND ARSENAL")
+                    Text("Sound Arsenal")
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                    
+                        .onTapGesture {
+                            withAnimation(.spring()) {
+                                showArsenal.toggle()
+                            }
+                        }
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
                     }
-                    
+
                     Spacer()
 
                     Button {
@@ -330,6 +334,7 @@ struct TimerSetupScreen: View {
                                             }
                                         }
                                     )
+
                                     if i + 1 < proSounds.count {
                                         let sound2 = proSounds[i + 1]
                                         SoundTypeButton(
@@ -395,8 +400,10 @@ struct TimerSetupScreen: View {
         }
     }
 
-    // Helper to update config with specific field changes
-    private func updateConfig(
+}
+
+private extension TimerSetupScreen {
+    func updateConfig(
         minSeconds: Int? = nil,
         maxSeconds: Int? = nil,
         alarmDuration: Int? = nil,
@@ -424,7 +431,7 @@ struct TimerSetupScreen: View {
         timerManager.updateConfig(newConfig)
     }
 
-    private func presentPaywall(entryPoint: PaywallEntryPoint) {
+    func presentPaywall(entryPoint: PaywallEntryPoint) {
         paywallEntryPoint = entryPoint
         showPaywall = true
     }
