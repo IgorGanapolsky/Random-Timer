@@ -8,6 +8,31 @@ platform :ios do
     false
   end
 
+  def duplicate_testflight_build_error?(error)
+    msg = error.to_s
+    return true if msg.include?("bundle version must be higher than the previously uploaded version")
+    return true if msg.include?("value that has already been used")
+    false
+  end
+
+  def testflight_upload_options(api_key)
+    options = {
+      skip_waiting_for_build_processing: false,
+      api_key: api_key
+    }
+
+    group_names = ENV.fetch("TESTFLIGHT_GROUPS", "").split(",").map(&:strip).reject(&:empty?)
+    return options if group_names.empty?
+
+    options[:groups] = group_names
+    distribute_external = ENV.fetch("TESTFLIGHT_DISTRIBUTE_EXTERNAL", "false") == "true"
+    options[:distribute_external] = distribute_external
+    if distribute_external
+      options[:notify_external_testers] = ENV.fetch("TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS", "false") == "true"
+    end
+    options
+  end
+
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_ci if ENV["CI"] == "true"
@@ -104,11 +129,53 @@ platform :ios do
       )
     end
 
-    # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: false,
-      api_key: defined?(api_key) ? api_key : nil
-    )
+    testflight_api_key = defined?(api_key) ? api_key : nil
+    upload_attempts = 0
+    begin
+      upload_to_testflight(**testflight_upload_options(testflight_api_key))
+    rescue => e
+      raise unless duplicate_testflight_build_error?(e)
+      raise if upload_attempts >= 1 || !defined?(api_key)
+
+      upload_attempts += 1
+      latest_remote_build_number = latest_testflight_build_number(
+        api_key: api_key,
+        app_identifier: "com.igorganapolsky.randomtimer",
+        version: marketing_version,
+        initial_build_number: next_build_number
+      ).to_i
+      next_build_number = [next_build_number + 1, latest_remote_build_number + 1].max
+      UI.important("Retrying TestFlight upload with build #{next_build_number} after duplicate build rejection.")
+      increment_build_number(
+        xcodeproj: "RandomTimer.xcodeproj",
+        build_number: next_build_number
+      )
+
+      if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+        build_opts = {
+          scheme: "RandomTimer",
+          export_method: "app-store",
+          export_options: {
+            signingStyle: "manual",
+            provisioningProfiles: {
+              "com.igorganapolsky.randomtimer" => app_profile,
+              "com.igorganapolsky.randomtimer.widget" => widget_profile
+            }
+          }
+        }
+        build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+        build_app(**build_opts)
+      else
+        posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
+        build_app(
+          scheme: "RandomTimer",
+          export_method: "app-store",
+          xcargs: posthog_xcargs
+        )
+      end
+
+      retry
+    end
   end
 
   desc "Create app in App Store Connect"
