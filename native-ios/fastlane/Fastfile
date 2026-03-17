@@ -9,9 +9,10 @@ platform :ios do
     # Build and upload to TestFlight
     build_app(
       scheme: "RandomTimer",
-      workspace: "RandomTimer.xcworkspace",
+      workspace: "RandomTimer.xcodeproj/project.xcworkspace",
       export_method: "app-store",
-      output_directory: "build"
+      output_directory: "build",
+      clean: true
     )
     
     # Upload to TestFlight
