@@ -11,6 +11,16 @@ on:
         description: "Git ref to distribute (optional, defaults to develop)"
         required: false
         type: string
+      target:
+        description: "Platform target to distribute"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android_play
+          - android_firebase
 
 concurrency:
   group: internal-distribution-${{ github.event_name }}-${{ github.event.workflow_run.head_branch || inputs.ref || github.ref_name }}
@@ -26,6 +36,7 @@ jobs:
       ref: ${{ steps.decide.outputs.ref }}
       sha: ${{ steps.decide.outputs.sha }}
       reason: ${{ steps.decide.outputs.reason }}
+      target: ${{ steps.decide.outputs.target }}
     steps:
       - name: Decide whether to run
         id: decide
@@ -35,6 +46,7 @@ jobs:
           WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
           WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
           INPUT_REF: ${{ inputs.ref }}
+          INPUT_TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
 
@@ -42,6 +54,7 @@ jobs:
           REF=""
           SHA=""
           REASON="not_eligible"
+          TARGET="${INPUT_TARGET:-all}"
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             REF="${INPUT_REF:-develop}"
@@ -58,12 +71,13 @@ jobs:
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "reason=$REASON" >> "$GITHUB_OUTPUT"
-          echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF sha=$SHA"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF sha=$SHA target=$TARGET"
 
   ios-testflight-internal:
     name: iOS TestFlight (Internal)
     needs: [gate]
-    if: needs.gate.outputs.should_run == 'true'
+    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
     environment: production
     steps:
@@ -160,8 +174,22 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS }}
+          TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL }}
+          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: ${{ secrets.TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS }}
         run: fastlane beta
         working-directory: native-ios
+
+      - name: Verify TestFlight upload read-back
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: |
+          set -euo pipefail
+          python -m pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
+          VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
+          python scripts/verify_release.py --platform ios --version "$VERSION"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -171,10 +199,10 @@ jobs:
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
 
-  android-internal:
+  android-play-internal:
     name: Android Google Play (Internal)
     needs: [gate]
-    if: needs.gate.outputs.should_run == 'true'
+    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_play')
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -222,6 +250,14 @@ jobs:
         run: gem install fastlane
         working-directory: native-android
 
+      - name: Resolve source versions
+        id: versions
+        run: |
+          set -euo pipefail
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          echo "android_version_code=$ANDROID_VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "android_version_name=$ANDROID_VERSION_NAME" >> "$GITHUB_OUTPUT"
+
       - name: Create google-services.json
         working-directory: native-android
         env:
@@ -259,20 +295,17 @@ jobs:
           export GOOGLE_PLAY_JSON_KEY_PATH="$(pwd)/play-store-key.json"
           fastlane internal
 
-      # Firebase App Distribution: requires FIREBASE_SERVICE_ACCOUNT secret (JSON content).
-      # Step is skipped when secret is not set.
-      - name: Upload to Firebase App Distribution
-        if: env.FIREBASE_SERVICE_ACCOUNT != ''
+      - name: Verify Play internal track read-back
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: 1:624873778337:android:4503588605a3273edc14e0
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          file: native-android/app/build/outputs/bundle/release/app-release.aab
-          releaseNotes: |
-            Internal build from ${{ github.sha }}
-            Branch: ${{ github.ref_name }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
+          python scripts/verify_release.py \
+            --platform android \
+            --track internal \
+            --version-code "${{ steps.versions.outputs.android_version_code }}" \
+            --version "${{ steps.versions.outputs.android_version_name }}"
 
       - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4
@@ -286,4 +319,89 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore native-android/play-store-key.json
-# Triggering fresh check
+
+  android-firebase-internal:
+    name: Android Firebase (Internal)
+    needs: [gate]
+    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Fail fast on Firebase distribution auth inputs
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+        run: |
+          set -euo pipefail
+          for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_SERVICE_ACCOUNT_JSON FIREBASE_ANDROID_APP_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Preflight release checks (Android)
+        run: bash scripts/preflight-release.sh --platform android --layer 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Create google-services.json
+        working-directory: native-android
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+
+      - name: Decode keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
+
+      - name: Build release APK
+        working-directory: native-android
+        env:
+          KEYSTORE_PATH: /tmp/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+        run: |
+          set -euo pipefail
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          file: native-android/app/build/outputs/apk/release/app-release.apk
+          groups: ${{ secrets.FIREBASE_INTERNAL_TESTERS || 'testers' }}
+          releaseNotes: |
+            Internal build from ${{ needs.gate.outputs.sha || github.sha }}
+            Ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-apk-firebase-internal
+          path: native-android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: warn
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f /tmp/release.keystore

@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
+IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -30,6 +31,23 @@ def test_internal_distribution_workflow_emits_platform_specific_release_artifact
 
     assert "ios-ipa-internal" in source or "ios-ipa" in source
     assert "android-aab-internal" in source or "android-aab" in source
+
+
+def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "target:" in source
+    assert "android_firebase" in source
+    assert "android-firebase-internal" in source or "Android Firebase" in source
+    assert "FIREBASE_SERVICE_ACCOUNT_JSON" in source
+    assert "FIREBASE_ANDROID_APP_ID" in source
+    assert "android-apk-firebase-internal" in source or "app-release.apk" in source
+
+
+def test_ios_internal_retry_dispatch_targets_ios_only():
+    source = IOS_INTERNAL_RETRY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "-f target=ios" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

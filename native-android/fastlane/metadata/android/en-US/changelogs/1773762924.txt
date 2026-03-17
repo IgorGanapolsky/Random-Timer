@@ -1,0 +1,3 @@
+- Fixed iOS Pro range validation and release build path regressions.
+- Improved internal distribution reliability for TestFlight and Google Play.
+- Polished premium setup flow labels and Sound Arsenal behavior.
