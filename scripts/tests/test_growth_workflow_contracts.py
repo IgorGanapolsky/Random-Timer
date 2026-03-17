@@ -23,6 +23,7 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
 
     assert "preflight-release" in source or "Preflight release" in source
     assert "ios-testflight-internal" in source or "android-internal" in source
+    assert "android-firebase-internal" in source
 
 
 def test_internal_distribution_workflow_emits_platform_specific_release_artifacts():
@@ -30,6 +31,7 @@ def test_internal_distribution_workflow_emits_platform_specific_release_artifact
 
     assert "ios-ipa-internal" in source or "ios-ipa" in source
     assert "android-aab-internal" in source or "android-aab" in source
+    assert "android-apk-firebase-internal" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
