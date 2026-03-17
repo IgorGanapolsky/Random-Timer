@@ -259,6 +259,21 @@ jobs:
           export GOOGLE_PLAY_JSON_KEY_PATH="$(pwd)/play-store-key.json"
           fastlane internal
 
+      # Firebase App Distribution: requires FIREBASE_SERVICE_ACCOUNT secret (JSON content).
+      # Step is skipped when secret is not set.
+      - name: Upload to Firebase App Distribution
+        if: env.FIREBASE_SERVICE_ACCOUNT != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: 1:624873778337:android:4503588605a3273edc14e0
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          file: native-android/app/build/outputs/bundle/release/app-release.aab
+          releaseNotes: |
+            Internal build from ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+
       - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4
         if: always()
