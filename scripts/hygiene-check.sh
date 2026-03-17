@@ -94,6 +94,14 @@ echo "7. Required files present"
 [ ! -f "$REPO_ROOT/AGENTS.md" ] && error "Missing AGENTS.md"
 [ ! -f "$REPO_ROOT/README.md" ] && error "Missing README.md"
 
+# ── 8. English-only rule verification ───────────────────────────────
+echo "8. English-only AI config"
+if [ -f "$REPO_ROOT/scripts/verify-english-rules.sh" ]; then
+  bash "$REPO_ROOT/scripts/verify-english-rules.sh" || error "verify-english-rules.sh failed"
+else
+  warn "scripts/verify-english-rules.sh missing"
+fi
+
 # ── Summary ─────────────────────────────────────────────────────────
 echo ""
 echo "=== Results ==="

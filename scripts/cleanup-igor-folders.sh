@@ -52,7 +52,7 @@ for container in _worktrees _branch-archives; do
       echo "  KEEP (registered): $dirname"
       continue
     fi
-    if [ -f "${dir}.git" ] || [ -f "${dir}/.git" ]; then
+    if [ -f "${dir}/.git" ]; then
       if git -C "$dir" status --porcelain 2>/dev/null | grep -q .; then
         echo "  SKIP (dirty): $dirname"
         continue
