@@ -122,6 +122,7 @@ Use paid spend only when attribution is measurable and activation quality holds.
 - **Python automation layer** in [`scripts/`](scripts/) drives release ops, analytics snapshots, growth reporting, and store metadata workflows.
 - **GitHub Actions pipelines** in [`.github/workflows/`](.github/workflows/) run CI, release automation, metadata sync, and guardrail checks.
 - **Fastlane metadata** lives under [`native-ios/fastlane`](native-ios/fastlane) and [`native-android/fastlane`](native-android/fastlane).
+- **Optional SwiftUI skill setup** for iOS-only agent work lives in [`docs/SWIFTUI_AGENT_SKILL.md`](docs/SWIFTUI_AGENT_SKILL.md).
 
 ## Build & Test
 

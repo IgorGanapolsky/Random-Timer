@@ -1,6 +1,7 @@
 .PHONY: run-android-device run-android-emulator run-ios-device run-ios-sim fix-ios-device install-hooks
 .PHONY: verify verify-android verify-android-instrumentation verify-ios verify-ios-ui maestro-android maestro-ios
 .PHONY: playwright-install playwright-install-agent-browser playwright-verify-local playwright-verify-strict playwright-store-console playwright-store-console-agent playwright-sync-auth-secrets
+.PHONY: swiftui-skill-install swiftui-skill-verify
 .PHONY: device-tests device-tests-adb phoneclaw-visual
 
 ANDROID_DIR := native-android
@@ -191,3 +192,9 @@ self-heal:
 # Internal distribution (Firebase + TestFlight)
 distribute:
 	@gh workflow run internal-distribution.yml --ref develop
+
+swiftui-skill-install:
+	@bash scripts/install-swiftui-agent-skill.sh
+
+swiftui-skill-verify:
+	@bash scripts/verify-swiftui-agent-skill.sh
