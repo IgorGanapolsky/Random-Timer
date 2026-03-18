@@ -132,7 +132,11 @@ platform :ios do
     testflight_api_key = defined?(api_key) ? api_key : nil
     upload_attempts = 0
     begin
-      upload_to_testflight(**testflight_upload_options(testflight_api_key))
+      upload_to_testflight(
+        api_key: testflight_api_key,
+        groups: ["Internal"],
+        skip_waiting_for_build_processing: false
+      )
     rescue => e
       raise unless duplicate_testflight_build_error?(e)
       raise if upload_attempts >= 1 || !defined?(api_key)
