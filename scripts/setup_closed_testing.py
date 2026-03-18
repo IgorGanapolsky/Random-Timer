@@ -2,6 +2,8 @@
 """Set up Closed Testing track with 20 testers in Google Play Console."""
 
 import time
+from pathlib import Path
+
 from playwright.sync_api import sync_playwright
 from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
@@ -11,7 +13,8 @@ BASE = f"https://play.google.com/console/u/0/developers/{DEV}/app/{APP}"
 
 TESTERS = "\n".join([f"ig5973700+tester{i}@gmail.com" for i in range(1, 21)])
 
-AAB_PATH = "/Users/ganapolsky_i/workspace/git/igor/Random-Timer/native-android/app/build/outputs/bundle/release/app-release.aab"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+AAB_PATH = REPO_ROOT / "native-android" / "app" / "build" / "outputs" / "bundle" / "release" / "app-release.aab"
 
 
 def screenshot(page, name):
