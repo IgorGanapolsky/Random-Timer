@@ -31,6 +31,10 @@ def read_private_key_material(key_id: str) -> str:
         if os.path.isfile(default_path):
             value = default_path
     if not value:
+        # Try reading from GitHub Actions secret format
+        github_key = os.environ.get("APPSTORE_PRIVATE_KEY_GITHUB")
+        if github_key:
+            return github_key
         return ""
 
     expanded = os.path.expanduser(value)
