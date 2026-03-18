@@ -249,9 +249,28 @@ jobs:
         id: versions
         run: |
           set -euo pipefail
-          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
-          echo "android_version_code=$ANDROID_VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "android_version_name=$ANDROID_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          VERSIONS=$(python scripts/source_versions.py --repo-root . --format json)
+          echo "android_version_code=$(echo "$VERSIONS" | python -c "import json,sys; d=json.load(sys.stdin); print(d['android']['version_code'])")" >> "$GITHUB_OUTPUT"
+          echo "android_version_name=$(echo "$VERSIONS" | python -c "import json,sys; d=json.load(sys.stdin); print(d['android']['version_name'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Google Play JSON key
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          KEY_PATH="$RUNNER_TEMP/play-validate.json"
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$KEY_PATH"
+          VALIDATE_PATH="$KEY_PATH" python -c '
+          import json, sys, os
+          path = os.environ["VALIDATE_PATH"]
+          try:
+              with open(path) as f:
+                  json.load(f)
+          except json.JSONDecodeError as e:
+              print("::error::GOOGLE_PLAY_JSON_KEY is not valid JSON:", e)
+              sys.exit(1)
+          '
+          rm -f "$KEY_PATH"
 
       - name: Compute monotonic Play version code
         id: play_version_code
@@ -260,7 +279,7 @@ jobs:
         run: |
           set -euo pipefail
           KEY_PATH="$RUNNER_TEMP/play-service-account.json"
-          echo "$GOOGLE_PLAY_JSON_KEY" > "$KEY_PATH"
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$KEY_PATH"
           python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0
           NEXT_CODE="$(python scripts/compute_android_release_version_code.py \
             --service-account-json "$KEY_PATH" \
@@ -300,7 +319,7 @@ jobs:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
           export GOOGLE_PLAY_JSON_KEY_PATH="$(pwd)/play-store-key.json"
           fastlane internal
 
@@ -346,6 +365,8 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_INTERNAL_GROUPS: ${{ vars.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_INTERNAL_TESTERS: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
         run: |
           set -euo pipefail
           for name in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 FIREBASE_SERVICE_ACCOUNT_JSON FIREBASE_ANDROID_APP_ID; do
@@ -354,6 +375,14 @@ jobs:
               exit 1
             fi
           done
+          if [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ] && [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ]; then
+            echo "❌ Set vars.FIREBASE_INTERNAL_GROUPS (Firebase Console group alias) or vars.FIREBASE_INTERNAL_TESTERS (comma-separated emails)"
+            exit 1
+          fi
+          if ! [[ "$FIREBASE_ANDROID_APP_ID" =~ ^1:[0-9]+:android:[a-fA-F0-9]+$ ]]; then
+            echo "❌ FIREBASE_ANDROID_APP_ID must match 1:PROJECT_NUMBER:android:APP_ID (e.g. 1:624873778337:android:4503588605a3273edc14e0)"
+            exit 1
+          fi
 
       - name: Preflight release checks (Android)
         run: bash scripts/preflight-release.sh --platform android --layer 1
@@ -396,6 +425,7 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          groups: ${{ vars.FIREBASE_INTERNAL_GROUPS }}
           testers: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
           file: native-android/app/build/outputs/apk/release/app-release.apk
           releaseNotes: |
