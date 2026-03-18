@@ -1,3 +1,4 @@
+import tempfile
 import unittest
 from unittest.mock import call
 from unittest.mock import Mock
@@ -5,6 +6,7 @@ from unittest.mock import Mock
 from scripts.play_publish import (
     _commit_edit,
     _is_failed_precondition,
+    _parse_args,
     _release_payload,
     _requires_manual_review_submission,
 )
@@ -121,6 +123,25 @@ class PlayPublishTests(unittest.TestCase):
 
         with self.assertRaises(_FakeHttpError):
             _commit_edit(edits_service, "pkg", "edit-1")
+
+    def test_parse_args_default_result_error_json_use_tempdir(self):
+        import sys
+
+        tmp = tempfile.gettempdir()
+        sys.argv = [
+            "play_publish.py",
+            "--service-account-json",
+            "/fake/sa.json",
+            "--package",
+            "com.test",
+            "--aab-path",
+            "/fake/app.aab",
+        ]
+        args = _parse_args()
+        self.assertIn(tmp, args.result_json)
+        self.assertIn(tmp, args.error_json)
+        self.assertTrue(args.result_json.endswith("play-upload-result.json"))
+        self.assertTrue(args.error_json.endswith("play-upload-error.json"))
 
 
 if __name__ == "__main__":

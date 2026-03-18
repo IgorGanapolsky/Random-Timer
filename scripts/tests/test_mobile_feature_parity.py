@@ -57,6 +57,20 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     assert "unlockProForDebug" in ios_paywall
 
 
+def test_paywall_single_offer_parity():
+    """Enforce one visible premium offer on both platforms (monetization-roadmap)."""
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+
+    assert "Elite Tactical" not in android_paywall, (
+        "Android paywall must not show Elite Tactical; single-offer only per monetization roadmap"
+    )
+    assert "One premium plan" in android_paywall
+    assert "One premium plan" in ios_paywall
+    assert "Yearly auto-renewing subscription" in android_paywall
+    assert "Yearly auto-renewing subscription" in ios_paywall
+
+
 def test_voice_callouts_present_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)
@@ -119,5 +133,5 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
     assert "suspend fun launchProPurchase(" in android_pro_manager
-    assert "getFormattedPrice" in android_nav or "basePrice" in android_nav
+    assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
     assert "launchProPurchase" in android_nav
