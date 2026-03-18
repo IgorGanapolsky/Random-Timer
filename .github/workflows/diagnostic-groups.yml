@@ -1,0 +1,16 @@
+name: Diagnostic List Groups
+on: workflow_dispatch
+jobs:
+  diagnose:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: List Beta Groups
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$APPSTORE_KEY_ID.p8
+          fastlane pilot groups --api_key_path ~/.appstoreconnect/private_keys/AuthKey_$APPSTORE_KEY_ID.p8 --api_key_id $APPSTORE_KEY_ID --api_key_issuer_id $APPSTORE_ISSUER_ID
