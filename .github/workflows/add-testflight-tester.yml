@@ -26,21 +26,18 @@ on:
 jobs:
   add-tester:
     name: Add Tester to TestFlight
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          ruby-version: "3.2"
-          bundler-cache: true
-          working-directory: native-ios
+          python-version: "3.11"
 
-      - name: Install Fastlane
-        run: gem install fastlane
-        working-directory: native-ios
+      - name: Install dependencies
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
       - name: Write App Store Connect key
         env:
@@ -53,14 +50,13 @@ jobs:
           printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_PATH"
           python3 scripts/normalize_pem.py "$KEY_PATH" || true
 
-      - name: Add tester
-        working-directory: native-ios
+      - name: Add tester to TestFlight
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
-          fastlane add_tester \
-            email:"${{ inputs.email }}" \
-            first_name:"${{ inputs.first_name }}" \
-            last_name:"${{ inputs.last_name }}" \
-            group:"${{ inputs.group }}"
+          python3 scripts/asc_add_tester.py \
+            --email "${{ inputs.email }}" \
+            --first-name "${{ inputs.first_name }}" \
+            --last-name "${{ inputs.last_name }}" \
+            --group "${{ inputs.group }}"
