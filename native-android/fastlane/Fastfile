@@ -19,12 +19,16 @@ platform :android do
     )
     
     # Upload to Firebase App Distribution
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID"],
-      firebase_cli_token: ENV["FIREBASE_TOKEN"],
-      release_notes: "Automated build from GitHub Actions",
-      groups: "internal-testers"
-    )
+    if ENV["FIREBASE_TOKEN"] && ENV["FIREBASE_ANDROID_APP_ID"]
+      firebase_app_distribution(
+        app: ENV["FIREBASE_ANDROID_APP_ID"],
+        firebase_cli_token: ENV["FIREBASE_TOKEN"],
+        release_notes: "Automated build from GitHub Actions",
+        groups: "internal-testers"
+      )
+    else
+      UI.important("Firebase App Distribution not configured - skipping")
+    end
   end
   
   desc "Build debug APK for CI"
