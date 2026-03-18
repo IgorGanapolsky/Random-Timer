@@ -213,14 +213,14 @@ fun ActiveTimerScreen(
                     )
                 } else if (isComplete) {
                     Text(
-                        text = "Went off after ${formatDurationReadable(state.targetDuration)}",
+                        text = stringResource(R.string.timer_went_off_after, formatDurationReadable(state.targetDuration)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TimerColors.TextSecondary,
                         textAlign = TextAlign.Center,
                     )
                 } else {
                     Text(
-                        text = "You don't know when it will go off...",
+                        text = stringResource(R.string.timer_unknown_arrival),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isPaused) TimerColors.TextSecondary else TimerColors.TextMuted,
                         textAlign = TextAlign.Center,

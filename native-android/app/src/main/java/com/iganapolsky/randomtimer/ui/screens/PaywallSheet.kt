@@ -87,10 +87,10 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Voice callouts during countdown")
-            ProFeatureRow(text = "Support independent development")
+            ProFeatureRow(text = stringResource(R.string.pro_feature_sounds))
+            ProFeatureRow(text = stringResource(R.string.pro_feature_range))
+            ProFeatureRow(text = stringResource(R.string.pro_feature_voice))
+            ProFeatureRow(text = stringResource(R.string.pro_feature_support))
 
             Spacer(modifier = Modifier.height(24.dp))
 

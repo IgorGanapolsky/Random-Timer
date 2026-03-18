@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://igorganapolsky.github.io/Random-Timer/sitemap.xml

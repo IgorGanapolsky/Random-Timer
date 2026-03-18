@@ -7,4 +7,19 @@
     <string name="dismiss">Stop</string>
     <string name="cancel">Cancel</string>
     <string name="start_timer">Start Timer</string>
+    <string name="pro_feature_sounds">10 alarm sounds (vs 2 free)</string>
+    <string name="pro_feature_range">Extended range up to 60 minutes</string>
+    <string name="pro_feature_voice">Voice callouts during countdown</string>
+    <string name="pro_feature_support">Support independent development</string>
+    <string name="pro_subscription_notice">Yearly auto-renewing subscription. Cancel anytime.</string>
+    <string name="timer_went_off_after">Went off after %1$s</string>
+    <string name="timer_unknown_arrival">You don\'t know when it will go off...</string>
+    <string name="session_count">Session #%1$d</string>
+    <string name="timer_range">Timer Range</string>
+    <string name="ai_voice_callouts">AI Voice Callouts</string>
+    <string name="day_streak">%1$d day streak</string>
+    <string name="pro_timer_range_label">PRO: 1H \uD83D\uDD12</string>
+    <string name="alarm_sound_label">Alarm Sound</string>
+    <string name="voice_prompts_description">Voice prompts during countdown</string>
+    <string name="preview_label">PREVIEW</string>
 </resources>
