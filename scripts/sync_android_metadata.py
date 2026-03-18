@@ -24,13 +24,14 @@ from googleapiclient.discovery import build
 PACKAGE_NAME = "com.iganapolsky.randomtimer"
 METADATA_ROOT = Path(__file__).resolve().parent.parent / "native-android" / "fastlane" / "metadata" / "android"
 
-# Google Play API language codes.
-# Note: ja-JP requires the locale to be enabled in Play Console first.
+# Local dir name -> Google Play API language code.
+# ja-JP/ko: Enable locale in Play Console first; per-locale errors are caught and skipped.
 LANG_MAP = {
     "en-US": "en-US",
     "de-DE": "de-DE",
-    "ja-JP": "ja-JP",
     "pt-BR": "pt-BR",
+    "ja-JP": "ja-JP",
+    "ko": "ko-KR",
 }
 
 
@@ -60,6 +61,7 @@ def main():
     print(f"Created edit: {edit_id}")
 
     updated = []
+    skipped = []
     for local_lang, api_lang in LANG_MAP.items():
         title = read_metadata(local_lang, "title.txt")
         short_desc = read_metadata(local_lang, "short_description.txt")
@@ -76,23 +78,34 @@ def main():
         if full_desc:
             listing["fullDescription"] = full_desc
 
-        edits.listings().update(
-            packageName=PACKAGE_NAME,
-            editId=edit_id,
-            language=api_lang,
-            body=listing,
-        ).execute()
-        updated.append(api_lang)
-        print(f"  Updated listing for {api_lang}: title={'yes' if title else 'no'}, short={'yes' if short_desc else 'no'}, full={'yes' if full_desc else 'no'}")
+        try:
+            edits.listings().update(
+                packageName=PACKAGE_NAME,
+                editId=edit_id,
+                language=api_lang,
+                body=listing,
+            ).execute()
+            updated.append(api_lang)
+            print(f"  Updated listing for {api_lang}: title={'yes' if title else 'no'}, short={'yes' if short_desc else 'no'}, full={'yes' if full_desc else 'no'}")
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "invalid" in err_msg or "404" in err_msg or "not found" in err_msg:
+                skipped.append(api_lang)
+                print(f"  Skipped {api_lang}: locale not configured in Play Console or invalid request", file=sys.stderr)
+            else:
+                raise
 
     if not updated:
         print("No metadata to upload. Discarding edit.")
         edits.delete(packageName=PACKAGE_NAME, editId=edit_id).execute()
         return
 
+    if skipped:
+        print(f"Skipped {len(skipped)} locales (enable in Play Console if needed): {', '.join(skipped)}", file=sys.stderr)
+
     # Commit edit with changesNotSentForReview=true since we can't auto-send for review
     edits.commit(
-        packageName=PACKAGE_NAME, 
+        packageName=PACKAGE_NAME,
         editId=edit_id,
         changesNotSentForReview=True
     ).execute()
