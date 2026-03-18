@@ -7,19 +7,20 @@ Detects and fixes common CI/CD blockers:
 3. Missing build artifacts
 """
 
-import os
 import re
 import sys
-import subprocess
+import time
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
 
 def bump_android_version():
     """Bumps Android versionCode to a unique timestamp to avoid Play Store conflicts."""
-    gradle_path = Path("native-android/app/build.gradle.kts")
+    gradle_path = REPO_ROOT / "native-android" / "app" / "build.gradle.kts"
     if not gradle_path.exists():
         return
-    
-    import time
+
     new_code = int(time.time())
     content = gradle_path.read_text()
     new_content = re.sub(r'versionCode\s*=\s*\d+', f'versionCode = {new_code}', content)
@@ -28,7 +29,7 @@ def bump_android_version():
 
 def bump_ios_build_number():
     """Bumps iOS CURRENT_PROJECT_VERSION."""
-    project_path = Path("native-ios/RandomTimer.xcodeproj/project.pbxproj")
+    project_path = REPO_ROOT / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj"
     if not project_path.exists():
         return
     
@@ -44,7 +45,7 @@ def bump_ios_build_number():
 
 def fix_preflight_regex():
     """Ensures the source_versions script is robust."""
-    script_path = Path("scripts/source_versions.py")
+    script_path = REPO_ROOT / "scripts" / "source_versions.py"
     if not script_path.exists():
         return
     

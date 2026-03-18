@@ -15,13 +15,9 @@ import sys
 from pathlib import Path
 
 try:
-    from scripts.source_versions import (
-        VersionParseError,
-        extract_android_version_name,
-        extract_ios_version_name,
-    )
+    from scripts.source_versions import VersionParseError, read_source_versions
 except ModuleNotFoundError:
-    from source_versions import VersionParseError, extract_android_version_name, extract_ios_version_name
+    from source_versions import VersionParseError, read_source_versions
 
 
 class ValidationError(RuntimeError):
@@ -38,16 +34,9 @@ def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
 
     expected_version = branch_match.group("version")
     try:
-        android_text = (repo_root / "native-android" / "app" / "build.gradle.kts").read_text(
-            encoding="utf-8",
-            errors="replace",
-        )
-        ios_text = (repo_root / "native-ios" / "RandomTimer.xcodeproj" / "project.pbxproj").read_text(
-            encoding="utf-8",
-            errors="replace",
-        )
-        android_version = extract_android_version_name(android_text)
-        ios_version = extract_ios_version_name(ios_text)
+        versions = read_source_versions(repo_root)
+        android_version = versions["android"]["version_name"]
+        ios_version = versions["ios"]["version_name"]
     except (OSError, VersionParseError) as exc:
         raise ValidationError(str(exc)) from exc
 
