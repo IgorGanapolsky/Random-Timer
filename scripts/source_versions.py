@@ -17,9 +17,11 @@ class VersionParseError(RuntimeError):
 
 
 ANDROID_VERSION_NAME_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
-ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(?:[^\n]*?\?:\s*)?(\d+)")")
+ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(?:[^\n]*?\?:\s*)?(\d+)")
 ANDROID_VERSION_CODE_FALLBACK_RE = re.compile(r"versionCode\s*=\s*[^\n]*?\?:\s*(\d+)")
-IOS_MARKETING_VERSION_RE = re.compile(r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;")
+IOS_MARKETING_VERSION_RE = re.compile(
+    r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;"
+)
 IOS_BUILD_NUMBER_RE = re.compile(r"CURRENT_PROJECT_VERSION\s*=\s*(\d+)\s*;")
 
 
@@ -91,7 +93,9 @@ def _flatten_versions(payload: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Read release version metadata from source files.")
+    parser = argparse.ArgumentParser(
+        description="Read release version metadata from source files."
+    )
     parser.add_argument("--repo-root", default=".", help="Repository root")
     parser.add_argument("--format", choices=("json", "shell", "value"), default="json")
     parser.add_argument("--key", default="", help="Required when --format=value")
