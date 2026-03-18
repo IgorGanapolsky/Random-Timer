@@ -9,6 +9,7 @@ import json
 import mimetypes
 import os
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -366,8 +367,14 @@ def _parse_args() -> argparse.Namespace:
         "--changelog-dir",
         default="native-android/fastlane/metadata/android/en-US/changelogs",
     )
-    parser.add_argument("--result-json", default="/tmp/play-upload-result.json")
-    parser.add_argument("--error-json", default="/tmp/play-upload-error.json")
+    parser.add_argument(
+        "--result-json",
+        default=os.path.join(tempfile.gettempdir(), "play-upload-result.json"),
+    )
+    parser.add_argument(
+        "--error-json",
+        default=os.path.join(tempfile.gettempdir(), "play-upload-error.json"),
+    )
     parser.add_argument("--user-fraction", default=os.getenv("PLAY_USER_FRACTION", "0.1"))
     return parser.parse_args()
 
