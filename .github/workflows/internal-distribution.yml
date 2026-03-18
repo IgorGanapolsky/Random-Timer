@@ -192,7 +192,7 @@ jobs:
           set -euo pipefail
           python -m pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
           VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
-          python scripts/verify_release.py --platform ios --version "$VERSION"
+          python scripts/verify_release.py --platform ios --version "$VERSION" --wait --timeout 900 --poll-interval 60
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -424,6 +424,8 @@ jobs:
 
       - name: Distribute to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
+        continue-on-error: true
+        id: firebase_dist
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
@@ -433,6 +435,11 @@ jobs:
           releaseNotes: |
             Internal build from ${{ needs.gate.outputs.sha || github.sha }}
             Ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Warn on Firebase distribution failure
+        if: steps.firebase_dist.outcome == 'failure'
+        run: |
+          echo "::warning::Firebase App Distribution failed (e.g. 404). Check vars.FIREBASE_INTERNAL_GROUPS matches a valid group alias in Firebase Console, or vars.FIREBASE_INTERNAL_TESTERS has valid emails."
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4

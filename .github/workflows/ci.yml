@@ -533,18 +533,18 @@ jobs:
       - name: Detect Crashlytics credentials
         id: crashlytics-creds
         run: |
-          if [ -n "${{ secrets.GCP_SA_KEY }}" ]; then
+          if [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" ]; then
             echo "has_creds=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_creds=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping Crashlytics check because GCP_SA_KEY is not configured."
+            echo "::notice::Skipping Crashlytics check because FIREBASE_SERVICE_ACCOUNT_JSON is not configured."
           fi
 
       - name: Authenticate to Google Cloud
         if: steps.crashlytics-creds.outputs.has_creds == 'true'
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
       - name: Check crash-free rate
         if: steps.crashlytics-creds.outputs.has_creds == 'true'
