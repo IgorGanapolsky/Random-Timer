@@ -104,7 +104,7 @@ jobs:
           done
 
       - name: Preflight release checks (iOS)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -228,7 +228,7 @@ jobs:
           done
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -389,7 +389,7 @@ jobs:
           fi
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -431,7 +431,7 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          groups: ${{ vars.FIREBASE_INTERNAL_GROUPS }}
+          groups: ${{ vars.FIREBASE_INTERNAL_GROUPS || env.FIREBASE_INTERNAL_GROUPS }}
           testers: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
           file: native-android/app/build/outputs/apk/release/app-release.apk
           releaseNotes: |
