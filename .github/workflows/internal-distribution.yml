@@ -146,7 +146,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_PATH"
+          python scripts/normalize_pem.py "$KEY_PATH"
 
       - name: Configure git credentials for match
         env:

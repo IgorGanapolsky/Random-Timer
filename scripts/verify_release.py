@@ -259,9 +259,17 @@ class AppStoreVerifier:
             sys.exit(2)
 
         # Support both raw key content and file path
-        if os.path.isfile(private_key):
-            with open(private_key) as f:
-                private_key = f.read()
+        def _normalize_pem(raw: str) -> str:
+            raw = raw.replace("\r\n", "\n").replace("\r", "\n")
+            if raw.startswith("\ufeff"):
+                raw = raw[1:]
+            return raw.replace("\\n", "\n").strip()
+
+        if os.path.isfile(os.path.expanduser(str(private_key))):
+            with open(os.path.expanduser(private_key), encoding="utf-8") as f:
+                private_key = _normalize_pem(f.read())
+        else:
+            private_key = _normalize_pem(str(private_key))
 
         exp = int(now) + 1200  # 20 minutes
         payload = {

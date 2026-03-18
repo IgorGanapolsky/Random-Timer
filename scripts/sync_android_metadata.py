@@ -24,12 +24,11 @@ from googleapiclient.discovery import build
 PACKAGE_NAME = "com.iganapolsky.randomtimer"
 METADATA_ROOT = Path(__file__).resolve().parent.parent / "native-android" / "fastlane" / "metadata" / "android"
 
-# Google Play API language codes differ from fastlane directory names
+# Google Play API language codes differ from fastlane directory names.
+# ja/ko removed: Play API returns Invalid request until those locales are configured in Play Console.
 LANG_MAP = {
     "en-US": "en-US",
     "de-DE": "de-DE",
-    "ja": "ja-JP",
-    "ko": "ko-KR",
     "pt-BR": "pt-BR",
 }
 
