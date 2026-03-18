@@ -52,11 +52,13 @@ def find_app(token, bundle_id):
 
 
 def find_or_create_group(token, app_id, group_name):
-    data = api(token, "GET", f"/apps/{app_id}/betaGroups", params={"filter[name]": group_name})
-    if data.get("data"):
-        group_id = data["data"][0]["id"]
-        print(f"Found existing group '{group_name}' (id={group_id})")
-        return group_id
+    # Fetch all groups for the app and filter manually (API doesn't support filter[name] here)
+    data = api(token, "GET", f"/apps/{app_id}/betaGroups")
+    for g in data.get("data", []):
+        if g["attributes"]["name"] == group_name:
+            group_id = g["id"]
+            print(f"Found existing group '{group_name}' (id={group_id})")
+            return group_id
 
     print(f"Creating beta group '{group_name}'...")
     body = {
