@@ -56,9 +56,9 @@
 | Metric | Value |
 |--------|-------|
 | Before | 61% (scripts/) |
-| After | 61% |
-| New tests added | 0 |
-| Gaps remaining | `verify_release.py` 30%, `validate_release_branch.py` 55%, `upload_store_listing_anchor.py` 0% |
+| After | 63% |
+| New tests added | 21 |
+| Gaps filled | `verify_release.py` 30% → 58%, `upload_store_listing_anchor.py` 0% → 50%; `play_publish.py` uses tempfile.gettempdir() |
 
 ## CI Health Report
 
