@@ -178,9 +178,9 @@ platform :ios do
     end
     
     # Also upload to Firebase App Distribution
-    if ENV["FIREBASE_IOS_APP_ID"] && ENV["FIREBASE_TOKEN"]
+    if ENV["FIREBASE_APP_ID"] && ENV["FIREBASE_TOKEN"]
       firebase_app_distribution(
-        app: ENV["FIREBASE_IOS_APP_ID"],
+        app: ENV["FIREBASE_APP_ID"],
         firebase_cli_token: ENV["FIREBASE_TOKEN"],
         release_notes: "Automated build from GitHub Actions",
         groups: "internal-testers"
