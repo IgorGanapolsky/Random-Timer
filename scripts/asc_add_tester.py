@@ -74,8 +74,9 @@ def find_app(token: str, bundle_id: str) -> str:
 
 def find_or_create_group(token: str, app_id: str, group_name: str) -> str:
     data = api(token, "GET", f"/apps/{app_id}/betaGroups",
-               params={"filter[name]": group_name})
-    groups = data.get("data", [])
+               params={"fields[betaGroups]": "name,isInternalGroup"})
+    groups = [g for g in data.get("data", [])
+              if g.get("attributes", {}).get("name") == group_name]
     if groups:
         print(f"Found existing group '{group_name}' (id={groups[0]['id']})")
         return groups[0]["id"]
