@@ -1,0 +1,66 @@
+name: Add TestFlight Tester
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Tester email address"
+        required: true
+        type: string
+      first_name:
+        description: "Tester first name"
+        required: false
+        type: string
+        default: ""
+      last_name:
+        description: "Tester last name"
+        required: false
+        type: string
+        default: ""
+      group:
+        description: "Beta group name (created if missing)"
+        required: false
+        type: string
+        default: "Beta Testers"
+
+jobs:
+  add-tester:
+    name: Add Tester to TestFlight
+    runs-on: macos-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-ios
+
+      - name: Write App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_PATH"
+          python3 scripts/normalize_pem.py "$KEY_PATH" || true
+
+      - name: Add tester
+        working-directory: native-ios
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          fastlane add_tester \
+            email:"${{ inputs.email }}" \
+            first_name:"${{ inputs.first_name }}" \
+            last_name:"${{ inputs.last_name }}" \
+            group:"${{ inputs.group }}"

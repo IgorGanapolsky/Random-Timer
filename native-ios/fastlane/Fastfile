@@ -191,6 +191,37 @@ platform :ios do
     end
   end
 
+  desc "Add external beta tester to TestFlight"
+  lane :add_tester do |options|
+    setup_ci if ENV["CI"] == "true"
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APPSTORE_KEY_ID"],
+      issuer_id: ENV["APPSTORE_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+    )
+
+    email = options[:email] || ENV["TESTER_EMAIL"]
+    first = options[:first_name] || ENV.fetch("TESTER_FIRST_NAME", "")
+    last = options[:last_name] || ENV.fetch("TESTER_LAST_NAME", "")
+    group = options[:group] || ENV.fetch("TESTFLIGHT_GROUPS", "Beta Testers")
+
+    pilot(
+      api_key: api_key,
+      app_identifier: "com.igorganapolsky.randomtimer",
+      tester_email: email,
+      tester_first_name: first,
+      tester_last_name: last,
+      groups: [group],
+      distribute_only: true,
+      notify_external_testers: true,
+      distribute_external: true,
+      reject_build_waiting_for_review: false,
+      skip_submission: false
+    )
+    UI.success("Added #{email} to '#{group}' TestFlight group")
+  end
+
   desc "Create app in App Store Connect"
   lane :create_app do |options|
     setup_ci if ENV["CI"] == "true"
