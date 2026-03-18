@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "perplexity-agent": {
+      "command": "bash",
+      "args": ["scripts/perplexity_mcp_wrapper.sh"]
+    }
+  }
+}

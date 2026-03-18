@@ -587,13 +587,18 @@ def main():
         asc = AppStoreVerifier()
 
         if args.wait:
+            # Apple needs time to process uploaded builds before they appear
+            # in the API. Wait before the first read-back attempt.
+            initial_delay = min(60, args.timeout // 4)
+            print(f"  ⏳ Waiting {initial_delay}s for Apple to process the build...")
+            time.sleep(initial_delay)
+
             result = poll_until_done(
                 lambda: asc.verify(args.version),
                 args.poll_interval,
-                args.timeout,
-                # For iOS, NOT_FOUND usually means the version is wrong or the build
-                # was never uploaded; fail fast instead of waiting out the timeout.
-                terminal_statuses={"ERROR", "NOT_FOUND"},
+                args.timeout - initial_delay,
+                # NOT_FOUND is NOT terminal — Apple may still be ingesting the build.
+                terminal_statuses={"ERROR"},
             )
         else:
             result = asc.verify(args.version)

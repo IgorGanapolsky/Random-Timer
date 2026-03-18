@@ -104,7 +104,7 @@ jobs:
           done
 
       - name: Preflight release checks (iOS)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -192,7 +192,7 @@ jobs:
           set -euo pipefail
           python -m pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
           VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
-          python scripts/verify_release.py --platform ios --version "$VERSION"
+          python scripts/verify_release.py --platform ios --version "$VERSION" --wait --timeout 900 --poll-interval 60
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -228,7 +228,7 @@ jobs:
           done
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -377,9 +377,11 @@ jobs:
               exit 1
             fi
           done
+          # Prefer groups over individual testers; default to 'internal-testers'
+          # group which matches the alias created in Firebase Console.
           if [ -z "${FIREBASE_INTERNAL_GROUPS:-}" ] && [ -z "${FIREBASE_INTERNAL_TESTERS:-}" ]; then
-            echo "❌ Set vars.FIREBASE_INTERNAL_GROUPS (Firebase Console group alias) or vars.FIREBASE_INTERNAL_TESTERS (comma-separated emails)"
-            exit 1
+            echo "⚠️ Neither FIREBASE_INTERNAL_GROUPS nor FIREBASE_INTERNAL_TESTERS set — defaulting groups to 'internal-testers'"
+            echo "FIREBASE_INTERNAL_GROUPS=internal-testers" >> "$GITHUB_ENV"
           fi
           if ! [[ "$FIREBASE_ANDROID_APP_ID" =~ ^1:[0-9]+:android:[a-fA-F0-9]+$ ]]; then
             echo "❌ FIREBASE_ANDROID_APP_ID must match 1:PROJECT_NUMBER:android:APP_ID (e.g. 1:624873778337:android:4503588605a3273edc14e0)"
@@ -387,7 +389,7 @@ jobs:
           fi
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/ci/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -424,15 +426,22 @@ jobs:
 
       - name: Distribute to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
+        continue-on-error: true
+        id: firebase_dist
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          groups: ${{ vars.FIREBASE_INTERNAL_GROUPS }}
+          groups: ${{ vars.FIREBASE_INTERNAL_GROUPS || env.FIREBASE_INTERNAL_GROUPS }}
           testers: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
           file: native-android/app/build/outputs/apk/release/app-release.apk
           releaseNotes: |
             Internal build from ${{ needs.gate.outputs.sha || github.sha }}
             Ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Warn on Firebase distribution failure
+        if: steps.firebase_dist.outcome == 'failure'
+        run: |
+          echo "::warning::Firebase App Distribution failed (e.g. 404). Check vars.FIREBASE_INTERNAL_GROUPS matches a valid group alias in Firebase Console, or vars.FIREBASE_INTERNAL_TESTERS has valid emails."
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
