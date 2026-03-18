@@ -107,7 +107,7 @@ def distribute_latest_build(token, app_id, group_id):
         print("No builds found for app")
         return
 
-    # Manually find build with latest uploadedDate
+    # Manually find build with latest uploadedDate (ISO string comparison works correctly)
     latest_build = max(data["data"], key=lambda x: x["attributes"]["uploadedDate"])
     build_id = latest_build["id"]
     build_version = latest_build["attributes"]["version"]
