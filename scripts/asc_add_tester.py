@@ -101,14 +101,16 @@ def find_or_create_tester(token, email, first_name, last_name, group_id):
 
 
 def distribute_latest_build(token, app_id, group_id):
-    # Find latest build for the app
-    data = api(token, "GET", f"/apps/{app_id}/builds", params={"sort": "-uploadedDate", "limit": 1})
+    # Find latest build for the app (API doesn't support sort here)
+    data = api(token, "GET", f"/apps/{app_id}/builds", params={"limit": 50})
     if not data.get("data"):
         print("No builds found for app")
         return
 
-    build_id = data["data"][0]["id"]
-    build_version = data["data"][0]["attributes"]["version"]
+    # Manually find build with latest uploadedDate
+    latest_build = max(data["data"], key=lambda x: x["attributes"]["uploadedDate"])
+    build_id = latest_build["id"]
+    build_version = latest_build["attributes"]["version"]
     print(f"Distributing build {build_version} (id={build_id}) to group...")
 
     body = {"data": [{"type": "builds", "id": build_id}]}
