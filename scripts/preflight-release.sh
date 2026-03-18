@@ -163,8 +163,14 @@ if [[ "$PLATFORM" == "android" || "$PLATFORM" == "both" ]]; then
   # Changelog for current version code
   if [[ -n "$ANDROID_VERSION_CODE" ]]; then
     CHANGELOG="$ANDROID_META/changelogs/${ANDROID_VERSION_CODE}.txt"
-    if check_file_nonempty "$CHANGELOG" "Android changelog (versionCode $ANDROID_VERSION_CODE)"; then
+    if [[ -f "$CHANGELOG" ]]; then
+      check_file_nonempty "$CHANGELOG" "Android changelog (versionCode $ANDROID_VERSION_CODE)"
       info "Changelog $ANDROID_VERSION_CODE.txt present"
+    elif [[ -f "$ANDROID_META/changelogs/default.txt" ]]; then
+      check_file_nonempty "$ANDROID_META/changelogs/default.txt" "Android fallback changelog (default.txt)"
+      info "Fallback changelog default.txt present"
+    else
+      err "Android changelog missing (expected ${ANDROID_VERSION_CODE}.txt or default.txt in $ANDROID_META/changelogs/)"
     fi
   else
     warn "Could not detect Android versionCode — skipping changelog check"
