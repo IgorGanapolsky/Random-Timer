@@ -111,6 +111,36 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     /// How many rounds to loop for (0 = infinite). Pro only feature.
     public let repeatRounds: Int
 
+    private struct SanitizedValues {
+        let minSeconds: Int
+        let maxSeconds: Int
+        let alarmDuration: Int
+        let volume: Float
+        let repeatRounds: Int
+    }
+
+    private static func sanitize(
+        minSeconds: Int,
+        maxSeconds: Int,
+        alarmDuration: Int,
+        volume: Float,
+        repeatRounds: Int
+    ) -> SanitizedValues {
+        let clampedMax = Swift.min(Swift.max(maxSeconds, 0), maxSecondsPro)
+        let clampedMin = Swift.min(Swift.min(Swift.max(minSeconds, 0), maxSecondsPro), clampedMax)
+        let clampedAlarm = Swift.max(1, alarmDuration)
+        let clampedVolume = Swift.min(Swift.max(volume, 0), 1)
+        let clampedRounds = Swift.max(0, repeatRounds)
+
+        return SanitizedValues(
+            minSeconds: clampedMin,
+            maxSeconds: clampedMax,
+            alarmDuration: clampedAlarm,
+            volume: clampedVolume,
+            repeatRounds: clampedRounds
+        )
+    }
+
     public init(
         minSeconds: Int = 0,
         maxSeconds: Int = 300,
@@ -124,25 +154,25 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         voiceEnabled: Bool = true,
         repeatRounds: Int = 0
     ) {
-        precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
-        precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
-        let maxPro = TimerConfig.maxSecondsPro
-        precondition(maxSeconds <= maxPro, "Maximum seconds cannot exceed \(maxPro)")
-        precondition(alarmDuration > 0, "Alarm duration must be positive")
-        precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
-        precondition(repeatRounds >= 0, "Repeat rounds cannot be negative")
+        let sanitized = Self.sanitize(
+            minSeconds: minSeconds,
+            maxSeconds: maxSeconds,
+            alarmDuration: alarmDuration,
+            volume: volume,
+            repeatRounds: repeatRounds
+        )
 
-        self.minSeconds = minSeconds
-        self.maxSeconds = maxSeconds
-        self.alarmDuration = alarmDuration
+        self.minSeconds = sanitized.minSeconds
+        self.maxSeconds = sanitized.maxSeconds
+        self.alarmDuration = sanitized.alarmDuration
         self.hiddenMode = hiddenMode
         self.repeatEnabled = repeatEnabled
         self.soundType = soundType
-        self.volume = volume
+        self.volume = sanitized.volume
         self.vibrationEnabled = vibrationEnabled
         self.useExtendedRange = useExtendedRange
         self.voiceEnabled = voiceEnabled
-        self.repeatRounds = repeatRounds
+        self.repeatRounds = sanitized.repeatRounds
     }
 
     /// Minimum as TimeInterval
@@ -248,25 +278,18 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: .intense
         )
 
-        let clampedMin = min(max(0, rawMin), TimerConfig.maxSecondsPro)
-        let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
-        let clampedMax = max(clampedMin, cappedMax)
-        let clampedAlarm = max(1, rawAlarm)
-        let clampedVolume = min(max(volume, 0), 1)
-        let clampedRounds = max(0, repeatRounds)
-
         self.init(
-            minSeconds: clampedMin,
-            maxSeconds: clampedMax,
-            alarmDuration: clampedAlarm,
+            minSeconds: rawMin,
+            maxSeconds: rawMax,
+            alarmDuration: rawAlarm,
             hiddenMode: hiddenMode,
             repeatEnabled: repeatEnabled,
             soundType: soundType,
-            volume: clampedVolume,
+            volume: volume,
             vibrationEnabled: vibrationEnabled,
             useExtendedRange: useExtendedRange,
             voiceEnabled: voiceEnabled,
-            repeatRounds: clampedRounds
+            repeatRounds: repeatRounds
         )
     }
 
@@ -293,7 +316,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         let clampedMax = Swift.min(maxSeconds, maxAllowed)
         // Ensure clampedMin is never greater than clampedMax to avoid precondition failure
         let clampedMin = Swift.min(minSeconds, clampedMax)
-        
+
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
         let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
         return TimerConfig(

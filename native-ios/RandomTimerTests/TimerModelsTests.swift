@@ -32,7 +32,7 @@ final class TimerConfigTests: XCTestCase {
 
     func testConfigDecodingFromLooseJSON() throws {
         // Test that our custom decoder handles various formats (strings, numbers, etc)
-        let payload = """
+        let payload = Data("""
         {
           "min_seconds": "0",
           "max_seconds": 3600,
@@ -46,7 +46,7 @@ final class TimerConfigTests: XCTestCase {
           "voiceEnabled": false,
           "repeatRounds": 5
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
@@ -84,9 +84,9 @@ final class TimerConfigTests: XCTestCase {
     }
 
     func testConfigDecodingFallsBackToDefaultsWhenFieldsMissing() throws {
-        let payload = "{}".data(using: .utf8)!
+        let payload = Data("{}".utf8)
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
-        
+
         let expected = RandomTimer.TimerConfig(
             minSeconds: 0,
             maxSeconds: 300,
@@ -101,6 +101,64 @@ final class TimerConfigTests: XCTestCase {
             repeatRounds: 0
         )
         XCTAssertEqual(decoded, expected)
+    }
+
+    func testConfigInitSanitizesInvalidInputs() {
+        let config = RandomTimer.TimerConfig(
+            minSeconds: -20,
+            maxSeconds: 5000,
+            alarmDuration: 0,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 1.5,
+            vibrationEnabled: false,
+            useExtendedRange: false,
+            voiceEnabled: true,
+            repeatRounds: -4
+        )
+
+        XCTAssertEqual(config.minSeconds, 0)
+        XCTAssertEqual(config.maxSeconds, RandomTimer.TimerConfig.maxSecondsPro)
+        XCTAssertEqual(config.alarmDuration, 1)
+        XCTAssertEqual(config.volume, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(config.repeatRounds, 0)
+    }
+
+    func testConfigInitPullsMinDownWhenRangeIsInverted() {
+        let config = RandomTimer.TimerConfig(
+            minSeconds: 240,
+            maxSeconds: 90,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false,
+            useExtendedRange: false,
+            voiceEnabled: true,
+            repeatRounds: 0
+        )
+
+        XCTAssertEqual(config.minSeconds, 90)
+        XCTAssertEqual(config.maxSeconds, 90)
+    }
+
+    func testConfigDecodingSanitizesInvertedLegacyRange() throws {
+        let payload = Data("""
+        {
+          "min_seconds": 600,
+          "max_seconds": 45,
+          "alarm_duration": 10,
+          "sound_type": "intense",
+          "soundVolume": 0.5
+        }
+        """.utf8)
+
+        let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
+
+        XCTAssertEqual(decoded.minSeconds, 45)
+        XCTAssertEqual(decoded.maxSeconds, 45)
     }
 }
 
