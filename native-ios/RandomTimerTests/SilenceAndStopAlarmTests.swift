@@ -82,4 +82,25 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         XCTAssertNotNil(manager.timerState)
         XCTAssertEqual(manager.isAlarmSilenced, silencedBefore)
     }
+
+    @MainActor
+    func testResetTimerResetsVoiceCalloutSession() async {
+        let manager = TimerManager()
+        let voiceService = AIVoiceCalloutService.shared
+        voiceService.resetSession()
+        voiceService.triggerCallout(elapsedSeconds: 1)
+        voiceService.triggerCallout(elapsedSeconds: 30)
+
+        let primedState = voiceService._stateSnapshotForTesting()
+        XCTAssertEqual(primedState.lastElapsedMilestone, 30)
+        XCTAssertGreaterThan(primedState.nextCommandCueAt, 0)
+
+        manager._setTimerStateForTesting(makeState(status: .running))
+
+        await manager.resetTimer()
+
+        let resetState = voiceService._stateSnapshotForTesting()
+        XCTAssertEqual(resetState.lastElapsedMilestone, 0)
+        XCTAssertEqual(resetState.nextCommandCueAt, 0)
+    }
 }
