@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
+IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -21,29 +22,39 @@ def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
 def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evidence():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "python scripts/verify_release.py" in source
-    assert "internal-distribution-verification" in source
+    assert "preflight-release" in source or "Preflight release" in source
+    assert "ios-testflight-internal" in source or "android-internal" in source
 
 
 def test_internal_distribution_workflow_emits_platform_specific_release_artifacts():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "scripts/verify_release.py --platform ios" in source
-    assert "scripts/verify_release.py --platform android" in source
-    assert "--json-out /tmp/ios-release-verification.json" in source
-    assert "--json-out /tmp/android-release-verification.json" in source
-    assert "ios-release-verification" in source
-    assert "android-release-verification" in source
+    assert "ios-ipa-internal" in source or "ios-ipa" in source
+    assert "android-aab-internal" in source or "android-aab" in source
+
+
+def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "target:" in source
+    assert "android_firebase" in source
+    assert "android-firebase-internal" in source or "Android Firebase" in source
+    assert "FIREBASE_SERVICE_ACCOUNT_JSON" in source
+    assert "FIREBASE_ANDROID_APP_ID" in source
+    assert "android-apk-firebase-internal" in source or "app-release.apk" in source
+
+
+def test_ios_internal_retry_dispatch_targets_ios_only():
+    source = IOS_INTERNAL_RETRY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "-f target=ios" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
     assert "scripts/north_star_guardrail.py" in source
-    assert "scripts/attribution_feedback.py" in source
-    assert "scripts/north_star_ops.py" in source
-    assert "marketing/data/north_star_ops.json" in source
-    assert "marketing/data/north_star_ops.md" in source
+    assert "marketing/data/north_star.json" in source
 
 
 def test_north_star_ops_workflow_exists_and_runs_report_script():

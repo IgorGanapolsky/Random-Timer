@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import tempfile
 import unittest
 from pathlib import Path
@@ -104,6 +106,32 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertTrue((root / "site" / "llms.txt").is_file())
             self.assertTrue((root / "site" / "agents.md").is_file())
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
+
+    def test_build_site_renders_privacy_policy_page_and_legacy_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output_root = repo / "marketing"
+            (output_root / "posts").mkdir(parents=True, exist_ok=True)
+            (output_root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (repo / "PRIVACY_POLICY.md").write_text(
+                "# Privacy Policy\n\nWe do not sell your data.\n",
+                encoding="utf-8",
+            )
+
+            with patch.dict("os.environ", {"BLOG_BASE_URL": "https://example.com/app"}, clear=False):
+                pipeline.build_site(output_root)
+
+            canonical_page = (output_root / "site" / "privacy-policy" / "index.html").read_text(encoding="utf-8")
+            legacy_page = (output_root / "site" / "PRIVACY_POLICY" / "index.html").read_text(encoding="utf-8")
+            sitemap = (output_root / "site" / "sitemap.xml").read_text(encoding="utf-8")
+            llms = (output_root / "site" / "llms.txt").read_text(encoding="utf-8")
+
+            self.assertIn("Privacy Policy", canonical_page)
+            self.assertIn("We do not sell your data.", canonical_page)
+            self.assertEqual(canonical_page, legacy_page)
+            self.assertIn("https://example.com/app/privacy-policy/", sitemap)
+            self.assertIn("https://example.com/app/PRIVACY_POLICY/", sitemap)
+            self.assertIn("https://example.com/app/privacy-policy/", llms)
 
     def test_build_site_writes_social_meta_structured_data_and_robots(self):
         with tempfile.TemporaryDirectory() as td:
