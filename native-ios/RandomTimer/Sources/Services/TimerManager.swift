@@ -393,6 +393,8 @@ final class TimerManager: ObservableObject {
         guard let currentState = timerState else { return }
         let sameDuration = currentState.targetDuration
 
+        AIVoiceCalloutService.shared.resetSession()
+
         // Reset silence flag for new timer
         isAlarmSilenced = false
 

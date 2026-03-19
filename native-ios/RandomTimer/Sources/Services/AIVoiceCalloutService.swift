@@ -59,6 +59,11 @@ internal func voiceFilenameOrFallback(for text: String) -> String {
 
 @MainActor
 final class AIVoiceCalloutService {
+    struct StateSnapshot {
+        let lastElapsedMilestone: Int
+        let nextCommandCueAt: Int
+    }
+
     static let shared = AIVoiceCalloutService()
 
     private var audioPlayer: AVAudioPlayer?
@@ -158,5 +163,12 @@ final class AIVoiceCalloutService {
         } else {
             return Int.random(in: range)
         }
+    }
+
+    func _stateSnapshotForTesting() -> StateSnapshot {
+        StateSnapshot(
+            lastElapsedMilestone: lastElapsedMilestone,
+            nextCommandCueAt: nextCommandCueAt
+        )
     }
 }
