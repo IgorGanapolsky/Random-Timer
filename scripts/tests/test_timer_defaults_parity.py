@@ -14,7 +14,11 @@ ANDROID_VOICE_SERVICE = ROOT / "native-android/app/src/main/java/com/iganapolsky
 IOS_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_SETUP_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 IOS_PAYWALL = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/PaywallSheet.swift"
+IOS_TIMER_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
+IOS_VOICE_TESTS = ROOT / "native-ios/RandomTimerTests/AIVoiceCalloutServiceTests.swift"
+IOS_XCODE_PROJECT = ROOT / "native-ios/RandomTimer.xcodeproj/project.pbxproj"
+IOS_VOICE_AUDIO_DIR = ROOT / "native-ios/RandomTimer/Resources/Audio"
 
 
 def _normalize_name(name: str) -> str:
@@ -94,7 +98,7 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     android_service = ANDROID_FOREGROUND_SERVICE.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
-    ios_timer_manager = (ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift").read_text(encoding="utf-8")
+    ios_timer_manager = IOS_TIMER_MANAGER.read_text(encoding="utf-8")
     android_config = ANDROID_CONFIG.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
@@ -103,7 +107,8 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     assert "checked = config.voiceEnabled" in android_setup
     assert "config.voiceEnabled" in ios_setup
     assert "voiceEnabled" in android_service and ("ELITE" in android_service or "isPro" in android_service)
-    assert "voiceEnabled" in ios_timer_manager
+    assert "ProManager.shared.isPro && state.config.voiceEnabled" in ios_timer_manager
+    assert "triggerCallout(elapsedSeconds: elapsedSeconds)" in ios_timer_manager
 
 
 def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
@@ -143,4 +148,40 @@ def test_voice_profile_configured_on_both_platforms():
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
     assert "preferredVoiceNames" in android_voice_service
-    assert "utterance.rate" in ios_voice_service
+    assert "voiceFilenamesByText" in ios_voice_service
+    assert "voiceFilenameOrFallback" in ios_voice_service
+    assert "AVAudioPlayer" in ios_voice_service
+    assert "AVSpeechSynthesizer" not in ios_voice_service
+
+
+def test_ios_voice_assets_exist_on_disk():
+    required_assets = {
+        "cmd_drive_forward",
+        "cmd_keep_pressure",
+        "cmd_move_now",
+        "cmd_push_pace",
+        "cmd_push_through",
+        "cmd_reset_breathe",
+        "cmd_stay_sharp",
+        "elapsed_120s",
+        "elapsed_180s",
+        "elapsed_300s",
+        "elapsed_30s",
+        "elapsed_600s",
+        "elapsed_60s",
+        "elapsed_90s",
+        "preview_elapsed",
+    }
+    actual_assets = {path.stem for path in IOS_VOICE_AUDIO_DIR.glob("*.mp3")}
+
+    assert required_assets <= actual_assets
+
+
+def test_ios_voice_assets_and_tests_are_wired_into_xcode_targets():
+    project = IOS_XCODE_PROJECT.read_text(encoding="utf-8")
+    voice_tests = IOS_VOICE_TESTS.read_text(encoding="utf-8")
+
+    assert "RandomTimer/Resources/Audio" in project
+    assert "Audio in Resources" in project
+    assert "AIVoiceCalloutServiceTests.swift in Sources" in project
+    assert "Missing bundled voice assets" in voice_tests
