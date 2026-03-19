@@ -93,7 +93,7 @@ struct TimerSetupScreen: View {
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
                                 
-                                Text("Voice prompts during countdown")
+                                Text("Elapsed-time voice prompts during the timer")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
