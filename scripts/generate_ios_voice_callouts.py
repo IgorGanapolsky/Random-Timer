@@ -102,10 +102,18 @@ def _resolve_voice(voices: list[dict], voice_id: str | None, voice_name_pattern:
     return sorted(candidates, key=rank)[0]
 
 
+def _configured_voice(voice_id: str) -> dict[str, str]:
+    return {
+        "name": "Configured custom drill instructor voice",
+        "voice_id": voice_id,
+        "category": "configured",
+    }
+
+
 def _load_voice_settings(api_key: str, voice_id: str) -> dict:
     try:
         return _request_json(f"/v1/voices/{voice_id}/settings", api_key)
-    except urllib.error.HTTPError:
+    except SystemExit:
         return {
             "stability": 0.4,
             "similarity_boost": 0.8,
@@ -136,6 +144,15 @@ def _generate(
         destination = output_dir / f"{filename}.mp3"
         destination.write_bytes(audio)
         print(f"generated {destination}")
+
+
+def _remove_stale_assets(lines: list[tuple[str, str]], output_dir: Path) -> None:
+    expected_stems = {filename for filename, _ in lines}
+    for asset in output_dir.glob("*.mp3"):
+        if asset.stem in expected_stems:
+            continue
+        asset.unlink()
+        print(f"removed stale {asset}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -192,8 +209,12 @@ def main() -> int:
     if not api_key:
         raise SystemExit("ELEVENLABS_API_KEY is required for voice synthesis.")
 
-    voices = _list_voices(api_key)
-    voice = _resolve_voice(voices, args.voice_id or None, args.voice_name_pattern)
+    voice_id = args.voice_id.strip()
+    if voice_id:
+        voice = _configured_voice(voice_id)
+    else:
+        voices = _list_voices(api_key)
+        voice = _resolve_voice(voices, None, args.voice_name_pattern)
     voice_settings = _load_voice_settings(api_key, voice["voice_id"])
     catalog = _load_catalog(args.catalog)
     lines = _catalog_lines(catalog)
@@ -218,6 +239,7 @@ def main() -> int:
         lines=lines,
         output_dir=args.output_dir,
     )
+    _remove_stale_assets(lines, args.output_dir)
     return 0
 
 

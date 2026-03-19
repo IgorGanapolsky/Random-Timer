@@ -174,7 +174,7 @@ def test_ios_voice_assets_exist_on_disk():
     required_assets = _ios_catalog_filenames(catalog)
     actual_assets = {path.stem for path in IOS_VOICE_AUDIO_DIR.glob("*.mp3")}
 
-    assert required_assets <= actual_assets
+    assert actual_assets == required_assets
 
 
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():

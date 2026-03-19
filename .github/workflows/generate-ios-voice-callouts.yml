@@ -13,6 +13,7 @@ on:
       voice_id:
         description: Optional exact ElevenLabs voice ID.
         required: false
+        default: DGzg6RaUqxGRTHSBjfgF
         type: string
       voice_name_pattern:
         description: Regex used to auto-discover the custom drill-instructor voice.
@@ -43,14 +44,16 @@ jobs:
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
+          voice_id="${{ inputs.voice_id }}"
+          if [ -z "$voice_id" ]; then
+            voice_id="DGzg6RaUqxGRTHSBjfgF"
+          fi
+
           args=(
             --catalog native-ios/RandomTimer/Resources/Audio/voice_callouts.json
             --output-dir native-ios/RandomTimer/Resources/Audio
+            --voice-id "$voice_id"
           )
-
-          if [ -n "${{ inputs.voice_id }}" ]; then
-            args+=(--voice-id "${{ inputs.voice_id }}")
-          fi
 
           if [ -n "${{ inputs.voice_name_pattern }}" ]; then
             args+=(--voice-name-pattern "${{ inputs.voice_name_pattern }}")

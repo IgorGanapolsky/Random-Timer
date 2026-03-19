@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -59,3 +60,48 @@ def test_resolve_voice_reports_available_voices_when_pattern_misses():
     assert "Available voices" in message
     assert "Adam" in message
     assert "Bella" in message
+
+
+def test_configured_voice_skips_voice_library_lookup():
+    module = _load_module()
+
+    configured = module._configured_voice("DGzg6RaUqxGRTHSBjfgF")
+
+    assert configured == {
+        "name": "Configured custom drill instructor voice",
+        "voice_id": "DGzg6RaUqxGRTHSBjfgF",
+        "category": "configured",
+    }
+
+
+def test_load_voice_settings_falls_back_when_settings_are_not_readable():
+    module = _load_module()
+
+    def failing_request(_path, _api_key):
+        raise SystemExit("missing voices_read")
+
+    module._request_json = failing_request
+
+    settings = module._load_voice_settings("ignored", "DGzg6RaUqxGRTHSBjfgF")
+
+    assert settings == {
+        "stability": 0.4,
+        "similarity_boost": 0.8,
+        "style": 0.65,
+        "use_speaker_boost": True,
+        "speed": 0.95,
+    }
+
+
+def test_remove_stale_assets_keeps_only_manifest_backed_files():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_dir = Path(tmpdir)
+        (output_dir / "keep_me.mp3").write_bytes(b"keep")
+        (output_dir / "delete_me.mp3").write_bytes(b"delete")
+
+        module._remove_stale_assets([("keep_me", "Keep me.")], output_dir)
+
+        assert (output_dir / "keep_me.mp3").exists()
+        assert not (output_dir / "delete_me.mp3").exists()
