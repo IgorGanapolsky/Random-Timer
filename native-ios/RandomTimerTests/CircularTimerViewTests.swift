@@ -107,4 +107,24 @@ final class CircularTimerViewTests: XCTestCase {
         XCTAssertTrue(CircularTimerView.shouldBreatheText(for: .running))
         XCTAssertFalse(CircularTimerView.shouldResetTextBreathing(for: .running))
     }
+
+    func testLoopBadgeTextShowsOffStateWhenDisabled() {
+        let result = ActiveTimerScreen.loopBadgeText(enabled: false, repeatRounds: 4, roundCount: 2)
+        XCTAssertEqual(result, "LOOP OFF")
+    }
+
+    func testLoopBadgeTextShowsInfiniteLoopWhenNoRoundCapIsSet() {
+        let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 0, roundCount: 3)
+        XCTAssertEqual(result, "LOOP")
+    }
+
+    func testLoopBadgeTextShowsFiniteRoundProgress() {
+        let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 5, roundCount: 2)
+        XCTAssertEqual(result, "ROUND 2/5")
+    }
+
+    func testLoopBadgeTextClampsVisibleRoundToConfiguredLimit() {
+        let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 3, roundCount: 8)
+        XCTAssertEqual(result, "ROUND 3/3")
+    }
 }

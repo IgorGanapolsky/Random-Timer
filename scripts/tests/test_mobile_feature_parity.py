@@ -14,6 +14,7 @@ ANDROID_SOUND_PREVIEW = ROOT / "native-android/app/src/main/java/com/iganapolsky
 ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/SoundPreviewManagerImpl.kt"
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
+ANDROID_ACTIVE_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -21,6 +22,7 @@ IOS_PAYWALL = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/PaywallSheet.swi
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 IOS_TIMER_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
+IOS_ACTIVE_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/ActiveTimerScreen.swift"
 
 
 def _read(path: Path) -> str:
@@ -135,3 +137,16 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
     assert "launchProPurchase" in android_nav
+
+
+def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
+    android_active = _read(ANDROID_ACTIVE_SCREEN)
+    ios_active = _read(IOS_ACTIVE_SCREEN)
+
+    assert "repeatRounds" in android_active
+    assert "roundCount" in android_active
+    assert '"ROUND $clampedRound/$repeatRounds"' in android_active
+
+    assert "repeatRounds" in ios_active
+    assert "roundCount" in ios_active
+    assert 'return "ROUND \\(clampedRound)/\\(repeatRounds)"' in ios_active

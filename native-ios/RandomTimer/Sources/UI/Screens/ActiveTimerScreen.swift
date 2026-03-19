@@ -41,6 +41,22 @@ struct ActiveTimerScreen: View {
         return "\(formatTime(minSeconds)) - \(formatTime(maxSeconds))"
     }
 
+    static func loopBadgeText(enabled: Bool, repeatRounds: Int, roundCount: Int) -> String {
+        guard enabled else { return "LOOP OFF" }
+        guard repeatRounds > 0 else { return "LOOP" }
+
+        let clampedRound = Swift.max(1, Swift.min(roundCount, repeatRounds))
+        return "ROUND \(clampedRound)/\(repeatRounds)"
+    }
+
+    static func loopBadgeAccessibilityLabel(enabled: Bool, repeatRounds: Int, roundCount: Int) -> String {
+        guard enabled else { return "Loop disabled" }
+        guard repeatRounds > 0 else { return "Infinite loop enabled" }
+
+        let clampedRound = Swift.max(1, Swift.min(roundCount, repeatRounds))
+        return "Round \(clampedRound) of \(repeatRounds)"
+    }
+
     var body: some View {
         ZStack {
             Color.backgroundDark.ignoresSafeArea()
@@ -208,10 +224,19 @@ struct ActiveTimerScreen: View {
 
     private var loopBadge: some View {
         let isEnabled = timerManager.config.repeatEnabled
+        let repeatRounds = state?.config.repeatRounds ?? timerManager.config.repeatRounds
+        let roundCount = state?.roundCount ?? 1
         return Button {
             updateLoopConfig(!isEnabled)
         } label: {
-            Label(isEnabled ? "LOOP" : "LOOP OFF", systemImage: "repeat")
+            Label(
+                Self.loopBadgeText(
+                    enabled: isEnabled,
+                    repeatRounds: repeatRounds,
+                    roundCount: roundCount
+                ),
+                systemImage: "repeat"
+            )
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(isEnabled ? .accentPrimary : .textMuted)
@@ -226,7 +251,13 @@ struct ActiveTimerScreen: View {
                         .stroke(isEnabled ? .accentPrimary : Color.glassBorder, lineWidth: 1)
                 )
         }
-        .accessibilityLabel(isEnabled ? "Loop enabled" : "Loop disabled")
+        .accessibilityLabel(
+            Self.loopBadgeAccessibilityLabel(
+                enabled: isEnabled,
+                repeatRounds: repeatRounds,
+                roundCount: roundCount
+            )
+        )
         .accessibilityHint("Double-tap to toggle repeat timer")
     }
 
