@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
+IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -24,6 +25,9 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
 
     assert "preflight-release" in source or "Preflight release" in source
     assert "ios-testflight-internal" in source or "android-internal" in source
+    assert "check_ios_version_lineage.py" in source
+    assert "Internal Testers" in source
+    assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
 
 
 def test_internal_distribution_workflow_emits_platform_specific_release_artifacts():
@@ -48,6 +52,12 @@ def test_ios_internal_retry_dispatch_targets_ios_only():
     source = IOS_INTERNAL_RETRY_WORKFLOW.read_text(encoding="utf-8")
 
     assert "-f target=ios" in source
+
+
+def test_ios_submit_review_workflow_guards_ios_version_lineage():
+    source = IOS_SUBMIT_REVIEW_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "check_ios_version_lineage.py" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
