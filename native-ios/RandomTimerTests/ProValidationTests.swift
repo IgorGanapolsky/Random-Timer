@@ -130,4 +130,23 @@ final class TimerConfigProClampingTests: XCTestCase {
                            "Pro sound \(sound) must be clamped to .intense for expired Pro user")
         }
     }
+
+    func testExpiredProUser_highSavedRangeCollapsesToFreeCeiling() {
+        let proConfig = RandomTimer.TimerConfig(
+            minSeconds: 3300,
+            maxSeconds: 3600,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false,
+            useExtendedRange: true
+        )
+
+        let clamped = proConfig.clamped(isPro: false)
+
+        XCTAssertEqual(clamped.minSeconds, RandomTimer.TimerConfig.maxSecondsFree)
+        XCTAssertEqual(clamped.maxSeconds, RandomTimer.TimerConfig.maxSecondsFree)
+    }
 }
