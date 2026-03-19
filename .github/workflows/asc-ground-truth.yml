@@ -18,4 +18,4 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
           export PYTHONPATH=$PYTHONPATH:.
-          python3 scripts/diagnose_testers.py
+          python3 scripts/check_tester_deep.py
