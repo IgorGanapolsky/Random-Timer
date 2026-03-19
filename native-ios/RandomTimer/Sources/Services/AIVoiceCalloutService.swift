@@ -3,91 +3,156 @@ import AVFoundation
 import os
 import Security
 
+internal let previewElapsedCue = "Thirty seconds. Stay locked in."
+internal let defaultFallbackVoiceCue = "Stay sharp."
+
+internal let elapsedVoiceCuesBySecond: [Int: String] = [
+    30: "Thirty seconds.",
+    60: "One minute. Keep moving.",
+    90: "One minute thirty.",
+    120: "Two minutes. Stay locked in.",
+    180: "Three minutes. Drive forward.",
+    300: "Five minutes. Finish strong.",
+    600: "Ten minutes. Outstanding."
+]
+
+internal let commandVoiceCues = [
+    "Move now.",
+    "Stay sharp.",
+    "Reset. Breathe.",
+    "Push the pace.",
+    "Drive forward.",
+    "Keep pressure.",
+    "Push through it."
+]
+
+internal let voiceFilenamesByText: [String: String] = [
+    "Thirty seconds.": "elapsed_30s",
+    "One minute. Keep moving.": "elapsed_60s",
+    "One minute thirty.": "elapsed_90s",
+    "Two minutes. Stay locked in.": "elapsed_120s",
+    "Three minutes. Drive forward.": "elapsed_180s",
+    "Five minutes. Finish strong.": "elapsed_300s",
+    "Ten minutes. Outstanding.": "elapsed_600s",
+    previewElapsedCue: "preview_elapsed",
+    "Move now.": "cmd_move_now",
+    "Stay sharp.": "cmd_stay_sharp",
+    "Reset. Breathe.": "cmd_reset_breathe",
+    "Push the pace.": "cmd_push_pace",
+    "Drive forward.": "cmd_drive_forward",
+    "Keep pressure.": "cmd_keep_pressure",
+    "Push through it.": "cmd_push_through",
+]
+
+internal func voiceFilename(for text: String) -> String? {
+    voiceFilenamesByText[text]
+}
+
+internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
+    bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Audio")
+        ?? bundle.url(forResource: filename, withExtension: "mp3")
+}
+
+internal func voiceFilenameOrFallback(for text: String) -> String {
+    voiceFilename(for: text) ?? voiceFilename(for: defaultFallbackVoiceCue) ?? "cmd_stay_sharp"
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
 
-    private let synthesizer = AVSpeechSynthesizer()
+    private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
-    private var lastChaosCueTime = 0
-    private var nextChaosCueAt = 0
+    private var lastElapsedMilestone = 0
+    private var nextCommandCueAt = 0
 
-    private init() {}
+    private init() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            Self.log.error("Audio session setup failed: \(error.localizedDescription)")
+        }
+    }
 
     func speak(_ text: String) {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.5
+        let mappedFilename = voiceFilename(for: text)
+        let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
 
-        Self.log.info("Voice Callout: \(text)")
-        synthesizer.speak(utterance)
-    }
-
-    func resetSession() {
-        lastChaosCueTime = 0
-        nextChaosCueAt = 0
-    }
-
-    func previewCommandCue() {
-        speak(randomChaosCue())
-    }
-
-    func triggerCallout(remainingSeconds: Int) {
-        // Fixed countdown callouts
-        let countdownCallouts: [Int: String] = [
-            30: "Thirty seconds remaining. Hold your position.",
-            10: "Ten seconds. Prepare for impact.",
-            5: "Five. Four. Three. Two. One."
-        ]
-
-        if let callout = countdownCallouts[remainingSeconds] {
-            speak(callout)
+        guard let url = voiceAudioURL(for: filename) else {
+            Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
             return
         }
 
-        // Chaos Drill: randomized tactical cues at unpredictable intervals
-        if remainingSeconds > 30, shouldFireChaosCue(remainingSeconds: remainingSeconds) {
-            speak(randomChaosCue())
-            lastChaosCueTime = remainingSeconds
-            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 8...19)
+        if mappedFilename == nil {
+            Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.volume = 1.0
+            audioPlayer?.play()
+        } catch {
+            Self.log.error("Audio playback failed: \(error.localizedDescription)")
         }
     }
 
-    private func shouldFireChaosCue(remainingSeconds: Int) -> Bool {
-        if nextChaosCueAt == 0 {
-            // First cue: fire within first 5-15 seconds of timer running
-            nextChaosCueAt = remainingSeconds - secureRandomInt(in: 5...15)
-        }
-        return remainingSeconds <= nextChaosCueAt
+    func resetSession() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        lastElapsedMilestone = 0
+        nextCommandCueAt = 0
     }
 
-    private func randomChaosCue() -> String {
-        let cues = [
-            "Switch stance!",
-            "Move! Move! Move!",
-            "Breathe. Reset.",
-            "Double up!",
-            "Change levels!",
-            "Check your six!",
-            "Pick up the pace!",
-            "Stay sharp!",
-            "Dig deeper!",
-            "Eyes up!",
-            "Recover now!",
-            "Explode!",
-            "Control the center!",
-            "Tighten up!",
-            "Push through it!"
-        ]
-        let index = secureRandomInt(in: 0...(cues.count - 1))
-        return cues[index]
+    func preview() {
+        previewCommandCue()
+    }
+
+    func previewCommandCue() {
+        speak(randomCommandCue())
+    }
+
+    func previewCountdownCue() {
+        speak(previewElapsedCue)
+    }
+
+    func triggerCallout(elapsedSeconds: Int) {
+        if let callout = elapsedMilestone(for: elapsedSeconds) {
+            speak(callout)
+            lastElapsedMilestone = elapsedSeconds
+            return
+        }
+
+        if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
+            speak(randomCommandCue())
+            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
+        }
+    }
+
+    private func elapsedMilestone(for elapsed: Int) -> String? {
+        guard let cue = elapsedVoiceCuesBySecond[elapsed], elapsed != lastElapsedMilestone else {
+            return nil
+        }
+        return cue
+    }
+
+    private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
+        if nextCommandCueAt == 0 {
+            nextCommandCueAt = secureRandomInt(in: 8...20)
+        }
+        return elapsedSeconds >= nextCommandCueAt
+    }
+
+    private func randomCommandCue() -> String {
+        let index = secureRandomInt(in: 0...(commandVoiceCues.count - 1))
+        return commandVoiceCues[index]
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {
         let count = range.upperBound - range.lowerBound + 1
         var randomValue: UInt32 = 0
         let status = SecRandomCopyBytes(kSecRandomDefault, MemoryLayout<UInt32>.size, &randomValue)
-        
+
         if status == errSecSuccess {
             return range.lowerBound + Int(randomValue % UInt32(count))
         } else {

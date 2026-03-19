@@ -546,9 +546,10 @@ final class TimerManager: ObservableObject {
         state.remainingDuration -= 1
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
-        // Trigger voice callouts for Pro users
-        if ProManager.shared.isPro {
-            AIVoiceCalloutService.shared.triggerCallout(remainingSeconds: Int(state.remainingDuration))
+        // Drive bundled drill-sergeant clips from elapsed time so cue assets line up with runtime milestones.
+        if ProManager.shared.isPro && state.config.voiceEnabled {
+            let elapsedSeconds = max(0, Int(state.targetDuration - state.remainingDuration))
+            AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: elapsedSeconds)
         }
 
         if state.remainingDuration <= 0 {
