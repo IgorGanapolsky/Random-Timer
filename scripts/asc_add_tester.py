@@ -134,6 +134,23 @@ def main():
 
     token = build_token()
     app_id = find_app(token, "com.igorganapolsky.randomtimer")
+
+    # === DIAGNOSTIC: show beta review state for recent builds ===
+    print("\n=== Build Beta Review State ===")
+    diag = api(token, "GET", f"/apps/{app_id}/builds",
+               params={"limit": 5, "include": "buildBetaDetail",
+                        "fields[builds]": "version,processingState,uploadedDate",
+                        "fields[buildBetaDetails]": "externalBuildState,internalBuildState"})
+    dets = {i["id"]: i["attributes"] for i in diag.get("included", []) if i["type"] == "buildBetaDetails"}
+    sorted_builds = sorted(diag.get("data", []), key=lambda x: x["attributes"].get("uploadedDate", ""), reverse=True)
+    for b in sorted_builds:
+        ba = b["attributes"]
+        rel = b.get("relationships", {}).get("buildBetaDetail", {}).get("data", {})
+        d = dets.get(rel.get("id") if rel else None, {})
+        print(f"  Build {ba['version']}: processing={ba['processingState']} "
+              f"external={d.get('externalBuildState','?')} internal={d.get('internalBuildState','?')}")
+    print()
+
     group_id = find_or_create_group(token, app_id, args.group)
     find_or_create_tester(token, args.email, args.first_name, args.last_name, group_id)
     distribute_latest_build(token, app_id, group_id)
