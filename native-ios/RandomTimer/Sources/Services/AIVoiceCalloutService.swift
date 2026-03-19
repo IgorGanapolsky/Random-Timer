@@ -1,51 +1,81 @@
-import Foundation
 import AVFoundation
-import os
+import Foundation
 import Security
+import os
 
-internal let previewElapsedCue = "Thirty seconds. Stay locked in."
-internal let defaultFallbackVoiceCue = "Stay sharp."
+internal struct VoiceCueCatalog: Decodable {
+    struct Cue: Decodable, Hashable {
+        let filename: String
+        let text: String
+    }
 
-internal let elapsedVoiceCuesBySecond: [Int: String] = [
-    30: "Thirty seconds.",
-    60: "One minute. Keep moving.",
-    90: "One minute thirty.",
-    120: "Two minutes. Stay locked in.",
-    180: "Three minutes. Drive forward.",
-    300: "Five minutes. Finish strong.",
-    600: "Ten minutes. Outstanding."
-]
+    struct ElapsedCue: Decodable, Hashable {
+        let second: Int
+        let filename: String
+        let text: String
+    }
 
-internal let commandVoiceCues = [
-    "Move now.",
-    "Stay sharp.",
-    "Reset. Breathe.",
-    "Push the pace.",
-    "Drive forward.",
-    "Keep pressure.",
-    "Push through it."
-]
+    let previewElapsed: Cue
+    let fallbackCommandFilename: String
+    let elapsedCues: [ElapsedCue]
+    let commandCues: [Cue]
 
-internal let voiceFilenamesByText: [String: String] = [
-    "Thirty seconds.": "elapsed_30s",
-    "One minute. Keep moving.": "elapsed_60s",
-    "One minute thirty.": "elapsed_90s",
-    "Two minutes. Stay locked in.": "elapsed_120s",
-    "Three minutes. Drive forward.": "elapsed_180s",
-    "Five minutes. Finish strong.": "elapsed_300s",
-    "Ten minutes. Outstanding.": "elapsed_600s",
-    previewElapsedCue: "preview_elapsed",
-    "Move now.": "cmd_move_now",
-    "Stay sharp.": "cmd_stay_sharp",
-    "Reset. Breathe.": "cmd_reset_breathe",
-    "Push the pace.": "cmd_push_pace",
-    "Drive forward.": "cmd_drive_forward",
-    "Keep pressure.": "cmd_keep_pressure",
-    "Push through it.": "cmd_push_through",
-]
+    var elapsedCueBySecond: [Int: ElapsedCue] {
+        Dictionary(uniqueKeysWithValues: elapsedCues.map { ($0.second, $0) })
+    }
 
-internal func voiceFilename(for text: String) -> String? {
-    voiceFilenamesByText[text]
+    var fallbackCommandCue: Cue {
+        commandCues.first(where: { $0.filename == fallbackCommandFilename }) ?? commandCues.first ?? previewElapsed
+    }
+
+    var filenameByText: [String: String] {
+        var mapping = [previewElapsed.text: previewElapsed.filename]
+        elapsedCues.forEach { mapping[$0.text] = $0.filename }
+        commandCues.forEach { mapping[$0.text] = $0.filename }
+        return mapping
+    }
+
+    var bundledFilenames: [String] {
+        [previewElapsed.filename]
+            + elapsedCues.map(\.filename)
+            + commandCues.map(\.filename)
+    }
+}
+
+internal let voiceCatalogResourceName = "voice_callouts"
+
+private let fallbackVoiceCueCatalog = VoiceCueCatalog(
+    previewElapsed: .init(
+        filename: "preview_elapsed",
+        text: "Thirty seconds elapsed. Move with a purpose."
+    ),
+    fallbackCommandFilename: "cmd_move_with_a_purpose",
+    elapsedCues: [
+        .init(second: 30, filename: "elapsed_30s", text: "Thirty seconds elapsed. Move with a purpose.")
+    ],
+    commandCues: [
+        .init(filename: "cmd_move_with_a_purpose", text: "Move with a purpose."),
+        .init(filename: "cmd_stay_locked_in", text: "Stay locked in.")
+    ]
+)
+
+internal func loadVoiceCalloutCatalog(bundle: Bundle = .main) -> VoiceCueCatalog {
+    guard let url = bundle.url(forResource: voiceCatalogResourceName, withExtension: "json", subdirectory: "Audio")
+        ?? bundle.url(forResource: voiceCatalogResourceName, withExtension: "json")
+    else {
+        return fallbackVoiceCueCatalog
+    }
+
+    do {
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(VoiceCueCatalog.self, from: data)
+    } catch {
+        return fallbackVoiceCueCatalog
+    }
+}
+
+internal func voiceFilename(for text: String, bundle: Bundle = .main) -> String? {
+    loadVoiceCalloutCatalog(bundle: bundle).filenameByText[text]
 }
 
 internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
@@ -53,8 +83,32 @@ internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL
         ?? bundle.url(forResource: filename, withExtension: "mp3")
 }
 
-internal func voiceFilenameOrFallback(for text: String) -> String {
-    voiceFilename(for: text) ?? voiceFilename(for: defaultFallbackVoiceCue) ?? "cmd_stay_sharp"
+internal func voiceFilenameOrFallback(for text: String, bundle: Bundle = .main) -> String {
+    let catalog = loadVoiceCalloutCatalog(bundle: bundle)
+    return catalog.filenameByText[text] ?? catalog.fallbackCommandCue.filename
+}
+
+internal func nextCommandCue(
+    from cues: [VoiceCueCatalog.Cue],
+    lastFilename: String?,
+    pickIndex: (Int) -> Int
+) -> VoiceCueCatalog.Cue {
+    guard !cues.isEmpty else {
+        return fallbackVoiceCueCatalog.fallbackCommandCue
+    }
+
+    if cues.count == 1 {
+        return cues[0]
+    }
+
+    let boundedIndex = max(0, min(cues.count - 1, pickIndex(cues.count)))
+    let candidate = cues[boundedIndex]
+    guard candidate.filename == lastFilename else {
+        return candidate
+    }
+
+    let nextIndex = (boundedIndex + 1) % cues.count
+    return cues[nextIndex]
 }
 
 @MainActor
@@ -62,16 +116,24 @@ final class AIVoiceCalloutService {
     struct StateSnapshot {
         let lastElapsedMilestone: Int
         let nextCommandCueAt: Int
+        let lastCommandCueFilename: String?
     }
 
     static let shared = AIVoiceCalloutService()
 
-    private var audioPlayer: AVAudioPlayer?
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
+
+    private let bundle: Bundle
+    private let catalog: VoiceCueCatalog
+    private var audioPlayer: AVAudioPlayer?
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
+    private var lastCommandCueFilename: String?
 
-    private init() {
+    init(bundle: Bundle = .main) {
+        self.bundle = bundle
+        self.catalog = loadVoiceCalloutCatalog(bundle: bundle)
+
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
             try AVAudioSession.sharedInstance().setActive(true)
@@ -81,10 +143,10 @@ final class AIVoiceCalloutService {
     }
 
     func speak(_ text: String) {
-        let mappedFilename = voiceFilename(for: text)
-        let filename = mappedFilename ?? voiceFilenameOrFallback(for: text)
+        let mappedFilename = catalog.filenameByText[text]
+        let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
 
-        guard let url = voiceAudioURL(for: filename) else {
+        guard let url = voiceAudioURL(for: filename, bundle: bundle) else {
             Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
             return
         }
@@ -107,6 +169,7 @@ final class AIVoiceCalloutService {
         audioPlayer = nil
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
+        lastCommandCueFilename = nil
     }
 
     func preview() {
@@ -114,28 +177,31 @@ final class AIVoiceCalloutService {
     }
 
     func previewCommandCue() {
-        speak(randomCommandCue())
+        let cue = randomCommandCue()
+        speak(cue.text)
     }
 
     func previewCountdownCue() {
-        speak(previewElapsedCue)
+        speak(catalog.previewElapsed.text)
     }
 
     func triggerCallout(elapsedSeconds: Int) {
         if let callout = elapsedMilestone(for: elapsedSeconds) {
-            speak(callout)
+            speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
             return
         }
 
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
-            speak(randomCommandCue())
+            let cue = randomCommandCue()
+            speak(cue.text)
+            lastCommandCueFilename = cue.filename
             nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
         }
     }
 
-    private func elapsedMilestone(for elapsed: Int) -> String? {
-        guard let cue = elapsedVoiceCuesBySecond[elapsed], elapsed != lastElapsedMilestone else {
+    private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
+        guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil
         }
         return cue
@@ -148,9 +214,12 @@ final class AIVoiceCalloutService {
         return elapsedSeconds >= nextCommandCueAt
     }
 
-    private func randomCommandCue() -> String {
-        let index = secureRandomInt(in: 0...(commandVoiceCues.count - 1))
-        return commandVoiceCues[index]
+    private func randomCommandCue() -> VoiceCueCatalog.Cue {
+        let cue = nextCommandCue(from: catalog.commandCues, lastFilename: lastCommandCueFilename) { upperBound in
+            secureRandomInt(in: 0...(upperBound - 1))
+        }
+        lastCommandCueFilename = cue.filename
+        return cue
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {
@@ -168,7 +237,8 @@ final class AIVoiceCalloutService {
     func _stateSnapshotForTesting() -> StateSnapshot {
         StateSnapshot(
             lastElapsedMilestone: lastElapsedMilestone,
-            nextCommandCueAt: nextCommandCueAt
+            nextCommandCueAt: nextCommandCueAt,
+            lastCommandCueFilename: lastCommandCueFilename
         )
     }
 }

@@ -4,14 +4,16 @@ import XCTest
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
     private func makeSut() -> AIVoiceCalloutService {
-        let service = AIVoiceCalloutService.shared
+        let service = AIVoiceCalloutService(bundle: .main)
         service.resetSession()
         return service
     }
 
     func testTriggerCalloutElapsedMilestonesDoNotCrash() {
         let sut = makeSut()
-        [30, 60, 90, 120, 180, 300, 600].forEach { elapsed in
+        let catalog = loadVoiceCalloutCatalog(bundle: .main)
+
+        catalog.elapsedCues.map(\.second).forEach { elapsed in
             sut.triggerCallout(elapsedSeconds: elapsed)
         }
     }
@@ -32,36 +34,54 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
     func testCommandCueScheduleDoesNotCrashAcrossLongRun() {
         let sut = makeSut()
-        for elapsed in 1...120 {
+        for elapsed in 1...180 {
             sut.triggerCallout(elapsedSeconds: elapsed)
         }
     }
 
-    func testEveryRuntimeElapsedCueHasBundledFilename() {
-        XCTAssertEqual(voiceFilename(for: previewElapsedCue), "preview_elapsed")
-        XCTAssertTrue(elapsedVoiceCuesBySecond.values.allSatisfy { voiceFilename(for: $0) != nil })
+    func testCatalogHasVarietyAndClearElapsedLanguage() {
+        let catalog = loadVoiceCalloutCatalog(bundle: .main)
+
+        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 16)
+        XCTAssertGreaterThanOrEqual(catalog.commandCues.count, 20)
+        XCTAssertTrue(
+            catalog.elapsedCues.allSatisfy { $0.text.localizedCaseInsensitiveContains("elapsed") },
+            "Elapsed cues must explicitly say elapsed so they are not mistaken for time remaining."
+        )
     }
 
-    func testEveryRuntimeCommandCueHasBundledFilename() {
-        XCTAssertFalse(commandVoiceCues.isEmpty)
-        XCTAssertTrue(commandVoiceCues.allSatisfy { voiceFilename(for: $0) != nil })
+    func testEveryRuntimeCueHasBundledFilename() {
+        let catalog = loadVoiceCalloutCatalog(bundle: .main)
+
+        XCTAssertEqual(voiceFilename(for: catalog.previewElapsed.text, bundle: .main), catalog.previewElapsed.filename)
+        XCTAssertTrue(catalog.elapsedCues.allSatisfy { voiceFilename(for: $0.text, bundle: .main) == $0.filename })
+        XCTAssertTrue(catalog.commandCues.allSatisfy { voiceFilename(for: $0.text, bundle: .main) == $0.filename })
     }
 
     func testBundledVoiceAudioResolvesFromMainBundle() {
-        let filenames = Set(
-            [previewElapsedCue]
-                .compactMap(voiceFilename(for:))
-                + elapsedVoiceCuesBySecond.values.compactMap(voiceFilename(for:))
-                + commandVoiceCues.compactMap(voiceFilename(for:))
-        )
+        let catalog = loadVoiceCalloutCatalog(bundle: .main)
+        let missing = Set(catalog.bundledFilenames)
+            .filter { voiceAudioURL(for: $0, bundle: .main) == nil }
+            .sorted()
 
-        let missing = filenames.filter { voiceAudioURL(for: $0, bundle: .main) == nil }.sorted()
         XCTAssertTrue(missing.isEmpty, "Missing bundled voice assets: \(missing)")
     }
 
-    func testUnknownCueFallsBackToBundledDrillSergeantClip() {
-        let fallback = voiceFilenameOrFallback(for: "Unexpected cue")
-        XCTAssertEqual(fallback, "cmd_stay_sharp")
+    func testUnknownCueFallsBackToBundledDrillInstructorClip() {
+        let catalog = loadVoiceCalloutCatalog(bundle: .main)
+        let fallback = voiceFilenameOrFallback(for: "Unexpected cue", bundle: .main)
+
+        XCTAssertEqual(fallback, catalog.fallbackCommandCue.filename)
         XCTAssertNotNil(voiceAudioURL(for: fallback, bundle: .main))
+    }
+
+    func testNextCommandCueAvoidsImmediateRepeatWhenPossible() {
+        let cues = [
+            VoiceCueCatalog.Cue(filename: "cue_a", text: "Cue A"),
+            VoiceCueCatalog.Cue(filename: "cue_b", text: "Cue B"),
+        ]
+
+        let selected = nextCommandCue(from: cues, lastFilename: "cue_a") { _ in 0 }
+        XCTAssertEqual(selected.filename, "cue_b")
     }
 }

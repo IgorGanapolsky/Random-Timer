@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -19,6 +20,19 @@ IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCallo
 IOS_VOICE_TESTS = ROOT / "native-ios/RandomTimerTests/AIVoiceCalloutServiceTests.swift"
 IOS_XCODE_PROJECT = ROOT / "native-ios/RandomTimer.xcodeproj/project.pbxproj"
 IOS_VOICE_AUDIO_DIR = ROOT / "native-ios/RandomTimer/Resources/Audio"
+IOS_VOICE_CATALOG = IOS_VOICE_AUDIO_DIR / "voice_callouts.json"
+
+
+def _load_ios_voice_catalog() -> dict:
+    return json.loads(IOS_VOICE_CATALOG.read_text(encoding="utf-8"))
+
+
+def _ios_catalog_filenames(catalog: dict) -> set[str]:
+    return (
+        {catalog["previewElapsed"]["filename"]}
+        | {cue["filename"] for cue in catalog["elapsedCues"]}
+        | {cue["filename"] for cue in catalog["commandCues"]}
+    )
 
 
 def _normalize_name(name: str) -> str:
@@ -128,8 +142,8 @@ def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
 
     assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
     assert "Voice Callouts" in ios_setup
-    assert "voice prompts" in android_setup.lower() and "countdown" in android_setup.lower()
-    assert "voice prompts" in ios_setup.lower() and "countdown" in ios_setup.lower()
+    assert "voice prompts" in android_setup.lower() and "elapsed" in android_setup.lower()
+    assert "voice prompts" in ios_setup.lower() and "elapsed" in ios_setup.lower()
 
 
 def test_sound_arsenal_is_expanded_by_default_for_free_users():
@@ -148,33 +162,28 @@ def test_voice_profile_configured_on_both_platforms():
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
     assert "preferredVoiceNames" in android_voice_service
-    assert "voiceFilenamesByText" in ios_voice_service
+    assert "VoiceCueCatalog" in ios_voice_service
+    assert "loadVoiceCalloutCatalog" in ios_voice_service
     assert "voiceFilenameOrFallback" in ios_voice_service
     assert "AVAudioPlayer" in ios_voice_service
     assert "AVSpeechSynthesizer" not in ios_voice_service
 
 
 def test_ios_voice_assets_exist_on_disk():
-    required_assets = {
-        "cmd_drive_forward",
-        "cmd_keep_pressure",
-        "cmd_move_now",
-        "cmd_push_pace",
-        "cmd_push_through",
-        "cmd_reset_breathe",
-        "cmd_stay_sharp",
-        "elapsed_120s",
-        "elapsed_180s",
-        "elapsed_300s",
-        "elapsed_30s",
-        "elapsed_600s",
-        "elapsed_60s",
-        "elapsed_90s",
-        "preview_elapsed",
-    }
+    catalog = _load_ios_voice_catalog()
+    required_assets = _ios_catalog_filenames(catalog)
     actual_assets = {path.stem for path in IOS_VOICE_AUDIO_DIR.glob("*.mp3")}
 
     assert required_assets <= actual_assets
+
+
+def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():
+    catalog = _load_ios_voice_catalog()
+
+    assert len(catalog["elapsedCues"]) >= 16
+    assert len(catalog["commandCues"]) >= 20
+    assert all("elapsed" in cue["text"].lower() for cue in catalog["elapsedCues"])
+    assert catalog["fallbackCommandFilename"] in _ios_catalog_filenames(catalog)
 
 
 def test_ios_voice_assets_and_tests_are_wired_into_xcode_targets():

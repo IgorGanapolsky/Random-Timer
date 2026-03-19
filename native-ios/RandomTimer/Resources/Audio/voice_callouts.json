@@ -1,0 +1,187 @@
+{
+  "previewElapsed": {
+    "filename": "preview_elapsed",
+    "text": "Thirty seconds elapsed. Move with a purpose."
+  },
+  "fallbackCommandFilename": "cmd_move_with_a_purpose",
+  "elapsedCues": [
+    {
+      "second": 15,
+      "filename": "elapsed_15s",
+      "text": "Fifteen seconds elapsed. Move with a purpose."
+    },
+    {
+      "second": 30,
+      "filename": "elapsed_30s",
+      "text": "Thirty seconds elapsed. Stay locked in."
+    },
+    {
+      "second": 45,
+      "filename": "elapsed_45s",
+      "text": "Forty-five seconds elapsed. Keep your bearing."
+    },
+    {
+      "second": 60,
+      "filename": "elapsed_60s",
+      "text": "One minute elapsed. Keep pressure on."
+    },
+    {
+      "second": 75,
+      "filename": "elapsed_75s",
+      "text": "One minute fifteen elapsed. No hesitation. Move."
+    },
+    {
+      "second": 90,
+      "filename": "elapsed_90s",
+      "text": "One minute thirty elapsed. Stay disciplined."
+    },
+    {
+      "second": 105,
+      "filename": "elapsed_105s",
+      "text": "One minute forty-five elapsed. Breathe and press."
+    },
+    {
+      "second": 120,
+      "filename": "elapsed_120s",
+      "text": "Two minutes elapsed. Pick it up."
+    },
+    {
+      "second": 150,
+      "filename": "elapsed_150s",
+      "text": "Two minutes thirty elapsed. Stay sharp and keep driving."
+    },
+    {
+      "second": 180,
+      "filename": "elapsed_180s",
+      "text": "Three minutes elapsed. Sound off and move."
+    },
+    {
+      "second": 210,
+      "filename": "elapsed_210s",
+      "text": "Three minutes thirty elapsed. Do not coast."
+    },
+    {
+      "second": 240,
+      "filename": "elapsed_240s",
+      "text": "Four minutes elapsed. Maintain your pace."
+    },
+    {
+      "second": 300,
+      "filename": "elapsed_300s",
+      "text": "Five minutes elapsed. Finish this stretch strong."
+    },
+    {
+      "second": 420,
+      "filename": "elapsed_420s",
+      "text": "Seven minutes elapsed. Recover and press."
+    },
+    {
+      "second": 540,
+      "filename": "elapsed_540s",
+      "text": "Nine minutes elapsed. Stay precise. Stay relentless."
+    },
+    {
+      "second": 600,
+      "filename": "elapsed_600s",
+      "text": "Ten minutes elapsed. Outstanding. Keep moving."
+    }
+  ],
+  "commandCues": [
+    {
+      "filename": "cmd_move_with_a_purpose",
+      "text": "Move with a purpose."
+    },
+    {
+      "filename": "cmd_pick_it_up",
+      "text": "Pick it up."
+    },
+    {
+      "filename": "cmd_stay_locked_in",
+      "text": "Stay locked in."
+    },
+    {
+      "filename": "cmd_no_hesitation_move",
+      "text": "No hesitation. Move."
+    },
+    {
+      "filename": "cmd_keep_your_bearing",
+      "text": "Keep your bearing."
+    },
+    {
+      "filename": "cmd_sound_off_and_drive",
+      "text": "Sound off and drive."
+    },
+    {
+      "filename": "cmd_eyes_up_keep_moving",
+      "text": "Eyes up. Keep moving."
+    },
+    {
+      "filename": "cmd_stay_disciplined",
+      "text": "Stay disciplined."
+    },
+    {
+      "filename": "cmd_breathe_recover_press",
+      "text": "Breathe, recover, and press."
+    },
+    {
+      "filename": "cmd_do_not_coast",
+      "text": "Do not coast."
+    },
+    {
+      "filename": "cmd_own_this_rep",
+      "text": "Own this rep."
+    },
+    {
+      "filename": "cmd_keep_pressure_on",
+      "text": "Keep pressure on."
+    },
+    {
+      "filename": "cmd_sharp_movement_sharp_focus",
+      "text": "Sharp movement. Sharp focus."
+    },
+    {
+      "filename": "cmd_stay_in_the_fight",
+      "text": "Stay in the fight."
+    },
+    {
+      "filename": "cmd_drive_through_it",
+      "text": "Drive through it."
+    },
+    {
+      "filename": "cmd_reset_and_attack",
+      "text": "Reset and attack the next step."
+    },
+    {
+      "filename": "cmd_strong_feet_strong_pace",
+      "text": "Strong feet. Strong pace."
+    },
+    {
+      "filename": "cmd_move_fast_stay_precise",
+      "text": "Move fast. Stay precise."
+    },
+    {
+      "filename": "cmd_keep_tempo_high",
+      "text": "Keep the tempo high."
+    },
+    {
+      "filename": "cmd_most_ricky_tick",
+      "text": "Most ricky tick. Move with a purpose."
+    },
+    {
+      "filename": "cmd_instant_response_go",
+      "text": "Instant response. Go."
+    },
+    {
+      "filename": "cmd_maintain_your_interval",
+      "text": "Maintain your interval."
+    },
+    {
+      "filename": "cmd_snap_back_and_drive",
+      "text": "Snap back and drive."
+    },
+    {
+      "filename": "cmd_finish_rep_keep_pushing",
+      "text": "Finish the rep. Then keep pushing."
+    }
+  ]
+}
