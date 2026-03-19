@@ -55,9 +55,13 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          TESTER_EMAIL: ${{ inputs.email }}
+          TESTER_FIRST_NAME: ${{ inputs.first_name }}
+          TESTER_LAST_NAME: ${{ inputs.last_name }}
+          TESTER_GROUP: ${{ inputs.group }}
         run: |
           python3 scripts/asc_add_tester.py \
-            --email "${{ inputs.email }}" \
-            --first-name "${{ inputs.first_name }}" \
-            --last-name "${{ inputs.last_name }}" \
-            --group "${{ inputs.group }}"
+            --email "$TESTER_EMAIL" \
+            --first-name "$TESTER_FIRST_NAME" \
+            --last-name "$TESTER_LAST_NAME" \
+            --group "$TESTER_GROUP"
