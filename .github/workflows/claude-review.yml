@@ -5,8 +5,20 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   issue_comment:
     types: [created]
+  push:
+    branches: [develop, main]
 
 jobs:
+  claude-review-push-advisory:
+    name: Claude Review Advisory
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip advisory review on push
+        run: |
+          echo "Claude Review only performs PR and @claude review flows."
+          echo "Push events get a green advisory noop to avoid false red checks."
+
   # Claude deep review for architectural and project-specific checks
   claude-review:
     name: Claude Review
