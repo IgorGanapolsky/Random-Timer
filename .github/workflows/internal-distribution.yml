@@ -150,6 +150,13 @@ jobs:
           printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_PATH"
           python scripts/normalize_pem.py "$KEY_PATH"
 
+      - name: Guard iOS version lineage against ASC
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: python scripts/check_ios_version_lineage.py --repo-root .
+
       - name: Configure git credentials for match
         env:
           GIT_AUTH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
@@ -177,9 +184,9 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS }}
-          TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL }}
-          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: ${{ secrets.TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS }}
+          TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
+          TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}
+          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: ${{ secrets.TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS || 'false' }}
         run: fastlane beta
         working-directory: native-ios
 
