@@ -26,6 +26,10 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert "preflight-release" in source or "Preflight release" in source
     assert "ios-testflight-internal" in source or "android-internal" in source
     assert "check_ios_version_lineage.py" in source
+    assert "Install App Store Connect Python dependencies" in source
+    assert source.index("Install App Store Connect Python dependencies") < source.index(
+        "Guard iOS version lineage against ASC"
+    )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
 
