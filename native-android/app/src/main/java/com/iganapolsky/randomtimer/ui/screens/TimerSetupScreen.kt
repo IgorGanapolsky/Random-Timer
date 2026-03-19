@@ -31,13 +31,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -373,7 +373,7 @@ fun TimerSetupScreen(
                                         color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Voice prompts during countdown",
+                                        text = "Elapsed-time voice prompts during the timer",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
@@ -559,38 +559,38 @@ fun TimerSetupScreen(
                                     }
 
                                     if (isPro) {
-                                            IconButton(
-                                                onClick = {
-                                                    if (config.repeatRounds > 0) {
-                                                        updateConfig(repeatRounds = config.repeatRounds - 1)
-                                                    }
-                                                },
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Remove,
-                                                    contentDescription = "Decrease Rounds",
-                                                    tint = TimerColors.TextPrimary,
-                                                )
-                                            }
-                                            Text(
-                                                text = config.repeatRounds.toString(),
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = TimerColors.TextPrimary,
-                                                modifier = Modifier.padding(horizontal = 8.dp),
+                                        IconButton(
+                                            onClick = {
+                                                if (config.repeatRounds > 0) {
+                                                    updateConfig(repeatRounds = config.repeatRounds - 1)
+                                                }
+                                            },
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Remove,
+                                                contentDescription = "Decrease Rounds",
+                                                tint = TimerColors.TextPrimary,
                                             )
-                                            IconButton(
-                                                onClick = {
-                                                    if (config.repeatRounds < 100) {
-                                                        updateConfig(repeatRounds = config.repeatRounds + 1)
-                                                    }
-                                                },
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Add,
-                                                    contentDescription = "Increase Rounds",
-                                                    tint = TimerColors.TextPrimary,
-                                                )
-                                            }
+                                        }
+                                        Text(
+                                            text = config.repeatRounds.toString(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = TimerColors.TextPrimary,
+                                            modifier = Modifier.padding(horizontal = 8.dp),
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                if (config.repeatRounds < 100) {
+                                                    updateConfig(repeatRounds = config.repeatRounds + 1)
+                                                }
+                                            },
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Increase Rounds",
+                                                tint = TimerColors.TextPrimary,
+                                            )
+                                        }
                                     } else {
                                         Surface(
                                             onClick = onUpgradeTap,
