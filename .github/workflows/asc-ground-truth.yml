@@ -17,10 +17,5 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
-          python3 -c "import scripts.asc_add_tester as asc; t=asc.build_token(); \
-          print('\n--- TEAM MEMBERS ---'); \
-          users=asc.api(t, 'GET', '/users'); \
-          [print(f\"Member: {u['attributes']['username']} | Roles: {u['attributes']['roles']}\") for u in users.get('data', [])]; \
-          print('\n--- PENDING INVITES ---'); \
-          invites=asc.api(t, 'GET', '/userInvitations'); \
-          [print(f\"Pending: {i['attributes']['email']}\") for i in invites.get('data', [])]"
+          export PYTHONPATH=$PYTHONPATH:.
+          python3 scripts/diagnose_build_194.py
