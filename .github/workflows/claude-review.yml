@@ -6,7 +6,6 @@ on:
   issue_comment:
     types: [created]
   push:
-    branches: [develop, main]
 
 jobs:
   claude-review-push-advisory:
