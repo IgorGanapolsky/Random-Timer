@@ -53,7 +53,6 @@ def find_app(token, bundle_id):
 
 
 def find_or_create_group(token, app_id, group_name):
-    # Fetch all groups for the app and filter manually
     data = api(token, "GET", f"/apps/{app_id}/betaGroups")
     for g in data.get("data", []):
         if g["attributes"]["name"] == group_name:
@@ -80,8 +79,7 @@ def find_or_create_tester(token, email, first_name, last_name, group_id):
         tester_id = data["data"][0]["id"]
         print(f"Found existing tester {email} (id={tester_id})")
         
-        # Ensure they are in the group
-        print(f"Assigning {email} to group...")
+        print(f"Ensuring {email} is in group...")
         body = {"data": [{"type": "betaTesters", "id": tester_id}]}
         try:
             api(token, "POST", f"/betaGroups/{group_id}/relationships/betaTesters", body=body)
@@ -103,21 +101,24 @@ def find_or_create_tester(token, email, first_name, last_name, group_id):
 
 
 def distribute_latest_build(token, app_id, group_id, is_internal):
-    if is_internal:
-        print("Skipping explicit build distribution for internal group (App Store Connect handles this automatically)")
-        return
-
     # Find latest build for the app
     data = api(token, "GET", f"/apps/{app_id}/builds", params={"limit": 50, "sort": "-uploadedDate"})
     if not data.get("data"):
         print("No builds found for app")
         return
 
-    # Sort by version (build number) as a secondary check, but sort=-uploadedDate should work
     latest_build = data["data"][0]
     build_id = latest_build["id"]
     build_version = latest_build["attributes"]["version"]
-    print(f"Distributing build {build_version} (id={build_id}) to group...")
+    
+    print(f"Distributing build {build_version} (id={build_id}) to group (internal={is_internal})...")
+
+    # For internal groups, we check if build is already there first to avoid 422
+    if is_internal:
+        existing = api(token, "GET", f"/betaGroups/{group_id}/builds", params={"filter[version]": build_version})
+        if any(b['id'] == build_id for b in existing.get('data', [])):
+            print(f"Build {build_version} is already in internal group.")
+            return
 
     body = {"data": [{"type": "builds", "id": build_id}]}
     try:
@@ -127,7 +128,7 @@ def distribute_latest_build(token, app_id, group_id, is_internal):
         if "409" in str(e):
             print(f"Note: Build {build_version} already distributed.")
         else:
-            raise e
+            print(f"Warning: Could not distribute build {build_version}: {e}")
 
 
 def main():
