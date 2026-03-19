@@ -1,6 +1,13 @@
 name: Generate iOS Voice Callouts
 
 on:
+  push:
+    branches:
+      - feat/voice-callout-variety
+    paths:
+      - .github/workflows/generate-ios-voice-callouts.yml
+      - scripts/generate_ios_voice_callouts.py
+      - native-ios/RandomTimer/Resources/Audio/voice_callouts.json
   workflow_dispatch:
     inputs:
       voice_id:
