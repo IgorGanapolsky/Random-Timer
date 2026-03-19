@@ -20,7 +20,7 @@ jobs:
           python3 -c "import scripts.asc_add_tester as asc; t=asc.build_token(); \
           print('\n--- TEAM MEMBERS ---'); \
           users=asc.api(t, 'GET', '/users'); \
-          [print(f\"Member: {u['attributes']['username']} | Email: {u['attributes']['email']} | Roles: {u['attributes']['roles']}\") for u in users.get('data', [])]; \
+          [print(f\"Member: {u['attributes']['username']} | Roles: {u['attributes']['roles']}\") for u in users.get('data', [])]; \
           print('\n--- PENDING INVITES ---'); \
           invites=asc.api(t, 'GET', '/userInvitations'); \
           [print(f\"Pending: {i['attributes']['email']}\") for i in invites.get('data', [])]"
