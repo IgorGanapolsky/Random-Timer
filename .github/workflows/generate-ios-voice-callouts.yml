@@ -8,11 +8,6 @@ on:
         required: false
         default: DGzg6RaUqxGRTHSBjfgF
         type: string
-      voice_name_pattern:
-        description: Regex used to auto-discover the custom drill-instructor voice.
-        required: false
-        default: marine|drill|instructor|sergeant
-        type: string
       model_id:
         description: ElevenLabs model ID used for synthesis.
         required: false
@@ -36,10 +31,15 @@ jobs:
       - name: Generate iOS voice assets from ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          DEFAULT_VOICE_ID: DGzg6RaUqxGRTHSBjfgF
+          VOICE_ID_INPUT: ${{ inputs.voice_id }}
+          MODEL_ID_INPUT: ${{ inputs.model_id }}
         run: |
-          voice_id="${{ inputs.voice_id }}"
+          set -euo pipefail
+
+          voice_id="${VOICE_ID_INPUT:-}"
           if [ -z "$voice_id" ]; then
-            voice_id="DGzg6RaUqxGRTHSBjfgF"
+            voice_id="$DEFAULT_VOICE_ID"
           fi
 
           args=(
@@ -48,12 +48,8 @@ jobs:
             --voice-id "$voice_id"
           )
 
-          if [ -n "${{ inputs.voice_name_pattern }}" ]; then
-            args+=(--voice-name-pattern "${{ inputs.voice_name_pattern }}")
-          fi
-
-          if [ -n "${{ inputs.model_id }}" ]; then
-            args+=(--model-id "${{ inputs.model_id }}")
+          if [ -n "${MODEL_ID_INPUT:-}" ]; then
+            args+=(--model-id "$MODEL_ID_INPUT")
           fi
 
           python scripts/generate_ios_voice_callouts.py "${args[@]}"
