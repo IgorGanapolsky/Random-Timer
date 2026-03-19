@@ -237,6 +237,8 @@ fun ActiveTimerScreen(
                 ) {
                     LoopBadge(
                         enabled = loopEnabled,
+                        repeatRounds = state.config.repeatRounds,
+                        roundCount = state.roundCount,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             loopEnabled = !loopEnabled
@@ -260,6 +262,8 @@ fun ActiveTimerScreen(
                         if (!isComplete) {
                             LoopBadge(
                                 enabled = loopEnabled,
+                                repeatRounds = state.config.repeatRounds,
+                                roundCount = state.roundCount,
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     loopEnabled = !loopEnabled
@@ -299,6 +303,8 @@ fun ActiveTimerScreen(
                     if (!isComplete) {
                         LoopBadge(
                             enabled = loopEnabled,
+                            repeatRounds = state.config.repeatRounds,
+                            roundCount = state.roundCount,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 loopEnabled = !loopEnabled
@@ -326,6 +332,8 @@ fun ActiveTimerScreen(
 @Composable
 private fun LoopBadge(
     enabled: Boolean,
+    repeatRounds: Int,
+    roundCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -369,13 +377,29 @@ private fun LoopBadge(
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
-                text = if (enabled) "LOOP" else "LOOP OFF",
+                text = loopBadgeText(enabled = enabled, repeatRounds = repeatRounds, roundCount = roundCount),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
                 color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
             )
         }
     }
+}
+
+internal fun loopBadgeText(
+    enabled: Boolean,
+    repeatRounds: Int,
+    roundCount: Int,
+): String {
+    if (!enabled) {
+        return "LOOP OFF"
+    }
+    if (repeatRounds == 0) {
+        return "LOOP"
+    }
+
+    val clampedRound = roundCount.coerceIn(1, repeatRounds)
+    return "ROUND $clampedRound/$repeatRounds"
 }
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
