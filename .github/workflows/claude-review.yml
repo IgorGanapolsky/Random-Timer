@@ -35,7 +35,7 @@ jobs:
       statuses: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Claude Code Review
         id: claude_review
@@ -119,7 +119,7 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Claude Code Assist
         if: ${{ env.ANTHROPIC_API_KEY != '' }}

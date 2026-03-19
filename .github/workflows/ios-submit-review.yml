@@ -34,7 +34,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Fail fast on required App Store secrets
         env:
@@ -54,7 +54,7 @@ jobs:
         run: bash scripts/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -230,14 +230,14 @@ jobs:
 
       - name: Upload version resolution report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
 
       - name: Upload submission readiness artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-submit-readiness
           path: |

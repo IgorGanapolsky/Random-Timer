@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-26
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -107,7 +107,7 @@ jobs:
         run: bash scripts/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -204,7 +204,7 @@ jobs:
           python scripts/verify_release.py --platform ios --version "$VERSION" --wait --timeout 900 --poll-interval 60
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ios-ipa-internal
@@ -218,7 +218,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -347,7 +347,7 @@ jobs:
             --version "${{ steps.versions.outputs.android_version_name }}"
 
       - name: Upload Android AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-aab-internal
@@ -366,7 +366,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -453,7 +453,7 @@ jobs:
           echo "::warning::Firebase App Distribution failed (e.g. 404). Check vars.FIREBASE_INTERNAL_GROUPS matches a valid group alias in Firebase Console, or vars.FIREBASE_INTERNAL_TESTERS has valid emails."
 
       - name: Upload Android APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-apk-firebase-internal

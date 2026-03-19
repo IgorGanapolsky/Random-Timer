@@ -37,7 +37,7 @@ jobs:
       IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
       IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Fail fast on required App Store secrets
         env:
@@ -70,7 +70,7 @@ jobs:
           fastlane --version
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -156,7 +156,7 @@ jobs:
 
       - name: Upload readiness report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-ready-report
           path: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Upload version resolution report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
