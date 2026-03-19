@@ -50,6 +50,13 @@ jobs:
           printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_PATH"
           python3 scripts/normalize_pem.py "$KEY_PATH" || true
 
+      - name: Diagnose TestFlight state
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: python3 scripts/asc_diagnose_testflight.py
+
       - name: Add tester to TestFlight
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
