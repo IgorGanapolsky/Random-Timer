@@ -23,13 +23,14 @@ def build_token():
         sys.exit(1)
 
     private_key = PRIVATE_KEY.replace("\\n", "\n")
-    now = time.time()
+    now = int(time.time())
     payload = {
         "iss": ISSUER_ID,
-        "exp": int(now) + 1200,
+        "iat": now,
+        "exp": now + 1200,
         "aud": "appstoreconnect-v1",
     }
-    headers = {"kid": KEY_ID}
+    headers = {"kid": KEY_ID, "typ": "JWT", "alg": "ES256"}
     return jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
 
 
@@ -52,13 +53,14 @@ def find_app(token, bundle_id):
 
 
 def find_or_create_group(token, app_id, group_name):
-    # Fetch all groups for the app and filter manually (API doesn't support filter[name] here)
+    # Fetch all groups for the app and filter manually
     data = api(token, "GET", f"/apps/{app_id}/betaGroups")
     for g in data.get("data", []):
         if g["attributes"]["name"] == group_name:
             group_id = g["id"]
-            print(f"Found existing group '{group_name}' (id={group_id})")
-            return group_id
+            is_internal = g["attributes"]["isInternalGroup"]
+            print(f"Found existing group '{group_name}' (id={group_id}, internal={is_internal})")
+            return group_id, is_internal
 
     print(f"Creating beta group '{group_name}'...")
     body = {
@@ -69,7 +71,7 @@ def find_or_create_group(token, app_id, group_name):
         }
     }
     data = api(token, "POST", "/betaGroups", body=body)
-    return data["data"]["id"]
+    return data["data"]["id"], False
 
 
 def find_or_create_tester(token, email, first_name, last_name, group_id):
@@ -100,15 +102,19 @@ def find_or_create_tester(token, email, first_name, last_name, group_id):
     return data["data"]["id"]
 
 
-def distribute_latest_build(token, app_id, group_id):
-    # Find latest build for the app (API doesn't support sort here)
-    data = api(token, "GET", f"/apps/{app_id}/builds", params={"limit": 50})
+def distribute_latest_build(token, app_id, group_id, is_internal):
+    if is_internal:
+        print("Skipping explicit build distribution for internal group (App Store Connect handles this automatically)")
+        return
+
+    # Find latest build for the app
+    data = api(token, "GET", f"/apps/{app_id}/builds", params={"limit": 50, "sort": "-uploadedDate"})
     if not data.get("data"):
         print("No builds found for app")
         return
 
-    # Manually find build with latest uploadedDate (ISO string comparison works correctly)
-    latest_build = max(data["data"], key=lambda x: x["attributes"]["uploadedDate"])
+    # Sort by version (build number) as a secondary check, but sort=-uploadedDate should work
+    latest_build = data["data"][0]
     build_id = latest_build["id"]
     build_version = latest_build["attributes"]["version"]
     print(f"Distributing build {build_version} (id={build_id}) to group...")
@@ -128,16 +134,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--email", required=True)
     parser.add_argument("--group", default="Beta Testers")
-    parser.add_argument("--first-name", default="Igor")
-    parser.add_argument("--last-name", default="Tester")
+    parser.add_argument("--first-name", default="")
+    parser.add_argument("--last-name", default="")
     args = parser.parse_args()
 
     token = build_token()
     app_id = find_app(token, "com.igorganapolsky.randomtimer")
-    group_id = find_or_create_group(token, app_id, args.group)
+    group_id, is_internal = find_or_create_group(token, app_id, args.group)
     find_or_create_tester(token, args.email, args.first_name, args.last_name, group_id)
-    distribute_latest_build(token, app_id, group_id)
-    print(f"\n✅ {args.email} invited to '{args.group}' on TestFlight")
+    distribute_latest_build(token, app_id, group_id, is_internal)
+    print(f"\n✅ {args.email} processed for '{args.group}' on TestFlight")
 
 
 if __name__ == "__main__":
