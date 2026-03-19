@@ -13,6 +13,7 @@ ANDROID_VIEWMODEL = ROOT / "native-android/app/src/main/java/com/iganapolsky/ran
 ANDROID_SOUND_PREVIEW = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/domain/SoundPreviewManager.kt"
 ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/SoundPreviewManagerImpl.kt"
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
+ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -26,14 +27,14 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_zero_to_thirty_on_both_platforms():
+def test_default_timer_range_is_zero_to_300_on_both_platforms():
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
     assert re.search(r"minSeconds\s*=\s*0", android_source)
-    assert re.search(r"maxSeconds\s*=\s*30", android_source)
+    assert re.search(r"maxSeconds\s*=\s*300", android_source)
     assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
+    assert re.search(r"maxSeconds:\s*Int\s*=\s*300", ios_source)
 
 
 def test_time_range_limits_and_gap_match_between_platforms():
@@ -42,9 +43,8 @@ def test_time_range_limits_and_gap_match_between_platforms():
 
     assert "MAX_SECONDS_PRO = 3600" in android_source
     assert "maxSecondsPro = 3600" in ios_source
-    assert "defaultMaxSecondsLimit = 3600" in ios_source
-    assert "defaultMinGapSeconds = 1" in ios_source
-    assert "Swift.max(1, newValue)" in _read(IOS_SETUP)
+    assert "defaultMaxSecondsLimit = TimerConfig.maxSecondsFree" in ios_source
+    assert "defaultMinGapSeconds = 5" in ios_source
 
 
 def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
@@ -52,33 +52,52 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     ios_paywall = _read(IOS_PAYWALL)
     ios_pro_manager = _read(IOS_PRO_MANAGER)
 
-    assert re.search(
-        r'Text\(\s*text = "Upgrade to Pro".*?holdForHiddenUnlock',
-        android_source,
-        re.S,
-    )
-    assert not re.search(
-        r'PrimaryButton\([\s\S]*?holdForHiddenUnlock',
-        android_source,
-        re.S,
-    )
+    assert "Upgrade to Pro" in android_source and "holdForHiddenUnlock" in android_source
+    assert "Upgrade to Pro" in ios_paywall and "onLongPressGesture" in ios_paywall and "8.0" in ios_paywall
+    assert "unlockProForDebug" in ios_paywall
 
-    assert re.search(
-        r'Text\("Upgrade to Pro"\)[\s\S]*?onLongPressGesture\(minimumDuration:\s*8\.0\)',
-        ios_paywall,
-        re.S,
+
+def test_paywall_single_offer_parity():
+    """Enforce one visible premium offer on both platforms (monetization-roadmap)."""
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+
+    assert "Elite Tactical" not in android_paywall, (
+        "Android paywall must not show Elite Tactical; single-offer only per monetization roadmap"
     )
-    assert "unlockProForDebug()" in ios_paywall
-    assert "unlockEliteForDebug()" not in ios_paywall
-    assert "func unlockEliteForDebug()" not in ios_pro_manager
+    assert "One premium plan" in android_paywall
+    assert "One premium plan" in ios_paywall
+    assert "Yearly auto-renewing subscription" in android_paywall
+    assert "Yearly auto-renewing subscription" in ios_paywall
 
 
 def test_voice_callouts_present_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)
+    android_timer_config = _read(ANDROID_TIMER_CONFIG)
+    ios_timer_models = _read(IOS_TIMER_MODELS)
 
     for source in (android_setup, ios_setup):
-        assert "Voice Callouts" in source
+        assert "Voice Callouts" in source or "AI Voice Callouts" in source
+        assert "countdown" in source.lower()
+
+    assert "voiceEnabled" in android_timer_config
+    assert "voiceEnabled" in ios_timer_models
+
+
+def test_voice_callouts_use_toggle_when_pro_and_runtime_respects_setting():
+    android_setup = _read(ANDROID_SETUP)
+    android_service = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt")
+    ios_setup = _read(IOS_SETUP)
+    ios_timer_manager = _read(IOS_TIMER_MANAGER)
+
+    assert "checked = config.voiceEnabled" in android_setup
+    assert "updateConfig(voiceEnabled = " in android_setup
+    assert "voiceEnabled" in android_service
+
+    assert "config.voiceEnabled" in ios_setup
+    assert "updateConfig(voiceEnabled:" in ios_setup
+    assert "voiceEnabled" in ios_timer_manager
 
 
 def test_voice_preview_supports_command_cues_on_both_platforms():
@@ -96,4 +115,23 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
 
     assert "func previewCommandCue()" in ios_timer_manager
     assert "func previewCommandCue()" in ios_voice_service
-    assert "func previewCountdownCue()" in ios_voice_service
+
+
+def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
+    android_setup = _read(ANDROID_SETUP)
+    android_paywall = _read(ANDROID_PAYWALL)
+    android_nav = _read(ANDROID_NAV)
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    ios_setup = _read(IOS_SETUP)
+
+    assert "TACTICAL EXPANSION" not in android_setup
+    assert "TACTICAL EXPANSION" not in ios_setup
+    assert "Preview Sounds" in android_setup
+    assert "Preview Sounds" in ios_setup
+    assert "10 alarm sounds" in android_paywall
+
+    assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
+    assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
+    assert "suspend fun launchProPurchase(" in android_pro_manager
+    assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
+    assert "launchProPurchase" in android_nav

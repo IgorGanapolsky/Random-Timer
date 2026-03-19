@@ -271,3 +271,107 @@ def test_inject_paid_uses_apple_live_metrics(data_dir: Path, paid_template: str)
     assert "API reports 1 campaign(s), 1 active" in result
     assert "Apple Ads Taps (30d snapshot trend)" in result
     assert "Platform | Config Status | Live Status | Daily Budget" in result
+
+
+def test_inject_dashboard_marks_stale_download_proxy_metrics(data_dir: Path) -> None:
+    template = textwrap.dedent("""\
+        # Dashboard
+
+        <!-- DOWNLOADS_START -->
+        old
+        <!-- DOWNLOADS_END -->
+    """)
+    (data_dir / "store_downloads.json").write_text(json.dumps({
+        "status": "degraded",
+        "generated_at": "2026-03-16T00:00:00+00:00",
+        "ios": {"downloads_30d": 4},
+        "android": {"downloads_30d": 7, "active_installs": 9},
+        "combined": {"downloads_30d": 11},
+        "active_users": {"dau": 2, "wau": 5, "mau": 12},
+        "metric_definitions": {
+            "downloads_30d": {"display_name": "Distinct install users (30d)"}
+        },
+        "data_quality": {
+            "is_stale": True,
+            "last_good_generated_at": "2026-03-15T10:00:00+00:00",
+            "reason": "http_504",
+        },
+    }))
+
+    result = inject_dashboard_data(template, data_dir)
+    assert "Distinct install users (30d)" in result
+    assert "showing last good metrics from `2026-03-15T10:00:00+00:00`" in result
+    assert "http_504" in result
+
+
+def test_inject_dashboard_marks_stale_north_star_and_funnel(data_dir: Path) -> None:
+    template = textwrap.dedent("""\
+        # Dashboard
+
+        <!-- NORTH_STAR_START -->
+        old
+        <!-- NORTH_STAR_END -->
+
+        <!-- FUNNEL_START -->
+        old
+        <!-- FUNNEL_END -->
+    """)
+    (data_dir / "north_star.json").write_text(json.dumps({
+        "status": "degraded",
+        "north_star": {
+            "wqtu_7d": 9,
+            "timer_completed_7d": 27,
+            "completed_users_7d": 9,
+            "sessions_per_completed_user_7d": 3.0,
+            "targets": {"checkpoint_2026_03_31": 8, "quarter_2026_06_30": 25},
+        },
+        "paid": {"paid_distinct_users_30d": 2, "active_campaign_count": 1, "guardrail_violated": False},
+        "data_quality": {
+            "is_stale": True,
+            "last_good_generated_at": "2026-03-15T10:00:00+00:00",
+            "reason": "http_504",
+        },
+    }))
+    (data_dir / "content_feedback.json").write_text(json.dumps({
+        "status": "degraded",
+        "onboarding_funnel": {
+            "first_open": 100,
+            "first_timer_configured": 75,
+            "first_timer_completed": 30,
+            "open_to_configured_rate": 0.75,
+            "open_to_completed_rate": 0.30,
+        },
+        "data_quality": {
+            "is_stale": True,
+            "last_good_generated_at": "2026-03-15T10:00:00+00:00",
+            "reason": "query timeout",
+        },
+    }))
+
+    result = inject_dashboard_data(template, data_dir)
+    assert result.count("_Data quality: stale") == 2
+    assert "query timeout" in result
+
+
+def test_inject_paid_acquisition_marks_stale_sources(data_dir: Path, paid_template: str) -> None:
+    (data_dir / "north_star.json").write_text(json.dumps({
+        "status": "degraded",
+        "north_star": {"wqtu_7d": 1, "targets": {"checkpoint_2026_03_31": 8, "quarter_2026_06_30": 25}},
+        "paid": {"paid_distinct_users_30d": 0, "paid_events_by_source_30d": [], "active_campaign_count": 1, "guardrail_violated": False},
+        "data_quality": {"is_stale": True, "last_good_generated_at": "2026-03-15T10:00:00+00:00", "reason": "http_504"},
+    }))
+    (data_dir / "store_downloads.json").write_text(json.dumps({
+        "status": "degraded",
+        "combined": {"downloads_30d": 9},
+        "metric_definitions": {"downloads_30d": {"display_name": "Distinct install users (30d)"}},
+        "data_quality": {"is_stale": True, "last_good_generated_at": "2026-03-15T10:00:00+00:00", "reason": "http_504"},
+    }))
+    (data_dir / "content_feedback.json").write_text(json.dumps({
+        "status": "degraded",
+        "onboarding_funnel": {"open_to_completed_rate": 0.242},
+        "data_quality": {"is_stale": True, "last_good_generated_at": "2026-03-15T10:00:00+00:00", "reason": "query timeout"},
+    }))
+
+    result = inject_paid_acquisition_data(paid_template, data_dir)
+    assert "Distinct install users (30d)" in result
+    assert "showing last good metrics from `2026-03-15T10:00:00+00:00`" in result
