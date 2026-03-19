@@ -10,21 +10,35 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 
 API_BASE_URL = "https://api.elevenlabs.io"
 
 
-def _request_json(path: str, api_key: str) -> dict:
+def _read_error_body(error: urllib.error.HTTPError) -> str:
+    try:
+        return error.read().decode("utf-8").strip()
+    except Exception:
+        return ""
+
+
+def _request_json(path: str, api_key: str | None) -> dict[str, Any]:
+    headers = {"Accept": "application/json"}
+    if api_key:
+        headers["xi-api-key"] = api_key
+
     request = urllib.request.Request(
         f"{API_BASE_URL}{path}",
-        headers={
-            "Accept": "application/json",
-            "xi-api-key": api_key,
-        },
+        headers=headers,
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        body = _read_error_body(error)
+        detail = f" Body: {body}" if body else ""
+        raise SystemExit(f"ElevenLabs request failed with HTTP {error.code} for {path}.{detail}") from error
 
 
 def _request_audio(path: str, api_key: str, payload: dict) -> bytes:
@@ -38,8 +52,13 @@ def _request_audio(path: str, api_key: str, payload: dict) -> bytes:
         },
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            return response.read()
+    except urllib.error.HTTPError as error:
+        body = _read_error_body(error)
+        detail = f" Body: {body}" if body else ""
+        raise SystemExit(f"ElevenLabs audio request failed with HTTP {error.code} for {path}.{detail}") from error
 
 
 def _load_catalog(path: Path) -> dict:
@@ -53,7 +72,7 @@ def _catalog_lines(catalog: dict) -> list[tuple[str, str]]:
     return lines
 
 
-def _list_voices(api_key: str) -> list[dict]:
+def _list_voices(api_key: str | None) -> list[dict]:
     payload = _request_json("/v1/voices", api_key)
     return payload.get("voices", [])
 
@@ -154,12 +173,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
-    if not api_key:
-        raise SystemExit("ELEVENLABS_API_KEY is required.")
-
-    voices = _list_voices(api_key)
     if args.list_voices:
+        api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip() or None
+        voices = _list_voices(api_key)
         for voice in voices:
             print(
                 json.dumps(
@@ -172,6 +188,11 @@ def main() -> int:
             )
         return 0
 
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    if not api_key:
+        raise SystemExit("ELEVENLABS_API_KEY is required for voice synthesis.")
+
+    voices = _list_voices(api_key)
     voice = _resolve_voice(voices, args.voice_id or None, args.voice_name_pattern)
     voice_settings = _load_voice_settings(api_key, voice["voice_id"])
     catalog = _load_catalog(args.catalog)
