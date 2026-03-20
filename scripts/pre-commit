@@ -302,6 +302,32 @@ if [ -n "$STAGED_SWIFT" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
+# UI SECTION REGRESSION GUARD — TimerSetupScreen required sections
+# ═══════════════════════════════════════════════════════════════════
+
+IOS_SETUP_FILE="native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
+ANDROID_SETUP_FILE="native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
+
+STAGED_IOS_SETUP=$(git diff --cached --name-only --diff-filter=ACM | grep -F "$IOS_SETUP_FILE" || true)
+STAGED_ANDROID_SETUP=$(git diff --cached --name-only --diff-filter=ACM | grep -F "$ANDROID_SETUP_FILE" || true)
+
+if [ -n "$STAGED_IOS_SETUP" ] && [ -f "$IOS_SETUP_FILE" ]; then
+  for section in "Timer Range" "Alarm Sound" "Repeat Loop" "Start Timer" "Sound Arsenal"; do
+    if ! grep -qF "$section" "$IOS_SETUP_FILE"; then
+      err "TimerSetupScreen.swift: Required UI section missing — \"$section\""
+    fi
+  done
+fi
+
+if [ -n "$STAGED_ANDROID_SETUP" ] && [ -f "$ANDROID_SETUP_FILE" ]; then
+  for section in "Timer Range" "Alarm Sound" "Start Timer" "Sound Arsenal"; do
+    if ! grep -qF "$section" "$ANDROID_SETUP_FILE"; then
+      err "TimerSetupScreen.kt: Required UI section missing — \"$section\""
+    fi
+  done
+fi
+
+# ═══════════════════════════════════════════════════════════════════
 # RESULT
 # ═══════════════════════════════════════════════════════════════════
 
