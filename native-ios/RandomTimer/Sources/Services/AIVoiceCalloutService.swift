@@ -21,7 +21,11 @@ internal struct VoiceCueCatalog: Codable {
     let commandCues: [Cue]
 
     var elapsedCueBySecond: [Int: ElapsedCue] {
-        Dictionary(uniqueKeysWithValues: elapsedCues.map { ($0.second, $0) })
+        var mapping = [Int: ElapsedCue]()
+        for cue in elapsedCues where mapping[cue.second] == nil {
+            mapping[cue.second] = cue
+        }
+        return mapping
     }
 
     var fallbackCommandCue: Cue {
@@ -29,9 +33,20 @@ internal struct VoiceCueCatalog: Codable {
     }
 
     var filenameByText: [String: String] {
-        var mapping = [previewElapsed.text: previewElapsed.filename]
-        elapsedCues.forEach { mapping[$0.text] = $0.filename }
-        commandCues.forEach { mapping[$0.text] = $0.filename }
+        var mapping = [String: String]()
+
+        if mapping[previewElapsed.text] == nil {
+            mapping[previewElapsed.text] = previewElapsed.filename
+        }
+
+        for cue in elapsedCues where mapping[cue.text] == nil {
+            mapping[cue.text] = cue.filename
+        }
+
+        for cue in commandCues where mapping[cue.text] == nil {
+            mapping[cue.text] = cue.filename
+        }
+
         return mapping
     }
 
