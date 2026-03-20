@@ -630,10 +630,10 @@ fun TimerSetupScreen(
                                     )
                                 }
 
-                                if (config.repeatEnabled) {
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier.fillMaxWidth()
+                                            .graphicsLayer { this.alpha = if (config.repeatEnabled) 1f else 0.5f },
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
@@ -671,7 +671,6 @@ fun TimerSetupScreen(
                                             }
                                         }
                                     }
-                                }
                             }
                         }
                     }

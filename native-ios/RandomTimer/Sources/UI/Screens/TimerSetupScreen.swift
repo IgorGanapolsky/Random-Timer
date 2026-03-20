@@ -245,8 +245,7 @@ struct TimerSetupScreen: View {
                                 .tint(.accentPrimary)
                                 .labelsHidden()
                             }
-                            if config.repeatEnabled {
-                                HStack {
+                            HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Round Selection")
                                             .font(.subheadline)
@@ -281,7 +280,7 @@ struct TimerSetupScreen: View {
                                     }
                                 }
                                 .padding(.top, 8)
-                            }
+                                .opacity(config.repeatEnabled ? 1.0 : 0.5)
                         }
                     }
 
