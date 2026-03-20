@@ -48,3 +48,4 @@ def test_android_required_sections_present():
         f"TimerSetupScreen.kt is missing required UI sections: {missing}\n"
         f"File: {ANDROID_FILE}"
     )
+# UI regression guard
