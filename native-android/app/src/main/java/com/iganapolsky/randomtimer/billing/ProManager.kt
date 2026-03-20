@@ -21,6 +21,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.service.ProAudioPackStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +42,7 @@ class ProManager
     constructor(
         @ApplicationContext private val context: Context,
         private val analyticsService: AnalyticsService,
+        private val packStore: ProAudioPackStore,
         private val externalScope: CoroutineScope,
     ) : PurchasesUpdatedListener {
         companion object {
@@ -162,6 +164,9 @@ class ProManager
                 }
 
             _entitlementLevel.value = level
+            if (level.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
+            }
 
             if (trackResult) {
                 trackRestoreResult(
@@ -344,6 +349,9 @@ class ProManager
                     _entitlementLevel.value = EntitlementLevel.BASE
                 }
             }
+            if (_entitlementLevel.value.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
+            }
         }
 
         private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {
@@ -425,6 +433,9 @@ class ProManager
                     EntitlementLevel.ELITE -> EntitlementLevel.NONE
                 }
             _entitlementLevel.value = next
+            if (next.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
+            }
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
@@ -446,6 +457,7 @@ class ProManager
                 return false
             }
             _entitlementLevel.value = EntitlementLevel.ELITE
+            packStore.refreshIfNeeded(isPro = true)
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,

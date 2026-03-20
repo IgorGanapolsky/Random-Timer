@@ -106,7 +106,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
     /// Whether to use the extended 60-minute range (Pro only)
     public let useExtendedRange: Bool
-    /// Whether AI voice callouts are enabled (Elite only)
+    /// Whether AI voice callouts are enabled (Pro only)
     public let voiceEnabled: Bool
     /// How many rounds to loop for (0 = infinite). Pro only feature.
     public let repeatRounds: Int

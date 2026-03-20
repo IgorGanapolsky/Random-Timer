@@ -12,6 +12,7 @@
 		0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */; };
 		0DDD8A9A4BBA38ABE292B47F /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E4CF9C669D336F6C2FD8E7 /* PrimaryButton.swift */; };
 		1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */; };
+		1F9A3C44B55D66E77F880011 /* ProSoundCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A3C44B55D66E77F880010 /* ProSoundCatalog.swift */; };
 		17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5328BD9D4D105BCDE8D488F4 /* TimerModels.swift */; };
 		1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */; };
 		1DB82123D1FB23AC92C566D7 /* drum_roll.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F5F3E399050BD30295736FEA /* drum_roll.mp3 */; };
@@ -107,6 +108,7 @@
 		3063864498ABB31478972EDD /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
 		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
 		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		1F9A3C44B55D66E77F880010 /* ProSoundCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProSoundCatalog.swift; sourceTree = "<group>"; };
 		48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreReviewManager.swift; sourceTree = "<group>"; };
 		4C626B57059C6BDF97711A5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
@@ -227,6 +229,7 @@
 				A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
 				A1B2C3D400000002DEADBEEF /* Logger.swift */,
 				3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */,
+				1F9A3C44B55D66E77F880010 /* ProSoundCatalog.swift */,
 				8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */,
 				D4045FE32D7D1E2F9D4C423C /* StorageService.swift */,
 				CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */,
@@ -518,6 +521,7 @@
 				4F4A683B236AE94216503707 /* Colors.swift in Sources */,
 				96771424C44C551B73F7732B /* GlassCard.swift in Sources */,
 				1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */,
+				1F9A3C44B55D66E77F880011 /* ProSoundCatalog.swift in Sources */,
 				E1DD7FFA2F3044B7A5F461C1 /* LiveActivityService.swift in Sources */,
 				0DDD8A9A4BBA38ABE292B47F /* PrimaryButton.swift in Sources */,
 				4ED9D921707F80E1AC5501F3 /* RandomTimerApp.swift in Sources */,

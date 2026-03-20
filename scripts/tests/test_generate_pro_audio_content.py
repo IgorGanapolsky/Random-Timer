@@ -1,0 +1,188 @@
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+
+
+ROOT = Path(__file__).resolve().parents[2]
+MODULE_PATH = ROOT / "scripts" / "generate_pro_audio_content.py"
+MANIFEST_PATH = ROOT / "content" / "pro_audio" / "monthly_pro_audio_packs.json"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("generate_pro_audio_content", MODULE_PATH)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_select_pack_uses_active_pack_by_default():
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+
+    pack = module._select_pack(manifest, None)
+
+    assert pack["id"] == manifest["activePackId"]
+
+
+def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    pack = module._select_pack(manifest, None)
+
+    catalog = module._voice_catalog(pack)
+    lines = module._voice_lines(catalog)
+
+    expected_count = 1 + len(pack["elapsedCues"]) + len(pack["commandCues"])
+    assert len(lines) == expected_count
+    assert lines[0] == (pack["previewElapsed"]["filename"], pack["previewElapsed"]["text"])
+
+
+def test_sound_catalog_tracks_pack_metadata_and_all_sound_types():
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    pack = module._select_pack(manifest, None)
+
+    catalog = module._sound_catalog(pack, manifest["defaults"]["entitlement"])
+
+    assert catalog["packId"] == pack["id"]
+    assert catalog["releaseMonth"] == pack["releaseMonth"]
+    assert catalog["entitlement"] == "pro"
+    assert len(catalog["sounds"]) == len(pack["soundArsenal"])
+
+
+def test_estimate_credits_matches_manifest_shape():
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    pack = module._select_pack(manifest, None)
+
+    voice_estimate = module._estimate_voice_credits(module._voice_lines(module._voice_catalog(pack)), "eleven_multilingual_v2")
+    sound_estimate = module._estimate_sound_credits(module._sound_entries(pack))
+
+    assert voice_estimate > 0
+    assert sound_estimate > 0
+
+
+def test_resolve_voice_prefers_custom_voice_category():
+    module = _load_module()
+    voices = [
+        {"name": "Marine Drill Voice", "voice_id": "premade-id", "category": "premade"},
+        {"name": "Marine Drill Voice", "voice_id": "cloned-id", "category": "cloned"},
+        {"name": "Something Else", "voice_id": "other-id", "category": "generated"},
+    ]
+
+    resolved = module._resolve_voice(voices, None, "marine")
+
+    assert resolved["voice_id"] == "cloned-id"
+
+
+def test_remove_stale_assets_keeps_expected_stems_only():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_dir = Path(tmpdir)
+        (output_dir / "keep_me.mp3").write_bytes(b"keep")
+        (output_dir / "delete_me.mp3").write_bytes(b"delete")
+
+        module._remove_stale_assets({"keep_me"}, output_dir)
+
+        assert (output_dir / "keep_me.mp3").exists()
+        assert not (output_dir / "delete_me.mp3").exists()
+
+
+def test_write_json_produces_readable_payload():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "payload.json"
+        payload = {"packId": "2026-03", "count": 2}
+
+        module._write_json(path, payload)
+
+        assert json.loads(path.read_text(encoding="utf-8")) == payload
+
+
+def test_copy_assets_can_normalize_android_resource_names():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        source_dir = Path(tmpdir) / "source"
+        destination_dir = Path(tmpdir) / "destination"
+        source_dir.mkdir()
+        (source_dir / "gentle-chime.mp3").write_bytes(b"audio")
+
+        copied = module._copy_assets(
+            source_dir,
+            destination_dir,
+            {"gentle-chime"},
+            stem_transform=module._android_safe_stem,
+        )
+
+        assert copied == {"gentle_chime"}
+        assert (destination_dir / "gentle_chime.mp3").exists()
+        assert not (destination_dir / "gentle-chime.mp3").exists()
+
+
+def test_runtime_manifest_contains_hashed_assets_and_catalogs():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        runtime_dir = root / "runtime"
+        voice_dir = runtime_dir / "packs" / "2026-03_marine_foundations" / "voice"
+        sound_dir = runtime_dir / "packs" / "2026-03_marine_foundations" / "sounds"
+        voice_dir.mkdir(parents=True)
+        sound_dir.mkdir(parents=True)
+        (voice_dir / "preview_elapsed.mp3").write_bytes(b"voice-audio")
+        (sound_dir / "alarm.mp3").write_bytes(b"sound-audio")
+
+        manifest = module._load_manifest(MANIFEST_PATH)
+        pack = module._select_pack(manifest, None)
+        payload = module._runtime_manifest(
+            pack,
+            manifest["defaults"]["entitlement"],
+            module._voice_catalog(pack),
+            module._sound_catalog(pack, manifest["defaults"]["entitlement"]),
+            runtime_base_url="https://example.com/runtime",
+            runtime_assets_dir=runtime_dir,
+        )
+
+        assert payload["schemaVersion"] == 1
+        assert payload["packId"] == pack["id"]
+        assert payload["voiceCatalog"]["previewElapsed"]["filename"] == pack["previewElapsed"]["filename"]
+        assert payload["soundCatalog"]["packId"] == pack["id"]
+        assert len(payload["assets"]) == 2
+        assert {asset["kind"] for asset in payload["assets"]} == {"voice", "sound"}
+        assert all(asset["sha256"] for asset in payload["assets"])
+        assert all(asset["url"].startswith("https://example.com/runtime/") for asset in payload["assets"])
+
+
+def test_stage_runtime_assets_replaces_stale_pack_directories():
+    module = _load_module()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        ios_voice_dir = root / "ios-voice"
+        ios_sound_dir = root / "ios-sound"
+        runtime_dir = root / "runtime"
+        ios_voice_dir.mkdir()
+        ios_sound_dir.mkdir()
+        (ios_voice_dir / "preview_elapsed.mp3").write_bytes(b"voice-audio")
+        (ios_sound_dir / "alarm.mp3").write_bytes(b"sound-audio")
+        stale_dir = runtime_dir / "packs" / "old-pack" / "voice"
+        stale_dir.mkdir(parents=True)
+        (stale_dir / "stale.mp3").write_bytes(b"stale")
+
+        module._stage_runtime_assets(
+            "new-pack",
+            ios_audio_dir=ios_voice_dir,
+            ios_sounds_dir=ios_sound_dir,
+            runtime_assets_dir=runtime_dir,
+            voice_stems={"preview_elapsed"},
+            sound_stems={"alarm"},
+        )
+
+        assert (runtime_dir / "packs" / "new-pack" / "voice" / "preview_elapsed.mp3").exists()
+        assert (runtime_dir / "packs" / "new-pack" / "sounds" / "alarm.mp3").exists()
+        assert not (runtime_dir / "packs" / "old-pack").exists()

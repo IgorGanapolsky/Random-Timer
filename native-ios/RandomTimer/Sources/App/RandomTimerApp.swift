@@ -23,6 +23,7 @@ struct RandomTimerApp: App {
             switch newPhase {
             case .active:
                 Task {
+                    await ProAudioPackStore.shared.refreshIfNeeded(isPro: ProManager.shared.isPro)
                     await timerManager.handleForeground()
                 }
             case .background:

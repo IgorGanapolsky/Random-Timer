@@ -195,6 +195,22 @@ fun TimerSetupScreen(
                     )
                 }
             },
+            containerColor = TimerColors.BackgroundDark,
+            modifier = Modifier.fillMaxSize(),
+        ) { paddingValues ->
+            LazyColumn(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = spacing.outerHorizontal),
+                verticalArrangement = Arrangement.spacedBy(spacing.listItem),
+                contentPadding =
+                    PaddingValues(
+                        top = spacing.listTop,
+                        bottom = spacing.listBottom,
+                    ),
+            ) {
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -354,7 +370,7 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 AI Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
                                         text = "Elapsed-time voice prompts during the timer",
@@ -383,7 +399,7 @@ fun TimerSetupScreen(
                                         )
                                     }
 
-                                    if (isElite) {
+                                    if (isPro) {
                                         Switch(
                                             checked = config.voiceEnabled,
                                             onCheckedChange = { updateConfig(voiceEnabled = it) },
@@ -404,7 +420,7 @@ fun TimerSetupScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "ELITE ",
+                                                    text = "PRO ",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
