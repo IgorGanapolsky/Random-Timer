@@ -603,6 +603,79 @@ fun TimerSetupScreen(
                         }
                     }
 
+                    // 3. Loop
+                    item {
+                        GlassCard {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "\uD83D\uDD01 Repeat Loop",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TimerColors.TextPrimary,
+                                    )
+
+                                    Switch(
+                                        checked = config.repeatEnabled,
+                                        onCheckedChange = { updateConfig(repeatEnabled = it) },
+                                        colors =
+                                            SwitchDefaults.colors(
+                                                checkedThumbColor = TimerColors.AccentPrimary,
+                                                checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                            ),
+                                    )
+                                }
+
+                                if (config.repeatEnabled) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Round Selection",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                            )
+                                            Text(
+                                                text = "Infinite Rounds",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                        }
+
+                                        if (!isPro) {
+                                            Surface(
+                                                onClick = onUpgradeTap,
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Text(
+                                                        text = "PRO \uD83D\uDD12",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Pro Sound Arsenal
                     item {
                         if (!isCompactHeight) {
