@@ -28,3 +28,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 交互语言
 
 所有 AI 回复、代码注释、commit message 和文档一律使用 **中文**。
+
+## Interaction Language
+- All interactions must use **English**.
