@@ -1,6 +1,5 @@
 import Foundation
 import ActivityKit
-
 // MARK: - Sound Type
 
 public enum SoundType: String, Codable, Sendable, CaseIterable {
@@ -107,8 +106,40 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let vibrationEnabled: Bool
     /// Whether to use the extended 60-minute range (Pro only)
     public let useExtendedRange: Bool
-    /// Whether AI voice callouts are enabled (Elite only)
+    /// Whether AI voice callouts are enabled (Pro only)
     public let voiceEnabled: Bool
+    /// How many rounds to loop for (0 = infinite). Pro only feature.
+    public let repeatRounds: Int
+
+    private struct SanitizedValues {
+        let minSeconds: Int
+        let maxSeconds: Int
+        let alarmDuration: Int
+        let volume: Float
+        let repeatRounds: Int
+    }
+
+    private static func sanitize(
+        minSeconds: Int,
+        maxSeconds: Int,
+        alarmDuration: Int,
+        volume: Float,
+        repeatRounds: Int
+    ) -> SanitizedValues {
+        let clampedMax = Swift.min(Swift.max(maxSeconds, 0), maxSecondsPro)
+        let clampedMin = Swift.min(Swift.min(Swift.max(minSeconds, 0), maxSecondsPro), clampedMax)
+        let clampedAlarm = Swift.max(1, alarmDuration)
+        let clampedVolume = Swift.min(Swift.max(volume, 0), 1)
+        let clampedRounds = Swift.max(0, repeatRounds)
+
+        return SanitizedValues(
+            minSeconds: clampedMin,
+            maxSeconds: clampedMax,
+            alarmDuration: clampedAlarm,
+            volume: clampedVolume,
+            repeatRounds: clampedRounds
+        )
+    }
 
     public init(
         minSeconds: Int = 0,
@@ -120,25 +151,28 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         volume: Float = 0.5, // Default to 50%
         vibrationEnabled: Bool = false,
         useExtendedRange: Bool = false,
-        voiceEnabled: Bool = true
+        voiceEnabled: Bool = true,
+        repeatRounds: Int = 0
     ) {
-        precondition(minSeconds >= 0, "Minimum seconds cannot be negative")
-        precondition(maxSeconds >= minSeconds, "Maximum seconds must be >= minimum seconds")
-        let maxAllowed = useExtendedRange ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
-        precondition(maxSeconds <= maxAllowed, "Maximum seconds cannot exceed \(maxAllowed)")
-        precondition(alarmDuration > 0, "Alarm duration must be positive")
-        precondition(volume >= 0 && volume <= 1, "Volume must be between 0 and 1")
+        let sanitized = Self.sanitize(
+            minSeconds: minSeconds,
+            maxSeconds: maxSeconds,
+            alarmDuration: alarmDuration,
+            volume: volume,
+            repeatRounds: repeatRounds
+        )
 
-        self.minSeconds = minSeconds
-        self.maxSeconds = maxSeconds
-        self.alarmDuration = alarmDuration
+        self.minSeconds = sanitized.minSeconds
+        self.maxSeconds = sanitized.maxSeconds
+        self.alarmDuration = sanitized.alarmDuration
         self.hiddenMode = hiddenMode
         self.repeatEnabled = repeatEnabled
         self.soundType = soundType
-        self.volume = volume
+        self.volume = sanitized.volume
         self.vibrationEnabled = vibrationEnabled
         self.useExtendedRange = useExtendedRange
         self.voiceEnabled = voiceEnabled
+        self.repeatRounds = sanitized.repeatRounds
     }
 
     /// Minimum as TimeInterval
@@ -168,10 +202,13 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case vibrationEnabled
         case useExtendedRange
         case voiceEnabled
+        case repeatRounds
 
         // Legacy / compatibility keys
         case minDuration
         case maxDuration
+        case min_seconds
+        case max_seconds
         case min_time
         case max_time
         case alarm_duration
@@ -184,6 +221,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case soundVolume
         case vibration
         case vibration_enabled
+        case voice_callouts_enabled
     }
 
     private enum EncodingKeys: String, CodingKey {
@@ -197,17 +235,18 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case vibrationEnabled
         case useExtendedRange
         case voiceEnabled
+        case repeatRounds
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DecodingKeys.self)
 
         let rawMin = container.decodeFirstInt(
-            forKeys: [.minSeconds, .minDuration, .min_time],
+            forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
             defaultValue: 0
         )
         let rawMax = container.decodeFirstInt(
-            forKeys: [.maxSeconds, .maxDuration, .max_time],
+            forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
             defaultValue: 300
         )
         let rawAlarm = container.decodeFirstInt(
@@ -230,37 +269,27 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             forKeys: [.vibrationEnabled, .vibration_enabled, .vibration],
             defaultValue: false
         )
-        let useExtendedRange = container.decodeFirstBool(
-            forKeys: [.useExtendedRange],
-            defaultValue: false
-        )
-        let voiceEnabled = container.decodeFirstBool(
-            forKeys: [.voiceEnabled],
-            defaultValue: true
-        )
+        let useExtendedRange = try container.decodeIfPresent(Bool.self, forKey: .useExtendedRange) ?? false
+        let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? true
+        let repeatRounds = try container.decodeIfPresent(Int.self, forKey: .repeatRounds) ?? 0
 
         let soundType = container.decodeFirstSoundType(
             forKeys: [.soundType, .sound_type, .alarmSound, .sound],
             defaultValue: .intense
         )
 
-        let clampedMin = min(max(0, rawMin), TimerConfig.maxSecondsPro)
-        let cappedMax = min(rawMax, TimerConfig.maxSecondsPro)
-        let clampedMax = max(clampedMin, cappedMax)
-        let clampedAlarm = max(1, rawAlarm)
-        let clampedVolume = min(max(volume, 0), 1)
-
         self.init(
-            minSeconds: clampedMin,
-            maxSeconds: clampedMax,
-            alarmDuration: clampedAlarm,
+            minSeconds: rawMin,
+            maxSeconds: rawMax,
+            alarmDuration: rawAlarm,
             hiddenMode: hiddenMode,
             repeatEnabled: repeatEnabled,
             soundType: soundType,
-            volume: clampedVolume,
+            volume: volume,
             vibrationEnabled: vibrationEnabled,
             useExtendedRange: useExtendedRange,
-            voiceEnabled: voiceEnabled
+            voiceEnabled: voiceEnabled,
+            repeatRounds: repeatRounds
         )
     }
 
@@ -276,14 +305,18 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         try container.encode(vibrationEnabled, forKey: .vibrationEnabled)
         try container.encode(useExtendedRange, forKey: .useExtendedRange)
         try container.encode(voiceEnabled, forKey: .voiceEnabled)
+        try container.encode(repeatRounds, forKey: .repeatRounds)
     }
 
     /// Returns a copy of this config with values clamped to the caller's Pro entitlement.
     /// Call this at deserialization time to enforce feature gating after subscription expiry.
     public func clamped(isPro: Bool) -> TimerConfig {
+        // Respect useExtendedRange toggle for Pro users. If they opted for 5m mode (false), clamp to 5m.
         let maxAllowed = (isPro && useExtendedRange) ? TimerConfig.maxSecondsPro : TimerConfig.maxSecondsFree
-        let clampedMax = min(maxSeconds, maxAllowed)
-        let clampedMin = min(minSeconds, clampedMax)
+        let clampedMax = Swift.min(maxSeconds, maxAllowed)
+        // Ensure clampedMin is never greater than clampedMax to avoid precondition failure
+        let clampedMin = Swift.min(minSeconds, clampedMax)
+
         let allowedSounds: [SoundType] = isPro ? SoundType.allCases : SoundType.freeSounds
         let clampedSound = allowedSounds.contains(soundType) ? soundType : .intense
         return TimerConfig(
@@ -296,7 +329,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             volume: volume,
             vibrationEnabled: vibrationEnabled,
             useExtendedRange: isPro ? useExtendedRange : false,
-            voiceEnabled: voiceEnabled
+            voiceEnabled: voiceEnabled,
+            repeatRounds: isPro ? repeatRounds : 0
         )
     }
 }
@@ -408,6 +442,7 @@ public struct TimerState: Codable, Sendable, Equatable {
     public var status: TimerStatus
     public var alarmTimeRemaining: TimeInterval
     public var alarmStartedAt: Date?
+    public var roundCount: Int
 
     public init(
         config: TimerConfig,
@@ -416,7 +451,8 @@ public struct TimerState: Codable, Sendable, Equatable {
         remainingDuration: TimeInterval? = nil,
         status: TimerStatus = .running,
         alarmTimeRemaining: TimeInterval = 0,
-        alarmStartedAt: Date? = nil
+        alarmStartedAt: Date? = nil,
+        roundCount: Int = 1
     ) {
         self.config = config
         self.targetDuration = targetDuration
@@ -425,6 +461,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         self.status = status
         self.alarmTimeRemaining = alarmTimeRemaining
         self.alarmStartedAt = alarmStartedAt
+        self.roundCount = roundCount
     }
 
     fileprivate enum DecodingKeys: String, CodingKey {
@@ -435,6 +472,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         case status
         case alarmTimeRemaining
         case alarmStartedAt
+        case roundCount
 
         // Legacy / compatibility keys
         case target_duration
@@ -453,6 +491,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         case status
         case alarmTimeRemaining
         case alarmStartedAt
+        case roundCount
     }
 
     public init(from decoder: Decoder) throws {
@@ -485,6 +524,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         let alarmStartedAt = container.decodeFirstDateOptional(
             forKeys: [.alarmStartedAt, .alarm_started_at]
         )
+        let roundCount = try container.decodeIfPresent(Int.self, forKey: .roundCount) ?? 1
 
         self.init(
             config: config,
@@ -493,7 +533,8 @@ public struct TimerState: Codable, Sendable, Equatable {
             remainingDuration: max(remainingDuration, 0),
             status: status,
             alarmTimeRemaining: max(alarmTimeRemaining, 0),
-            alarmStartedAt: alarmStartedAt
+            alarmStartedAt: alarmStartedAt,
+            roundCount: roundCount
         )
     }
 
@@ -506,6 +547,7 @@ public struct TimerState: Codable, Sendable, Equatable {
         try container.encode(status, forKey: .status)
         try container.encode(alarmTimeRemaining, forKey: .alarmTimeRemaining)
         try container.encodeIfPresent(alarmStartedAt, forKey: .alarmStartedAt)
+        try container.encode(roundCount, forKey: .roundCount)
     }
 
     public var progress: Double {
@@ -574,7 +616,12 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(
+        timerName: String = "Random Tactical Timer",
+        endDate: Date,
+        minSeconds: Int = 30,
+        maxSeconds: Int = 120
+    ) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds
