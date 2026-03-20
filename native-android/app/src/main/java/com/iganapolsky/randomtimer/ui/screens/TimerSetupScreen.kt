@@ -195,22 +195,6 @@ fun TimerSetupScreen(
                     )
                 }
             },
-            containerColor = TimerColors.BackgroundDark,
-            modifier = Modifier.fillMaxSize(),
-        ) { paddingValues ->
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = spacing.outerHorizontal),
-                verticalArrangement = Arrangement.spacedBy(spacing.listItem),
-                contentPadding =
-                    PaddingValues(
-                        top = spacing.listTop,
-                        bottom = spacing.listBottom,
-                    ),
-            ) {
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -635,6 +619,18 @@ fun TimerSetupScreen(
                 }
 
                 // 3. Sound Arsenal
+                // Start Button
+                item {
+                    PrimaryButton(
+                        text = "Start Timer",
+                        onClick = onStartTimer,
+                        modifier =
+                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            },
+                    )
+                }
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(

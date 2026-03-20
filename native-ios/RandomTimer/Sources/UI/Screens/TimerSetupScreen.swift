@@ -359,21 +359,18 @@ struct TimerSetupScreen: View {
                                     }
                                     .font(.caption2.weight(.semibold))
                                     .foregroundColor(.accentPrimary)
+                // Start Button
+                PrimaryButton(title: "Start Timer") {
+                    Task {
+                        await timerManager.startTimer()
+                    }
+                }
+                .scaleEffect(1.02)
+                .padding(.vertical, 8)
                                 }
                                 .padding(.top, 8)
                             }
                         }
-                    }
-                    .opacity(proManager.isPro ? 1.0 : 0.7)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-
-                Spacer(minLength: 32)
-            }
-            .padding(.horizontal, 24)
-        }
-        .background(Color.backgroundDark.ignoresSafeArea())
-        .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
