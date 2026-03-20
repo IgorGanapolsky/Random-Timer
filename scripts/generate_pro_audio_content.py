@@ -243,17 +243,25 @@ def _write_catalogs(voice_catalog: dict[str, Any], sound_catalog: dict[str, Any]
     serialized_voice_catalog = json.dumps(voice_catalog, indent=2) + "\n"
     serialized_sound_catalog = json.dumps(sound_catalog, indent=2) + "\n"
 
-    IOS_VOICE_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    IOS_VOICE_CATALOG_PATH.write_text(serialized_voice_catalog, encoding="utf-8")
+    ios_voice_catalog_path = IOS_VOICE_CATALOG_PATH.resolve()
+    ios_voice_catalog_path.relative_to(REPO_ROOT)
+    ios_voice_catalog_path.parent.mkdir(parents=True, exist_ok=True)
+    ios_voice_catalog_path.write_text(serialized_voice_catalog, encoding="utf-8")
 
-    ANDROID_VOICE_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ANDROID_VOICE_CATALOG_PATH.write_text(serialized_voice_catalog, encoding="utf-8")
+    android_voice_catalog_path = ANDROID_VOICE_CATALOG_PATH.resolve()
+    android_voice_catalog_path.relative_to(REPO_ROOT)
+    android_voice_catalog_path.parent.mkdir(parents=True, exist_ok=True)
+    android_voice_catalog_path.write_text(serialized_voice_catalog, encoding="utf-8")
 
-    IOS_SOUND_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    IOS_SOUND_CATALOG_PATH.write_text(serialized_sound_catalog, encoding="utf-8")
+    ios_sound_catalog_path = IOS_SOUND_CATALOG_PATH.resolve()
+    ios_sound_catalog_path.relative_to(REPO_ROOT)
+    ios_sound_catalog_path.parent.mkdir(parents=True, exist_ok=True)
+    ios_sound_catalog_path.write_text(serialized_sound_catalog, encoding="utf-8")
 
-    ANDROID_SOUND_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ANDROID_SOUND_CATALOG_PATH.write_text(serialized_sound_catalog, encoding="utf-8")
+    android_sound_catalog_path = ANDROID_SOUND_CATALOG_PATH.resolve()
+    android_sound_catalog_path.relative_to(REPO_ROOT)
+    android_sound_catalog_path.parent.mkdir(parents=True, exist_ok=True)
+    android_sound_catalog_path.write_text(serialized_sound_catalog, encoding="utf-8")
 
 
 def _resolve_generation_api_key(args: argparse.Namespace) -> str:
@@ -617,8 +625,10 @@ def main() -> None:
         ),
         indent=2,
     ) + "\n"
-    RUNTIME_MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    RUNTIME_MANIFEST_PATH.write_text(runtime_payload, encoding="utf-8")
+    runtime_manifest_path = RUNTIME_MANIFEST_PATH.resolve()
+    runtime_manifest_path.relative_to(REPO_ROOT)
+    runtime_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    runtime_manifest_path.write_text(runtime_payload, encoding="utf-8")
 
 if __name__ == "__main__":
     main()
