@@ -12,7 +12,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -332,25 +332,29 @@ class ProAudioPackStore
         private fun downloadText(url: String): String = downloadBytes(url).decodeToString()
 
         private fun downloadBytes(url: String): ByteArray {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 30_000
-            connection.instanceFollowRedirects = true
-            val status = connection.responseCode
-            if (status !in 200..299) {
-                connection.errorStream?.close()
-                throw IllegalStateException("Unexpected HTTP $status for $url")
+            val connection = URI.create(url).toURL().openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 15_000
+                connection.readTimeout = 30_000
+                connection.instanceFollowRedirects = true
+                val status = connection.responseCode
+                if (status !in 200..299) {
+                    connection.errorStream?.close()
+                    throw IllegalStateException("Unexpected HTTP $status for $url")
+                }
+                return connection.inputStream.use { stream -> stream.readBytes() }
+            } finally {
+                connection.disconnect()
             }
-            return connection.inputStream.use { stream -> stream.readBytes() }
         }
 
         private fun validateAsset(
             bytes: ByteArray,
             asset: RemoteProAudioManifestAsset,
         ) {
-            if (asset.bytes > 0 && bytes.size != asset.bytes) {
-                throw IllegalStateException("Unexpected size for ${asset.filename}: expected ${asset.bytes}, got ${bytes.size}")
+            check(asset.bytes <= 0 || bytes.size == asset.bytes) {
+                "Unexpected size for ${asset.filename}: expected ${asset.bytes}, got ${bytes.size}"
             }
             val digest =
                 MessageDigest

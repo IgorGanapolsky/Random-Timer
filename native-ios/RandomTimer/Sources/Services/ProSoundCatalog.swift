@@ -194,7 +194,7 @@ internal final class ProAudioPackStore: @unchecked Sendable {
         return bundledProSoundAudioURL(for: type, bundle: bundle)
     }
 
-    func _installForTesting(
+    func installForTesting(
         manifest: RemoteProAudioManifest,
         payloadsByKey: [String: Data]
     ) throws {

@@ -4,6 +4,10 @@ import CryptoKit
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
+    private func makeUnusedTestAssetURL(filename: String) -> URL {
+        URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
+    }
+
     private func makeSut() -> AIVoiceCalloutService {
         let service = AIVoiceCalloutService(bundle: .main)
         service.resetSession()
@@ -116,7 +120,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
                     kind: .voice,
                     filename: "preview_elapsed",
                     relativePath: "packs/2026-04_field/voice/preview_elapsed.mp3",
-                    url: URL(string: "https://example.com/preview_elapsed.mp3")!,
+                    url: makeUnusedTestAssetURL(filename: "preview_elapsed.mp3"),
                     sha256: sha256Hex(voicePayload),
                     bytes: voicePayload.count
                 ),
@@ -124,7 +128,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
                     kind: .sound,
                     filename: "alarm",
                     relativePath: "packs/2026-04_field/sounds/alarm.mp3",
-                    url: URL(string: "https://example.com/alarm.mp3")!,
+                    url: makeUnusedTestAssetURL(filename: "alarm.mp3"),
                     sha256: sha256Hex(soundPayload),
                     bytes: soundPayload.count
                 ),
@@ -132,7 +136,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
 
         let store = ProAudioPackStore(bundle: .main, manifestURL: nil, cacheRoot: cacheRoot)
-        try store._installForTesting(
+        try store.installForTesting(
             manifest: manifest,
             payloadsByKey: [
                 "voice:preview_elapsed": voicePayload,

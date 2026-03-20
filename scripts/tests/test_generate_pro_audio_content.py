@@ -94,7 +94,7 @@ def test_remove_stale_assets_keeps_expected_stems_only():
 def test_write_json_produces_readable_payload():
     module = _load_module()
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=module.REPO_ROOT) as tmpdir:
         path = Path(tmpdir) / "payload.json"
         payload = {"packId": "2026-03", "count": 2}
 

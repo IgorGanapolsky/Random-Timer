@@ -7,7 +7,6 @@ import json
 import os
 import re
 import shutil
-import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -20,6 +19,7 @@ API_BASE_URL = "https://api.elevenlabs.io"
 VOICE_OUTPUT_FORMAT = "mp3_44100_128"
 SOUND_OUTPUT_FORMAT = "mp3_44100_128"
 DEFAULT_RUNTIME_BASE_URL = "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime"
+REPO_ROOT = Path(__file__).resolve().parents[1]
 VOICE_MODEL_RATES = {
     "eleven_multilingual_v2": 1.0,
     "eleven_multilingual_v3": 1.0,
@@ -27,6 +27,10 @@ VOICE_MODEL_RATES = {
     "eleven_flash_v2_5": 0.5,
     "eleven_turbo_v2_5": 0.5,
 }
+
+
+class ElevenLabsRequestError(RuntimeError):
+    pass
 
 
 def _read_error_body(error: urllib.error.HTTPError) -> str:
@@ -48,7 +52,9 @@ def _request_json(path: str, api_key: str | None) -> dict[str, Any]:
     except urllib.error.HTTPError as error:
         body = _read_error_body(error)
         detail = f" Body: {body}" if body else ""
-        raise SystemExit(f"ElevenLabs request failed with HTTP {error.code} for {path}.{detail}") from error
+        raise ElevenLabsRequestError(
+            f"ElevenLabs request failed with HTTP {error.code} for {path}.{detail}"
+        ) from error
 
 
 def _request_binary(path: str, api_key: str, payload: dict, accept: str) -> bytes:
@@ -68,11 +74,20 @@ def _request_binary(path: str, api_key: str, payload: dict, accept: str) -> byte
     except urllib.error.HTTPError as error:
         body = _read_error_body(error)
         detail = f" Body: {body}" if body else ""
-        raise SystemExit(f"ElevenLabs binary request failed with HTTP {error.code} for {path}.{detail}") from error
+        raise ElevenLabsRequestError(
+            f"ElevenLabs binary request failed with HTTP {error.code} for {path}.{detail}"
+        ) from error
+
+
+def _resolve_repo_path(path: Path, *, must_exist: bool = False) -> Path:
+    resolved = path.expanduser().resolve(strict=must_exist)
+    if resolved != REPO_ROOT and REPO_ROOT not in resolved.parents:
+        raise SystemExit(f"Refusing to access path outside repository: {path}")
+    return resolved
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(_resolve_repo_path(path, must_exist=True).read_text(encoding="utf-8"))
 
 
 def _select_pack(manifest: dict[str, Any], pack_id: str | None) -> dict[str, Any]:
@@ -127,6 +142,7 @@ def _sound_entries(pack: dict[str, Any]) -> list[tuple[str, str, float]]:
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path = _resolve_repo_path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
@@ -154,20 +170,22 @@ def _list_voices(api_key: str | None) -> list[dict[str, Any]]:
     return payload.get("voices", [])
 
 
-def _resolve_voice(voices: list[dict[str, Any]], voice_id: str | None, voice_name_pattern: str) -> dict[str, Any]:
+def _resolve_voice(voices: list[dict[str, Any]], voice_id: str | None, voice_name_query: str) -> dict[str, Any]:
     if voice_id:
         for voice in voices:
             if voice.get("voice_id") == voice_id:
                 return voice
         raise SystemExit(f"Requested voice_id {voice_id!r} was not found in ElevenLabs voice list.")
 
-    pattern = re.compile(voice_name_pattern, re.IGNORECASE)
-    candidates = [voice for voice in voices if pattern.search(voice.get("name", ""))]
+    normalized_query = voice_name_query.strip().casefold()
+    candidates = [
+        voice for voice in voices if normalized_query and normalized_query in voice.get("name", "").casefold()
+    ]
     if not candidates:
         available = ", ".join(sorted(voice.get("name", "<unnamed>") for voice in voices))
         raise SystemExit(
             "Could not auto-discover an ElevenLabs voice matching "
-            f"{voice_name_pattern!r}. Available voices: {available}"
+            f"{voice_name_query!r}. Available voices: {available}"
         )
 
     def rank(voice: dict[str, Any]) -> tuple[int, int, str]:
@@ -190,8 +208,120 @@ def _configured_voice(voice_id: str) -> dict[str, str]:
 def _load_voice_settings(api_key: str, voice_id: str, fallback: dict[str, Any]) -> dict[str, Any]:
     try:
         return _request_json(f"/v1/voices/{voice_id}/settings", api_key)
-    except SystemExit:
+    except ElevenLabsRequestError:
         return fallback
+
+
+def _resolve_output_paths(args: argparse.Namespace) -> argparse.Namespace:
+    path_fields = (
+        "manifest",
+        "ios_voice_catalog",
+        "android_voice_catalog",
+        "ios_sound_catalog",
+        "android_sound_catalog",
+        "ios_audio_dir",
+        "ios_sounds_dir",
+        "android_raw_dir",
+        "runtime_assets_dir",
+        "runtime_manifest",
+    )
+    for field in path_fields:
+        setattr(args, field, _resolve_repo_path(getattr(args, field), must_exist=(field == "manifest")))
+    return args
+
+
+def _print_available_voices(api_key: str | None) -> None:
+    voices = _list_voices(api_key)
+    for voice in voices:
+        print(
+            json.dumps(
+                {
+                    "name": voice.get("name"),
+                    "voice_id": voice.get("voice_id"),
+                    "category": voice.get("category"),
+                }
+            )
+        )
+
+
+def _write_catalogs(args: argparse.Namespace, voice_catalog: dict[str, Any], sound_catalog: dict[str, Any]) -> None:
+    _write_json(args.ios_voice_catalog, voice_catalog)
+    _write_json(args.android_voice_catalog, voice_catalog)
+    _write_json(args.ios_sound_catalog, sound_catalog)
+    _write_json(args.android_sound_catalog, sound_catalog)
+
+
+def _resolve_generation_api_key(args: argparse.Namespace) -> str:
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    if (args.generate_voice_assets or args.generate_sound_assets) and not api_key:
+        raise SystemExit("ELEVENLABS_API_KEY is required when generating audio assets.")
+    return api_key
+
+
+def _generate_voice_assets_if_requested(
+    args: argparse.Namespace,
+    api_key: str,
+    defaults: dict[str, Any],
+    voice_lines: list[tuple[str, str]],
+    expected_voice_stems: set[str],
+    model_id: str,
+    voice_name_query: str,
+) -> None:
+    if not args.generate_voice_assets:
+        return
+
+    voice_id = args.voice_id.strip()
+    if voice_id:
+        voice = _configured_voice(voice_id)
+    else:
+        voices = _list_voices(api_key)
+        voice = _resolve_voice(voices, None, voice_name_query)
+
+    voice_settings = _load_voice_settings(api_key, voice["voice_id"], defaults["voiceSettings"])
+    _generate_voice_assets(
+        api_key=api_key,
+        voice_id=voice["voice_id"],
+        model_id=model_id,
+        voice_settings=voice_settings,
+        lines=voice_lines,
+        output_dir=args.ios_audio_dir,
+    )
+    _remove_stale_assets(expected_voice_stems, args.ios_audio_dir)
+
+
+def _generate_sound_assets_if_requested(
+    args: argparse.Namespace,
+    api_key: str,
+    sound_lines: list[tuple[str, str, float]],
+    expected_sound_stems: set[str],
+) -> None:
+    if not args.generate_sound_assets:
+        return
+
+    _generate_sound_assets(
+        api_key=api_key,
+        sounds=sound_lines,
+        output_dir=args.ios_sounds_dir,
+    )
+    _remove_stale_assets(expected_sound_stems, args.ios_sounds_dir)
+
+
+def _sync_android_assets_if_requested(
+    args: argparse.Namespace,
+    expected_voice_stems: set[str],
+    expected_sound_stems: set[str],
+) -> None:
+    if not args.sync_android_assets:
+        return
+
+    android_voice_stems = _copy_assets(args.ios_audio_dir, args.android_raw_dir, expected_voice_stems)
+    android_sound_stems = _copy_assets(
+        args.ios_sounds_dir,
+        args.android_raw_dir,
+        expected_sound_stems,
+        stem_transform=_android_safe_stem,
+    )
+    _remove_stale_assets(android_voice_stems | android_sound_stems, args.android_raw_dir)
 
 
 def _generate_voice_assets(
@@ -444,8 +574,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
+def main() -> None:
+    args = _resolve_output_paths(parse_args())
     manifest = _load_manifest(args.manifest)
     pack = _select_pack(manifest, args.pack_id.strip() or None)
     defaults = manifest["defaults"]
@@ -468,72 +598,30 @@ def main() -> int:
     }
 
     if args.list_voices:
-        api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip() or None
-        voices = _list_voices(api_key)
-        for voice in voices:
-            print(
-                json.dumps(
-                    {
-                        "name": voice.get("name"),
-                        "voice_id": voice.get("voice_id"),
-                        "category": voice.get("category"),
-                    }
-                )
-            )
-        return 0
+        _print_available_voices(os.environ.get("ELEVENLABS_API_KEY", "").strip() or None)
+        return
 
     print(json.dumps(estimate))
     if args.estimate_only:
-        return 0
+        return
 
-    _write_json(args.ios_voice_catalog, voice_catalog)
-    _write_json(args.android_voice_catalog, voice_catalog)
-    _write_json(args.ios_sound_catalog, sound_catalog)
-    _write_json(args.android_sound_catalog, sound_catalog)
+    _write_catalogs(args, voice_catalog, sound_catalog)
 
     expected_voice_stems = {filename for filename, _ in voice_lines}
     expected_sound_stems = {filename for filename, _, _ in sound_lines}
 
-    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
-    if args.generate_voice_assets or args.generate_sound_assets:
-        if not api_key:
-            raise SystemExit("ELEVENLABS_API_KEY is required when generating audio assets.")
-
-    if args.generate_voice_assets:
-        voice_id = args.voice_id.strip()
-        if voice_id:
-            voice = _configured_voice(voice_id)
-        else:
-            voices = _list_voices(api_key)
-            voice = _resolve_voice(voices, None, voice_name_pattern)
-        voice_settings = _load_voice_settings(api_key, voice["voice_id"], defaults["voiceSettings"])
-        _generate_voice_assets(
-            api_key=api_key,
-            voice_id=voice["voice_id"],
-            model_id=model_id,
-            voice_settings=voice_settings,
-            lines=voice_lines,
-            output_dir=args.ios_audio_dir,
-        )
-        _remove_stale_assets(expected_voice_stems, args.ios_audio_dir)
-
-    if args.generate_sound_assets:
-        _generate_sound_assets(
-            api_key=api_key,
-            sounds=sound_lines,
-            output_dir=args.ios_sounds_dir,
-        )
-        _remove_stale_assets(expected_sound_stems, args.ios_sounds_dir)
-
-    if args.sync_android_assets:
-        android_voice_stems = _copy_assets(args.ios_audio_dir, args.android_raw_dir, expected_voice_stems)
-        android_sound_stems = _copy_assets(
-            args.ios_sounds_dir,
-            args.android_raw_dir,
-            expected_sound_stems,
-            stem_transform=_android_safe_stem,
-        )
-        _remove_stale_assets(android_voice_stems | android_sound_stems, args.android_raw_dir)
+    api_key = _resolve_generation_api_key(args)
+    _generate_voice_assets_if_requested(
+        args=args,
+        api_key=api_key,
+        defaults=defaults,
+        voice_lines=voice_lines,
+        expected_voice_stems=expected_voice_stems,
+        model_id=model_id,
+        voice_name_query=voice_name_pattern,
+    )
+    _generate_sound_assets_if_requested(args, api_key, sound_lines, expected_sound_stems)
+    _sync_android_assets_if_requested(args, expected_voice_stems, expected_sound_stems)
 
     _stage_runtime_assets(
         pack["id"],
@@ -555,8 +643,5 @@ def main() -> int:
         ),
     )
 
-    return 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

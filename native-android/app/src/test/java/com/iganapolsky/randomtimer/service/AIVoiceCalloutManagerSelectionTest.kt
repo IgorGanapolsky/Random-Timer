@@ -33,7 +33,7 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun `parseVoiceCalloutCatalog reads shared generated asset`() {
+    fun parseVoiceCalloutCatalogReadsSharedGeneratedAsset() {
         val path = Paths.get("src/main/assets/voice_callouts.json")
         val catalog = parseVoiceCalloutCatalog(path.toFile().readText())
 
@@ -43,7 +43,7 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun `nextCommandCue avoids immediate repeats when multiple cues exist`() {
+    fun nextCommandCueAvoidsImmediateRepeatsWhenMultipleCuesExist() {
         val cues =
             listOf(
                 VoiceCue(filename = "cue_a", text = "Cue A"),
@@ -56,7 +56,7 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun `parseRemoteProAudioManifest keeps hosted catalogs and asset integrity metadata`() {
+    fun parseRemoteProAudioManifestKeepsHostedCatalogsAndAssetIntegrityMetadata() {
         val manifest =
             parseRemoteProAudioManifest(
                 """
