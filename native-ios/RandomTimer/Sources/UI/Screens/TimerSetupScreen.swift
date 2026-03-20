@@ -264,15 +264,6 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // Start Button
-                PrimaryButton(title: "Start Timer") {
-                    Task {
-                        await timerManager.startTimer()
-                    }
-                }
-                .scaleEffect(1.02)
-                .padding(.vertical, 8)
-
                 // 4. Sound Arsenal
                 HStack {
                     Text("SOUND ARSENAL")
@@ -359,18 +350,21 @@ struct TimerSetupScreen: View {
                                     }
                                     .font(.caption2.weight(.semibold))
                                     .foregroundColor(.accentPrimary)
-                // Start Button
-                PrimaryButton(title: "Start Timer") {
-                    Task {
-                        await timerManager.startTimer()
-                    }
-                }
-                .scaleEffect(1.02)
-                .padding(.vertical, 8)
                                 }
                                 .padding(.top, 8)
                             }
                         }
+        .safeAreaInset(edge: .bottom) {
+            PrimaryButton(title: "Start Timer") {
+                Task {
+                    await timerManager.startTimer()
+                }
+            }
+            .scaleEffect(1.02)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 8)
+            .background(Color.backgroundDark)
+        }
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
