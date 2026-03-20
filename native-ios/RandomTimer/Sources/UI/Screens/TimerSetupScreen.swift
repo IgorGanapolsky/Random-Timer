@@ -264,15 +264,6 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // Start Button
-                PrimaryButton(title: "Start Timer") {
-                    Task {
-                        await timerManager.startTimer()
-                    }
-                }
-                .scaleEffect(1.02)
-                .padding(.vertical, 8)
-
                 // 4. Sound Arsenal
                 HStack {
                     Text("SOUND ARSENAL")
@@ -368,6 +359,14 @@ struct TimerSetupScreen: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
+                // Start Button
+                PrimaryButton(title: "Start Timer") {
+                    Task {
+                        await timerManager.startTimer()
+                    }
+                }
+                .scaleEffect(1.02)
+                .padding(.vertical, 8)
                 Spacer(minLength: 32)
             }
             .padding(.horizontal, 24)

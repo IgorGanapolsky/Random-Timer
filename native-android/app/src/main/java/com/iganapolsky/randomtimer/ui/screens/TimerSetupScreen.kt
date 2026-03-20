@@ -195,8 +195,6 @@ fun TimerSetupScreen(
                     )
                 }
             },
-            containerColor = TimerColors.BackgroundDark,
-            modifier = Modifier.fillMaxSize(),
         ) { paddingValues ->
             LazyColumn(
                 modifier =
@@ -633,7 +631,6 @@ fun TimerSetupScreen(
                             },
                     )
                 }
-
                 // 3. Sound Arsenal
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
