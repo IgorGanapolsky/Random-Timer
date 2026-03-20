@@ -28,7 +28,6 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
-import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -62,6 +61,8 @@ class TimerForegroundService : Service() {
     @Inject lateinit var proManager: ProManager
 
     @Inject lateinit var voiceCalloutManager: AIVoiceCalloutManager
+
+    @Inject lateinit var packStore: ProAudioPackStore
 
     private val trainingStatsService by lazy { TrainingStatsService(this) }
     private val binder = LocalBinder()
@@ -174,12 +175,13 @@ class TimerForegroundService : Service() {
 
     private fun updateLoopSetting(repeatEnabled: Boolean) {
         _timerState.value?.let { current ->
-            val updatedConfig = current.config.copy(
-                repeatEnabled = repeatEnabled,
-                useExtendedRange = current.config.useExtendedRange,
-                voiceEnabled = current.config.voiceEnabled,
-                repeatRounds = current.config.repeatRounds
-            )
+            val updatedConfig =
+                current.config.copy(
+                    repeatEnabled = repeatEnabled,
+                    useExtendedRange = current.config.useExtendedRange,
+                    voiceEnabled = current.config.voiceEnabled,
+                    repeatRounds = current.config.repeatRounds,
+                )
             _timerState.value = current.copy(config = updatedConfig)
         }
     }
@@ -287,9 +289,10 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    // Trigger AI Voice Callout for ELITE users
-                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
-                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                    // Trigger AI voice callouts for Pro users using elapsed time, not remaining time.
+                    if (proManager.entitlementLevel.value.isPro && state.config.voiceEnabled) {
+                        val elapsedSeconds = (state.targetDuration - newRemaining).inWholeSeconds.toInt()
+                        voiceCalloutManager.triggerCallout(elapsedSeconds)
                     }
 
                     if (newStatus == TimerStatus.COMPLETE) {
@@ -469,7 +472,8 @@ class TimerForegroundService : Service() {
 
                     val currentState = _timerState.value
                     if (currentState?.config?.repeatEnabled == true) {
-                        val shouldContinue = currentState.config.repeatRounds == 0 || currentState.roundCount < currentState.config.repeatRounds
+                        val shouldContinue =
+                            currentState.config.repeatRounds == 0 || currentState.roundCount < currentState.config.repeatRounds
                         if (shouldContinue) {
                             // Auto-restart timer
                             restartTimerInternal()
@@ -841,19 +845,8 @@ class TimerForegroundService : Service() {
     private fun playAlarmSound() {
         val state = _timerState.value ?: return
         if (!AlarmPlaybackPolicy.shouldRequestAudioFocus(state.status)) return
-        val resourceId =
-            when (state.config.soundType) {
-                SoundType.INTENSE -> R.raw.alarm
-                SoundType.GENTLE -> R.raw.gentle_chime
-                SoundType.KLAXON -> R.raw.klaxon
-                SoundType.WHISTLE -> R.raw.whistle
-                SoundType.BUZZER -> R.raw.buzzer
-                SoundType.GONG -> R.raw.gong
-                SoundType.AIRHORN -> R.raw.airhorn
-                SoundType.DRUM_ROLL -> R.raw.drum_roll
-                SoundType.SIREN -> R.raw.siren
-                SoundType.BELL -> R.raw.bell
-            }
+        val resourceId = resolveProSoundResId(this, state.config.soundType)
+        val remoteFile = packStore.soundFile(state.config.soundType)
 
         // Request audio focus BEFORE playing alarm sound
         requestAlarmAudioFocus()
@@ -868,11 +861,15 @@ class TimerForegroundService : Service() {
                     .build()
             val player = MediaPlayer()
             player.setAudioAttributes(alarmAttributes)
-            val afd =
-                resources.openRawResourceFd(resourceId)
-                    ?: throw IllegalStateException("Could not open alarm sound resource")
-            player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-            afd.close()
+            if (remoteFile != null) {
+                player.setDataSource(remoteFile.absolutePath)
+            } else {
+                val afd =
+                    resources.openRawResourceFd(resourceId)
+                        ?: throw IllegalStateException("Could not open alarm sound resource")
+                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
+            }
             player.isLooping = true
             player.setVolume(state.config.volume, state.config.volume)
             player.prepare()

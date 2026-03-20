@@ -52,6 +52,11 @@ android {
 
         // PostHog Analytics - from gradle.properties or CI secret
         buildConfigField("String", "POSTHOG_API_KEY", "\"${System.getenv("POSTHOG_API_KEY") ?: project.findProperty("POSTHOG_API_KEY") ?: ""}\"")
+        buildConfigField(
+            "String",
+            "PRO_AUDIO_MANIFEST_URL",
+            "\"${project.findProperty("PRO_AUDIO_MANIFEST_URL") ?: "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/latest.json"}\"",
+        )
     }
 
     signingConfigs {

@@ -107,6 +107,12 @@ final class ProManager: ObservableObject {
 
         let wasPro = isPro
         entitlementLevel = highestLevel
+
+        if entitlementLevel.isPro {
+            Task {
+                await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+            }
+        }
         
         if isPro && !wasPro {
             return .restored
@@ -139,7 +145,13 @@ final class ProManager: ObservableObject {
         if newLevel == .elite {
             entitlementLevel = .elite
         } else if newLevel == .base && entitlementLevel == .none {
-            entitlementLevel = .elite
+            entitlementLevel = .base
+        }
+
+        if entitlementLevel.isPro {
+            Task {
+                await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+            }
         }
     }
 
@@ -176,11 +188,17 @@ final class ProManager: ObservableObject {
     func unlockProForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
+        Task {
+            await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+        }
     }
     
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
+        Task {
+            await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+        }
     }
 }
 

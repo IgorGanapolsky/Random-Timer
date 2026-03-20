@@ -1,0 +1,57 @@
+{
+  "packId": "2026-03_marine_foundations",
+  "releaseMonth": "2026-03",
+  "entitlement": "pro",
+  "sounds": [
+    {
+      "soundType": "intense",
+      "filename": "alarm",
+      "durationSeconds": 4.0
+    },
+    {
+      "soundType": "gentle",
+      "filename": "gentle-chime",
+      "durationSeconds": 4.0
+    },
+    {
+      "soundType": "klaxon",
+      "filename": "klaxon",
+      "durationSeconds": 4.0
+    },
+    {
+      "soundType": "whistle",
+      "filename": "whistle",
+      "durationSeconds": 3.0
+    },
+    {
+      "soundType": "buzzer",
+      "filename": "buzzer",
+      "durationSeconds": 3.0
+    },
+    {
+      "soundType": "gong",
+      "filename": "gong",
+      "durationSeconds": 5.0
+    },
+    {
+      "soundType": "airhorn",
+      "filename": "airhorn",
+      "durationSeconds": 3.0
+    },
+    {
+      "soundType": "drumRoll",
+      "filename": "drum_roll",
+      "durationSeconds": 4.0
+    },
+    {
+      "soundType": "siren",
+      "filename": "siren",
+      "durationSeconds": 4.0
+    },
+    {
+      "soundType": "bell",
+      "filename": "bell",
+      "durationSeconds": 4.0
+    }
+  ]
+}

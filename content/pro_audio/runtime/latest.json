@@ -1,0 +1,661 @@
+{
+  "schemaVersion": 1,
+  "packId": "2026-03_marine_foundations",
+  "releaseMonth": "2026-03",
+  "entitlement": "pro",
+  "generatedAt": "2026-03-20T14:59:53.664521Z",
+  "voiceCatalog": {
+    "previewElapsed": {
+      "filename": "preview_elapsed",
+      "text": "Thirty seconds elapsed. Move with a purpose."
+    },
+    "fallbackCommandFilename": "cmd_move_with_a_purpose",
+    "elapsedCues": [
+      {
+        "second": 15,
+        "filename": "elapsed_15s",
+        "text": "Fifteen seconds elapsed. Move with a purpose."
+      },
+      {
+        "second": 30,
+        "filename": "elapsed_30s",
+        "text": "Thirty seconds elapsed. Stay locked in."
+      },
+      {
+        "second": 45,
+        "filename": "elapsed_45s",
+        "text": "Forty-five seconds elapsed. Keep your bearing."
+      },
+      {
+        "second": 60,
+        "filename": "elapsed_60s",
+        "text": "One minute elapsed. Keep pressure on."
+      },
+      {
+        "second": 75,
+        "filename": "elapsed_75s",
+        "text": "One minute fifteen elapsed. No hesitation. Move."
+      },
+      {
+        "second": 90,
+        "filename": "elapsed_90s",
+        "text": "One minute thirty elapsed. Stay disciplined."
+      },
+      {
+        "second": 105,
+        "filename": "elapsed_105s",
+        "text": "One minute forty-five elapsed. Breathe and press."
+      },
+      {
+        "second": 120,
+        "filename": "elapsed_120s",
+        "text": "Two minutes elapsed. Pick it up."
+      },
+      {
+        "second": 150,
+        "filename": "elapsed_150s",
+        "text": "Two minutes thirty elapsed. Stay sharp and keep driving."
+      },
+      {
+        "second": 180,
+        "filename": "elapsed_180s",
+        "text": "Three minutes elapsed. Sound off and move."
+      },
+      {
+        "second": 210,
+        "filename": "elapsed_210s",
+        "text": "Three minutes thirty elapsed. Do not coast."
+      },
+      {
+        "second": 240,
+        "filename": "elapsed_240s",
+        "text": "Four minutes elapsed. Maintain your pace."
+      },
+      {
+        "second": 300,
+        "filename": "elapsed_300s",
+        "text": "Five minutes elapsed. Finish this stretch strong."
+      },
+      {
+        "second": 420,
+        "filename": "elapsed_420s",
+        "text": "Seven minutes elapsed. Recover and press."
+      },
+      {
+        "second": 540,
+        "filename": "elapsed_540s",
+        "text": "Nine minutes elapsed. Stay precise. Stay relentless."
+      },
+      {
+        "second": 600,
+        "filename": "elapsed_600s",
+        "text": "Ten minutes elapsed. Outstanding. Keep moving."
+      }
+    ],
+    "commandCues": [
+      {
+        "filename": "cmd_move_with_a_purpose",
+        "text": "Move with a purpose."
+      },
+      {
+        "filename": "cmd_pick_it_up",
+        "text": "Pick it up."
+      },
+      {
+        "filename": "cmd_stay_locked_in",
+        "text": "Stay locked in."
+      },
+      {
+        "filename": "cmd_no_hesitation_move",
+        "text": "No hesitation. Move."
+      },
+      {
+        "filename": "cmd_keep_your_bearing",
+        "text": "Keep your bearing."
+      },
+      {
+        "filename": "cmd_sound_off_and_drive",
+        "text": "Sound off and drive."
+      },
+      {
+        "filename": "cmd_eyes_up_keep_moving",
+        "text": "Eyes up. Keep moving."
+      },
+      {
+        "filename": "cmd_stay_disciplined",
+        "text": "Stay disciplined."
+      },
+      {
+        "filename": "cmd_breathe_recover_press",
+        "text": "Breathe, recover, and press."
+      },
+      {
+        "filename": "cmd_do_not_coast",
+        "text": "Do not coast."
+      },
+      {
+        "filename": "cmd_own_this_rep",
+        "text": "Own this rep."
+      },
+      {
+        "filename": "cmd_keep_pressure_on",
+        "text": "Keep pressure on."
+      },
+      {
+        "filename": "cmd_sharp_movement_sharp_focus",
+        "text": "Sharp movement. Sharp focus."
+      },
+      {
+        "filename": "cmd_stay_in_the_fight",
+        "text": "Stay in the fight."
+      },
+      {
+        "filename": "cmd_drive_through_it",
+        "text": "Drive through it."
+      },
+      {
+        "filename": "cmd_reset_and_attack",
+        "text": "Reset and attack the next step."
+      },
+      {
+        "filename": "cmd_strong_feet_strong_pace",
+        "text": "Strong feet. Strong pace."
+      },
+      {
+        "filename": "cmd_move_fast_stay_precise",
+        "text": "Move fast. Stay precise."
+      },
+      {
+        "filename": "cmd_keep_tempo_high",
+        "text": "Keep the tempo high."
+      },
+      {
+        "filename": "cmd_most_ricky_tick",
+        "text": "Most ricky tick. Move with a purpose."
+      },
+      {
+        "filename": "cmd_instant_response_go",
+        "text": "Instant response. Go."
+      },
+      {
+        "filename": "cmd_maintain_your_interval",
+        "text": "Maintain your interval."
+      },
+      {
+        "filename": "cmd_snap_back_and_drive",
+        "text": "Snap back and drive."
+      },
+      {
+        "filename": "cmd_finish_rep_keep_pushing",
+        "text": "Finish the rep. Then keep pushing."
+      }
+    ]
+  },
+  "soundCatalog": {
+    "packId": "2026-03_marine_foundations",
+    "releaseMonth": "2026-03",
+    "entitlement": "pro",
+    "sounds": [
+      {
+        "soundType": "intense",
+        "filename": "alarm",
+        "durationSeconds": 4.0
+      },
+      {
+        "soundType": "gentle",
+        "filename": "gentle-chime",
+        "durationSeconds": 4.0
+      },
+      {
+        "soundType": "klaxon",
+        "filename": "klaxon",
+        "durationSeconds": 4.0
+      },
+      {
+        "soundType": "whistle",
+        "filename": "whistle",
+        "durationSeconds": 3.0
+      },
+      {
+        "soundType": "buzzer",
+        "filename": "buzzer",
+        "durationSeconds": 3.0
+      },
+      {
+        "soundType": "gong",
+        "filename": "gong",
+        "durationSeconds": 5.0
+      },
+      {
+        "soundType": "airhorn",
+        "filename": "airhorn",
+        "durationSeconds": 3.0
+      },
+      {
+        "soundType": "drumRoll",
+        "filename": "drum_roll",
+        "durationSeconds": 4.0
+      },
+      {
+        "soundType": "siren",
+        "filename": "siren",
+        "durationSeconds": 4.0
+      },
+      {
+        "soundType": "bell",
+        "filename": "bell",
+        "durationSeconds": 4.0
+      }
+    ]
+  },
+  "assets": [
+    {
+      "kind": "voice",
+      "filename": "cmd_breathe_recover_press",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_breathe_recover_press.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_breathe_recover_press.mp3",
+      "sha256": "20e379e5819849c7386ea236d07b49dbcc507549d667eb99c34ccf446e9aab15",
+      "bytes": 33898
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_do_not_coast",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_do_not_coast.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_do_not_coast.mp3",
+      "sha256": "e5f351576477b850b26f36fa572ffd45b1b55c9227fa9fc867f5fe82b00302a4",
+      "bytes": 20942
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_drive_through_it",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_drive_through_it.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_drive_through_it.mp3",
+      "sha256": "d194aa434223da5f507ae74b18fc445f742d52533c46ca98d61db53e434ac939",
+      "bytes": 22613
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_eyes_up_keep_moving",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_eyes_up_keep_moving.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_eyes_up_keep_moving.mp3",
+      "sha256": "a132ce9bef550106296503b26761498ca2d7fdac7e9717fadcf629d452e259dc",
+      "bytes": 25539
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_finish_rep_keep_pushing",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_finish_rep_keep_pushing.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_finish_rep_keep_pushing.mp3",
+      "sha256": "285fa4fbb13921374b229a442862bfa97754846b13e89b103faef19d1bec5917",
+      "bytes": 39750
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_instant_response_go",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_instant_response_go.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_instant_response_go.mp3",
+      "sha256": "56672e0f2e4e06eaea0d84a70cc44622f1c850ba20ae78ea3b123dc7b570a376",
+      "bytes": 32226
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_pressure_on",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_keep_pressure_on.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_keep_pressure_on.mp3",
+      "sha256": "88de4c559e7452ba220853847013b36a479c1427ccdf55923eae0dc2ddbedf0a",
+      "bytes": 22613
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_tempo_high",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_keep_tempo_high.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_keep_tempo_high.mp3",
+      "sha256": "44f56d4b35b2084a0a60425dd4c45757c015d56daf16f1192ba13a33c7adcb0a",
+      "bytes": 25539
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_your_bearing",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_keep_your_bearing.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_keep_your_bearing.mp3",
+      "sha256": "8d7c17955d672962fcacf348531a8262390d5ab16de26a4cf20939b56f6e0682",
+      "bytes": 26375
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_maintain_your_interval",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_maintain_your_interval.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_maintain_your_interval.mp3",
+      "sha256": "38ff2fd49125ea4f0746eff269baf06ba8c5b2e71747bc42c3b621890955537e",
+      "bytes": 24703
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_most_ricky_tick",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_most_ricky_tick.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_most_ricky_tick.mp3",
+      "sha256": "d6a9ee2eda0d0ae25ce0c06cda47c86404c4de0dbab49df32de14534dbd1b72d",
+      "bytes": 48527
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_move_fast_stay_precise",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_move_fast_stay_precise.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_move_fast_stay_precise.mp3",
+      "sha256": "ea604197c114abd66d28a8e3a1543fa3a7834c71bb8ad57cc45e819ab91bac41",
+      "bytes": 37660
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_move_with_a_purpose",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_move_with_a_purpose.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_move_with_a_purpose.mp3",
+      "sha256": "eb81cd04ecd22b96131bf0b12bc41b75a903f0c43551d17e3487d22a11abd538",
+      "bytes": 29301
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_no_hesitation_move",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_no_hesitation_move.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_no_hesitation_move.mp3",
+      "sha256": "7dd74098d83bfc894cd1f85a64008a794a69324638c772749e4b19e71b9fc4d8",
+      "bytes": 34316
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_own_this_rep",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_own_this_rep.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_own_this_rep.mp3",
+      "sha256": "b0aea6ebad7be037f524ec4cd4813b8ead8ae47d6dc5c8b8d599ccd47ea89d05",
+      "bytes": 17598
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_pick_it_up",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_pick_it_up.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_pick_it_up.mp3",
+      "sha256": "2e6f78c2e0f2fa47781760cf6f6c92f462d9479559c55ad262393c252c10562c",
+      "bytes": 18016
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_reset_and_attack",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_reset_and_attack.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_reset_and_attack.mp3",
+      "sha256": "29b85b862d0ee74cde7b8c3d40b44324ea67bdd33e536b22eb6b8f26294b2d2c",
+      "bytes": 36824
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_sharp_movement_sharp_focus",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_sharp_movement_sharp_focus.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_sharp_movement_sharp_focus.mp3",
+      "sha256": "0bb663a8ba49668e86ad7c4cdfb59784c5cd12e5a1ba5824adf826840dd6acc9",
+      "bytes": 36824
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_snap_back_and_drive",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_snap_back_and_drive.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_snap_back_and_drive.mp3",
+      "sha256": "65a849215968d4cd9d53546ba599b1c2aeb3f7203040542a7d5ae628f374975c",
+      "bytes": 27211
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_sound_off_and_drive",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_sound_off_and_drive.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_sound_off_and_drive.mp3",
+      "sha256": "87ad0efe71161a55e7d142891b1dc2a8da84c67f520e9143c97cab3c84a7411b",
+      "bytes": 30137
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_stay_disciplined",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_stay_disciplined.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_stay_disciplined.mp3",
+      "sha256": "5772646787cd0e3819d9915e1a2f54c8d37ee1359c366ef39cb99b8b4b057e2d",
+      "bytes": 19688
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_stay_in_the_fight",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_stay_in_the_fight.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_stay_in_the_fight.mp3",
+      "sha256": "560d9db055250e75bfa13dd4846a9c935a1c0bbc74cf365d4ec01fee4412c2cc",
+      "bytes": 24285
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_stay_locked_in",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_stay_locked_in.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_stay_locked_in.mp3",
+      "sha256": "93e9a206892926b5df832012c80c05639b9953453d4945946d6fb799d2a5a8bc",
+      "bytes": 21777
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_strong_feet_strong_pace",
+      "relativePath": "packs/2026-03_marine_foundations/voice/cmd_strong_feet_strong_pace.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/cmd_strong_feet_strong_pace.mp3",
+      "sha256": "a3b4257c710c34f508ab47f55e47d47fce6fbe242834d40f54283cca4774d65c",
+      "bytes": 34316
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_105s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_105s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_105s.mp3",
+      "sha256": "f880f3867b841483196d64aa9495e4db43bea978a3b373ef9224da336abcf099",
+      "bytes": 54378
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_120s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_120s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_120s.mp3",
+      "sha256": "75cddb35fda88cfe05386499cc33fc1c975c3e81006eed99321cd1c5fce4dea3",
+      "bytes": 40586
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_150s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_150s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_150s.mp3",
+      "sha256": "0b3d5a6affbe9bbe6685784076c59982104b9658090080d11ee7a000e8a123f1",
+      "bytes": 53960
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_15s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_15s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_15s.mp3",
+      "sha256": "eb3b3b0b922d6f00455ddc029297527adc3cb927c070caca6a54439159dab020",
+      "bytes": 66499
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_180s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_180s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_180s.mp3",
+      "sha256": "1131d45b284ee1f3b29b7adb924ee307d99f896ce7553cc664788bd013f1e89b",
+      "bytes": 44765
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_210s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_210s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_210s.mp3",
+      "sha256": "056d3dd28e1ec676a543511dad05d215c4818405ee99180ded6a4419257bd858",
+      "bytes": 53960
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_240s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_240s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_240s.mp3",
+      "sha256": "23786f48d561b6969f79ed59ea36dcc6710f4e30f0cd839dc8d429c814917b33",
+      "bytes": 47691
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_300s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_300s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_300s.mp3",
+      "sha256": "c6208cfe7f62b37e276431c4709018f5e20133ac592cd12e516adda659bd85c6",
+      "bytes": 58976
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_30s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_30s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_30s.mp3",
+      "sha256": "99109e853f30cc94f4127c80146bd231a5ef237344d0436e3ae619fbb79e7c94",
+      "bytes": 45601
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_420s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_420s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_420s.mp3",
+      "sha256": "300e718f3e1b024a5bb2084b1e08a5d2e5b82ee8bc01d6dcbec1409641f7948f",
+      "bytes": 53960
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_45s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_45s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_45s.mp3",
+      "sha256": "4e025fada681dfe76ea2cd75cc0b7b15bfc862d49e60801d16df5b41b101cf27",
+      "bytes": 61066
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_540s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_540s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_540s.mp3",
+      "sha256": "28ec6f911913f526c6732f3de29d29e3b54b527d22e3b5d4774c5f8e4f848b20",
+      "bytes": 66499
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_600s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_600s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_600s.mp3",
+      "sha256": "1901fa33923bba378db672e894a3544fb95cd7b8756c70fea99dd7d6aa10d661",
+      "bytes": 63573
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_60s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_60s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_60s.mp3",
+      "sha256": "f7e0b44451433f06a74c2ed6a2da8c266e8f9e4467a2c543f2d4d079ebccdf7b",
+      "bytes": 37660
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_75s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_75s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_75s.mp3",
+      "sha256": "bbe4243387b2e622cb57e2aeba983ad8ad458f9ed99c33a739b8109f9f08e01a",
+      "bytes": 59812
+    },
+    {
+      "kind": "voice",
+      "filename": "elapsed_90s",
+      "relativePath": "packs/2026-03_marine_foundations/voice/elapsed_90s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/elapsed_90s.mp3",
+      "sha256": "50bc71799818f6df809f4a4be6c666803f8da2471798be192ad9844dfc7902e5",
+      "bytes": 44347
+    },
+    {
+      "kind": "voice",
+      "filename": "preview_elapsed",
+      "relativePath": "packs/2026-03_marine_foundations/voice/preview_elapsed.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/preview_elapsed.mp3",
+      "sha256": "56a889bdf577df38d3bb612e0f950c8f7cfb54ea57d4a5c048ba4f54b847362e",
+      "bytes": 63573
+    },
+    {
+      "kind": "sound",
+      "filename": "airhorn",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/airhorn.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/airhorn.mp3",
+      "sha256": "f4c6ff1715742e4f2883ebeb166748d3fd9664ca646944d6eed8a83ddadc9adc",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "alarm",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/alarm.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/alarm.mp3",
+      "sha256": "e1271b5905be5dd2a72c818a4ef088ccb75801944fe0a700e8fa29ff641916ba",
+      "bytes": 271444
+    },
+    {
+      "kind": "sound",
+      "filename": "bell",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/bell.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/bell.mp3",
+      "sha256": "e5240c37fb00f4af89a991fa7fb74df3c859fceadc854d994bed8f8bd669dc2c",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "buzzer",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/buzzer.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/buzzer.mp3",
+      "sha256": "932d9dc917ef1d89651b5e3fb4c700d94238c8734ac485a8d38dec341269b29a",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "drum_roll",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/drum_roll.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/drum_roll.mp3",
+      "sha256": "c8bc6d8d258eff687fd9b05782d48288ee97bb0037acc36bb4f1263ffc6e066b",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "gentle-chime",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/gentle-chime.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/gentle-chime.mp3",
+      "sha256": "7564a69c25432c46477cc741aca96090ed44ca11c3a24759c7a70a3199c4f94e",
+      "bytes": 303856
+    },
+    {
+      "kind": "sound",
+      "filename": "gong",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/gong.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/gong.mp3",
+      "sha256": "a9d00f3f504371c4df3f27f668e7ed490f4aae76c1e0f6277f2125bc0f03f451",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "klaxon",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/klaxon.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/klaxon.mp3",
+      "sha256": "b67a9d8d2d7c31a501d760a9b14c9e31db4792f0603f3578cba71265e30e3fb6",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "siren",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/siren.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/siren.mp3",
+      "sha256": "3352db0609eb09df5f87b890dbaf1bf8b0b6470a3be15ffba9655d486b70f862",
+      "bytes": 20497
+    },
+    {
+      "kind": "sound",
+      "filename": "whistle",
+      "relativePath": "packs/2026-03_marine_foundations/sounds/whistle.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/whistle.mp3",
+      "sha256": "2c58a7db9f5c892b17c4350eb436f4ef66870f33bdca3ca65da0e97a2d8f9537",
+      "bytes": 20497
+    }
+  ]
+}

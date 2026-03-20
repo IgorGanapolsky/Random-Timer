@@ -3,13 +3,13 @@ import Foundation
 import Security
 import os
 
-internal struct VoiceCueCatalog: Decodable {
-    struct Cue: Decodable, Hashable {
+internal struct VoiceCueCatalog: Codable {
+    struct Cue: Codable, Hashable {
         let filename: String
         let text: String
     }
 
-    struct ElapsedCue: Decodable, Hashable {
+    struct ElapsedCue: Codable, Hashable {
         let second: Int
         let filename: String
         let text: String
@@ -78,7 +78,7 @@ internal func voiceFilename(for text: String, bundle: Bundle = .main) -> String?
     loadVoiceCalloutCatalog(bundle: bundle).filenameByText[text]
 }
 
-internal func voiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
+internal func bundledVoiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
     bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Audio")
         ?? bundle.url(forResource: filename, withExtension: "mp3")
 }
@@ -124,15 +124,15 @@ final class AIVoiceCalloutService {
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
 
     private let bundle: Bundle
-    private let catalog: VoiceCueCatalog
+    private let packStore: ProAudioPackStore
     private var audioPlayer: AVAudioPlayer?
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
 
-    init(bundle: Bundle = .main) {
+    init(bundle: Bundle = .main, packStore: ProAudioPackStore = .shared) {
         self.bundle = bundle
-        self.catalog = loadVoiceCalloutCatalog(bundle: bundle)
+        self.packStore = packStore
 
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
@@ -143,10 +143,11 @@ final class AIVoiceCalloutService {
     }
 
     func speak(_ text: String) {
+        let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
 
-        guard let url = voiceAudioURL(for: filename, bundle: bundle) else {
+        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
             Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
             return
         }
@@ -182,6 +183,7 @@ final class AIVoiceCalloutService {
     }
 
     func previewCountdownCue() {
+        let catalog = packStore.voiceCatalog(bundle: bundle)
         speak(catalog.previewElapsed.text)
     }
 
@@ -201,6 +203,7 @@ final class AIVoiceCalloutService {
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
+        let catalog = packStore.voiceCatalog(bundle: bundle)
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil
         }
@@ -215,6 +218,7 @@ final class AIVoiceCalloutService {
     }
 
     private func randomCommandCue() -> VoiceCueCatalog.Cue {
+        let catalog = packStore.voiceCatalog(bundle: bundle)
         let cue = nextCommandCue(from: catalog.commandCues, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
         }

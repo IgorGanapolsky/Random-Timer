@@ -1,8 +1,13 @@
 import XCTest
+import CryptoKit
 @testable import RandomTimer
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
+    private func makeUnusedTestAssetURL(filename: String) -> URL {
+        URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
+    }
+
     private func makeSut() -> AIVoiceCalloutService {
         let service = AIVoiceCalloutService(bundle: .main)
         service.resetSession()
@@ -61,7 +66,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testBundledVoiceAudioResolvesFromMainBundle() {
         let catalog = loadVoiceCalloutCatalog(bundle: .main)
         let missing = Set(catalog.bundledFilenames)
-            .filter { voiceAudioURL(for: $0, bundle: .main) == nil }
+            .filter { bundledVoiceAudioURL(for: $0, bundle: .main) == nil }
             .sorted()
 
         XCTAssertTrue(missing.isEmpty, "Missing bundled voice assets: \(missing)")
@@ -72,7 +77,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         let fallback = voiceFilenameOrFallback(for: "Unexpected cue", bundle: .main)
 
         XCTAssertEqual(fallback, catalog.fallbackCommandCue.filename)
-        XCTAssertNotNil(voiceAudioURL(for: fallback, bundle: .main))
+        XCTAssertNotNil(bundledVoiceAudioURL(for: fallback, bundle: .main))
     }
 
     func testNextCommandCueAvoidsImmediateRepeatWhenPossible() {
@@ -83,5 +88,69 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
         let selected = nextCommandCue(from: cues, lastFilename: "cue_a") { _ in 0 }
         XCTAssertEqual(selected.filename, "cue_b")
+    }
+
+    func testRemotePackStoreInstallsAndServesRemoteVoiceAndSoundAssets() throws {
+        let cacheRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pro-audio-store-tests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: cacheRoot) }
+
+        let voicePayload = Data("voice-remote".utf8)
+        let soundPayload = Data("sound-remote".utf8)
+        let manifest = RemoteProAudioManifest(
+            schemaVersion: 1,
+            packId: "2026-04_field",
+            releaseMonth: "2026-04",
+            entitlement: "pro",
+            generatedAt: "2026-04-01T15:00:00Z",
+            voiceCatalog: VoiceCueCatalog(
+                previewElapsed: .init(filename: "preview_elapsed", text: "Fifteen seconds elapsed. Move."),
+                fallbackCommandFilename: "cmd_move",
+                elapsedCues: [.init(second: 15, filename: "elapsed_15s", text: "Fifteen seconds elapsed. Move.")],
+                commandCues: [.init(filename: "cmd_move", text: "Move.")]
+            ),
+            soundCatalog: ProSoundCatalog(
+                packId: "2026-04_field",
+                releaseMonth: "2026-04",
+                entitlement: "pro",
+                sounds: [.init(soundType: "intense", filename: "alarm", durationSeconds: 4)]
+            ),
+            assets: [
+                .init(
+                    kind: .voice,
+                    filename: "preview_elapsed",
+                    relativePath: "packs/2026-04_field/voice/preview_elapsed.mp3",
+                    url: makeUnusedTestAssetURL(filename: "preview_elapsed.mp3"),
+                    sha256: sha256Hex(voicePayload),
+                    bytes: voicePayload.count
+                ),
+                .init(
+                    kind: .sound,
+                    filename: "alarm",
+                    relativePath: "packs/2026-04_field/sounds/alarm.mp3",
+                    url: makeUnusedTestAssetURL(filename: "alarm.mp3"),
+                    sha256: sha256Hex(soundPayload),
+                    bytes: soundPayload.count
+                ),
+            ]
+        )
+
+        let store = ProAudioPackStore(bundle: .main, manifestURL: nil, cacheRoot: cacheRoot)
+        try store.installForTesting(
+            manifest: manifest,
+            payloadsByKey: [
+                "voice:preview_elapsed": voicePayload,
+                "sound:alarm": soundPayload,
+            ]
+        )
+
+        XCTAssertEqual(store.voiceCatalog().previewElapsed.text, "Fifteen seconds elapsed. Move.")
+        XCTAssertEqual(store.soundCatalog().packId, "2026-04_field")
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.voiceAudioURL(for: "preview_elapsed", bundle: .main))), voicePayload)
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.soundAudioURL(for: .intense, bundle: .main))), soundPayload)
+    }
+
+    private func sha256Hex(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 }
