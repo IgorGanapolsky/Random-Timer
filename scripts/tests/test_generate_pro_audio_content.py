@@ -1,5 +1,4 @@
 import importlib.util
-import json
 from pathlib import Path
 import tempfile
 
@@ -91,16 +90,31 @@ def test_remove_stale_assets_keeps_expected_stems_only():
         assert not (output_dir / "delete_me.mp3").exists()
 
 
-def test_write_json_produces_readable_payload():
+def test_resolve_repo_path_rejects_external_paths():
     module = _load_module()
 
-    with tempfile.TemporaryDirectory(dir=module.REPO_ROOT) as tmpdir:
-        path = Path(tmpdir) / "payload.json"
-        payload = {"packId": "2026-03", "count": 2}
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            module._resolve_repo_path(Path(tmpdir))
+        except SystemExit as error:
+            assert "outside repository" in str(error)
+        else:
+            raise AssertionError("Expected external paths to be rejected")
 
-        module._write_json(path, payload)
 
-        assert json.loads(path.read_text(encoding="utf-8")) == payload
+def test_managed_output_paths_stay_inside_repository():
+    module = _load_module()
+
+    managed_paths = (
+        module.CANONICAL_MANIFEST_PATH,
+        module.IOS_VOICE_CATALOG_PATH,
+        module.ANDROID_VOICE_CATALOG_PATH,
+        module.IOS_SOUND_CATALOG_PATH,
+        module.ANDROID_SOUND_CATALOG_PATH,
+        module.RUNTIME_MANIFEST_PATH,
+    )
+
+    assert all(module.REPO_ROOT in path.parents for path in managed_paths)
 
 
 def test_copy_assets_can_normalize_android_resource_names():

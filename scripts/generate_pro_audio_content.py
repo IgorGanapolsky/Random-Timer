@@ -20,6 +20,12 @@ VOICE_OUTPUT_FORMAT = "mp3_44100_128"
 SOUND_OUTPUT_FORMAT = "mp3_44100_128"
 DEFAULT_RUNTIME_BASE_URL = "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime"
 REPO_ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_MANIFEST_PATH = REPO_ROOT / "content/pro_audio/monthly_pro_audio_packs.json"
+IOS_VOICE_CATALOG_PATH = REPO_ROOT / "native-ios/RandomTimer/Resources/Audio/voice_callouts.json"
+ANDROID_VOICE_CATALOG_PATH = REPO_ROOT / "native-android/app/src/main/assets/voice_callouts.json"
+IOS_SOUND_CATALOG_PATH = REPO_ROOT / "native-ios/RandomTimer/Resources/Audio/sound_arsenal.json"
+ANDROID_SOUND_CATALOG_PATH = REPO_ROOT / "native-android/app/src/main/assets/sound_arsenal.json"
+RUNTIME_MANIFEST_PATH = REPO_ROOT / "content/pro_audio/runtime/latest.json"
 VOICE_MODEL_RATES = {
     "eleven_multilingual_v2": 1.0,
     "eleven_multilingual_v3": 1.0,
@@ -141,12 +147,6 @@ def _sound_entries(pack: dict[str, Any]) -> list[tuple[str, str, float]]:
     ]
 
 
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path = _resolve_repo_path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-
-
 def _remove_stale_assets(expected_stems: set[str], output_dir: Path) -> None:
     if not output_dir.exists():
         return
@@ -215,15 +215,10 @@ def _load_voice_settings(api_key: str, voice_id: str, fallback: dict[str, Any]) 
 def _resolve_output_paths(args: argparse.Namespace) -> argparse.Namespace:
     path_fields = (
         "manifest",
-        "ios_voice_catalog",
-        "android_voice_catalog",
-        "ios_sound_catalog",
-        "android_sound_catalog",
         "ios_audio_dir",
         "ios_sounds_dir",
         "android_raw_dir",
         "runtime_assets_dir",
-        "runtime_manifest",
     )
     for field in path_fields:
         setattr(args, field, _resolve_repo_path(getattr(args, field), must_exist=(field == "manifest")))
@@ -244,11 +239,21 @@ def _print_available_voices(api_key: str | None) -> None:
         )
 
 
-def _write_catalogs(args: argparse.Namespace, voice_catalog: dict[str, Any], sound_catalog: dict[str, Any]) -> None:
-    _write_json(args.ios_voice_catalog, voice_catalog)
-    _write_json(args.android_voice_catalog, voice_catalog)
-    _write_json(args.ios_sound_catalog, sound_catalog)
-    _write_json(args.android_sound_catalog, sound_catalog)
+def _write_catalogs(voice_catalog: dict[str, Any], sound_catalog: dict[str, Any]) -> None:
+    serialized_voice_catalog = json.dumps(voice_catalog, indent=2) + "\n"
+    serialized_sound_catalog = json.dumps(sound_catalog, indent=2) + "\n"
+
+    IOS_VOICE_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    IOS_VOICE_CATALOG_PATH.write_text(serialized_voice_catalog, encoding="utf-8")
+
+    ANDROID_VOICE_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ANDROID_VOICE_CATALOG_PATH.write_text(serialized_voice_catalog, encoding="utf-8")
+
+    IOS_SOUND_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    IOS_SOUND_CATALOG_PATH.write_text(serialized_sound_catalog, encoding="utf-8")
+
+    ANDROID_SOUND_CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ANDROID_SOUND_CATALOG_PATH.write_text(serialized_sound_catalog, encoding="utf-8")
 
 
 def _resolve_generation_api_key(args: argparse.Namespace) -> str:
@@ -484,34 +489,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--manifest",
         type=Path,
-        default=Path("content/pro_audio/monthly_pro_audio_packs.json"),
+        default=CANONICAL_MANIFEST_PATH,
         help="Canonical monthly Pro audio manifest.",
     )
     parser.add_argument("--pack-id", default="", help="Optional explicit pack ID. Defaults to the active pack.")
-    parser.add_argument(
-        "--ios-voice-catalog",
-        type=Path,
-        default=Path("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"),
-        help="Generated iOS voice catalog path.",
-    )
-    parser.add_argument(
-        "--android-voice-catalog",
-        type=Path,
-        default=Path("native-android/app/src/main/assets/voice_callouts.json"),
-        help="Generated Android voice catalog path.",
-    )
-    parser.add_argument(
-        "--ios-sound-catalog",
-        type=Path,
-        default=Path("native-ios/RandomTimer/Resources/Audio/sound_arsenal.json"),
-        help="Generated iOS sound catalog path.",
-    )
-    parser.add_argument(
-        "--android-sound-catalog",
-        type=Path,
-        default=Path("native-android/app/src/main/assets/sound_arsenal.json"),
-        help="Generated Android sound catalog path.",
-    )
     parser.add_argument(
         "--ios-audio-dir",
         type=Path,
@@ -535,12 +516,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("content/pro_audio/runtime"),
         help="Directory for hosted runtime manifest and audio pack assets.",
-    )
-    parser.add_argument(
-        "--runtime-manifest",
-        type=Path,
-        default=Path("content/pro_audio/runtime/latest.json"),
-        help="Generated hosted runtime manifest path.",
     )
     parser.add_argument(
         "--runtime-base-url",
@@ -605,7 +580,7 @@ def main() -> None:
     if args.estimate_only:
         return
 
-    _write_catalogs(args, voice_catalog, sound_catalog)
+    _write_catalogs(voice_catalog, sound_catalog)
 
     expected_voice_stems = {filename for filename, _ in voice_lines}
     expected_sound_stems = {filename for filename, _, _ in sound_lines}
@@ -631,8 +606,7 @@ def main() -> None:
         voice_stems=expected_voice_stems,
         sound_stems=expected_sound_stems,
     )
-    _write_json(
-        args.runtime_manifest,
+    runtime_payload = json.dumps(
         _runtime_manifest(
             pack,
             entitlement,
@@ -641,7 +615,10 @@ def main() -> None:
             runtime_base_url=args.runtime_base_url,
             runtime_assets_dir=args.runtime_assets_dir,
         ),
-    )
+        indent=2,
+    ) + "\n"
+    RUNTIME_MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    RUNTIME_MANIFEST_PATH.write_text(runtime_payload, encoding="utf-8")
 
 if __name__ == "__main__":
     main()
