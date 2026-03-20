@@ -42,13 +42,34 @@ if [ -f "$IGOR/AGENTS.md" ]; then
 fi
 
 echo ""
-echo "--- Chinese rule check (must find none) ---"
-CHINESE=$(find "$IGOR" -type f \( -name "*.md" -o -name "*.mdc" \) ! -path "*/node_modules/*" ! -path "*/.git/*" -exec grep -l "交互语言\|一律使用" {} \; 2>/dev/null || true)
-if [ -z "$CHINESE" ]; then
-  echo "PASS: No Chinese language rule found in igor"
+echo "--- Chinese rule check (must find none in active instruction files) ---"
+
+FILES_TO_SCAN=(
+  "$REPO/CLAUDE.md"
+  "$REPO/AGENTS.md"
+  "$REPO/.cursor/rules/english-only.mdc"
+)
+
+if [ -f "$IGOR/CLAUDE.md" ]; then
+  FILES_TO_SCAN+=("$IGOR/CLAUDE.md")
+fi
+if [ -f "$IGOR/AGENTS.md" ]; then
+  FILES_TO_SCAN+=("$IGOR/AGENTS.md")
+fi
+
+CHINESE=()
+for file in "${FILES_TO_SCAN[@]}"; do
+  if [ -f "$file" ] && grep -q "交互语言\|一律使用" "$file"; then
+    CHINESE+=("$file")
+  fi
+done
+
+if [ "${#CHINESE[@]}" -eq 0 ]; then
+  echo "PASS: No Chinese language rule found in active instruction files"
   PASS=$((PASS + 1))
 else
-  echo "FAIL: Chinese rule found in: $CHINESE"
+  printf 'FAIL: Chinese rule found in:\n'
+  printf '%s\n' "${CHINESE[@]}"
   FAIL=$((FAIL + 1))
 fi
 

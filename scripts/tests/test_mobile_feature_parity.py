@@ -150,3 +150,13 @@ def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
     assert "repeatRounds" in ios_active
     assert "roundCount" in ios_active
     assert 'return "ROUND \\(clampedRound)/\\(repeatRounds)"' in ios_active
+
+
+def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_copy():
+    android_setup = _read(ANDROID_SETUP)
+
+    start_cta_count = len(re.findall(r'PrimaryButton\(\s*text\s*=\s*"Start Timer"', android_setup, re.MULTILINE))
+    assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
+    assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
+    assert 'repeatLoopDetailSummary(' in android_setup
+    assert 'Infinite Loop - Pro unlocks round limits' in android_setup
