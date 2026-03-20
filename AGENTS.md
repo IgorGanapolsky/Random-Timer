@@ -218,3 +218,6 @@ Say: **"Done merging PRs"** only after all steps verified.
 - Query RAG at session start; update RAG at session end
 - Self-assess: Is RAG helping or hindering? Is Langsmith useful? Report status.
 
+
+## Interaction Language
+- All interactions must use **English**.
