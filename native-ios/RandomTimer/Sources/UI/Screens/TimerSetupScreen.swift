@@ -371,6 +371,17 @@ struct TimerSetupScreen: View {
             }
             .padding(.horizontal, 24)
         }
+        .safeAreaInset(edge: .bottom) {
+            PrimaryButton(title: "Start Timer") {
+                Task {
+                    await timerManager.startTimer()
+                }
+            }
+            .scaleEffect(1.02)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 8)
+            .background(Color.backgroundDark)
+        }
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
