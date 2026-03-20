@@ -44,6 +44,15 @@ final class RandomTimerUITests: XCTestCase {
         ensureSetupScreen(app)
     }
 
+    func testSetupStateKeepsStartTimerHittable() {
+        let app = launchApp()
+        ensureSetupScreen(app)
+
+        let startButton = app.buttons["Start Timer"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(startButton.isHittable)
+    }
+
     func testRunningStateShowsRunningLabelAndPauseAction() {
         let app = launchApp(withState: "running")
         XCTAssertTrue(app.staticTexts["Timer running..."].waitForExistence(timeout: 2.0))

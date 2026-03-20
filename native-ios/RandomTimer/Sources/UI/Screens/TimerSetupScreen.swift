@@ -264,15 +264,6 @@ struct TimerSetupScreen: View {
                     }
                 }
 
-                // Start Button
-                PrimaryButton(title: "Start Timer") {
-                    Task {
-                        await timerManager.startTimer()
-                    }
-                }
-                .scaleEffect(1.02)
-                .padding(.vertical, 8)
-
                 // 4. Sound Arsenal
                 HStack {
                     Text("SOUND ARSENAL")
@@ -368,9 +359,20 @@ struct TimerSetupScreen: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
-                Spacer(minLength: 32)
+                Spacer(minLength: 140)
             }
             .padding(.horizontal, 24)
+        }
+        .safeAreaInset(edge: .bottom) {
+            PrimaryButton(title: "Start Timer") {
+                Task {
+                    await timerManager.startTimer()
+                }
+            }
+            .scaleEffect(1.02)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 8)
+            .background(Color.backgroundDark)
         }
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
