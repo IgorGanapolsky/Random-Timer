@@ -160,3 +160,11 @@ def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_cop
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
     assert 'Infinite Loop - Pro unlocks round limits' in android_setup
+
+
+def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
+    ios_setup = _read(IOS_SETUP)
+
+    assert ".safeAreaInset(edge: .bottom)" in ios_setup
+    assert 'PrimaryButton(title: "Start Timer")' in ios_setup
+    assert "Spacer(minLength: 140)" in ios_setup
