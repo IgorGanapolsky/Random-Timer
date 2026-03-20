@@ -85,13 +85,13 @@ struct TimerSetupScreen: View {
 
                         Spacer().frame(height: 20)
 
-                        // Voice Callouts (Elite Feature)
+                        // Voice Callouts (Pro Feature)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(proManager.isElite ? .textPrimary : .textMuted)
+                                    .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
                                 
                                 Text("Elapsed-time voice prompts during the timer")
                                     .font(.caption2)
@@ -114,7 +114,7 @@ struct TimerSetupScreen: View {
                                         .cornerRadius(4)
                                 }
 
-                                if proManager.isElite {
+                                if proManager.isPro {
                                     Toggle("Voice Enabled", isOn: Binding(
                                         get: { config.voiceEnabled },
                                         set: { updateConfig(voiceEnabled: $0) }
@@ -126,7 +126,7 @@ struct TimerSetupScreen: View {
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
-                                            Text("ELITE")
+                                            Text("PRO")
                                             Image(systemName: "lock.fill")
                                         }
                                         .font(.caption2.weight(.bold))
@@ -140,7 +140,7 @@ struct TimerSetupScreen: View {
                             }
                         }
                         .padding(.vertical, 8)
-                        .opacity(proManager.isElite ? 1.0 : 0.6)
+                        .opacity(proManager.isPro ? 1.0 : 0.6)
 
                         Spacer().frame(height: 20)
 

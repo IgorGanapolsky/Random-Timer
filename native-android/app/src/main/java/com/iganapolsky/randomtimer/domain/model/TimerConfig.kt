@@ -52,7 +52,7 @@ data class TimerConfig(
     val vibrationEnabled: Boolean = false,
     /** Whether to use the extended 60-minute range (Pro only) */
     val useExtendedRange: Boolean = false,
-    /** Whether AI voice callouts are enabled (Elite only) */
+    /** Whether AI voice callouts are enabled (Pro only) */
     val voiceEnabled: Boolean = true,
     /** How many rounds to loop for (0 = infinite). Pro only feature. */
     val repeatRounds: Int = 0,

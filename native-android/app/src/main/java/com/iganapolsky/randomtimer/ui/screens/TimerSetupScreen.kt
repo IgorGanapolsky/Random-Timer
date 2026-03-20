@@ -370,7 +370,7 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 AI Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
                                         text = "Elapsed-time voice prompts during the timer",
@@ -399,7 +399,7 @@ fun TimerSetupScreen(
                                         )
                                     }
 
-                                    if (isElite) {
+                                    if (isPro) {
                                         Switch(
                                             checked = config.voiceEnabled,
                                             onCheckedChange = { updateConfig(voiceEnabled = it) },
@@ -420,7 +420,7 @@ fun TimerSetupScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "ELITE ",
+                                                    text = "PRO ",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
@@ -635,6 +635,18 @@ fun TimerSetupScreen(
                 }
 
                 // 3. Sound Arsenal
+                // Start Button
+                item {
+                    PrimaryButton(
+                        text = "Start Timer",
+                        onClick = onStartTimer,
+                        modifier =
+                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            },
+                    )
+                }
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(

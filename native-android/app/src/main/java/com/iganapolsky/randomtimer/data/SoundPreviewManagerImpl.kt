@@ -3,10 +3,11 @@ package com.iganapolsky.randomtimer.data
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
+import com.iganapolsky.randomtimer.service.ProAudioPackStore
+import com.iganapolsky.randomtimer.service.resolveProSoundResId
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ class SoundPreviewManagerImpl
     constructor(
         @ApplicationContext private val context: Context,
         private val voiceCalloutManager: AIVoiceCalloutManager,
+        private val packStore: ProAudioPackStore,
         private val scope: CoroutineScope,
     ) : SoundPreviewManager {
         private var player: MediaPlayer? = null
@@ -73,19 +75,8 @@ class SoundPreviewManagerImpl
         ) {
             stop()
 
-            val resourceId =
-                when (soundType) {
-                    SoundType.INTENSE -> R.raw.alarm
-                    SoundType.GENTLE -> R.raw.gentle_chime
-                    SoundType.KLAXON -> R.raw.klaxon
-                    SoundType.WHISTLE -> R.raw.whistle
-                    SoundType.BUZZER -> R.raw.buzzer
-                    SoundType.GONG -> R.raw.gong
-                    SoundType.AIRHORN -> R.raw.airhorn
-                    SoundType.DRUM_ROLL -> R.raw.drum_roll
-                    SoundType.SIREN -> R.raw.siren
-                    SoundType.BELL -> R.raw.bell
-                }
+            val resourceId = resolveProSoundResId(context, soundType)
+            val remoteFile = packStore.soundFile(soundType)
 
             player =
                 MediaPlayer().apply {
@@ -96,9 +87,13 @@ class SoundPreviewManagerImpl
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                             .build(),
                     )
-                    val afd = context.resources.openRawResourceFd(resourceId) ?: return
-                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                    afd.close()
+                    if (remoteFile != null) {
+                        setDataSource(remoteFile.absolutePath)
+                    } else {
+                        val afd = context.resources.openRawResourceFd(resourceId) ?: return
+                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                        afd.close()
+                    }
                     isLooping = true
                     setVolume(volume, volume)
                     prepare()
