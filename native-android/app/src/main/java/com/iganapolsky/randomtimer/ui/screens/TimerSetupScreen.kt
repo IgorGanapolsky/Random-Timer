@@ -546,13 +546,17 @@ fun TimerSetupScreen(
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Round Selection",
+                                            text = repeatLoopDetailTitle(isPro = isPro),
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                         )
                                         Text(
-                                            text = if (config.repeatRounds == 0) "Infinite Rounds" else "${config.repeatRounds} Rounds",
+                                            text =
+                                                repeatLoopDetailSummary(
+                                                    isPro = isPro,
+                                                    repeatRounds = config.repeatRounds,
+                                                ),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = TimerColors.AccentPrimary,
                                         )
@@ -635,18 +639,6 @@ fun TimerSetupScreen(
                 }
 
                 // 3. Sound Arsenal
-                // Start Button
-                item {
-                    PrimaryButton(
-                        text = "Start Timer",
-                        onClick = onStartTimer,
-                        modifier =
-                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                    )
-                }
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(
@@ -757,6 +749,18 @@ fun TimerSetupScreen(
         }
     }
 }
+
+internal fun repeatLoopDetailTitle(isPro: Boolean): String = if (isPro) "Round Selection" else "Loop Mode"
+
+internal fun repeatLoopDetailSummary(
+    isPro: Boolean,
+    repeatRounds: Int,
+): String =
+    when {
+        !isPro -> "Infinite Loop - Pro unlocks round limits"
+        repeatRounds == 0 -> "Infinite Rounds"
+        else -> "$repeatRounds Rounds"
+    }
 
 @Composable
 private fun SoundArsenalCard(
