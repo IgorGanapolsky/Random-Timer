@@ -39,6 +39,11 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(startButton.waitForExistence(timeout: timeout))
     }
 
+    private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
+        let path = "\(outputDir)/\(name)"
+        FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
+    }
+
     func testSetupStateShowsStartTimer() {
         let app = launchApp()
         ensureSetupScreen(app)
@@ -51,6 +56,21 @@ final class RandomTimerUITests: XCTestCase {
         let startButton = app.buttons["Start Timer"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         XCTAssertTrue(startButton.isHittable)
+    }
+
+    func testPreviewVoiceCueDoesNotCrashSetupScreen() {
+        let app = launchApp()
+        ensureSetupScreen(app)
+
+        let previewButton = app.buttons["PREVIEW"]
+        XCTAssertTrue(previewButton.waitForExistence(timeout: 3.0))
+        previewButton.tap()
+
+        let startButton = app.buttons["Start Timer"]
+        XCTAssertTrue(
+            startButton.waitForExistence(timeout: 3.0),
+            "Preview must not crash the app or navigate away from setup."
+        )
     }
 
     func testRunningStateShowsRunningLabelAndPauseAction() {
@@ -121,7 +141,7 @@ final class RandomTimerUITests: XCTestCase {
         let app = XCUIApplication()
         // The script expects raw screenshots in /tmp/appstore_screenshots
         let outputDir = "/tmp/appstore_screenshots"
-        
+
         // Force Pro/Elite state for screenshots
         app.launchArguments += ["-ui-test-elite", "true"]
 
@@ -139,8 +159,7 @@ final class RandomTimerUITests: XCTestCase {
             loopToggle.tap()
         }
         sleep(2)
-        let setupScreenshot = app.windows.firstMatch.screenshot()
-        FileManager.default.createFile(atPath: "\(outputDir)/1_setup.png", contents: setupScreenshot.pngRepresentation)
+        saveScreenshot(app.windows.firstMatch.screenshot(), named: "1_setup.png", outputDir: outputDir)
 
         // 2. Active timer (running state)
         let startButton = app.buttons["Start Timer"]
@@ -150,24 +169,21 @@ final class RandomTimerUITests: XCTestCase {
         // Dismiss notification permission if it appears
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         sleep(2)
-        let activeScreenshot = app.windows.firstMatch.screenshot()
-        FileManager.default.createFile(atPath: "\(outputDir)/2_active.png", contents: activeScreenshot.pngRepresentation)
+        saveScreenshot(app.windows.firstMatch.screenshot(), named: "2_active.png", outputDir: outputDir)
 
         // 3. Alarm state (timer just went off)
         app.terminate()
         app.launchArguments = ["-ui-test-state", "alarm", "-ui-test-pro", "true"]
         app.launch()
         sleep(2)
-        let alarmScreenshot = app.windows.firstMatch.screenshot()
-        FileManager.default.createFile(atPath: "\(outputDir)/3_alarm.png", contents: alarmScreenshot.pngRepresentation)
+        saveScreenshot(app.windows.firstMatch.screenshot(), named: "3_alarm.png", outputDir: outputDir)
 
         // 4. Running timer (different view/state if needed)
         app.terminate()
         app.launchArguments = ["-ui-test-state", "running", "-ui-test-pro", "true"]
         app.launch()
         sleep(2)
-        let runningScreenshot = app.windows.firstMatch.screenshot()
-        FileManager.default.createFile(atPath: "\(outputDir)/4_running.png", contents: runningScreenshot.pngRepresentation)
+        saveScreenshot(app.windows.firstMatch.screenshot(), named: "4_running.png", outputDir: outputDir)
     }
 
     func testLandscapeShowsActionButtons() {
