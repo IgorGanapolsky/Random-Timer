@@ -195,6 +195,20 @@ fun TimerSetupScreen(
                     )
                 }
             },
+            bottomBar = {
+                PrimaryButton(
+                    text = "Start Timer",
+                    onClick = onStartTimer,
+                    modifier =
+                        Modifier
+                            .padding(horizontal = spacing.outerHorizontal)
+                            .padding(bottom = 16.dp, top = 8.dp)
+                            .graphicsLayer {
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            },
+                )
+            },
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),
         ) { paddingValues ->
@@ -623,19 +637,6 @@ fun TimerSetupScreen(
                             }
                         }
                     }
-                }
-
-                // Start Button
-                item {
-                    PrimaryButton(
-                        text = "Start Timer",
-                        onClick = onStartTimer,
-                        modifier =
-                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                    )
                 }
 
                 // 3. Sound Arsenal
