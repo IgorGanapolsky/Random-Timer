@@ -42,11 +42,11 @@ struct ActiveTimerScreen: View {
     }
 
     static func loopBadgeText(enabled: Bool, repeatRounds: Int, roundCount: Int) -> String {
-        guard enabled else { return "LOOP OFF" }
-        guard repeatRounds > 0 else { return "LOOP" }
+        guard enabled else { return "Loop Off" }
+        guard repeatRounds > 0 else { return "Infinite Loop" }
 
         let clampedRound = Swift.max(1, Swift.min(roundCount, repeatRounds))
-        return "ROUND \(clampedRound)/\(repeatRounds)"
+        return "Round \(clampedRound)/\(repeatRounds)"
     }
 
     static func loopBadgeAccessibilityLabel(enabled: Bool, repeatRounds: Int, roundCount: Int) -> String {
