@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -203,6 +204,7 @@ fun TimerSetupScreen(
                         Modifier
                             .padding(horizontal = spacing.outerHorizontal)
                             .padding(bottom = 16.dp, top = 8.dp)
+                            .navigationBarsPadding()
                             .graphicsLayer {
                                 scaleX = 1.02f
                                 scaleY = 1.02f

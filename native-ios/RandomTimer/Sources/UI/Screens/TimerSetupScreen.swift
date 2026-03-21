@@ -224,12 +224,17 @@ struct TimerSetupScreen: View {
                         if config.repeatEnabled {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Round Selection")
+                                    Text(repeatLoopDetailTitle(isPro: proManager.isPro))
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
                                     
-                                    Text(config.repeatRounds == 0 ? "Infinite Rounds" : "\(config.repeatRounds) Rounds")
+                                    Text(
+                                        repeatLoopDetailSummary(
+                                            isPro: proManager.isPro,
+                                            repeatRounds: config.repeatRounds
+                                        )
+                                    )
                                         .font(.caption2)
                                         .foregroundColor(.accentPrimary)
                                 }
@@ -424,6 +429,18 @@ struct TimerSetupScreen: View {
             repeatRounds: repeatRounds ?? config.repeatRounds
         )
         timerManager.updateConfig(newConfig)
+    }
+
+    private func repeatLoopDetailTitle(isPro: Bool) -> String {
+        return isPro ? "Round Selection" : "Loop Mode"
+    }
+
+    private func repeatLoopDetailSummary(isPro: Bool, repeatRounds: Int) -> String {
+        if !isPro {
+            return "Infinite Loop - Pro unlocks round limits"
+        }
+
+        return repeatRounds == 0 ? "Infinite Rounds" : "\(repeatRounds) Rounds"
     }
 
     private func presentPaywall(entryPoint: PaywallEntryPoint) {
