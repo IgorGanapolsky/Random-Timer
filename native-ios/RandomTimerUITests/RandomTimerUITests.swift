@@ -39,6 +39,16 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(startButton.waitForExistence(timeout: timeout))
     }
 
+    private func scrollUntilVisible(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        maxSwipes: Int = 4
+    ) {
+        for _ in 0..<maxSwipes where !element.exists {
+            app.swipeUp()
+        }
+    }
+
     private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
         let path = "\(outputDir)/\(name)"
         FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
@@ -71,6 +81,27 @@ final class RandomTimerUITests: XCTestCase {
             startButton.waitForExistence(timeout: 3.0),
             "Preview must not crash the app or navigate away from setup."
         )
+    }
+
+    func testRepeatLoopDetailsMatchAndroidCopy() {
+        let app = launchApp()
+        ensureSetupScreen(app)
+
+        let loopToggle = app.switches["Loop Enabled"]
+        scrollUntilVisible(loopToggle, in: app)
+        XCTAssertTrue(loopToggle.waitForExistence(timeout: 3.0))
+
+        if loopToggle.value as? String == "0" {
+            loopToggle.tap()
+        }
+
+        let detailTitle = app.staticTexts["Round Selection"]
+        let detailSummary = app.staticTexts["Infinite Rounds"]
+        scrollUntilVisible(detailTitle, in: app)
+        scrollUntilVisible(detailSummary, in: app)
+
+        XCTAssertTrue(detailTitle.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(detailSummary.waitForExistence(timeout: 2.0))
     }
 
     func testRunningStateShowsRunningLabelAndPauseAction() {

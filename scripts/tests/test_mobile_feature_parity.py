@@ -157,9 +157,8 @@ def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_cop
 
     start_cta_count = len(re.findall(r'PrimaryButton\(\s*text\s*=\s*"Start Timer"', android_setup, re.MULTILINE))
     assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
-    assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
-    assert 'repeatLoopDetailSummary(' in android_setup
-    assert 'Infinite Loop - Pro unlocks round limits' in android_setup
+    assert 'text = "Round Selection"' in android_setup
+    assert 'text = if (config.repeatRounds == 0) "Infinite Rounds" else "${config.repeatRounds} Rounds"' in android_setup
 
 
 def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
@@ -168,3 +167,16 @@ def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
     assert ".safeAreaInset(edge: .bottom)" in ios_setup
     assert 'PrimaryButton(title: "Start Timer")' in ios_setup
     assert "Spacer(minLength: 140)" in ios_setup
+    assert "repeatLoopDetailTitle" not in ios_setup
+    assert "repeatLoopDetailSummary" not in ios_setup
+
+
+def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
+    android_setup = _read(ANDROID_SETUP)
+    ios_setup = _read(IOS_SETUP)
+
+    assert 'text = "Round Selection"' in android_setup
+    assert 'text = if (config.repeatRounds == 0) "Infinite Rounds" else "${config.repeatRounds} Rounds"' in android_setup
+
+    assert 'Text("Round Selection")' in ios_setup
+    assert 'Text(config.repeatRounds == 0 ? "Infinite Rounds" : "\\(config.repeatRounds) Rounds")' in ios_setup
