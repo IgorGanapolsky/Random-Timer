@@ -22,6 +22,7 @@ IOS_REQUIRED_SECTIONS = [
 ANDROID_REQUIRED_SECTIONS = [
     "Timer Range",
     "Alarm Sound",
+    "Repeat Loop",
     "Start Timer",
     "Sound Arsenal",
 ]

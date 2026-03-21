@@ -160,6 +160,7 @@ def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_cop
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
     assert 'Infinite Loop - Pro unlocks round limits' in android_setup
+    assert ".navigationBarsPadding()" in android_setup
 
 
 def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
