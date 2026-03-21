@@ -392,14 +392,14 @@ internal fun loopBadgeText(
     roundCount: Int,
 ): String {
     if (!enabled) {
-        return "LOOP OFF"
+        return "Loop Off"
     }
     if (repeatRounds == 0) {
-        return "LOOP"
+        return "Infinite Loop"
     }
 
     val clampedRound = roundCount.coerceIn(1, repeatRounds)
-    return "ROUND $clampedRound/$repeatRounds"
+    return "Round $clampedRound/$repeatRounds"
 }
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
