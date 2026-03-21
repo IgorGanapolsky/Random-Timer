@@ -18,18 +18,19 @@ final class ProManager: ObservableObject {
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
     private var transactionListener: Task<Void, Never>?
+    private let launchOverrideEntitlementLevel: EntitlementLevel?
 
     private init() {
-        // UI Test Overrides
         let args = ProcessInfo.processInfo.arguments
-        if args.contains("-ui-test-elite") {
-            entitlementLevel = .elite
-        } else if args.contains("-ui-test-pro") {
-            entitlementLevel = .base
+        launchOverrideEntitlementLevel = Self.entitlementOverride(forLaunchArguments: args)
+        if let launchOverrideEntitlementLevel {
+            entitlementLevel = launchOverrideEntitlementLevel
         }
 
-        transactionListener = listenForTransactions()
-        Task { await restorePurchases() }
+        if launchOverrideEntitlementLevel == nil {
+            transactionListener = listenForTransactions()
+            Task { await restorePurchases() }
+        }
     }
 
     deinit {
@@ -92,6 +93,11 @@ final class ProManager: ObservableObject {
 
     @discardableResult
     func restorePurchases() async -> ProRestoreResult {
+        if let launchOverrideEntitlementLevel {
+            entitlementLevel = launchOverrideEntitlementLevel
+            return .alreadyUnlocked
+        }
+
         var highestLevel: EntitlementLevel = .none
 
         for await result in Transaction.currentEntitlements {
@@ -161,6 +167,16 @@ final class ProManager: ObservableObject {
         case Self.baseProductID: return .base
         default: return .none
         }
+    }
+
+    nonisolated static func entitlementOverride(forLaunchArguments args: [String]) -> EntitlementLevel? {
+        if args.contains("-ui-test-elite") {
+            return .elite
+        }
+        if args.contains("-ui-test-pro") {
+            return .base
+        }
+        return nil
     }
 
     private nonisolated static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

@@ -83,8 +83,28 @@ final class RandomTimerUITests: XCTestCase {
         )
     }
 
-    func testRepeatLoopDetailsMatchAndroidCopy() {
+    func testFreeRepeatLoopDetailsMatchAndroidCopy() {
         let app = launchApp()
+        ensureSetupScreen(app)
+
+        let loopToggle = app.switches["Loop Enabled"]
+        scrollUntilVisible(loopToggle, in: app)
+        XCTAssertTrue(loopToggle.waitForExistence(timeout: 3.0))
+
+        if loopToggle.value as? String == "0" {
+            loopToggle.tap()
+        }
+
+        XCTAssertTrue(app.staticTexts["Loop Mode"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(
+            app.staticTexts["Infinite Loop - Pro unlocks round limits"].waitForExistence(timeout: 2.0)
+        )
+    }
+
+    func testProRepeatLoopDetailsMatchAndroidCopy() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-pro", "true"]
+        app.launch()
         ensureSetupScreen(app)
 
         let loopToggle = app.switches["Loop Enabled"]
