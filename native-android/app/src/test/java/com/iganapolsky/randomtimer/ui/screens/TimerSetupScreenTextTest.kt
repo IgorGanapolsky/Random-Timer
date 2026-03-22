@@ -10,8 +10,8 @@ class TimerSetupScreenTextTest {
     }
 
     @Test
-    fun repeatLoopDetailTitleShowsLoopModeForFreeTier() {
-        assertThat(repeatLoopDetailTitle(isPro = false)).isEqualTo("Loop Mode")
+    fun repeatLoopDetailTitleShowsRoundSelectionForFreeTier() {
+        assertThat(repeatLoopDetailTitle(isPro = false)).isEqualTo("Round Selection")
     }
 
     @Test
@@ -22,6 +22,6 @@ class TimerSetupScreenTextTest {
     @Test
     fun repeatLoopDetailSummaryExplainsFreeTierLockClearly() {
         assertThat(repeatLoopDetailSummary(isPro = false, repeatRounds = 0))
-            .isEqualTo("Infinite Loop - Pro unlocks round limits")
+            .isEqualTo("Infinite Loop (Pro: set 1–100 rounds)")
     }
 }
