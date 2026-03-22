@@ -181,8 +181,10 @@ fun RandomTimerNavHost(
     }
 
     LaunchedEffect(viewModel.proManager) {
-        viewModel.proManager.newProUnlockEvents.collectLatest {
-            viewModel.enableExtendedRangeDefaultForNewProUnlock()
+        viewModel.proManager.newProUnlockEventId.collectLatest { eventId ->
+            if (eventId > 0L) {
+                viewModel.enableExtendedRangeDefaultForNewProUnlock()
+            }
         }
     }
 

@@ -51,6 +51,35 @@ class TimerRepositoryImplTest {
         }
 
     @Test
+    fun getTimerConfig_reemits_raw_pro_values_when_entitlement_changes() =
+        runTest {
+            val entitlementLevelFlow = MutableStateFlow(EntitlementLevel.NONE)
+            val isProFlow = MutableStateFlow(false)
+            val repo = createRepository(this, entitlementLevelFlow = entitlementLevelFlow, isProFlow = isProFlow)
+            val storedRawConfig =
+                TimerConfig.DEFAULT.copy(
+                    maxSeconds = 900,
+                    soundType = SoundType.BELL,
+                    useExtendedRange = true,
+                )
+
+            repo.saveTimerConfig(storedRawConfig)
+
+            val freeTierView = repo.getTimerConfig().first()
+            assertThat(freeTierView.maxSeconds).isEqualTo(TimerConfig.MAX_SECONDS_FREE)
+            assertThat(freeTierView.soundType).isEqualTo(SoundType.INTENSE)
+            assertThat(freeTierView.useExtendedRange).isFalse()
+
+            entitlementLevelFlow.value = EntitlementLevel.ELITE
+            isProFlow.value = true
+
+            val proView = repo.getTimerConfig().first { it.useExtendedRange }
+            assertThat(proView.maxSeconds).isEqualTo(900)
+            assertThat(proView.soundType).isEqualTo(SoundType.BELL)
+            assertThat(proView.useExtendedRange).isTrue()
+        }
+
+    @Test
     fun getActiveTimer_returns_null_when_active_timer_is_not_stored() =
         runTest {
             val repo = createRepository(this)
@@ -76,7 +105,11 @@ class TimerRepositoryImplTest {
             assertThat(restored).isEqualTo(state)
         }
 
-    private fun createRepository(testScope: TestScope): TimerRepositoryImpl {
+    private fun createRepository(
+        testScope: TestScope,
+        entitlementLevelFlow: MutableStateFlow<EntitlementLevel> = MutableStateFlow(EntitlementLevel.NONE),
+        isProFlow: MutableStateFlow<Boolean> = MutableStateFlow(false),
+    ): TimerRepositoryImpl {
         val dataStore =
             PreferenceDataStoreFactory.create(
                 scope = testScope.backgroundScope,
@@ -86,8 +119,6 @@ class TimerRepositoryImplTest {
             )
 
         val proManager = mockk<ProManager>(relaxed = true)
-        val entitlementLevelFlow = MutableStateFlow(EntitlementLevel.NONE)
-        val isProFlow = MutableStateFlow(false)
 
         every { proManager.entitlementLevel } returns entitlementLevelFlow.asStateFlow()
         every { proManager.isPro } returns isProFlow.asStateFlow()

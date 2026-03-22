@@ -18,6 +18,7 @@ final class TimerManager: ObservableObject {
     nonisolated private let storageService: TimerStorage
     private let notificationService: TimerNotificationHandling
     private let liveActivityService: TimerLiveActivityHandling
+    private var rawConfig: TimerConfig
 
     // MARK: - Initialization
 
@@ -32,8 +33,9 @@ final class TimerManager: ObservableObject {
 
         // Load config synchronously from storage to avoid UI flicker.
         // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
-        let rawConfig = storageService.loadConfigSync() ?? .default
-        self.config = rawConfig.clamped(isPro: ProManager.shared.isPro)
+        let storedConfig = storageService.loadConfigSync() ?? .default
+        self.rawConfig = storedConfig
+        self.config = storedConfig.clamped(isPro: ProManager.shared.isPro)
 
         // Wire Bluetooth/CarPlay media button and notification action callbacks.
         // Media button behavior must match timer-circle tap (silence + stay on timer screen).
@@ -83,24 +85,50 @@ final class TimerManager: ObservableObject {
     // MARK: - Public Methods
 
     func updateConfig(_ newConfig: TimerConfig) {
-        config = newConfig
+        rawConfig = newConfig
+        config = newConfig.clamped(isPro: ProManager.shared.isPro)
 
         // Sync config into running timer state so alarmTick sees the change
         if var state = timerState {
-            state.config = newConfig
+            state.config = config
             timerState = state
         }
 
-        AnalyticsService.shared.track(AnalyticsEvents.settingsChanged, properties: [
-            "min_duration": newConfig.minDuration,
-            "max_duration": newConfig.maxDuration,
-            "sound_type": String(describing: newConfig.soundType),
-            "repeat_enabled": newConfig.repeatEnabled,
-            "voice_callouts_enabled": newConfig.voiceEnabled,
-        ])
+        trackSettingsChanged(config)
 
         Task {
             await storageService.saveConfig(newConfig)
+        }
+    }
+
+    func enableExtendedRangeDefaultForNewProUnlock(isPro: Bool = ProManager.shared.isPro) {
+        guard isPro else { return }
+
+        if rawConfig.useExtendedRange {
+            config = rawConfig.clamped(isPro: true)
+            return
+        }
+
+        let updatedRawConfig = TimerConfig(
+            minSeconds: rawConfig.minSeconds,
+            maxSeconds: rawConfig.maxSeconds,
+            alarmDuration: rawConfig.alarmDuration,
+            hiddenMode: rawConfig.hiddenMode,
+            repeatEnabled: rawConfig.repeatEnabled,
+            soundType: rawConfig.soundType,
+            volume: rawConfig.volume,
+            vibrationEnabled: rawConfig.vibrationEnabled,
+            useExtendedRange: true,
+            voiceEnabled: rawConfig.voiceEnabled,
+            repeatRounds: rawConfig.repeatRounds
+        )
+
+        rawConfig = updatedRawConfig
+        config = updatedRawConfig.clamped(isPro: true)
+        trackSettingsChanged(config)
+
+        Task {
+            await storageService.saveConfig(updatedRawConfig)
         }
     }
 
@@ -478,8 +506,19 @@ final class TimerManager: ObservableObject {
     private func loadSavedConfig() async {
         if let saved = await storageService.loadConfig() {
             // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
+            rawConfig = saved
             config = saved.clamped(isPro: ProManager.shared.isPro)
         }
+    }
+
+    private func trackSettingsChanged(_ config: TimerConfig) {
+        AnalyticsService.shared.track(AnalyticsEvents.settingsChanged, properties: [
+            "min_duration": config.minDuration,
+            "max_duration": config.maxDuration,
+            "sound_type": String(describing: config.soundType),
+            "repeat_enabled": config.repeatEnabled,
+            "voice_callouts_enabled": config.voiceEnabled,
+        ])
     }
 
     private func restoreActiveTimer() async {

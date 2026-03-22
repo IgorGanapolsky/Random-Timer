@@ -9,10 +9,8 @@ enum PaywallEntryPoint: String {
 struct PaywallSheet: View {
     // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
-    @EnvironmentObject var timerManager: TimerManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
-    @State private var hadProBeforePresenting = false
     let entryPoint: PaywallEntryPoint
 
     var body: some View {
@@ -47,7 +45,6 @@ struct PaywallSheet: View {
                     let generator = UIImpactFeedbackGenerator(style: .heavy)
                     generator.impactOccurred()
                     proManager.unlockProForDebug()
-                    applyExtendedRangeDefaultIfNeeded()
                     hasTrackedDismiss = true
                     dismiss()
                 }
@@ -87,14 +84,13 @@ struct PaywallSheet: View {
 
             Button("Restore purchase") {
                 Task {
-                    let result = await proManager.restorePurchases()
+                    let result = await proManager.restorePurchases(fromPaywall: true)
                     AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
                         AnalyticsProperties.entryPoint: entryPoint.rawValue,
                         AnalyticsProperties.result: result.rawValue,
                     ])
 
                     if result == .restored || result == .alreadyUnlocked {
-                        applyExtendedRangeDefaultIfNeeded()
                         hasTrackedDismiss = true
                         dismiss()
                     }
@@ -114,7 +110,6 @@ struct PaywallSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
-            hadProBeforePresenting = proManager.isPro
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
@@ -146,31 +141,8 @@ struct PaywallSheet: View {
             AnalyticsEvents.paywallPurchaseSuccess,
             properties: purchaseProperties(productID: productID, result: result)
         )
-        applyExtendedRangeDefaultIfNeeded()
         hasTrackedDismiss = true
         dismiss()
-    }
-
-    private func applyExtendedRangeDefaultIfNeeded() {
-        guard !hadProBeforePresenting, proManager.isPro, !timerManager.config.useExtendedRange else {
-            return
-        }
-
-        let current = timerManager.config
-        let upgradedConfig = TimerConfig(
-            minSeconds: current.minSeconds,
-            maxSeconds: current.maxSeconds,
-            alarmDuration: current.alarmDuration,
-            hiddenMode: current.hiddenMode,
-            repeatEnabled: current.repeatEnabled,
-            soundType: current.soundType,
-            volume: current.volume,
-            vibrationEnabled: current.vibrationEnabled,
-            useExtendedRange: true,
-            voiceEnabled: current.voiceEnabled,
-            repeatRounds: current.repeatRounds
-        )
-        timerManager.updateConfig(upgradedConfig.clamped(isPro: true))
     }
 
     private func purchaseProperties(

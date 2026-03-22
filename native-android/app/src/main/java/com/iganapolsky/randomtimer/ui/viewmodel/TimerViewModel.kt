@@ -107,26 +107,25 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
-            analyticsService.track(
-                AnalyticsEvents.SETTINGS_CHANGED,
-                mapOf(
-                    "min_duration" to newConfig.minSeconds,
-                    "max_duration" to newConfig.maxSeconds,
-                    "sound_type" to newConfig.soundType.name,
-                    "repeat_enabled" to newConfig.repeatEnabled,
-                ),
-            )
+            trackSettingsChanged(newConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(newConfig)
             }
         }
 
         fun enableExtendedRangeDefaultForNewProUnlock() {
-            val current = config.value
-            if (!proManager.entitlementLevel.value.isPro || current.useExtendedRange) {
+            if (!proManager.entitlementLevel.value.isPro) {
                 return
             }
-            updateConfig(current.copy(useExtendedRange = true))
+            viewModelScope.launch {
+                val rawConfig = repository.getRawTimerConfig()
+                if (rawConfig.useExtendedRange) {
+                    return@launch
+                }
+                val updatedConfig = rawConfig.copy(useExtendedRange = true)
+                trackSettingsChanged(updatedConfig)
+                repository.saveTimerConfig(updatedConfig)
+            }
         }
 
         fun startTimer() {
@@ -207,15 +206,7 @@ class TimerViewModel
                     voiceEnabled = current.voiceEnabled,
                     repeatRounds = current.repeatRounds,
                 )
-            analyticsService.track(
-                AnalyticsEvents.SETTINGS_CHANGED,
-                mapOf(
-                    "min_duration" to updatedConfig.minSeconds,
-                    "max_duration" to updatedConfig.maxSeconds,
-                    "sound_type" to updatedConfig.soundType.name,
-                    "repeat_enabled" to updatedConfig.repeatEnabled,
-                ),
-            )
+            trackSettingsChanged(updatedConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
                 serviceController.updateLoop(enabled)
@@ -282,6 +273,18 @@ class TimerViewModel
 
         fun previewCommandCue() {
             soundPreviewManager.previewCommandCue()
+        }
+
+        private fun trackSettingsChanged(config: TimerConfig) {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                mapOf(
+                    "min_duration" to config.minSeconds,
+                    "max_duration" to config.maxSeconds,
+                    "sound_type" to config.soundType.name,
+                    "repeat_enabled" to config.repeatEnabled,
+                ),
+            )
         }
 
         private fun stopSoundPreview() {

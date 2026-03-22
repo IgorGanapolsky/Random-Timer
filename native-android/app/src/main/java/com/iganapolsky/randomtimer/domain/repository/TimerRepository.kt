@@ -14,6 +14,11 @@ interface TimerRepository {
     fun getTimerConfig(): Flow<TimerConfig>
 
     /**
+     * Get the raw persisted timer configuration without Pro clamping.
+     */
+    suspend fun getRawTimerConfig(): TimerConfig
+
+    /**
      * Save timer configuration for persistence.
      */
     suspend fun saveTimerConfig(config: TimerConfig)

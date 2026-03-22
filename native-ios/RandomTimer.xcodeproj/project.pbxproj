@@ -50,6 +50,7 @@
 		840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */; };
 		A1C100112233445566778899 /* Audio in Resources */ = {isa = PBXBuildFile; fileRef = A1C1001122334455667788BB /* Audio */; };
 		A1C1001122334455667788AA /* AIVoiceCalloutServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C1001122334455667788CC /* AIVoiceCalloutServiceTests.swift */; };
+		F1E2D3C4B5A6978877665544 /* ProUpgradeDefaultRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978877665545 /* ProUpgradeDefaultRangeTests.swift */; };
 		PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRVT001122334455AABB0001 /* ProValidationTests.swift */; };
 		85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A3DD46F85A68522E1B0902 /* ProManager.swift */; };
 		AIVC00112233445566778899 /* AIVoiceCalloutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AIVC00112233445566778800 /* AIVoiceCalloutService.swift */; };
@@ -165,6 +166,7 @@
 		A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularTimerViewTests.swift; sourceTree = "<group>"; };
 		A1C1001122334455667788BB /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = RandomTimer/Resources/Audio; sourceTree = "<group>"; };
 		A1C1001122334455667788CC /* AIVoiceCalloutServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVoiceCalloutServiceTests.swift; sourceTree = "<group>"; };
+		F1E2D3C4B5A6978877665545 /* ProUpgradeDefaultRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProUpgradeDefaultRangeTests.swift; sourceTree = "<group>"; };
 		A5A3DD46F85A68522E1B0902 /* ProManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProManager.swift; sourceTree = "<group>"; };
 		AIVC00112233445566778800 /* AIVoiceCalloutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIVoiceCalloutService.swift; sourceTree = "<group>"; };
 		AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSetupScreen.swift; sourceTree = "<group>"; };
@@ -221,6 +223,7 @@
 			children = (
 				A1C1001122334455667788CC /* AIVoiceCalloutServiceTests.swift */,
 				A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */,
+				F1E2D3C4B5A6978877665545 /* ProUpgradeDefaultRangeTests.swift */,
 				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
 				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
@@ -589,6 +592,7 @@
 			files = (
 				A1C1001122334455667788AA /* AIVoiceCalloutServiceTests.swift in Sources */,
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
+				F1E2D3C4B5A6978877665544 /* ProUpgradeDefaultRangeTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
 				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,

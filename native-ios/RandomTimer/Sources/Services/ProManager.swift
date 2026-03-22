@@ -1,3 +1,4 @@
+import Foundation
 import os
 import StoreKit
 
@@ -11,6 +12,7 @@ final class ProManager: ObservableObject {
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
     @Published private(set) var products: [Product] = []
+    @Published private(set) var newProUnlockEventID: Int = 0
     private var debugOverrideActive = false
 
     var isPro: Bool { entitlementLevel.isPro }
@@ -20,6 +22,11 @@ final class ProManager: ObservableObject {
 
     private var transactionListener: Task<Void, Never>?
     private let launchOverrideEntitlementLevel: EntitlementLevel?
+    private let defaults = UserDefaults.standard
+
+    private enum Keys {
+        static let pendingPaywallRangeDefault = "pending_paywall_range_default"
+    }
 
     private init() {
         let args = ProcessInfo.processInfo.arguments
@@ -60,11 +67,15 @@ final class ProManager: ObservableObject {
         if products.isEmpty {
             await fetchProduct()
         }
-        
+
         guard let product = products.first(where: { $0.id == productID }) else {
+            setPendingPaywallRangeDefault(false)
             return .productUnavailable
         }
-        
+
+        if !isPro {
+            setPendingPaywallRangeDefault(true)
+        }
         return await doPurchase(product)
     }
 
@@ -74,18 +85,23 @@ final class ProManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try Self.checkVerified(verification)
+                let wasPro = isPro
                 updateEntitlement(for: transaction.productID)
+                emitPendingNewProUnlockIfNeeded(wasPro: wasPro)
                 await transaction.finish()
                 return .success
             case .userCancelled:
+                setPendingPaywallRangeDefault(false)
                 return .userCancelled
             case .pending:
                 return .pending
             @unknown default:
+                setPendingPaywallRangeDefault(false)
                 return .failed
             }
         } catch {
             Self.log.error("ProManager: purchase failed: \(error)")
+            setPendingPaywallRangeDefault(false)
             return .failed
         }
     }
@@ -93,10 +109,14 @@ final class ProManager: ObservableObject {
     // MARK: - Restore
 
     @discardableResult
-    func restorePurchases() async -> ProRestoreResult {
+    func restorePurchases(fromPaywall: Bool = false) async -> ProRestoreResult {
         if let launchOverrideEntitlementLevel {
             entitlementLevel = launchOverrideEntitlementLevel
             return .alreadyUnlocked
+        }
+
+        if fromPaywall && !isPro {
+            setPendingPaywallRangeDefault(true)
         }
 
         var highestLevel: EntitlementLevel = .none
@@ -113,7 +133,12 @@ final class ProManager: ObservableObject {
         }
 
         let wasPro = isPro
-        guard !debugOverrideActive else { return wasPro ? .alreadyUnlocked : .notFound }
+        guard !debugOverrideActive else {
+            if !wasPro {
+                setPendingPaywallRangeDefault(false)
+            }
+            return wasPro ? .alreadyUnlocked : .notFound
+        }
         entitlementLevel = highestLevel
 
         if entitlementLevel.isPro {
@@ -121,7 +146,12 @@ final class ProManager: ObservableObject {
                 await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
             }
         }
-        
+
+        emitPendingNewProUnlockIfNeeded(wasPro: wasPro)
+        if !isPro {
+            setPendingPaywallRangeDefault(false)
+        }
+
         if isPro && !wasPro {
             return .restored
         } else if isPro {
@@ -140,7 +170,9 @@ final class ProManager: ObservableObject {
                     let productID = transaction.productID
                     await MainActor.run { [weak self] in
                         guard self?.debugOverrideActive != true else { return }
+                        let wasPro = self?.isPro ?? false
                         self?.updateEntitlement(for: productID)
+                        self?.emitPendingNewProUnlockIfNeeded(wasPro: wasPro)
                     }
                     await transaction.finish()
                 }
@@ -205,19 +237,45 @@ final class ProManager: ObservableObject {
     }
 
     func unlockProForDebug() {
+        let wasPro = isPro
+        if !wasPro {
+            setPendingPaywallRangeDefault(true)
+        }
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
+        emitPendingNewProUnlockIfNeeded(wasPro: wasPro)
     }
     
     func unlockEliteForDebug() {
+        let wasPro = isPro
+        if !wasPro {
+            setPendingPaywallRangeDefault(true)
+        }
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
+        emitPendingNewProUnlockIfNeeded(wasPro: wasPro)
+    }
+
+    private func emitPendingNewProUnlockIfNeeded(wasPro: Bool) {
+        guard pendingPaywallRangeDefault, isPro else { return }
+        if !wasPro {
+            newProUnlockEventID += 1
+        }
+        setPendingPaywallRangeDefault(false)
+    }
+
+    private var pendingPaywallRangeDefault: Bool {
+        defaults.bool(forKey: Keys.pendingPaywallRangeDefault)
+    }
+
+    private func setPendingPaywallRangeDefault(_ pending: Bool) {
+        defaults.set(pending, forKey: Keys.pendingPaywallRangeDefault)
     }
 }
 

@@ -26,12 +26,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -52,6 +49,7 @@ class ProManager
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
             const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
+            private const val KEY_PENDING_PAYWALL_RANGE_DEFAULT = "pending_paywall_range_default"
 
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
@@ -60,8 +58,8 @@ class ProManager
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
         val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel.asStateFlow()
-        private val _newProUnlockEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-        val newProUnlockEvents: SharedFlow<Unit> = _newProUnlockEvents.asSharedFlow()
+        private val _newProUnlockEventId = MutableStateFlow(0L)
+        val newProUnlockEventId: StateFlow<Long> = _newProUnlockEventId.asStateFlow()
         private var debugOverrideActive = false
 
         val isPro: StateFlow<Boolean> =
@@ -87,6 +85,7 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
+        private val proPrefs = context.getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
 
         init {
             connectAndRestore()
@@ -174,8 +173,9 @@ class ProManager
             if (level.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
             }
-            if (source == MonetizationSources.PAYWALL) {
-                emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = level.isPro)
+            emitPendingNewProUnlockIfNeeded(wasPro = wasPro, isProNow = level.isPro)
+            if (!level.isPro && source == MonetizationSources.PAYWALL) {
+                setPendingPaywallRangeDefault(false)
             }
 
             if (trackResult) {
@@ -196,6 +196,9 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
+            if (!_entitlementLevel.value.isPro) {
+                setPendingPaywallRangeDefault(true)
+            }
             if (!billingClient.isReady) {
                 connectAndRestore()
                 trackPurchaseResult(
@@ -206,6 +209,7 @@ class ProManager
                     debugMessage = "billing_not_ready",
                 )
                 pendingPurchaseEntryPoint = null
+                setPendingPaywallRangeDefault(false)
                 return false
             }
 
@@ -219,6 +223,7 @@ class ProManager
                     debugMessage = "product_details_unavailable",
                 )
                 pendingPurchaseEntryPoint = null
+                setPendingPaywallRangeDefault(false)
                 return false
             }
             cachedProductDetails[productID] = productDetails
@@ -238,6 +243,7 @@ class ProManager
                     debugMessage = "subscription_offer_unavailable",
                 )
                 pendingPurchaseEntryPoint = null
+                setPendingPaywallRangeDefault(false)
                 return false
             }
 
@@ -269,6 +275,7 @@ class ProManager
                     debugMessage = result.debugMessage,
                 )
                 pendingPurchaseEntryPoint = null
+                setPendingPaywallRangeDefault(false)
                 return false
             }
             return true
@@ -332,6 +339,7 @@ class ProManager
             purchases: MutableList<Purchase>?,
         ) {
             var hasPurchased = false
+            val hasPendingPurchase = purchases?.any { it.purchaseState == Purchase.PurchaseState.PENDING } == true
             if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
                     if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
@@ -348,12 +356,14 @@ class ProManager
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
             )
+            if (!hasPurchased && !hasPendingPurchase) {
+                setPendingPaywallRangeDefault(false)
+            }
             pendingPurchaseEntryPoint = null
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
             val wasPro = _entitlementLevel.value.isPro
-            val originatedFromPaywall = !pendingPurchaseEntryPoint.isNullOrBlank()
             if (purchase.products.contains(ELITE_PRODUCT_ID)) {
                 _entitlementLevel.value = EntitlementLevel.ELITE
             } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
@@ -364,9 +374,7 @@ class ProManager
             if (_entitlementLevel.value.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
             }
-            if (originatedFromPaywall) {
-                emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
-            }
+            emitPendingNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
         }
 
         private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {
@@ -380,12 +388,21 @@ class ProManager
             }
         }
 
-        suspend fun restorePurchasesFromPaywall(entryPoint: String): Boolean =
-            restorePurchases(
-                source = MonetizationSources.PAYWALL,
-                entryPoint = entryPoint,
-                trackResult = true,
-            )
+        suspend fun restorePurchasesFromPaywall(entryPoint: String): Boolean {
+            if (!_entitlementLevel.value.isPro) {
+                setPendingPaywallRangeDefault(true)
+            }
+            val restored =
+                restorePurchases(
+                    source = MonetizationSources.PAYWALL,
+                    entryPoint = entryPoint,
+                    trackResult = true,
+                )
+            if (!restored) {
+                setPendingPaywallRangeDefault(false)
+            }
+            return restored
+        }
 
         private fun trackPurchaseResult(
             success: Boolean,
@@ -472,10 +489,13 @@ class ProManager
                 return false
             }
             val wasPro = _entitlementLevel.value.isPro
+            if (!wasPro) {
+                setPendingPaywallRangeDefault(true)
+            }
             debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
-            emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
+            emitPendingNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,
@@ -486,13 +506,26 @@ class ProManager
             return true
         }
 
-        private fun emitNewProUnlockIfNeeded(
+        private fun emitPendingNewProUnlockIfNeeded(
             wasPro: Boolean,
             isProNow: Boolean,
         ) {
-            if (!wasPro && isProNow) {
-                _newProUnlockEvents.tryEmit(Unit)
+            if (!hasPendingPaywallRangeDefault() || !isProNow) {
+                return
             }
+            if (!wasPro) {
+                _newProUnlockEventId.value += 1
+            }
+            setPendingPaywallRangeDefault(false)
+        }
+
+        private fun hasPendingPaywallRangeDefault(): Boolean = proPrefs.getBoolean(KEY_PENDING_PAYWALL_RANGE_DEFAULT, false)
+
+        private fun setPendingPaywallRangeDefault(pending: Boolean) {
+            proPrefs
+                .edit()
+                .putBoolean(KEY_PENDING_PAYWALL_RANGE_DEFAULT, pending)
+                .apply()
         }
     }
 

@@ -7,6 +7,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
+import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -62,6 +63,10 @@ class TimerViewModelAnalyticsTest {
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
+        coEvery {
+            repository.getRawTimerConfig()
+        } returns
+            TimerConfig.DEFAULT.copy(maxSeconds = TimerConfig.MAX_SECONDS_FREE, soundType = SoundType.INTENSE, useExtendedRange = false)
         coEvery { repository.saveTimerConfig(any()) } just runs
         coEvery { repository.clearActiveTimer() } just runs
         every { serviceController.bindService(any()) } just runs
@@ -166,12 +171,20 @@ class TimerViewModelAnalyticsTest {
         verify {
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
-                match { it["max_duration"] == 300 && it["repeat_enabled"] == false },
+                match {
+                    it["max_duration"] == TimerConfig.MAX_SECONDS_FREE &&
+                        it["sound_type"] == SoundType.INTENSE.name &&
+                        it["repeat_enabled"] == false
+                },
             )
         }
         coVerify {
             repository.saveTimerConfig(
-                match { it.useExtendedRange && it.maxSeconds == TimerConfig.DEFAULT.maxSeconds },
+                match {
+                    it.useExtendedRange &&
+                        it.maxSeconds == TimerConfig.MAX_SECONDS_FREE &&
+                        it.soundType == SoundType.INTENSE
+                },
             )
         }
     }

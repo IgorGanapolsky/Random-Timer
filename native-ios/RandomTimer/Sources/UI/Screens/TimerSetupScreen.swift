@@ -413,7 +413,6 @@ struct TimerSetupScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
-                .environmentObject(timerManager)
                 .environmentObject(proManager)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)

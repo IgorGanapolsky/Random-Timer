@@ -18,6 +18,10 @@ struct RandomTimerApp: App {
                 .onOpenURL { url in
                     AnalyticsService.shared.trackDeepLink(url)
                 }
+                .onReceive(ProManager.shared.$newProUnlockEventID) { eventID in
+                    guard eventID > 0 else { return }
+                    timerManager.enableExtendedRangeDefaultForNewProUnlock()
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {

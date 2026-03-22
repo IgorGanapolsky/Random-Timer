@@ -17,6 +17,8 @@ import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,11 +39,12 @@ class TimerRepositoryImpl
         private fun TimerConfig.clampedForPro(): TimerConfig {
             val level = proManager.entitlementLevel.value
             val isPro = level.isPro
-            val maxAllowed = if (isPro && useExtendedRange) {
-                TimerConfig.MAX_SECONDS_PRO
-            } else {
-                TimerConfig.MAX_SECONDS_FREE
-            }
+            val maxAllowed =
+                if (isPro && useExtendedRange) {
+                    TimerConfig.MAX_SECONDS_PRO
+                } else {
+                    TimerConfig.MAX_SECONDS_FREE
+                }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
             val clampedMin = minSeconds.coerceAtMost(clampedMax)
@@ -50,33 +53,16 @@ class TimerRepositoryImpl
                 minSeconds = clampedMin,
                 maxSeconds = clampedMax,
                 soundType = clampedSound,
-                useExtendedRange = if (isPro) useExtendedRange else false
+                useExtendedRange = if (isPro) useExtendedRange else false,
             )
         }
 
         override fun getTimerConfig(): Flow<TimerConfig> =
-            dataStore.data.map { preferences ->
-                TimerConfig(
-                    minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                    maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
-                    alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                    hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                    repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                    soundType =
-                        preferences[KEY_SOUND_TYPE]?.let {
-                            try {
-                                SoundType.valueOf(it)
-                            } catch (_: Exception) {
-                                SoundType.INTENSE
-                            }
-                        } ?: SoundType.INTENSE,
-                    volume = preferences[KEY_VOLUME] ?: 0.5f,
-                    vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                    useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
-                    voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
-                    repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
-                ).clampedForPro()
+            combine(dataStore.data, proManager.entitlementLevel) { preferences, _ ->
+                preferences.toRawTimerConfig().clampedForPro()
             }
+
+        override suspend fun getRawTimerConfig(): TimerConfig = dataStore.data.first().toRawTimerConfig()
 
         override suspend fun saveTimerConfig(config: TimerConfig) {
             dataStore.edit { preferences ->
@@ -102,27 +88,7 @@ class TimerRepositoryImpl
                 val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@map null
                 val roundCount = preferences[KEY_ACTIVE_ROUND_COUNT] ?: 1
 
-                val config =
-                    TimerConfig(
-                        minSeconds = preferences[KEY_MIN_SECONDS] ?: 0,
-                        maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300,
-                        alarmDuration = preferences[KEY_ALARM_DURATION] ?: 10,
-                        hiddenMode = preferences[KEY_HIDDEN_MODE] ?: false,
-                        repeatEnabled = preferences[KEY_REPEAT_ENABLED] ?: false,
-                        soundType =
-                            preferences[KEY_SOUND_TYPE]?.let {
-                                try {
-                                    SoundType.valueOf(it)
-                                } catch (_: Exception) {
-                                    SoundType.INTENSE
-                                }
-                            } ?: SoundType.INTENSE,
-                        volume = preferences[KEY_VOLUME] ?: 0.5f,
-                        vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
-                        useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
-                        voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
-                        repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
-                    ).clampedForPro()
+                val config = preferences.toRawTimerConfig().clampedForPro()
 
                 TimerState(
                     config = config,
@@ -175,4 +141,26 @@ class TimerRepositoryImpl
             private val KEY_ACTIVE_STARTED_AT = longPreferencesKey("active_started_at")
             private val KEY_ACTIVE_ROUND_COUNT = intPreferencesKey("active_round_count")
         }
+
+        private fun Preferences.toRawTimerConfig(): TimerConfig =
+            TimerConfig(
+                minSeconds = this[KEY_MIN_SECONDS] ?: 0,
+                maxSeconds = this[KEY_MAX_SECONDS] ?: 300,
+                alarmDuration = this[KEY_ALARM_DURATION] ?: 10,
+                hiddenMode = this[KEY_HIDDEN_MODE] ?: false,
+                repeatEnabled = this[KEY_REPEAT_ENABLED] ?: false,
+                soundType =
+                    this[KEY_SOUND_TYPE]?.let {
+                        try {
+                            SoundType.valueOf(it)
+                        } catch (_: Exception) {
+                            SoundType.INTENSE
+                        }
+                    } ?: SoundType.INTENSE,
+                volume = this[KEY_VOLUME] ?: 0.5f,
+                vibrationEnabled = this[KEY_VIBRATION_ENABLED] ?: false,
+                useExtendedRange = this[KEY_USE_EXTENDED_RANGE] ?: false,
+                voiceEnabled = this[KEY_VOICE_ENABLED] ?: true,
+                repeatRounds = this[KEY_REPEAT_ROUNDS] ?: 0,
+            )
     }

@@ -14,10 +14,12 @@ ANDROID_SOUND_PREVIEW = ROOT / "native-android/app/src/main/java/com/iganapolsky
 ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/SoundPreviewManagerImpl.kt"
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
+ANDROID_REPOSITORY = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/repository/TimerRepositoryImpl.kt"
 ANDROID_ACTIVE_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt"
 ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
+IOS_APP = ROOT / "native-ios/RandomTimer/Sources/App/RandomTimerApp.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
 IOS_PAYWALL = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/PaywallSheet.swift"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
@@ -228,18 +230,29 @@ def test_new_pro_unlock_defaults_extended_range_to_1h_on_both_platforms():
     android_nav = _read(ANDROID_NAV)
     android_viewmodel = _read(ANDROID_VIEWMODEL)
     android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    android_repo = _read(ANDROID_REPOSITORY)
+    ios_app = _read(IOS_APP)
     ios_paywall = _read(IOS_PAYWALL)
+    ios_timer_manager = _read(IOS_TIMER_MANAGER)
     ios_setup = _read(IOS_SETUP)
+    ios_pro_manager = _read(IOS_PRO_MANAGER)
 
-    assert "newProUnlockEvents" in android_pro_manager
-    assert "emitNewProUnlockIfNeeded" in android_pro_manager
+    assert "newProUnlockEventId" in android_pro_manager
+    assert "pending_paywall_range_default" in android_pro_manager
+    assert "emitPendingNewProUnlockIfNeeded" in android_pro_manager
     assert "enableExtendedRangeDefaultForNewProUnlock" in android_viewmodel
-    assert "updateConfig(current.copy(useExtendedRange = true))" in android_viewmodel
-    assert "newProUnlockEvents.collectLatest" in android_nav
+    assert "repository.getRawTimerConfig()" in android_viewmodel
+    assert "rawConfig.copy(useExtendedRange = true)" in android_viewmodel
+    assert "combine(dataStore.data, proManager.entitlementLevel)" in android_repo
+    assert "newProUnlockEventId.collectLatest" in android_nav
     assert "enableExtendedRangeDefaultForNewProUnlock()" in android_nav
 
-    assert "@EnvironmentObject var timerManager: TimerManager" in ios_paywall
-    assert "@State private var hadProBeforePresenting = false" in ios_paywall
-    assert "applyExtendedRangeDefaultIfNeeded()" in ios_paywall
-    assert "useExtendedRange: true" in ios_paywall
-    assert ".environmentObject(timerManager)" in ios_setup
+    assert "@Published private(set) var newProUnlockEventID: Int = 0" in ios_pro_manager
+    assert "pendingPaywallRangeDefault" in ios_pro_manager
+    assert "restorePurchases(fromPaywall: true)" in ios_paywall
+    assert "@EnvironmentObject var timerManager: TimerManager" not in ios_paywall
+    assert ".environmentObject(timerManager)" not in ios_setup
+    assert "private var rawConfig: TimerConfig" in ios_timer_manager
+    assert "enableExtendedRangeDefaultForNewProUnlock" in ios_timer_manager
+    assert "rawConfig.useExtendedRange" in ios_timer_manager
+    assert ".onReceive(ProManager.shared.$newProUnlockEventID)" in ios_app
