@@ -213,3 +213,6 @@ Say: **"Done merging PRs"** only after all steps verified.
 
 ## Interaction Language
 - All interactions must use **English**.
+
+## Interaction Language
+- All interactions must use **English**.
