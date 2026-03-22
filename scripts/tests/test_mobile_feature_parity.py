@@ -15,6 +15,7 @@ ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganap
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
 ANDROID_ACTIVE_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt"
+ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -125,18 +126,30 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_nav = _read(ANDROID_NAV)
     android_pro_manager = _read(ANDROID_PRO_MANAGER)
     ios_setup = _read(IOS_SETUP)
+    ios_paywall = _read(IOS_PAYWALL)
 
     assert "TACTICAL EXPANSION" not in android_setup
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
     assert "10 alarm sounds" in android_paywall
+    assert "Loop with optional round limits" in android_paywall
+    assert "Loop with optional round limits" in ios_paywall
+    assert "Monthly voice callout and sound arsenal refreshes" in android_paywall
+    assert "Monthly voice callout and sound arsenal refreshes" in ios_paywall
 
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
     assert "launchProPurchase" in android_nav
+
+
+def test_android_elapsed_voice_cues_short_circuit_before_command_cues():
+    android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+
+    assert "runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert re.search(r"lastElapsedMilestone = elapsedSeconds\s+return", android_voice_manager)
 
 
 def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
@@ -162,7 +175,7 @@ def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_cop
     assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert 'Infinite Loop - Pro unlocks round limits' in android_setup
+    assert 'Infinite Loop (Pro: set 1–100 rounds)' in android_setup
     assert ".navigationBarsPadding()" in android_setup
 
 
@@ -180,9 +193,9 @@ def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
 
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert 'internal fun repeatLoopDetailTitle(isPro: Boolean): String = if (isPro) "Round Selection" else "Loop Mode"' in android_setup
+    assert 'internal fun repeatLoopDetailTitle(isPro: Boolean): String = "Round Selection"' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert '!isPro -> "Infinite Loop - Pro unlocks round limits"' in android_setup
+    assert '!isPro -> "Infinite Loop (Pro: set 1–100 rounds)"' in android_setup
 
     assert 'repeatLoopDetailTitle(isPro: proManager.isPro)' in ios_setup
     assert re.search(
@@ -190,9 +203,9 @@ def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
         ios_setup,
     )
     assert 'private func repeatLoopDetailTitle(isPro: Bool) -> String' in ios_setup
-    assert 'return isPro ? "Round Selection" : "Loop Mode"' in ios_setup
+    assert 'return "Round Selection"' in ios_setup
     assert 'private func repeatLoopDetailSummary(isPro: Bool, repeatRounds: Int) -> String' in ios_setup
-    assert 'return "Infinite Loop - Pro unlocks round limits"' in ios_setup
+    assert 'return "Infinite Loop (Pro: set 1–100 rounds)"' in ios_setup
 
 
 def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_platforms():

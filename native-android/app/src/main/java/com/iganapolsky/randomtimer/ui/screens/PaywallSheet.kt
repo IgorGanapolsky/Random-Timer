@@ -53,8 +53,20 @@ fun PaywallSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
+                text = "Not now",
+                style = MaterialTheme.typography.labelMedium,
+                color = TimerColors.TextSecondary,
+                modifier =
+                    Modifier
+                        .align(Alignment.Start)
+                        .clickable(onClick = onDismiss),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
                 text = "Upgrade to Pro",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
                 textAlign = TextAlign.Center,
@@ -87,9 +99,21 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            Text(
+                text = "PRO FEATURES",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = TimerColors.AccentPrimary,
+                modifier = Modifier.align(Alignment.Start),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
             ProFeatureRow(text = "Elapsed-time voice callouts")
+            ProFeatureRow(text = "Loop with optional round limits")
+            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -107,10 +131,11 @@ fun PaywallSheet(
                 color = TimerColors.TextSecondary,
                 modifier =
                     Modifier
-                        .padding(bottom = 16.dp)
                         .clickable(onClick = onRestore),
                 textAlign = TextAlign.Center,
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Not now",
@@ -118,10 +143,11 @@ fun PaywallSheet(
                 color = TimerColors.TextSecondary,
                 modifier =
                     Modifier
-                        .padding(bottom = 16.dp)
                         .clickable(onClick = onDismiss),
                 textAlign = TextAlign.Center,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

@@ -461,12 +461,12 @@ struct TimerSetupScreen: View {
     }
 
     private func repeatLoopDetailTitle(isPro: Bool) -> String {
-        return isPro ? "Round Selection" : "Loop Mode"
+        return "Round Selection"
     }
 
     private func repeatLoopDetailSummary(isPro: Bool, repeatRounds: Int) -> String {
         if !isPro {
-            return "Infinite Loop - Pro unlocks round limits"
+            return "Infinite Loop (Pro: set 1–100 rounds)"
         }
 
         return repeatRounds == 0 ? "Infinite Rounds" : "\(repeatRounds) Rounds"
