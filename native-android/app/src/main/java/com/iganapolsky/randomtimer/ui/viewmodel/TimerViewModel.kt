@@ -121,6 +121,14 @@ class TimerViewModel
             }
         }
 
+        fun enableExtendedRangeDefaultForNewProUnlock() {
+            val current = config.value
+            if (!proManager.entitlementLevel.value.isPro || current.useExtendedRange) {
+                return
+            }
+            updateConfig(current.copy(useExtendedRange = true))
+        }
+
         fun startTimer() {
             stopSoundPreview()
 
@@ -192,12 +200,13 @@ class TimerViewModel
 
         fun updateLoopSetting(enabled: Boolean) {
             val current = config.value
-            val updatedConfig = current.copy(
-                repeatEnabled = enabled,
-                useExtendedRange = current.useExtendedRange,
-                voiceEnabled = current.voiceEnabled,
-                repeatRounds = current.repeatRounds
-            )
+            val updatedConfig =
+                current.copy(
+                    repeatEnabled = enabled,
+                    useExtendedRange = current.useExtendedRange,
+                    voiceEnabled = current.voiceEnabled,
+                    repeatRounds = current.repeatRounds,
+                )
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(

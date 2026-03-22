@@ -16,6 +16,7 @@ import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -38,6 +39,7 @@ class TimerViewModelAnalyticsTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var analyticsService: AnalyticsService
+    private lateinit var repository: TimerRepository
     private lateinit var serviceController: TimerServiceController
     private lateinit var viewModel: TimerViewModel
 
@@ -49,7 +51,7 @@ class TimerViewModelAnalyticsTest {
         val mockPrefs = mockk<SharedPreferences>(relaxed = true)
         every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
 
-        val repository = mockk<TimerRepository>()
+        repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
@@ -60,6 +62,7 @@ class TimerViewModelAnalyticsTest {
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
 
         every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
+        coEvery { repository.saveTimerConfig(any()) } just runs
         coEvery { repository.clearActiveTimer() } just runs
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
@@ -151,6 +154,24 @@ class TimerViewModelAnalyticsTest {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
                 match { it["entry_point"] == "setup_upgrade_cta" },
+            )
+        }
+    }
+
+    @Test
+    fun `enableExtendedRangeDefaultForNewProUnlock saves 1h mode when newly unlocked`() {
+        viewModel.enableExtendedRangeDefaultForNewProUnlock()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match { it["max_duration"] == 300 && it["repeat_enabled"] == false },
+            )
+        }
+        coVerify {
+            repository.saveTimerConfig(
+                match { it.useExtendedRange && it.maxSeconds == TimerConfig.DEFAULT.maxSeconds },
             )
         }
     }

@@ -27,6 +27,7 @@ import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 sealed class Screen(
@@ -176,6 +177,12 @@ fun RandomTimerNavHost(
     LaunchedEffect(showPaywall, paywallEntryPoint) {
         if (showPaywall) {
             viewModel.trackPaywallViewed(paywallEntryPoint)
+        }
+    }
+
+    LaunchedEffect(viewModel.proManager) {
+        viewModel.proManager.newProUnlockEvents.collectLatest {
+            viewModel.enableExtendedRangeDefaultForNewProUnlock()
         }
     }
 

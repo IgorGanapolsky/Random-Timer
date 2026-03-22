@@ -26,9 +26,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -57,6 +60,8 @@ class ProManager
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
         val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel.asStateFlow()
+        private val _newProUnlockEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        val newProUnlockEvents: SharedFlow<Unit> = _newProUnlockEvents.asSharedFlow()
 
         val isPro: StateFlow<Boolean> =
             _entitlementLevel
@@ -114,6 +119,7 @@ class ProManager
             entryPoint: String?,
             trackResult: Boolean,
         ): Boolean {
+            val wasPro = _entitlementLevel.value.isPro
             if (!billingClient.isReady) {
                 connectAndRestore()
                 if (trackResult) {
@@ -166,6 +172,9 @@ class ProManager
             _entitlementLevel.value = level
             if (level.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
+            }
+            if (source == MonetizationSources.PAYWALL) {
+                emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = level.isPro)
             }
 
             if (trackResult) {
@@ -342,6 +351,8 @@ class ProManager
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
+            val wasPro = _entitlementLevel.value.isPro
+            val originatedFromPaywall = !pendingPurchaseEntryPoint.isNullOrBlank()
             if (purchase.products.contains(ELITE_PRODUCT_ID)) {
                 _entitlementLevel.value = EntitlementLevel.ELITE
             } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
@@ -351,6 +362,9 @@ class ProManager
             }
             if (_entitlementLevel.value.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
+            }
+            if (originatedFromPaywall) {
+                emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
             }
         }
 
@@ -456,8 +470,10 @@ class ProManager
             if (!canUseDebugUnlock()) {
                 return false
             }
+            val wasPro = _entitlementLevel.value.isPro
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
+            emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,
@@ -466,6 +482,15 @@ class ProManager
                 debugMessage = "hidden_hold_override",
             )
             return true
+        }
+
+        private fun emitNewProUnlockIfNeeded(
+            wasPro: Boolean,
+            isProNow: Boolean,
+        ) {
+            if (!wasPro && isProNow) {
+                _newProUnlockEvents.tryEmit(Unit)
+            }
         }
     }
 

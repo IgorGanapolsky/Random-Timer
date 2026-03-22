@@ -209,3 +209,24 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
     assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
     assert 'Text("PRO: 1H' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup
+
+
+def test_new_pro_unlock_defaults_extended_range_to_1h_on_both_platforms():
+    android_nav = _read(ANDROID_NAV)
+    android_viewmodel = _read(ANDROID_VIEWMODEL)
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    ios_paywall = _read(IOS_PAYWALL)
+    ios_setup = _read(IOS_SETUP)
+
+    assert "newProUnlockEvents" in android_pro_manager
+    assert "emitNewProUnlockIfNeeded" in android_pro_manager
+    assert "enableExtendedRangeDefaultForNewProUnlock" in android_viewmodel
+    assert "updateConfig(current.copy(useExtendedRange = true))" in android_viewmodel
+    assert "newProUnlockEvents.collectLatest" in android_nav
+    assert "enableExtendedRangeDefaultForNewProUnlock()" in android_nav
+
+    assert "@EnvironmentObject var timerManager: TimerManager" in ios_paywall
+    assert "@State private var hadProBeforePresenting = false" in ios_paywall
+    assert "applyExtendedRangeDefaultIfNeeded()" in ios_paywall
+    assert "useExtendedRange: true" in ios_paywall
+    assert ".environmentObject(timerManager)" in ios_setup
