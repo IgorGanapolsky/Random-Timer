@@ -162,7 +162,7 @@ def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_cop
     assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert 'Infinite Loop - Pro unlocks round limits' in android_setup
+    assert 'Infinite Loop (Pro: set 1–100 rounds)' in android_setup
     assert ".navigationBarsPadding()" in android_setup
 
 
@@ -180,9 +180,9 @@ def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
 
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert 'internal fun repeatLoopDetailTitle(isPro: Boolean): String = if (isPro) "Round Selection" else "Loop Mode"' in android_setup
+    assert 'internal fun repeatLoopDetailTitle(isPro: Boolean): String = "Round Selection"' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
-    assert '!isPro -> "Infinite Loop - Pro unlocks round limits"' in android_setup
+    assert '!isPro -> "Infinite Loop (Pro: set 1–100 rounds)"' in android_setup
 
     assert 'repeatLoopDetailTitle(isPro: proManager.isPro)' in ios_setup
     assert re.search(
@@ -190,6 +190,6 @@ def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
         ios_setup,
     )
     assert 'private func repeatLoopDetailTitle(isPro: Bool) -> String' in ios_setup
-    assert 'return isPro ? "Round Selection" : "Loop Mode"' in ios_setup
+    assert 'return "Round Selection"' in ios_setup
     assert 'private func repeatLoopDetailSummary(isPro: Bool, repeatRounds: Int) -> String' in ios_setup
-    assert 'return "Infinite Loop - Pro unlocks round limits"' in ios_setup
+    assert 'return "Infinite Loop (Pro: set 1–100 rounds)"' in ios_setup
