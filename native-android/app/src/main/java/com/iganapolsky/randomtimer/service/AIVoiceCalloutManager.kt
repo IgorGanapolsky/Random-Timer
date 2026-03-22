@@ -262,7 +262,6 @@ class AIVoiceCalloutManager
             runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
-                return
             }
 
             if (shouldFireCommandCue(elapsedSeconds)) {
