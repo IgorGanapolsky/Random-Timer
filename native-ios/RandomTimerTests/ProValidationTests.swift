@@ -3,6 +3,24 @@ import XCTest
 
 final class TimerConfigProClampingTests: XCTestCase {
 
+    func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
+        XCTAssertEqual(
+            ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-pro", "true"]),
+            .base
+        )
+    }
+
+    func testUiTestEliteLaunchArgumentOverridesEntitlementToElite() {
+        XCTAssertEqual(
+            ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-elite", "true"]),
+            .elite
+        )
+    }
+
+    func testLaunchArgumentsWithoutUiTestOverrideReturnNil() {
+        XCTAssertNil(ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-state", "running"]))
+    }
+
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
         let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,

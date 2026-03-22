@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -195,6 +196,7 @@ fun TimerSetupScreen(
                     )
                 }
             },
+<<<<<<< HEAD
             bottomBar = {
                 PrimaryButton(
                     text = "Start Timer",
@@ -209,6 +211,24 @@ fun TimerSetupScreen(
                             },
                 )
             },
+||||||| e7ebdde1
+=======
+            bottomBar = {
+                PrimaryButton(
+                    text = "Start Timer",
+                    onClick = onStartTimer,
+                    modifier =
+                        Modifier
+                            .padding(horizontal = spacing.outerHorizontal)
+                            .padding(bottom = 16.dp, top = 8.dp)
+                            .navigationBarsPadding()
+                            .graphicsLayer {
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            },
+                )
+            },
+>>>>>>> origin/develop
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),
         ) { paddingValues ->
@@ -1205,3 +1225,4 @@ private fun TimerSetupScreenPreview() {
         )
     }
 }
+# Trigger CI
