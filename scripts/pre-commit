@@ -197,6 +197,16 @@ if [ -n "$STAGED_SWIFT" ]; then
   done <<< "$STAGED_SWIFT"
 
   if command -v swiftlint > /dev/null 2>&1; then
+    # Set DEVELOPER_DIR so SourceKittenFramework can load (required when Xcode CLI is non-default)
+    if [ -z "${DEVELOPER_DIR:-}" ]; then
+      # Prefer a full Xcode.app over CommandLineTools (swiftlint requires SourceKit from Xcode.app)
+      for xcode_candidate in /Applications/Xcode.app /Applications/Xcode-26.1.1.app /Applications/Xcode-16.app /Applications/Xcode-15.app; do
+        if [ -d "$xcode_candidate/Contents/Developer" ]; then
+          export DEVELOPER_DIR="$xcode_candidate/Contents/Developer"
+          break
+        fi
+      done
+    fi
     echo "$STAGED_SWIFT" | xargs swiftlint lint --strict --quiet 2>/dev/null || ERRORS=$((ERRORS + 1))
   fi
 fi
