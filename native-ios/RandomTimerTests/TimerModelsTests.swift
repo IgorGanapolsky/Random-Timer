@@ -160,6 +160,38 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(decoded.minSeconds, 45)
         XCTAssertEqual(decoded.maxSeconds, 45)
     }
+
+    func testAdjustForMinChangeSafelyClampsWhenRangeLimitDrops() {
+        let adjusted = TimeRangeAdjuster.adjustForMinChange(
+            currentMinSeconds: 3300,
+            currentMaxSeconds: 3600,
+            newMinSeconds: 3300,
+            maxSecondsLimit: TimerConfig.maxSecondsFree
+        )
+
+        XCTAssertEqual(adjusted.min, 295)
+        XCTAssertEqual(adjusted.max, TimerConfig.maxSecondsFree)
+        XCTAssertGreaterThanOrEqual(
+            adjusted.max - adjusted.min,
+            TimeRangeAdjuster.defaultMinGapSeconds
+        )
+    }
+
+    func testAdjustForMaxChangeSafelyClampsWhenRangeLimitDrops() {
+        let adjusted = TimeRangeAdjuster.adjustForMaxChange(
+            currentMinSeconds: 3300,
+            currentMaxSeconds: 3600,
+            newMaxSeconds: 3600,
+            maxSecondsLimit: TimerConfig.maxSecondsFree
+        )
+
+        XCTAssertEqual(adjusted.min, 295)
+        XCTAssertEqual(adjusted.max, TimerConfig.maxSecondsFree)
+        XCTAssertGreaterThanOrEqual(
+            adjusted.max - adjusted.min,
+            TimeRangeAdjuster.defaultMinGapSeconds
+        )
+    }
 }
 
 final class TimerStateTests: XCTestCase {

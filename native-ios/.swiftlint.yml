@@ -7,12 +7,6 @@ excluded:
 disabled_rules:
   - trailing_comma
   - identifier_name
-  - file_length
-  - type_body_length
-  - line_length
-  - trailing_whitespace
-  - implicit_optional_initialization
-  - cyclomatic_complexity
 
 opt_in_rules:
   - empty_count
@@ -51,5 +45,3 @@ custom_rules:
     regex: '@EnvironmentObject'
     message: "Use @Environment with @Observable instead of @EnvironmentObject"
     severity: warning
-    # NOTE: Suppressed until full @Observable migration (pre-existing codebase pattern)
-    excluded: ".*"
