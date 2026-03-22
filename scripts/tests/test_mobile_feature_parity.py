@@ -125,12 +125,17 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_nav = _read(ANDROID_NAV)
     android_pro_manager = _read(ANDROID_PRO_MANAGER)
     ios_setup = _read(IOS_SETUP)
+    ios_paywall = _read(IOS_PAYWALL)
 
     assert "TACTICAL EXPANSION" not in android_setup
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
     assert "10 alarm sounds" in android_paywall
+    assert "Loop with optional round limits" in android_paywall
+    assert "Loop with optional round limits" in ios_paywall
+    assert "Monthly voice callout and sound arsenal refreshes" in android_paywall
+    assert "Monthly voice callout and sound arsenal refreshes" in ios_paywall
 
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager

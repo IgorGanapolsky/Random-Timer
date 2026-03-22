@@ -112,6 +112,8 @@ fun PaywallSheet(
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
             ProFeatureRow(text = "Elapsed-time voice callouts")
+            ProFeatureRow(text = "Loop with optional round limits")
+            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
