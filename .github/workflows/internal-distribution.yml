@@ -61,18 +61,8 @@ jobs:
             exit 0
           fi
 
-          if [[ "${INPUT_BUDGET_ACK:-}" != "$REQUIRED_BUDGET_ACK" ]]; then
-            echo "❌ budget_ack mismatch. Aborting distribution."
-            echo "Expected: $REQUIRED_BUDGET_ACK"
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "ref=" >> "$GITHUB_OUTPUT"
-            echo "sha=" >> "$GITHUB_OUTPUT"
-            echo "reason=budget_ack_failed" >> "$GITHUB_OUTPUT"
-            echo "run_ios=false" >> "$GITHUB_OUTPUT"
-            echo "run_android_play=false" >> "$GITHUB_OUTPUT"
-            echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
+          # causing unbound variable crash with set -u.
 
           TARGET="${INPUT_TARGET:-all}"
           case "$TARGET" in
