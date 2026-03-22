@@ -206,5 +206,6 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
 
     assert 'Text(config.useExtendedRange ? "1H" : "5m")' in ios_setup
     assert "config.useExtendedRange ? proManager.maxSecondsLimit : 300" in ios_setup
+    assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
     assert 'Text("PRO: 1H' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup

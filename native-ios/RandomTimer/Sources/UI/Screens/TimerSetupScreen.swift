@@ -457,7 +457,7 @@ struct TimerSetupScreen: View {
             voiceEnabled: voiceEnabled ?? config.voiceEnabled,
             repeatRounds: repeatRounds ?? config.repeatRounds
         )
-        timerManager.updateConfig(newConfig)
+        timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))
     }
 
     private func repeatLoopDetailTitle(isPro: Bool) -> String {
