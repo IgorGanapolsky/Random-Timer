@@ -62,6 +62,7 @@ class ProManager
         val entitlementLevel: StateFlow<EntitlementLevel> = _entitlementLevel.asStateFlow()
         private val _newProUnlockEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         val newProUnlockEvents: SharedFlow<Unit> = _newProUnlockEvents.asSharedFlow()
+        private var debugOverrideActive = false
 
         val isPro: StateFlow<Boolean> =
             _entitlementLevel
@@ -471,6 +472,7 @@ class ProManager
                 return false
             }
             val wasPro = _entitlementLevel.value.isPro
+            debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
             emitNewProUnlockIfNeeded(wasPro = wasPro, isProNow = _entitlementLevel.value.isPro)

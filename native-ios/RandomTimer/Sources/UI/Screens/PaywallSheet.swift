@@ -7,6 +7,7 @@ enum PaywallEntryPoint: String {
 }
 
 struct PaywallSheet: View {
+    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @EnvironmentObject var timerManager: TimerManager
     @Environment(\.dismiss) private var dismiss
@@ -67,13 +68,17 @@ struct PaywallSheet: View {
                     ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
                     ProFeatureRow(text: "Extended range up to 60 minutes")
                     ProFeatureRow(text: "Elapsed-time voice callouts")
+                    ProFeatureRow(text: "Loop with optional round limits")
+                    ProFeatureRow(text: "Monthly voice callout and sound arsenal refreshes")
                     ProFeatureRow(text: "Support independent development")
                 }
             }
             .padding(.horizontal)
 
             VStack(spacing: 12) {
-                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
+                PrimaryButton(
+                    title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))"
+                ) {
                     Task {
                         await purchase(productID: ProManager.eliteProductID)
                     }

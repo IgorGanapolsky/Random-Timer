@@ -802,14 +802,14 @@ fun TimerSetupScreen(
     }
 }
 
-internal fun repeatLoopDetailTitle(isPro: Boolean): String = if (isPro) "Round Selection" else "Loop Mode"
+internal fun repeatLoopDetailTitle(isPro: Boolean): String = "Round Selection"
 
 internal fun repeatLoopDetailSummary(
     isPro: Boolean,
     repeatRounds: Int,
 ): String =
     when {
-        !isPro -> "Infinite Loop - Pro unlocks round limits"
+        !isPro -> "Infinite Loop (Pro: set 1–100 rounds)"
         repeatRounds == 0 -> "Infinite Rounds"
         else -> "$repeatRounds Rounds"
     }
