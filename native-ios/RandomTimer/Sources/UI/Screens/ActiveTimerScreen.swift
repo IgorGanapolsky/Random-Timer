@@ -46,7 +46,7 @@ struct ActiveTimerScreen: View {
         guard repeatRounds > 0 else { return "Infinite Loop" }
 
         let clampedRound = Swift.max(1, Swift.min(roundCount, repeatRounds))
-        return "Round \(clampedRound)/\(repeatRounds)"
+        return "Loop On · Round \(clampedRound)/\(repeatRounds)"
     }
 
     static func loopBadgeAccessibilityLabel(enabled: Bool, repeatRounds: Int, roundCount: Int) -> String {
