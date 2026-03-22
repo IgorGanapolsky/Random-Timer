@@ -111,9 +111,7 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Elapsed-time voice callouts")
-            ProFeatureRow(text = "Loop with optional round limits")
-            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
+            ProFeatureRow(text = "Spoken countdown cues + command callouts")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -123,7 +121,7 @@ fun PaywallSheet(
                 onClick = { onPurchase("elite_tactical") },
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Restore purchase",

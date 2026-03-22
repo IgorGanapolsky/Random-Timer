@@ -55,7 +55,7 @@ fun RandomTimerNavHost(
     val activity = LocalContext.current as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
-    var proPrice by remember { mutableStateOf("$29.99") }
+    var proPrice by remember { mutableStateOf("$29.99/yr") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
 
     // Auto-navigate based on timer state
@@ -114,7 +114,7 @@ fun RandomTimerNavHost(
                 isElite = isElite,
                 onUpgradeTap = {
                     scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.ELITE_PRODUCT_ID) + "/yr"
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }

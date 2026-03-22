@@ -164,9 +164,8 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            _entitlementLevel.value = level
-            if (level.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
+            if (!debugOverrideActive) {
+                _entitlementLevel.value = level
             }
 
             if (trackResult) {
