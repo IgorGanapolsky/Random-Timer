@@ -15,6 +15,7 @@ ANDROID_SOUND_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganap
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
 ANDROID_ACTIVE_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt"
+ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -142,6 +143,13 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
     assert "launchProPurchase" in android_nav
+
+
+def test_android_elapsed_voice_cues_short_circuit_before_command_cues():
+    android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+
+    assert "runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert re.search(r"lastElapsedMilestone = elapsedSeconds\s+return", android_voice_manager)
 
 
 def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
