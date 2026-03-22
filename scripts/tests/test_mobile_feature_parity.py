@@ -206,3 +206,18 @@ def test_repeat_loop_detail_copy_matches_android_on_both_platforms():
     assert 'return "Round Selection"' in ios_setup
     assert 'private func repeatLoopDetailSummary(isPro: Bool, repeatRounds: Int) -> String' in ios_setup
     assert 'return "Infinite Loop (Pro: set 1–100 rounds)"' in ios_setup
+
+
+def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_platforms():
+    android_setup = _read(ANDROID_SETUP)
+    ios_setup = _read(IOS_SETUP)
+
+    assert 'text = if (config.useExtendedRange) "1H" else "5m"' in android_setup
+    assert "config.useExtendedRange" in android_setup
+    assert 'text = "PRO: 1H' in android_setup
+    assert 'text = "PREVIEW"' in android_setup
+
+    assert 'Text(config.useExtendedRange ? "1H" : "5m")' in ios_setup
+    assert "config.useExtendedRange ? proManager.maxSecondsLimit : 300" in ios_setup
+    assert 'Text("PRO: 1H' in ios_setup
+    assert 'Text("PREVIEW")' in ios_setup

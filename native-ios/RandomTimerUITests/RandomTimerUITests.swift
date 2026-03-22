@@ -83,6 +83,29 @@ final class RandomTimerUITests: XCTestCase {
         )
     }
 
+    func testFreeSetupShowsPreviewWithoutExtendedRangeToggle() {
+        let app = launchApp()
+        ensureSetupScreen(app)
+
+        XCTAssertTrue(app.buttons["PREVIEW"].waitForExistence(timeout: 3.0))
+        XCTAssertFalse(app.buttons["5m"].exists)
+    }
+
+    func testProSetupShowsExtendedRangeToggleAndHidesPreview() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-pro", "true"]
+        app.launch()
+        ensureSetupScreen(app)
+
+        let rangeToggle = app.buttons["5m"]
+        XCTAssertTrue(rangeToggle.waitForExistence(timeout: 3.0))
+        XCTAssertFalse(app.buttons["PREVIEW"].exists)
+
+        rangeToggle.tap()
+
+        XCTAssertTrue(app.buttons["1H"].waitForExistence(timeout: 3.0))
+    }
+
     func testFreeRepeatLoopDetailsMatchAndroidCopy() {
         let app = launchApp()
         ensureSetupScreen(app)
