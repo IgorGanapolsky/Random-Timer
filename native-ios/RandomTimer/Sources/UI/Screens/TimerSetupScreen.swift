@@ -36,8 +36,24 @@ struct TimerSetupScreen: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
                             
-                            if !proManager.isPro {
-                                Spacer()
+                            Spacer()
+                            if proManager.isPro {
+                                Button {
+                                    updateConfig(useExtendedRange: !config.useExtendedRange)
+                                } label: {
+                                    Text(config.useExtendedRange ? "1H" : "5m")
+                                        .font(.caption2.weight(.bold))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(config.useExtendedRange ? Color.accentPrimary.opacity(0.2) : Color.glassBackground)
+                                        .foregroundColor(config.useExtendedRange ? .accentPrimary : .textSecondary)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(config.useExtendedRange ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
+                                        )
+                                        .cornerRadius(6)
+                                }
+                            } else {
                                 Text("PRO: 1H \u{1F512}")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
@@ -52,7 +68,7 @@ struct TimerSetupScreen: View {
                         TimeRangeSliders(
                             minValue: config.minSeconds,
                             maxValue: config.maxSeconds,
-                            maxSecondsLimit: proManager.maxSecondsLimit,
+                            maxSecondsLimit: config.useExtendedRange ? proManager.maxSecondsLimit : 300,
                             onRangeChange: { newMin, newMax in
                                 updateConfig(minSeconds: newMin, maxSeconds: newMax)
                             }
@@ -101,19 +117,6 @@ struct TimerSetupScreen: View {
                             Spacer()
                             
                             HStack(spacing: 8) {
-                                // Preview Button (always enabled)
-                                Button {
-                                    timerManager.previewCommandCue()
-                                } label: {
-                                    Text("PREVIEW")
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.accentPrimary.opacity(0.1))
-                                        .foregroundColor(.accentPrimary)
-                                        .cornerRadius(4)
-                                }
-
                                 if proManager.isPro {
                                     Toggle("Voice Enabled", isOn: Binding(
                                         get: { config.voiceEnabled },
@@ -122,6 +125,17 @@ struct TimerSetupScreen: View {
                                     .tint(.accentPrimary)
                                     .labelsHidden()
                                 } else {
+                                    Button {
+                                        timerManager.previewCommandCue()
+                                    } label: {
+                                        Text("PREVIEW")
+                                            .font(.caption2.weight(.bold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.accentPrimary.opacity(0.1))
+                                            .foregroundColor(.accentPrimary)
+                                            .cornerRadius(4)
+                                    }
                                     Button {
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {

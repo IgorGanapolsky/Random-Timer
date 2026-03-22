@@ -260,8 +260,34 @@ fun TimerSetupScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
                                 )
-                                if (!isPro) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                Spacer(modifier = Modifier.weight(1f))
+                                if (isPro) {
+                                    FilterChip(
+                                        selected = config.useExtendedRange,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            updateConfig(useExtendedRange = !config.useExtendedRange)
+                                        },
+                                        label = {
+                                            Text(
+                                                text = if (config.useExtendedRange) "1H" else "5m",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (config.useExtendedRange) TimerColors.AccentPrimary else TimerColors.TextSecondary,
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            containerColor = TimerColors.GlassBackground,
+                                            selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            borderColor = TimerColors.GlassBorder,
+                                            selectedBorderColor = TimerColors.AccentPrimary,
+                                            enabled = true,
+                                            selected = config.useExtendedRange,
+                                        ),
+                                    )
+                                } else {
                                     Text(
                                         text = "PRO: 1H \uD83D\uDD12",
                                         style = MaterialTheme.typography.labelSmall,
@@ -281,7 +307,7 @@ fun TimerSetupScreen(
                             }
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
-                            val maxRange = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                            val maxRange = if (isPro && config.useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
                             TimeRangeSliders(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
@@ -394,25 +420,6 @@ fun TimerSetupScreen(
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // Preview Button (always enabled to sell the feature)
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCommandCuePreview()
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                        modifier = Modifier.padding(end = 8.dp),
-                                    ) {
-                                        Text(
-                                            text = "PREVIEW",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
-                                    }
-
                                     if (isPro) {
                                         Switch(
                                             checked = config.voiceEnabled,
@@ -425,6 +432,23 @@ fun TimerSetupScreen(
                                         )
                                     } else {
                                         Surface(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onCommandCuePreview()
+                                            },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            modifier = Modifier.padding(end = 8.dp),
+                                        ) {
+                                            Text(
+                                                text = "PREVIEW",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            )
+                                        }
+                                        Surface(
                                             onClick = onUpgradeTap,
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -434,14 +458,9 @@ fun TimerSetupScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "PRO ",
+                                                    text = "ELITE \uD83D\uDD12",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
-                                                Text(
-                                                    text = "\uD83D\uDD12",
-                                                    style = MaterialTheme.typography.labelSmall,
                                                     color = TimerColors.AccentPrimary,
                                                 )
                                             }

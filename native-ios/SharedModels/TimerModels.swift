@@ -356,7 +356,7 @@ enum TimeRangeAdjuster {
         minGapSeconds: Int = defaultMinGapSeconds
     ) -> (min: Int, max: Int) {
         precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
-        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+        let maxSecondsLimit = Swift.max(maxSecondsLimit, minSecondsLimit + minGapSeconds)
 
         var adjustedMinSeconds = Swift.min(
             Swift.max(newMinSeconds, minSecondsLimit),
@@ -387,7 +387,7 @@ enum TimeRangeAdjuster {
         minGapSeconds: Int = defaultMinGapSeconds
     ) -> (min: Int, max: Int) {
         precondition(minGapSeconds >= 0, "minGapSeconds must be >= 0")
-        precondition(maxSecondsLimit >= minSecondsLimit, "maxSecondsLimit must be >= minSecondsLimit")
+        let maxSecondsLimit = Swift.max(maxSecondsLimit, minSecondsLimit + minGapSeconds)
 
         var adjustedMaxSeconds = Swift.min(
             Swift.max(newMaxSeconds, minSecondsLimit + minGapSeconds),
