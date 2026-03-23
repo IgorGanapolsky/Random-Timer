@@ -70,7 +70,7 @@ struct PaywallSheet: View {
                         ProFeatureRow(text: "Extended range up to 60 minutes")
                         ProFeatureRow(text: "Elapsed-time voice callouts")
                         ProFeatureRow(text: "Loop with optional round limits")
-                        ProFeatureRow(text: "Monthly voice callout and sound arsenal refreshes")
+                        ProFeatureRow(text: "Monthly voice and sound refreshes")
                         ProFeatureRow(text: "Support independent development")
                     }
                 }
@@ -111,6 +111,7 @@ struct PaywallSheet: View {
                 .foregroundColor(.textSecondary)
             }
             .padding(24)
+            .padding(.top, 8)
             .padding(.bottom, 12)
             .frame(maxWidth: .infinity, alignment: .top)
         }
