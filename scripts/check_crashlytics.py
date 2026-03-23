@@ -12,6 +12,10 @@ Requires:
     - gcloud auth (or GOOGLE_APPLICATION_CREDENTIALS)
     - BigQuery API enabled on random-timer-486213
     - Firebase project: random-timer-486213
+
+This script reads runtime Crashlytics data only. Android App Distribution is
+owned by a separate Firebase project and is documented in
+docs/FIREBASE_ANDROID_INFRASTRUCTURE.md.
 """
 
 import argparse
