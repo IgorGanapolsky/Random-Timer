@@ -10,6 +10,7 @@ import org.json.JSONObject
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 internal data class VoiceCandidate(
     val name: String,
@@ -260,6 +261,7 @@ class AIVoiceCalloutManager
             runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
+                return
             }
 
             if (shouldFireCommandCue(elapsedSeconds)) {

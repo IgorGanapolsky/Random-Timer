@@ -178,9 +178,9 @@ def test_sound_arsenal_is_expanded_by_default_for_free_users():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
 
-    assert "showArsenal" in android_setup
+    assert "var showArsenal by remember { mutableStateOf(true) }" in android_setup
     assert "@State private var showArsenal = true" in ios_setup
-    assert "showArsenal = true" in android_setup or "showArsenal" in android_setup
+    assert "LaunchedEffect(isPro)" not in android_setup
     assert "Sound Arsenal" in ios_setup
     assert "Sound Arsenal" in android_setup
 

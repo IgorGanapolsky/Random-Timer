@@ -137,11 +137,7 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(!isPro) }
-
-    LaunchedEffect(isPro) {
-        showArsenal = true
-    }
+    var showArsenal by remember { mutableStateOf(true) }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
