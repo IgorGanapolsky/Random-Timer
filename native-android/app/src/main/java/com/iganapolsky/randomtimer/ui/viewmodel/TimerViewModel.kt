@@ -191,7 +191,7 @@ class TimerViewModel
         }
 
         fun updateLoopSetting(enabled: Boolean) {
-            val current = config.value
+            val current = _timerState.value?.config ?: config.value
             val updatedConfig =
                 current.copy(
                     repeatEnabled = enabled,
@@ -199,6 +199,7 @@ class TimerViewModel
                     voiceEnabled = current.voiceEnabled,
                     repeatRounds = current.repeatRounds,
                 )
+            _timerState.value = _timerState.value?.copy(config = updatedConfig)
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(
@@ -215,7 +216,7 @@ class TimerViewModel
         }
 
         fun updateVoiceSetting(enabled: Boolean) {
-            val current = config.value
+            val current = _timerState.value?.config ?: config.value
             val updatedConfig =
                 current.copy(
                     voiceEnabled = enabled,
