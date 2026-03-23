@@ -16,7 +16,9 @@ def test_parse_pixels() -> None:
 
 def test_run_generates_files(tmp_path: Path) -> None:
     source = tmp_path / "source.png"
-    Image.new("RGBA", (512, 512), color=(1, 2, 3, 255)).save(source)
+    source_image = Image.new("RGBA", (512, 512), color=(1, 2, 3, 255))
+    source_image.putpixel((256, 256), (250, 251, 252, 128))
+    source_image.save(source)
 
     appiconset = tmp_path / "AppIcon.appiconset"
     appiconset.mkdir(parents=True, exist_ok=True)
@@ -44,3 +46,5 @@ def test_run_generates_files(tmp_path: Path) -> None:
         assert path.exists()
         img = Image.open(path)
         assert img.size == expected_size
+        assert img.mode == "RGB"
+        assert "A" not in img.getbands()
