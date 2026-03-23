@@ -50,6 +50,17 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "FIREBASE_SERVICE_ACCOUNT_JSON" in source
     assert "FIREBASE_ANDROID_APP_ID" in source
     assert "android-apk-firebase-internal" in source or "app-release.apk" in source
+    firebase_section = source.split("- name: Distribute to Firebase", 1)[1].split(
+        "- name: Upload Android APK artifact", 1
+    )[0]
+    assert "continue-on-error: true" not in firebase_section
+    assert "Warn on Firebase distribution failure" not in firebase_section
+
+    android_firebase_job = source.split("android-firebase-internal:", 1)[1].split(
+        "android-play-internal:", 1
+    )[0]
+    assert "Write Google Play service account key" not in android_firebase_job
+    assert "Verify Google Play API access" not in android_firebase_job
 
 
 def test_ios_internal_retry_dispatch_targets_ios_only():
