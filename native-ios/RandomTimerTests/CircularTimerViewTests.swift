@@ -127,4 +127,12 @@ final class CircularTimerViewTests: XCTestCase {
         let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 3, roundCount: 8)
         XCTAssertEqual(result, "Loop On · Round 3/3")
     }
+
+    func testVoiceBadgeTextShowsOnStateWhenEnabled() {
+        XCTAssertEqual(ActiveTimerScreen.voiceBadgeText(enabled: true), "Voice On")
+    }
+
+    func testVoiceBadgeTextShowsOffStateWhenDisabled() {
+        XCTAssertEqual(ActiveTimerScreen.voiceBadgeText(enabled: false), "Voice Off")
+    }
 }

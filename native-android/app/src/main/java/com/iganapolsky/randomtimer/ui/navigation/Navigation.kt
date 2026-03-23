@@ -168,6 +168,7 @@ fun RandomTimerNavHost(
                         viewModel.resetTimer()
                     },
                     onLoopToggle = viewModel::updateLoopSetting,
+                    onVoiceToggle = viewModel::updateVoiceSetting,
                 )
             }
         }

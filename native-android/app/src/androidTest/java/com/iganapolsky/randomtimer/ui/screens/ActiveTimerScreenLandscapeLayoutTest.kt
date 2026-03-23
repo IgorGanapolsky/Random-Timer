@@ -21,18 +21,18 @@ import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 class ActiveTimerScreenLandscapeLayoutTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
     fun stopButtonIsVisibleAndTappableInLandscapeConstraints() {
-        val state = TimerState(
-            config = TimerConfig.DEFAULT,
-            targetDuration = 30.seconds,
-            remainingDuration = 30.seconds,
-            status = TimerStatus.RUNNING,
-        )
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT,
+                targetDuration = 30.seconds,
+                remainingDuration = 30.seconds,
+                status = TimerStatus.RUNNING,
+            )
 
         var stopped = false
 
@@ -47,6 +47,7 @@ class ActiveTimerScreenLandscapeLayoutTest {
                     onResume = {},
                     onReset = {},
                     onLoopToggle = {},
+                    onVoiceToggle = {},
                     // Force "landscape" branch by giving a wide constraint box.
                     modifier = Modifier.size(width = 800.dp, height = 400.dp),
                 )

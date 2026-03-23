@@ -192,12 +192,13 @@ class TimerViewModel
 
         fun updateLoopSetting(enabled: Boolean) {
             val current = config.value
-            val updatedConfig = current.copy(
-                repeatEnabled = enabled,
-                useExtendedRange = current.useExtendedRange,
-                voiceEnabled = current.voiceEnabled,
-                repeatRounds = current.repeatRounds
-            )
+            val updatedConfig =
+                current.copy(
+                    repeatEnabled = enabled,
+                    useExtendedRange = current.useExtendedRange,
+                    voiceEnabled = current.voiceEnabled,
+                    repeatRounds = current.repeatRounds,
+                )
             analyticsService.track(
                 AnalyticsEvents.SETTINGS_CHANGED,
                 mapOf(
@@ -210,6 +211,32 @@ class TimerViewModel
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
                 serviceController.updateLoop(enabled)
+            }
+        }
+
+        fun updateVoiceSetting(enabled: Boolean) {
+            val current = config.value
+            val updatedConfig =
+                current.copy(
+                    voiceEnabled = enabled,
+                    repeatEnabled = current.repeatEnabled,
+                    useExtendedRange = current.useExtendedRange,
+                    repeatRounds = current.repeatRounds,
+                )
+            _timerState.value = _timerState.value?.copy(config = updatedConfig)
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                mapOf(
+                    "min_duration" to updatedConfig.minSeconds,
+                    "max_duration" to updatedConfig.maxSeconds,
+                    "sound_type" to updatedConfig.soundType.name,
+                    "repeat_enabled" to updatedConfig.repeatEnabled,
+                    "voice_callouts_enabled" to updatedConfig.voiceEnabled,
+                ),
+            )
+            viewModelScope.launch {
+                repository.saveTimerConfig(updatedConfig)
+                serviceController.updateVoiceEnabled(enabled)
             }
         }
 

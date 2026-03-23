@@ -57,6 +57,14 @@ struct ActiveTimerScreen: View {
         return "Loop on, round \(clampedRound) of \(repeatRounds)"
     }
 
+    static func voiceBadgeText(enabled: Bool) -> String {
+        enabled ? "Voice On" : "Voice Off"
+    }
+
+    static func voiceBadgeAccessibilityLabel(enabled: Bool) -> String {
+        enabled ? "Voice callouts enabled" : "Voice callouts disabled"
+    }
+
     var body: some View {
         ZStack {
             Color.backgroundDark.ignoresSafeArea()
@@ -66,13 +74,7 @@ struct ActiveTimerScreen: View {
                     if isLandscape {
                         HStack(spacing: 24) {
                             VStack(spacing: 16) {
-                                Group {
-                                    if isComplete {
-                                        Color.clear.frame(height: 36)
-                                    } else {
-                                        loopBadge
-                                    }
-                                }
+                                topControlBadges
                                 .frame(height: 36)
 
                                 statusText(for: state)
@@ -137,14 +139,7 @@ struct ActiveTimerScreen: View {
                     } else {
                         VStack(spacing: 32) {
                             // Loop badge at top - use fixed height placeholder to prevent layout shift
-                            Group {
-                                if isComplete {
-                                    // Invisible placeholder with same height as badge
-                                    Color.clear.frame(height: 36)
-                                } else {
-                                    loopBadge
-                                }
-                            }
+                            topControlBadges
                             .frame(height: 36)
 
                             // Status text - fixed height to prevent layout shift
@@ -261,6 +256,45 @@ struct ActiveTimerScreen: View {
         .accessibilityHint("Double-tap to toggle repeat timer")
     }
 
+    private var voiceBadge: some View {
+        let isEnabled = state?.config.voiceEnabled ?? timerManager.config.voiceEnabled
+        return Button {
+            updateVoiceConfig(!isEnabled)
+        } label: {
+            Label(
+                Self.voiceBadgeText(enabled: isEnabled),
+                systemImage: "waveform"
+            )
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(isEnabled ? .accentPrimary : .textMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.glassBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isEnabled ? .accentPrimary : Color.glassBorder, lineWidth: 1)
+                )
+        }
+        .accessibilityLabel(Self.voiceBadgeAccessibilityLabel(enabled: isEnabled))
+        .accessibilityHint("Double-tap to toggle voice callouts")
+    }
+
+    @ViewBuilder
+    private var topControlBadges: some View {
+        if isComplete {
+            Color.clear.frame(height: 36)
+        } else {
+            HStack(spacing: 12) {
+                loopBadge
+                voiceBadge
+            }
+        }
+    }
+
     private func updateLoopConfig(_ enabled: Bool) {
         let current = timerManager.config
         let newConfig = TimerConfig(
@@ -274,6 +308,24 @@ struct ActiveTimerScreen: View {
             vibrationEnabled: current.vibrationEnabled,
             useExtendedRange: current.useExtendedRange,
             voiceEnabled: current.voiceEnabled,
+            repeatRounds: current.repeatRounds
+        )
+        timerManager.updateConfig(newConfig)
+    }
+
+    private func updateVoiceConfig(_ enabled: Bool) {
+        let current = timerManager.config
+        let newConfig = TimerConfig(
+            minSeconds: current.minSeconds,
+            maxSeconds: current.maxSeconds,
+            alarmDuration: current.alarmDuration,
+            hiddenMode: current.hiddenMode,
+            repeatEnabled: current.repeatEnabled,
+            soundType: current.soundType,
+            volume: current.volume,
+            vibrationEnabled: current.vibrationEnabled,
+            useExtendedRange: current.useExtendedRange,
+            voiceEnabled: enabled,
             repeatRounds: current.repeatRounds
         )
         timerManager.updateConfig(newConfig)

@@ -23,4 +23,14 @@ class ActiveTimerScreenBadgeTextTest {
     fun loopBadgeClampsVisibleRoundToConfiguredLimit() {
         assertThat(loopBadgeText(enabled = true, repeatRounds = 3, roundCount = 7)).isEqualTo("Loop On · Round 3/3")
     }
+
+    @Test
+    fun voiceBadgeShowsOnStateWhenEnabled() {
+        assertThat(voiceBadgeText(enabled = true)).isEqualTo("Voice On")
+    }
+
+    @Test
+    fun voiceBadgeShowsOffStateWhenDisabled() {
+        assertThat(voiceBadgeText(enabled = false)).isEqualTo("Voice Off")
+    }
 }

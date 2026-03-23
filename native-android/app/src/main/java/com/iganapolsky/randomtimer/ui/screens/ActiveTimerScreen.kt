@@ -69,12 +69,14 @@ fun ActiveTimerScreen(
     onResume: () -> Unit,
     onReset: () -> Unit,
     onLoopToggle: (Boolean) -> Unit,
+    onVoiceToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
+    var voiceEnabled by remember(state.config.voiceEnabled) { mutableStateOf(state.config.voiceEnabled) }
     var showResetFeedback by remember { mutableStateOf(false) }
     var resetFeedbackCounter by remember { mutableStateOf(0) }
 
@@ -248,6 +250,40 @@ fun ActiveTimerScreen(
                 }
             }
 
+            @Composable
+            fun ControlBadges() {
+                Box(
+                    modifier = Modifier.height(36.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (!isComplete) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            LoopBadge(
+                                enabled = loopEnabled,
+                                repeatRounds = state.config.repeatRounds,
+                                roundCount = state.roundCount,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    loopEnabled = !loopEnabled
+                                    onLoopToggle(loopEnabled)
+                                },
+                            )
+                            VoiceBadge(
+                                enabled = voiceEnabled,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    voiceEnabled = !voiceEnabled
+                                    onVoiceToggle(voiceEnabled)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
             if (isLandscape) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
@@ -259,27 +295,16 @@ fun ActiveTimerScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        if (!isComplete) {
-                            LoopBadge(
-                                enabled = loopEnabled,
-                                repeatRounds = state.config.repeatRounds,
-                                roundCount = state.roundCount,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    loopEnabled = !loopEnabled
-                                    onLoopToggle(loopEnabled)
-                                },
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        } else {
-                            AlarmLoopBadge()
-                        }
+                        ControlBadges()
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         StatusText()
                         Spacer(modifier = Modifier.height(16.dp))
                         TimerCircle()
                         Spacer(modifier = Modifier.height(16.dp))
                         InfoMessage()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        AlarmLoopBadge()
                     }
 
                     Column(
@@ -300,25 +325,15 @@ fun ActiveTimerScreen(
                 ) {
                     Spacer(modifier = Modifier.weight(0.15f))
 
-                    if (!isComplete) {
-                        LoopBadge(
-                            enabled = loopEnabled,
-                            repeatRounds = state.config.repeatRounds,
-                            roundCount = state.roundCount,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                loopEnabled = !loopEnabled
-                                onLoopToggle(loopEnabled)
-                            },
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                    ControlBadges()
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     StatusText()
                     Spacer(modifier = Modifier.height(32.dp))
                     TimerCircle()
                     Spacer(modifier = Modifier.height(32.dp))
                     InfoMessage()
+                    Spacer(modifier = Modifier.height(12.dp))
                     AlarmLoopBadge()
                     Spacer(modifier = Modifier.weight(1f))
                     ActionButtons()
@@ -386,6 +401,61 @@ private fun LoopBadge(
     }
 }
 
+@Composable
+private fun VoiceBadge(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "voicePressScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "voicePressAlpha",
+    )
+
+    Surface(
+        onClick = onClick,
+        modifier =
+            modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(8.dp),
+        color = TimerColors.GlassBackground,
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+            ),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "🔊",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = voiceBadgeText(enabled = enabled),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+            )
+        }
+    }
+}
+
 internal fun loopBadgeText(
     enabled: Boolean,
     repeatRounds: Int,
@@ -401,6 +471,8 @@ internal fun loopBadgeText(
     val clampedRound = roundCount.coerceIn(1, repeatRounds)
     return "Loop On · Round $clampedRound/$repeatRounds"
 }
+
+internal fun voiceBadgeText(enabled: Boolean): String = if (enabled) "Voice On" else "Voice Off"
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
@@ -447,6 +519,7 @@ private fun ActiveTimerScreenRunningPreview() {
             onResume = {},
             onReset = {},
             onLoopToggle = {},
+            onVoiceToggle = {},
         )
     }
 }
@@ -470,6 +543,7 @@ private fun ActiveTimerScreenPausedPreview() {
             onResume = {},
             onReset = {},
             onLoopToggle = {},
+            onVoiceToggle = {},
         )
     }
 }
@@ -493,6 +567,7 @@ private fun ActiveTimerScreenCompletePreview() {
             onResume = {},
             onReset = {},
             onLoopToggle = {},
+            onVoiceToggle = {},
         )
     }
 }

@@ -117,6 +117,10 @@ class TimerForegroundService : Service() {
                 val repeatEnabled = intent.getBooleanExtra(EXTRA_REPEAT_ENABLED, false)
                 updateLoopSetting(repeatEnabled)
             }
+            ACTION_UPDATE_VOICE -> {
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                updateVoiceSetting(voiceEnabled)
+            }
             ACTION_START -> {
                 val targetMs = intent.getLongExtra(EXTRA_TARGET_DURATION_MS, 0L)
                 val remainingMs = intent.getLongExtra(EXTRA_REMAINING_DURATION_MS, targetMs)
@@ -180,6 +184,19 @@ class TimerForegroundService : Service() {
                     repeatEnabled = repeatEnabled,
                     useExtendedRange = current.config.useExtendedRange,
                     voiceEnabled = current.config.voiceEnabled,
+                    repeatRounds = current.config.repeatRounds,
+                )
+            _timerState.value = current.copy(config = updatedConfig)
+        }
+    }
+
+    private fun updateVoiceSetting(voiceEnabled: Boolean) {
+        _timerState.value?.let { current ->
+            val updatedConfig =
+                current.config.copy(
+                    voiceEnabled = voiceEnabled,
+                    repeatEnabled = current.config.repeatEnabled,
+                    useExtendedRange = current.config.useExtendedRange,
                     repeatRounds = current.config.repeatRounds,
                 )
             _timerState.value = current.copy(config = updatedConfig)
@@ -984,6 +1001,7 @@ class TimerForegroundService : Service() {
         const val ACTION_DISMISS_ALARM = "com.iganapolsky.randomtimer.DISMISS"
         const val ACTION_SILENCE_ALARM = "com.iganapolsky.randomtimer.SILENCE"
         const val ACTION_UPDATE_LOOP = "com.iganapolsky.randomtimer.UPDATE_LOOP"
+        const val ACTION_UPDATE_VOICE = "com.iganapolsky.randomtimer.UPDATE_VOICE"
         const val ACTION_APP_STATE_CHANGED = "com.iganapolsky.randomtimer.APP_STATE"
         const val EXTRA_APP_IN_FOREGROUND = "app_in_foreground"
         const val EXTRA_TARGET_DURATION_MS = "target_duration_ms"
