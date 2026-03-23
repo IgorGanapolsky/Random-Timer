@@ -16,7 +16,8 @@ One visible premium offer in paywall:
 - All premium features included in Pro:
   - Full sound arsenal.
   - Extended training range to 60 minutes.
-  - Voice callouts during countdown.
+  - Elapsed-time voice callouts.
+  - Monthly Pro audio pack refreshes.
   - Future advanced training modules.
 
 Backward compatibility:

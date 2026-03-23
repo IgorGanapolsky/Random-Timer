@@ -23,6 +23,7 @@ Color = Tuple[int, int, int]
 
 @dataclass(frozen=True)
 class CreativeText:
+    eyebrow: str
     title: str
     subtitle: str
     badge: str
@@ -30,39 +31,46 @@ class CreativeText:
 
 CREATIVE_COPY: Dict[str, CreativeText] = {
     "1_setup.png": CreativeText(
-        title="SHARPEN YOUR DRAW",
-        subtitle="Randomized signals for dry-fire and target acquisition.",
-        badge="REACTION SPEED",
+        eyebrow="CONTROL THE DRILL",
+        title="REACT UNDER STRESS",
+        subtitle="Set a live range and let randomness punish lazy rhythm.",
+        badge="DRY FIRE • MMA • HIIT",
     ),
     "2_active.png": CreativeText(
-        title="STOP PREDICTING",
-        subtitle="Unpredictable intervals ensure you stay honest under stress.",
-        badge="ELIMINATE RHYTHM",
+        eyebrow="STAY HONEST",
+        title="NO COUNTDOWN TO CHEAT",
+        subtitle="Unpredictable start cues stop anticipation before it starts.",
+        badge="PURE REACTION WORK",
     ),
     "3_alarm.png": CreativeText(
-        title="RANGE COMMANDS",
-        subtitle="High-intensity audio arsenal designed for the noise of the gym.",
-        badge="SIGNAL HIT",
+        eyebrow="CUT THROUGH CHAOS",
+        title="LOUD. CLEAR. COMMANDING.",
+        subtitle="Aggressive alarms and voice prompts stay readable in noisy rooms.",
+        badge="PRO VOICE CALLOUTS",
     ),
     "4_running.png": CreativeText(
-        title="BATTLE READY",
-        subtitle="Non-stop automated rounds for boxing, MMA, and HIIT.",
-        badge="RUN DRILLS",
+        eyebrow="BUILD DISCIPLINE",
+        title="REACT ON THE BEEP",
+        subtitle="Train explosive response when your heart rate is already up.",
+        badge="SPEED UNDER STRESS",
     ),
     "5_ipad_setup.png": CreativeText(
-        title="COACH VIEW",
-        subtitle="Class-optimized controls for class-wide reaction stress tests.",
-        badge="PRO UTILITY",
+        eyebrow="COACH MODE",
+        title="RUN THE WHOLE ROOM",
+        subtitle="Big-screen controls make partner and class drills easy to manage.",
+        badge="IPAD-READY",
     ),
     "6_ipad_running.png": CreativeText(
-        title="VISIBLE BATTLESPACE",
-        subtitle="Large-scale UI ensures every athlete stays synchronized.",
-        badge="MISSION READY",
+        eyebrow="VISIBLE AT DISTANCE",
+        title="SEE IT ACROSS THE MAT",
+        subtitle="High-contrast timer views stay legible from the floor, bag, or line.",
+        badge="NO SQUINTING",
     ),
     "7_ipad_stopped.png": CreativeText(
-        title="RAPID RESET",
-        subtitle="Zero friction between rounds. Adjust and execute immediately.",
-        badge="GO AGAIN",
+        eyebrow="BETWEEN ROUNDS",
+        title="RESET. ADJUST. GO AGAIN.",
+        subtitle="Change settings in seconds and get right back to work.",
+        badge="ZERO FRICTION",
     ),
 }
 
@@ -91,57 +99,218 @@ def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
     return ImageFont.load_default()
 
 
+def _mix_color(start: Color, end: Color, ratio: float) -> Color:
+    return tuple(
+        int(round(start[idx] + ((end[idx] - start[idx]) * ratio)))
+        for idx in range(3)
+    )
+
+
+def _wrapped_lines(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    font: ImageFont.ImageFont,
+    max_width: int,
+) -> list[str]:
+    words = text.split()
+    lines: list[str] = []
+    current: list[str] = []
+
+    for word in words:
+        candidate = " ".join([*current, word]).strip()
+        bbox = draw.textbbox((0, 0), candidate, font=font)
+        if current and (bbox[2] - bbox[0]) > max_width:
+            lines.append(" ".join(current))
+            current = [word]
+        else:
+            current.append(word)
+
+    if current:
+        lines.append(" ".join(current))
+    return lines
+
+
+def _draw_multiline(
+    draw: ImageDraw.ImageDraw,
+    lines: list[str],
+    *,
+    x: int,
+    y: int,
+    font: ImageFont.ImageFont,
+    fill: Color,
+    line_spacing: int,
+) -> int:
+    current_y = y
+    for line in lines:
+        draw.text((x, current_y), line, font=font, fill=fill)
+        bbox = draw.textbbox((x, current_y), line, font=font)
+        current_y = bbox[3] + line_spacing
+    return current_y
+
+
+def _resolve_source_path(screenshots_dir: Path, filename: str) -> Path:
+    def candidate_matches_device(path: Path) -> bool:
+        if not path.is_file():
+            return False
+        width, _height = Image.open(path).size
+        is_ipad = filename.startswith(("5_", "6_", "7_"))
+        return width >= 1600 if is_ipad else width < 1600
+
+    candidates = [screenshots_dir / "originals" / filename]
+
+    backup_root = screenshots_dir / "_backup"
+    if backup_root.is_dir():
+        for backup_dir in sorted(path for path in backup_root.iterdir() if path.is_dir()):
+            candidates.append(backup_dir / filename)
+
+    candidates.append(screenshots_dir / filename)
+
+    for candidate in candidates:
+        if candidate_matches_device(candidate):
+            return candidate
+
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    raise FileNotFoundError(f"Source screenshot not found for {filename} in {screenshots_dir}")
+
+
 def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     w, h = source.size
-    
-    # Background: Solid high-contrast Tactical Black
-    base = Image.new("RGB", (w, h), (10, 12, 18))
+    base = Image.new("RGBA", (w, h), (9, 11, 16, 255))
+
+    background = ImageDraw.Draw(base)
+    top_color = (15, 18, 26)
+    bottom_color = (29, 10, 13)
+    for y in range(h):
+        ratio = y / max(1, h - 1)
+        background.line([(0, y), (w, y)], fill=_mix_color(top_color, bottom_color, ratio))
+
+    overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    glow = ImageDraw.Draw(overlay)
+    glow.ellipse(
+        (
+            int(w * 0.42),
+            int(h * -0.02),
+            int(w * 1.12),
+            int(h * 0.52),
+        ),
+        fill=(235, 72, 50, 62),
+    )
+    glow.ellipse(
+        (
+            int(w * -0.18),
+            int(h * 0.56),
+            int(w * 0.62),
+            int(h * 1.18),
+        ),
+        fill=(255, 122, 69, 28),
+    )
+
+    grid_color = (255, 255, 255, 14)
+    grid_step = max(40, int(min(w, h) * 0.055))
+    for x in range(grid_step, w, grid_step):
+        glow.line([(x, 0), (x, h)], fill=grid_color, width=1)
+    for y in range(grid_step, h, grid_step):
+        glow.line([(0, y), (w, y)], fill=grid_color, width=1)
+
+    glow.rounded_rectangle(
+        (int(w * 0.06), int(h * 0.05), int(w * 0.94), int(h * 0.056)),
+        radius=4,
+        fill=(229, 57, 53, 255),
+    )
+    base = Image.alpha_composite(base, overlay)
+
+    draw = ImageDraw.Draw(base)
+    content_left = int(w * 0.08)
+    content_width = int(w * 0.8)
+
+    eyebrow_font = _load_font(max(28, int(h * 0.014)), bold=True)
+    title_font = _load_font(max(78, int(h * 0.05)), bold=True)
+    subtitle_font = _load_font(max(32, int(h * 0.018)), bold=False)
+    badge_font = _load_font(max(28, int(h * 0.014)), bold=True)
+
+    current_y = int(h * 0.08)
+    draw.text((content_left, current_y), text.eyebrow, font=eyebrow_font, fill=(255, 143, 107))
+    current_y += int(h * 0.038)
+
+    title_lines = _wrapped_lines(draw, text.title, title_font, content_width)
+    current_y = _draw_multiline(
+        draw,
+        title_lines,
+        x=content_left,
+        y=current_y,
+        font=title_font,
+        fill=(248, 250, 252),
+        line_spacing=max(6, int(h * 0.004)),
+    )
+
+    current_y += int(h * 0.006)
+    subtitle_lines = _wrapped_lines(draw, text.subtitle, subtitle_font, content_width)
+    current_y = _draw_multiline(
+        draw,
+        subtitle_lines,
+        x=content_left,
+        y=current_y,
+        font=subtitle_font,
+        fill=(203, 213, 225),
+        line_spacing=max(4, int(h * 0.003)),
+    )
+
+    badge_bbox = draw.textbbox((0, 0), text.badge, font=badge_font)
+    badge_width = (badge_bbox[2] - badge_bbox[0]) + 48
+    badge_height = (badge_bbox[3] - badge_bbox[1]) + 26
+    badge_y = current_y + int(h * 0.02)
+    draw.rounded_rectangle(
+        (content_left, badge_y, content_left + badge_width, badge_y + badge_height),
+        radius=16,
+        fill=(220, 38, 38),
+    )
+    draw.text((content_left + 24, badge_y + 10), text.badge, font=badge_font, fill=(255, 255, 255))
+
+    panel_top = int(h * 0.34)
+    panel_left = int(w * 0.05)
+    panel_right = int(w * 0.95)
+    panel_bottom = int(h * 0.965)
+    panel_radius = max(28, int(w * 0.03))
+
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    shadow_draw.rounded_rectangle(
+        (panel_left + 10, panel_top + 18, panel_right + 4, panel_bottom + 12),
+        radius=panel_radius,
+        fill=(0, 0, 0, 120),
+    )
+    base = Image.alpha_composite(base, shadow)
     draw = ImageDraw.Draw(base)
 
-    # Outcome-First Header Section
-    title_font = _load_font(max(72, int(h * 0.045)), bold=True)
-    subtitle_font = _load_font(max(32, int(h * 0.018)), bold=False)
-    
-    title_bbox = draw.textbbox((0, 0), text.title, font=title_font)
-    title_w = title_bbox[2] - title_bbox[0]
-    
-    # Draw large headline
-    draw.text(((w - title_w) // 2, int(h * 0.06)), text.title, font=title_font, fill=(255, 255, 255))
-    
-    # Draw outcome subtitle
-    subtitle_bbox = draw.textbbox((0, 0), text.subtitle, font=subtitle_font)
-    subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
-    draw.text(((w - subtitle_w) // 2, int(h * 0.12)), text.subtitle, font=subtitle_font, fill=(180, 190, 210))
+    draw.rounded_rectangle(
+        (panel_left, panel_top, panel_right, panel_bottom),
+        radius=panel_radius,
+        fill=(13, 16, 22),
+        outline=(82, 35, 35),
+        width=3,
+    )
 
-    # Badge (Result)
-    badge_font = _load_font(max(28, int(h * 0.015)), bold=True)
-    badge_bbox = draw.textbbox((0, 0), text.badge, font=badge_font)
-    bw, bh = badge_bbox[2] - badge_bbox[0], badge_bbox[3] - badge_bbox[1]
-    
-    pad_x, pad_y = 24, 12
-    bx1 = (w - (bw + pad_x * 2)) // 2
-    by1 = int(h * 0.165)
-    bx2, by2 = bx1 + bw + pad_x * 2, by1 + bh + pad_y * 2
-    
-    # Tactical Red Badge
-    draw.rounded_rectangle((bx1, by1, bx2, by2), radius=8, fill=(220, 38, 38))
-    draw.text((bx1 + pad_x, by1 + pad_y - 2), text.badge, font=badge_font, fill=(255, 255, 255))
+    inner_margin = int(w * 0.018)
+    target_w = (panel_right - panel_left) - (inner_margin * 2)
+    target_h = (panel_bottom - panel_top) - (inner_margin * 2)
+    ui_frame = ImageOps.fit(
+        source,
+        (target_w, target_h),
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.06),
+    )
 
-    # App UI Placement: Full-Bleed Offset (High Trust)
-    # We crop the source to show the most relevant parts of the UI without muddy framing.
-    ui_top = int(h * 0.24)
-    ui_margin = int(w * 0.05)
-    target_w = w - (ui_margin * 2)
-    target_h = h - ui_top
-    
-    # Fit source into the remaining space
-    ui_frame = ImageOps.fit(source, (target_w, target_h), method=Image.Resampling.LANCZOS)
-    
-    # Paste directly with sharp high-contrast border
-    draw.rectangle((ui_margin - 2, ui_top - 2, w - ui_margin + 2, h + 2), outline=(40, 50, 70), width=2)
-    base.paste(ui_frame, (ui_margin, ui_top))
-
-    return base
+    mask = Image.new("L", (target_w, target_h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, target_w, target_h),
+        radius=max(20, int(panel_radius * 0.75)),
+        fill=255,
+    )
+    base.paste(ui_frame, (panel_left + inner_margin, panel_top + inner_margin), mask)
+    return base.convert("RGB")
 
 
 def generate(repo_root: Path, locale: str) -> Dict[str, object]:
@@ -155,11 +324,11 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
     backup_root = screenshots_dir / "_backup"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_dir = backup_root / timestamp
+    source_files: dict[str, str] = {}
     
     for filename, text in CREATIVE_COPY.items():
-        source_path = screenshots_dir / SOURCE_MAP.get(filename, filename)
-        if not source_path.is_file():
-            raise FileNotFoundError(f"Source screenshot not found: {source_path}")
+        source_path = _resolve_source_path(screenshots_dir, SOURCE_MAP.get(filename, filename))
+        source_files[filename] = str(source_path)
 
         # If target file exists, move to backup
         target = screenshots_dir / filename
@@ -178,6 +347,7 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "locale": locale,
         "written_files": written,
+        "source_files": source_files,
         "backup_dir": str(backup_dir) if written else None,
         "report_path": str(screenshots_dir / "report.json")
     }

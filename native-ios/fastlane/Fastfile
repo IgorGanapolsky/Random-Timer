@@ -8,6 +8,31 @@ platform :ios do
     false
   end
 
+  def duplicate_testflight_build_error?(error)
+    msg = error.to_s
+    return true if msg.include?("bundle version must be higher than the previously uploaded version")
+    return true if msg.include?("value that has already been used")
+    false
+  end
+
+  def testflight_upload_options(api_key)
+    options = {
+      skip_waiting_for_build_processing: false,
+      api_key: api_key
+    }
+
+    distribute_external = ENV.fetch("TESTFLIGHT_DISTRIBUTE_EXTERNAL", "false") == "true"
+    return options unless distribute_external
+
+    group_names = ENV.fetch("TESTFLIGHT_GROUPS", "").split(",").map(&:strip).reject(&:empty?)
+    UI.user_error!("TESTFLIGHT_GROUPS required when TESTFLIGHT_DISTRIBUTE_EXTERNAL=true") if group_names.empty?
+
+    options[:groups] = group_names
+    options[:distribute_external] = true
+    options[:notify_external_testers] = ENV.fetch("TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS", "false") == "true"
+    options
+  end
+
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_ci if ENV["CI"] == "true"
@@ -81,7 +106,7 @@ platform :ios do
         profile_name: widget_profile
       )
 
-      build_app(
+      build_opts = {
         scheme: "RandomTimer",
         export_method: "app-store",
         export_options: {
@@ -91,25 +116,117 @@ platform :ios do
             "com.igorganapolsky.randomtimer.widget" => widget_profile
           }
         }
-      )
+      }
+      build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+      build_app(**build_opts)
     else
       # Local/dev fallback when match is not configured.
+      posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
       build_app(
         scheme: "RandomTimer",
         export_method: "app-store",
-        xcargs: "-allowProvisioningUpdates"
+        xcargs: posthog_xcargs
       )
     end
 
-    # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: false,
-      api_key: defined?(api_key) ? api_key : nil
+    testflight_api_key = defined?(api_key) ? api_key : nil
+    upload_attempts = 0
+    begin
+      upload_to_testflight(**testflight_upload_options(testflight_api_key))
+    rescue => e
+      raise unless duplicate_testflight_build_error?(e)
+      raise if upload_attempts >= 1 || !defined?(api_key)
+
+      upload_attempts += 1
+      latest_remote_build_number = latest_testflight_build_number(
+        api_key: api_key,
+        app_identifier: "com.igorganapolsky.randomtimer",
+        version: marketing_version,
+        initial_build_number: next_build_number
+      ).to_i
+      next_build_number = [next_build_number + 1, latest_remote_build_number + 1].max
+      UI.important("Retrying TestFlight upload with build #{next_build_number} after duplicate build rejection.")
+      increment_build_number(
+        xcodeproj: "RandomTimer.xcodeproj",
+        build_number: next_build_number
+      )
+
+      if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+        build_opts = {
+          scheme: "RandomTimer",
+          export_method: "app-store",
+          export_options: {
+            signingStyle: "manual",
+            provisioningProfiles: {
+              "com.igorganapolsky.randomtimer" => app_profile,
+              "com.igorganapolsky.randomtimer.widget" => widget_profile
+            }
+          }
+        }
+        build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+        build_app(**build_opts)
+      else
+        posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
+        build_app(
+          scheme: "RandomTimer",
+          export_method: "app-store",
+          xcargs: posthog_xcargs
+        )
+      end
+
+      retry
+    end
+    
+    # Also upload to Firebase App Distribution
+    if (ENV["FIREBASE_IOS_APP_ID"] || ENV["FIREBASE_APP_ID"]) && ENV["FIREBASE_TOKEN"]
+      firebase_app_id = ENV["FIREBASE_IOS_APP_ID"] || ENV["FIREBASE_APP_ID"]
+      firebase_app_distribution(
+        app: firebase_app_id,
+        firebase_cli_token: ENV["FIREBASE_TOKEN"],
+        release_notes: "Automated build from GitHub Actions",
+        groups: "internal-testers"
+      )
+    else
+      UI.important("Firebase App Distribution not configured - skipping")
+    end
+  end
+
+  desc "Add external beta tester to TestFlight"
+  lane :add_tester do |options|
+    setup_ci if ENV["CI"] == "true"
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APPSTORE_KEY_ID"],
+      issuer_id: ENV["APPSTORE_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
     )
+
+    email = options[:email] || ENV["TESTER_EMAIL"]
+    first = options[:first_name] || ENV.fetch("TESTER_FIRST_NAME", "")
+    last = options[:last_name] || ENV.fetch("TESTER_LAST_NAME", "")
+    group = options[:group] || ENV.fetch("TESTFLIGHT_GROUPS", "Beta Testers")
+
+    pilot(
+      api_key: api_key,
+      app_platform: "ios",
+      app_identifier: "com.igorganapolsky.randomtimer",
+      email: email,
+      first_name: first,
+      last_name: last,
+      groups: [group],
+      distribute_only: true,
+      notify_external_testers: true,
+      distribute_external: true,
+      reject_build_waiting_for_review: false,
+      skip_submission: false
+    )
+    UI.success("Added #{email} to '#{group}' TestFlight group")
   end
 
   desc "Create app in App Store Connect"
   lane :create_app do |options|
+    setup_ci if ENV["CI"] == "true"
+    
     produce(
       app_identifier: "com.igorganapolsky.randomtimer",
       app_name: "Random Tactical Timer",
@@ -122,6 +239,8 @@ platform :ios do
 
   desc "Upload metadata (screenshots, descriptions) to App Store Connect"
   lane :metadata do |options|
+    setup_ci if ENV["CI"] == "true"
+    
     if ENV["APPSTORE_KEY_ID"] && ENV["APPSTORE_ISSUER_ID"]
       api_key = app_store_connect_api_key(
         key_id: ENV["APPSTORE_KEY_ID"],
@@ -229,6 +348,8 @@ platform :ios do
 
   desc "Verify build processed on TestFlight"
   lane :verify do |options|
+    setup_ci if ENV["CI"] == "true"
+    
     version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj")
     sh("python3 #{File.expand_path('../../scripts/verify_release.py', __dir__)} " \
        "--platform ios --version #{version}")
@@ -258,5 +379,16 @@ platform :ios do
     else
       UI.message("No MATCH_GIT_URL set - using Xcode automatic signing")
     end
+  end
+
+  desc "Deploy a new version to TestFlight and Firebase App Distribution"
+  lane :deploy do
+    # Setup for CI
+    setup_ci if ENV["CI"]
+    
+    # Build and upload to TestFlight using the same logic as beta lane
+    beta
+    
+    # The Firebase upload is already handled in the beta lane
   end
 end

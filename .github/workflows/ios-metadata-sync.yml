@@ -37,7 +37,7 @@ jobs:
       IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
       IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Fail fast on required App Store secrets
         env:
@@ -70,7 +70,7 @@ jobs:
           fastlane --version
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -85,7 +85,8 @@ jobs:
           if [ -n "$VERSION_INPUT" ]; then
             VERSION="$VERSION_INPUT"
           else
-            VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oE '[0-9]+(\.[0-9]+){1,2}')
+            eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+            VERSION="$IOS_VERSION_NAME"
           fi
           if [ -z "$VERSION" ]; then
             echo "Failed to resolve iOS version" >&2
@@ -155,7 +156,7 @@ jobs:
 
       - name: Upload readiness report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-ready-report
           path: |
@@ -165,7 +166,7 @@ jobs:
 
       - name: Upload version resolution report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json

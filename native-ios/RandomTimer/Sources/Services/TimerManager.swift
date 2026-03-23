@@ -96,6 +96,7 @@ final class TimerManager: ObservableObject {
             "max_duration": newConfig.maxDuration,
             "sound_type": String(describing: newConfig.soundType),
             "repeat_enabled": newConfig.repeatEnabled,
+            "voice_callouts_enabled": newConfig.voiceEnabled,
         ])
 
         Task {
@@ -103,7 +104,7 @@ final class TimerManager: ObservableObject {
         }
     }
 
-    func startTimer() async {
+    func startTimer(roundCount: Int = 1) async {
         // Reset silence flag for new timer
         isAlarmSilenced = false
 
@@ -121,7 +122,8 @@ final class TimerManager: ObservableObject {
 
         let state = TimerState(
             config: config,
-            targetDuration: randomDuration
+            targetDuration: randomDuration,
+            roundCount: roundCount
         )
 
         timerState = state
@@ -158,6 +160,7 @@ final class TimerManager: ObservableObject {
             ])
         }
         stopCountdown()
+        AIVoiceCalloutService.shared.resetSession()
         timerState = nil
 
         await storageService.clearTimerState()
@@ -202,10 +205,11 @@ final class TimerManager: ObservableObject {
     }
 
     func restartTimer() async {
+        let currentRound = timerState?.roundCount ?? 1
         // Restart with a NEW random duration (used after alarm completes with loop)
         notificationService.stopAlarmSound()
         await cancelTimer()
-        await startTimer()
+        await startTimer(roundCount: currentRound + 1)
     }
 
     /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
@@ -264,7 +268,14 @@ final class TimerManager: ObservableObject {
                     isAlarmSilenced = true
 
                     if state.config.repeatEnabled {
-                        await restartTimer()
+                        let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                        if shouldContinue {
+                            await restartTimer()
+                        } else {
+                            state.status = .complete
+                            state.alarmTimeRemaining = 0
+                            timerState = state
+                        }
                     } else {
                         state.status = .complete
                         state.alarmTimeRemaining = 0
@@ -382,6 +393,8 @@ final class TimerManager: ObservableObject {
         // Reset to the SAME duration (restart from beginning)
         guard let currentState = timerState else { return }
         let sameDuration = currentState.targetDuration
+
+        AIVoiceCalloutService.shared.resetSession()
 
         // Reset silence flag for new timer
         isAlarmSilenced = false
@@ -536,9 +549,10 @@ final class TimerManager: ObservableObject {
         state.remainingDuration -= 1
         Logger.timer.debug("tick: remaining = \(state.remainingDuration)")
 
-        // Trigger voice callouts for Pro users
-        if ProManager.shared.isPro {
-            AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: Int(state.targetDuration - state.remainingDuration))
+        // Drive bundled drill-sergeant clips from elapsed time so cue assets line up with runtime milestones.
+        if ProManager.shared.isPro && state.config.voiceEnabled {
+            let elapsedSeconds = max(0, Int(state.targetDuration - state.remainingDuration))
+            AIVoiceCalloutService.shared.triggerCallout(elapsedSeconds: elapsedSeconds)
         }
 
         if state.remainingDuration <= 0 {
@@ -627,7 +641,14 @@ final class TimerManager: ObservableObject {
 
             // Auto-repeat if enabled
             if state.config.repeatEnabled {
-                await restartTimer()
+                let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                if shouldContinue {
+                    await restartTimer()
+                } else {
+                    AnalyticsService.shared.track("loop_limit_reached", properties: [
+                        "rounds": state.roundCount
+                    ])
+                }
             }
         } else {
             timerState = state

@@ -34,7 +34,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Fail fast on required App Store secrets
         env:
@@ -54,7 +54,7 @@ jobs:
         run: bash scripts/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -81,6 +81,13 @@ jobs:
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
           echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
 
+      - name: Guard iOS version lineage against ASC
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+        run: python scripts/check_ios_version_lineage.py --repo-root .
+
       - name: Resolve iOS version
         id: version
         env:
@@ -94,11 +101,10 @@ jobs:
             echo "ios_version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Info.plist commonly contains build-setting placeholders like $(MARKETING_VERSION).
-          # Read MARKETING_VERSION directly from the Xcode project for a stable X.Y.Z value.
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | sed -n 's/.*= *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' || true)
+          eval "$(python scripts/source_versions.py --repo-root . --format shell)"
+          IOS_VERSION="${IOS_VERSION_NAME:-}"
           if [ -z "$IOS_VERSION" ]; then
-            echo "❌ Could not determine iOS version (MARKETING_VERSION) from Xcode project"
+            echo "❌ Could not determine iOS version from source metadata"
             exit 1
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
@@ -224,14 +230,14 @@ jobs:
 
       - name: Upload version resolution report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
 
       - name: Upload submission readiness artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-submit-readiness
           path: |

@@ -15,7 +15,7 @@ class TimerConfigProClampingTest {
     // Simulate the clamping logic extracted from TimerRepositoryImpl.
     // Mirrors the exact copy() logic used in the production clampedForPro() helper.
     private fun TimerConfig.clampedForPro(isPro: Boolean): TimerConfig {
-        val maxAllowed = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+        val maxAllowed = if (isPro && useExtendedRange) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
         val allowedSounds = if (isPro) SoundType.entries.toList() else SoundType.FREE
         val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
         val clampedMin = minSeconds.coerceAtMost(clampedMax)
@@ -24,6 +24,7 @@ class TimerConfigProClampingTest {
             minSeconds = clampedMin,
             maxSeconds = clampedMax,
             soundType = clampedSound,
+            useExtendedRange = if (isPro) useExtendedRange else false
         )
     }
 
@@ -38,11 +39,13 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
 
         val clamped = proConfig.clampedForPro(isPro = false)
 
         assertThat(clamped.maxSeconds).isEqualTo(TimerConfig.MAX_SECONDS_FREE)
+        assertThat(clamped.useExtendedRange).isFalse()
     }
 
     @Test
@@ -92,11 +95,13 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
 
         val clamped = proConfig.clampedForPro(isPro = true)
 
         assertThat(clamped.maxSeconds).isEqualTo(3600)
+        assertThat(clamped.useExtendedRange).isTrue()
     }
 
     @Test
@@ -129,12 +134,14 @@ class TimerConfigProClampingTest {
                 repeatEnabled = false,
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
+                useExtendedRange = true,
             )
         val clamped = proConfig.clampedForPro(isPro = false)
 
         // min=0 is already safe; verify clamped max is 300 and min <= max
         assertThat(clamped.maxSeconds).isEqualTo(300)
         assertThat(clamped.minSeconds).isAtMost(clamped.maxSeconds)
+        assertThat(clamped.useExtendedRange).isFalse()
     }
 
     @Test

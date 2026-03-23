@@ -11,6 +11,7 @@ import os
 final class NotificationService: NSObject, TimerNotificationHandling {
 
     private var audioPlayer: AVAudioPlayer?
+    private let packStore: ProAudioPackStore
     /// Set to true when user taps the alarm notification
     private(set) var didTapAlarmNotification = false
 
@@ -30,7 +31,8 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     private var hapticPlayer: CHHapticPatternPlayer?
     private var vibrationTimer: Timer?
 
-    override init() {
+    init(packStore: ProAudioPackStore = .shared) {
+        self.packStore = packStore
         super.init()
         UNUserNotificationCenter.current().delegate = self
         registerNotificationActions()
@@ -158,7 +160,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         let resourceName = soundResourceName(for: type)
 
-        if let url = Bundle.main.url(forResource: resourceName, withExtension: "mp3") {
+        if let url = packStore.soundAudioURL(for: type, bundle: .main) {
             do {
                 audioPlayer = try AVAudioPlayer(contentsOf: url)
                 audioPlayer?.numberOfLoops = -1 // Loop indefinitely
@@ -213,7 +215,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         let resourceName = soundResourceName(for: type)
 
-        if let url = Bundle.main.url(forResource: resourceName, withExtension: "mp3") {
+        if let url = packStore.soundAudioURL(for: type, bundle: .main) {
             do {
                 audioPlayer = try AVAudioPlayer(contentsOf: url)
                 audioPlayer?.numberOfLoops = -1 // Loop while playing
@@ -267,18 +269,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     }
 
     private func soundResourceName(for type: SoundType) -> String {
-        switch type {
-        case .intense: return "alarm"
-        case .gentle: return "gentle-chime"
-        case .klaxon: return "klaxon"
-        case .whistle: return "whistle"
-        case .buzzer: return "buzzer"
-        case .gong: return "gong"
-        case .airhorn: return "airhorn"
-        case .drumRoll: return "drum_roll"
-        case .siren: return "siren"
-        case .bell: return "bell"
-        }
+        proSoundResourceName(for: type)
     }
 
     // MARK: - Media Session (Bluetooth / CarPlay alarm controls)

@@ -121,3 +121,41 @@ def test_run_writes_json_and_markdown_reports(tmp_path: Path):
     assert json_path.exists()
     assert md_path.exists()
     assert "Next Experiment" in md_path.read_text(encoding="utf-8")
+
+
+def test_build_ops_payload_warns_on_stale_metric_inputs(tmp_path: Path):
+    repo_root = tmp_path
+    _write_json(
+        repo_root / "marketing/data/north_star.json",
+        {
+            "status": "degraded",
+            "north_star": {
+                "wqtu_7d": 1,
+                "targets": {"checkpoint_2026_03_31": 8, "quarter_2026_06_30": 25},
+            },
+            "paid": {"paid_distinct_users_30d": 0, "no_scale_lock": {"active": False, "reasons": []}},
+            "data_quality": {"is_stale": True, "last_good_generated_at": "2026-03-15T10:00:00+00:00"},
+        },
+    )
+    _write_json(
+        repo_root / "marketing/data/content_feedback.json",
+        {
+            "status": "degraded",
+            "onboarding_funnel": {
+                "first_open": 100,
+                "first_timer_configured": 80,
+                "first_timer_completed": 30,
+                "open_to_configured_rate": 0.8,
+                "configured_to_completed_rate": 0.375,
+                "open_to_completed_rate": 0.3,
+                "window_days": 30,
+            },
+            "top_campaigns_by_activation": [],
+            "data_quality": {"is_stale": True, "last_good_generated_at": "2026-03-15T10:00:00+00:00"},
+        },
+    )
+
+    payload = nso.build_ops_payload(repo_root)
+
+    assert any("stale metrics in north_star.json" in warning for warning in payload["warnings"])
+    assert any("stale metrics in content_feedback.json" in warning for warning in payload["warnings"])

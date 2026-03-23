@@ -21,6 +21,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.service.ProAudioPackStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,11 +42,13 @@ class ProManager
     constructor(
         @ApplicationContext private val context: Context,
         private val analyticsService: AnalyticsService,
+        private val packStore: ProAudioPackStore,
         private val externalScope: CoroutineScope,
     ) : PurchasesUpdatedListener {
         companion object {
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
+            const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
@@ -161,8 +164,9 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            if (!debugOverrideActive) {
-                _entitlementLevel.value = level
+            _entitlementLevel.value = level
+            if (level.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
             }
 
             if (trackResult) {
@@ -307,6 +311,13 @@ class ProManager
             }
         }
 
+        suspend fun getFormattedProPrice(): String = getFormattedPrice(PRO_PRODUCT_ID)
+
+        suspend fun launchProPurchase(
+            activity: Activity,
+            entryPoint: String,
+        ): Boolean = launchPurchase(activity, PRO_PRODUCT_ID, entryPoint)
+
         override fun onPurchasesUpdated(
             result: BillingResult,
             purchases: MutableList<Purchase>?,
@@ -338,6 +349,9 @@ class ProManager
                 if (_entitlementLevel.value == EntitlementLevel.NONE) {
                     _entitlementLevel.value = EntitlementLevel.BASE
                 }
+            }
+            if (_entitlementLevel.value.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
             }
         }
 
@@ -420,6 +434,9 @@ class ProManager
                     EntitlementLevel.ELITE -> EntitlementLevel.NONE
                 }
             _entitlementLevel.value = next
+            if (next.isPro) {
+                packStore.refreshIfNeeded(isPro = true)
+            }
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
@@ -442,6 +459,7 @@ class ProManager
             }
             debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
+            packStore.refreshIfNeeded(isPro = true)
             trackPurchaseResult(
                 success = true,
                 source = MonetizationSources.PAYWALL,

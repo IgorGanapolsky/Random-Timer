@@ -5,8 +5,22 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   issue_comment:
     types: [created]
+  push:
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
 jobs:
+  claude-review-push-advisory:
+    name: Claude Review Advisory
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip advisory review on push
+        run: |
+          echo "Claude Review only performs PR and @claude review flows."
+          echo "Push events get a green advisory noop to avoid false red checks."
+
   # Claude deep review for architectural and project-specific checks
   claude-review:
     name: Claude Review
@@ -21,15 +35,15 @@ jobs:
       statuses: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Claude Code Review
         id: claude_review
-        if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        if: ${{ env.ANTHROPIC_API_KEY != '' }}
         continue-on-error: true
         uses: anthropics/claude-code-action@ea5a04005c9fd4deed2ed803c15a64d0e6eb65d0 # v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
           allowed_bots: 'trunk-io,dependabot[bot],github-actions[bot]'
           prompt: |
             Review this PR for the Random Timer app. This is a native mobile project:
@@ -61,7 +75,7 @@ jobs:
           claude_args: '--max-turns 10'
 
       - name: Advisory mode notice when secret is unavailable
-        if: ${{ secrets.ANTHROPIC_API_KEY == '' }}
+        if: ${{ env.ANTHROPIC_API_KEY == '' }}
         run: |
           echo "ANTHROPIC_API_KEY is not available for this run."
           echo "Claude Review remains advisory and non-blocking."
@@ -105,12 +119,13 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Claude Code Assist
+        if: ${{ env.ANTHROPIC_API_KEY != '' }}
         uses: anthropics/claude-code-action@ea5a04005c9fd4deed2ed803c15a64d0e6eb65d0 # v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
           allowed_bots: 'trunk-io,dependabot[bot],github-actions[bot]'
           prompt: |
@@ -128,3 +143,9 @@ jobs:
           claude_args: |
             --max-turns 5
             --setting-sources user
+
+      - name: Advisory mode notice when secret is unavailable
+        if: ${{ env.ANTHROPIC_API_KEY == '' }}
+        run: |
+          echo "ANTHROPIC_API_KEY is not available for this run."
+          echo "Claude Assist remains advisory and non-blocking."

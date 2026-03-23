@@ -1,0 +1,27 @@
+- name: openrouter/qwen/qwen3-coder
+  edit_format: whole
+  use_repo_map: true
+  examples_as_sys_msg: true
+  extra_params:
+    max_tokens: 24000
+    extra_body:
+      provider:
+        only:
+          - deepinfra
+          - together
+          - novita
+        allow_fallbacks: true
+
+- name: openrouter/moonshotai/kimi-k2
+  edit_format: whole
+  use_repo_map: true
+  examples_as_sys_msg: true
+  extra_params:
+    max_tokens: 32000
+    extra_body:
+      provider:
+        only:
+          - deepinfra
+          - together
+          - novita
+        allow_fallbacks: true

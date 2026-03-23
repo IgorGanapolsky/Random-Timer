@@ -14,6 +14,7 @@ class TimerConfigTest {
         assertThat(config.maxSeconds).isEqualTo(300)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
+        assertThat(config.voiceEnabled).isTrue()
     }
 
     @Test
@@ -112,6 +113,7 @@ class TimerConfigTest {
                 soundType = SoundType.INTENSE,
                 volume = 0.5f,
                 vibrationEnabled = false,
+                useExtendedRange = true,
             )
         assertThat(config.maxSeconds).isEqualTo(3600)
     }
@@ -131,6 +133,24 @@ class TimerConfigTest {
             )
 
         assertThat(config.vibrationEnabled).isTrue()
+    }
+
+    @Test
+    fun `config can enable voice callouts`() {
+        val config =
+            TimerConfig(
+                minSeconds = 30,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+                voiceEnabled = true,
+            )
+
+        assertThat(config.voiceEnabled).isTrue()
     }
 
     @Test

@@ -1,0 +1,10 @@
+appId: com.iganapolsky.randomtimer
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Minimum: 0s"
+- takeScreenshot: evidence/android-upper-plus-before
+- tapOn:
+    point: "88%,25%"
+- assertVisible: "Minimum: 5s"
+- takeScreenshot: evidence/android-upper-plus-after

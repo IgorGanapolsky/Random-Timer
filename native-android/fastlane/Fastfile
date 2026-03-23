@@ -2,12 +2,12 @@ default_platform(:android)
 
 platform :android do
   desc "Upload metadata (screenshots, descriptions) to Google Play"
-  lane :metadata do |options|
+  lane :metadata do |_options|
     sh("python3 #{File.expand_path('../../scripts/sync_android_metadata.py', __dir__)}")
   end
 
   desc "Legacy metadata upload via supply (kept for troubleshooting only)"
-  lane :metadata_legacy do |options|
+  lane :metadata_legacy do |_options|
     upload_to_play_store(
       package_name: "com.iganapolsky.randomtimer",
       track: "internal",
@@ -27,7 +27,8 @@ platform :android do
       aab: "app/build/outputs/bundle/release/app-release.aab",
       skip_upload_metadata: true,
       skip_upload_images: true,
-      skip_upload_screenshots: true
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
     )
   end
 
@@ -62,6 +63,41 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true
+    )
+  end
+
+  desc "Deploy a new version to the Google Play Store and Firebase App Distribution"
+  lane :deploy do
+    setup_ci if ENV["CI"]
+
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: "."
+    )
+
+    upload_to_play_store(
+      track: "internal",
+      json_key_data: ENV["PLAY_STORE_JSON_KEY"]
+    )
+
+    if ENV["FIREBASE_TOKEN"] && (ENV["FIREBASE_ANDROID_APP_ID"] || ENV["FIREBASE_APP_ID"])
+      firebase_app_id = ENV["FIREBASE_ANDROID_APP_ID"] || ENV["FIREBASE_APP_ID"]
+      firebase_app_distribution(
+        app: firebase_app_id,
+        firebase_cli_token: ENV["FIREBASE_TOKEN"],
+        release_notes: "Automated build from GitHub Actions",
+        groups: "internal-testers"
+      )
+    else
+      UI.important("Firebase App Distribution not configured - skipping")
+    end
+  end
+
+  desc "Build debug APK for CI"
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug",
+      project_dir: "."
     )
   end
 end

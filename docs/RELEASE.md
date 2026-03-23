@@ -173,6 +173,12 @@ CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so ev
 
 ## Store Metadata Locations
 
+## Android Firebase App Distribution
+
+Android Firebase App Distribution is documented separately in [FIREBASE_ANDROID_INFRASTRUCTURE.md](FIREBASE_ANDROID_INFRASTRUCTURE.md).
+
+Important: Android runtime Firebase and Android App Distribution do not currently use the same Firebase project. Check that document before rotating any Firebase secret.
+
 ### Android (Google Play)
 
 ```

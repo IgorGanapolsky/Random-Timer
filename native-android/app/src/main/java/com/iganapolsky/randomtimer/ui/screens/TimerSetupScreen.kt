@@ -25,15 +25,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -46,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -129,7 +137,7 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(isPro) }
+    var showArsenal by remember { mutableStateOf(true) }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
@@ -139,6 +147,9 @@ fun TimerSetupScreen(
         soundType: SoundType = config.soundType,
         volume: Float = config.volume,
         vibrationEnabled: Boolean = config.vibrationEnabled,
+        useExtendedRange: Boolean = config.useExtendedRange,
+        voiceEnabled: Boolean = config.voiceEnabled,
+        repeatRounds: Int = config.repeatRounds,
     ) {
         onConfigChange(
             config.copy(
@@ -150,6 +161,9 @@ fun TimerSetupScreen(
                 soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                useExtendedRange = useExtendedRange,
+                voiceEnabled = voiceEnabled,
+                repeatRounds = repeatRounds,
             ),
         )
     }
@@ -177,6 +191,21 @@ fun TimerSetupScreen(
                             ),
                     )
                 }
+            },
+            bottomBar = {
+                PrimaryButton(
+                    text = "Start Timer",
+                    onClick = onStartTimer,
+                    modifier =
+                        Modifier
+                            .padding(horizontal = spacing.outerHorizontal)
+                            .padding(bottom = 16.dp, top = 8.dp)
+                            .navigationBarsPadding()
+                            .graphicsLayer {
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            },
+                )
             },
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),
@@ -229,8 +258,8 @@ fun TimerSetupScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
                                 )
+                                Spacer(modifier = Modifier.weight(1f))
                                 if (!isPro) {
-                                    Spacer(modifier = Modifier.weight(1f))
                                     Text(
                                         text = "PRO: 1H \uD83D\uDD12",
                                         style = MaterialTheme.typography.labelSmall,
@@ -246,11 +275,56 @@ fun TimerSetupScreen(
                                                 },
                                             ),
                                     )
+                                } else {
+                                    FilterChip(
+                                        selected = config.useExtendedRange,
+                                        onClick = {
+                                            val newExtended = !config.useExtendedRange
+                                            val clampedMax =
+                                                if (newExtended) {
+                                                    config.maxSeconds
+                                                } else {
+                                                    minOf(
+                                                        config.maxSeconds,
+                                                        TimerConfig.MAX_SECONDS_FREE,
+                                                    )
+                                                }
+                                            val clampedMin = minOf(config.minSeconds, clampedMax)
+                                            updateConfig(useExtendedRange = newExtended, maxSeconds = clampedMax, minSeconds = clampedMin)
+                                        },
+                                        label = {
+                                            Text(
+                                                text = if (config.useExtendedRange) "1H" else "5m",
+                                                style = MaterialTheme.typography.labelSmall,
+                                            )
+                                        },
+                                        colors =
+                                            FilterChipDefaults.filterChipColors(
+                                                containerColor = TimerColors.GlassBackground,
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                labelColor = TimerColors.TextSecondary,
+                                                selectedLabelColor = TimerColors.AccentPrimary,
+                                            ),
+                                        border =
+                                            FilterChipDefaults.filterChipBorder(
+                                                borderColor = TimerColors.GlassBorder,
+                                                selectedBorderColor = TimerColors.AccentPrimary,
+                                                enabled = true,
+                                                selected = config.useExtendedRange,
+                                            ),
+                                    )
                                 }
                             }
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
-                            val maxRange = if (isPro) TimerConfig.MAX_SECONDS_PRO else TimerConfig.MAX_SECONDS_FREE
+                            val maxRange =
+                                if (isPro &&
+                                    config.useExtendedRange
+                                ) {
+                                    TimerConfig.MAX_SECONDS_PRO
+                                } else {
+                                    TimerConfig.MAX_SECONDS_FREE
+                                }
                             TimeRangeSliders(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
@@ -353,41 +427,48 @@ fun TimerSetupScreen(
                                         text = "\uD83D\uDCE2 AI Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isElite) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Voice prompts during countdown",
+                                        text = "Elapsed-time voice prompts during the timer",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // Preview Button (always enabled to sell the feature)
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onCommandCuePreview()
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                        modifier = Modifier.padding(end = 8.dp),
-                                    ) {
-                                        Text(
-                                            text = "PREVIEW",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
+                                    if (isPro) {
+                                        // Pro users only see the voice toggle
+                                    } else {
+                                        // Preview Button only for free users (to sell the feature)
+                                        Surface(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onCommandCuePreview()
+                                            },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            modifier = Modifier.padding(end = 8.dp),
+                                        ) {
+                                            Text(
+                                                text = "PREVIEW",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            )
+                                        }
                                     }
 
-                                    if (isElite) {
-                                        Text(
-                                            text = "ENABLED",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
+                                    if (isPro) {
+                                        Switch(
+                                            checked = config.voiceEnabled,
+                                            onCheckedChange = { updateConfig(voiceEnabled = it) },
+                                            colors =
+                                                SwitchDefaults.colors(
+                                                    checkedThumbColor = TimerColors.AccentPrimary,
+                                                    checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                                ),
                                         )
                                     } else {
                                         Surface(
@@ -400,7 +481,7 @@ fun TimerSetupScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Text(
-                                                    text = "ELITE ",
+                                                    text = "PRO ",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
@@ -489,22 +570,123 @@ fun TimerSetupScreen(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(spacing.listItem))
+
+                    // 3. Loop & Rounds (Pro)
+                    GlassCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                LabelWithIcon(
+                                    text = "Repeat Loop",
+                                    icon = androidx.compose.material.icons.Icons.Filled.Refresh,
+                                    color = TimerColors.TextPrimary,
+                                )
+
+                                Switch(
+                                    checked = config.repeatEnabled,
+                                    onCheckedChange = { updateConfig(repeatEnabled = it) },
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = TimerColors.AccentPrimary,
+                                            checkedTrackColor = TimerColors.AccentPrimary.copy(alpha = 0.5f),
+                                        ),
+                                )
+                            }
+
+                            if (config.repeatEnabled) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = repeatLoopDetailTitle(isPro = isPro),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        )
+                                        Text(
+                                            text =
+                                                repeatLoopDetailSummary(
+                                                    isPro = isPro,
+                                                    repeatRounds = config.repeatRounds,
+                                                ),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    }
+
+                                    if (isPro) {
+                                        IconButton(
+                                            onClick = {
+                                                if (config.repeatRounds > 0) {
+                                                    updateConfig(repeatRounds = config.repeatRounds - 1)
+                                                }
+                                            },
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Remove,
+                                                contentDescription = "Decrease Rounds",
+                                                tint = TimerColors.TextPrimary,
+                                            )
+                                        }
+                                        Text(
+                                            text = config.repeatRounds.toString(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = TimerColors.TextPrimary,
+                                            modifier = Modifier.padding(horizontal = 8.dp),
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                if (config.repeatRounds < 100) {
+                                                    updateConfig(repeatRounds = config.repeatRounds + 1)
+                                                }
+                                            },
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Increase Rounds",
+                                                tint = TimerColors.TextPrimary,
+                                            )
+                                        }
+                                    } else {
+                                        Surface(
+                                            onClick = onUpgradeTap,
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = "PRO ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                                Text(
+                                                    text = "\uD83D\uDD12",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.AccentPrimary,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // Start Button
-                item {
-                    PrimaryButton(
-                        text = "Start Timer",
-                        onClick = onStartTimer,
-                        modifier =
-                            Modifier.padding(top = spacing.startButtonTop).graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                    )
-                }
-
-                // Zone 2: Tactical Expansion (PRO)
+                // 3. Sound Arsenal
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
                     Row(
@@ -513,22 +695,19 @@ fun TimerSetupScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (isPro) "TACTICAL EXPANSION (PRO) \uD83D\uDD13" else "TACTICAL EXPANSION (PRO) \uD83D\uDD12",
+                            text = "Sound Arsenal",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isPro) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                             modifier =
                                 Modifier.pointerInput(Unit) {
                                     detectTapGestures(
                                         onTap = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isPro) {
-                                                if (isCompactHeight) {
-                                                    showArsenalSheet = true
-                                                } else {
-                                                    showArsenal = !showArsenal
-                                                }
+                                            if (isCompactHeight) {
+                                                showArsenalSheet = true
                                             } else {
-                                                onUpgradeTap()
+                                                showArsenal = !showArsenal
                                             }
                                         },
                                         onPress = {
@@ -544,9 +723,11 @@ fun TimerSetupScreen(
 
                         val actionLabel =
                             when {
-                                isCompactHeight -> "Open Sound Arsenal"
-                                !isPro -> if (showArsenal) "Hide Sound Arsenal" else "View Sound Arsenal"
-                                else -> "View Sound Arsenal"
+                                isCompactHeight && isPro -> "Open Sound Arsenal"
+                                isCompactHeight -> "Preview Sounds"
+                                showArsenal -> "Hide Sound Arsenal"
+                                isPro -> "View Sound Arsenal"
+                                else -> "Preview Sounds"
                             }
                         Text(
                             text = actionLabel,
@@ -566,7 +747,7 @@ fun TimerSetupScreen(
                     }
                 }
 
-                // Pro Sound Arsenal
+                // Sound Arsenal
                 item {
                     if (!isCompactHeight) {
                         AnimatedVisibility(
@@ -616,6 +797,18 @@ fun TimerSetupScreen(
         }
     }
 }
+
+internal fun repeatLoopDetailTitle(isPro: Boolean): String = "Round Selection"
+
+internal fun repeatLoopDetailSummary(
+    isPro: Boolean,
+    repeatRounds: Int,
+): String =
+    when {
+        !isPro -> "Infinite Loop (Pro: set 1–100 rounds)"
+        repeatRounds == 0 -> "Infinite Rounds"
+        else -> "$repeatRounds Rounds"
+    }
 
 @Composable
 private fun SoundArsenalCard(
@@ -1000,6 +1193,29 @@ private fun VolumeSlider(
                 height = 32.dp,
             )
         }
+    }
+}
+
+@Composable
+private fun LabelWithIcon(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: androidx.compose.ui.graphics.Color = TimerColors.TextPrimary,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+        )
     }
 }
 

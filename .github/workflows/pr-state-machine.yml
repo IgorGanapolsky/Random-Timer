@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   check_suite:
-    types: [requested, rerequested, completed]
+    types: [completed]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -27,7 +27,7 @@ jobs:
       issues: write
     steps:
       - name: Reconcile labels, commit status, and incidents
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REQUIRED_CHECKS_FROM_VAR: ${{ vars.PR_REQUIRED_CHECKS || '' }}
         with:
@@ -489,7 +489,7 @@ jobs:
                 }
               }
             } else if (context.eventName === "workflow_dispatch") {
-              const raw = core.getInput("pr_number");
+              const raw = context.payload.inputs?.pr_number || core.getInput("pr_number");
               if (raw && raw.trim()) {
                 const parsed = Number.parseInt(raw, 10);
                 if (Number.isInteger(parsed) && parsed > 0) {

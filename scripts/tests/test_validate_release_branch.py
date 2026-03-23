@@ -13,11 +13,11 @@ def _write_version_files(repo_root, android_version: str, ios_version: str) -> N
     ios_file.parent.mkdir(parents=True, exist_ok=True)
 
     android_file.write_text(
-        f'android {{\n  defaultConfig {{\n    versionName = "{android_version}"\n  }}\n}}\n',
+        f'android {{\n  defaultConfig {{\n    versionCode = 1\n    versionName = "{android_version}"\n  }}\n}}\n',
         encoding="utf-8",
     )
     ios_file.write_text(
-        f"MARKETING_VERSION = {ios_version};\n",
+        f"MARKETING_VERSION = {ios_version};\nCURRENT_PROJECT_VERSION = 1;\n",
         encoding="utf-8",
     )
 

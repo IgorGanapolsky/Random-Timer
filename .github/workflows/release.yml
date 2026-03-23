@@ -27,7 +27,7 @@ jobs:
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -36,13 +36,13 @@ jobs:
         env:
           INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          echo "version=$INPUT_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Validate version
         env:
           VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          if ! [[ $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
             echo "Invalid version format: $VERSION"
             exit 1
           fi
@@ -55,10 +55,10 @@ jobs:
       id-token: write
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -132,14 +132,14 @@ jobs:
           previous_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$previous_tag" ]; then
             echo "# Changes since $previous_tag" > RELEASE_NOTES.md
-            git log --pretty=format:"* %s" $previous_tag..HEAD >> RELEASE_NOTES.md
+            git log --pretty=format:"* %s" "${previous_tag}"..HEAD >> RELEASE_NOTES.md
           else
             echo "# Initial release" > RELEASE_NOTES.md
             git log --pretty=format:"* %s" >> RELEASE_NOTES.md
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2.6.1
         if: ${{ github.event.inputs.environment == 'production' }}
         with:
           tag_name: ${{ needs.prepare.outputs.version }}
@@ -151,7 +151,7 @@ jobs:
             sbom.cdx.json
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.cdx.json

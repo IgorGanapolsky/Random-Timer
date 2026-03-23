@@ -11,7 +11,7 @@
 
 **Built for fighters, operators, and serious athletes.**
 
-No ads. No subscriptions. Purpose-built performance training.
+No ads. Privacy-first. Free core timer with an optional Pro subscription for advanced training features.
 
 ---
 

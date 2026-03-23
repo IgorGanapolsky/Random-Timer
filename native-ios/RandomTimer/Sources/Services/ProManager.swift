@@ -19,10 +19,19 @@ final class ProManager: ObservableObject {
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
     private var transactionListener: Task<Void, Never>?
+    private let launchOverrideEntitlementLevel: EntitlementLevel?
 
     private init() {
-        transactionListener = listenForTransactions()
-        Task { await restorePurchases() }
+        let args = ProcessInfo.processInfo.arguments
+        launchOverrideEntitlementLevel = Self.entitlementOverride(forLaunchArguments: args)
+        if let launchOverrideEntitlementLevel {
+            entitlementLevel = launchOverrideEntitlementLevel
+        }
+
+        if launchOverrideEntitlementLevel == nil {
+            transactionListener = listenForTransactions()
+            Task { await restorePurchases() }
+        }
     }
 
     deinit {
@@ -85,6 +94,11 @@ final class ProManager: ObservableObject {
 
     @discardableResult
     func restorePurchases() async -> ProRestoreResult {
+        if let launchOverrideEntitlementLevel {
+            entitlementLevel = launchOverrideEntitlementLevel
+            return .alreadyUnlocked
+        }
+
         var highestLevel: EntitlementLevel = .none
 
         for await result in Transaction.currentEntitlements {
@@ -101,6 +115,12 @@ final class ProManager: ObservableObject {
         let wasPro = isPro
         guard !debugOverrideActive else { return wasPro ? .alreadyUnlocked : .notFound }
         entitlementLevel = highestLevel
+
+        if entitlementLevel.isPro {
+            Task {
+                await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+            }
+        }
         
         if isPro && !wasPro {
             return .restored
@@ -136,6 +156,12 @@ final class ProManager: ObservableObject {
         } else if newLevel == .base && entitlementLevel == .none {
             entitlementLevel = .base
         }
+
+        if entitlementLevel.isPro {
+            Task {
+                await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+            }
+        }
     }
 
     private func levelFor(productID: String) -> EntitlementLevel {
@@ -144,6 +170,16 @@ final class ProManager: ObservableObject {
         case Self.baseProductID: return .base
         default: return .none
         }
+    }
+
+    nonisolated static func entitlementOverride(forLaunchArguments args: [String]) -> EntitlementLevel? {
+        if args.contains("-ui-test-elite") {
+            return .elite
+        }
+        if args.contains("-ui-test-pro") {
+            return .base
+        }
+        return nil
     }
 
     private nonisolated static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
@@ -169,14 +205,19 @@ final class ProManager: ObservableObject {
     }
 
     func unlockProForDebug() {
-        debugOverrideActive = true
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
+        Task {
+            await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+        }
     }
     
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
+        Task {
+            await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
+        }
     }
 }
 

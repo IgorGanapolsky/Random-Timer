@@ -9,6 +9,7 @@ import json
 import mimetypes
 import os
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,10 @@ TRANSIENT_ERROR_FRAGMENTS = (
 FAILED_PRECONDITION_MARKERS = (
     "failed_precondition",
     "precondition check failed",
+)
+MANUAL_REVIEW_REQUIRED_MARKERS = (
+    "changes cannot be sent for review automatically",
+    "changesnotsentforreview",
 )
 
 
@@ -81,6 +86,11 @@ def _is_transient_http(http_status: int | None, message: str) -> bool:
     return any(fragment in lowered for fragment in TRANSIENT_ERROR_FRAGMENTS)
 
 
+def _requires_manual_review_submission(message: str, response_text: str, http_status: int | None) -> bool:
+    combined = f"{message}\n{response_text}".lower()
+    return http_status == 400 and any(marker in combined for marker in MANUAL_REVIEW_REQUIRED_MARKERS)
+
+
 def _load_google_clients(credentials_path: Path):
     from google.oauth2 import service_account
     from googleapiclient.discovery import build
@@ -115,6 +125,31 @@ def _upload_images(service: Any, package: str, edit_id: str, language: str, imag
             imageType=image_type,
             media_body=MediaFileUpload(fp, mimetype=_mime_for(fp)),
         ).execute()
+
+
+def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
+    """Commit a Play edit.
+
+    Returns True when Google requires `changesNotSentForReview=true`, which means
+    the edit was committed successfully but still needs a manual "Send for review"
+    action in Play Console.
+    """
+
+    try:
+        edits_service.commit(packageName=package, editId=edit_id).execute()
+        return False
+    except Exception as error:
+        message = str(error)
+        response_text = _extract_response_text(error)
+        status = getattr(getattr(error, "resp", None), "status", None)
+        if not _requires_manual_review_submission(message, response_text, status):
+            raise
+        edits_service.commit(
+            packageName=package,
+            editId=edit_id,
+            changesNotSentForReview=True,
+        ).execute()
+        return True
 
 
 def _update_listing_and_assets(
@@ -271,11 +306,12 @@ def _publish_to_track(
                 track=track,
                 body={"releases": [release]},
             ).execute()
-            service.edits().commit(packageName=package, editId=edit_id).execute()
+            changes_not_sent_for_review = _commit_edit(service.edits(), package, edit_id)
 
             return {
                 "version_code": str(version_code),
                 "attempt": attempt,
+                "changes_not_sent_for_review": changes_not_sent_for_review,
             }
         except HttpError as error:
             message = str(error)
@@ -331,8 +367,14 @@ def _parse_args() -> argparse.Namespace:
         "--changelog-dir",
         default="native-android/fastlane/metadata/android/en-US/changelogs",
     )
-    parser.add_argument("--result-json", default="/tmp/play-upload-result.json")
-    parser.add_argument("--error-json", default="/tmp/play-upload-error.json")
+    parser.add_argument(
+        "--result-json",
+        default=os.path.join(tempfile.gettempdir(), "play-upload-result.json"),
+    )
+    parser.add_argument(
+        "--error-json",
+        default=os.path.join(tempfile.gettempdir(), "play-upload-error.json"),
+    )
     parser.add_argument("--user-fraction", default=os.getenv("PLAY_USER_FRACTION", "0.1"))
     return parser.parse_args()
 
@@ -388,6 +430,7 @@ def main() -> int:
                 "release_status": release_status,
                 "version_code": outcome["version_code"],
                 "attempt": outcome["attempt"],
+                "changes_not_sent_for_review": bool(outcome.get("changes_not_sent_for_review")),
                 "fallback_reason": "FAILED_PRECONDITION" if fallback_used else "",
             }
             if precondition_error_payload:
@@ -397,6 +440,12 @@ def main() -> int:
                 f"✅ Uploaded version code {outcome['version_code']} to '{track}' track "
                 f"(requested={requested_track}, status={release_status}, fallback_used={fallback_used})"
             )
+            if outcome.get("changes_not_sent_for_review"):
+                print(
+                    "ℹ️ Google Play committed the edit with changesNotSentForReview=true. "
+                    "Open Play Console and click 'Send for review' for this release.",
+                    file=sys.stderr,
+                )
             return 0
         except PublishError as error:
             payload = {
