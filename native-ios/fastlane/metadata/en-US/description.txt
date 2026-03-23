@@ -1,16 +1,18 @@
-RANDOM TACTICAL TIMER: The industry standard for unpredictable training.
+Random Tactical Timer helps you train reaction, discipline, and speed when the exact start time is unknown.
 
-Stop training for predictability. Most timers follow a rhythm; real-world stress does not. Random Tactical Timer generates randomized work and rest intervals to simulate the entropy of combat, sports, and elite competition.
+Most interval timers teach rhythm. This one breaks it. Set a minimum and maximum range, hit start, and wait for the unpredictable cue.
 
-OPTIMIZED FOR:
-- DRY FIRE & RANGE DRILLS: Randomized "Go" signals for draw-stroke and target acquisition.
-- COMBAT SPORTS: Unpredictable rounds for shadowboxing, MMA, and reaction drills.
-- CROSSFIT & HIIT: Break the rhythm of fixed intervals to increase mental and physical agility.
+BUILT FOR
+- Dry fire and draw-stroke drills
+- Boxing, MMA, bag work, and pad rounds
+- HIIT, sprint, and reaction conditioning
+- Coaching partner or group sessions
 
-TACTICAL FEATURES:
-- TACTICAL RED UI: High-contrast, low-light optimized interface for 2026 standards.
-- PRECISION NUDGE CONTROLS: Rapid, tactile adjustments for minute-second bounds.
-- SOUND ARSENAL: Intense alerts designed to cut through background noise and gym environments.
-- ZERO FRICTION: One-tap start. No accounts. No bloat.
+WHY ATHLETES USE IT
+- Randomized start windows that remove countdown cheating
+- Loud alarm arsenal that cuts through gym noise
+- Pro voice callouts and repeat-loop round limits
+- Fast reset flow between rounds and reps
+- Large, readable timer views on iPhone and iPad
 
-Train the mind to react when the body is under stress. Download Random Tactical Timer today.
+Train faster under pressure. Stay honest. React on cue.

@@ -1,6 +1,6 @@
 {
   "status": "success",
-  "generated_at": "2026-03-17T14:36:49.072844+00:00",
+  "generated_at": "2026-03-23T15:43:01.205867+00:00",
   "locale": "en-US",
   "written_files": [
     "native-ios/fastlane/screenshots/en-US/1_setup.png",
@@ -11,6 +11,15 @@
     "native-ios/fastlane/screenshots/en-US/6_ipad_running.png",
     "native-ios/fastlane/screenshots/en-US/7_ipad_stopped.png"
   ],
-  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260317_143647",
+  "source_files": {
+    "1_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/1_setup.png",
+    "2_active.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/2_active.png",
+    "3_alarm.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/3_alarm.png",
+    "4_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/4_running.png",
+    "5_ipad_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/5_ipad_setup.png",
+    "6_ipad_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/6_ipad_running.png",
+    "7_ipad_stopped.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/7_ipad_stopped.png"
+  },
+  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260323_154257",
   "report_path": "native-ios/fastlane/screenshots/en-US/report.json"
 }

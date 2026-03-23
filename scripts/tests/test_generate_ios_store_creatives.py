@@ -52,6 +52,18 @@ class GenerateIosStoreCreativesTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 creatives.generate(repo, "en-US")
 
+    def test_generate_prefers_originals_before_current_files(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            shots_dir = self._seed_screenshots(repo, size=(300, 600))
+            originals_dir = shots_dir / "originals"
+            originals_dir.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (300, 600), (220, 30, 30)).save(originals_dir / "1_setup.png", format="PNG")
+
+            report = creatives.generate(repo, "en-US")
+
+            assert report["source_files"]["1_setup.png"].endswith("originals/1_setup.png")
+
 
 if __name__ == "__main__":
     unittest.main()
