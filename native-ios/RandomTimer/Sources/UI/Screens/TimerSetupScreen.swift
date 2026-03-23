@@ -414,7 +414,7 @@ struct TimerSetupScreen: View {
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
                 .environmentObject(proManager)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .interactiveDismissDisabled(false)
         }

@@ -2,6 +2,7 @@ package com.iganapolsky.randomtimer.ui.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
@@ -16,10 +17,12 @@ import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,8 +41,10 @@ class TimerViewModelAnalyticsTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var analyticsService: AnalyticsService
+    private lateinit var repository: TimerRepository
     private lateinit var serviceController: TimerServiceController
     private lateinit var viewModel: TimerViewModel
+    private lateinit var configFlow: MutableStateFlow<TimerConfig>
 
     @Before
     fun setup() {
@@ -49,7 +54,7 @@ class TimerViewModelAnalyticsTest {
         val mockPrefs = mockk<SharedPreferences>(relaxed = true)
         every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
 
-        val repository = mockk<TimerRepository>()
+        repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
@@ -59,7 +64,9 @@ class TimerViewModelAnalyticsTest {
         val proManager = mockk<ProManager>(relaxed = true)
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
 
-        every { repository.getTimerConfig() } returns flowOf(TimerConfig.DEFAULT)
+        configFlow = MutableStateFlow(TimerConfig.DEFAULT)
+        every { repository.getTimerConfig() } returns configFlow
+        coEvery { repository.saveTimerConfig(any()) } just runs
         coEvery { repository.clearActiveTimer() } just runs
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
@@ -165,6 +172,76 @@ class TimerViewModelAnalyticsTest {
         verify(exactly = 1) { serviceController.stopTimer() }
     }
 
+    @Test
+    fun `updateVoiceSetting preserves live loop configuration while timer is active`() {
+        configFlow.value = TimerConfig.DEFAULT.copy(repeatEnabled = false, voiceEnabled = false, repeatRounds = 0)
+        val liveState =
+            timerState(TimerStatus.RUNNING).copy(
+                config = TimerConfig.DEFAULT.copy(repeatEnabled = true, voiceEnabled = false, repeatRounds = 3),
+            )
+        viewModel.setActiveTimerStateForTest(liveState)
+        val savedConfig = slot<TimerConfig>()
+
+        viewModel.updateVoiceSetting(enabled = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.voiceEnabled,
+        ).isTrue()
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.repeatEnabled,
+        ).isTrue()
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.repeatRounds,
+        ).isEqualTo(3)
+        coVerify { repository.saveTimerConfig(capture(savedConfig)) }
+        assertThat(savedConfig.captured.voiceEnabled).isTrue()
+        assertThat(savedConfig.captured.repeatEnabled).isTrue()
+        assertThat(savedConfig.captured.repeatRounds).isEqualTo(3)
+        verify { serviceController.updateVoiceEnabled(true) }
+    }
+
+    @Test
+    fun `updateLoopSetting preserves live voice configuration while timer is active`() {
+        configFlow.value = TimerConfig.DEFAULT.copy(repeatEnabled = false, voiceEnabled = false, repeatRounds = 0)
+        val liveState =
+            timerState(TimerStatus.RUNNING).copy(
+                config = TimerConfig.DEFAULT.copy(repeatEnabled = false, voiceEnabled = true, repeatRounds = 2),
+            )
+        viewModel.setActiveTimerStateForTest(liveState)
+        val savedConfig = slot<TimerConfig>()
+
+        viewModel.updateLoopSetting(enabled = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.repeatEnabled,
+        ).isTrue()
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.voiceEnabled,
+        ).isTrue()
+        assertThat(
+            viewModel.timerState.value
+                ?.config
+                ?.repeatRounds,
+        ).isEqualTo(2)
+        coVerify { repository.saveTimerConfig(capture(savedConfig)) }
+        assertThat(savedConfig.captured.repeatEnabled).isTrue()
+        assertThat(savedConfig.captured.voiceEnabled).isTrue()
+        assertThat(savedConfig.captured.repeatRounds).isEqualTo(2)
+        verify { serviceController.updateLoop(true) }
+    }
+
     private fun timerState(status: TimerStatus): TimerState =
         TimerState(
             config = TimerConfig.DEFAULT,
@@ -172,4 +249,12 @@ class TimerViewModelAnalyticsTest {
             remainingDuration = 10.seconds,
             status = status,
         )
+
+    private fun TimerViewModel.setActiveTimerStateForTest(state: TimerState?) {
+        val field = TimerViewModel::class.java.getDeclaredField("_timerState")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val timerState = field.get(this) as MutableStateFlow<TimerState?>
+        timerState.value = state
+    }
 }

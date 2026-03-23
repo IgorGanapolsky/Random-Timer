@@ -156,7 +156,10 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
     assert "Upgrade to Pro" in android_paywall and "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
-    assert "Upgrade to Pro" in ios_paywall and "onLongPressGesture" in ios_paywall and "8.0" in ios_paywall
+    assert "Upgrade to Pro" in ios_paywall
+    assert "highPriorityGesture" in ios_paywall
+    assert "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in android_navigation
     assert "unlockProForDebug" in ios_paywall
 

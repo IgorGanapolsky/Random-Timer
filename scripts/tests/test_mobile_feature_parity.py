@@ -56,7 +56,8 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     ios_pro_manager = _read(IOS_PRO_MANAGER)
 
     assert "Upgrade to Pro" in android_source and "holdForHiddenUnlock" in android_source
-    assert "Upgrade to Pro" in ios_paywall and "onLongPressGesture" in ios_paywall and "8.0" in ios_paywall
+    assert "Upgrade to Pro" in ios_paywall and "highPriorityGesture" in ios_paywall and "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
 
@@ -72,6 +73,17 @@ def test_paywall_single_offer_parity():
     assert "One premium plan" in ios_paywall
     assert "Yearly auto-renewing subscription" in android_paywall
     assert "Yearly auto-renewing subscription" in ios_paywall
+
+
+def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+    ios_setup = _read(IOS_SETUP)
+
+    assert "skipPartiallyExpanded = true" in android_paywall
+    assert "ScrollView" in ios_paywall
+    assert ".scrollIndicators(.hidden)" in ios_paywall
+    assert ".presentationDetents([.large])" in ios_setup
 
 
 def test_voice_callouts_present_on_both_platforms():
@@ -166,6 +178,37 @@ def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
     assert 'guard enabled else { return "Loop Off" }' in ios_active
     assert 'guard repeatRounds > 0 else { return "Infinite Loop" }' in ios_active
     assert 'return "Loop On · Round \\(clampedRound)/\\(repeatRounds)"' in ios_active
+
+
+def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platforms():
+    android_active = _read(ANDROID_ACTIVE_SCREEN)
+    android_nav = _read(ANDROID_NAV)
+    android_viewmodel = _read(ANDROID_VIEWMODEL)
+    android_service = _read(
+        ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt"
+    )
+    android_controller = _read(
+        ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerServiceController.kt"
+    )
+    ios_active = _read(IOS_ACTIVE_SCREEN)
+    ios_timer_manager = _read(IOS_TIMER_MANAGER)
+
+    assert 'voiceBadgeText(enabled: Bool)' in ios_active
+    assert 'Label(' in ios_active and 'systemImage: "waveform"' in ios_active
+    assert 'updateConfig(voiceEnabled: !isEnabled)' in ios_active
+    assert 'timerManager.updateConfig(newConfig)' in ios_active
+    assert 'voiceEnabled: voiceEnabled ?? current.voiceEnabled' in ios_active
+    assert "if var state = timerState" in ios_timer_manager
+
+    assert "internal fun voiceBadgeText(enabled: Boolean)" in android_active
+    assert "VoiceBadge(" in android_active
+    assert "onVoiceToggle: (Boolean) -> Unit" in android_active
+    assert "onVoiceToggle = viewModel::updateVoiceSetting" in android_nav
+    assert "fun updateVoiceSetting(enabled: Boolean)" in android_viewmodel
+    assert '"voice_callouts_enabled" to updatedConfig.voiceEnabled' in android_viewmodel
+    assert "fun updateVoiceEnabled(enabled: Boolean)" in android_controller
+    assert "ACTION_UPDATE_VOICE" in android_service
+    assert "updateVoiceSetting(voiceEnabled)" in android_service
 
 
 def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_copy():
