@@ -464,21 +464,6 @@ jobs:
           set -euo pipefail
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
 
-      - name: Write Google Play service account key
-        env:
-          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: |
-          set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
-
-      - name: Verify Google Play API access
-        env:
-          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
-        run: |
-          set -euo pipefail
-          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
-          python scripts/check_store_access.py --platform android
-
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
