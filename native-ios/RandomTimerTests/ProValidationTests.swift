@@ -3,6 +3,24 @@ import XCTest
 
 final class TimerConfigProClampingTests: XCTestCase {
 
+    func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
+        XCTAssertEqual(
+            ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-pro", "true"]),
+            .base
+        )
+    }
+
+    func testUiTestEliteLaunchArgumentOverridesEntitlementToElite() {
+        XCTAssertEqual(
+            ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-elite", "true"]),
+            .elite
+        )
+    }
+
+    func testLaunchArgumentsWithoutUiTestOverrideReturnNil() {
+        XCTAssertNil(ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-state", "running"]))
+    }
+
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
         let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,
@@ -66,7 +84,8 @@ final class TimerConfigProClampingTests: XCTestCase {
             repeatEnabled: false,
             soundType: .intense,
             volume: 0.5,
-            vibrationEnabled: false
+            vibrationEnabled: false,
+            useExtendedRange: true
         )
 
         let clamped = proConfig.clamped(isPro: true)
@@ -128,5 +147,24 @@ final class TimerConfigProClampingTests: XCTestCase {
             XCTAssertEqual(clamped.soundType, RandomTimer.SoundType.intense,
                            "Pro sound \(sound) must be clamped to .intense for expired Pro user")
         }
+    }
+
+    func testExpiredProUser_highSavedRangeCollapsesToFreeCeiling() {
+        let proConfig = RandomTimer.TimerConfig(
+            minSeconds: 3300,
+            maxSeconds: 3600,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false,
+            useExtendedRange: true
+        )
+
+        let clamped = proConfig.clamped(isPro: false)
+
+        XCTAssertEqual(clamped.minSeconds, RandomTimer.TimerConfig.maxSecondsFree)
+        XCTAssertEqual(clamped.maxSeconds, RandomTimer.TimerConfig.maxSecondsFree)
     }
 }

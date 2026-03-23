@@ -1,1 +1,1 @@
-Train reaction timing with randomized start cues. Set a min/max window, loop rounds, and use loud alarms plus haptics for pressure drills.
+ELIMINATE PREDICTABILITY. TRAIN REACTION TIME UNDER STRESS.

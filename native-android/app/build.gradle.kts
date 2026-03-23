@@ -35,6 +35,7 @@ if (enableFirebasePlugins) {
 
 val ciCompileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toIntOrNull()
 val ciTargetSdk = providers.gradleProperty("ciTargetSdk").orNull?.toIntOrNull()
+val ciVersionCode = providers.gradleProperty("ciVersionCode").orNull?.toIntOrNull()
 
 android {
     namespace = "com.iganapolsky.randomtimer"
@@ -44,13 +45,18 @@ android {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
         targetSdk = ciTargetSdk ?: 35
-        versionCode = 1773410000
-        versionName = "1.2.7"
+        versionCode = ciVersionCode ?: 1773900000
+        versionName = "1.3.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // PostHog Analytics - from gradle.properties or CI secret
         buildConfigField("String", "POSTHOG_API_KEY", "\"${System.getenv("POSTHOG_API_KEY") ?: project.findProperty("POSTHOG_API_KEY") ?: ""}\"")
+        buildConfigField(
+            "String",
+            "PRO_AUDIO_MANIFEST_URL",
+            "\"${project.findProperty("PRO_AUDIO_MANIFEST_URL") ?: "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/latest.json"}\"",
+        )
     }
 
     signingConfigs {
@@ -130,6 +136,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 
     // Dependency Injection

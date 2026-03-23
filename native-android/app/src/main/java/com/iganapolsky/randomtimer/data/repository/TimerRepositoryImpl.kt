@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
@@ -35,7 +36,12 @@ class TimerRepositoryImpl
          */
         private fun TimerConfig.clampedForPro(): TimerConfig {
             val level = proManager.entitlementLevel.value
-            val maxAllowed = proManager.maxSecondsLimit(level)
+            val isPro = level.isPro
+            val maxAllowed = if (isPro && useExtendedRange) {
+                TimerConfig.MAX_SECONDS_PRO
+            } else {
+                TimerConfig.MAX_SECONDS_FREE
+            }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
             val clampedMin = minSeconds.coerceAtMost(clampedMax)
@@ -44,6 +50,7 @@ class TimerRepositoryImpl
                 minSeconds = clampedMin,
                 maxSeconds = clampedMax,
                 soundType = clampedSound,
+                useExtendedRange = if (isPro) useExtendedRange else false
             )
         }
 
@@ -65,6 +72,9 @@ class TimerRepositoryImpl
                         } ?: SoundType.INTENSE,
                     volume = preferences[KEY_VOLUME] ?: 0.5f,
                     vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                    useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
+                    voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
+                    repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
                 ).clampedForPro()
             }
 
@@ -78,6 +88,9 @@ class TimerRepositoryImpl
                 preferences[KEY_SOUND_TYPE] = config.soundType.name
                 preferences[KEY_VOLUME] = config.volume
                 preferences[KEY_VIBRATION_ENABLED] = config.vibrationEnabled
+                preferences[KEY_USE_EXTENDED_RANGE] = config.useExtendedRange
+                preferences[KEY_VOICE_ENABLED] = config.voiceEnabled
+                preferences[KEY_REPEAT_ROUNDS] = config.repeatRounds
             }
         }
 
@@ -87,6 +100,7 @@ class TimerRepositoryImpl
                 val remainingMs = preferences[KEY_ACTIVE_REMAINING] ?: return@map null
                 val statusStr = preferences[KEY_ACTIVE_STATUS] ?: return@map null
                 val startedAt = preferences[KEY_ACTIVE_STARTED_AT] ?: return@map null
+                val roundCount = preferences[KEY_ACTIVE_ROUND_COUNT] ?: 1
 
                 val config =
                     TimerConfig(
@@ -105,6 +119,9 @@ class TimerRepositoryImpl
                             } ?: SoundType.INTENSE,
                         volume = preferences[KEY_VOLUME] ?: 0.5f,
                         vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
+                        useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
+                        voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
+                        repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
                     ).clampedForPro()
 
                 TimerState(
@@ -113,6 +130,7 @@ class TimerRepositoryImpl
                     remainingDuration = remainingMs.milliseconds,
                     status = TimerStatus.valueOf(statusStr),
                     startedAt = startedAt,
+                    roundCount = roundCount,
                 )
             }
         }
@@ -123,6 +141,7 @@ class TimerRepositoryImpl
                 preferences[KEY_ACTIVE_REMAINING] = state.remainingDuration.inWholeMilliseconds
                 preferences[KEY_ACTIVE_STATUS] = state.status.name
                 preferences[KEY_ACTIVE_STARTED_AT] = state.startedAt
+                preferences[KEY_ACTIVE_ROUND_COUNT] = state.roundCount
             }
         }
 
@@ -145,11 +164,15 @@ class TimerRepositoryImpl
             private val KEY_SOUND_TYPE = stringPreferencesKey("sound_type")
             private val KEY_VOLUME = floatPreferencesKey("volume")
             private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+            private val KEY_USE_EXTENDED_RANGE = booleanPreferencesKey("use_extended_range")
+            private val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
+            private val KEY_REPEAT_ROUNDS = intPreferencesKey("repeat_rounds")
 
             // Active timer keys
             private val KEY_ACTIVE_TARGET = longPreferencesKey("active_target_ms")
             private val KEY_ACTIVE_REMAINING = longPreferencesKey("active_remaining_ms")
             private val KEY_ACTIVE_STATUS = stringPreferencesKey("active_status")
             private val KEY_ACTIVE_STARTED_AT = longPreferencesKey("active_started_at")
+            private val KEY_ACTIVE_ROUND_COUNT = intPreferencesKey("active_round_count")
         }
     }

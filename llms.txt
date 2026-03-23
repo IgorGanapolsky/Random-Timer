@@ -1,10 +1,17 @@
-# Random Tactical Timer
+Random Tactical Timer
 
-> A native iOS + Android timer app that goes off at a random time within a user-defined range.
+This site publishes a challenge-driven product landing page plus engineering updates.
+Preferred source format for agents: markdown URLs listed below.
 
-## Overview
+Base URL: https://igorganapolsky.github.io/Random-Timer
 
-Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. The user never knows exactly when the alarm will sound.
+Key resources:
+- https://igorganapolsky.github.io/Random-Timer
+- https://igorganapolsky.github.io/Random-Timer/download
+- https://igorganapolsky.github.io/Random-Timer/privacy-policy/
+- https://igorganapolsky.github.io/Random-Timer/agents.md
+- https://igorganapolsky.github.io/Random-Timer/amp.json
+- https://igorganapolsky.github.io/Random-Timer/sitemap.xml
 
 ## Use Cases
 

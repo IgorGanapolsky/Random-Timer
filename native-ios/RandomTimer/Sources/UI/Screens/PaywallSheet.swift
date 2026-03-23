@@ -7,101 +7,115 @@ enum PaywallEntryPoint: String {
 }
 
 struct PaywallSheet: View {
+    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
     let entryPoint: PaywallEntryPoint
 
     var body: some View {
-        VStack(spacing: 24) {
-            HStack {
-                Button("Not now") {
-                    trackDismiss(method: "header_not_now")
-                    dismiss()
-                }
-                .font(.footnote.weight(.semibold))
-                .foregroundColor(.textSecondary)
-
-                Spacer()
-
-                Button {
-                    trackDismiss(method: "close_button")
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.textSecondary)
-                        .accessibilityLabel("Close paywall")
-                }
-            }
-
-            Text("Upgrade to Pro")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.textPrimary)
-                .contentShape(Rectangle())
-                .onLongPressGesture(minimumDuration: 8.0, maximumDistance: 100) {
-                    let generator = UIImpactFeedbackGenerator(style: .heavy)
-                    generator.impactOccurred()
-                    proManager.unlockProForDebug()
-                    hasTrackedDismiss = true
-                    dismiss()
-                }
-
-            VStack(spacing: 4) {
-                Text("One premium plan.")
-                Text("Yearly auto-renewing subscription. Cancel anytime.")
-            }
-            .font(.caption)
-            .foregroundColor(.textSecondary)
-            .multilineTextAlignment(.center)
-
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("PRO FEATURES")
-                        .font(.caption.bold())
-                        .foregroundColor(.accentPrimary)
-                    ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
-                    ProFeatureRow(text: "Extended range up to 60 minutes")
-                    ProFeatureRow(text: "Voice callouts during countdown")
-                    ProFeatureRow(text: "Support independent development")
-                }
-            }
-            .padding(.horizontal)
-
-            VStack(spacing: 12) {
-                PrimaryButton(title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))") {
-                    Task {
-                        await purchase(productID: ProManager.eliteProductID)
-                    }
-                }
-            }
-
-            Button("Restore purchase") {
-                Task {
-                    let result = await proManager.restorePurchases()
-                    AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
-                        AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                        AnalyticsProperties.result: result.rawValue,
-                    ])
-
-                    if result == .restored || result == .alreadyUnlocked {
-                        hasTrackedDismiss = true
+        ScrollView {
+            VStack(spacing: 24) {
+                HStack {
+                    Button("Not now") {
+                        trackDismiss(method: "header_not_now")
                         dismiss()
                     }
-                }
-            }
-            .font(.footnote)
-            .foregroundColor(.textSecondary)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundColor(.textSecondary)
 
-            Button("Not now") {
-                trackDismiss(method: "footer_not_now")
-                dismiss()
+                    Spacer()
+
+                    Button {
+                        trackDismiss(method: "close_button")
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.textSecondary)
+                            .accessibilityLabel("Close paywall")
+                    }
+                }
+
+                VStack(spacing: 4) {
+                    Text("Upgrade to Pro")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.textPrimary)
+
+                    VStack(spacing: 4) {
+                        Text("One premium plan.")
+                        Text("Yearly auto-renewing subscription. Cancel anytime.")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    LongPressGesture(minimumDuration: 8.0, maximumDistance: 100)
+                        .onEnded { _ in
+                            triggerDebugUnlock()
+                        }
+                )
+
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("PRO FEATURES")
+                            .font(.caption.bold())
+                            .foregroundColor(.accentPrimary)
+                        ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
+                        ProFeatureRow(text: "Extended range up to 60 minutes")
+                        ProFeatureRow(text: "Elapsed-time voice callouts")
+                        ProFeatureRow(text: "Loop with optional round limits")
+                        ProFeatureRow(text: "Monthly voice and sound refreshes")
+                        ProFeatureRow(text: "Support independent development")
+                    }
+                }
+                .padding(.horizontal)
+
+                VStack(spacing: 12) {
+                    PrimaryButton(
+                        title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))"
+                    ) {
+                        Task {
+                            await purchase(productID: ProManager.eliteProductID)
+                        }
+                    }
+                }
+
+                Button("Restore purchase") {
+                    Task {
+                        let result = await proManager.restorePurchases()
+                        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
+                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                            AnalyticsProperties.result: result.rawValue,
+                        ])
+
+                        if result == .restored || result == .alreadyUnlocked {
+                            hasTrackedDismiss = true
+                            dismiss()
+                        }
+                    }
+                }
+                .font(.footnote)
+                .foregroundColor(.textSecondary)
+
+                Button("Not now") {
+                    trackDismiss(method: "footer_not_now")
+                    dismiss()
+                }
+                .font(.footnote)
+                .foregroundColor(.textSecondary)
             }
-            .font(.footnote)
-            .foregroundColor(.textSecondary)
+            .padding(24)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .frame(maxWidth: .infinity, alignment: .top)
         }
-        .padding(24)
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
@@ -161,6 +175,14 @@ struct PaywallSheet: View {
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.dismissMethod: method,
         ])
+    }
+
+    private func triggerDebugUnlock() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        proManager.unlockProForDebug()
+        hasTrackedDismiss = true
+        dismiss()
     }
 }
 

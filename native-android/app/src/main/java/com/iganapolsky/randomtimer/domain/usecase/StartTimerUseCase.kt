@@ -18,7 +18,10 @@ class StartTimerUseCase
         private val repository: TimerRepository,
         private val random: Random = Random.Default,
     ) {
-        suspend operator fun invoke(config: TimerConfig): TimerState {
+        suspend operator fun invoke(
+            config: TimerConfig,
+            roundCount: Int = 1,
+        ): TimerState {
             val randomDuration = generateRandomDuration(config.minDuration, config.maxDuration)
 
             val state =
@@ -27,6 +30,7 @@ class StartTimerUseCase
                     targetDuration = randomDuration,
                     remainingDuration = randomDuration,
                     status = TimerStatus.RUNNING,
+                    roundCount = roundCount,
                 )
 
             repository.saveTimerConfig(config)

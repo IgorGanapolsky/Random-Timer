@@ -37,6 +37,19 @@ def _append_staleness_warning(path: Path, warnings: list[str]) -> None:
         )
 
 
+def _append_quality_warning(path: Path, payload: dict[str, Any], warnings: list[str]) -> None:
+    status = str(payload.get("status", "")).strip().lower()
+    quality = payload.get("data_quality", {})
+    if not isinstance(quality, dict):
+        quality = {}
+    if status in {"degraded", "skipped"} or quality.get("is_stale"):
+        last_good = str(quality.get("last_good_generated_at") or "").strip()
+        detail = f"stale metrics in {path.name}"
+        if last_good:
+            detail += f" (last good `{last_good}`)"
+        warnings.append(detail)
+
+
 def _relative(path: Path, repo_root: Path) -> str:
     return str(path.resolve().relative_to(repo_root.resolve()))
 
@@ -91,6 +104,8 @@ def build_ops_payload(repo_root: Path) -> dict[str, Any]:
     warnings: list[str] = []
     for path in (north_star_path, feedback_path, cro_path, paid_path, apple_ads_path):
         _append_staleness_warning(path, warnings)
+    _append_quality_warning(north_star_path, north_star_payload, warnings)
+    _append_quality_warning(feedback_path, feedback_payload, warnings)
 
     if paid.get("no_scale_lock", {}).get("active"):
         warnings.append("paid no-scale lock is active")

@@ -70,6 +70,39 @@ def _fmt_num_allow_zero(val: Any) -> str:
     return str(val)
 
 
+def _data_quality_note(payload: Optional[Dict[str, Any]], *, fallback_source: str = "") -> str:
+    if not payload:
+        return ""
+    quality = payload.get("data_quality", {})
+    if not isinstance(quality, dict):
+        quality = {}
+    status = str(payload.get("status", "")).strip().lower()
+    is_stale = bool(quality.get("is_stale"))
+    if status not in {"degraded", "skipped"} and not is_stale:
+        return ""
+    last_good = str(quality.get("last_good_generated_at") or "").strip()
+    reason = str(quality.get("reason") or payload.get("status_reason") or fallback_source).strip()
+    note = "_Data quality: stale"
+    if last_good:
+        note += f"; showing last good metrics from `{last_good}`"
+    if reason:
+        note += f"; latest read issue: `{reason}`"
+    note += "._"
+    return note
+
+
+def _metric_display_name(payload: Optional[Dict[str, Any]], metric_key: str, default: str) -> str:
+    if not payload:
+        return default
+    definitions = payload.get("metric_definitions", {})
+    if not isinstance(definitions, dict):
+        return default
+    definition = definitions.get(metric_key, {})
+    if not isinstance(definition, dict):
+        return default
+    return str(definition.get("display_name") or default)
+
+
 def _extract_budget_allocation(pc: Optional[Dict[str, Any]]) -> Dict[str, float]:
     if not pc:
         return {}
@@ -353,6 +386,8 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
         android = dl.get("android", {})
         combined = dl.get("combined", {})
         users = dl.get("active_users", {})
+        downloads_label = _metric_display_name(dl, "downloads_30d", "Downloads (30d)")
+        quality_note = _data_quality_note(dl, fallback_source="store downloads snapshot degraded")
         ios_30 = _fmt_num(ios.get("downloads_30d"))
         and_30 = _fmt_num(android.get("downloads_30d"))
         comb_30 = _fmt_num(combined.get("downloads_30d"))
@@ -360,7 +395,7 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
         downloads_block = (
             "| Metric | iOS | Android | Combined |\n"
             "|--------|:---:|:-------:|:--------:|\n"
-            f"| Downloads (30d) | {ios_30} | {and_30} | {comb_30} |\n"
+            f"| {downloads_label} | {ios_30} | {and_30} | {comb_30} |\n"
             f"| Active Installs | — | {and_active} | — |\n\n"
             "| Active Users | Count |\n"
             "|-------------|:-----:|\n"
@@ -368,6 +403,8 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
             f"| WAU | {_fmt_num(users.get('wau'))} |\n"
             f"| MAU | {_fmt_num(users.get('mau'))} |"
         )
+        if quality_note:
+            downloads_block += f"\n\n{quality_note}"
         dashboard = re.sub(
             r"<!-- DOWNLOADS_START -->.*?<!-- DOWNLOADS_END -->",
             f"<!-- DOWNLOADS_START -->\n{downloads_block}\n<!-- DOWNLOADS_END -->",
@@ -381,6 +418,7 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
         nsm = ns.get("north_star", {})
         paid = ns.get("paid", {})
         targets = nsm.get("targets", {})
+        quality_note = _data_quality_note(ns, fallback_source="north star snapshot degraded")
         north_star_block = (
             "| Metric | Value |\n"
             "|--------|-------|\n"
@@ -394,6 +432,8 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
             f"| Active Campaign Count | {_fmt_num_allow_zero(paid.get('active_campaign_count'))} |\n"
             f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
         )
+        if quality_note:
+            north_star_block += f"\n\n{quality_note}"
         dashboard = re.sub(
             r"<!-- NORTH_STAR_START -->.*?<!-- NORTH_STAR_END -->",
             f"<!-- NORTH_STAR_START -->\n{north_star_block}\n<!-- NORTH_STAR_END -->",
@@ -552,6 +592,7 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
     cf = load_json(data_dir / "content_feedback.json")
     if cf:
         funnel = cf.get("onboarding_funnel", {})
+        quality_note = _data_quality_note(cf, fallback_source="attribution feedback degraded")
         fo = funnel.get("first_open", 0)
         fc = funnel.get("first_timer_configured", 0)
         ft = funnel.get("first_timer_completed", 0)
@@ -564,6 +605,8 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
             f"| First Timer Configured | {_fmt_num(fc)} | {_fmt(oc_rate)} of opens |\n"
             f"| First Timer Completed | {_fmt_num(ft)} | {_fmt(ot_rate)} of opens |"
         )
+        if quality_note:
+            funnel_block += f"\n\n{quality_note}"
         dashboard = re.sub(
             r"<!-- FUNNEL_START -->.*?<!-- FUNNEL_END -->",
             f"<!-- FUNNEL_START -->\n{funnel_block}\n<!-- FUNNEL_END -->",
@@ -669,6 +712,12 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
         )
 
     downloads_30d = dl.get("combined", {}).get("downloads_30d")
+    downloads_label = _metric_display_name(dl, "downloads_30d", "Downloads (30d)")
+    quality_notes = [note for note in (
+        _data_quality_note(ns, fallback_source="north star snapshot degraded"),
+        _data_quality_note(dl, fallback_source="store downloads snapshot degraded"),
+        _data_quality_note(cf, fallback_source="attribution feedback degraded"),
+    ) if note]
     kpi_block = (
         "| Metric | Value |\n"
         "|--------|-------|\n"
@@ -682,7 +731,7 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
         f"| WQTU (7d) | {_fmt_num_allow_zero(nsm.get('wqtu_7d'))} |\n"
         f"| WQTU Checkpoint Target (2026-03-31) | {_fmt_num_allow_zero(targets.get('checkpoint_2026_03_31'))} |\n"
         f"| WQTU Quarter Target (2026-06-30) | {_fmt_num_allow_zero(targets.get('quarter_2026_06_30'))} |\n"
-        f"| Downloads (30d) | {_fmt_num_allow_zero(downloads_30d)} |\n"
+        f"| {downloads_label} | {_fmt_num_allow_zero(downloads_30d)} |\n"
         f"| Apple Ads Campaigns (API) | {_fmt_num_allow_zero(apple.get('campaign_count', 0))} |\n"
         f"| Apple Ads Active Campaigns (API) | {_fmt_num_allow_zero(apple.get('active_campaign_count', 0))} |\n"
         f"| Apple Ads Impressions (30d) | {_fmt_num_allow_zero(apple_metrics.get('impressions', 0))} |\n"
@@ -692,6 +741,8 @@ def inject_paid_acquisition_data(page: str, data_dir: Path) -> str:
         f"| Apple Ads Live Finding | {apple_finding} |\n"
         f"| Guardrail Violated | {'YES' if paid.get('guardrail_violated') else 'NO'} |"
     )
+    if quality_notes:
+        kpi_block += "\n\n" + "\n".join(quality_notes)
 
     paid_rows = paid.get("paid_events_by_source_30d", [])
     if isinstance(paid_rows, list) and paid_rows:

@@ -28,7 +28,6 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.billing.ProManager
-import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
@@ -62,6 +61,8 @@ class TimerForegroundService : Service() {
     @Inject lateinit var proManager: ProManager
 
     @Inject lateinit var voiceCalloutManager: AIVoiceCalloutManager
+
+    @Inject lateinit var packStore: ProAudioPackStore
 
     private val trainingStatsService by lazy { TrainingStatsService(this) }
     private val binder = LocalBinder()
@@ -116,6 +117,10 @@ class TimerForegroundService : Service() {
                 val repeatEnabled = intent.getBooleanExtra(EXTRA_REPEAT_ENABLED, false)
                 updateLoopSetting(repeatEnabled)
             }
+            ACTION_UPDATE_VOICE -> {
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                updateVoiceSetting(voiceEnabled)
+            }
             ACTION_START -> {
                 val targetMs = intent.getLongExtra(EXTRA_TARGET_DURATION_MS, 0L)
                 val remainingMs = intent.getLongExtra(EXTRA_REMAINING_DURATION_MS, targetMs)
@@ -127,6 +132,10 @@ class TimerForegroundService : Service() {
                 val soundType = intent.getStringExtra(EXTRA_SOUND_TYPE) ?: "INTENSE"
                 val volume = intent.getFloatExtra(EXTRA_VOLUME, 1.0f)
                 val vibrationEnabled = intent.getBooleanExtra(EXTRA_VIBRATION_ENABLED, true)
+                val useExtendedRange = intent.getBooleanExtra(EXTRA_USE_EXTENDED_RANGE, false)
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                val repeatRounds = intent.getIntExtra(EXTRA_REPEAT_ROUNDS, 0)
+                val roundCount = intent.getIntExtra(EXTRA_ROUND_COUNT, 1)
 
                 if (targetMs > 0) {
                     startTimerFromExtras(
@@ -140,6 +149,10 @@ class TimerForegroundService : Service() {
                         soundType = soundType,
                         volume = volume,
                         vibrationEnabled = vibrationEnabled,
+                        useExtendedRange = useExtendedRange,
+                        voiceEnabled = voiceEnabled,
+                        repeatRounds = repeatRounds,
+                        roundCount = roundCount,
                     )
                 }
             }
@@ -166,7 +179,26 @@ class TimerForegroundService : Service() {
 
     private fun updateLoopSetting(repeatEnabled: Boolean) {
         _timerState.value?.let { current ->
-            val updatedConfig = current.config.copy(repeatEnabled = repeatEnabled)
+            val updatedConfig =
+                current.config.copy(
+                    repeatEnabled = repeatEnabled,
+                    useExtendedRange = current.config.useExtendedRange,
+                    voiceEnabled = current.config.voiceEnabled,
+                    repeatRounds = current.config.repeatRounds,
+                )
+            _timerState.value = current.copy(config = updatedConfig)
+        }
+    }
+
+    private fun updateVoiceSetting(voiceEnabled: Boolean) {
+        _timerState.value?.let { current ->
+            val updatedConfig =
+                current.config.copy(
+                    voiceEnabled = voiceEnabled,
+                    repeatEnabled = current.config.repeatEnabled,
+                    useExtendedRange = current.config.useExtendedRange,
+                    repeatRounds = current.config.repeatRounds,
+                )
             _timerState.value = current.copy(config = updatedConfig)
         }
     }
@@ -201,6 +233,10 @@ class TimerForegroundService : Service() {
         soundType: String,
         volume: Float,
         vibrationEnabled: Boolean,
+        useExtendedRange: Boolean = false,
+        voiceEnabled: Boolean = true,
+        repeatRounds: Int = 0,
+        roundCount: Int = 1,
     ) {
         val config =
             TimerConfig(
@@ -217,6 +253,9 @@ class TimerForegroundService : Service() {
                     },
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
+                useExtendedRange = useExtendedRange,
+                voiceEnabled = voiceEnabled,
+                repeatRounds = repeatRounds,
             )
 
         val initialState =
@@ -225,6 +264,7 @@ class TimerForegroundService : Service() {
                 targetDuration = targetMs.milliseconds,
                 remainingDuration = remainingMs.milliseconds,
                 status = TimerStatus.RUNNING,
+                roundCount = roundCount,
             )
 
         startTimer(initialState)
@@ -266,9 +306,10 @@ class TimerForegroundService : Service() {
                     _timerState.value = state
                     updateNotification(state)
 
-                    // Trigger AI Voice Callout for ELITE users
-                    if (proManager.entitlementLevel.value == EntitlementLevel.ELITE) {
-                        voiceCalloutManager.triggerCallout(newRemaining.inWholeSeconds.toInt())
+                    // Trigger AI voice callouts for Pro users using elapsed time, not remaining time.
+                    if (proManager.entitlementLevel.value.isPro && state.config.voiceEnabled) {
+                        val elapsedSeconds = (state.targetDuration - newRemaining).inWholeSeconds.toInt()
+                        voiceCalloutManager.triggerCallout(elapsedSeconds)
                     }
 
                     if (newStatus == TimerStatus.COMPLETE) {
@@ -288,6 +329,7 @@ class TimerForegroundService : Service() {
         }
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
+        voiceCalloutManager.resetSession()
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
@@ -448,8 +490,21 @@ class TimerForegroundService : Service() {
 
                     val currentState = _timerState.value
                     if (currentState?.config?.repeatEnabled == true) {
-                        // Auto-restart timer
-                        restartTimerInternal()
+                        val shouldContinue =
+                            currentState.config.repeatRounds == 0 || currentState.roundCount < currentState.config.repeatRounds
+                        if (shouldContinue) {
+                            // Auto-restart timer
+                            restartTimerInternal()
+                        } else {
+                            // Loop limit reached - keep state as COMPLETE
+                            _timerState.value =
+                                currentState.copy(
+                                    status = TimerStatus.COMPLETE,
+                                    alarmTimeRemaining = 0.seconds,
+                                    isAlarmSilenced = false,
+                                )
+                            _timerState.value?.let { updateNotification(it) }
+                        }
                     } else {
                         // Alarm sound finished — keep state as COMPLETE (iOS parity)
                         // User must manually Stop or Reset from the ActiveTimerScreen
@@ -466,7 +521,9 @@ class TimerForegroundService : Service() {
     }
 
     private fun restartTimerInternal() {
-        val currentConfig = _timerState.value?.config ?: return
+        val currentState = _timerState.value ?: return
+        val currentConfig = currentState.config
+        val currentRound = currentState.roundCount
 
         // Generate new random duration
         val minMs = currentConfig.minSeconds * 1000L
@@ -479,6 +536,7 @@ class TimerForegroundService : Service() {
                 targetDuration = randomMs.milliseconds,
                 remainingDuration = randomMs.milliseconds,
                 status = TimerStatus.RUNNING,
+                roundCount = currentRound + 1,
             )
 
         startTimer(newState)
@@ -805,19 +863,8 @@ class TimerForegroundService : Service() {
     private fun playAlarmSound() {
         val state = _timerState.value ?: return
         if (!AlarmPlaybackPolicy.shouldRequestAudioFocus(state.status)) return
-        val resourceId =
-            when (state.config.soundType) {
-                SoundType.INTENSE -> R.raw.alarm
-                SoundType.GENTLE -> R.raw.gentle_chime
-                SoundType.KLAXON -> R.raw.klaxon
-                SoundType.WHISTLE -> R.raw.whistle
-                SoundType.BUZZER -> R.raw.buzzer
-                SoundType.GONG -> R.raw.gong
-                SoundType.AIRHORN -> R.raw.airhorn
-                SoundType.DRUM_ROLL -> R.raw.drum_roll
-                SoundType.SIREN -> R.raw.siren
-                SoundType.BELL -> R.raw.bell
-            }
+        val resourceId = resolveProSoundResId(this, state.config.soundType)
+        val remoteFile = packStore.soundFile(state.config.soundType)
 
         // Request audio focus BEFORE playing alarm sound
         requestAlarmAudioFocus()
@@ -832,11 +879,15 @@ class TimerForegroundService : Service() {
                     .build()
             val player = MediaPlayer()
             player.setAudioAttributes(alarmAttributes)
-            val afd =
-                resources.openRawResourceFd(resourceId)
-                    ?: throw IllegalStateException("Could not open alarm sound resource")
-            player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-            afd.close()
+            if (remoteFile != null) {
+                player.setDataSource(remoteFile.absolutePath)
+            } else {
+                val afd =
+                    resources.openRawResourceFd(resourceId)
+                        ?: throw IllegalStateException("Could not open alarm sound resource")
+                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
+            }
             player.isLooping = true
             player.setVolume(state.config.volume, state.config.volume)
             player.prepare()
@@ -951,6 +1002,7 @@ class TimerForegroundService : Service() {
         const val ACTION_DISMISS_ALARM = "com.iganapolsky.randomtimer.DISMISS"
         const val ACTION_SILENCE_ALARM = "com.iganapolsky.randomtimer.SILENCE"
         const val ACTION_UPDATE_LOOP = "com.iganapolsky.randomtimer.UPDATE_LOOP"
+        const val ACTION_UPDATE_VOICE = "com.iganapolsky.randomtimer.UPDATE_VOICE"
         const val ACTION_APP_STATE_CHANGED = "com.iganapolsky.randomtimer.APP_STATE"
         const val EXTRA_APP_IN_FOREGROUND = "app_in_foreground"
         const val EXTRA_TARGET_DURATION_MS = "target_duration_ms"
@@ -963,6 +1015,10 @@ class TimerForegroundService : Service() {
         const val EXTRA_SOUND_TYPE = "sound_type"
         const val EXTRA_VOLUME = "volume"
         const val EXTRA_VIBRATION_ENABLED = "vibration_enabled"
+        const val EXTRA_USE_EXTENDED_RANGE = "use_extended_range"
+        const val EXTRA_VOICE_ENABLED = "voice_enabled"
+        const val EXTRA_REPEAT_ROUNDS = "repeat_rounds"
+        const val EXTRA_ROUND_COUNT = "round_count"
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
         const val EXTRA_FROM_ALARM_STOP_ACTION = "from_alarm_stop_action"
 

@@ -1,0 +1,8 @@
+---
+description: Enforce English for all AI output
+alwaysApply: true
+---
+
+## Interaction Language
+
+All AI replies, code comments, commit messages, and documentation use **English**.

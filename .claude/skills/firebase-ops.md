@@ -53,6 +53,14 @@ bq query --use_legacy_sql=false \
    ORDER BY count DESC LIMIT 10"
 ```
 
+### App Distribution (internal-distribution workflow)
+
+- **groups**: Use Firebase Console group alias (e.g. `internal-testers`). Set `vars.FIREBASE_INTERNAL_GROUPS`.
+- **testers**: Comma-separated emails. Set `vars.FIREBASE_INTERNAL_TESTERS`.
+- At least one required. Prefer **groups** (avoids 404 from unmatched tester emails).
+- App ID format: `1:PROJECT_NUMBER:android:APP_ID` (e.g. `1:624873778337:android:4503588605a3273edc14e0`).
+- To see group alias: Firebase Console → App Distribution → Testers & groups → select group.
+
 ### Automated Crash Check (CI)
 
 ```bash

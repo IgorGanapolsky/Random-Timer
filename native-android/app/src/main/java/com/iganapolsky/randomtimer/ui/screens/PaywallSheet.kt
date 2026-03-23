@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -112,7 +111,9 @@ fun PaywallSheet(
 
             ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
             ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Spoken countdown cues + command callouts")
+            ProFeatureRow(text = "Elapsed-time voice callouts")
+            ProFeatureRow(text = "Loop with optional round limits")
+            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
             ProFeatureRow(text = "Support independent development")
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -122,7 +123,7 @@ fun PaywallSheet(
                 onClick = { onPurchase("elite_tactical") },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Restore purchase",
@@ -160,17 +161,18 @@ private fun Modifier.holdForHiddenUnlock(
         awaitPointerEventScope {
             while (true) {
                 awaitFirstDown(requireUnconsumed = false)
-                val success = withTimeoutOrNull(holdDurationMs) {
-                    var released = false
-                    while (!released) {
-                        val event = awaitPointerEvent()
-                        if (event.changes.any { it.changedToUp() }) {
-                            released = true
+                val success =
+                    withTimeoutOrNull(holdDurationMs) {
+                        var released = false
+                        while (!released) {
+                            val event = awaitPointerEvent()
+                            if (event.changes.any { it.changedToUp() }) {
+                                released = true
+                            }
                         }
-                    }
-                    false // Released before timeout
-                } ?: true
-                
+                        false // Released before timeout
+                    } ?: true
+
                 if (success) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onHoldComplete()

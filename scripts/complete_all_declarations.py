@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 from play_artifacts import ARTIFACTS_DIR, screenshot_path
 
 DEV = "8239620436488925047"
-APP = "4976249162120849673"
+APP = "4976079011400662287"
 BASE = f"https://play.google.com/console/u/0/developers/{DEV}/app/{APP}"
 
 FGS_JUSTIFICATION = (
