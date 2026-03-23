@@ -16,11 +16,11 @@ class ActiveTimerScreenBadgeTextTest {
 
     @Test
     fun loopBadgeShowsFiniteRoundProgressWhenRoundCapIsSet() {
-        assertThat(loopBadgeText(enabled = true, repeatRounds = 5, roundCount = 2)).isEqualTo("Round 2/5")
+        assertThat(loopBadgeText(enabled = true, repeatRounds = 5, roundCount = 2)).isEqualTo("Loop On · Round 2/5")
     }
 
     @Test
     fun loopBadgeClampsVisibleRoundToConfiguredLimit() {
-        assertThat(loopBadgeText(enabled = true, repeatRounds = 3, roundCount = 7)).isEqualTo("Round 3/3")
+        assertThat(loopBadgeText(enabled = true, repeatRounds = 3, roundCount = 7)).isEqualTo("Loop On · Round 3/3")
     }
 }
