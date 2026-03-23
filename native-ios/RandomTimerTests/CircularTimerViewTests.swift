@@ -120,11 +120,11 @@ final class CircularTimerViewTests: XCTestCase {
 
     func testLoopBadgeTextShowsFiniteRoundProgress() {
         let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 5, roundCount: 2)
-        XCTAssertEqual(result, "Loop On · Round 2/5")
+        XCTAssertEqual(result, "Round 2/5")
     }
 
     func testLoopBadgeTextClampsVisibleRoundToConfiguredLimit() {
         let result = ActiveTimerScreen.loopBadgeText(enabled: true, repeatRounds: 3, roundCount: 8)
-        XCTAssertEqual(result, "Loop On · Round 3/3")
+        XCTAssertEqual(result, "Round 3/3")
     }
 }

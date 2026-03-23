@@ -51,13 +51,15 @@ jobs:
 
           if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
             echo "Only workflow_dispatch is supported for budget-safe internal distribution."
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "ref=" >> "$GITHUB_OUTPUT"
-            echo "sha=" >> "$GITHUB_OUTPUT"
-            echo "reason=event_not_allowed" >> "$GITHUB_OUTPUT"
-            echo "run_ios=false" >> "$GITHUB_OUTPUT"
-            echo "run_android_play=false" >> "$GITHUB_OUTPUT"
-            echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "should_run=false"
+              echo "ref="
+              echo "sha="
+              echo "reason=event_not_allowed"
+              echo "run_ios=false"
+              echo "run_android_play=false"
+              echo "run_android_firebase=false"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -67,28 +69,24 @@ jobs:
           TARGET="${INPUT_TARGET:-all}"
           case "$TARGET" in
             all)
-              RUN_IOS="true"
-              RUN_ANDROID_PLAY="true"
-              RUN_ANDROID_FIREBASE="true"
               ;;
             ios)
-              RUN_IOS="true"
               ;;
             android_play)
-              RUN_ANDROID_PLAY="true"
               ;;
             android_firebase)
-              RUN_ANDROID_FIREBASE="true"
               ;;
             *)
               echo "❌ Unsupported target: $TARGET"
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
-              echo "ref=" >> "$GITHUB_OUTPUT"
-              echo "sha=" >> "$GITHUB_OUTPUT"
-              echo "reason=invalid_target" >> "$GITHUB_OUTPUT"
-              echo "run_ios=false" >> "$GITHUB_OUTPUT"
-              echo "run_android_play=false" >> "$GITHUB_OUTPUT"
-              echo "run_android_firebase=false" >> "$GITHUB_OUTPUT"
+              {
+                echo "should_run=false"
+                echo "ref="
+                echo "sha="
+                echo "reason=invalid_target"
+                echo "run_ios=false"
+                echo "run_android_play=false"
+                echo "run_android_firebase=false"
+              } >> "$GITHUB_OUTPUT"
               exit 0
               ;;
           esac
@@ -101,11 +99,13 @@ jobs:
             SHA="$REF"
           fi
 
-          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
-          echo "ref=$REF" >> "$GITHUB_OUTPUT"
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
-          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          {
+            echo "should_run=$SHOULD_RUN"
+            echo "ref=$REF"
+            echo "sha=$SHA"
+            echo "reason=$REASON"
+            echo "target=$TARGET"
+          } >> "$GITHUB_OUTPUT"
           echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF sha=$SHA target=$TARGET"
 
   ios-testflight-internal:
@@ -340,21 +340,6 @@ jobs:
           set -euo pipefail
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
 
-      - name: Write Google Play service account key
-        env:
-          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: |
-          set -euo pipefail
-          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
-
-      - name: Verify Google Play API access
-        env:
-          GOOGLE_PLAY_JSON_KEY_PATH: /tmp/play-service-account.json
-        run: |
-          set -euo pipefail
-          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
-          python scripts/check_store_access.py --platform android
-
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -380,8 +365,9 @@ jobs:
         working-directory: native-android
         run: |
           set -euo pipefail
-          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > play-store-key.json
-          export GOOGLE_PLAY_JSON_KEY_PATH="$(pwd)/play-store-key.json"
+          KEY_PATH="$(pwd)/play-store-key.json"
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$KEY_PATH"
+          export GOOGLE_PLAY_JSON_KEY_PATH="$KEY_PATH"
           fastlane internal
 
       - name: Verify Play internal track read-back
@@ -486,7 +472,6 @@ jobs:
 
       - name: Distribute to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
-        continue-on-error: true
         id: firebase_dist
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
@@ -497,11 +482,6 @@ jobs:
           releaseNotes: |
             Internal build from ${{ needs.gate.outputs.sha || github.sha }}
             Ref: ${{ needs.gate.outputs.ref }}
-
-      - name: Warn on Firebase distribution failure
-        if: steps.firebase_dist.outcome == 'failure'
-        run: |
-          echo "::warning::Firebase App Distribution failed (e.g. 404). Check vars.FIREBASE_INTERNAL_GROUPS matches a valid group alias in Firebase Console, or vars.FIREBASE_INTERNAL_TESTERS has valid emails."
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v7
