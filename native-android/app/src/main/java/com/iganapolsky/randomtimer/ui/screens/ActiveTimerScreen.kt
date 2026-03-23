@@ -399,7 +399,7 @@ internal fun loopBadgeText(
     }
 
     val clampedRound = roundCount.coerceIn(1, repeatRounds)
-    return "Loop On · Round $clampedRound/$repeatRounds"
+    return "Round $clampedRound/$repeatRounds"
 }
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
