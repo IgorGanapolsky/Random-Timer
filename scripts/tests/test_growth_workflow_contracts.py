@@ -41,6 +41,16 @@ def test_internal_distribution_workflow_emits_platform_specific_release_artifact
     assert "android-aab-internal" in source or "android-aab" in source
 
 
+def test_internal_distribution_workflow_passes_play_json_key_into_distribution_step():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    play_distribute_section = source.split("- name: Distribute to Google Play Internal", 1)[1].split(
+        "- name: Verify Play internal track read-back", 1
+    )[0]
+    assert "env:" in play_distribute_section
+    assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
+
+
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
