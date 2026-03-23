@@ -79,6 +79,16 @@ fun ActiveTimerScreen(
     var voiceEnabled by remember(state.config.voiceEnabled) { mutableStateOf(state.config.voiceEnabled) }
     var showResetFeedback by remember { mutableStateOf(false) }
     var resetFeedbackCounter by remember { mutableStateOf(0) }
+    val toggleLoop = {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        loopEnabled = !loopEnabled
+        onLoopToggle(loopEnabled)
+    }
+    val toggleVoice = {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        voiceEnabled = !voiceEnabled
+        onVoiceToggle(voiceEnabled)
+    }
 
     LaunchedEffect(resetFeedbackCounter) {
         if (resetFeedbackCounter == 0) return@LaunchedEffect
@@ -241,11 +251,7 @@ fun ActiveTimerScreen(
                         enabled = loopEnabled,
                         repeatRounds = state.config.repeatRounds,
                         roundCount = state.roundCount,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            loopEnabled = !loopEnabled
-                            onLoopToggle(loopEnabled)
-                        },
+                        onClick = toggleLoop,
                     )
                 }
             }
@@ -265,19 +271,11 @@ fun ActiveTimerScreen(
                                 enabled = loopEnabled,
                                 repeatRounds = state.config.repeatRounds,
                                 roundCount = state.roundCount,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    loopEnabled = !loopEnabled
-                                    onLoopToggle(loopEnabled)
-                                },
+                                onClick = toggleLoop,
                             )
                             VoiceBadge(
                                 enabled = voiceEnabled,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    voiceEnabled = !voiceEnabled
-                                    onVoiceToggle(voiceEnabled)
-                                },
+                                onClick = toggleVoice,
                             )
                         }
                     }
@@ -352,53 +350,15 @@ private fun LoopBadge(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "loopPressScale",
-    )
-    val alpha by animateFloatAsState(
-        targetValue = if (isPressed) 0.85f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "loopPressAlpha",
-    )
-
-    Surface(
+    ToggleBadge(
+        icon = "🔁",
+        text = loopBadgeText(enabled = enabled, repeatRounds = repeatRounds, roundCount = roundCount),
+        enabled = enabled,
         onClick = onClick,
-        modifier =
-            modifier.graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            },
-        interactionSource = interactionSource,
-        shape = RoundedCornerShape(8.dp),
-        color = TimerColors.GlassBackground,
-        border =
-            BorderStroke(
-                width = 1.dp,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.GlassBorder,
-            ),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "🔁",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                text = loopBadgeText(enabled = enabled, repeatRounds = repeatRounds, roundCount = roundCount),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
-            )
-        }
-    }
+        modifier = modifier,
+        scaleLabel = "loopPressScale",
+        alphaLabel = "loopPressAlpha",
+    )
 }
 
 @Composable
@@ -407,17 +367,38 @@ private fun VoiceBadge(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    ToggleBadge(
+        icon = "🔊",
+        text = voiceBadgeText(enabled = enabled),
+        enabled = enabled,
+        onClick = onClick,
+        modifier = modifier,
+        scaleLabel = "voicePressScale",
+        alphaLabel = "voicePressAlpha",
+    )
+}
+
+@Composable
+private fun ToggleBadge(
+    icon: String,
+    text: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    scaleLabel: String,
+    alphaLabel: String,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "voicePressScale",
+        label = scaleLabel,
     )
     val alpha by animateFloatAsState(
         targetValue = if (isPressed) 0.85f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "voicePressAlpha",
+        label = alphaLabel,
     )
 
     Surface(
@@ -443,11 +424,11 @@ private fun VoiceBadge(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "🔊",
+                text = icon,
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
-                text = voiceBadgeText(enabled = enabled),
+                text = text,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
                 color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,

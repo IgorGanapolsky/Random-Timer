@@ -195,9 +195,9 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
 
     assert 'voiceBadgeText(enabled: Bool)' in ios_active
     assert 'Label(' in ios_active and 'systemImage: "waveform"' in ios_active
-    assert 'updateVoiceConfig(!isEnabled)' in ios_active
+    assert 'updateConfig(voiceEnabled: !isEnabled)' in ios_active
     assert 'timerManager.updateConfig(newConfig)' in ios_active
-    assert 'voiceEnabled: enabled' in ios_active
+    assert 'voiceEnabled: voiceEnabled ?? current.voiceEnabled' in ios_active
     assert "if var state = timerState" in ios_timer_manager
 
     assert "internal fun voiceBadgeText(enabled: Boolean)" in android_active
