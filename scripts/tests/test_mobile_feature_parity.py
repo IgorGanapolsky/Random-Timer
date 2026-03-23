@@ -159,13 +159,13 @@ def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
     assert "repeatRounds" in android_active
     assert "roundCount" in android_active
     assert 'return "Infinite Loop"' in android_active
-    assert 'return "Round $clampedRound/$repeatRounds"' in android_active
+    assert 'return "Loop On · Round $clampedRound/$repeatRounds"' in android_active
 
     assert "repeatRounds" in ios_active
     assert "roundCount" in ios_active
     assert 'guard enabled else { return "Loop Off" }' in ios_active
     assert 'guard repeatRounds > 0 else { return "Infinite Loop" }' in ios_active
-    assert 'return "Round \\(clampedRound)/\\(repeatRounds)"' in ios_active
+    assert 'return "Loop On · Round \\(clampedRound)/\\(repeatRounds)"' in ios_active
 
 
 def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_copy():
