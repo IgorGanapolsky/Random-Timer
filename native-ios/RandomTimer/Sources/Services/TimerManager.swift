@@ -160,6 +160,7 @@ final class TimerManager: ObservableObject {
             ])
         }
         stopCountdown()
+        AIVoiceCalloutService.shared.resetSession()
         timerState = nil
 
         await storageService.clearTimerState()

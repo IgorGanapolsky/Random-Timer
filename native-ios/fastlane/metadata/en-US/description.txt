@@ -1,18 +1,22 @@
-Random Tactical Timer helps you train reaction, discipline, and speed when the exact start time is unknown.
+ELIMINATE PREDICTABILITY. MASTER THE OODA LOOP.
 
-Most interval timers teach rhythm. This one breaks it. Set a minimum and maximum range, hit start, and wait for the unpredictable cue.
+Random Tactical Timer is a professional-grade response training tool designed to punish lazy rhythm and build explosive reaction speed. Built for dry fire, MMA, HIIT, and tactical training, it removes the "cheat" of a standard countdown by using unpredictable start intervals.
 
-BUILT FOR
-- Dry fire and draw-stroke drills
-- Boxing, MMA, bag work, and pad rounds
-- HIIT, sprint, and reaction conditioning
-- Coaching partner or group sessions
+### TRAIN LIKE YOU FIGHT
+Standard timers teach you to anticipate the beep. Random Tactical Timer forces you to react to it. Whether you're working draw speed on the range or defensive entries on the mat, our randomized engine ensures every rep is a fresh challenge.
 
-WHY ATHLETES USE IT
-- Randomized start windows that remove countdown cheating
-- Loud alarm arsenal that cuts through gym noise
-- Pro voice callouts and repeat-loop round limits
-- Fast reset flow between rounds and reps
-- Large, readable timer views on iPhone and iPad
+### TACTICAL FEATURES
+- **LOUD & CLEAR:** Aggressive alarms and voice callouts that cut through range noise and gym chaos.
+- **PRO SOUND ARSENAL:** 10 distinct tactical cues including Klaxon, Airhorn, and Siren.
+- **ELAPSED VOICE CALLOUTS:** Keep your eyes on the threat—the app tells you exactly how much time has passed.
+- **EXTENDED RANGE:** Configure intervals from 5 seconds to 60 minutes.
+- **LOOP & ROUND LIMITS:** Automated drill cycles with Pro-level round selection.
 
-Train faster under pressure. Stay honest. React on cue.
+### BUILT FOR UTILITY
+- **STAY HONEST:** No visual countdown. No cheating the start.
+- **DISTANCE READY:** High-contrast tactical UI designed to be readable across the mat or down the range.
+- **ADAPTIVE:** Perfectly tuned for dry fire, boxing, wrestling, and high-intensity interval work.
+
+Stop timing your drills. Start training your response. 
+
+GET TACTICAL.

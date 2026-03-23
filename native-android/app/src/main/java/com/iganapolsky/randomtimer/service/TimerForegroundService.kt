@@ -329,6 +329,7 @@ class TimerForegroundService : Service() {
         }
         timerJob?.cancel()
         alarmCountdownJob?.cancel()
+        voiceCalloutManager.resetSession()
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()
