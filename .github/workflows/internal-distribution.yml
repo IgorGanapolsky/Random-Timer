@@ -429,7 +429,7 @@ jobs:
             echo "FIREBASE_INTERNAL_GROUPS=internal-testers" >> "$GITHUB_ENV"
           fi
           if ! [[ "$FIREBASE_ANDROID_APP_ID" =~ ^1:[0-9]+:android:[a-fA-F0-9]+$ ]]; then
-            echo "❌ FIREBASE_ANDROID_APP_ID must match 1:PROJECT_NUMBER:android:APP_ID (e.g. 1:624873778337:android:4503588605a3273edc14e0)"
+            echo "❌ FIREBASE_ANDROID_APP_ID must match 1:PROJECT_NUMBER:android:APP_ID (e.g. 1:712918404489:android:5fb1dfde1d712f53e7a558)"
             exit 1
           fi
 

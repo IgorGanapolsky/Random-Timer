@@ -61,6 +61,8 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     )[0]
     assert "Write Google Play service account key" not in android_firebase_job
     assert "Verify Google Play API access" not in android_firebase_job
+    assert "1:624873778337:android:4503588605a3273edc14e0" not in source
+    assert "1:712918404489:android:5fb1dfde1d712f53e7a558" in source
 
 
 def test_ios_internal_retry_dispatch_targets_ios_only():
