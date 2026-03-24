@@ -1,32 +1,10 @@
-TRAIN FOR CHAOS. NOT RHYTHM.
+Random Tactical Timer helps you train your reaction time and stress response with completely randomized intervals.
 
-Most timers teach your brain to anticipate the bell. That's comfort training — and it makes you slower when it counts. Random Tactical Timer fires at an unpredictable moment inside your chosen time window, forcing genuine reaction under stress. This is pattern-interrupt training for serious fighters and operators.
+Features:
+• True random interval generation (no patterns)
+• Visual and auditory alerts
+• Training statistics tracking
+• Perfect for stress inoculation training
+• Military and law enforcement training tool
 
-BUILT FOR:
-- Boxing pad rounds, bag intervals, and shadowboxing flurries
-- BJJ scramble and positional transition drills
-- MMA, Muay Thai, and Combatives pattern-interrupt work
-- Law enforcement and Military defensive tactics training
-- HIIT and CrossFit sessions that punish predictability
-
-WHY UNPREDICTABILITY WORKS:
-- Pattern Interrupt: Force your nervous system to stay present, not wait for a buzzer.
-- Stress Inoculation: Build composure by training against uncertain triggers—the same method used in tactical and military stress-conditioning.
-- Eliminate Anticipation: Stop "cruising" through rounds. React when the stimulus hits, not when you expect it.
-
-KEY FEATURES:
-- True random trigger within your selected min/max range
-- Hidden countdown mode — no timer watching allowed
-- Loop mode for continuous random chaos rounds
-- High-intensity alarm + haptic vibration + volume precision
-- Stable background behavior via Foreground Service
-- Full-screen tactical alerts that command attention
-
-HOW IT WORKS:
-1. Set your range (e.g. 15 seconds to 3 minutes)
-2. Press Start
-3. Train normally — move, drill, spar, or hold position
-4. React with explosive intensity when the cue hits
-5. Loop for continuous stress rounds
-
-Zero ads. No tracking. Free core timer with an optional Pro upgrade for advanced training features.
+Developed by a former military trainer for realistic stress response training.

@@ -1,103 +1,23 @@
 default_platform(:android)
 
 platform :android do
-  desc "Upload metadata (screenshots, descriptions) to Google Play"
-  lane :metadata do |_options|
-    sh("python3 #{File.expand_path('../../scripts/sync_android_metadata.py', __dir__)}")
-  end
-
-  desc "Legacy metadata upload via supply (kept for troubleshooting only)"
-  lane :metadata_legacy do |_options|
-    upload_to_play_store(
-      package_name: "com.iganapolsky.randomtimer",
-      track: "internal",
-      skip_upload_apk: true,
-      skip_upload_aab: true,
-      skip_upload_changelogs: true,
-      skip_upload_images: false,
-      skip_upload_screenshots: false
-    )
-  end
-
-  desc "Upload AAB to internal track"
-  lane :internal do
-    upload_to_play_store(
-      package_name: "com.iganapolsky.randomtimer",
-      track: "internal",
-      aab: "app/build/outputs/bundle/release/app-release.aab",
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true,
-      skip_upload_changelogs: true
-    )
-  end
-
-  desc "Upload AAB to closed testing (alpha) track"
-  lane :closed do
-    upload_to_play_store(
-      package_name: "com.iganapolsky.randomtimer",
-      track: "alpha",
-      aab: "app/build/outputs/bundle/release/app-release.aab",
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
-  end
-
-  desc "Verify release landed on the expected track"
-  lane :verify do |options|
-    track = options[:track] || "alpha"
-    version_code = options[:version_code] || sh("sed -n 's/.*versionCode *= *//p' ../app/build.gradle.kts").strip
-    sh("python3 #{File.expand_path('../../scripts/verify_release.py', __dir__)} " \
-       "--platform android --track #{track} --version-code #{version_code}")
-  end
-
-  desc "Promote internal to production"
-  lane :promote do
-    upload_to_play_store(
-      package_name: "com.iganapolsky.randomtimer",
-      track: "internal",
-      track_promote_to: "production",
-      skip_upload_apk: true,
-      skip_upload_aab: true,
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
-  end
-
-  desc "Deploy a new version to the Google Play Store and Firebase App Distribution"
+  desc "Deploy a new version to the Google Play Store"
   lane :deploy do
-    setup_ci if ENV["CI"]
-
-    gradle(
-      task: "clean assembleRelease",
-      project_dir: "."
-    )
-
+    gradle(task: "clean")
+    gradle(task: "assemble", build_type: "Release")
     upload_to_play_store(
-      track: "internal",
-      json_key_data: ENV["PLAY_STORE_JSON_KEY"]
+      track: "production",
+      release_status: "completed"
     )
-
-    if ENV["FIREBASE_TOKEN"] && (ENV["FIREBASE_ANDROID_APP_ID"] || ENV["FIREBASE_APP_ID"])
-      firebase_app_id = ENV["FIREBASE_ANDROID_APP_ID"] || ENV["FIREBASE_APP_ID"]
-      firebase_app_distribution(
-        app: firebase_app_id,
-        firebase_cli_token: ENV["FIREBASE_TOKEN"],
-        release_notes: "Automated build from GitHub Actions",
-        groups: "internal-testers"
-      )
-    else
-      UI.important("Firebase App Distribution not configured - skipping")
-    end
   end
 
-  desc "Build debug APK for CI"
-  lane :build_debug do
-    gradle(
-      task: "assembleDebug",
-      project_dir: "."
+  desc "Upload metadata and screenshots only"
+  lane :supply_metadata do
+    supply(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_screenshots: false,
+      skip_upload_images: false
     )
   end
 end

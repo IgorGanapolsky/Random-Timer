@@ -1,2 +1,5 @@
-json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "/tmp/play-service-account.json")
-package_name("com.iganapolsky.randomtimer")
+json(
+  "package_name" => "com.iganapolsky.randomtimer",
+  "google_play_track" => "production",
+  "json_key_file" => "fastlane/google-play-key.json"
+)
