@@ -460,7 +460,7 @@ def print_results(results: list[dict]):
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
+def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: Optional[set[str]] = None) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
@@ -540,6 +540,12 @@ def parse_args() -> argparse.Namespace:
             "Use this after a submit-for-review automation step."
         ),
     )
+    parser.add_argument(
+        "--ios-scope",
+        choices=["testflight", "both"],
+        default="both",
+        help="For iOS verification, check only TestFlight or both TestFlight and App Store state.",
+    )
     return parser.parse_args()
 
 
@@ -610,23 +616,23 @@ def main():
             **result,
         })
 
-        # Also check App Store version state
-        asv = asc.verify_app_store_version(args.version)
-        if args.require_appstore_submission and asv.get("status") == "NOT_SUBMITTED":
-            asv = {
-                "passed": False,
-                "status": "NOT_SUBMITTED",
-                "details": (
-                    f"App Store version '{args.version}' is still NOT_SUBMITTED "
-                    "(expected a submitted state like WAITING_FOR_REVIEW)"
-                ),
-            }
-        results.append({
-            "platform": "iOS",
-            "track": "App Store",
-            "version": args.version,
-            **asv,
-        })
+        if args.ios_scope == "both":
+            asv = asc.verify_app_store_version(args.version)
+            if args.require_appstore_submission and asv.get("status") == "NOT_SUBMITTED":
+                asv = {
+                    "passed": False,
+                    "status": "NOT_SUBMITTED",
+                    "details": (
+                        f"App Store version '{args.version}' is still NOT_SUBMITTED "
+                        "(expected a submitted state like WAITING_FOR_REVIEW)"
+                    ),
+                }
+            results.append({
+                "platform": "iOS",
+                "track": "App Store",
+                "version": args.version,
+                **asv,
+            })
 
     # --- Results ---
     all_passed = print_results(results)

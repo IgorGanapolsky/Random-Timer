@@ -85,6 +85,8 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     source = IOS_SUBMIT_REVIEW_WORKFLOW.read_text(encoding="utf-8")
 
     assert "check_ios_version_lineage.py" in source
+    assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
+    assert "fastlane submit_review" not in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

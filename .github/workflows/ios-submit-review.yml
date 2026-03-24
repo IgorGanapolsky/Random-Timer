@@ -78,7 +78,7 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          echo "$APPSTORE_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
           echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
 
       - name: Guard iOS version lineage against ASC
@@ -140,6 +140,7 @@ jobs:
           python scripts/verify_release.py \
             --platform ios \
             --version "$IOS_VERSION" \
+            --ios-scope testflight \
             --wait \
             --timeout 1200
 
@@ -214,18 +215,11 @@ jobs:
           if [[ "$STATE" == "WAITING_FOR_REVIEW" || "$STATE" == "IN_REVIEW" || "$STATE" == "PENDING_DEVELOPER_RELEASE" || "$STATE" == "READY_FOR_SALE" ]]; then
             echo "Already submitted ($STATE); skipping submit_review."
           else
-            # Use our ASC preflight script for hard validation, then submit via Fastlane deliver.
-            python scripts/asc_submit_for_review.py --version "$IOS_VERSION" --locale "$LOCALE" --dry-run
-
-            cd native-ios
-            fastlane submit_review version:"$IOS_VERSION"
-            cd ..
-          fi
-
-          if [[ "$WAIT_FOR_STATE" == "true" ]]; then
-            python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --wait --timeout 1800 --poll-interval 20
-          else
-            python scripts/asc_poll_version_state.py --version "$IOS_VERSION"
+            SUBMIT_ARGS=(--version "$IOS_VERSION" --locale "$LOCALE")
+            if [[ "$WAIT_FOR_STATE" == "true" ]]; then
+              SUBMIT_ARGS+=(--wait)
+            fi
+            python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"
           fi
 
       - name: Upload version resolution report

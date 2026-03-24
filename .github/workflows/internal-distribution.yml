@@ -236,7 +236,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
-          python scripts/verify_release.py --platform ios --version "$VERSION" --wait --timeout 900 --poll-interval 60
+          python scripts/verify_release.py --platform ios --version "$VERSION" --ios-scope testflight --wait --timeout 900 --poll-interval 60
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v7

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+import pytest
 
 from scripts import verify_release as vr
 
@@ -217,3 +218,40 @@ def test_parse_args_platform_and_version_code(monkeypatch):
     a = vr.parse_args()
     assert a.platform == "android"
     assert a.version_code == 5
+
+
+def test_parse_args_ios_scope(monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv",
+        ["verify_release.py", "--platform", "ios", "--version", "1.2.3", "--ios-scope", "testflight"],
+    )
+    a = vr.parse_args()
+    assert a.ios_scope == "testflight"
+
+
+def test_main_skips_app_store_check_when_ios_scope_is_testflight(monkeypatch):
+    build_calls = []
+    app_store_calls = []
+
+    class _FakeASC:
+        def verify(self, version):
+            build_calls.append(version)
+            return {"passed": True, "status": "VALID", "details": "ok"}
+
+        def verify_app_store_version(self, version):
+            app_store_calls.append(version)
+            return {"passed": False, "status": "REJECTED", "details": "bad"}
+
+    monkeypatch.setattr(vr, "AppStoreVerifier", lambda: _FakeASC())
+    monkeypatch.setattr(vr, "print_results", lambda results: True)
+    monkeypatch.setattr(
+        "sys.argv",
+        ["verify_release.py", "--platform", "ios", "--version", "1.2.3", "--ios-scope", "testflight"],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        vr.main()
+
+    assert exc.value.code == 0
+    assert build_calls == ["1.2.3"]
+    assert app_store_calls == []

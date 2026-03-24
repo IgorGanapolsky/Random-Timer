@@ -674,11 +674,71 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
         die("App Review contactPhone is missing.")
 
 
-def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
-    # Current ASC API exposes a unified AgeRatingDeclaration relationship on the App Store Version:
-    #   GET /v1/appStoreVersions/{id}/ageRatingDeclaration
-    # Some older code paths used app/appInfo relationships which may not exist on newer APIs.
+def _list_app_infos(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
+    params = {
+        "limit": 200,
+        "fields[appInfos]": "appStoreState",
+    }
+    if hasattr(client, "get_all"):
+        infos = client.get_all(f"/apps/{app_id}/appInfos", params=params)
+    else:
+        payload = client.request("GET", f"/apps/{app_id}/appInfos", params=params)
+        infos = payload.get("data") or []
+    return [it for it in infos if isinstance(it, dict)]
+
+
+def _ordered_app_infos_for_version(
+    client: ASCClient, app_id: str, version_id: str | None = None
+) -> tuple[list[dict[str, Any]], list[str]]:
     errors: list[str] = []
+    version_state: str | None = None
+    if version_id:
+        try:
+            version_state = get_version_state(client, version_id)
+        except Exception as e:
+            errors.append(f"version /appStoreVersions/{version_id}: {e}")
+
+    infos: list[dict[str, Any]] = []
+    try:
+        infos = _list_app_infos(client, app_id)
+    except Exception as e:
+        errors.append(f"app /apps/{app_id}/appInfos: {e}")
+        return [], errors
+
+    if not version_state:
+        return infos, errors
+
+    matching: list[dict[str, Any]] = []
+    other: list[dict[str, Any]] = []
+    for info_obj in infos:
+        state = (info_obj.get("attributes") or {}).get("appStoreState")
+        if state == version_state:
+            matching.append(info_obj)
+        else:
+            other.append(info_obj)
+    return matching + other, errors
+
+
+def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
+    # Apple currently exposes AgeRatingDeclaration from App Info:
+    #   GET /v1/appInfos/{id}/ageRatingDeclaration
+    # The older App Store Version relationship is deprecated and now returns PATH_ERROR
+    # for this app, so prefer the App Info path and only use the version path as a fallback.
+    errors: list[str] = []
+    app_infos, info_errors = _ordered_app_infos_for_version(client, app_id, version_id)
+    errors.extend(info_errors)
+
+    for info_obj in app_infos:
+        app_info_id = info_obj.get("id")
+        if not isinstance(app_info_id, str) or not app_info_id:
+            continue
+        try:
+            data = client.request("GET", f"/appInfos/{app_info_id}/ageRatingDeclaration")
+            if data.get("data"):
+                return
+        except Exception as e:
+            errors.append(f"appInfo /appInfos/{app_info_id}/ageRatingDeclaration: {e}")
+
     if version_id:
         try:
             data = client.request("GET", f"/appStoreVersions/{version_id}/ageRatingDeclaration")
@@ -686,25 +746,155 @@ def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = N
                 return
         except Exception as e:
             errors.append(f"version /appStoreVersions/{version_id}/ageRatingDeclaration: {e}")
-    else:
-        errors.append("version_id missing (cannot verify ageRatingDeclaration).")
 
     detail = "\n  ".join(errors)
     die("Age Rating declaration not found. Complete Age Rating in App Store Connect.\n  " + detail)
 
 
-def submit_for_review(client: ASCClient, version_id: str) -> None:
-    # Apple’s public App Store Connect OpenAPI currently exposes:
-    # - GET /v1/appStoreVersions/{id}/appStoreVersionSubmission
-    # - DELETE /v1/appStoreVersionSubmissions/{id}
-    # but does not expose a CREATE operation for submissions.
-    #
-    # Attempting to POST will fail with FORBIDDEN_ERROR ("does not allow CREATE").
-    # Use Fastlane `deliver` (see native-ios/fastlane/Fastfile lane `submit_review`)
-    # or submit via the App Store Connect UI.
-    die(
-        "App Store Connect API does not support creating an appStoreVersionSubmission via POST. "
-        "Use fastlane `submit_review` (deliver submit_for_review) or submit in App Store Connect UI."
+def _list_review_submissions(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
+    params = {"limit": 200, "fields[reviewSubmissions]": "platform,state,submittedDate"}
+    if hasattr(client, "get_all"):
+        return client.get_all(f"/apps/{app_id}/reviewSubmissions", params=params)
+    payload = client.request("GET", f"/apps/{app_id}/reviewSubmissions", params=params)
+    return payload.get("data") or []
+
+
+def _list_review_submission_items(client: ASCClient, submission_id: str) -> list[dict[str, Any]]:
+    data = client.request(
+        "GET",
+        f"/reviewSubmissions/{submission_id}/items",
+        params={
+            "limit": 200,
+            "include": "appStoreVersion,appCustomProductPageVersion",
+            "fields[reviewSubmissionItems]": "state",
+        },
+    )
+    return data.get("data") or []
+
+
+def _find_submission_for_version(
+    client: ASCClient, *, app_id: str, version_id: str
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    for submission in _list_review_submissions(client, app_id):
+        submission_id = submission.get("id")
+        if not isinstance(submission_id, str) or not submission_id:
+            continue
+        for item in _list_review_submission_items(client, submission_id):
+            rel_version = ((item.get("relationships") or {}).get("appStoreVersion") or {}).get("data") or {}
+            if rel_version.get("id") == version_id:
+                return submission, item
+    return None, None
+
+
+def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
+    payload = {
+        "data": {
+            "type": "reviewSubmissions",
+            "attributes": {"platform": "IOS"},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+        }
+    }
+    return client.request("POST", "/reviewSubmissions", payload=payload).get("data") or {}
+
+
+def _create_review_submission_item(client: ASCClient, *, submission_id: str, version_id: str) -> dict[str, Any]:
+    payload = {
+        "data": {
+            "type": "reviewSubmissionItems",
+            "relationships": {
+                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
+                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}},
+            },
+        }
+    }
+    return client.request("POST", "/reviewSubmissionItems", payload=payload).get("data") or {}
+
+
+def _mark_review_submission_item_resolved(client: ASCClient, *, item_id: str) -> dict[str, Any]:
+    payload = {
+        "data": {
+            "type": "reviewSubmissionItems",
+            "id": item_id,
+            "attributes": {"resolved": True},
+        }
+    }
+    return client.request("PATCH", f"/reviewSubmissionItems/{item_id}", payload=payload).get("data") or {}
+
+
+def _submit_review_submission(
+    client: ASCClient,
+    *,
+    submission_id: str,
+    retries: int = 6,
+    retry_delay: int = 10,
+) -> dict[str, Any]:
+    payload = {
+        "data": {
+            "type": "reviewSubmissions",
+            "id": submission_id,
+            "attributes": {"submitted": True},
+        }
+    }
+    last_error: Exception | None = None
+    for attempt in range(1, retries + 1):
+        try:
+            return client.request("PATCH", f"/reviewSubmissions/{submission_id}", payload=payload).get("data") or {}
+        except Exception as exc:
+            last_error = exc
+            msg = str(exc)
+            if "already in progress" in msg.lower():
+                info(f"Review submission {submission_id} is already in progress.")
+                return client.request("GET", f"/reviewSubmissions/{submission_id}").get("data") or {}
+            if "not ready to be submitted yet" not in msg.lower() or attempt == retries:
+                raise
+            info(
+                f"Review submission {submission_id} not ready yet; retrying in {retry_delay}s "
+                f"({attempt}/{retries})…"
+            )
+            time.sleep(retry_delay)
+    if last_error:
+        raise last_error
+    raise AssertionError("unreachable")
+
+
+def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
+    submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
+    if submission:
+        info(
+            "Found existing review submission "
+            f"{submission.get('id')} (state={(submission.get('attributes') or {}).get('state', 'UNKNOWN')})."
+        )
+    else:
+        info("No existing review submission found for this version; creating one.")
+
+    if not submission:
+        submission = _create_review_submission(client, app_id=app_id)
+        submission_id = str(submission.get("id") or "")
+        if not submission_id:
+            die("Failed to create review submission (missing submission id in response).")
+        item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+    else:
+        submission_id = str(submission.get("id") or "")
+        if not submission_id:
+            die("Existing review submission is missing an id.")
+        if not item:
+            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+
+    item_id = str((item or {}).get("id") or "")
+    item_state = ((item or {}).get("attributes") or {}).get("state", "UNKNOWN")
+    if not item_id:
+        die("Review submission item is missing an id.")
+
+    if item_state == "REJECTED":
+        info(f"Resolving rejected review submission item {item_id} for resubmission…")
+        item = _mark_review_submission_item_resolved(client, item_id=item_id)
+        item_state = ((item or {}).get("attributes") or {}).get("state", item_state)
+        info(f"Review submission item {item_id} state: {item_state}")
+
+    submission = _submit_review_submission(client, submission_id=submission_id)
+    info(
+        "Review submission "
+        f"{submission_id} state: {((submission or {}).get('attributes') or {}).get('state', 'UNKNOWN')}"
     )
 
 
@@ -793,7 +983,7 @@ def main() -> int:
 
     build_id = select_valid_build_id(client, app_id, args.version)
     attach_build(client, version_id, build_id)
-    submit_for_review(client, version_id)
+    submit_for_review(client, app_id, version_id)
 
     if args.wait:
         wait_for_state(client, version_id, timeout=args.timeout, poll_interval=args.poll_interval)
