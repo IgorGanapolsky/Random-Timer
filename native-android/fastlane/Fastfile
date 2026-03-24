@@ -4,10 +4,11 @@ platform :android do
   desc "Deploy a new version to the Google Play Store"
   lane :deploy do
     gradle(task: "clean")
-    gradle(task: "assemble", build_type: "Release")
+    gradle(task: "bundle", build_type: "Release")
     upload_to_play_store(
       track: "production",
-      release_status: "completed"
+      release_status: "completed",
+      aab: "app/build/outputs/bundle/release/app-release.aab"
     )
   end
 
