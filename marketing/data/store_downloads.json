@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-03-12T14:42:48+00:00",
+  "generated_at": "2026-03-24T18:23:28+00:00",
   "window_days": 30,
   "source": "posthog",
   "status": "degraded",
-  "status_reason": "",
+  "status_reason": "preserved last good metrics after degraded PostHog query",
   "ios": {
     "downloads_30d": 4
   },
@@ -21,7 +21,11 @@
   },
   "query_diagnostics": {
     "errors": [
-      "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)"
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests"
     ]
   },
   "snapshots": [
@@ -45,5 +49,20 @@
       "wau": 142,
       "mau": 144
     }
-  ]
+  ],
+  "metric_definitions": {
+    "downloads_30d": {
+      "display_name": "Distinct install users (30d)",
+      "source": "posthog",
+      "semantic_type": "proxy",
+      "description": "Distinct live-device users with an 'Application Installed' event over the trailing window. This is a PostHog proxy metric, not store download truth."
+    }
+  },
+  "data_quality": {
+    "is_stale": true,
+    "preserved_previous_metrics": true,
+    "last_attempt_generated_at": "2026-03-24T18:23:28+00:00",
+    "last_good_generated_at": "2026-03-12T14:42:48+00:00",
+    "reason": "missing_dependency: requests"
+  }
 }

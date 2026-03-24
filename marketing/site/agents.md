@@ -2,14 +2,12 @@
 
 Use this page for machine-readable summaries of current content and positioning.
 
-## Agentic Merchant Protocol (AMP)
-- **Approved Product Data**: [amp.json](https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json) - Machine-readable, verified claims and features for AI consumption.
-
 ## Intent
 - Product: Random Tactical Timer
 - Audience: athletes, trainers, coaches, and reaction-drill users
 - Outcomes: reaction readiness, unpredictability in interval training, repeatable setup
 
 ## Latest posts
+- 2026-03-24 | Mental Readiness: what we learned building Random Tactical Timer | html: https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-03-24-mental-readiness-what-we-learned-building-random-tactical-timer.html | markdown: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-03-24-mental-readiness-what-we-learned-building-random-tactical-timer.md
 - 2026-03-11 | How we implemented Agentic Merchant Protocol (AMP) for AI discovery | html: https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.html | markdown: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.md
 - 2026-02-19 | The inspiration behind Random Tactical Timer | html: https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-02-19-the-inspiration-behind-random-tactical-timer.html | markdown: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md

@@ -198,7 +198,7 @@ fun TimerSetupScreen(
             },
             bottomBar = {
                 PrimaryButton(
-                    text = "Start Timer",
+                    text = "Commence Drill",
                     onClick = onStartTimer,
                     modifier =
                         Modifier
@@ -257,7 +257,7 @@ fun TimerSetupScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "\u23F1\uFE0F Timer Range",
+                                    text = "\u23F1\uFE0F Tactical Drill Range",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TimerColors.TextPrimary,
