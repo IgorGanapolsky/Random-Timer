@@ -206,14 +206,51 @@ def _get_app_price_schedules(client: AscClient, app_id: str) -> List[Dict[str, A
     return payload.get("data", []) or []
 
 
-def _get_age_rating_declaration(client: AscClient, app_id: str) -> Optional[Dict[str, Any]]:
-    # Relationship is singular on apps: appStoreAgeRatingDeclaration
+def _get_age_rating_declaration(
+    client: AscClient, app_id: str, *, version_state: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     payload = client.get(
-        f"/apps/{app_id}/appStoreAgeRatingDeclaration",
-        params={"fields[appStoreAgeRatingDeclarations]": "alcoholTobaccoOrDrugUseOrReferences,gamblingAndContests,violenceCartoonOrFantasy,violenceRealistic,profanityOrCrudeHumor"},
+        f"/apps/{app_id}/appInfos",
+        params={
+            "limit": "200",
+            "fields[appInfos]": "appStoreState",
+        },
     )
-    data = payload.get("data")
-    return data if isinstance(data, dict) else None
+    app_infos = [item for item in (payload.get("data") or []) if isinstance(item, dict)]
+    if version_state:
+        matching = [item for item in app_infos if (item.get("attributes") or {}).get("appStoreState") == version_state]
+        if matching:
+            app_infos = matching + [item for item in app_infos if item not in matching]
+
+    last_error: Exception | None = None
+    for app_info in app_infos:
+        app_info_id = app_info.get("id")
+        if not isinstance(app_info_id, str) or not app_info_id:
+            continue
+        try:
+            payload = client.get(
+                f"/appInfos/{app_info_id}/ageRatingDeclaration",
+                params={
+                    "fields[ageRatingDeclarations]": (
+                        "advertising,alcoholTobaccoOrDrugUseOrReferences,contests,gambling,"
+                        "gamblingSimulated,gunsOrOtherWeapons,healthOrWellnessTopics,lootBox,"
+                        "medicalOrTreatmentInformation,messagingAndChat,parentalControls,"
+                        "profanityOrCrudeHumor,sexualContentGraphicAndNudity,sexualContentOrNudity,"
+                        "horrorOrFearThemes,matureOrSuggestiveThemes,unrestrictedWebAccess,"
+                        "userGeneratedContent,violenceCartoonOrFantasy,violenceRealistic,"
+                        "violenceRealisticProlongedGraphicOrSadistic"
+                    )
+                },
+            )
+            data = payload.get("data")
+            if isinstance(data, dict):
+                return data
+        except Exception as exc:
+            last_error = exc
+
+    if last_error is not None:
+        raise last_error
+    return None
 
 
 def verify_ready(
@@ -437,21 +474,16 @@ def verify_ready(
 
     # Age rating declaration exists
     try:
-        decl = _get_age_rating_declaration(client, app_id)
+        decl = _get_age_rating_declaration(
+            client,
+            app_id,
+            version_state=str((app_store_version.get("attributes") or {}).get("appStoreState") or ""),
+        )
         checks.append(
             Check(
                 name="Age Rating Completed",
                 passed=decl is not None,
-                details="OK" if decl else "Missing appStoreAgeRatingDeclaration",
-            )
-        )
-    except AscClientError as exc:
-        checks.append(
-            Check(
-                name="Age Rating Completed",
-                passed=True,
-                details=f"Skipped check (endpoint/API unavailable): {exc}",
-                evidence={"skipped": True},
+                details="OK" if decl else "Missing ageRatingDeclaration on App Info",
             )
         )
     except Exception as exc:
