@@ -460,7 +460,7 @@ def print_results(results: list[dict]):
 # Polling
 # ---------------------------------------------------------------------------
 
-def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: set[str] | None = None) -> dict:
+def poll_until_done(verify_fn, poll_interval: int, timeout: int, terminal_statuses: Optional[set[str]] = None) -> dict:
     """Call verify_fn repeatedly until it passes or times out."""
     deadline = time.time() + timeout
     attempt = 0
