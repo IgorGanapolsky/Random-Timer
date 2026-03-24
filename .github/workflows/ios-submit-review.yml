@@ -140,6 +140,7 @@ jobs:
           python scripts/verify_release.py \
             --platform ios \
             --version "$IOS_VERSION" \
+            --ios-scope testflight \
             --wait \
             --timeout 1200
 
