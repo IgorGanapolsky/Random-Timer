@@ -128,3 +128,15 @@ def test_workflow_contract_exists_and_points_at_canonical_proof_commands():
 
 def test_dead_play_precondition_stub_is_removed():
     assert not (ROOT / "scripts/play_precondition_triage.py").exists()
+
+
+def test_ci_crashlytics_job_uses_dedicated_runtime_secret_and_is_not_best_effort():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    crashlytics_section = source.split("crashlytics:", 1)[1].split("notify:", 1)[0]
+    assert "CRASHLYTICS_SERVICE_ACCOUNT_JSON" in crashlytics_section
+    assert "FIREBASE_SERVICE_ACCOUNT_JSON" not in crashlytics_section
+    assert "google-github-actions/auth" not in crashlytics_section
+    assert "google-auth==" in crashlytics_section
+    assert "Missing CRASHLYTICS_SERVICE_ACCOUNT_JSON secret" in crashlytics_section
+    assert "continue-on-error: true" not in crashlytics_section

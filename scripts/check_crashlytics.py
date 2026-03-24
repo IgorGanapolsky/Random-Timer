@@ -9,7 +9,7 @@ Setup (one-time in Firebase Console):
     2. This enables streaming export to: random-timer-486213.firebase_crashlytics.{app_id}
 
 Requires:
-    - gcloud auth (or GOOGLE_APPLICATION_CREDENTIALS)
+    - CRASHLYTICS_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
     - BigQuery API enabled on random-timer-486213
     - Firebase project: random-timer-486213
 
@@ -18,32 +18,43 @@ owned by a separate Firebase project and is documented in
 docs/FIREBASE_ANDROID_INFRASTRUCTURE.md.
 """
 
+import ssl
 import argparse
 import json
-import subprocess
+import os
 import sys
 import urllib.request
-import ssl
 from datetime import datetime, timedelta, timezone
 
+import google.auth
+from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 
-PROJECT_ID = "random-timer-486213"
-PACKAGE = "com.iganapolsky.randomtimer"
+
+PROJECT_ID = os.environ.get("CRASHLYTICS_PROJECT_ID", "random-timer-486213")
+PACKAGE = os.environ.get("CRASHLYTICS_PACKAGE", "com.iganapolsky.randomtimer")
 # BigQuery dataset created by Crashlytics streaming export
-BQ_DATASET = "firebase_crashlytics"
+BQ_DATASET = os.environ.get("CRASHLYTICS_BQ_DATASET", "firebase_crashlytics")
 DEFAULT_THRESHOLD = 99.0
+SCOPES = ("https://www.googleapis.com/auth/cloud-platform",)
 
 
-def get_access_token():
-    result = subprocess.run(
-        ["gcloud", "auth", "print-access-token"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        print(f"ERROR: gcloud auth failed: {result.stderr}", file=sys.stderr)
-        sys.exit(1)
-    return result.stdout.strip()
+def get_credentials():
+    raw_json = os.environ.get("CRASHLYTICS_SERVICE_ACCOUNT_JSON", "").strip()
+    if raw_json:
+        return service_account.Credentials.from_service_account_info(
+            json.loads(raw_json),
+            scopes=SCOPES,
+        )
+
+    creds, _ = google.auth.default(scopes=SCOPES)
+    return creds
+
+
+def get_access_token(credentials=None):
+    creds = credentials or get_credentials()
+    creds.refresh(Request())
+    return creds.token
 
 
 def bq_query(token, sql):
@@ -94,42 +105,59 @@ def check_bigquery_export(token):
         return None
 
 
-def query_crash_summary(token, hours):
-    """Query crash summary from BigQuery."""
-    # Crashlytics BQ export table naming: {sanitized_app_id}
-    # For com.iganapolsky.randomtimer -> com_iganapolsky_randomtimer
-    table_suffix = PACKAGE.replace(".", "_")
+def select_crashlytics_table(tables):
+    """Pick the active Crashlytics export table for the Android runtime app."""
+    base = PACKAGE.replace(".", "_")
+    if base in tables:
+        return base
 
+    realtime = f"{base}_ANDROID_REALTIME"
+    if realtime in tables:
+        return realtime
+
+    realtime_candidates = sorted(
+        table for table in tables if table.startswith(f"{base}_") and table.endswith("_REALTIME")
+    )
+    if realtime_candidates:
+        return realtime_candidates[0]
+
+    candidates = sorted(table for table in tables if table.startswith(base))
+    if candidates:
+        return candidates[0]
+
+    raise ValueError(f"No Crashlytics export table found for package {PACKAGE}")
+
+
+def query_crash_summary(token, hours, table_id):
+    """Query crash summary from BigQuery."""
     sql = f"""
     SELECT
       COUNT(*) as crash_count,
       COUNT(DISTINCT installation_uuid) as affected_users,
       error_type,
-      SUBSTR(blame_frame.file, 1, 80) as file,
+      SUBSTR(COALESCE(blame_frame.file, issue_title), 1, 80) as file,
       blame_frame.line as line,
-      SUBSTR(exception_type, 1, 60) as exception,
-      SUBSTR(exception_message, 1, 100) as message,
-      app_version as version,
-    FROM `{PROJECT_ID}.{BQ_DATASET}.{table_suffix}`
+      SUBSTR(issue_title, 1, 80) as issue_title,
+      SUBSTR(issue_subtitle, 1, 120) as issue_subtitle,
+      application.display_version as version
+    FROM `{PROJECT_ID}.{BQ_DATASET}.{table_id}`
     WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {hours} HOUR)
-      AND error_type = 'FATAL'
-    GROUP BY error_type, file, line, exception, message, version
+      AND COALESCE(is_fatal, FALSE) = TRUE
+    GROUP BY error_type, file, line, issue_title, issue_subtitle, version
     ORDER BY crash_count DESC
     LIMIT 20
     """
     return bq_query(token, sql)
 
 
-def query_crash_free_rate(token, hours):
+def query_crash_free_rate(token, hours, table_id):
     """Calculate crash-free user rate from BigQuery."""
-    table_suffix = PACKAGE.replace(".", "_")
-
     sql = f"""
     WITH sessions AS (
       SELECT
         installation_uuid,
         MAX(CASE WHEN error_type = 'FATAL' THEN 1 ELSE 0 END) as had_crash
-      FROM `{PROJECT_ID}.{BQ_DATASET}.{table_suffix}`
+      FROM `{PROJECT_ID}.{BQ_DATASET}.{table_id}`
       WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {hours} HOUR)
       GROUP BY installation_uuid
     )
@@ -167,32 +195,44 @@ def main():
         sys.exit(0)
 
     print(f"BigQuery tables found: {tables}")
+    table_id = select_crashlytics_table(tables)
+    print(f"Using Crashlytics table: {table_id}")
 
     # Query crash summary
     print(f"\n--- Crash summary (last {args.hours}h) ---")
-    result = query_crash_summary(token, args.hours)
+    result = query_crash_summary(token, args.hours, table_id)
     if "error" in result:
         print(f"Query error: {result['error']}")
     elif result.get("rows"):
         for row in result["rows"]:
             vals = [f.get("v", "") for f in row["f"]]
-            count, users, err_type, file, line, exc, msg, ver = vals
-            print(f"  {count} crashes ({users} users) v{ver}: {exc} - {msg}")
+            count, users, err_type, file, line, issue_title, issue_subtitle, ver = vals
+            print(f"  {count} crashes ({users} users) v{ver}: {issue_title}")
+            if issue_subtitle:
+                print(f"    detail: {issue_subtitle}")
             print(f"    at {file}:{line}")
     else:
         print("  No crashes found!")
 
     # Query crash-free rate
     print(f"\n--- Crash-free rate (last {args.hours}h) ---")
-    rate_result = query_crash_free_rate(token, args.hours)
+    rate_result = query_crash_free_rate(token, args.hours, table_id)
     if "error" in rate_result:
         print(f"Query error: {rate_result['error']}")
     elif rate_result.get("rows"):
         vals = [f.get("v", "") for f in rate_result["rows"][0]["f"]]
         total, crash_free, pct = vals
-        print(f"  Total users: {total}")
-        print(f"  Crash-free: {crash_free} ({pct}%)")
-        if float(pct or 100) < args.threshold:
+        total_users = int(total or 0)
+        crash_free_users = int(crash_free or 0)
+        crash_free_pct = float(pct or 100)
+        print(f"  Total users: {total_users}")
+        if total_users == 0:
+            print("  No recent sessions found; treating crash-free rate as pass.")
+            print(f"  PASS: Above {args.threshold}% threshold")
+            return
+
+        print(f"  Crash-free: {crash_free_users} ({crash_free_pct}%)")
+        if crash_free_pct < args.threshold:
             print(f"  FAIL: Below {args.threshold}% threshold")
             sys.exit(1)
         else:
