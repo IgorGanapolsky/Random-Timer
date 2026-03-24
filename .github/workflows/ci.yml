@@ -530,26 +530,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Detect Crashlytics credentials
-        id: crashlytics-creds
+      - name: Require Crashlytics runtime secret
+        env:
+          CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
         run: |
-          if [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" ]; then
-            echo "has_creds=true" >> "$GITHUB_OUTPUT"
+          if [ -n "${CRASHLYTICS_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "Crashlytics runtime secret detected."
           else
-            echo "has_creds=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping Crashlytics check because FIREBASE_SERVICE_ACCOUNT_JSON is not configured."
+            echo "::error::Missing CRASHLYTICS_SERVICE_ACCOUNT_JSON secret for runtime Crashlytics checks."
+            exit 1
           fi
 
-      - name: Authenticate to Google Cloud
-        if: steps.crashlytics-creds.outputs.has_creds == 'true'
-        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - name: Install Crashlytics auth dependencies
+        run: python -m pip install --upgrade google-auth==2.43.0 requests==2.32.5
 
       - name: Check crash-free rate
-        if: steps.crashlytics-creds.outputs.has_creds == 'true'
+        env:
+          CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
         run: python scripts/check_crashlytics.py --threshold 99.0 --hours 24
-        continue-on-error: true
 
   notify:
     name: Notify
