@@ -1,4 +1,5 @@
 import unittest
+from typing import Optional
 
 from scripts.asc_resolve_version import (
     _bump_patch,
@@ -10,9 +11,11 @@ from scripts.asc_resolve_version import (
 
 
 class _FakeClient:
-    def __init__(self, versions):
+    def __init__(self, versions, *, post_error: Optional[Exception] = None):
         self.versions = list(versions)
         self.created = []
+        self.post_error = post_error
+        self.patched = []
 
     def get_all(self, path, params=None):
         if path.endswith("/appStoreVersions"):
@@ -21,6 +24,8 @@ class _FakeClient:
 
     def request(self, method, path, payload=None, params=None):
         if method == "POST" and path == "/appStoreVersions":
+            if self.post_error is not None:
+                raise self.post_error
             data = payload["data"]
             created = {
                 "id": f"new-{len(self.created) + 1}",
@@ -33,6 +38,14 @@ class _FakeClient:
             self.created.append(created)
             self.versions.insert(0, created)
             return {"data": created}
+        if method == "PATCH" and path.startswith("/appStoreVersions/"):
+            version_id = path.split("/")[-1]
+            target_version = payload["data"]["attributes"]["versionString"]
+            for item in self.versions:
+                if item["id"] == version_id:
+                    item["attributes"]["versionString"] = target_version
+                    self.patched.append((version_id, target_version))
+                    return {"data": item}
         raise AssertionError(f"Unhandled request: {method} {path}")
 
 
@@ -116,18 +129,36 @@ class AscResolveVersionUnitTests(unittest.TestCase):
         self.assertFalse(result.created)
         self.assertIn("reused_highest_editable", result.reason)
 
-    def test_reuses_existing_editable_when_preferred_missing_and_auto_next_patch(self):
+    def test_retargets_existing_editable_when_preferred_missing_and_auto_next_patch(self):
         client = _FakeClient([_version("1.2.0", "PREPARE_FOR_SUBMISSION")])
         result = resolve_version(
             client=client,
             app_id="app1",
-            preferred_version="1.1.2",
+            preferred_version="1.2.1",
             create_if_needed=True,
             auto_next_patch=True,
         )
-        self.assertEqual(result.selected_version, "1.2.0")
+        self.assertEqual(result.selected_version, "1.2.1")
         self.assertFalse(result.created)
-        self.assertEqual(result.reason, "preferred_missing_reused_highest_editable")
+        self.assertEqual(result.reason, "preferred_missing_retargeted_highest_editable")
+        self.assertEqual(client.patched, [("id-1.2.0", "1.2.1")])
+
+    def test_retargets_existing_editable_when_create_hits_409(self):
+        client = _FakeClient(
+            [_version("1.3.7", "REJECTED")],
+            post_error=RuntimeError("POST /appStoreVersions failed: HTTP 409"),
+        )
+        result = resolve_version(
+            client=client,
+            app_id="app1",
+            preferred_version="1.3.11",
+            create_if_needed=True,
+            auto_next_patch=False,
+        )
+        self.assertEqual(result.selected_version, "1.3.11")
+        self.assertFalse(result.created)
+        self.assertEqual(result.reason, "preferred_missing_create_blocked_409_retargeted_highest_editable")
+        self.assertEqual(client.patched, [("id-1.3.7", "1.3.11")])
 
     def test_creates_preferred_when_missing(self):
         client = _FakeClient([])

@@ -130,6 +130,27 @@ def _create_ios_version(client: ASCClient, app_id: str, version: str) -> Dict[st
     return data
 
 
+def _retarget_ios_version(
+    client: ASCClient, version_obj: Dict[str, Any], target_version: str
+) -> Dict[str, Any]:
+    version_id = str(version_obj.get("id") or "")
+    if not version_id:
+        raise RuntimeError("Cannot retarget an App Store version without an id.")
+
+    payload = {
+        "data": {
+            "type": "appStoreVersions",
+            "id": version_id,
+            "attributes": {"versionString": target_version},
+        }
+    }
+    response = client.request("PATCH", f"/appStoreVersions/{version_id}", payload=payload)
+    data = response.get("data")
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Failed to retarget App Store version {version_id}: malformed response")
+    return data
+
+
 @dataclass
 class Resolution:
     selected_version: str
@@ -150,6 +171,38 @@ def resolve_version(
 ) -> Resolution:
     versions = _list_ios_versions(client, app_id)
     highest_editable = _pick_highest_editable_version(versions)
+
+    def try_retarget_highest_editable(reason_prefix: str) -> Optional[Resolution]:
+        if not create_if_needed or not highest_editable:
+            return None
+
+        editable_attrs = highest_editable.get("attributes") or {}
+        editable_version = str(editable_attrs.get("versionString") or "")
+        if not editable_version or editable_version == preferred_version:
+            return None
+
+        preferred_semver = _semver_or_none(preferred_version)
+        editable_semver = _semver_or_none(editable_version)
+        if preferred_semver is None or editable_semver is None:
+            return None
+        if preferred_semver < editable_semver:
+            return None
+
+        try:
+            retargeted = _retarget_ios_version(client, highest_editable, preferred_version)
+        except Exception:
+            return None
+
+        retargeted_state = str((retargeted.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
+        return Resolution(
+            selected_version=preferred_version,
+            selected_state=retargeted_state,
+            created=False,
+            reason=f"{reason_prefix}_retargeted_highest_editable",
+            selected_id=str(retargeted.get("id") or ""),
+            preferred_version=preferred_version,
+        )
+
     current = _find_version(versions, preferred_version)
     if current:
         attrs = current.get("attributes") or {}
@@ -232,6 +285,10 @@ def resolve_version(
             candidate = _bump_patch(candidate)
 
     if auto_next_patch and highest_editable:
+        retargeted = try_retarget_highest_editable("preferred_missing")
+        if retargeted:
+            return retargeted
+
         editable_attrs = highest_editable.get("attributes") or {}
         editable_version = str(editable_attrs.get("versionString") or "")
         editable_state = str(editable_attrs.get("appStoreState") or "UNKNOWN")
@@ -247,7 +304,14 @@ def resolve_version(
     if not create_if_needed:
         die(f"Preferred App Store version {preferred_version} does not exist and create_if_needed is disabled.", code=1)
 
-    created = _create_ios_version(client, app_id, preferred_version)
+    try:
+        created = _create_ios_version(client, app_id, preferred_version)
+    except Exception as exc:
+        if "HTTP 409" in str(exc):
+            retargeted = try_retarget_highest_editable("preferred_missing_create_blocked_409")
+            if retargeted:
+                return retargeted
+        raise
     created_state = str((created.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
     return Resolution(
         selected_version=preferred_version,
