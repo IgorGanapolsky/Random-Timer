@@ -4,12 +4,21 @@ from scripts.tests.router_client import RouterClient
 
 
 class AscSubmitForReviewVerifyAgeRatingTests(unittest.TestCase):
-    def test_verify_age_rating_reads_age_rating_declaration_from_version(self):
+    def test_verify_age_rating_reads_age_rating_declaration_from_state_matched_app_info(self):
         from scripts.asc_submit_for_review import verify_age_rating
 
         client = RouterClient(
             {
-                ("GET", "/appStoreVersions/ver1/ageRatingDeclaration"): {
+                ("GET", "/appStoreVersions/ver1"): {
+                    "data": {"id": "ver1", "type": "appStoreVersions", "attributes": {"appStoreState": "REJECTED"}}
+                },
+                ("GET", "/apps/app1/appInfos"): {
+                    "data": [
+                        {"id": "info-ready", "type": "appInfos", "attributes": {"appStoreState": "READY_FOR_SALE"}},
+                        {"id": "info-rejected", "type": "appInfos", "attributes": {"appStoreState": "REJECTED"}},
+                    ]
+                },
+                ("GET", "/appInfos/info-rejected/ageRatingDeclaration"): {
                     "data": {"id": "decl1", "type": "ageRatingDeclarations", "attributes": {}}
                 }
             }
@@ -21,6 +30,13 @@ class AscSubmitForReviewVerifyAgeRatingTests(unittest.TestCase):
 
         client = RouterClient(
             {
+                ("GET", "/appStoreVersions/ver1"): {
+                    "data": {"id": "ver1", "type": "appStoreVersions", "attributes": {"appStoreState": "REJECTED"}}
+                },
+                ("GET", "/apps/app1/appInfos"): {
+                    "data": [{"id": "info-rejected", "type": "appInfos", "attributes": {"appStoreState": "REJECTED"}}]
+                },
+                ("GET", "/appInfos/info-rejected/ageRatingDeclaration"): RuntimeError("404"),
                 ("GET", "/appStoreVersions/ver1/ageRatingDeclaration"): RuntimeError("404"),
             }
         )
@@ -30,4 +46,3 @@ class AscSubmitForReviewVerifyAgeRatingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

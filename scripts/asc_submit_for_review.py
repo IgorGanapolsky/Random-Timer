@@ -674,11 +674,71 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
         die("App Review contactPhone is missing.")
 
 
-def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
-    # Current ASC API exposes a unified AgeRatingDeclaration relationship on the App Store Version:
-    #   GET /v1/appStoreVersions/{id}/ageRatingDeclaration
-    # Some older code paths used app/appInfo relationships which may not exist on newer APIs.
+def _list_app_infos(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
+    params = {
+        "limit": 200,
+        "fields[appInfos]": "appStoreState",
+    }
+    if hasattr(client, "get_all"):
+        infos = client.get_all(f"/apps/{app_id}/appInfos", params=params)
+    else:
+        payload = client.request("GET", f"/apps/{app_id}/appInfos", params=params)
+        infos = payload.get("data") or []
+    return [it for it in infos if isinstance(it, dict)]
+
+
+def _ordered_app_infos_for_version(
+    client: ASCClient, app_id: str, version_id: str | None = None
+) -> tuple[list[dict[str, Any]], list[str]]:
     errors: list[str] = []
+    version_state: str | None = None
+    if version_id:
+        try:
+            version_state = get_version_state(client, version_id)
+        except Exception as e:
+            errors.append(f"version /appStoreVersions/{version_id}: {e}")
+
+    infos: list[dict[str, Any]] = []
+    try:
+        infos = _list_app_infos(client, app_id)
+    except Exception as e:
+        errors.append(f"app /apps/{app_id}/appInfos: {e}")
+        return [], errors
+
+    if not version_state:
+        return infos, errors
+
+    matching: list[dict[str, Any]] = []
+    other: list[dict[str, Any]] = []
+    for info_obj in infos:
+        state = (info_obj.get("attributes") or {}).get("appStoreState")
+        if state == version_state:
+            matching.append(info_obj)
+        else:
+            other.append(info_obj)
+    return matching + other, errors
+
+
+def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = None) -> None:
+    # Apple currently exposes AgeRatingDeclaration from App Info:
+    #   GET /v1/appInfos/{id}/ageRatingDeclaration
+    # The older App Store Version relationship is deprecated and now returns PATH_ERROR
+    # for this app, so prefer the App Info path and only use the version path as a fallback.
+    errors: list[str] = []
+    app_infos, info_errors = _ordered_app_infos_for_version(client, app_id, version_id)
+    errors.extend(info_errors)
+
+    for info_obj in app_infos:
+        app_info_id = info_obj.get("id")
+        if not isinstance(app_info_id, str) or not app_info_id:
+            continue
+        try:
+            data = client.request("GET", f"/appInfos/{app_info_id}/ageRatingDeclaration")
+            if data.get("data"):
+                return
+        except Exception as e:
+            errors.append(f"appInfo /appInfos/{app_info_id}/ageRatingDeclaration: {e}")
+
     if version_id:
         try:
             data = client.request("GET", f"/appStoreVersions/{version_id}/ageRatingDeclaration")
@@ -686,8 +746,6 @@ def verify_age_rating(client: ASCClient, app_id: str, version_id: str | None = N
                 return
         except Exception as e:
             errors.append(f"version /appStoreVersions/{version_id}/ageRatingDeclaration: {e}")
-    else:
-        errors.append("version_id missing (cannot verify ageRatingDeclaration).")
 
     detail = "\n  ".join(errors)
     die("Age Rating declaration not found. Complete Age Rating in App Store Connect.\n  " + detail)
