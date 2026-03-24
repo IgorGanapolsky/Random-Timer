@@ -56,7 +56,7 @@ class _FakeAscClient:
 
         if path == "/apps/app1/appInfos":
             return {
-                "data": [{"id": "info1", "type": "appInfos"}],
+                "data": [{"id": "info1", "type": "appInfos", "attributes": {"appStoreState": "READY_FOR_SALE"}}],
                 "included": [
                     {
                         "id": "infoLoc1",
@@ -83,7 +83,7 @@ class _FakeAscClient:
         if path == "/apps/app1/appPriceSchedules":
             return {"data": [{"id": "price1", "type": "appPriceSchedules"}]}
 
-        if path == "/apps/app1/appStoreAgeRatingDeclaration":
+        if path == "/appInfos/info1/ageRatingDeclaration":
             return {"data": {"id": "age1", "type": "appStoreAgeRatingDeclarations"}}
 
         if path == "/appStoreVersionLocalizations/loc1/appScreenshotSets":
