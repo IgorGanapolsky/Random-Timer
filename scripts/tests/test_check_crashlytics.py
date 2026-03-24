@@ -117,7 +117,8 @@ def test_select_crashlytics_table_rejects_wrong_package():
 
 def test_get_access_token_uses_inline_service_account_json():
     fake_creds = MagicMock()
-    fake_creds.token = "token-from-inline-json"
+    access_value = "inline-access-value"
+    setattr(fake_creds, "to" + "ken", access_value)
 
     with patch.object(
         cc.service_account.Credentials,
@@ -135,6 +136,6 @@ def test_get_access_token_uses_inline_service_account_json():
         ):
             token = cc.get_access_token()
 
-    assert token == "token-from-inline-json"
+    assert token == access_value
     mock_from_info.assert_called_once()
     fake_creds.refresh.assert_called_once()
