@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-03-03T00:08:07+00:00",
+  "generated_at": "2026-03-24T18:23:28+00:00",
   "source": "posthog",
-  "status": "ok",
+  "status": "degraded",
   "status_reason": "",
   "lookback_days": 30,
   "wqtu_window_days": 7,
@@ -45,8 +45,21 @@
       "enforceable_status": "not_applicable"
     }
   },
+  "data_quality": {
+    "is_stale": true,
+    "preserved_previous_metrics": true,
+    "last_attempt_generated_at": "2026-03-24T18:23:28+00:00",
+    "last_good_generated_at": "2026-03-03T00:08:07+00:00",
+    "reason": "missing_dependency: requests"
+  },
   "query_diagnostics": {
-    "errors": []
+    "errors": [
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests",
+      "missing_dependency: requests"
+    ]
   },
   "snapshots": [
     {

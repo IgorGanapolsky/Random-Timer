@@ -1,21 +1,27 @@
 {
-  "generated_at": "2026-03-09T20:05:42+00:00",
+  "generated_at": "2026-03-24T18:23:16+00:00",
   "primary_focus": "activation",
   "primary_metric": "open_to_completed_rate",
-  "current_value": 0.023,
+  "current_value": 0.0,
   "target_value": 0.25,
-  "gap": 0.227,
-  "priority_score": 252,
+  "gap": 0.25,
+  "priority_score": 275,
   "next_experiment": {
     "slug": "activation-default-range-0-30",
     "target_metric": "open_to_completed_rate",
-    "current_metric_value": 0.023,
+    "current_metric_value": 0.0,
     "target_metric_value": 0.25,
     "hypothesis": "Starting every user at 0s to 30s reduces setup friction and increases first completion rate.",
     "owner": "product"
   },
   "recommended_next_action": "Ship the default 0s to 30s timer range and verify first-session completion improves.",
-  "warnings": [],
+  "warnings": [
+    "stale input: north_star.json is 287h old",
+    "stale input: content_feedback.json is 173h old",
+    "stale input: cro_experiments.json is 741h old",
+    "stale input: paid_campaigns.json is 506h old",
+    "stale input: apple_ads_live_metrics.json is 598h old"
+  ],
   "inputs": {
     "north_star": "marketing/data/north_star.json",
     "content_feedback": "marketing/data/content_feedback.json",

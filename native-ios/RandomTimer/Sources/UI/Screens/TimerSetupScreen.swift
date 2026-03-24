@@ -31,7 +31,7 @@ struct TimerSetupScreen: View {
                 GlassCard {
                     VStack(alignment: .leading) {
                         HStack {
-                            Label("Timer Range", systemImage: "timer")
+                            Label("Tactical Drill Range", systemImage: "timer")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
@@ -398,7 +398,7 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .safeAreaInset(edge: .bottom) {
-            PrimaryButton(title: "Start Timer") {
+            PrimaryButton(title: "Commence Drill") {
                 Task {
                     await timerManager.startTimer()
                 }
