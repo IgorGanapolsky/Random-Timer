@@ -18,14 +18,14 @@ try:
 except ImportError:
     sys.exit("Pillow is required: pip install Pillow")
 
-SCREENSHOT_SPECS: dict[str, tuple[int, int]] = {
-    "1_setup.png": (1290, 2796),
-    "2_active.png": (1290, 2796),
-    "3_alarm.png": (1290, 2796),
-    "4_running.png": (1290, 2796),
-    "5_ipad_setup.png": (2048, 2732),
-    "6_ipad_running.png": (2048, 2732),
-    "7_ipad_stopped.png": (2048, 2732),
+SCREENSHOT_SPECS: dict[str, set[tuple[int, int]]] = {
+    "1_setup.png": {(1290, 2796)},
+    "2_active.png": {(1290, 2796)},
+    "3_alarm.png": {(1290, 2796)},
+    "4_running.png": {(1290, 2796)},
+    "5_ipad_setup.png": {(2048, 2732), (2064, 2752)},
+    "6_ipad_running.png": {(2048, 2732), (2064, 2752)},
+    "7_ipad_stopped.png": {(2048, 2732), (2064, 2752)},
 }
 
 METADATA_LIMITS: dict[str, tuple[int, int]] = {
@@ -46,14 +46,15 @@ def validate(root: Path) -> list[str]:
     screenshots_dir = root / "native-ios" / "fastlane" / "screenshots" / "en-US"
     metadata_dir = root / "native-ios" / "fastlane" / "metadata" / "en-US"
 
-    for name, (exp_w, exp_h) in SCREENSHOT_SPECS.items():
+    for name, allowed_sizes in SCREENSHOT_SPECS.items():
         path = screenshots_dir / name
         if not path.is_file():
             errors.append(f"missing screenshot: {name}")
             continue
         img = Image.open(path)
-        if img.size != (exp_w, exp_h):
-            errors.append(f"{name}: {img.size[0]}x{img.size[1]}, expected {exp_w}x{exp_h}")
+        if img.size not in allowed_sizes:
+            expected = " or ".join(f"{w}x{h}" for (w, h) in sorted(allowed_sizes))
+            errors.append(f"{name}: {img.size[0]}x{img.size[1]}, expected {expected}")
 
     for name, (min_len, max_len) in METADATA_LIMITS.items():
         path = metadata_dir / name
