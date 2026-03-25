@@ -9,7 +9,6 @@ jobs:
   verify:
     name: Read-Only Console Verification
     runs-on: ubuntu-latest
-    environment: production
     permissions:
       contents: read
     defaults:
