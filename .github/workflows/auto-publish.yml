@@ -1,0 +1,111 @@
+name: Auto Publish to Play Store
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC to check for new versions
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Google Play track to publish to'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+        required: false
+        default: 'internal'
+      force_publish:
+        description: 'Force publish even if version already exists'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  check-and-publish:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION_CODE=$(sed -n 's/.*versionCode *= *//p' native-android/app/build.gradle.kts | head -1)
+          VERSION_NAME=$(sed -n 's/.*versionName *= *"//p' native-android/app/build.gradle.kts | head -1 | sed 's/"//')
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "Current version: $VERSION_NAME (code: $VERSION_CODE)"
+
+      - name: Check if version already published
+        id: check_published
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ GOOGLE_PLAY_JSON_KEY secret is not set"
+            exit 1
+          fi
+          
+          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-key.json
+          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0
+          
+          VERSION_CODE="${{ steps.version.outputs.version_code }}"
+          python scripts/check_version_published.py \
+            --service-account-json /tmp/play-key.json \
+            --package com.iganapolsky.randomtimer \
+            --version-code "$VERSION_CODE" \
+            --json-output /tmp/version_check.json
+          
+          IS_PUBLISHED=$(jq -r '.is_published' /tmp/version_check.json)
+          echo "is_published=$IS_PUBLISHED" >> "$GITHUB_OUTPUT"
+          echo "Version published status: $IS_PUBLISHED"
+          
+          rm -f /tmp/play-key.json /tmp/version_check.json
+
+      - name: Determine publish action
+        id: publish_decision
+        run: |
+          IS_PUBLISHED="${{ steps.check_published.outputs.is_published }}"
+          FORCE_PUBLISH="${{ github.event.inputs.force_publish || 'false' }}"
+          TRACK="${{ github.event.inputs.track || 'internal' }}"
+          
+          if [ "$IS_PUBLISHED" = "true" ] && [ "$FORCE_PUBLISH" = "false" ]; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Version already published, skipping"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "track=$TRACK" >> "$GITHUB_OUTPUT"
+            echo "📦 Will publish to $TRACK track"
+          fi
+
+  publish-android:
+    needs: check-and-publish
+    if: needs.check-and-publish.outputs.should_publish == 'true'
+    uses: ./.github/workflows/native-release.yml
+    with:
+      platform: android
+      android_track: ${{ needs.check-and-publish.outputs.track }}
+      submit_review: 'false'
+    secrets: inherit

@@ -19,6 +19,7 @@ on:
           - production
           - beta
           - alpha
+          - internal
         required: false
         default: 'production'
       submit_review:
@@ -31,6 +32,20 @@ on:
           - 'false'
           - 'true'
         required: false
+        default: 'false'
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+        default: 'android'
+      android_track:
+        required: false
+        type: string
+        default: 'internal'
+      submit_review:
+        required: false
+        type: string
         default: 'false'
 
 concurrency:
@@ -269,7 +284,7 @@ jobs:
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
           if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
-            echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
+            echo "❌ Google Play key file not found at $GOOGLE_PLAY_KEY"
             exit 1
           fi
           pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
@@ -730,7 +745,7 @@ jobs:
           gh pr create \
             --base develop \
             --head "$BRANCH" \
-            --title "chore: merge $BRANCH back into develop" \
+ --title "chore: merge $BRANCH back into develop" \
             --body "Auto-generated PR to sync develop after release" \
             || echo "PR already exists or branch is up to date"
         continue-on-error: true
