@@ -23,6 +23,9 @@ npm run verify
 TARGET=asc npm run auth:save
 TARGET=play npm run auth:save
 
+# If Google blocks Play login in the default Playwright browser, use Comet
+BROWSER_APP=comet TARGET=play npm run auth:save
+
 # Push auth-state JSON into GitHub Actions secrets
 npm run auth:sync-secrets
 
@@ -47,11 +50,16 @@ To wire scheduled CI checks without manual secret editing:
 2. Run `TARGET=play npm run auth:save`.
 3. Run `npm run auth:sync-secrets` (requires `gh` CLI auth).
 
+`auth:sync-secrets` automatically strips unrelated non-Google cookies from
+the Play storage-state payload before uploading `PLAY_STORAGE_STATE_JSON`, so
+the secret stays under GitHub's size limit.
+
 Optional:
 
 - `ASC_VERSION_URL`
 - `ASC_EXPECTED_STATE_TEXT` (default: `Prepare for Submission`)
 - `ASC_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)
+- `BROWSER_APP` (`comet` supported for auth capture)
 - `PLAY_CONSOLE_URL`
 - `PLAY_EXPECTED_APP_NAME` (default: `Random Timer`)
 - `PLAY_EXPECTED_BANNER_TEXT`

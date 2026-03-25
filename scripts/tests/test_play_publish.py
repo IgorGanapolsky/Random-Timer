@@ -140,6 +140,7 @@ class PlayPublishTests(unittest.TestCase):
         args = _parse_args()
         self.assertIn(tmp, args.result_json)
         self.assertIn(tmp, args.error_json)
+        self.assertEqual(args.fallback_track, "")
         self.assertTrue(args.result_json.endswith("play-upload-result.json"))
         self.assertTrue(args.error_json.endswith("play-upload-error.json"))
 

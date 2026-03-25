@@ -351,7 +351,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--package", required=True)
     parser.add_argument("--aab-path", required=True)
     parser.add_argument("--requested-track", default="production")
-    parser.add_argument("--fallback-track", default="alpha")
+    parser.add_argument("--fallback-track", default="")
     parser.add_argument("--release-status", default="completed")
     parser.add_argument("--retry-window-seconds", type=int, default=10800)
     parser.add_argument("--retry-interval-seconds", type=int, default=300)
@@ -435,17 +435,19 @@ def main() -> int:
             }
             if precondition_error_payload:
                 result_payload["production_precondition_error"] = precondition_error_payload
+            if outcome.get("changes_not_sent_for_review"):
+                _write_json(result_json_path, result_payload)
+                print(
+                    "❌ Google Play committed the edit with changesNotSentForReview=true. "
+                    "This release is not publicly live until Play Console 'Send for review' is completed.",
+                    file=sys.stderr,
+                )
+                return 1
             _write_json(result_json_path, result_payload)
             print(
                 f"✅ Uploaded version code {outcome['version_code']} to '{track}' track "
                 f"(requested={requested_track}, status={release_status}, fallback_used={fallback_used})"
             )
-            if outcome.get("changes_not_sent_for_review"):
-                print(
-                    "ℹ️ Google Play committed the edit with changesNotSentForReview=true. "
-                    "Open Play Console and click 'Send for review' for this release.",
-                    file=sys.stderr,
-                )
             return 0
         except PublishError as error:
             payload = {

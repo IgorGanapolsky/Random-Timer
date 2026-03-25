@@ -263,7 +263,7 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
-          PLAY_FALLBACK_TRACK: alpha
+          PLAY_FALLBACK_TRACK: ""
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
@@ -344,7 +344,12 @@ jobs:
 
   verify-releases:
     needs: [ios-testflight, android-release]
-    if: always() && (needs.ios-testflight.result == 'success' || needs.android-release.result == 'success')
+    if: >-
+      always() && (
+        (inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success') ||
+        (inputs.platform == 'ios' && needs.ios-testflight.result == 'success') ||
+        (inputs.platform == 'android' && needs.android-release.result == 'success')
+      )
     runs-on: ubuntu-latest
     environment: production
     steps:
