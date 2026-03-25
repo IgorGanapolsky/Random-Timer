@@ -182,6 +182,34 @@
     {
       "filename": "cmd_finish_rep_keep_pushing",
       "text": "Finish the rep. Then keep pushing."
+    },
+    {
+      "filename": "cmd_drive_forward",
+      "text": "Drive forward. No hesitation."
+    },
+    {
+      "filename": "cmd_keep_pressure",
+      "text": "Keep pressure. Don't let up."
+    },
+    {
+      "filename": "cmd_move_now",
+      "text": "Move now. Sharp and precise."
+    },
+    {
+      "filename": "cmd_push_pace",
+      "text": "Push the pace. Don't coast."
+    },
+    {
+      "filename": "cmd_push_through",
+      "text": "Push through. Stay in the fight."
+    },
+    {
+      "filename": "cmd_reset_breathe",
+      "text": "Reset. Breathe. Attack again."
+    },
+    {
+      "filename": "cmd_stay_sharp",
+      "text": "Stay sharp. Eyes up."
     }
   ]
 }
