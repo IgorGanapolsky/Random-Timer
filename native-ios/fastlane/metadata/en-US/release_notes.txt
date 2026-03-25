@@ -1,4 +1,1 @@
-v1.2.0 — Random Tactical Timer
-- Refreshed App Store screenshots and listing metadata for clearer onboarding
-- Improved timer setup and alarm flow copy for faster first-session use
-- Stability fixes and performance improvements
+v1.3.12 — Maintenance release (parity with Android store upload).

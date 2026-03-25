@@ -1,0 +1,1 @@
+v1.3.12 — Maintenance release for Play Store publishing and credential refresh.
