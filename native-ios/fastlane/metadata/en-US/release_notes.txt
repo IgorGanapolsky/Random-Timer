@@ -1,1 +1,1 @@
-v1.3.13 — Play Store release (new upload; version parity).
+v1.3.14 — Play production upload (version parity).
