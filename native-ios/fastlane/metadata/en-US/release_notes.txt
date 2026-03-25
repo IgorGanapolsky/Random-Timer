@@ -1,1 +1,1 @@
-v1.3.12 — Maintenance release (parity with Android store upload).
+v1.3.13 — Play Store release (new upload; version parity).
