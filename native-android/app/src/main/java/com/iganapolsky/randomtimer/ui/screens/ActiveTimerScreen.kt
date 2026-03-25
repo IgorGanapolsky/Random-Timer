@@ -453,7 +453,7 @@ internal fun loopBadgeText(
     return "Loop On · Round $clampedRound/$repeatRounds"
 }
 
-internal fun voiceBadgeText(enabled: Boolean): String = if (enabled) "Voice On" else "Voice Off"
+internal fun voiceBadgeText(enabled: Boolean): String = if (enabled) "Voice Callouts On" else "Voice Callouts Off"
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
