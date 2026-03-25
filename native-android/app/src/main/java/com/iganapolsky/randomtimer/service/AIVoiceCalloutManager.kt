@@ -268,13 +268,13 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(12, 26)
+                nextCommandCueAt = elapsedSeconds + Random.nextInt(30, 46)
             }
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
             if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(8, 21)
+                nextCommandCueAt = Random.nextInt(30, 46)
             }
             return elapsedSeconds >= nextCommandCueAt
         }

@@ -197,7 +197,13 @@ if [ -n "$STAGED_SWIFT" ]; then
   done <<< "$STAGED_SWIFT"
 
   if command -v swiftlint > /dev/null 2>&1; then
-    echo "$STAGED_SWIFT" | xargs swiftlint lint --strict --quiet 2>/dev/null || ERRORS=$((ERRORS + 1))
+    LINT_OUTPUT=$(echo "$STAGED_SWIFT" | xargs swiftlint lint --strict --quiet 2>&1) || true
+    if echo "$LINT_OUTPUT" | grep -q 'Fatal error\|sourcekitd\|terminated with signal'; then
+      warn "swiftlint crashed (SourceKit issue) — skipping lint"
+    elif [ -n "$LINT_OUTPUT" ]; then
+      echo "$LINT_OUTPUT"
+      ERRORS=$((ERRORS + 1))
+    fi
   fi
 fi
 

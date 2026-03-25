@@ -213,7 +213,7 @@ final class AIVoiceCalloutService {
             let cue = randomCommandCue()
             speak(cue.text)
             lastCommandCueFilename = cue.filename
-            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
+            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 30...45)
         }
     }
 
@@ -227,7 +227,7 @@ final class AIVoiceCalloutService {
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
         if nextCommandCueAt == 0 {
-            nextCommandCueAt = secureRandomInt(in: 8...20)
+            nextCommandCueAt = secureRandomInt(in: 30...45)
         }
         return elapsedSeconds >= nextCommandCueAt
     }
