@@ -361,13 +361,26 @@ jobs:
       - name: Extract version info
         id: versions
         run: |
-          # Android versionCode from build.gradle.kts
-          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' native-android/app/build.gradle.kts || echo "")
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          python3 <<'PY'
+          import os
+          import re
+          from pathlib import Path
 
-          # iOS version from project.pbxproj
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\d.]+' || echo "")
-          echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
+          gradle = Path("native-android/app/build.gradle.kts").read_text(encoding="utf-8")
+          m = re.search(r"versionCode\s*=\s*ciVersionCode\s*\?:\s*(\d+)", gradle)
+          if not m:
+              m = re.search(r"versionCode\s*=\s*(\d+)", gradle)
+          code = m.group(1) if m else ""
+
+          pbx = Path("native-ios/RandomTimer.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
+          m2 = re.search(r"MARKETING_VERSION = ([0-9.]+);", pbx)
+          ios = m2.group(1) if m2 else ""
+
+          out = os.environ["GITHUB_OUTPUT"]
+          with open(out, "a", encoding="utf-8") as fh:
+              fh.write(f"version_code={code}\n")
+              fh.write(f"ios_version={ios}\n")
+          PY
 
       - name: Debug workflow inputs (no secrets)
         run: |
@@ -636,7 +649,16 @@ jobs:
         id: version
         run: |
           VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
-          VERSION_CODE=$(sed -n 's/.*versionCode *= *\([0-9]*\).*/\1/p' native-android/app/build.gradle.kts | head -1)
+          VERSION_CODE=$(python3 <<'PY'
+          import re
+          from pathlib import Path
+          text = Path("native-android/app/build.gradle.kts").read_text(encoding="utf-8")
+          m = re.search(r"versionCode\s*=\s*ciVersionCode\s*\?:\s*(\d+)", text)
+          if not m:
+              m = re.search(r"versionCode\s*=\s*(\d+)", text)
+          print(m.group(1) if m else "")
+          PY
+          )
           TAG="v${VERSION_NAME}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
