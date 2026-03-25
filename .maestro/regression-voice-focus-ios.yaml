@@ -6,6 +6,6 @@ appId: com.igorganapolsky.randomtimer
     element: "Voice Callouts"
     direction: DOWN
 - assertVisible: "Voice Callouts"
-- assertVisible: "Countdown"
-- assertVisible: "Focus"
+- assertVisible:
+    text: ".*voice prompts.*"
 - takeScreenshot: evidence/ios-voice-focus
