@@ -35,11 +35,19 @@ echo -e "${BLUE}🔍 Recent Publishing Activity:${NC}"
 
 # Show recent workflow runs
 echo -e "${YELLOW}Workflow Runs (last 10):${NC}"
-gh run list --workflow=native-release.yml --limit 10 --json databaseId,status,conclusion,createdAt,event,displayTitle | jq -r '.[] | "\(.createdAt[0:10]) \(.createdAt[11:16]) \(.status) \(.conclusion // "N/A") \(.displayTitle)"' | head -10
+if gh run list --workflow=native-release.yml --limit 10 --json databaseId,status,conclusion,createdAt,event,displayTitle 2>/dev/null | jq -r '.[] | "\(.createdAt[0:10]) \(.createdAt[11:16]) \(.status) \(.conclusion // "N/A") \(.displayTitle)"' 2>/dev/null | head -10; then
+    echo "✅ Successfully retrieved native-release workflow runs"
+else
+    echo -e "${RED}❌ Failed to retrieve native-release workflow runs${NC}"
+fi
 
 echo ""
 echo -e "${YELLOW}Auto-publish Workflow Runs (last 5):${NC}"
-gh run list --workflow=auto-publish.yml --limit 5 --json databaseId,status,conclusion,createdAt,event,displayTitle | jq -r '.[] | "\(.createdAt[0:10]) \(.createdAt[11:16]) \(.status) \(.conclusion // "N/A") \(.displayTitle)"' | head -5
+if gh run list --workflow=auto-publish.yml --limit 5 --json databaseId,status,conclusion,createdAt,event,displayTitle 2>/dev/null | jq -r '.[] | "\(.createdAt[0:10]) \(.createdAt[11:16]) \(.status) \(.conclusion // "N/A") \(.displayTitle)"' 2>/dev/null | head -5; then
+    echo "✅ Successfully retrieved auto-publish workflow runs"
+else
+    echo -e "${RED}❌ Failed to retrieve auto-publish workflow runs${NC}"
+fi
 
 echo ""
 echo -e "${BLUE}📊 Publishing Status Check:${NC}"
@@ -50,7 +58,7 @@ SECRETS=("GOOGLE_PLAY_JSON_KEY" "ANDROID_KEYSTORE_BASE64" "KEYSTORE_PASSWORD" "K
 MISSING_SECRETS=0
 
 for secret in "${SECRETS[@]}"; do
-    if gh secret list | grep -q "^$secret$"; then
+    if gh secret list 2>/dev/null | grep -q "^$secret$"; then
         echo -e "  ✅ $secret"
     else
         echo -e "  ❌ $secret"
