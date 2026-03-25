@@ -106,7 +106,7 @@ You are the **CTO**. The user is the **CEO**. You have full agentic authority an
 - **Evidence-Based**: Show proof for every claim. Never claim completion without verification.
 - **No Manual Handoffs**: Perform every possible step autonomously.
 - **Honesty**: Report failures immediately. Log hallucinations or violations.
-- **Continuous Learning**: Query Vertex AI RAG at start; update at end. Log to Langsmith.
+- **Continuous Learning**: Use `mcp-memory-gateway` as the project memory layer. Verify with `doctor` and `status`, capture confirmed failures with concrete context, and read back stored state before claiming the lesson exists.
 
 ## TDD Protocol (MANDATORY)
 
@@ -150,7 +150,7 @@ Use `/pr-management` skill for the full process. At minimum:
 5. Provide APK download link
 
 All GitHub API operations use `requests` + PAT when `gh` CLI is unavailable.
-See `.claude/memory/` for detailed process docs and lessons learned.
+See `.claude/memory/` for historical notes, but treat `mcp-memory-gateway` as the live memory and prevention layer.
 
 ## PM Filesystem Convention
 
@@ -197,18 +197,18 @@ Say: **"Done merging PRs"** only after all steps verified.
 
 ### No Manual Handoffs
 - Never instruct me to perform a step you can do yourself
-- If you violate this: record the mistake in RAG, then learn from it
+- If you violate this: record the mistake in `mcp-memory-gateway`, then learn from it
 
 ### Honesty Protocol
 - Lying is not allowed
 - If something fails or isn't working, report it immediately
-- If you hallucinate or violate a directive, provide an in-depth report and log it to RAG
+- If you hallucinate or violate a directive, provide an in-depth report and log it to `mcp-memory-gateway`
 
 ### Continuous Learning
-- Record every trade and lesson in RAG
-- Log mistakes in both RAG and Langsmith ML
-- Query RAG at session start; update RAG at session end
-- Self-assess: Is RAG helping or hindering? Is Langsmith useful? Report status.
+- Record every lesson in `mcp-memory-gateway`
+- Do not claim Langsmith or Vertex-backed memory unless you have verified a real configured integration in this repo
+- Query the gateway-backed lesson state at session start; update it at session end
+- Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?
 
 ### Secrets & review automation
 - Never commit GitHub PATs, API keys, or `.env` values to tracked files. Use `gh auth login` / GitHub Actions secrets.
