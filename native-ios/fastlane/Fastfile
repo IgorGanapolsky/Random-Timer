@@ -30,6 +30,7 @@ platform :ios do
     options[:groups] = group_names
     options[:distribute_external] = true
     options[:notify_external_testers] = ENV.fetch("TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS", "false") == "true"
+    options[:changelog] = ENV.fetch("TESTFLIGHT_CHANGELOG", "Internal build from #{ENV.fetch('GITHUB_SHA', 'local')[0..7]}")
     options
   end
 
