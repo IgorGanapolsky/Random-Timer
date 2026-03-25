@@ -12,18 +12,18 @@ IOS_FILE = REPO_ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScre
 ANDROID_FILE = REPO_ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 
 IOS_REQUIRED_SECTIONS = [
-    "Timer Range",
+    "Tactical Drill Range",
     "Alarm Sound",
     "Repeat Loop",
-    "Start Timer",
+    "Commence Drill",
     "Sound Arsenal",
 ]
 
 ANDROID_REQUIRED_SECTIONS = [
-    "Timer Range",
+    "Tactical Drill Range",
     "Alarm Sound",
     "Repeat Loop",
-    "Start Timer",
+    "Commence Drill",
     "Sound Arsenal",
 ]
 

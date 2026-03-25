@@ -30,14 +30,14 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_zero_to_300_on_both_platforms():
+def test_default_timer_range_is_zero_to_30_on_both_platforms():
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
     assert re.search(r"minSeconds\s*=\s*0", android_source)
-    assert re.search(r"maxSeconds\s*=\s*300", android_source)
+    assert re.search(r"maxSeconds\s*=\s*30", android_source)
     assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*300", ios_source)
+    assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
 
 
 def test_time_range_limits_and_gap_match_between_platforms():
@@ -214,8 +214,8 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
 def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_copy():
     android_setup = _read(ANDROID_SETUP)
 
-    start_cta_count = len(re.findall(r'PrimaryButton\(\s*text\s*=\s*"Start Timer"', android_setup, re.MULTILINE))
-    assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
+    start_cta_count = len(re.findall(r'PrimaryButton\(\s*text\s*=\s*"Commence Drill"', android_setup, re.MULTILINE))
+    assert start_cta_count == 1, "Android setup screen should expose exactly one Commence Drill CTA"
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
     assert 'Infinite Loop (Pro: set 1–100 rounds)' in android_setup
@@ -226,7 +226,7 @@ def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
     ios_setup = _read(IOS_SETUP)
 
     assert ".safeAreaInset(edge: .bottom)" in ios_setup
-    assert 'PrimaryButton(title: "Start Timer")' in ios_setup
+    assert 'PrimaryButton(title: "Commence Drill")' in ios_setup
     assert "Spacer(minLength: 140)" in ios_setup
 
 
