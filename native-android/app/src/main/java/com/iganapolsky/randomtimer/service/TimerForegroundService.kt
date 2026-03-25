@@ -274,6 +274,9 @@ class TimerForegroundService : Service() {
         _timerState.value = initialState
         updateNotification(initialState)
         voiceCalloutManager.resetSession()
+        if (proManager.entitlementLevel.value.isPro && initialState.config.voiceEnabled) {
+            voiceCalloutManager.beginSession(initialState.targetDuration.inWholeSeconds.toInt())
+        }
 
         timerJob?.cancel()
         timerJob =

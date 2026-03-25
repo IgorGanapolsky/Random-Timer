@@ -108,6 +108,12 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(selected.filename, "cue_b")
     }
 
+    func testShortTimersScheduleFollowupCommandCuesEarly() {
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), 10)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 15)
+    }
+
     func testRemotePackStoreInstallsAndServesRemoteVoiceAndSoundAssets() throws {
         let cacheRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("pro-audio-store-tests-\(UUID().uuidString)", isDirectory: true)
