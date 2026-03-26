@@ -42,13 +42,13 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
         subtitle="Unpredictable start cues stop anticipation before it starts.",
         badge="PURE REACTION WORK",
     ),
-    "3_alarm.png": CreativeText(
+    "3_voice.png": CreativeText(
         eyebrow="CUT THROUGH CHAOS",
         title="LOUD. CLEAR. COMMANDING.",
         subtitle="Aggressive alarms and voice prompts stay readable in noisy rooms.",
         badge="PRO VOICE CALLOUTS",
     ),
-    "4_running.png": CreativeText(
+    "4_loop.png": CreativeText(
         eyebrow="BUILD DISCIPLINE",
         title="REACT ON THE BEEP",
         subtitle="Train explosive response when your heart rate is already up.",
@@ -78,8 +78,8 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
 SOURCE_MAP: Dict[str, str] = {
     "1_setup.png": "1_setup.png",
     "2_active.png": "2_active.png",
-    "3_alarm.png": "3_alarm.png",
-    "4_running.png": "4_running.png",
+    "3_voice.png": "3_voice.png",
+    "4_loop.png": "4_loop.png",
     "5_ipad_setup.png": "5_ipad_setup.png",
     "6_ipad_running.png": "6_ipad_running.png",
     "7_ipad_stopped.png": "7_ipad_stopped.png",
