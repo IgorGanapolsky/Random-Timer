@@ -38,18 +38,20 @@ struct PaywallSheet: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("Upgrade to Pro")
+                    Text("Unlock Full Training Mode")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.textPrimary)
 
-                    VStack(spacing: 4) {
-                        Text("One premium plan.")
-                        Text("Yearly auto-renewing subscription. Cancel anytime.")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.textSecondary)
-                    .multilineTextAlignment(.center)
+                    Text("Longer sessions, voice coaching, more sounds, and repeatable rounds.")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+                        .multilineTextAlignment(.center)
+
+                    Text("Built for dry fire, sparring, drills, and reaction training.")
+                        .font(.caption)
+                        .foregroundColor(.textMuted)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -61,30 +63,27 @@ struct PaywallSheet: View {
                         }
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("PRO FEATURES")
-                            .font(.caption.bold())
-                            .foregroundColor(.accentPrimary)
-                        ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
-                        ProFeatureRow(text: "Extended range up to 60 minutes")
-                        ProFeatureRow(text: "Elapsed-time voice callouts")
-                        ProFeatureRow(text: "Loop with optional round limits")
-                        ProFeatureRow(text: "Monthly voice callout and sound arsenal refreshes")
-                        ProFeatureRow(text: "Support independent development")
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    ProFeatureRow(text: "Train up to 60-minute sessions")
+                    ProFeatureRow(text: "Get voice callouts during training")
+                    ProFeatureRow(text: "Use loop mode with round limits")
+                    ProFeatureRow(text: "Unlock the full sound library")
                 }
                 .padding(.horizontal)
 
                 VStack(spacing: 12) {
                     PrimaryButton(
-                        title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))"
+                        title: "Start Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))/year"
                     ) {
                         Task {
                             await purchase(productID: ProManager.eliteProductID)
                         }
                     }
                 }
+
+                Text("Cancel anytime. Auto-renews yearly.")
+                    .font(.caption)
+                    .foregroundColor(.textMuted)
 
                 Button("Restore purchase") {
                     Task {

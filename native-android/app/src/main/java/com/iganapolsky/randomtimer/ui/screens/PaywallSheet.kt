@@ -65,7 +65,7 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Upgrade to Pro",
+                text = "Unlock Full Training Mode",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
@@ -87,43 +87,48 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "One premium plan.",
+                text = "Longer sessions, voice coaching, more sounds, and repeatable rounds.",
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
             Text(
-                text = "Yearly auto-renewing subscription. Cancel anytime.",
+                text = "Built for dry fire, sparring, drills, and reaction training.",
                 style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
+                color = TimerColors.TextMuted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "PRO FEATURES",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.AccentPrimary,
-                modifier = Modifier.align(Alignment.Start),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Elapsed-time voice callouts")
-            ProFeatureRow(text = "Loop with optional round limits")
-            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
-            ProFeatureRow(text = "Support independent development")
+            ProFeatureRow(text = "Train up to 60-minute sessions")
+            ProFeatureRow(text = "Get voice callouts during training")
+            ProFeatureRow(text = "Use loop mode with round limits")
+            ProFeatureRow(text = "Unlock the full sound library")
 
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = "Unlock Pro \u2022 $proPrice",
+                text = "Start Pro \u2022 $proPrice/year",
                 onClick = { onPurchase("elite_tactical") },
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Cancel anytime. Auto-renews yearly.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextMuted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Restore purchase",
