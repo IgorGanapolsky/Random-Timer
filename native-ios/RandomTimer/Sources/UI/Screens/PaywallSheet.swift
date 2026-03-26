@@ -7,6 +7,8 @@ enum PaywallEntryPoint: String {
 }
 
 struct PaywallSheet: View {
+    static let hiddenUnlockHoldDuration: TimeInterval = 8.0
+
     // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
@@ -57,7 +59,7 @@ struct PaywallSheet: View {
                 .padding(.vertical, 8)
                 .contentShape(Rectangle())
                 .highPriorityGesture(
-                    LongPressGesture(minimumDuration: 8.0, maximumDistance: 100)
+                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
                         .onEnded { _ in
                             triggerDebugUnlock()
                         }

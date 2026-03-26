@@ -30,6 +30,8 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
+internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
@@ -74,7 +76,7 @@ fun PaywallSheet(
                     Modifier.fillMaxWidth().then(
                         if (onDebugUnlock != null) {
                             Modifier.holdForHiddenUnlock(
-                                holdDurationMs = 8_000L,
+                                holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
                                 haptic = haptic,
                                 onHoldComplete = onDebugUnlock,
                             )

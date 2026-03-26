@@ -2,6 +2,10 @@ import XCTest
 @testable import RandomTimer
 
 final class TimerConfigProClampingTests: XCTestCase {
+    @MainActor
+    func testPaywallHiddenUnlockHoldDurationIsEightSeconds() {
+        XCTAssertEqual(PaywallSheet.hiddenUnlockHoldDuration, 8.0, accuracy: 0.001)
+    }
 
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
         XCTAssertEqual(
