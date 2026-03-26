@@ -138,6 +138,7 @@ internal fun runtimeVoiceCueForElapsedSecond(
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
     if (elapsedSeconds == lastElapsedMilestone) return null
+    if (elapsedSeconds % 30 != 0) return null  // Only fire at 30s multiples
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
 }
 
