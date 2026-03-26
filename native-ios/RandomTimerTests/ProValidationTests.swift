@@ -7,6 +7,30 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(PaywallSheet.hiddenUnlockHoldDuration, 8.0, accuracy: 0.001)
     }
 
+    @MainActor
+    func testPaywallCopyFocusesOnTrainingOutcomes() {
+        XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
+        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice callouts, more sounds, and repeatable rounds.")
+        XCTAssertEqual(PaywallSheet.pricingFooter, "Cancel anytime. Auto-renews yearly.")
+        XCTAssertEqual(
+            PaywallSheet.featureRows,
+            [
+                "Train up to 60-minute sessions",
+                "Get voice callouts during training",
+                "Use loop mode with round limits",
+                "Unlock the full sound library",
+                "Support independent development",
+            ]
+        )
+    }
+
+    @MainActor
+    func testPaywallPriceLabelNormalizesToYearlyPricing() {
+        let sut = PaywallSheet(entryPoint: .unknown)
+        XCTAssertEqual(sut.normalizedPriceLabel("$29.99"), "$29.99/year")
+        XCTAssertEqual(sut.normalizedPriceLabel("$29.99/yr"), "$29.99/yr")
+    }
+
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
         XCTAssertEqual(
             ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-pro", "true"]),

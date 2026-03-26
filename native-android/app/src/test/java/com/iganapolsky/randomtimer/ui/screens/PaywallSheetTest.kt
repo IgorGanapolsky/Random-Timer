@@ -8,4 +8,30 @@ class PaywallSheetTest {
     fun `hidden unlock hold duration is eight seconds`() {
         assertEquals(8_000L, HIDDEN_UNLOCK_HOLD_DURATION_MS)
     }
+
+    @Test
+    fun `paywall copy focuses on training outcomes`() {
+        assertEquals("Unlock Full Training Mode", PAYWALL_HEADLINE)
+        assertEquals(
+            "Longer sessions, voice callouts, more sounds, and repeatable rounds.",
+            PAYWALL_SUBHEADLINE,
+        )
+        assertEquals("Cancel anytime. Auto-renews yearly.", PAYWALL_PRICING_FOOTER)
+        assertEquals(
+            listOf(
+                "Train up to 60-minute sessions",
+                "Get voice callouts during training",
+                "Use loop mode with round limits",
+                "Unlock the full sound library",
+                "Support independent development",
+            ),
+            PAYWALL_FEATURE_ROWS,
+        )
+    }
+
+    @Test
+    fun `price label normalizes to yearly pricing`() {
+        assertEquals("$29.99/year", normalizedPriceLabel("$29.99"))
+        assertEquals("$29.99/yr", normalizedPriceLabel("$29.99/yr"))
+    }
 }

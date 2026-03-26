@@ -8,6 +8,17 @@ enum PaywallEntryPoint: String {
 
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
+    static let headline = "Unlock Full Training Mode"
+    static let subheadline = "Longer sessions, voice callouts, more sounds, and repeatable rounds."
+    static let pricingFooter = "Cancel anytime. Auto-renews yearly."
+    static let featureTitle = "PRO FEATURES"
+    static let featureRows = [
+        "Train up to 60-minute sessions",
+        "Get voice callouts during training",
+        "Use loop mode with round limits",
+        "Unlock the full sound library",
+        "Support independent development",
+    ]
 
     // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
@@ -40,20 +51,19 @@ struct PaywallSheet: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("Unlock Full Training Mode")
+                    Text(Self.headline)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.textPrimary)
 
-                    Text("Longer sessions, voice coaching, more sounds, and repeatable rounds.")
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
-                        .multilineTextAlignment(.center)
-
-                    Text("Built for dry fire, sparring, drills, and reaction training.")
-                        .font(.caption)
-                        .foregroundColor(.textMuted)
-                        .multilineTextAlignment(.center)
+                    VStack(spacing: 4) {
+                        Text(Self.subheadline)
+                        Text(Self.audienceLine)
+                        Text(Self.pricingFooter)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -65,28 +75,27 @@ struct PaywallSheet: View {
                         }
                 )
 
-                VStack(alignment: .leading, spacing: 8) {
-                    ProFeatureRow(text: "Train up to 60-minute sessions")
-                    ProFeatureRow(text: "Get voice callouts during training")
-                    ProFeatureRow(text: "Use loop mode with round limits")
-                    ProFeatureRow(text: "Unlock the full sound library")
-                    ProFeatureRow(text: "New voice packs and sounds every 30 days")
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(Self.featureTitle)
+                            .font(.caption.bold())
+                            .foregroundColor(.accentPrimary)
+                        ForEach(Self.featureRows, id: \.self) { feature in
+                            ProFeatureRow(text: feature)
+                        }
+                    }
                 }
                 .padding(.horizontal)
 
                 VStack(spacing: 12) {
                     PrimaryButton(
-                        title: "Start Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))/year"
+                        title: "Start Pro \u{2022} \(normalizedPriceLabel(proManager.formattedPrice(for: ProManager.eliteProductID)))"
                     ) {
                         Task {
                             await purchase(productID: ProManager.eliteProductID)
                         }
                     }
                 }
-
-                Text("Cancel anytime. Auto-renews yearly.")
-                    .font(.caption)
-                    .foregroundColor(.textMuted)
 
                 Button("Restore purchase") {
                     Task {
@@ -185,6 +194,15 @@ struct PaywallSheet: View {
         proManager.unlockProForDebug()
         hasTrackedDismiss = true
         dismiss()
+    }
+
+    func normalizedPriceLabel(_ price: String) -> String {
+        let trimmed = price.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowered = trimmed.lowercased()
+        if lowered.contains("/yr") || lowered.contains("/year") {
+            return trimmed
+        }
+        return "\(trimmed)/year"
     }
 }
 
