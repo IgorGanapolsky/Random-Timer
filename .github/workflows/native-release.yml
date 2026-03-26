@@ -164,6 +164,7 @@ jobs:
       effective_track: ${{ steps.play_result.outputs.effective_track }}
       fallback_used: ${{ steps.play_result.outputs.fallback_used }}
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
+      version_code: ${{ steps.play_result.outputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
@@ -250,27 +251,39 @@ jobs:
             -alias "$KEY_ALIAS" | grep -E "Alias name:|Valid from:|SHA1:|SHA-256:"
 
       - name: Build release AAB
+        id: build_meta
         env:
+          GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-        run: ./gradlew bundleRelease
+        run: |
+          set -euo pipefail
+          VERSION_CODE="$(python scripts/compute_android_release_version_code.py \
+            --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
+            --gradle-file native-android/app/build.gradle.kts)"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          ./gradlew -PciVersionCode="$VERSION_CODE" bundleRelease
         working-directory: native-android
 
       - name: Upload to Google Play (track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
-          PLAY_FALLBACK_TRACK: alpha
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
         run: |
+          set -euo pipefail
           if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
             echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
             exit 1
+          fi
+          PLAY_FALLBACK_TRACK=""
+          if [ "$PLAY_TRACK" != "production" ]; then
+            PLAY_FALLBACK_TRACK="alpha"
           fi
           pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
           python scripts/play_publish.py \
@@ -293,12 +306,14 @@ jobs:
           EFFECTIVE_TRACK="${{ inputs.android_track }}"
           FALLBACK_USED="false"
           PRECONDITION_BLOCKED="false"
+          VERSION_CODE="${{ steps.build_meta.outputs.version_code }}"
 
           if [ -f /tmp/play-upload-result.json ]; then
             REQUESTED_TRACK="$(jq -r '.requested_track // empty' /tmp/play-upload-result.json)"
             EFFECTIVE_TRACK="$(jq -r '.effective_track // empty' /tmp/play-upload-result.json)"
             FALLBACK_USED="$(jq -r '.fallback_used // false' /tmp/play-upload-result.json)"
             PRECONDITION_BLOCKED="$(jq -r '.precondition_blocked // false' /tmp/play-upload-result.json)"
+            VERSION_CODE="$(jq -r '.version_code // empty' /tmp/play-upload-result.json)"
           fi
 
           if [ -z "$REQUESTED_TRACK" ] || [ "$REQUESTED_TRACK" = "null" ]; then
@@ -312,7 +327,8 @@ jobs:
           echo "effective_track=$EFFECTIVE_TRACK" >> "$GITHUB_OUTPUT"
           echo "fallback_used=$FALLBACK_USED" >> "$GITHUB_OUTPUT"
           echo "precondition_blocked=$PRECONDITION_BLOCKED" >> "$GITHUB_OUTPUT"
-          echo "play_result requested=$REQUESTED_TRACK effective=$EFFECTIVE_TRACK fallback_used=$FALLBACK_USED precondition_blocked=$PRECONDITION_BLOCKED"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "play_result requested=$REQUESTED_TRACK effective=$EFFECTIVE_TRACK fallback_used=$FALLBACK_USED precondition_blocked=$PRECONDITION_BLOCKED version_code=$VERSION_CODE"
 
       - name: Upload Play upload result (if any)
         uses: actions/upload-artifact@v4
@@ -447,7 +463,9 @@ jobs:
           if [ "${{ needs.android-release.result }}" = "success" ]; then
             ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
           fi
-          if [ -n "${{ steps.versions.outputs.version_code }}" ]; then
+          if [ -n "${{ needs.android-release.outputs.version_code }}" ]; then
+            ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"
+          elif [ -n "${{ steps.versions.outputs.version_code }}" ]; then
             ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
           fi
           if [ -n "${{ steps.versions.outputs.ios_version }}" ]; then
