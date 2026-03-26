@@ -10,16 +10,17 @@ on:
       target:
         description: "Platform target to distribute"
         required: false
-        default: all
+        default: all_safe
         type: choice
         options:
+          - all_safe
           - all
           - ios
           - android_play
           - android_firebase
 
 concurrency:
-  group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all' }}
+  group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all_safe' }}
   cancel-in-progress: true
 
 jobs:
@@ -47,7 +48,7 @@ jobs:
           REF=""
           SHA=""
           REASON="not_eligible"
-          TARGET="${INPUT_TARGET:-all}"
+          TARGET="${INPUT_TARGET:-all_safe}"
 
           if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
             echo "Only workflow_dispatch is supported for budget-safe internal distribution."
@@ -66,8 +67,10 @@ jobs:
           # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
           # causing unbound variable crash with set -u.
 
-          TARGET="${INPUT_TARGET:-all}"
+          TARGET="${INPUT_TARGET:-all_safe}"
           case "$TARGET" in
+            all_safe)
+              ;;
             all)
               ;;
             ios)
@@ -111,7 +114,7 @@ jobs:
   ios-testflight-internal:
     name: iOS TestFlight (Internal)
     needs: [gate]
-    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
+    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
     environment: production
     steps:
@@ -249,7 +252,7 @@ jobs:
   android-play-internal:
     name: Android Google Play (Internal)
     needs: [gate]
-    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_play')
+    if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_play')
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -404,6 +407,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Note Play Protect mitigation
+        run: |
+          echo "Android Firebase internal APK delivery is explicit opt-in only."
+          echo "Reason: Play Protect classified a recent Firebase-distributed APK as harmful during tester install."
+          echo "Use target=all_safe or target=android_play unless Firebase APK delivery is required for debugging."
+
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.gate.outputs.ref }}
