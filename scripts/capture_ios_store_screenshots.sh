@@ -61,7 +61,7 @@ resolve_device_type() {
   local family="$1"
   shift
 
-  FAMILY="$family" PREFERRED_IDS="$(IFS=,; echo "$*")" xcrun simctl list devicetypes -j | python3 -c '
+  xcrun simctl list devicetypes -j | env FAMILY="$family" PREFERRED_IDS="$(IFS=,; echo "$*")" python3 -c '
 import json
 import os
 import sys
@@ -90,7 +90,7 @@ find_existing_sim() {
   local name="$1"
   local runtime_id="$2"
 
-  SIM_NAME="$name" SIM_RUNTIME_ID="$runtime_id" xcrun simctl list devices available -j | python3 -c '
+  xcrun simctl list devices available -j | env SIM_NAME="$name" SIM_RUNTIME_ID="$runtime_id" python3 -c '
 import json
 import os
 import sys

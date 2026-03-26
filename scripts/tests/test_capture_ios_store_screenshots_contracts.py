@@ -13,5 +13,7 @@ def test_ios_store_capture_script_uses_dynamic_runtime_and_device_resolution():
     assert "resolve_device_type()" in source
     assert "xcrun simctl list runtimes -j" in source
     assert "xcrun simctl list devicetypes -j" in source
+    assert 'env FAMILY="$family"' in source
+    assert 'env SIM_NAME="$name"' in source
     assert '-destination "platform=iOS Simulator,id=$IPHONE_UDID"' in source
     assert 'run_capture "platform=iOS Simulator,id=$IPAD_UDID"' in source
