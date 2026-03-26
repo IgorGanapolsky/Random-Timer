@@ -9,7 +9,7 @@ Usage:
     python3 scripts/sync_android_metadata.py
 
 Requires:
-    - GOOGLE_PLAY_JSON_KEY_PATH or /tmp/play-service-account.json
+    - GOOGLE_PLAY_JSON_KEY_PATH or $RUNNER_TEMP/play-service-account.json
     - google-api-python-client, google-auth
 """
 

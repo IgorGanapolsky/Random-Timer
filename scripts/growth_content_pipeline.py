@@ -1767,8 +1767,8 @@ def generate_post(args: argparse.Namespace) -> PostAsset:
             "description": post.description,
             "primary_keyword": primary_keyword,
             "keyword_intent": keyword_intent,
-            "markdown_path": str(post.markdown_path),
-            "diagram_svg_path": str(post.diagram_svg_path),
+            "markdown_path": str(post.markdown_path.relative_to(output_root.parent)),
+            "diagram_svg_path": str(post.diagram_svg_path.relative_to(output_root.parent)),
         },
     )
 

@@ -213,9 +213,10 @@ final class RandomTimerUITests: XCTestCase {
 
     func testCaptureAppStoreScreenshots() {
         let app = XCUIApplication()
-        // The script expects raw screenshots in /tmp/appstore_screenshots
-        let outputDir = "/tmp/appstore_screenshots"
+        let outputDir = ProcessInfo.processInfo.environment["APPSTORE_SCREENSHOT_OUTPUT_DIR"]
+            ?? (NSTemporaryDirectory() as NSString).appendingPathComponent("appstore_screenshots")
         let isPadCapture = UIDevice.current.userInterfaceIdiom == .pad
+        try? FileManager.default.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 
         // Force Pro/Elite state for screenshots
         app.launchArguments += ["-ui-test-elite", "true"]

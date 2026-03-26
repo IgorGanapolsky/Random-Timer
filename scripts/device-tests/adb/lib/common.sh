@@ -154,7 +154,7 @@ foreground_app() {
   adb shell am start -n "$ACTIVITY" --activity-single-top >/dev/null 2>&1
 }
 
-NOTIF_DUMP="/tmp/device_test_notif_dump.txt"
+NOTIF_DUMP="${TMPDIR:-/tmp}/device_test_notif_dump.txt"
 
 # Dump notifications to a temp file (avoids shell variable truncation on large dumps).
 dump_notifications() {

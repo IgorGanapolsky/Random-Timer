@@ -209,15 +209,15 @@ Say: **"Done merging PRs"** only after all steps verified.
 
 ### No Manual Handoffs
 - Never instruct me to perform a step you can do yourself
-- If you violate this: record the mistake in `mcp-memory-gateway`, then learn from it
+- If you violate this: record the mistake in the active memory tool available in the session, then learn from it
 
 ### Honesty Protocol
 - Lying is not allowed
 - If something fails or isn't working, report it immediately
-- If you hallucinate or violate a directive, provide an in-depth report and log it to `mcp-memory-gateway`
+- If you hallucinate or violate a directive, provide an in-depth report and log it to the active memory tool available in the session
 
 ### Continuous Learning
-- Record every lesson in `mcp-memory-gateway`
-- Do not claim Langsmith or Vertex-backed memory unless you have verified a real configured integration in this repo
-- Query gateway-backed lessons at session start; update them at session end
+- Record every lesson in the active memory tool available in the session
+- Do not claim any external memory backend unless you have verified a real configured integration in this repo and tool session
+- Query available lessons at session start; update them at session end
 - Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?

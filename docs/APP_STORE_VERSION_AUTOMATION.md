@@ -16,7 +16,7 @@ python scripts/asc_resolve_version.py \
   --preferred-version 1.1.1 \
   --create-if-needed \
   --auto-next-patch \
-  --json-out /tmp/asc_version.json
+  --json-out .artifacts/asc_version.json
 ```
 
 Behavior:

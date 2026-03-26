@@ -6,9 +6,17 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+import os
+import tempfile
 import time
 import subprocess
 import sys
+
+
+TEMP_DIR = os.environ.get("RANDOM_TIMER_UPLOAD_TMPDIR", tempfile.gettempdir())
+ARCHIVE_PATH = os.path.join(TEMP_DIR, "RandomTimer.xcarchive")
+EXPORT_PATH = os.path.join(TEMP_DIR, "RandomTimer-ipa")
+IPA_PATH = os.path.join(EXPORT_PATH, "RandomTimer.ipa")
 
 def upload_to_testflight():
     """Upload the built archive to TestFlight"""
@@ -16,10 +24,10 @@ def upload_to_testflight():
     # First, export the archive to IPA using App Store development profile
     print("📦 Exporting archive to IPA...")
 
-    export_cmd = """
+    export_cmd = f"""
 xcodebuild -exportArchive \
-  -archivePath /tmp/RandomTimer.xcarchive \
-  -exportPath /tmp/RandomTimer-ipa \
+  -archivePath {ARCHIVE_PATH} \
+  -exportPath {EXPORT_PATH} \
   -exportOptionsPlist /dev/stdin <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -45,10 +53,10 @@ EOF
         print("📤 Attempting direct upload with xcrun...")
 
         # Use transporter CLI
-        upload_cmd = """
+        upload_cmd = f"""
 xcrun altool --upload-app \
   --type ios \
-  --file /tmp/RandomTimer.xcarchive \
+  --file {ARCHIVE_PATH} \
   --username "$APPLE_ID" \
   --password "@keychain:AC_PASSWORD"
 """
@@ -62,10 +70,10 @@ xcrun altool --upload-app \
 
         # Upload the IPA
         print("📤 Uploading to App Store Connect...")
-        upload_cmd = """
+        upload_cmd = f"""
 xcrun altool --upload-app \
   --type ios \
-  --file /tmp/RandomTimer-ipa/RandomTimer.ipa \
+  --file {IPA_PATH} \
   --username "$APPLE_ID" \
   --password "@keychain:AC_PASSWORD"
 """
@@ -107,7 +115,7 @@ xcrun altool --upload-app \
 
         print("✅ Ready for build upload!")
         print("📝 Note: Build upload requires Xcode Organizer or Transporter app")
-        print("   The archive is at: /tmp/RandomTimer.xcarchive")
+        print(f"   The archive is at: {ARCHIVE_PATH}")
 
         return True
 
