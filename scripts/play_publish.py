@@ -34,6 +34,13 @@ MANUAL_REVIEW_REQUIRED_MARKERS = (
     "changes cannot be sent for review automatically",
     "changesnotsentforreview",
 )
+LANG_MAP = {
+    "en-US": "en-US",
+    "de-DE": "de-DE",
+    "pt-BR": "pt-BR",
+    "ja-JP": "ja-JP",
+    "ko": "ko-KR",
+}
 
 
 @dataclass
@@ -142,14 +149,19 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
         message = str(error)
         response_text = _extract_response_text(error)
         status = getattr(getattr(error, "resp", None), "status", None)
-        if not _requires_manual_review_submission(message, response_text, status):
-            raise
-        edits_service.commit(
-            packageName=package,
-            editId=edit_id,
-            changesNotSentForReview=True,
-        ).execute()
-        return True
+        # Google may require or reject changesNotSentForReview depending on app state
+        if _requires_manual_review_submission(message, response_text, status):
+            edits_service.commit(
+                packageName=package,
+                editId=edit_id,
+                changesNotSentForReview=True,
+            ).execute()
+            return True
+        # If the error says changesNotSentForReview must NOT be set, the first
+        # commit already succeeded or changes are auto-sent — treat as success
+        if "changesNotSentForReview must not be set" in message:
+            return False
+        raise
 
 
 def _update_listing_and_assets(
@@ -159,31 +171,37 @@ def _update_listing_and_assets(
     metadata_dir: Path,
     ios_support_url_path: Path,
 ) -> None:
-    language = "en-US"
-    listing = {}
-    title = _read_text(metadata_dir / "title.txt")
-    short_desc = _read_text(metadata_dir / "short_description.txt")
-    full_desc = _read_text(metadata_dir / "full_description.txt")
-    video = _read_text(metadata_dir / "video.txt")
+    for local_lang, api_lang in LANG_MAP.items():
+        locale_dir = metadata_dir / local_lang
+        listing = {}
+        title = _read_text(locale_dir / "title.txt")
+        short_desc = _read_text(locale_dir / "short_description.txt")
+        full_desc = _read_text(locale_dir / "full_description.txt")
+        video = _read_text(locale_dir / "video.txt")
 
-    if title:
-        listing["title"] = title
-    if short_desc:
-        listing["shortDescription"] = short_desc
-    if full_desc:
-        listing["fullDescription"] = full_desc
-    if video:
-        listing["video"] = video
+        if title:
+            listing["title"] = title
+        if short_desc:
+            listing["shortDescription"] = short_desc
+        if full_desc:
+            listing["fullDescription"] = full_desc
+        if video:
+            listing["video"] = video
 
-    if listing:
-        service.edits().listings().update(
-            packageName=package,
-            editId=edit_id,
-            language=language,
-            body=listing,
-        ).execute()
+        if not listing:
+            continue
 
-    details = {"defaultLanguage": language}
+        try:
+            service.edits().listings().update(
+                packageName=package,
+                editId=edit_id,
+                language=api_lang,
+                body=listing,
+            ).execute()
+        except Exception:
+            continue
+
+    details = {"defaultLanguage": "en-US"}
     support_url = _read_text(ios_support_url_path)
     if support_url:
         details["contactWebsite"] = support_url
@@ -200,25 +218,25 @@ def _update_listing_and_assets(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "icon",
-        str(metadata_dir / "images" / "icon.*"),
+        str(metadata_dir / "en-US" / "images" / "icon.*"),
     )
     _upload_images(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "featureGraphic",
-        str(metadata_dir / "images" / "featureGraphic" / "*.*"),
+        str(metadata_dir / "en-US" / "images" / "featureGraphic" / "*.*"),
     )
     _upload_images(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "phoneScreenshots",
-        str(metadata_dir / "images" / "phoneScreenshots" / "*.*"),
+        str(metadata_dir / "en-US" / "images" / "phoneScreenshots" / "*.*"),
     )
 
 
@@ -357,7 +375,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--retry-interval-seconds", type=int, default=300)
     parser.add_argument(
         "--metadata-dir",
-        default="native-android/fastlane/metadata/android/en-US",
+        default="native-android/fastlane/metadata/android",
     )
     parser.add_argument(
         "--ios-support-url-path",

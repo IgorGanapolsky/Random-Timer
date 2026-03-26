@@ -1,4 +1,5 @@
-v1.2.0 — Random Tactical Timer
-- Refreshed App Store screenshots and listing metadata for clearer onboarding
-- Improved timer setup and alarm flow copy for faster first-session use
-- Stability fixes and performance improvements
+• AI Drill Sergeant voice callouts with 31 unique tactical cues
+• Elapsed-time announcements on the minute
+• Redesigned Pro upgrade screen
+• Fixed voice callout timing and variety
+• New tactical compass app icon
