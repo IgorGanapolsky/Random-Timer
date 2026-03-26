@@ -31,7 +31,7 @@ def _write_metadata(root: Path) -> None:
 
 def _write_required_assets(root: Path, ipad_size: tuple[int, int]) -> None:
     screenshots_dir = root / "native-ios" / "fastlane" / "screenshots" / "en-US"
-    for filename in ("1_setup.png", "2_active.png", "3_voice.png", "4_loop.png"):
+    for filename in ("1_setup.png", "2_active.png", "3_pro.png"):
         _write_png(screenshots_dir / filename, (1290, 2796))
     for filename in ("5_ipad_setup.png", "6_ipad_running.png", "7_ipad_stopped.png"):
         _write_png(screenshots_dir / filename, ipad_size)

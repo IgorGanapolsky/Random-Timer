@@ -261,18 +261,9 @@ final class RandomTimerUITests: XCTestCase {
         sleep(2)
         saveScreenshot(
             app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "7_ipad_stopped.png" : "3_voice.png",
+            named: isPadCapture ? "7_ipad_stopped.png" : "3_pro.png",
             outputDir: outputDir
         )
-
-        if !isPadCapture {
-            // 4. Running timer (different view/state if needed)
-            app.terminate()
-            app.launchArguments = ["-ui-test-state", "running", "-ui-test-pro", "true"]
-            app.launch()
-            sleep(2)
-            saveScreenshot(app.windows.firstMatch.screenshot(), named: "4_loop.png", outputDir: outputDir)
-        }
     }
 
     func testLandscapeShowsActionButtons() {
