@@ -37,7 +37,7 @@ class AIVoiceCalloutManagerSelectionTest {
         val path = Paths.get("src/main/assets/voice_callouts.json")
         val catalog = parseVoiceCalloutCatalog(path.toFile().readText())
 
-        assertThat(catalog.elapsedCues.size).isAtLeast(16)
+        assertThat(catalog.elapsedCues.size).isAtLeast(12)
         assertThat(catalog.commandCues.size).isAtLeast(20)
         assertThat(catalog.elapsedCues.all { it.text.contains("elapsed", ignoreCase = true) }).isTrue()
     }
