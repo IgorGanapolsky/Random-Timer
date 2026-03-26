@@ -33,7 +33,7 @@ fi
 
 cd "$REPO_ROOT"
 
-RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.iOS-18-6"
+RUNTIME_ID="${IOS_RUNTIME_ID:-com.apple.CoreSimulator.SimRuntime.iOS-26-4}"
 IPHONE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
 IPAD_TYPE="com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB"
 IPHONE_NAME="RandomTimer AppStore iPhone 16 Pro Max"
