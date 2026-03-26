@@ -126,6 +126,19 @@ internal func nextCommandCue(
     return cues[nextIndex]
 }
 
+internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int {
+    switch totalDurationSeconds {
+    case ...15:
+        return .max
+    case ...30:
+        return 10
+    case ...45:
+        return 15
+    default:
+        return Int.random(in: 30...45)
+    }
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {
@@ -202,6 +215,13 @@ final class AIVoiceCalloutService {
         speak(catalog.previewElapsed.text)
     }
 
+    func beginSession(totalDurationSeconds: Int) {
+        let cue = randomCommandCue()
+        speak(cue.text)
+        lastCommandCueFilename = cue.filename
+        nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
+    }
+
     func triggerCallout(elapsedSeconds: Int) {
         if let callout = elapsedMilestone(for: elapsedSeconds) {
             speak(callout.text)
@@ -228,6 +248,9 @@ final class AIVoiceCalloutService {
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
         if nextCommandCueAt == 0 {
             nextCommandCueAt = secureRandomInt(in: 30...45)
+        }
+        if nextCommandCueAt == .max {
+            return false
         }
         return elapsedSeconds >= nextCommandCueAt
     }

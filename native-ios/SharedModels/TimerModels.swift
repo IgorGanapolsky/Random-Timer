@@ -407,6 +407,96 @@ enum TimeRangeAdjuster {
     }
 }
 
+internal struct RangeToggleProfiles: Equatable {
+    let freeMinSeconds: Int
+    let freeMaxSeconds: Int
+    let extendedMinSeconds: Int
+    let extendedMaxSeconds: Int
+}
+
+internal struct RangeToggleResult: Equatable {
+    let config: TimerConfig
+    let profiles: RangeToggleProfiles
+}
+
+internal func sanitizedStoredRange(
+    minSeconds: Int,
+    maxSeconds: Int,
+    maxSecondsLimit: Int
+) -> (min: Int, max: Int) {
+    let clampedMax = Swift.max(TimeRangeAdjuster.defaultMinGapSeconds, Swift.min(maxSeconds, maxSecondsLimit))
+    let clampedMin = Swift.max(0, Swift.min(minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds))
+    return TimeRangeAdjuster.adjustForMaxChange(
+        currentMinSeconds: clampedMin,
+        currentMaxSeconds: clampedMax,
+        newMaxSeconds: clampedMax,
+        maxSecondsLimit: maxSecondsLimit
+    )
+}
+
+internal func toggleExtendedRange(
+    current: TimerConfig,
+    profiles: RangeToggleProfiles
+) -> RangeToggleResult {
+    if current.useExtendedRange {
+        let nextProfiles = RangeToggleProfiles(
+            freeMinSeconds: profiles.freeMinSeconds,
+            freeMaxSeconds: profiles.freeMaxSeconds,
+            extendedMinSeconds: current.minSeconds,
+            extendedMaxSeconds: current.maxSeconds
+        )
+        let restoredFree = sanitizedStoredRange(
+            minSeconds: profiles.freeMinSeconds,
+            maxSeconds: profiles.freeMaxSeconds,
+            maxSecondsLimit: TimerConfig.maxSecondsFree
+        )
+        return RangeToggleResult(
+            config: TimerConfig(
+                minSeconds: restoredFree.min,
+                maxSeconds: restoredFree.max,
+                alarmDuration: current.alarmDuration,
+                hiddenMode: current.hiddenMode,
+                repeatEnabled: current.repeatEnabled,
+                soundType: current.soundType,
+                volume: current.volume,
+                vibrationEnabled: current.vibrationEnabled,
+                useExtendedRange: false,
+                voiceEnabled: current.voiceEnabled,
+                repeatRounds: current.repeatRounds
+            ),
+            profiles: nextProfiles
+        )
+    }
+
+    let nextProfiles = RangeToggleProfiles(
+        freeMinSeconds: current.minSeconds,
+        freeMaxSeconds: current.maxSeconds,
+        extendedMinSeconds: profiles.extendedMinSeconds,
+        extendedMaxSeconds: profiles.extendedMaxSeconds
+    )
+    let restoredExtended = sanitizedStoredRange(
+        minSeconds: profiles.extendedMinSeconds,
+        maxSeconds: profiles.extendedMaxSeconds,
+        maxSecondsLimit: TimerConfig.maxSecondsPro
+    )
+    return RangeToggleResult(
+        config: TimerConfig(
+            minSeconds: restoredExtended.min,
+            maxSeconds: restoredExtended.max,
+            alarmDuration: current.alarmDuration,
+            hiddenMode: current.hiddenMode,
+            repeatEnabled: current.repeatEnabled,
+            soundType: current.soundType,
+            volume: current.volume,
+            vibrationEnabled: current.vibrationEnabled,
+            useExtendedRange: true,
+            voiceEnabled: current.voiceEnabled,
+            repeatRounds: current.repeatRounds
+        ),
+        profiles: nextProfiles
+    )
+}
+
 // MARK: - Timer Status
 
 public enum TimerStatus: String, Codable, Sendable {
