@@ -48,7 +48,7 @@ Recent 5 runs:
 - [22368062054](https://github.com/IgorGanapolsky/Random-Timer/actions/runs/22368062054) `success`
 
 ## 4) Artifact Facts (Screenshots + Metadata Fields)
-Source: `python3 scripts/asc_verify_ready.py --version 1.2.1 --skip-build-check --json /tmp/asc_verify_ready_20260226.json`
+Source: `python3 scripts/asc_verify_ready.py --version 1.2.1 --skip-build-check --json .artifacts/asc_verify_ready_20260226.json`
 
 Verified App Store Connect facts:
 - App/version/state: `app_id=6758355312`, `version=1.2.1`, `app_store_state=WAITING_FOR_REVIEW`
@@ -86,6 +86,6 @@ Recent merged PRs (last 10):
 - `gh api '/repos/IgorGanapolsky/Random-Timer/commits?sha=develop&per_page=5'`
 - `gh run list -R IgorGanapolsky/Random-Timer --workflow ci.yml ...`
 - `gh run list -R IgorGanapolsky/Random-Timer --workflow ios-metadata-sync.yml ...`
-- `python3 scripts/asc_verify_ready.py --version 1.2.1 --skip-build-check --json /tmp/asc_verify_ready_20260226.json`
+- `python3 scripts/asc_verify_ready.py --version 1.2.1 --skip-build-check --json .artifacts/asc_verify_ready_20260226.json`
 - `gh api /repos/IgorGanapolsky/Random-Timer/{code-scanning,secret-scanning,dependabot}/alerts?...`
 - `gh api graphql` queries for unresolved review threads (open + merged PR sets)

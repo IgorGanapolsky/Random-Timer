@@ -163,13 +163,13 @@ Manual command:
 ```bash
 python scripts/delegation_contract.py \
   --operation ios_submit_for_review \
-  --asc-ready-json /tmp/asc_ready.json \
+  --asc-ready-json .artifacts/asc_ready.json \
   --intent true \
-  --json-out /tmp/delegation_contract.json \
+  --json-out .artifacts/delegation_contract.json \
   --enforce
 ```
 
-CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so every "ready" claim is backed by machine-readable evidence.
+CI/workflows persist contract artifacts under the runner temp directory so every "ready" claim is backed by machine-readable evidence.
 
 ## Store Metadata Locations
 
