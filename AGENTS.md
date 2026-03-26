@@ -4,6 +4,10 @@
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## PR management & secrets (cross-reference)
+
+Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens and resolving automated review threads that gate CI).
+
 ## Agent-Model Matching Standard
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.

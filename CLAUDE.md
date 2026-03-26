@@ -210,6 +210,10 @@ Say: **"Done merging PRs"** only after all steps verified.
 - Query RAG at session start; update RAG at session end
 - Self-assess: Is RAG helping or hindering? Is Langsmith useful? Report status.
 
+### Secrets & review automation
+- Never commit GitHub PATs, API keys, or `.env` values to tracked files. Use `gh auth login` / GitHub Actions secrets.
+- If a PAT is pasted in chat or logs, **rotate it immediately** in GitHub settings; treat it as compromised.
+- **Sentry / Copilot review threads** block the `Autonomous AI Review` CI job while unresolved. After fixing the code, resolve the thread (e.g. GitHub GraphQL `resolveReviewThread`) or address the comment so the gate can pass.
 
 ## Interaction Language
 - All interactions must use **English**.
