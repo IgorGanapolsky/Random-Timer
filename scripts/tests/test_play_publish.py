@@ -1,7 +1,10 @@
 import tempfile
 import unittest
+from argparse import Namespace
+from pathlib import Path
 from unittest.mock import call
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from scripts.play_publish import (
     _commit_edit,
@@ -142,6 +145,69 @@ class PlayPublishTests(unittest.TestCase):
         self.assertIn(tmp, args.error_json)
         self.assertTrue(args.result_json.endswith("play-upload-result.json"))
         self.assertTrue(args.error_json.endswith("play-upload-error.json"))
+
+    def test_parse_args_disables_fallback_track_by_default(self):
+        import sys
+
+        sys.argv = [
+            "play_publish.py",
+            "--service-account-json",
+            "/fake/sa.json",
+            "--package",
+            "com.test",
+            "--aab-path",
+            "/fake/app.aab",
+        ]
+
+        args = _parse_args()
+
+        self.assertEqual(args.fallback_track, "")
+
+    def test_main_fails_when_changes_not_sent_for_review(self):
+        from scripts import play_publish
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            service_account = tmp_path / "sa.json"
+            aab = tmp_path / "app.aab"
+            result_json = tmp_path / "result.json"
+            error_json = tmp_path / "error.json"
+            service_account.write_text("{}", encoding="utf-8")
+            aab.write_bytes(b"fake")
+
+            args = Namespace(
+                service_account_json=str(service_account),
+                package="com.test",
+                aab_path=str(aab),
+                requested_track="production",
+                fallback_track="",
+                release_status="completed",
+                retry_window_seconds=10800,
+                retry_interval_seconds=300,
+                metadata_dir="native-android/fastlane/metadata/android",
+                ios_support_url_path="native-ios/fastlane/metadata/en-US/support_url.txt",
+                changelog_dir="native-android/fastlane/metadata/android/en-US/changelogs",
+                result_json=str(result_json),
+                error_json=str(error_json),
+                user_fraction="0.1",
+            )
+
+            with (
+                patch.object(play_publish, "_parse_args", return_value=args),
+                patch.object(
+                    play_publish,
+                    "_publish_to_track",
+                    return_value={
+                        "version_code": "1773909999",
+                        "attempt": 1,
+                        "changes_not_sent_for_review": True,
+                    },
+                ),
+            ):
+                exit_code = play_publish.main()
+
+            self.assertEqual(exit_code, 1)
+            self.assertTrue(result_json.exists())
 
 
 if __name__ == "__main__":

@@ -272,6 +272,7 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
           PLAY_TRACK: ${{ inputs.android_track }}
+          PLAY_FALLBACK_TRACK: ""
           PLAY_RELEASE_STATUS: completed
           PLAY_UPLOAD_RETRY_WINDOW_SECONDS: "10800"
           PLAY_UPLOAD_RETRY_INTERVAL_SECONDS: "300"
@@ -280,10 +281,6 @@ jobs:
           if [ ! -f "$GOOGLE_PLAY_JSON_KEY" ]; then
             echo "❌ Google Play key file not found at $GOOGLE_PLAY_JSON_KEY"
             exit 1
-          fi
-          PLAY_FALLBACK_TRACK=""
-          if [ "$PLAY_TRACK" != "production" ]; then
-            PLAY_FALLBACK_TRACK="alpha"
           fi
           pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4
           python scripts/play_publish.py \
@@ -360,7 +357,12 @@ jobs:
 
   verify-releases:
     needs: [ios-testflight, android-release]
-    if: always() && (needs.ios-testflight.result == 'success' || needs.android-release.result == 'success')
+    if: >-
+      always() && (
+        (inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success') ||
+        (inputs.platform == 'ios' && needs.ios-testflight.result == 'success') ||
+        (inputs.platform == 'android' && needs.android-release.result == 'success')
+      )
     runs-on: ubuntu-latest
     environment: production
     steps:
