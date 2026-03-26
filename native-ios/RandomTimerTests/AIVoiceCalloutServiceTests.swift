@@ -110,8 +110,8 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
     func testShortTimersScheduleFollowupCommandCuesEarly() {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
-        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), 10)
-        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 15)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
     }
 
     func testRemotePackStoreInstallsAndServesRemoteVoiceAndSoundAssets() throws {
