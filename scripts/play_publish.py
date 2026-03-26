@@ -149,19 +149,21 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
         message = str(error)
         response_text = _extract_response_text(error)
         status = getattr(getattr(error, "resp", None), "status", None)
-        # Google may require or reject changesNotSentForReview depending on app state
-        if _requires_manual_review_submission(message, response_text, status):
+        if "changesNotSentForReview must not be set" in message:
+            return False
+        if not _requires_manual_review_submission(message, response_text, status):
+            raise
+        try:
             edits_service.commit(
                 packageName=package,
                 editId=edit_id,
                 changesNotSentForReview=True,
             ).execute()
             return True
-        # If the error says changesNotSentForReview must NOT be set, the first
-        # commit already succeeded or changes are auto-sent — treat as success
-        if "changesNotSentForReview must not be set" in message:
-            return False
-        raise
+        except Exception as retry_error:
+            if "changesNotSentForReview must not be set" in str(retry_error):
+                return False
+            raise
 
 
 def _update_listing_and_assets(
