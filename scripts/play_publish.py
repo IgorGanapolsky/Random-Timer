@@ -146,24 +146,32 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
         edits_service.commit(packageName=package, editId=edit_id).execute()
         return False
     except Exception as error:
-        error_text = str(error) + " " + str(getattr(error, "content", b""))
-        # Google auto-commits changes — no manual commit needed
-        if "sent for review automatically" in error_text or "changesNotSentForReview must not be set" in error_text:
-            return False
         response_text = _extract_response_text(error)
         status = getattr(getattr(error, "resp", None), "status", None)
-        if not _requires_manual_review_submission(str(error), response_text, status):
-            raise
-        try:
-            edits_service.commit(
-                packageName=package,
-                editId=edit_id,
-                changesNotSentForReview=True,
-            ).execute()
-            return True
-        except Exception:
-            # If retry also fails, changes were likely auto-committed
+        if _requires_manual_review_submission(str(error), response_text, status):
+            try:
+                edits_service.commit(
+                    packageName=package,
+                    editId=edit_id,
+                    changesNotSentForReview=True,
+                ).execute()
+                return True
+            except Exception:
+                # If retry also fails, changes were likely auto-committed
+                return False
+
+        error_text = f"{error}\n{response_text}".lower()
+        # Google auto-commits changes — no manual commit needed.
+        if (
+            "changesnotsentforreview must not be set" in error_text
+            or (
+                "sent for review automatically" in error_text
+                and "cannot be sent for review automatically" not in error_text
+            )
+        ):
             return False
+        else:
+            raise
 
 
 def _update_listing_and_assets(

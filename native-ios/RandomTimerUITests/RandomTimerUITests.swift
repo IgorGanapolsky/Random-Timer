@@ -215,6 +215,7 @@ final class RandomTimerUITests: XCTestCase {
         let app = XCUIApplication()
         // The script expects raw screenshots in /tmp/appstore_screenshots
         let outputDir = "/tmp/appstore_screenshots"
+        let isPadCapture = UIDevice.current.userInterfaceIdiom == .pad
 
         // Force Pro/Elite state for screenshots
         app.launchArguments += ["-ui-test-elite", "true"]
@@ -233,7 +234,11 @@ final class RandomTimerUITests: XCTestCase {
             loopToggle.tap()
         }
         sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "1_setup.png", outputDir: outputDir)
+        saveScreenshot(
+            app.windows.firstMatch.screenshot(),
+            named: isPadCapture ? "5_ipad_setup.png" : "1_setup.png",
+            outputDir: outputDir
+        )
 
         // 2. Active timer (running state)
         let startButton = app.buttons["Start Timer"]
@@ -243,21 +248,22 @@ final class RandomTimerUITests: XCTestCase {
         // Dismiss notification permission if it appears
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "2_active.png", outputDir: outputDir)
+        saveScreenshot(
+            app.windows.firstMatch.screenshot(),
+            named: isPadCapture ? "6_ipad_running.png" : "2_active.png",
+            outputDir: outputDir
+        )
 
         // 3. Alarm state (timer just went off)
         app.terminate()
         app.launchArguments = ["-ui-test-state", "alarm", "-ui-test-pro", "true"]
         app.launch()
         sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "3_alarm.png", outputDir: outputDir)
-
-        // 4. Running timer (different view/state if needed)
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "running", "-ui-test-pro", "true"]
-        app.launch()
-        sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "4_running.png", outputDir: outputDir)
+        saveScreenshot(
+            app.windows.firstMatch.screenshot(),
+            named: isPadCapture ? "7_ipad_stopped.png" : "3_pro.png",
+            outputDir: outputDir
+        )
     }
 
     func testLandscapeShowsActionButtons() {

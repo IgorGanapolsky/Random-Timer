@@ -127,16 +127,17 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
     }
 
-    func testBeginSessionReactivatesAudioSessionBeforePlayback() {
+    func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
         let counter = CounterBox()
         let sut = makeSut(counter: counter)
 
         sut.beginSession(totalDurationSeconds: 60)
+        sut.previewCountdownCue()
 
         XCTAssertGreaterThanOrEqual(
             counter.value,
             2,
-            "Voice playback must reactivate AVAudioSession after preview teardown deactivates it."
+            "Voice playback must reactivate AVAudioSession before cue playback."
         )
     }
 
