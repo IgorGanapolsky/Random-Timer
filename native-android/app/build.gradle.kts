@@ -75,6 +75,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            androidResources.enableResourceObfuscation = false
             signingConfig = if (System.getenv("KEYSTORE_PATH") != null) {
                 signingConfigs.getByName("release")
             } else {
