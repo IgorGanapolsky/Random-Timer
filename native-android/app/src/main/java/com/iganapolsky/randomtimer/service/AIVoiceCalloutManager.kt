@@ -274,12 +274,7 @@ class AIVoiceCalloutManager
                 return
             }
 
-            if (shouldFireCommandCue(elapsedSeconds)) {
-                val cue = randomCommandCue()
-                speak(cue.text)
-                lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + 30
-            }
+            // Command cues disabled — only elapsed cues fire at 30s intervals
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
