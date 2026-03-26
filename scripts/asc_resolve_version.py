@@ -326,7 +326,7 @@ def resolve_version(
                         preferred_version=preferred_version,
                     )
             # Refetch versions — the version may exist now in a non-editable state
-            refreshed = _list_all_versions(client, app_id)
+            refreshed = _list_ios_versions(client, app_id)
             found = _find_version(refreshed, preferred_version)
             if found:
                 f_state = str((found.get("attributes") or {}).get("appStoreState") or "UNKNOWN")

@@ -161,12 +161,8 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
             ).execute()
             return True
         except Exception as retry_error:
-            retry_msg = str(retry_error)
-            retry_content = str(getattr(retry_error, "content", b""))
-            if "changesNotSentForReview must not be set" in retry_msg or \
-               "changesNotSentForReview must not be set" in retry_content or \
-               "Changes are sent for review automatically" in retry_msg or \
-               "Changes are sent for review automatically" in retry_content:
+            full_error = str(retry_error) + " " + str(getattr(retry_error, "content", b""))
+            if "changesNotSentForReview" in full_error and ("must not be set" in full_error or "automatically" in full_error):
                 return False
             raise
 
