@@ -249,7 +249,7 @@ final class AIVoiceCalloutService {
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
-        guard elapsed % 30 == 0 else { return nil }  // Only fire at 30s multiples
+        guard elapsed % 60 == 0 else { return nil }  // Only fire elapsed cues on the minute
         let catalog = packStore.voiceCatalog(bundle: bundle)
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil

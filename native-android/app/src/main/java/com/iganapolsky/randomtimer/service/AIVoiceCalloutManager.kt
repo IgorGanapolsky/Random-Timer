@@ -138,7 +138,7 @@ internal fun runtimeVoiceCueForElapsedSecond(
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
     if (elapsedSeconds == lastElapsedMilestone) return null
-    if (elapsedSeconds % 30 != 0) return null  // Only fire at 30s multiples
+    if (elapsedSeconds % 60 != 0) return null  // Only fire elapsed cues on the minute
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
 }
 
@@ -244,6 +244,8 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
+            mediaPlayer?.apply { if (isPlaying) stop(); release() }
+            mediaPlayer = null
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             nextCommandCueAt = 0
