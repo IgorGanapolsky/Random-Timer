@@ -53,7 +53,7 @@ Optional:
 - `ASC_EXPECTED_STATE_TEXT` (default: `Prepare for Submission`)
 - `ASC_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)
 - `PLAY_CONSOLE_URL`
-- `PLAY_EXPECTED_APP_NAME` (default: `Random Timer`)
+- `PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)
 - `PLAY_EXPECTED_BANNER_TEXT`
 
 ## Strict Release-Readiness Gate

@@ -98,7 +98,7 @@ test.describe("Store Console Read-Only Verification", () => {
     }
 
     const playUrl = process.env.PLAY_CONSOLE_URL ?? defaultPlayUrl;
-    const expectedAppName = process.env.PLAY_EXPECTED_APP_NAME ?? "Random Timer";
+    const expectedAppName = process.env.PLAY_EXPECTED_APP_NAME ?? "Random Tactical Timer";
     const expectedBannerText = process.env.PLAY_EXPECTED_BANNER_TEXT ?? "";
 
     const context = await browser.newContext({ storageState: storageStatePath });

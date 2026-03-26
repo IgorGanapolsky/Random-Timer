@@ -1,4 +1,6 @@
 import path from "node:path";
+import { createHash } from "node:crypto";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import {
@@ -15,6 +17,10 @@ const repoRoot = path.resolve(__dirname, "../../../..");
 
 function rel(filePath: string): string {
   return path.relative(repoRoot, filePath);
+}
+
+function sha256(filePath: string): string {
+  return createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
 test.describe("Local Store Metadata", () => {
@@ -50,13 +56,29 @@ test.describe("Local Store Metadata", () => {
 
     expect(
       androidShots.length,
-      "Expected at least 3 Android phone screenshots for listing quality.",
-    ).toBeGreaterThanOrEqual(3);
+      "Expected the four canonical Android phone screenshots for Play listing quality.",
+    ).toBe(4);
+
+    const androidShotNames = androidShots.map((filePath) => path.basename(filePath));
+    expect(androidShotNames).toEqual(["1_setup.png", "2_active.png", "3_settings.png", "4_loop.png"]);
+    expect(
+      countUniqueFileHashes(androidShots),
+      "Android Play screenshots should all be visually distinct.",
+    ).toBe(4);
 
     expect(
       iosShots.length,
       "Expected at least 3 iOS screenshots in fastlane/screenshots/en-US.",
     ).toBeGreaterThanOrEqual(3);
+  });
+
+  test("Android Play icon matches the canonical brand source", async () => {
+    const canonicalIcon = path.join(repoRoot, "branding/app-icon-source.png");
+    const playIcon = path.join(repoRoot, "native-android/fastlane/metadata/android/en-US/images/icon.png");
+
+    expect(fs.existsSync(canonicalIcon), "Missing canonical Android brand icon source").toBeTruthy();
+    expect(fs.existsSync(playIcon), "Missing Google Play icon").toBeTruthy();
+    expect(sha256(playIcon)).toBe(sha256(canonicalIcon));
   });
 
   test("strict App Store readiness requires iPhone and iPad screenshot coverage", async () => {

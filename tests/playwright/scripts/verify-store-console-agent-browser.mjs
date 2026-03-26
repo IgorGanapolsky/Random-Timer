@@ -215,7 +215,7 @@ function main() {
 
   const ascExpectedState = process.env.ASC_EXPECTED_STATE_TEXT || "Prepare for Submission";
   const ascExpectedAppName = process.env.ASC_EXPECTED_APP_NAME || "Random Tactical Timer";
-  const playExpectedAppName = process.env.PLAY_EXPECTED_APP_NAME || "Random Timer";
+  const playExpectedAppName = process.env.PLAY_EXPECTED_APP_NAME || "Random Tactical Timer";
   const playExpectedBannerText = process.env.PLAY_EXPECTED_BANNER_TEXT || "";
 
   const artifactsDir = path.resolve("test-results/agent-browser");

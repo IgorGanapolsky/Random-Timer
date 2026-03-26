@@ -4,8 +4,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
+ANDROID_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/android-metadata-sync.yml"
+IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
+NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -32,6 +35,8 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert "sync_listings:" in source
+    assert 'default: "true"' in source
 
 
 def test_internal_distribution_workflow_emits_platform_specific_release_artifacts():
@@ -39,6 +44,8 @@ def test_internal_distribution_workflow_emits_platform_specific_release_artifact
 
     assert "ios-ipa-internal" in source or "ios-ipa" in source
     assert "android-aab-internal" in source or "android-aab" in source
+    assert "ios-listing-sync" in source
+    assert "android-listing-sync" in source
 
 
 def test_internal_distribution_workflow_passes_play_json_key_into_distribution_step():
@@ -73,6 +80,45 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "Verify Google Play API access" not in android_firebase_job
     assert "1:624873778337:android:4503588605a3273edc14e0" not in source
     assert "1:712918404489:android:5fb1dfde1d712f53e7a558" in source
+
+
+def test_internal_distribution_workflow_syncs_latest_internal_builds_to_store_listings():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "bash scripts/capture_ios_store_screenshots.sh" in source
+    assert "python scripts/generate_ios_store_creatives.py" in source
+    assert "python scripts/asc_strict_screenshot_sync.py" in source
+    assert "python scripts/generate_android_store_creatives.py" in source
+    assert "python3 scripts/sync_android_metadata.py" in source
+    assert "python scripts/listing_snapshot.py" in source
+
+
+def test_native_release_workflow_uses_published_android_version_code_and_branch_gate():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "gate-release-policy:" in source
+    assert "release/v* or hotfix/v*" in source
+    assert "version_code: ${{ steps.play_result.outputs.version_code }}" in source
+    assert 'ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"' in source
+    assert 'VERSION_CODE="${{ needs.android-release.outputs.version_code }}"' in source
+    assert "python scripts/generate_android_store_creatives.py --repo-root ." in source
+
+
+def test_android_metadata_sync_workflow_uploads_assets_not_only_text():
+    source = ANDROID_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python3 scripts/generate_android_store_creatives.py --repo-root ." in source
+    assert "python3 scripts/sync_android_metadata.py --result-json /tmp/android-listing-sync.json" in source
+    assert "python3 scripts/listing_snapshot.py" in source
+
+
+def test_ios_metadata_sync_workflow_uses_capture_generate_sync_flow():
+    source = IOS_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "bash scripts/capture_ios_store_screenshots.sh" in source
+    assert "python scripts/generate_ios_store_creatives.py" in source
+    assert "python scripts/asc_strict_screenshot_sync.py" in source
+    assert "python scripts/listing_snapshot.py" in source
 
 
 def test_ios_internal_retry_dispatch_targets_ios_only():

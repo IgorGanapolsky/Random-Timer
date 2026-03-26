@@ -16,7 +16,13 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install google-api-python-client==2.190.0 google-auth==2.48.0
+        run: |
+          pip install \
+            google-api-python-client==2.190.0 \
+            google-auth==2.48.0 \
+            google-auth-httplib2==0.3.0 \
+            google-auth-oauthlib==1.2.4 \
+            pillow==11.3.0
 
       - name: Write Google Play key
         env:
@@ -28,11 +34,34 @@ jobs:
           fi
           echo "$GOOGLE_PLAY_JSON_KEY" > "$RUNNER_TEMP/play-service-account.json"
 
+      - name: Generate Android Play creatives
+        run: python3 scripts/generate_android_store_creatives.py --repo-root .
+
       - name: Upload Android metadata
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
-        run: python3 scripts/sync_android_metadata.py
+        run: python3 scripts/sync_android_metadata.py --result-json /tmp/android-listing-sync.json
+
+      - name: Write Android listing snapshot
+        run: |
+          python3 scripts/listing_snapshot.py \
+            --platform android \
+            --repo-root . \
+            --source-run-id "${{ github.run_id }}" \
+            --source-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --output /tmp/android-listing-snapshot.json
+
+      - name: Upload Android listing sync artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: android-listing-sync
+          path: |
+            /tmp/android-listing-sync.json
+            /tmp/android-listing-snapshot.json
+            native-android/fastlane/metadata/android/en-US/images/generation-report.json
+          if-no-files-found: ignore
 
       - name: Cleanup secrets
         if: always()
-        run: rm -f "$RUNNER_TEMP/play-service-account.json"
+        run: rm -f "$RUNNER_TEMP/play-service-account.json" /tmp/android-listing-sync.json /tmp/android-listing-snapshot.json

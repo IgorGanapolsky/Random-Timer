@@ -38,7 +38,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate-release-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce Android production branch policy
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          ANDROID_TRACK: ${{ inputs.android_track }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$PLATFORM" != "android" && "$PLATFORM" != "both" ]]; then
+            echo "No Android release requested; skipping Android production branch policy."
+            exit 0
+          fi
+          if [[ "$ANDROID_TRACK" != "production" ]]; then
+            echo "Android track '$ANDROID_TRACK' does not require production branch gating."
+            exit 0
+          fi
+          if [[ "$REF_NAME" =~ ^release/v.+$ || "$REF_NAME" =~ ^hotfix/v.+$ ]]; then
+            echo "Android production branch policy satisfied for '$REF_NAME'."
+            exit 0
+          fi
+          echo "::error::Android production releases must run from release/v* or hotfix/v* branches. Current branch: $REF_NAME"
+          exit 1
+
   ios-testflight:
+    needs: [gate-release-policy]
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
     runs-on: macos-26
     environment: production
@@ -154,6 +180,7 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
+    needs: [gate-release-policy]
     if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
@@ -192,6 +219,16 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Android release Python dependencies
+        run: |
+          python -m pip install \
+            google-api-python-client==2.190.0 \
+            google-auth==2.48.0 \
+            google-auth-httplib2==0.3.0 \
+            google-auth-oauthlib==1.2.4 \
+            pillow==11.3.0 \
+            requests==2.32.5
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -226,7 +263,6 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
         run: |
-          python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0 google-auth-oauthlib==1.2.4 requests==2.32.5
           python scripts/check_store_access.py --platform android
 
       - name: Decode keystore
@@ -267,6 +303,9 @@ jobs:
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           ./gradlew -PciVersionCode="$VERSION_CODE" bundleRelease
         working-directory: native-android
+
+      - name: Generate Android Play creatives
+        run: python scripts/generate_android_store_creatives.py --repo-root .
 
       - name: Upload to Google Play (track)
         env:
@@ -374,7 +413,7 @@ jobs:
       - name: Install dependencies
         run: pip install google-api-python-client==2.190.0 google-auth==2.48.0 pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
-      - name: Extract version info
+      - name: Extract iOS version info
         id: versions
         run: |
           python3 <<'PY'
@@ -382,19 +421,12 @@ jobs:
           import re
           from pathlib import Path
 
-          gradle = Path("native-android/app/build.gradle.kts").read_text(encoding="utf-8")
-          m = re.search(r"versionCode\s*=\s*ciVersionCode\s*\?:\s*(\d+)", gradle)
-          if not m:
-              m = re.search(r"versionCode\s*=\s*(\d+)", gradle)
-          code = m.group(1) if m else ""
-
           pbx = Path("native-ios/RandomTimer.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
           m2 = re.search(r"MARKETING_VERSION = ([0-9.]+);", pbx)
           ios = m2.group(1) if m2 else ""
 
           out = os.environ["GITHUB_OUTPUT"]
           with open(out, "a", encoding="utf-8") as fh:
-              fh.write(f"version_code={code}\n")
               fh.write(f"ios_version={ios}\n")
           PY
 
@@ -438,6 +470,17 @@ jobs:
           echo "track=$TRACK" >> "$GITHUB_OUTPUT"
           echo "android_track=$TRACK"
 
+      - name: Validate Android publish outputs
+        if: needs.android-release.result == 'success'
+        run: |
+          set -euo pipefail
+          VERSION_CODE="${{ needs.android-release.outputs.version_code }}"
+          if [ -z "$VERSION_CODE" ] || [ "$VERSION_CODE" = "null" ]; then
+            echo "❌ android-release succeeded but did not expose a published version_code output"
+            exit 1
+          fi
+          echo "Using published Android version_code: $VERSION_CODE"
+
       - name: Write App Store Connect key
         if: needs.ios-testflight.result == 'success'
         env:
@@ -462,11 +505,7 @@ jobs:
           ARGS="--platform ${{ steps.platform.outputs.flag }} --wait --timeout 600"
           if [ "${{ needs.android-release.result }}" = "success" ]; then
             ARGS="$ARGS --track ${{ steps.android_track.outputs.track }}"
-          fi
-          if [ -n "${{ needs.android-release.outputs.version_code }}" ]; then
             ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"
-          elif [ -n "${{ steps.versions.outputs.version_code }}" ]; then
-            ARGS="$ARGS --version-code ${{ steps.versions.outputs.version_code }}"
           fi
           if [ -n "${{ steps.versions.outputs.ios_version }}" ]; then
             ARGS="$ARGS --version ${{ steps.versions.outputs.ios_version }}"
@@ -516,7 +555,7 @@ jobs:
 
       - name: Install dependencies (ASC)
         if: steps.gate.outputs.enabled == 'true'
-        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5 pillow==11.3.0
 
       - name: Extract iOS version
         if: steps.gate.outputs.enabled == 'true'
@@ -575,14 +614,28 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
 
-      - name: Upload App Store metadata/screenshots + attach build
+      - name: Capture fresh iOS store screenshots
+        if: steps.gate.outputs.enabled == 'true'
+        run: bash scripts/capture_ios_store_screenshots.sh --repo-root . --locale en-US
+
+      - name: Generate iOS store creatives
+        if: steps.gate.outputs.enabled == 'true'
+        run: python scripts/generate_ios_store_creatives.py --repo-root . --locale en-US
+
+      - name: Strict screenshot replacement + metadata upload
         if: steps.gate.outputs.enabled == 'true'
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
-        working-directory: native-ios
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_strict_screenshot_sync.py \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --locale en-US \
+            --retry-on-editable \
+            --json-out /tmp/asc_screenshot_sync.json \
+            --asc-ready-json /tmp/asc_ready.json
 
       - name: Verify App Store submission readiness (hard gate)
         if: steps.gate.outputs.enabled == 'true'
@@ -612,6 +665,7 @@ jobs:
           name: asc-ready-report
           path: |
             /tmp/asc_ready.json
+            /tmp/asc_screenshot_sync.json
             /tmp/delegation_contract.json
           if-no-files-found: ignore
 
@@ -648,7 +702,7 @@ jobs:
       - name: Cleanup secrets
         if: always()
         run: |
-          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/delegation_contract.json /tmp/asc_version.json
+          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_screenshot_sync.json /tmp/delegation_contract.json /tmp/asc_version.json
 
   tag-release:
     needs: [verify-releases]

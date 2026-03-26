@@ -17,6 +17,14 @@ on:
           - ios
           - android_play
           - android_firebase
+      sync_listings:
+        description: "After a successful internal build, sync public store listing assets and metadata."
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 concurrency:
   group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all' }}
@@ -252,6 +260,9 @@ jobs:
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_play')
     runs-on: ubuntu-latest
     environment: production
+    outputs:
+      version_code: ${{ steps.play_version_code.outputs.next_version_code }}
+      version_name: ${{ steps.versions.outputs.android_version_name }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -496,3 +507,220 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore
+
+  ios-listing-sync:
+    name: iOS App Store Listing Sync
+    needs: [gate, ios-testflight-internal]
+    if: needs.gate.outputs.should_run == 'true' && inputs.sync_listings != 'false' && needs['ios-testflight-internal'].result == 'success'
+    runs-on: macos-26
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Fail fast on required App Store secrets
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Preflight release checks (iOS listing assets)
+        run: bash scripts/preflight-release.sh --platform ios --layer 1
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-ios
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5 pillow==11.3.0
+
+      - name: Capture fresh iOS store screenshots
+        run: bash scripts/capture_ios_store_screenshots.sh --repo-root . --locale en-US
+
+      - name: Generate iOS store creatives
+        run: python scripts/generate_ios_store_creatives.py --repo-root . --locale en-US
+
+      - name: Resolve iOS version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Write App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
+          python scripts/normalize_pem.py /tmp/appstore_key.p8
+
+      - name: Resolve editable App Store version
+        id: asc_version
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          VERSION_RESOLVED: ${{ steps.version.outputs.version }}
+        run: |
+          python scripts/asc_resolve_version.py \
+            --preferred-version "$VERSION_RESOLVED" \
+            --create-if-needed \
+            --auto-next-patch \
+            --json-out /tmp/asc_version.json
+          SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
+          echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Strict screenshot replacement + metadata upload
+        env:
+          CI: "true"
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          SELECTED_VERSION: ${{ steps.asc_version.outputs.selected_version }}
+        run: |
+          python scripts/asc_strict_screenshot_sync.py \
+            --version "$SELECTED_VERSION" \
+            --locale en-US \
+            --retry-on-editable \
+            --json-out /tmp/asc_screenshot_sync.json \
+            --asc-ready-json /tmp/asc_ready.json
+
+      - name: Write iOS listing snapshot
+        run: |
+          python scripts/listing_snapshot.py \
+            --platform ios \
+            --repo-root . \
+            --locale en-US \
+            --app-store-version "${{ steps.asc_version.outputs.selected_version }}" \
+            --source-run-id "${{ github.run_id }}" \
+            --source-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --output /tmp/ios-listing-snapshot.json
+
+      - name: Upload iOS listing sync artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ios-listing-sync
+          path: |
+            /tmp/asc_ready.json
+            /tmp/asc_screenshot_sync.json
+            /tmp/asc_version.json
+            /tmp/ios-listing-snapshot.json
+            native-ios/fastlane/screenshots/en-US/report.json
+          if-no-files-found: ignore
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_screenshot_sync.json /tmp/asc_version.json /tmp/ios-listing-snapshot.json
+
+  android-listing-sync:
+    name: Android Play Listing Sync
+    needs: [gate, android-play-internal, android-firebase-internal]
+    if: needs.gate.outputs.should_run == 'true' && inputs.sync_listings != 'false' && (needs['android-play-internal'].result == 'success' || needs['android-firebase-internal'].result == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Android listing sync dependencies
+        run: |
+          pip install \
+            google-api-python-client==2.190.0 \
+            google-auth==2.48.0 \
+            google-auth-httplib2==0.3.0 \
+            google-auth-oauthlib==1.2.4 \
+            pillow==11.3.0
+
+      - name: Write Google Play key
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GOOGLE_PLAY_JSON_KEY" ]; then
+            echo "❌ GOOGLE_PLAY_JSON_KEY secret is not set"
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$RUNNER_TEMP/play-service-account.json"
+
+      - name: Generate Android Play creatives
+        run: python scripts/generate_android_store_creatives.py --repo-root .
+
+      - name: Sync Android Play listing
+        env:
+          GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
+          PLAY_INTERNAL_VERSION_CODE: ${{ needs['android-play-internal'].outputs.version_code }}
+        run: |
+          set -euo pipefail
+          ARGS=(--service-account-json "$GOOGLE_PLAY_JSON_KEY_PATH" --result-json /tmp/android-listing-sync.json)
+          if [ -n "${PLAY_INTERNAL_VERSION_CODE:-}" ]; then
+            ARGS+=(--track internal --version-code "$PLAY_INTERNAL_VERSION_CODE")
+          fi
+          python3 scripts/sync_android_metadata.py "${ARGS[@]}"
+
+      - name: Write Android listing snapshot
+        env:
+          PLAY_INTERNAL_VERSION_CODE: ${{ needs['android-play-internal'].outputs.version_code }}
+        run: |
+          set -euo pipefail
+          TRACK=""
+          VERSION_CODE="${PLAY_INTERNAL_VERSION_CODE:-}"
+          if [ -n "$VERSION_CODE" ]; then
+            TRACK="internal"
+          fi
+          python scripts/listing_snapshot.py \
+            --platform android \
+            --repo-root . \
+            --track "$TRACK" \
+            --version-code "$VERSION_CODE" \
+            --source-run-id "${{ github.run_id }}" \
+            --source-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --output /tmp/android-listing-snapshot.json
+
+      - name: Upload Android listing sync artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: android-listing-sync
+          path: |
+            /tmp/android-listing-sync.json
+            /tmp/android-listing-snapshot.json
+            native-android/fastlane/metadata/android/en-US/images/generation-report.json
+          if-no-files-found: ignore
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/play-service-account.json" /tmp/android-listing-sync.json /tmp/android-listing-snapshot.json

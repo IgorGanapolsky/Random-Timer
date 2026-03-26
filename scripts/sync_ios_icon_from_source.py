@@ -84,7 +84,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Regenerate iOS iconset from source PNG")
     parser.add_argument(
         "--source",
-        default="native-android/fastlane/metadata/android/en-US/images/icon.png",
+        default="branding/app-icon-source.png",
         help="Source icon PNG",
     )
     parser.add_argument(

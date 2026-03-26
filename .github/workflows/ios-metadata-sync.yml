@@ -75,7 +75,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5 pillow==11.3.0
+
+      - name: Capture fresh iOS store screenshots
+        run: bash scripts/capture_ios_store_screenshots.sh --repo-root . --locale "${IOS_METADATA_LOCALE}"
+
+      - name: Generate iOS store creatives
+        run: python scripts/generate_ios_store_creatives.py --repo-root . --locale "${IOS_METADATA_LOCALE}"
 
       - name: Resolve iOS version
         id: version
@@ -171,6 +177,26 @@ jobs:
           name: asc-version-resolution
           path: /tmp/asc_version.json
 
+      - name: Write iOS listing snapshot
+        if: always()
+        run: |
+          python scripts/listing_snapshot.py \
+            --platform ios \
+            --repo-root . \
+            --locale "${IOS_METADATA_LOCALE}" \
+            --app-store-version "${{ steps.asc_version.outputs.selected_version }}" \
+            --source-run-id "${{ github.run_id }}" \
+            --source-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --output /tmp/ios-listing-snapshot.json
+
+      - name: Upload listing snapshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-listing-snapshot
+          path: /tmp/ios-listing-snapshot.json
+          if-no-files-found: ignore
+
       - name: Cleanup secrets
         if: always()
-        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json /tmp/asc_screenshot_sync.json
+        run: rm -f /tmp/appstore_key.p8 /tmp/asc_ready.json /tmp/asc_version.json /tmp/asc_screenshot_sync.json /tmp/ios-listing-snapshot.json
