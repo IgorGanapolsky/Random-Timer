@@ -263,9 +263,6 @@ class AIVoiceCalloutManager
         }
 
         fun beginSession(totalDurationSeconds: Int) {
-            val cue = randomCommandCue()
-            speak(cue.text)
-            lastCommandCueFilename = cue.filename
             nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
         }
 

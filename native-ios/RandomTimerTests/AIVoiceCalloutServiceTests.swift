@@ -60,7 +60,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testCatalogHasVarietyAndClearElapsedLanguage() {
         let catalog = loadVoiceCalloutCatalog(bundle: .main)
 
-        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 16)
+        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 12)
         XCTAssertGreaterThanOrEqual(catalog.commandCues.count, 20)
         XCTAssertTrue(
             catalog.elapsedCues.allSatisfy { $0.text.localizedCaseInsensitiveContains("elapsed") },

@@ -224,9 +224,6 @@ final class AIVoiceCalloutService {
     }
 
     func beginSession(totalDurationSeconds: Int) {
-        let cue = randomCommandCue()
-        speak(cue.text)
-        lastCommandCueFilename = cue.filename
         nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
     }
 
