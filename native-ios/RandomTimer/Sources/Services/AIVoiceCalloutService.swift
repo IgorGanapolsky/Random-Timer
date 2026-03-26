@@ -128,14 +128,10 @@ internal func nextCommandCue(
 
 internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int {
     switch totalDurationSeconds {
-    case ...15:
+    case ...29:
         return .max
-    case ...30:
-        return 10
-    case ...45:
-        return 15
     default:
-        return Int.random(in: 30...45)
+        return 30
     }
 }
 
@@ -233,7 +229,7 @@ final class AIVoiceCalloutService {
             let cue = randomCommandCue()
             speak(cue.text)
             lastCommandCueFilename = cue.filename
-            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 30...45)
+            nextCommandCueAt = elapsedSeconds + 30
         }
     }
 
@@ -247,7 +243,7 @@ final class AIVoiceCalloutService {
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
         if nextCommandCueAt == 0 {
-            nextCommandCueAt = secureRandomInt(in: 30...45)
+            nextCommandCueAt = 30
         }
         if nextCommandCueAt == .max {
             return false

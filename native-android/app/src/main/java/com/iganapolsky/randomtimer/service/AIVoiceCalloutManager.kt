@@ -163,10 +163,8 @@ internal fun nextCommandCue(
 
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
-        totalDurationSeconds <= 15 -> Int.MAX_VALUE
-        totalDurationSeconds <= 30 -> 10
-        totalDurationSeconds <= 45 -> 15
-        else -> Random.nextInt(30, 46)
+        totalDurationSeconds <= 29 -> Int.MAX_VALUE
+        else -> 30
     }
 
 @Singleton
@@ -283,13 +281,13 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(30, 46)
+                nextCommandCueAt = elapsedSeconds + 30
             }
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
             if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(30, 46)
+                nextCommandCueAt = 30
             }
             if (nextCommandCueAt == Int.MAX_VALUE) {
                 return false
