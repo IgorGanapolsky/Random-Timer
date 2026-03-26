@@ -110,6 +110,7 @@ fun PaywallSheet(
             ProFeatureRow(text = "Get voice callouts during training")
             ProFeatureRow(text = "Use loop mode with round limits")
             ProFeatureRow(text = "Unlock the full sound library")
+            ProFeatureRow(text = "New voice packs and sounds every 30 days")
 
             Spacer(modifier = Modifier.height(24.dp))
 
