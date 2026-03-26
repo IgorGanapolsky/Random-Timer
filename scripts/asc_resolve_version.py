@@ -338,6 +338,16 @@ def resolve_version(
                     selected_id=str(found.get("id") or ""),
                     preferred_version=preferred_version,
                 )
+            # All recovery paths exhausted — return preferred as non-editable
+            # so downstream can decide (e.g. use live version for metadata-only sync)
+            return Resolution(
+                selected_version=preferred_version,
+                selected_state="UNKNOWN_409_BLOCKED",
+                created=False,
+                reason="preferred_missing_create_blocked_409_all_recovery_exhausted",
+                selected_id="",
+                preferred_version=preferred_version,
+            )
         raise
     created_state = str((created.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
     return Resolution(
