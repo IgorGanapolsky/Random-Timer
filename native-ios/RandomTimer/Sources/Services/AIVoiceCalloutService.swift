@@ -143,30 +143,42 @@ final class AIVoiceCalloutService {
         let lastCommandCueFilename: String?
     }
 
+    typealias AudioSessionActivator = @MainActor () -> Void
+
     static let shared = AIVoiceCalloutService()
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
+    private static func activateVoiceAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            log.error("Audio session setup failed: \(error.localizedDescription)")
+        }
+    }
 
     private let bundle: Bundle
     private let packStore: ProAudioPackStore
+    private let activateAudioSession: AudioSessionActivator
     private var audioPlayer: AVAudioPlayer?
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
 
-    init(bundle: Bundle = .main, packStore: ProAudioPackStore = .shared) {
+    init(
+        bundle: Bundle = .main,
+        packStore: ProAudioPackStore = .shared,
+        activateAudioSession: @escaping AudioSessionActivator = AIVoiceCalloutService.activateVoiceAudioSession
+    ) {
         self.bundle = bundle
         self.packStore = packStore
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            Self.log.error("Audio session setup failed: \(error.localizedDescription)")
-        }
+        self.activateAudioSession = activateAudioSession
+        self.activateAudioSession()
     }
 
     func speak(_ text: String) {
+        activateAudioSession()
+
         let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
