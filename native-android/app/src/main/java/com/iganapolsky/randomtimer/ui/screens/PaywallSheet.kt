@@ -30,6 +30,20 @@ import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
+internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
+internal const val PAYWALL_HEADLINE = "Unlock Full Training Mode"
+internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
+internal const val PAYWALL_AUDIENCE_LINE = "Built for dry fire, sparring, drills, and reaction training."
+internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Auto-renews yearly."
+internal val PAYWALL_FEATURE_ROWS =
+    listOf(
+        "Train up to 60-minute sessions",
+        "Get voice callouts during training",
+        "Use loop mode with round limits",
+        "Unlock the full sound library",
+        "New Pro voice callouts and sound packs every 30 days",
+    )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
@@ -65,7 +79,7 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Unlock Full Training Mode",
+                text = PAYWALL_HEADLINE,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
@@ -74,7 +88,7 @@ fun PaywallSheet(
                     Modifier.fillMaxWidth().then(
                         if (onDebugUnlock != null) {
                             Modifier.holdForHiddenUnlock(
-                                holdDurationMs = 8_000L,
+                                holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
                                 haptic = haptic,
                                 onHoldComplete = onDebugUnlock,
                             )
@@ -87,49 +101,48 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Longer sessions, voice coaching, more sounds, and repeatable rounds.",
+                text = PAYWALL_SUBHEADLINE,
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                text = PAYWALL_AUDIENCE_LINE,
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = PAYWALL_PRICING_FOOTER,
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Built for dry fire, sparring, drills, and reaction training.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ProFeatureRow(text = "Train up to 60-minute sessions")
-            ProFeatureRow(text = "Get voice callouts during training")
-            ProFeatureRow(text = "Use loop mode with round limits")
-            ProFeatureRow(text = "Unlock the full sound library")
-            ProFeatureRow(text = "New voice packs and sounds every 30 days")
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(
-                text = "Start Pro \u2022 $proPrice/year",
-                onClick = { onPurchase("elite_tactical") },
+                text = "PRO FEATURES",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = TimerColors.AccentPrimary,
+                modifier = Modifier.align(Alignment.Start),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Cancel anytime. Auto-renews yearly.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+            PAYWALL_FEATURE_ROWS.forEach { feature ->
+                ProFeatureRow(text = feature)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            PrimaryButton(
+                text = "Start Pro \u2022 ${normalizedPriceLabel(proPrice)}",
+                onClick = { onPurchase("elite_tactical") },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Restore purchase",
@@ -155,6 +168,16 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+internal fun normalizedPriceLabel(price: String): String {
+    val trimmed = price.trim()
+    val lowered = trimmed.lowercase()
+    return if ("/yr" in lowered || "/year" in lowered) {
+        trimmed
+    } else {
+        "$trimmed/year"
     }
 }
 
