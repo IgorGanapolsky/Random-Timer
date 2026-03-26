@@ -159,7 +159,7 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     assert "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
     assert "Unlock Full Training Mode" in ios_paywall
     assert "highPriorityGesture" in ios_paywall
-    assert "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in android_navigation
     assert "unlockProForDebug" in ios_paywall

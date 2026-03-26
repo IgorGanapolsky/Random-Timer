@@ -57,7 +57,7 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     assert "Unlock Full Training Mode" in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
     assert "Unlock Full Training Mode" in ios_paywall and "highPriorityGesture" in ios_paywall
-    assert "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
@@ -156,7 +156,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
         "Get voice callouts during training",
         "Use loop mode with round limits",
         "Unlock the full sound library",
-        "New voice packs and sounds every 30 days",
+        "New Pro voice callouts and sound packs every 30 days",
     ):
         assert expected in android_paywall
         assert expected in ios_paywall
@@ -171,7 +171,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
 def test_android_elapsed_voice_cues_fire_on_minute_marks_only_and_still_gate_command_cues():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert "runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
     assert "if (elapsedSeconds % 60 != 0) return null" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
 
