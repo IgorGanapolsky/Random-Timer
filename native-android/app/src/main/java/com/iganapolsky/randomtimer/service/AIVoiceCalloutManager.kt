@@ -190,6 +190,19 @@ class AIVoiceCalloutManager
             mediaPlayer?.setVolume(currentVolume, currentVolume)
         }
 
+        private fun stopPlayback() {
+            val player = mediaPlayer ?: return
+            runCatching {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+            }
+            player.release()
+            if (mediaPlayer == player) {
+                mediaPlayer = null
+            }
+        }
+
         fun speak(text: String) {
             val catalog = packStore.voiceCatalog()
             val mappedResId = voiceResIdForText(context, text, catalog)
@@ -204,7 +217,7 @@ class AIVoiceCalloutManager
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
             try {
-                mediaPlayer?.release()
+                stopPlayback()
                 mediaPlayer =
                     MediaPlayer().apply {
                         setAudioAttributes(
@@ -244,8 +257,7 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
-            mediaPlayer?.apply { if (isPlaying) stop(); release() }
-            mediaPlayer = null
+            stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             nextCommandCueAt = 0
@@ -299,7 +311,6 @@ class AIVoiceCalloutManager
         }
 
         fun shutdown() {
-            mediaPlayer?.release()
-            mediaPlayer = null
+            stopPlayback()
         }
     }
