@@ -142,6 +142,21 @@ internal fun runtimeVoiceCueForElapsedSecond(
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
 }
 
+internal fun runtimeVoiceCueForMinuteMark(
+    elapsedSeconds: Int,
+    lastElapsedMilestone: Int,
+    catalog: VoiceCueCatalog,
+): VoiceCue? {
+    if (elapsedSeconds <= 0 || elapsedSeconds % 60 != 0) {
+        return null
+    }
+    return runtimeVoiceCueForElapsedSecond(
+        elapsedSeconds = elapsedSeconds,
+        lastElapsedMilestone = lastElapsedMilestone,
+        catalog = catalog,
+    )
+}
+
 internal fun nextCommandCue(
     cues: List<VoiceCue>,
     lastFilename: String?,
@@ -282,6 +297,15 @@ class AIVoiceCalloutManager
         }
 
         fun triggerCallout(elapsedSeconds: Int) {
+            val catalog = packStore.voiceCatalog()
+            runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
+                speak(it.text)
+                lastElapsedMilestone = elapsedSeconds
+                if (nextCommandCueAt <= elapsedSeconds) {
+                    nextCommandCueAt = elapsedSeconds + 30
+                }
+                return
+            }
             if (shouldFireCommandCue(elapsedSeconds)) {
                 val cue = randomCommandCue()
                 speak(cue.text)

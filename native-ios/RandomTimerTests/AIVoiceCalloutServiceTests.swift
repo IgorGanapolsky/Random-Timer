@@ -141,7 +141,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
     }
 
-    func testTimerCalloutsIgnoreElapsedMilestonesAndStayOnThirtySecondRandomCadence() {
+    func testTimerCalloutsUseCommandsAtThirtySecondsAndElapsedOnlyOnMinuteMarks() {
         let sut = makeSut()
 
         sut.beginSession(totalDurationSeconds: 120)
@@ -156,6 +156,11 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
         XCTAssertEqual(atThirty.nextCommandCueAt, 60)
         XCTAssertNotNil(atThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 60)
+        let atSixty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
+        XCTAssertEqual(atSixty.nextCommandCueAt, 90)
     }
 
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {

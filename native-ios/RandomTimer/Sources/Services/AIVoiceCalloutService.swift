@@ -228,6 +228,15 @@ final class AIVoiceCalloutService {
     }
 
     func triggerCallout(elapsedSeconds: Int) {
+        if let callout = elapsedMilestone(for: elapsedSeconds), elapsedSeconds.isMultiple(of: 60) {
+            speak(callout.text)
+            lastElapsedMilestone = elapsedSeconds
+            if nextCommandCueAt <= elapsedSeconds {
+                nextCommandCueAt = elapsedSeconds + 30
+            }
+            return
+        }
+
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
             let cue = randomCommandCue()
             speak(cue.text)
