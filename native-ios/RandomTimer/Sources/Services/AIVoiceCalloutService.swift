@@ -228,18 +228,6 @@ final class AIVoiceCalloutService {
     }
 
     func triggerCallout(elapsedSeconds: Int) {
-        // Elapsed cue takes priority at its exact second
-        if let callout = elapsedMilestone(for: elapsedSeconds) {
-            speak(callout.text)
-            lastElapsedMilestone = elapsedSeconds
-            // Push next command cue past this second so they never overlap
-            if nextCommandCueAt <= elapsedSeconds {
-                nextCommandCueAt = elapsedSeconds + 30
-            }
-            return
-        }
-
-        // Command cue fires between elapsed cues
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
             let cue = randomCommandCue()
             speak(cue.text)

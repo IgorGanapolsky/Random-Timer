@@ -270,19 +270,6 @@ class AIVoiceCalloutManager
         }
 
         fun triggerCallout(elapsedSeconds: Int) {
-            val catalog = packStore.voiceCatalog()
-            // Elapsed cue takes priority at its exact second
-            runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
-                speak(it.text)
-                lastElapsedMilestone = elapsedSeconds
-                // Push next command cue past this second so they never overlap
-                if (nextCommandCueAt <= elapsedSeconds) {
-                    nextCommandCueAt = elapsedSeconds + 30
-                }
-                return
-            }
-
-            // Command cue fires between elapsed cues
             if (shouldFireCommandCue(elapsedSeconds)) {
                 val cue = randomCommandCue()
                 speak(cue.text)
