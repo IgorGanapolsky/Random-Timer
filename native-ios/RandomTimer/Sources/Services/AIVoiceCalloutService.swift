@@ -234,12 +234,7 @@ final class AIVoiceCalloutService {
             return
         }
 
-        if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
-            let cue = randomCommandCue()
-            speak(cue.text)
-            lastCommandCueFilename = cue.filename
-            nextCommandCueAt = elapsedSeconds + 30
-        }
+        // Command cues disabled — only elapsed cues fire at 30s intervals
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
