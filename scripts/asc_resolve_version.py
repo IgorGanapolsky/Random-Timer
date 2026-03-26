@@ -311,6 +311,33 @@ def resolve_version(
             retargeted = try_retarget_highest_editable("preferred_missing_create_blocked_409")
             if retargeted:
                 return retargeted
+            # If retarget failed but highest_editable matches preferred, use it directly
+            if highest_editable:
+                he_attrs = highest_editable.get("attributes") or {}
+                he_version = str(he_attrs.get("versionString") or "")
+                he_state = str(he_attrs.get("appStoreState") or "UNKNOWN")
+                if he_version == preferred_version:
+                    return Resolution(
+                        selected_version=preferred_version,
+                        selected_state=he_state,
+                        created=False,
+                        reason="preferred_missing_create_blocked_409_reused_matching_editable",
+                        selected_id=str(highest_editable.get("id") or ""),
+                        preferred_version=preferred_version,
+                    )
+            # Refetch versions — the version may exist now in a non-editable state
+            refreshed = _list_all_versions(client, app_id)
+            found = _find_version(refreshed, preferred_version)
+            if found:
+                f_state = str((found.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
+                return Resolution(
+                    selected_version=preferred_version,
+                    selected_state=f_state,
+                    created=False,
+                    reason="preferred_found_after_409_refetch",
+                    selected_id=str(found.get("id") or ""),
+                    preferred_version=preferred_version,
+                )
         raise
     created_state = str((created.get("attributes") or {}).get("appStoreState") or "UNKNOWN")
     return Resolution(
