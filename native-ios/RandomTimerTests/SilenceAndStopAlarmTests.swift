@@ -89,10 +89,10 @@ final class SilenceAndStopAlarmTests: XCTestCase {
         let voiceService = AIVoiceCalloutService.shared
         voiceService.resetSession()
         voiceService.triggerCallout(elapsedSeconds: 1)
-        voiceService.triggerCallout(elapsedSeconds: 30)
+        voiceService.triggerCallout(elapsedSeconds: 60)
 
         let primedState = voiceService._stateSnapshotForTesting()
-        XCTAssertEqual(primedState.lastElapsedMilestone, 30)
+        XCTAssertEqual(primedState.lastElapsedMilestone, 60)
         XCTAssertGreaterThan(primedState.nextCommandCueAt, 0)
 
         manager._setTimerStateForTesting(makeState(status: .running))
