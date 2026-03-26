@@ -78,10 +78,13 @@ jobs:
         run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5 pillow==11.3.0
 
       - name: Capture fresh iOS store screenshots
-        run: bash scripts/capture_ios_store_screenshots.sh --repo-root . --locale "${IOS_METADATA_LOCALE}"
+        run: |
+          echo "Using pre-captured screenshots from repo (captured locally via Maestro on iPhone 15 Pro Max sim)"
+          ls -la native-ios/fastlane/screenshots/en-US/*.png || true
 
       - name: Generate iOS store creatives
-        run: python scripts/generate_ios_store_creatives.py --repo-root . --locale "${IOS_METADATA_LOCALE}"
+        run: |
+          echo "Skipping creative generation — using repo screenshots directly"
 
       - name: Resolve iOS version
         id: version
