@@ -2,16 +2,19 @@ import XCTest
 
 @MainActor
 final class RandomTimerUITests: XCTestCase {
+    private let appStoreScreenshotOutputDir = "/tmp/appstore_screenshots"
+
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
     }
 
-    private func launchApp(withState state: String? = nil) -> XCUIApplication {
+    private func launchApp(withState state: String? = nil, extraLaunchArguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         if let state {
             app.launchArguments += ["-ui-test-state", state]
         }
+        app.launchArguments += extraLaunchArguments
         app.launch()
         dismissSystemAlertsIfNeeded(app)
         return app
@@ -52,6 +55,17 @@ final class RandomTimerUITests: XCTestCase {
     private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
         let path = "\(outputDir)/\(name)"
         FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
+    }
+
+    private func launchScreenshotApp(withState state: String? = nil) -> XCUIApplication {
+        launchApp(withState: state, extraLaunchArguments: ["-ui-test-elite", "true"])
+    }
+
+    private func captureAppStoreScreenshot(_ app: XCUIApplication, named name: String, delay: UInt32 = 2) {
+        sleep(delay)
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.waitForExistence(timeout: 5.0), "Expected app window before capturing \(name)")
+        saveScreenshot(window.screenshot(), named: name, outputDir: appStoreScreenshotOutputDir)
     }
 
     func testSetupStateShowsStartTimer() {
@@ -211,53 +225,54 @@ final class RandomTimerUITests: XCTestCase {
 
     // MARK: - App Store Screenshot Capture
 
-    func testCaptureAppStoreScreenshots() {
-        let app = XCUIApplication()
-        // The script expects raw screenshots in /tmp/appstore_screenshots
-        let outputDir = "/tmp/appstore_screenshots"
-
-        // Force Pro/Elite state for screenshots
-        app.launchArguments += ["-ui-test-elite", "true"]
-
-        addUIInterruptionMonitor(withDescription: "Notification Permission") { alert in
-            let allowButton = alert.buttons["Allow"]
-            if allowButton.exists { allowButton.tap(); return true }
-            return false
-        }
-
-        // 1. Setup screen (with Round Selection visible)
-        app.launch()
-        // Toggle loop on to show round selection
+    func testCaptureAppStorePhoneSetupScreenshot() {
+        let app = launchScreenshotApp()
         let loopToggle = app.switches["Loop Enabled"]
-        if loopToggle.waitForExistence(timeout: 3.0) && loopToggle.value as? String == "0" {
+        scrollUntilVisible(loopToggle, in: app)
+        if loopToggle.waitForExistence(timeout: 3.0), loopToggle.value as? String == "0" {
             loopToggle.tap()
         }
-        sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "1_setup.png", outputDir: outputDir)
+        captureAppStoreScreenshot(app, named: "1_setup.png")
+    }
 
-        // 2. Active timer (running state)
+    func testCaptureAppStorePhoneActiveScreenshot() {
+        let app = launchScreenshotApp()
+        ensureSetupScreen(app)
         let startButton = app.buttons["Start Timer"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         startButton.tap()
-        sleep(1)
-        // Dismiss notification permission if it appears
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "2_active.png", outputDir: outputDir)
+        dismissSystemAlertsIfNeeded(app)
+        captureAppStoreScreenshot(app, named: "2_active.png")
+    }
 
-        // 3. Alarm state (timer just went off)
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "alarm", "-ui-test-pro", "true"]
-        app.launch()
-        sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "3_alarm.png", outputDir: outputDir)
+    func testCaptureAppStorePhoneAlarmScreenshot() {
+        let app = launchScreenshotApp(withState: "alarm")
+        captureAppStoreScreenshot(app, named: "3_alarm.png")
+    }
 
-        // 4. Running timer (different view/state if needed)
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "running", "-ui-test-pro", "true"]
-        app.launch()
-        sleep(2)
-        saveScreenshot(app.windows.firstMatch.screenshot(), named: "4_running.png", outputDir: outputDir)
+    func testCaptureAppStorePhoneRunningScreenshot() {
+        let app = launchScreenshotApp(withState: "running")
+        captureAppStoreScreenshot(app, named: "4_running.png")
+    }
+
+    func testCaptureAppStorePadSetupScreenshot() {
+        let app = launchScreenshotApp()
+        let loopToggle = app.switches["Loop Enabled"]
+        scrollUntilVisible(loopToggle, in: app)
+        if loopToggle.waitForExistence(timeout: 3.0), loopToggle.value as? String == "0" {
+            loopToggle.tap()
+        }
+        captureAppStoreScreenshot(app, named: "5_ipad_setup.png")
+    }
+
+    func testCaptureAppStorePadRunningScreenshot() {
+        let app = launchScreenshotApp(withState: "running")
+        captureAppStoreScreenshot(app, named: "6_ipad_running.png")
+    }
+
+    func testCaptureAppStorePadStoppedScreenshot() {
+        let app = launchScreenshotApp(withState: "complete")
+        captureAppStoreScreenshot(app, named: "7_ipad_stopped.png")
     }
 
     func testLandscapeShowsActionButtons() {

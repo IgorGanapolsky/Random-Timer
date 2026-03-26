@@ -297,9 +297,9 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           set -euo pipefail
-          VERSION_CODE="$(python scripts/compute_android_release_version_code.py \
+          VERSION_CODE="$(python ../scripts/compute_android_release_version_code.py \
             --service-account-json "$GOOGLE_PLAY_JSON_KEY" \
-            --gradle-file native-android/app/build.gradle.kts)"
+            --gradle-file app/build.gradle.kts)"
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           ./gradlew -PciVersionCode="$VERSION_CODE" bundleRelease
         working-directory: native-android

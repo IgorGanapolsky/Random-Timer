@@ -156,13 +156,27 @@ find "$TMP_OUT_DIR" -mindepth 1 -maxdepth 1 -delete 2>/dev/null || true
 
 run_capture() {
   local destination="$1"
+  shift
   xcodebuild test-without-building \
     -project native-ios/RandomTimer.xcodeproj \
     -scheme RandomTimer \
     -destination "$destination" \
-    -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStoreScreenshots \
+    "$@" \
     CODE_SIGNING_ALLOWED=NO
 }
+
+IPHONE_CAPTURE_TESTS=(
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePhoneSetupScreenshot
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePhoneActiveScreenshot
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePhoneAlarmScreenshot
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePhoneRunningScreenshot
+)
+
+IPAD_CAPTURE_TESTS=(
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePadSetupScreenshot
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePadRunningScreenshot
+  -only-testing:RandomTimerUITests/RandomTimerUITests/testCaptureAppStorePadStoppedScreenshot
+)
 
 echo "==> Building once for UI-test capture"
 xcodebuild build-for-testing \
@@ -171,8 +185,8 @@ xcodebuild build-for-testing \
   -destination "platform=iOS Simulator,id=$IPHONE_UDID" \
   CODE_SIGNING_ALLOWED=NO
 
-run_capture "platform=iOS Simulator,id=$IPHONE_UDID"
-run_capture "platform=iOS Simulator,id=$IPAD_UDID"
+run_capture "platform=iOS Simulator,id=$IPHONE_UDID" "${IPHONE_CAPTURE_TESTS[@]}"
+run_capture "platform=iOS Simulator,id=$IPAD_UDID" "${IPAD_CAPTURE_TESTS[@]}"
 
 cp "$TMP_OUT_DIR"/*.png "$OUT_DIR"/
 

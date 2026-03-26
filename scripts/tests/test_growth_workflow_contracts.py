@@ -99,6 +99,8 @@ def test_native_release_workflow_uses_published_android_version_code_and_branch_
     assert "gate-release-policy:" in source
     assert "release/v* or hotfix/v*" in source
     assert "version_code: ${{ steps.play_result.outputs.version_code }}" in source
+    assert 'python ../scripts/compute_android_release_version_code.py' in source
+    assert '--gradle-file app/build.gradle.kts' in source
     assert 'ARGS="$ARGS --version-code ${{ needs.android-release.outputs.version_code }}"' in source
     assert 'VERSION_CODE="${{ needs.android-release.outputs.version_code }}"' in source
     assert "python scripts/generate_android_store_creatives.py --repo-root ." in source
