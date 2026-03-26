@@ -11,7 +11,7 @@ struct TimerSetupScreen: View {
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
     @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = 0
-    @AppStorage("timer_range_extended_max") private var storedExtendedMaxSeconds = TimerConfig.maxSecondsFree
+    @AppStorage("timer_range_extended_max") private var storedExtendedMaxSeconds = TimerConfig.maxSecondsPro
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
