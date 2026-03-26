@@ -41,6 +41,7 @@ LANG_MAP = {
     "ja-JP": "ja-JP",
     "ko": "ko-KR",
 }
+PLAY_ICON_UPLOAD_SIZE = (512, 512)
 
 
 @dataclass
@@ -108,6 +109,28 @@ def _load_google_clients(credentials_path: Path):
     return build("androidpublisher", "v3", credentials=credentials)
 
 
+def _prepare_image_upload(image_type: str, file_path: str, temp_dir: Path) -> str:
+    if image_type != "icon":
+        return file_path
+
+    from PIL import Image, ImageOps
+
+    source = Path(file_path)
+    with Image.open(source) as raw_icon:
+        if raw_icon.size == PLAY_ICON_UPLOAD_SIZE and raw_icon.mode == "RGB":
+            return file_path
+
+        rendered = ImageOps.fit(
+            raw_icon.convert("RGB"),
+            PLAY_ICON_UPLOAD_SIZE,
+            method=Image.Resampling.LANCZOS,
+        )
+        target = temp_dir / source.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        rendered.save(target, format="PNG", optimize=True)
+        return str(target)
+
+
 def _upload_images(service: Any, package: str, edit_id: str, language: str, image_type: str, pattern: str) -> None:
     from googleapiclient.http import MediaFileUpload
 
@@ -124,14 +147,17 @@ def _upload_images(service: Any, package: str, edit_id: str, language: str, imag
     except Exception:
         pass
 
-    for fp in files:
-        service.edits().images().upload(
-            packageName=package,
-            editId=edit_id,
-            language=language,
-            imageType=image_type,
-            media_body=MediaFileUpload(fp, mimetype=_mime_for(fp)),
-        ).execute()
+    with tempfile.TemporaryDirectory(prefix=f"play-{image_type}-") as temp_dir_raw:
+        temp_dir = Path(temp_dir_raw)
+        for fp in files:
+            prepared_path = _prepare_image_upload(image_type, fp, temp_dir)
+            service.edits().images().upload(
+                packageName=package,
+                editId=edit_id,
+                language=language,
+                imageType=image_type,
+                media_body=MediaFileUpload(prepared_path, mimetype=_mime_for(prepared_path)),
+            ).execute()
 
 
 def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:

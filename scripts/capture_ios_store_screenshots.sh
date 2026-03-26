@@ -33,22 +33,110 @@ fi
 
 cd "$REPO_ROOT"
 
-RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.iOS-18-6"
-IPHONE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
-IPAD_TYPE="com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB"
+resolve_latest_ios_runtime() {
+  xcrun simctl list runtimes -j | python3 -c '
+import json
+import re
+import sys
+
+runtimes = []
+for runtime in json.load(sys.stdin).get("runtimes", []):
+    identifier = runtime.get("identifier", "")
+    if not identifier.startswith("com.apple.CoreSimulator.SimRuntime.iOS-"):
+        continue
+    if not runtime.get("isAvailable", False):
+        continue
+    version = runtime.get("version") or identifier
+    version_key = tuple(int(part) for part in re.findall(r"\d+", version or identifier))
+    runtimes.append((version_key, identifier))
+
+if not runtimes:
+    raise SystemExit("No available iOS simulator runtime found")
+
+print(sorted(runtimes, reverse=True)[0][1])
+'
+}
+
+resolve_device_type() {
+  local family="$1"
+  shift
+
+  FAMILY="$family" PREFERRED_IDS="$(IFS=,; echo "$*")" xcrun simctl list devicetypes -j | python3 -c '
+import json
+import os
+import sys
+
+family = os.environ["FAMILY"]
+preferred_ids = [item for item in os.environ.get("PREFERRED_IDS", "").split(",") if item]
+device_types = json.load(sys.stdin).get("devicetypes", [])
+identifiers = {device_type.get("identifier", ""): device_type for device_type in device_types}
+
+for identifier in preferred_ids:
+    if identifier in identifiers:
+        print(identifier)
+        raise SystemExit(0)
+
+needle = "iPhone" if family == "iphone" else "iPad"
+for device_type in device_types:
+    if needle in device_type.get("name", ""):
+        print(device_type["identifier"])
+        raise SystemExit(0)
+
+raise SystemExit(f"No available {needle} simulator device type found")
+'
+}
+
+find_existing_sim() {
+  local name="$1"
+  local runtime_id="$2"
+
+  SIM_NAME="$name" SIM_RUNTIME_ID="$runtime_id" xcrun simctl list devices available -j | python3 -c '
+import json
+import os
+import sys
+
+devices = json.load(sys.stdin).get("devices", {})
+for device in devices.get(os.environ["SIM_RUNTIME_ID"], []):
+    if device.get("isAvailable") and device.get("name") == os.environ["SIM_NAME"]:
+        print(device["udid"])
+        raise SystemExit(0)
+'
+}
+
+RUNTIME_ID="$(resolve_latest_ios_runtime)"
+IPHONE_TYPE="$(resolve_device_type iphone \
+  com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max \
+  com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max \
+  com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro-Max)"
+IPAD_TYPE="$(resolve_device_type ipad \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M5-16GB \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M5-12GB \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-16GB \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-12-9-inch-6th-generation-16GB \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-12-9-inch-6th-generation-8GB)"
 IPHONE_NAME="RandomTimer AppStore iPhone 16 Pro Max"
 IPAD_NAME="RandomTimer AppStore iPad Pro 13 M4"
 
 ensure_sim() {
   local name="$1"
   local type="$2"
-  if ! xcrun simctl list devices available | grep -q "$name"; then
-    xcrun simctl create "$name" "$type" "$RUNTIME_ID" >/dev/null
+  local existing_udid=""
+  existing_udid="$(find_existing_sim "$name" "$RUNTIME_ID" || true)"
+  if [[ -n "$existing_udid" ]]; then
+    echo "$existing_udid"
+    return 0
   fi
+
+  xcrun simctl create "$name" "$type" "$RUNTIME_ID"
 }
 
-ensure_sim "$IPHONE_NAME" "$IPHONE_TYPE"
-ensure_sim "$IPAD_NAME" "$IPAD_TYPE"
+IPHONE_UDID="$(ensure_sim "$IPHONE_NAME" "$IPHONE_TYPE")"
+IPAD_UDID="$(ensure_sim "$IPAD_NAME" "$IPAD_TYPE")"
+
+echo "==> Using iOS runtime: $RUNTIME_ID"
+echo "==> Using iPhone simulator type: $IPHONE_TYPE ($IPHONE_UDID)"
+echo "==> Using iPad simulator type: $IPAD_TYPE ($IPAD_UDID)"
 
 OUT_DIR="native-ios/fastlane/screenshots/$LOCALE/originals"
 TMP_OUT_DIR="/tmp/appstore_screenshots"
@@ -80,11 +168,11 @@ echo "==> Building once for UI-test capture"
 xcodebuild build-for-testing \
   -project native-ios/RandomTimer.xcodeproj \
   -scheme RandomTimer \
-  -destination "platform=iOS Simulator,name=$IPHONE_NAME" \
+  -destination "platform=iOS Simulator,id=$IPHONE_UDID" \
   CODE_SIGNING_ALLOWED=NO
 
-run_capture "platform=iOS Simulator,name=$IPHONE_NAME"
-run_capture "platform=iOS Simulator,name=$IPAD_NAME"
+run_capture "platform=iOS Simulator,id=$IPHONE_UDID"
+run_capture "platform=iOS Simulator,id=$IPAD_UDID"
 
 cp "$TMP_OUT_DIR"/*.png "$OUT_DIR"/
 

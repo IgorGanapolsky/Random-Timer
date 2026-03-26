@@ -1,12 +1,16 @@
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import call
 from unittest.mock import Mock
+
+from PIL import Image
 
 from scripts.play_publish import (
     _commit_edit,
     _is_failed_precondition,
     _parse_args,
+    _prepare_image_upload,
     _release_payload,
     _requires_manual_review_submission,
 )
@@ -142,6 +146,27 @@ class PlayPublishTests(unittest.TestCase):
         self.assertIn(tmp, args.error_json)
         self.assertTrue(args.result_json.endswith("play-upload-result.json"))
         self.assertTrue(args.error_json.endswith("play-upload-error.json"))
+
+    def test_prepare_image_upload_resizes_play_icon_to_512_square(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            icon_path = tmp / "icon.png"
+            Image.new("RGB", (1024, 1024), color=(10, 20, 30)).save(icon_path, format="PNG")
+
+            prepared_path = Path(_prepare_image_upload("icon", str(icon_path), tmp / "prepared"))
+
+            self.assertNotEqual(prepared_path, icon_path)
+            self.assertEqual(Image.open(prepared_path).size, (512, 512))
+
+    def test_prepare_image_upload_leaves_non_icon_assets_untouched(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            screenshot_path = tmp / "shot.png"
+            Image.new("RGB", (1344, 2992), color=(1, 2, 3)).save(screenshot_path, format="PNG")
+
+            prepared_path = _prepare_image_upload("phoneScreenshots", str(screenshot_path), tmp / "prepared")
+
+            self.assertEqual(prepared_path, str(screenshot_path))
 
 
 if __name__ == "__main__":
