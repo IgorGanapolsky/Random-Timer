@@ -43,6 +43,17 @@ function readFileRequired(filePath) {
   return content;
 }
 
+function filterPlayStorageState(rawJson) {
+  const payload = JSON.parse(rawJson);
+  const cookies = Array.isArray(payload.cookies) ? payload.cookies : [];
+  const filtered = cookies.filter((cookie) =>
+    /(^|\.)google\.com$|(^|\.)play\.google\.com$|(^|\.)accounts\.google\.com$|(^|\.)googleapis\.com$|(^|\.)gstatic\.com$/.test(
+      String(cookie.domain || ""),
+    ),
+  );
+  return JSON.stringify({ cookies: filtered, origins: [] });
+}
+
 function setSecret(repo, name, value) {
   execFileSync(
     ghPath,
@@ -61,7 +72,7 @@ const playPath = path.join(root, ".auth", "play.json");
 
 const repo = repoFromGitHubCli();
 const asc = readFileRequired(ascPath);
-const play = readFileRequired(playPath);
+const play = filterPlayStorageState(readFileRequired(playPath));
 
 setSecret(repo, "ASC_STORAGE_STATE_JSON", asc);
 setSecret(repo, "PLAY_STORAGE_STATE_JSON", play);

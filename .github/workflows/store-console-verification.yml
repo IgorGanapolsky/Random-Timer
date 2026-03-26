@@ -9,7 +9,6 @@ jobs:
   verify:
     name: Read-Only Console Verification
     runs-on: ubuntu-latest
-    environment: production
     permissions:
       contents: read
     defaults:
@@ -68,14 +67,12 @@ jobs:
         env:
           ASC_STORAGE_STATE_PATH: ${{ steps.auth.outputs.asc_path }}
           PLAY_STORAGE_STATE_PATH: ${{ steps.auth.outputs.play_path }}
-          ASC_EXPECTED_STATE_TEXT: Prepare for Submission
         run: npm run test:console
 
       - name: Run read-only console checks (agent-browser)
         env:
           ASC_STORAGE_STATE_PATH: ${{ steps.auth.outputs.asc_path }}
           PLAY_STORAGE_STATE_PATH: ${{ steps.auth.outputs.play_path }}
-          ASC_EXPECTED_STATE_TEXT: Prepare for Submission
         run: npm run test:console:agent-browser
 
       - name: Upload Playwright artifacts

@@ -13,6 +13,18 @@ const startUrl =
   (target === "play"
     ? "https://play.google.com/console"
     : "https://appstoreconnect.apple.com");
+const browserApp = (process.env.BROWSER_APP || "").trim().toLowerCase();
+
+function resolveExecutablePath(appName) {
+  if (appName === "comet") {
+    const cometPath = "/Applications/Comet.app/Contents/MacOS/Comet";
+    if (fs.existsSync(cometPath)) {
+      return cometPath;
+    }
+    throw new Error(`Comet executable not found at ${cometPath}`);
+  }
+  return undefined;
+}
 
 if (!["asc", "play"].includes(target)) {
   console.error("Invalid TARGET. Use TARGET=asc or TARGET=play.");
@@ -22,12 +34,20 @@ if (!["asc", "play"].includes(target)) {
 const absOutputPath = path.resolve(outputPath);
 fs.mkdirSync(path.dirname(absOutputPath), { recursive: true });
 
-const browser = await chromium.launch({ headless: false });
+const executablePath = resolveExecutablePath(browserApp);
+const browser = await chromium.launch({
+  headless: false,
+  executablePath,
+});
 const context = await browser.newContext();
 const page = await context.newPage();
 
 console.log(`Opening ${startUrl}`);
 await page.goto(startUrl, { waitUntil: "domcontentloaded" });
+
+if (browserApp) {
+  console.log(`Using browser app: ${browserApp}`);
+}
 
 console.log("");
 console.log(`Login to ${target.toUpperCase()} in the opened browser window.`);
