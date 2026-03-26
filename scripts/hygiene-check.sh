@@ -21,6 +21,7 @@ ALLOWED_ROOT_MD=(
   "README.md"
   "CLAUDE.md"
   "AGENTS.md"
+  "BUGBOT.md"
   "GEMINI.md"
   "CONTRIBUTING.md"
   "CODE_OF_CONDUCT.md"
