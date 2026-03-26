@@ -2,7 +2,17 @@
   "mcpServers": {
     "perplexity-agent": {
       "command": "bash",
-      "args": ["scripts/perplexity_mcp_wrapper.sh"]
+      "args": [
+        "scripts/perplexity_mcp_wrapper.sh"
+      ]
+    },
+    "rlhf": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-memory-gateway@0.8.0",
+        "serve"
+      ]
     }
   }
 }

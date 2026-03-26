@@ -27,3 +27,24 @@ python3 scripts/perplexity_agent.py --query "topic" --tools web_search fetch_url
 
 ### Key Rule
 API key is in `.env` as `PERPLEXITY_API_KEY`. Never hardcode.
+
+## Memory Gateway
+
+The project memory backend is `mcp-memory-gateway`, not ad hoc local RAG claims.
+
+Evidence-first workflow:
+```bash
+make memory-doctor
+make memory-summary
+make memory-lessons Q="verification"
+```
+
+When a session contains a confirmed mistake or correction, capture it with one sentence of context:
+```bash
+make memory-capture-down CONTEXT="Unverified browser-state claim" TAGS="truthfulness,verification"
+```
+
+Rules:
+- Do not claim the memory system is active until `make memory-doctor`, `make memory-summary`, and `make memory-lessons` all read back successfully.
+- Use `.mcp.json` as the Codex/Cursor MCP source of truth for the `rlhf` server.
+- Treat `.rlhf/config.json` as tracked project config and `.rlhf/*.jsonl` / derived analytics as local runtime state.
