@@ -36,6 +36,15 @@ function isPlayLoginUrl(rawUrl: string): boolean {
   return parsed.hostname.toLowerCase() === "accounts.google.com";
 }
 
+function isPlayAppDashboardUrl(rawUrl: string): boolean {
+  const parsed = tryParseUrl(rawUrl);
+  if (!parsed) {
+    return false;
+  }
+
+  return parsed.hostname.toLowerCase() === "play.google.com" && /\/app\/\d+/i.test(parsed.pathname);
+}
+
 async function selectPlayDeveloperAccount(page: any, expectedAccountName: string): Promise<void> {
   const chooserHeading = page.getByRole("heading", { name: /choose developer account/i });
   if (!(await chooserHeading.isVisible().catch(() => false))) {
@@ -46,7 +55,7 @@ async function selectPlayDeveloperAccount(page: any, expectedAccountName: string
   if (await accountOption.isVisible().catch(() => false)) {
     await accountOption.click();
     await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(3000);
+    await expect(chooserHeading).toBeHidden({ timeout: 30_000 });
     return;
   }
 
@@ -55,7 +64,7 @@ async function selectPlayDeveloperAccount(page: any, expectedAccountName: string
 
 async function openPlayApp(page: any, expectedAppName: string): Promise<void> {
   const appHeading = page.getByText(new RegExp(expectedAppName, "i")).first();
-  if (await appHeading.isVisible().catch(() => false)) {
+  if (isPlayAppDashboardUrl(page.url()) && (await appHeading.isVisible().catch(() => false))) {
     return;
   }
 
@@ -63,7 +72,7 @@ async function openPlayApp(page: any, expectedAppName: string): Promise<void> {
   if (await appListEntry.isVisible().catch(() => false)) {
     await appListEntry.click();
     await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(5000);
+    await page.waitForFunction(() => window.location.pathname.includes("/app/"), null, { timeout: 30_000 });
     return;
   }
 
@@ -71,7 +80,7 @@ async function openPlayApp(page: any, expectedAppName: string): Promise<void> {
   if (await appTextEntry.isVisible().catch(() => false)) {
     await appTextEntry.click();
     await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(5000);
+    await page.waitForFunction(() => window.location.pathname.includes("/app/"), null, { timeout: 30_000 });
     return;
   }
 
