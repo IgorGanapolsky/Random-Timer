@@ -192,6 +192,66 @@ final class TimerConfigTests: XCTestCase {
             TimeRangeAdjuster.defaultMinGapSeconds
         )
     }
+
+    func testToggleExtendedRangeRestoresLastFreeRange() {
+        let current = TimerConfig(
+            minSeconds: 900,
+            maxSeconds: 1800,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false,
+            useExtendedRange: true,
+            voiceEnabled: true,
+            repeatRounds: 0
+        )
+        let profiles = RangeToggleProfiles(
+            freeMinSeconds: 30,
+            freeMaxSeconds: 120,
+            extendedMinSeconds: 900,
+            extendedMaxSeconds: 1800
+        )
+
+        let result = toggleExtendedRange(current: current, profiles: profiles)
+
+        XCTAssertFalse(result.config.useExtendedRange)
+        XCTAssertEqual(result.config.minSeconds, 30)
+        XCTAssertEqual(result.config.maxSeconds, 120)
+        XCTAssertEqual(result.profiles.extendedMinSeconds, 900)
+        XCTAssertEqual(result.profiles.extendedMaxSeconds, 1800)
+    }
+
+    func testToggleExtendedRangeRestoresLastExtendedRange() {
+        let current = TimerConfig(
+            minSeconds: 45,
+            maxSeconds: 180,
+            alarmDuration: 10,
+            hiddenMode: false,
+            repeatEnabled: false,
+            soundType: .intense,
+            volume: 0.5,
+            vibrationEnabled: false,
+            useExtendedRange: false,
+            voiceEnabled: true,
+            repeatRounds: 0
+        )
+        let profiles = RangeToggleProfiles(
+            freeMinSeconds: 45,
+            freeMaxSeconds: 180,
+            extendedMinSeconds: 1200,
+            extendedMaxSeconds: 2400
+        )
+
+        let result = toggleExtendedRange(current: current, profiles: profiles)
+
+        XCTAssertTrue(result.config.useExtendedRange)
+        XCTAssertEqual(result.config.minSeconds, 1200)
+        XCTAssertEqual(result.config.maxSeconds, 2400)
+        XCTAssertEqual(result.profiles.freeMinSeconds, 45)
+        XCTAssertEqual(result.profiles.freeMaxSeconds, 180)
+    }
 }
 
 final class TimerStateTests: XCTestCase {

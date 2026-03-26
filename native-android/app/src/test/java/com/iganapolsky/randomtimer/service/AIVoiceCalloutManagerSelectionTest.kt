@@ -56,6 +56,13 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun shortTimersScheduleFollowupCommandCuesEarly() {
+        assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
+    }
+
+    @Test
     fun parseRemoteProAudioManifestKeepsHostedCatalogsAndAssetIntegrityMetadata() {
         val manifest =
             parseRemoteProAudioManifest(

@@ -8,6 +8,10 @@ struct TimerSetupScreen: View {
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
+    @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
+    @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
+    @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = 0
+    @AppStorage("timer_range_extended_max") private var storedExtendedMaxSeconds = TimerConfig.maxSecondsPro
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
@@ -47,7 +51,12 @@ struct TimerSetupScreen: View {
                                     }
                             } else {
                                 Button {
-                                    updateConfig(useExtendedRange: !config.useExtendedRange)
+                                    let result = toggleExtendedRange(
+                                        current: config,
+                                        profiles: currentRangeProfiles
+                                    )
+                                    applyRangeProfiles(result.profiles)
+                                    timerManager.updateConfig(result.config.clamped(isPro: proManager.isPro))
                                 } label: {
                                     Text(config.useExtendedRange ? "1H" : "5m")
                                         .font(.caption2.weight(.bold))
@@ -421,6 +430,11 @@ struct TimerSetupScreen: View {
         .onAppear {
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true
+            persistActiveRangeProfile(
+                minSeconds: config.minSeconds,
+                maxSeconds: config.maxSeconds,
+                useExtendedRange: config.useExtendedRange
+            )
         }
         .onChange(of: proManager.isPro) { _, isPro in
             if isPro {
@@ -457,6 +471,12 @@ struct TimerSetupScreen: View {
             voiceEnabled: voiceEnabled ?? config.voiceEnabled,
             repeatRounds: repeatRounds ?? config.repeatRounds
         )
+        let effectiveUseExtendedRange = useExtendedRange ?? config.useExtendedRange
+        persistActiveRangeProfile(
+            minSeconds: newConfig.minSeconds,
+            maxSeconds: newConfig.maxSeconds,
+            useExtendedRange: effectiveUseExtendedRange
+        )
         timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))
     }
 
@@ -475,6 +495,46 @@ struct TimerSetupScreen: View {
     private func presentPaywall(entryPoint: PaywallEntryPoint) {
         paywallEntryPoint = entryPoint
         showPaywall = true
+    }
+
+    private var currentRangeProfiles: RangeToggleProfiles {
+        RangeToggleProfiles(
+            freeMinSeconds: storedFreeMinSeconds,
+            freeMaxSeconds: storedFreeMaxSeconds,
+            extendedMinSeconds: storedExtendedMinSeconds,
+            extendedMaxSeconds: storedExtendedMaxSeconds
+        )
+    }
+
+    private func applyRangeProfiles(_ profiles: RangeToggleProfiles) {
+        storedFreeMinSeconds = profiles.freeMinSeconds
+        storedFreeMaxSeconds = profiles.freeMaxSeconds
+        storedExtendedMinSeconds = profiles.extendedMinSeconds
+        storedExtendedMaxSeconds = profiles.extendedMaxSeconds
+    }
+
+    private func persistActiveRangeProfile(
+        minSeconds: Int,
+        maxSeconds: Int,
+        useExtendedRange: Bool
+    ) {
+        if useExtendedRange {
+            let sanitized = sanitizedStoredRange(
+                minSeconds: minSeconds,
+                maxSeconds: maxSeconds,
+                maxSecondsLimit: TimerConfig.maxSecondsPro
+            )
+            storedExtendedMinSeconds = sanitized.min
+            storedExtendedMaxSeconds = sanitized.max
+        } else {
+            let sanitized = sanitizedStoredRange(
+                minSeconds: minSeconds,
+                maxSeconds: maxSeconds,
+                maxSecondsLimit: TimerConfig.maxSecondsFree
+            )
+            storedFreeMinSeconds = sanitized.min
+            storedFreeMaxSeconds = sanitized.max
+        }
     }
 }
 

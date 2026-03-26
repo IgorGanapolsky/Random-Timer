@@ -161,6 +161,12 @@ internal fun nextCommandCue(
     return cues[(boundedIndex + 1) % cues.size]
 }
 
+internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
+    when {
+        totalDurationSeconds <= 29 -> Int.MAX_VALUE
+        else -> 30
+    }
+
 @Singleton
 class AIVoiceCalloutManager
     @Inject
@@ -256,6 +262,13 @@ class AIVoiceCalloutManager
             speak(catalog.previewElapsed.text)
         }
 
+        fun beginSession(totalDurationSeconds: Int) {
+            val cue = randomCommandCue()
+            speak(cue.text)
+            lastCommandCueFilename = cue.filename
+            nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
+        }
+
         fun triggerCallout(elapsedSeconds: Int) {
             val catalog = packStore.voiceCatalog()
             runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
@@ -268,13 +281,16 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(30, 46)
+                nextCommandCueAt = elapsedSeconds + 30
             }
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
             if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(30, 46)
+                nextCommandCueAt = 30
+            }
+            if (nextCommandCueAt == Int.MAX_VALUE) {
+                return false
             }
             return elapsedSeconds >= nextCommandCueAt
         }

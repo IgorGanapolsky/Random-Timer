@@ -127,6 +127,9 @@ final class TimerManager: ObservableObject {
         )
 
         timerState = state
+        if ProManager.shared.isPro && state.config.voiceEnabled {
+            AIVoiceCalloutService.shared.beginSession(totalDurationSeconds: Int(state.targetDuration))
+        }
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,

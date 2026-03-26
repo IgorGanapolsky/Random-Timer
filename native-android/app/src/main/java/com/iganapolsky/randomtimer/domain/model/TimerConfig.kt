@@ -99,6 +99,85 @@ data class TimerConfig(
     }
 }
 
+data class RangeToggleProfiles(
+    val freeMinSeconds: Int,
+    val freeMaxSeconds: Int,
+    val extendedMinSeconds: Int,
+    val extendedMaxSeconds: Int,
+)
+
+data class RangeToggleResult(
+    val config: TimerConfig,
+    val profiles: RangeToggleProfiles,
+)
+
+fun sanitizedStoredRange(
+    minSeconds: Int,
+    maxSeconds: Int,
+    maxSecondsLimit: Int,
+): Pair<Int, Int> {
+    val clampedMax = maxSeconds.coerceIn(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS, maxSecondsLimit)
+    val clampedMin =
+        minSeconds.coerceIn(
+            TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
+            clampedMax - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS,
+        )
+    return TimeRangeAdjuster.adjustForMaxChange(
+        currentMinSeconds = clampedMin,
+        currentMaxSeconds = clampedMax,
+        newMaxSeconds = clampedMax,
+        maxSecondsLimit = maxSecondsLimit,
+    )
+}
+
+fun toggleExtendedRange(
+    current: TimerConfig,
+    profiles: RangeToggleProfiles,
+): RangeToggleResult =
+    if (current.useExtendedRange) {
+        val nextProfiles =
+            profiles.copy(
+                extendedMinSeconds = current.minSeconds,
+                extendedMaxSeconds = current.maxSeconds,
+            )
+        val restoredFree =
+            sanitizedStoredRange(
+                minSeconds = profiles.freeMinSeconds,
+                maxSeconds = profiles.freeMaxSeconds,
+                maxSecondsLimit = TimerConfig.MAX_SECONDS_FREE,
+            )
+        RangeToggleResult(
+            config =
+                current.copy(
+                    minSeconds = restoredFree.first,
+                    maxSeconds = restoredFree.second,
+                    useExtendedRange = false,
+                ),
+            profiles = nextProfiles,
+        )
+    } else {
+        val nextProfiles =
+            profiles.copy(
+                freeMinSeconds = current.minSeconds,
+                freeMaxSeconds = current.maxSeconds,
+            )
+        val restoredExtended =
+            sanitizedStoredRange(
+                minSeconds = profiles.extendedMinSeconds,
+                maxSeconds = profiles.extendedMaxSeconds,
+                maxSecondsLimit = TimerConfig.MAX_SECONDS_PRO,
+            )
+        RangeToggleResult(
+            config =
+                current.copy(
+                    minSeconds = restoredExtended.first,
+                    maxSeconds = restoredExtended.second,
+                    useExtendedRange = true,
+                ),
+            profiles = nextProfiles,
+        )
+    }
+
 /**
  * Represents the current state of an active timer.
  */
