@@ -22,6 +22,12 @@ KEY FEATURES:
 - Stable background behavior via Foreground Service
 - Full-screen tactical alerts that command attention
 
+PRO FEATURES:
+- 🎙️ AI Voice Callouts: Drill sergeant commands keep you sharp during training — 31 unique ElevenLabs-generated tactical cues
+- ⏱️ Elapsed time announcements on the minute so you never lose track
+- 🔁 Round selection (1–100) for structured training cycles
+- 📏 Extended timer range up to 1 hour
+
 HOW IT WORKS:
 1. Set your range (e.g. 15 seconds to 3 minutes)
 2. Press Start
