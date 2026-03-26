@@ -1,0 +1,21 @@
+name: Pro Audio Freshness
+
+on:
+  schedule:
+    - cron: "5 15 * * *"
+  workflow_dispatch:
+
+jobs:
+  freshness:
+    name: Verify monthly Pro audio freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Verify active Pro audio pack freshness
+        run: python scripts/pro_audio_freshness.py

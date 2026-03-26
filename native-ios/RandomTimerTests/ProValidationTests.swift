@@ -10,7 +10,8 @@ final class TimerConfigProClampingTests: XCTestCase {
     @MainActor
     func testPaywallCopyFocusesOnTrainingOutcomes() {
         XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
-        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice callouts, more sounds, and repeatable rounds.")
+        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
+        XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
         XCTAssertEqual(PaywallSheet.pricingFooter, "Cancel anytime. Auto-renews yearly.")
         XCTAssertEqual(
             PaywallSheet.featureRows,
@@ -19,7 +20,7 @@ final class TimerConfigProClampingTests: XCTestCase {
                 "Get voice callouts during training",
                 "Use loop mode with round limits",
                 "Unlock the full sound library",
-                "Support independent development",
+                "New Pro voice callouts and sound packs every 30 days",
             ]
         )
     }

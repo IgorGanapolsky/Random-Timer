@@ -13,8 +13,12 @@ class PaywallSheetTest {
     fun `paywall copy focuses on training outcomes`() {
         assertEquals("Unlock Full Training Mode", PAYWALL_HEADLINE)
         assertEquals(
-            "Longer sessions, voice callouts, more sounds, and repeatable rounds.",
+            "Longer sessions, voice coaching, more sounds, and repeatable rounds.",
             PAYWALL_SUBHEADLINE,
+        )
+        assertEquals(
+            "Built for dry fire, sparring, drills, and reaction training.",
+            PAYWALL_AUDIENCE_LINE,
         )
         assertEquals("Cancel anytime. Auto-renews yearly.", PAYWALL_PRICING_FOOTER)
         assertEquals(
@@ -23,7 +27,7 @@ class PaywallSheetTest {
                 "Get voice callouts during training",
                 "Use loop mode with round limits",
                 "Unlock the full sound library",
-                "Support independent development",
+                "New Pro voice callouts and sound packs every 30 days",
             ),
             PAYWALL_FEATURE_ROWS,
         )

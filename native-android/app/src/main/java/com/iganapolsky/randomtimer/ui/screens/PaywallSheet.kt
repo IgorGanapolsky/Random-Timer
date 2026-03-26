@@ -32,7 +32,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
 internal const val PAYWALL_HEADLINE = "Unlock Full Training Mode"
-internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice callouts, more sounds, and repeatable rounds."
+internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
+internal const val PAYWALL_AUDIENCE_LINE = "Built for dry fire, sparring, drills, and reaction training."
 internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Auto-renews yearly."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
@@ -40,7 +41,7 @@ internal val PAYWALL_FEATURE_ROWS =
         "Get voice callouts during training",
         "Use loop mode with round limits",
         "Unlock the full sound library",
-        "Support independent development",
+        "New Pro voice callouts and sound packs every 30 days",
     )
 
 @OptIn(ExperimentalMaterial3Api::class)

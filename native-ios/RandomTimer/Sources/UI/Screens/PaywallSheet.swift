@@ -9,7 +9,8 @@ enum PaywallEntryPoint: String {
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
     static let headline = "Unlock Full Training Mode"
-    static let subheadline = "Longer sessions, voice callouts, more sounds, and repeatable rounds."
+    static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
+    static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
     static let pricingFooter = "Cancel anytime. Auto-renews yearly."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
@@ -17,7 +18,7 @@ struct PaywallSheet: View {
         "Get voice callouts during training",
         "Use loop mode with round limits",
         "Unlock the full sound library",
-        "Support independent development",
+        "New Pro voice callouts and sound packs every 30 days",
     ]
 
     // swiftlint:disable:next no_environment_object
