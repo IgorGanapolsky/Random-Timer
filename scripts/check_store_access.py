@@ -101,12 +101,22 @@ def check_android_access(package_name: str) -> Tuple[bool, str]:
         )
     except Exception as exc:
         details = f"Google Play API access failed: {exc}"
+        err_text = str(exc).lower()
         if "403" in str(exc) and service_account_email:
-            details += (
-                f"\n  Service account: {service_account_email}\n"
-                "  Fix: Grant this account access in Play Console > Users and permissions,"
-                " and confirm API access is linked for this app."
-            )
+            details += f"\n  Service account: {service_account_email}"
+            if "consumer_invalid" in err_text or "has been deleted" in err_text:
+                details += (
+                    "\n  Fix: The Google Cloud project for this key is missing or the "
+                    "Play Developer API consumer is invalid. In Google Cloud Console, use an "
+                    "active project, enable Google Play Android Developer API, link that project "
+                    "in Play Console (API access), invite the service account under Users and "
+                    "permissions, then replace GitHub secret GOOGLE_PLAY_JSON_KEY with a new key JSON."
+                )
+            else:
+                details += (
+                    "\n  Fix: Grant this account access in Play Console > Users and permissions,"
+                    " and confirm API access is linked for this app."
+                )
         return (False, details)
 
 
