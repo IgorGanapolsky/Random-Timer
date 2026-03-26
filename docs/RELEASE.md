@@ -177,6 +177,12 @@ CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so ev
 
 Android Firebase App Distribution is documented separately in [FIREBASE_ANDROID_INFRASTRUCTURE.md](FIREBASE_ANDROID_INFRASTRUCTURE.md).
 
+As of March 26, 2026, Android Firebase APK delivery is not the default internal-distribution path. A Firebase-distributed APK was flagged by Google Play Protect on tester install with a harmful-app warning, so the default `Internal Distribution` workflow target is now `all_safe`:
+- iOS TestFlight
+- Android Google Play internal
+
+Use `target=android_firebase` only when Firebase APK delivery is explicitly required for debugging or appeal evidence collection.
+
 Important: Android runtime Firebase and Android App Distribution do not currently use the same Firebase project. Check that document before rotating any Firebase secret.
 
 ### Android (Google Play)
