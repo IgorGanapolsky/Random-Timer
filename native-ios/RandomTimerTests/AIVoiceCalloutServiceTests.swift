@@ -4,12 +4,25 @@ import CryptoKit
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
+    private final class CounterBox {
+        var value = 0
+    }
+
     private func makeUnusedTestAssetURL(filename: String) -> URL {
         URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
     }
 
     private func makeSut() -> AIVoiceCalloutService {
         let service = AIVoiceCalloutService(bundle: .main)
+        service.resetSession()
+        return service
+    }
+
+    private func makeSut(counter: CounterBox) -> AIVoiceCalloutService {
+        let service = AIVoiceCalloutService(
+            bundle: .main,
+            activateAudioSession: { counter.value += 1 }
+        )
         service.resetSession()
         return service
     }
@@ -112,6 +125,19 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
+    }
+
+    func testBeginSessionReactivatesAudioSessionBeforePlayback() {
+        let counter = CounterBox()
+        let sut = makeSut(counter: counter)
+
+        sut.beginSession(totalDurationSeconds: 60)
+
+        XCTAssertGreaterThanOrEqual(
+            counter.value,
+            2,
+            "Voice playback must reactivate AVAudioSession after preview teardown deactivates it."
+        )
     }
 
     func testRemotePackStoreInstallsAndServesRemoteVoiceAndSoundAssets() throws {
