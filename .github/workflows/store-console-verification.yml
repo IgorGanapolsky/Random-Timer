@@ -4,10 +4,14 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 13 * * *"
+  workflow_run:
+    workflows: ["Native App Release"]
+    types: [completed]
 
 jobs:
   verify:
     name: Read-Only Console Verification
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
