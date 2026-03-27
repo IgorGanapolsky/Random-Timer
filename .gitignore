@@ -75,6 +75,8 @@ temp/
 # Python virtual environments
 .venv/
 venv/
+.venv-chatterbox/
+native-android/.venv-chatterbox/
 
 # Python bytecode
 __pycache__/
@@ -116,6 +118,8 @@ apple_status.json
 .aider*
 
 # RLHF local feedback data
+.rlhf/feedback.jsonl
+.rlhf/rejection-ledger.jsonl
 .rlhf/feedback-log.jsonl
 .rlhf/memory-log.jsonl
 .rlhf/feedback-sequences.jsonl
@@ -130,3 +134,6 @@ apple_status.json
 .rlhf/.watcher-offset
 .rlhf/chatgpt-openapi.yaml
 .rlhf/contextfs/
+
+# Local evidence captures
+evidence/

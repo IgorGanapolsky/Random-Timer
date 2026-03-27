@@ -65,3 +65,16 @@ def test_hygiene_check_matches_current_repo_policy() -> None:
     assert '"GEMINI.md"' in contents
     assert '"BUGBOT.md"' in contents
     assert "Possible secret or temp-path leak" not in contents
+
+
+def test_gitignore_covers_known_local_artifact_buckets() -> None:
+    contents = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    expected_entries = (
+        ".venv-chatterbox/",
+        "native-android/.venv-chatterbox/",
+        ".rlhf/feedback.jsonl",
+        ".rlhf/rejection-ledger.jsonl",
+        "evidence/",
+    )
+    for entry in expected_entries:
+        assert entry in contents, f".gitignore must ignore {entry}"
