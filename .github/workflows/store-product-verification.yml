@@ -1,6 +1,12 @@
 name: Store Product Verification
 
 on:
+  push:
+    branches:
+      - fix/store-product-verification
+    paths:
+      - .github/workflows/store-product-verification.yml
+      - scripts/verify_store_products.py
   workflow_dispatch:
     inputs:
       platform:
