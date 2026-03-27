@@ -66,7 +66,7 @@ jobs:
         run: python scripts/wiki_sync.py
 
       - name: Publish wiki pages
-        uses: Andrew-Chen-Wang/github-wiki-action@v4
+        uses: Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a # v4
         with:
           strategy: init
           path: wiki/

@@ -1,7 +1,7 @@
 name: enforce-release-branch-to-main
 
 on:
-  pull_request_target:
+  pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
 
@@ -16,8 +16,9 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v6
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Validate release branch and app versions
         env:
