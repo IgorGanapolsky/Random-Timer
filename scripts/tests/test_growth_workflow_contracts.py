@@ -99,11 +99,11 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
 
 
-def test_native_release_workflow_submits_ios_for_review_by_default():
+def test_native_release_workflow_keeps_ios_review_submission_opt_in():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     submit_review_block = source.split("submit_review:", 1)[1].split("concurrency:", 1)[0]
-    assert "default: 'true'" in submit_review_block
+    assert "default: 'false'" in submit_review_block
 
 
 def test_native_release_workflow_verifies_public_play_listing_for_production():
