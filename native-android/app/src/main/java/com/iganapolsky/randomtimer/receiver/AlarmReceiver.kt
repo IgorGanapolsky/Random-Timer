@@ -19,7 +19,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 // The foreground service handles the actual alarm
                 // This receiver is for backup/edge cases where the service might have been killed
                 val serviceIntent = Intent(context, TimerForegroundService::class.java).apply {
-                    action = TimerForegroundService.ACTION_DISMISS_ALARM
+                    action = TimerForegroundService.ACTION_START
                 }
                 context.startService(serviceIntent)
             }
