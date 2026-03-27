@@ -79,12 +79,15 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
           GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
+          STORE_VERIFICATION_PLATFORM: ${{ github.event.inputs.platform || 'both' }}
+          STORE_VERIFICATION_IOS_PRODUCT_ID: ${{ github.event.inputs.ios_product_id || 'com.iganapolsky.randomtimer.elite' }}
+          STORE_VERIFICATION_ANDROID_PRODUCT_ID: ${{ github.event.inputs.android_product_id || 'elite_tactical' }}
         run: |
           set -euo pipefail
           python scripts/verify_store_products.py \
-            --platform "${{ inputs.platform }}" \
-            --ios-product-id "${{ inputs.ios_product_id }}" \
-            --android-product-id "${{ inputs.android_product_id }}" \
+            --platform "$STORE_VERIFICATION_PLATFORM" \
+            --ios-product-id "$STORE_VERIFICATION_IOS_PRODUCT_ID" \
+            --android-product-id "$STORE_VERIFICATION_ANDROID_PRODUCT_ID" \
             --output store-product-verification.json
 
       - name: Upload verification artifact
