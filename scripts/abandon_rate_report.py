@@ -69,6 +69,63 @@ def run():
     if started > 0:
         abandon_rate = ((started - completed) / started) * 100
 
+    # 1b. Real abandon reasons from the timer_abandoned event
+    abandon_reasons = query_rows(
+        f"""
+        SELECT
+            coalesce(properties.abandon_reason, 'unknown') as reason,
+            coalesce(properties.abandon_source, 'unknown') as source,
+            count() as events,
+            count(DISTINCT person_id) as users
+        FROM events
+        WHERE event = 'timer_abandoned'
+          AND timestamp > now() - interval 30 day
+          AND {LIVE_EVENTS_PREDICATE}
+        GROUP BY reason, source
+        ORDER BY events DESC
+        LIMIT 20
+        """,
+        key,
+        project_id,
+        errors,
+    )
+    total_abandoned_events = sum(row[2] for row in abandon_reasons) if abandon_reasons else 0
+
+    # 1c. Onboarding funnel (first_open -> first_timer_configured -> first_timer_completed)
+    first_open = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id) FROM events
+        WHERE event = 'first_open'
+          AND timestamp > now() - interval 30 day
+          AND {LIVE_EVENTS_PREDICATE}
+        """,
+        key,
+        project_id,
+        errors,
+    )
+    first_configured = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id) FROM events
+        WHERE event = 'first_timer_configured'
+          AND timestamp > now() - interval 30 day
+          AND {LIVE_EVENTS_PREDICATE}
+        """,
+        key,
+        project_id,
+        errors,
+    )
+    first_completed = query_scalar(
+        f"""
+        SELECT count(DISTINCT person_id) FROM events
+        WHERE event = 'first_timer_completed'
+          AND timestamp > now() - interval 30 day
+          AND {LIVE_EVENTS_PREDICATE}
+        """,
+        key,
+        project_id,
+        errors,
+    )
+
     # 2. Most Used Parts (Screen Views) - Live audience only
     screens = query_rows(f"""
         SELECT properties.$screen_name as screen, count() as count
@@ -194,7 +251,20 @@ def run():
             "timer_started_30d": started,
             "timer_completed_30d": completed,
             "unique_started_users_30d": unique_users,
-            "abandon_rate_percent": round(abandon_rate, 2)
+            "inferred_abandon_rate_percent": round(abandon_rate, 2),
+            "timer_abandoned_events_30d": total_abandoned_events,
+            "abandon_reasons": [
+                {"reason": row[0], "source": row[1], "events": row[2], "users": row[3]}
+                for row in abandon_reasons
+            ],
+        },
+        "onboarding_funnel_30d": {
+            "first_open_users": first_open,
+            "first_timer_configured_users": first_configured,
+            "first_timer_completed_users": first_completed,
+            "open_to_configured_pct": round((first_configured / first_open) * 100, 2) if first_open > 0 else 0.0,
+            "configured_to_completed_pct": round((first_completed / first_configured) * 100, 2) if first_configured > 0 else 0.0,
+            "open_to_completed_pct": round((first_completed / first_open) * 100, 2) if first_open > 0 else 0.0,
         },
         "monetization_metrics": {
             "paywall_viewed_30d": paywall_viewed,

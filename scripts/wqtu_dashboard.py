@@ -127,7 +127,10 @@ def compute_monetization_funnel(key: str, project_id: str, errors: list) -> dict
         f"""
         SELECT count(DISTINCT person_id)
         FROM events
-        WHERE event IN ('paywall_purchase_success', 'paywall_purchase_result')
+        WHERE (
+            event = 'paywall_purchase_success'
+            OR (event = 'paywall_purchase_result' AND lower(coalesce(properties.success, '')) = 'true')
+        )
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
         """,
@@ -173,31 +176,30 @@ def compute_dau_wau(key: str, project_id: str, errors: list) -> dict:
 
 
 def compute_wqtu_trend(key: str, project_id: str, errors: list) -> list:
-    """WQTU per day for the last 14 days (for trend detection)."""
+    """WQTU per week for the last 4 weeks."""
     rows = query_rows(
         f"""
-        SELECT
-            toDate(now() - interval n day) AS week_end,
-            count() AS wqtu
+        SELECT week, count() AS wqtu
         FROM (
-            SELECT person_id, count() AS completions
+            SELECT
+                toStartOfWeek(timestamp) AS week,
+                person_id,
+                count() AS completions
             FROM events
             WHERE event = 'timer_completed'
-              AND timestamp > now() - interval 21 day
+              AND timestamp > now() - interval 28 day
               AND {LIVE_EVENTS_PREDICATE}
-            GROUP BY person_id, toStartOfWeek(timestamp)
+            GROUP BY week, person_id
             HAVING completions >= 3
         )
-        CROSS JOIN (SELECT number AS n FROM numbers(3)) -- last 3 weeks
-        WHERE week_end >= toDate(now() - interval 21 day)
-        GROUP BY week_end
-        ORDER BY week_end
+        GROUP BY week
+        ORDER BY week
         """,
         key,
         project_id,
         errors,
     )
-    return [{"week_end": str(r[0]), "wqtu": int(r[1] or 0)} for r in rows]
+    return [{"week_start": str(r[0]), "wqtu": int(r[1] or 0)} for r in rows]
 
 
 def run(repo_root: Path, alert_threshold: int = 0) -> dict:
