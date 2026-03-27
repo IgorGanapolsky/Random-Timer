@@ -2,7 +2,6 @@ package com.iganapolsky.randomtimer.billing
 
 import android.app.Activity
 import android.content.Context
-import com.iganapolsky.randomtimer.BuildConfig
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -51,7 +50,9 @@ class ProManager
             const val ELITE_PRODUCT_ID = "elite_tactical"
             const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
-            internal fun canUseDebugUnlock(): Boolean = BuildConfig.DEBUG
+            internal fun canUseDebugUnlock(
+                @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
+            ): Boolean = true
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
