@@ -18,9 +18,6 @@ import os
 import sys
 from pathlib import Path
 
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
 PACKAGE_NAME = "com.iganapolsky.randomtimer"
 METADATA_ROOT = Path(__file__).resolve().parent.parent / "native-android" / "fastlane" / "metadata" / "android"
 
@@ -42,18 +39,46 @@ def read_metadata(lang_dir: str, filename: str) -> str:
     return ""
 
 
-def main():
-    key_path = os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH", os.path.join(os.environ.get("RUNNER_TEMP", os.getcwd()), "play-service-account.json"))
-    if not os.path.exists(key_path):
-        print(f"Service account key not found at {key_path}", file=sys.stderr)
-        sys.exit(1)
+def build_edits_service(key_path: str):
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
 
     credentials = service_account.Credentials.from_service_account_file(
         key_path,
         scopes=["https://www.googleapis.com/auth/androidpublisher"],
     )
     service = build("androidpublisher", "v3", credentials=credentials)
-    edits = service.edits()
+    return service.edits()
+
+
+def commit_edit(edits, *, edit_id: str):
+    try:
+        return edits.commit(
+            packageName=PACKAGE_NAME,
+            editId=edit_id,
+            changesNotSentForReview=True,
+        ).execute()
+    except Exception as exc:
+        message = str(exc).lower()
+        if "changes are sent for review automatically" in message and "changesnotsentforreview" in message:
+            print(
+                "Play rejected changesNotSentForReview; retrying commit without that flag for auto-review apps.",
+                file=sys.stderr,
+            )
+            return edits.commit(
+                packageName=PACKAGE_NAME,
+                editId=edit_id,
+            ).execute()
+        raise
+
+
+def main():
+    key_path = os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH", os.path.join(os.environ.get("RUNNER_TEMP", os.getcwd()), "play-service-account.json"))
+    if not os.path.exists(key_path):
+        print(f"Service account key not found at {key_path}", file=sys.stderr)
+        sys.exit(1)
+
+    edits = build_edits_service(key_path)
 
     # Create edit
     edit = edits.insert(packageName=PACKAGE_NAME, body={}).execute()
@@ -103,12 +128,7 @@ def main():
     if skipped:
         print(f"Skipped {len(skipped)} locales (enable in Play Console if needed): {', '.join(skipped)}", file=sys.stderr)
 
-    # Commit edit with changesNotSentForReview=true since we can't auto-send for review
-    edits.commit(
-        packageName=PACKAGE_NAME,
-        editId=edit_id,
-        changesNotSentForReview=True
-    ).execute()
+    commit_edit(edits, edit_id=edit_id)
     print(f"Committed edit. Updated {len(updated)} languages: {', '.join(updated)}")
 
 
