@@ -1,0 +1,89 @@
+name: Store Product Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Store platform(s) to verify"
+        type: choice
+        options:
+          - both
+          - ios
+          - android
+        required: true
+        default: both
+      ios_product_id:
+        description: "App Store Connect product ID"
+        type: string
+        required: true
+        default: com.iganapolsky.randomtimer.elite
+      android_product_id:
+        description: "Google Play product ID"
+        type: string
+        required: true
+        default: elite_tactical
+
+jobs:
+  verify:
+    name: Verify Store Products
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            pyjwt==2.11.0 \
+            cryptography==46.0.5 \
+            requests==2.32.5 \
+            google-api-python-client==2.183.0 \
+            google-auth==2.41.1
+
+      - name: Prepare App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${APPSTORE_PRIVATE_KEY:-}" ] && [ -n "${APPSTORE_KEY_ID:-}" ]; then
+            mkdir -p ~/.appstoreconnect/private_keys
+            printf '%s' "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          fi
+
+      - name: Prepare Google Play service account key
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$RUNNER_TEMP/play-service-account.json"
+          fi
+
+      - name: Verify exact store product IDs
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
+        run: |
+          set -euo pipefail
+          python scripts/verify_store_products.py \
+            --platform "${{ inputs.platform }}" \
+            --ios-product-id "${{ inputs.ios_product_id }}" \
+            --android-product-id "${{ inputs.android_product_id }}" \
+            --output store-product-verification.json
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-product-verification
+          path: store-product-verification.json
