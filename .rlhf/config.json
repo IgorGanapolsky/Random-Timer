@@ -1,0 +1,6 @@
+{
+  "version": "0.8.0",
+  "apiUrl": "http://localhost:3000",
+  "logPath": ".rlhf/feedback-log.jsonl",
+  "memoryPath": ".rlhf/memory-log.jsonl"
+}

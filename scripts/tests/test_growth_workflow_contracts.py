@@ -6,6 +6,7 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
+NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -87,6 +88,15 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     assert "check_ios_version_lineage.py" in source
     assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
     assert "fastlane submit_review" not in source
+
+
+def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'PLAY_FALLBACK_TRACK: ""' in source
+    assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
+    assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
+    assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

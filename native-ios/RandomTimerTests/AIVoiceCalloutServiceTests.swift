@@ -127,16 +127,53 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
     }
 
-    func testBeginSessionReactivatesAudioSessionBeforePlayback() {
+    func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
         let counter = CounterBox()
         let sut = makeSut(counter: counter)
 
         sut.beginSession(totalDurationSeconds: 60)
+        sut.previewCountdownCue()
 
         XCTAssertGreaterThanOrEqual(
             counter.value,
             2,
-            "Voice playback must reactivate AVAudioSession after preview teardown deactivates it."
+            "Voice playback must reactivate AVAudioSession before cue playback."
+        )
+    }
+
+    func testTimerCalloutsUseCommandsAtThirtySecondsAndElapsedOnlyOnMinuteMarks() {
+        let sut = makeSut()
+
+        sut.beginSession(totalDurationSeconds: 120)
+        sut.triggerCallout(elapsedSeconds: 15)
+        let beforeThirty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(beforeThirty.lastElapsedMilestone, 0)
+        XCTAssertEqual(beforeThirty.nextCommandCueAt, 30)
+        XCTAssertNil(beforeThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 30)
+        let atThirty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
+        XCTAssertEqual(atThirty.nextCommandCueAt, 60)
+        XCTAssertNotNil(atThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 60)
+        let atSixty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
+        XCTAssertEqual(atSixty.nextCommandCueAt, 90)
+    }
+
+    func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {
+        let counter = CounterBox()
+        let sut = makeSut(counter: counter)
+
+        sut.beginSession(totalDurationSeconds: 60)
+        sut.triggerCallout(elapsedSeconds: 30)
+
+        XCTAssertGreaterThanOrEqual(
+            counter.value,
+            1,
+            "Timed voice playback must reactivate AVAudioSession before speaking."
         )
     }
 

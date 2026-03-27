@@ -1,2 +1,4 @@
-json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "/tmp/play-service-account.json")
+require "tmpdir"
+
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || File.join(Dir.tmpdir, "play-service-account.json"))
 package_name("com.iganapolsky.randomtimer")

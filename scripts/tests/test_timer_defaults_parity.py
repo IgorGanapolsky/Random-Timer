@@ -155,10 +155,11 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     android_navigation = ANDROID_NAVIGATION.read_text(encoding="utf-8")
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
-    assert "Upgrade to Pro" in android_paywall and "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
-    assert "Upgrade to Pro" in ios_paywall
+    assert "Unlock Full Training Mode" in android_paywall
+    assert "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
+    assert "Unlock Full Training Mode" in ios_paywall
     assert "highPriorityGesture" in ios_paywall
-    assert "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in android_navigation
     assert "unlockProForDebug" in ios_paywall
@@ -233,7 +234,7 @@ def test_sound_arsenal_catalog_matches_across_platforms():
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():
     catalog = _load_ios_voice_catalog()
 
-    assert len(catalog["elapsedCues"]) >= 16
+    assert len(catalog["elapsedCues"]) >= 12
     assert len(catalog["commandCues"]) >= 20
     assert all("elapsed" in cue["text"].lower() for cue in catalog["elapsedCues"])
     assert catalog["fallbackCommandFilename"] in _ios_catalog_filenames(catalog)

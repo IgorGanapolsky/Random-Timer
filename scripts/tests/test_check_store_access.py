@@ -65,3 +65,37 @@ def test_check_ios_access_not_found_app(monkeypatch):
     ok, summary = csa.check_ios_access("com.example.app")
     assert ok is False
     assert "no app found" in summary.lower()
+
+
+def test_check_android_access_surfaces_deleted_project_remediation(monkeypatch):
+    monkeypatch.setenv(
+        "GOOGLE_PLAY_JSON_KEY",
+        json.dumps({"client_email": "svc@example.com", "project_id": "dead-project"}),
+    )
+
+    class _CredsFactory:
+        @staticmethod
+        def from_service_account_info(*_args, **_kwargs):
+            return object()
+
+    class _Edits:
+        def insert(self, **_kwargs):
+            raise Exception("HttpError 403: consumer_invalid; Project #123 has been deleted.")
+
+    class _Service:
+        def edits(self):
+            return _Edits()
+
+    fake_google_oauth2 = SimpleNamespace(service_account=SimpleNamespace(Credentials=_CredsFactory))
+    fake_discovery = SimpleNamespace(build=lambda *_a, **_k: _Service())
+
+    monkeypatch.setitem(__import__("sys").modules, "google.oauth2", fake_google_oauth2)
+    monkeypatch.setitem(__import__("sys").modules, "google.oauth2.service_account", fake_google_oauth2.service_account)
+    monkeypatch.setitem(__import__("sys").modules, "googleapiclient.discovery", fake_discovery)
+
+    ok, summary = csa.check_android_access("com.example.app")
+
+    assert ok is False
+    assert "svc@example.com" in summary
+    assert "Google Cloud project for this key is missing" in summary
+    assert "GOOGLE_PLAY_JSON_KEY" in summary

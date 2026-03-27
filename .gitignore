@@ -114,3 +114,19 @@ apple_*.png
 artifacts_*.png
 apple_status.json
 .aider*
+
+# RLHF local feedback data
+.rlhf/feedback-log.jsonl
+.rlhf/memory-log.jsonl
+.rlhf/feedback-sequences.jsonl
+.rlhf/feedback-summary.json
+.rlhf/diversity-tracking.json
+.rlhf/risk-model.json
+.rlhf/self-score-log.jsonl
+.rlhf/funnel-events.jsonl
+.rlhf/telemetry-pings.jsonl
+.rlhf/audit-trail.jsonl
+.rlhf/auto-promoted-gates.json
+.rlhf/.watcher-offset
+.rlhf/chatgpt-openapi.yaml
+.rlhf/contextfs/

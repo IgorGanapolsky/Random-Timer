@@ -79,10 +79,12 @@ Use the App Distribution service account from `FIREBASE_SERVICE_ACCOUNT_JSON`, n
 python3 - <<'PY'
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+import os
 import requests
 
+key_path = os.environ["FIREBASE_SERVICE_ACCOUNT_JSON_PATH"]
 creds = service_account.Credentials.from_service_account_file(
-    "/tmp/firebase-sa.json",
+    key_path,
     scopes=["https://www.googleapis.com/auth/cloud-platform"],
 )
 creds.refresh(Request())

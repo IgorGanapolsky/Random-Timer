@@ -115,7 +115,8 @@ class GooglePlayVerifier:
                 "Set one of:\n"
                 "  - GOOGLE_PLAY_JSON_KEY (path or raw JSON)\n"
                 "  - GOOGLE_PLAY_JSON_KEY_PATH (path)\n"
-                "Or ensure /tmp/play-service-account.json exists.",
+                "Or ensure the repo temp fallback exists "
+                f"({os.path.join(tempfile.gettempdir(), 'play-service-account.json')}).",
                   file=sys.stderr)
             sys.exit(2)
 

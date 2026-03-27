@@ -163,19 +163,25 @@ Manual command:
 ```bash
 python scripts/delegation_contract.py \
   --operation ios_submit_for_review \
-  --asc-ready-json /tmp/asc_ready.json \
+  --asc-ready-json .artifacts/asc_ready.json \
   --intent true \
-  --json-out /tmp/delegation_contract.json \
+  --json-out .artifacts/delegation_contract.json \
   --enforce
 ```
 
-CI/workflows persist contract artifacts (`/tmp/delegation_contract*.json`) so every "ready" claim is backed by machine-readable evidence.
+CI/workflows persist contract artifacts under the runner temp directory so every "ready" claim is backed by machine-readable evidence.
 
 ## Store Metadata Locations
 
 ## Android Firebase App Distribution
 
 Android Firebase App Distribution is documented separately in [FIREBASE_ANDROID_INFRASTRUCTURE.md](FIREBASE_ANDROID_INFRASTRUCTURE.md).
+
+As of March 26, 2026, Android Firebase APK delivery is not the default internal-distribution path. A Firebase-distributed APK was flagged by Google Play Protect on tester install with a harmful-app warning, so the default `Internal Distribution` workflow target is now `all_safe`:
+- iOS TestFlight
+- Android Google Play internal
+
+Use `target=android_firebase` only when Firebase APK delivery is explicitly required for debugging or appeal evidence collection.
 
 Important: Android runtime Firebase and Android App Distribution do not currently use the same Firebase project. Check that document before rotating any Firebase secret.
 

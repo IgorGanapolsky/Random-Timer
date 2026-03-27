@@ -146,24 +146,32 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
         edits_service.commit(packageName=package, editId=edit_id).execute()
         return False
     except Exception as error:
-        error_text = str(error) + " " + str(getattr(error, "content", b""))
-        # Google auto-commits changes — no manual commit needed
-        if "sent for review automatically" in error_text or "changesNotSentForReview must not be set" in error_text:
-            return False
         response_text = _extract_response_text(error)
         status = getattr(getattr(error, "resp", None), "status", None)
-        if not _requires_manual_review_submission(str(error), response_text, status):
-            raise
-        try:
-            edits_service.commit(
-                packageName=package,
-                editId=edit_id,
-                changesNotSentForReview=True,
-            ).execute()
-            return True
-        except Exception:
-            # If retry also fails, changes were likely auto-committed
+        if _requires_manual_review_submission(str(error), response_text, status):
+            try:
+                edits_service.commit(
+                    packageName=package,
+                    editId=edit_id,
+                    changesNotSentForReview=True,
+                ).execute()
+                return True
+            except Exception:
+                # If retry also fails, changes were likely auto-committed
+                return False
+
+        error_text = f"{error}\n{response_text}".lower()
+        # Google auto-commits changes — no manual commit needed.
+        if (
+            "changesnotsentforreview must not be set" in error_text
+            or (
+                "sent for review automatically" in error_text
+                and "cannot be sent for review automatically" not in error_text
+            )
+        ):
             return False
+        else:
+            raise
 
 
 def _update_listing_and_assets(
@@ -371,7 +379,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--package", required=True)
     parser.add_argument("--aab-path", required=True)
     parser.add_argument("--requested-track", default="production")
-    parser.add_argument("--fallback-track", default="alpha")
+    parser.add_argument("--fallback-track", default="")
     parser.add_argument("--release-status", default="completed")
     parser.add_argument("--retry-window-seconds", type=int, default=10800)
     parser.add_argument("--retry-interval-seconds", type=int, default=300)
@@ -402,7 +410,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
     requested_track = (args.requested_track or "production").strip()
-    fallback_track = (args.fallback_track or "alpha").strip()
+    fallback_track = (args.fallback_track or "").strip()
     tracks = [requested_track]
     if requested_track == "production" and fallback_track and fallback_track != requested_track:
         tracks.append(fallback_track)
@@ -455,17 +463,19 @@ def main() -> int:
             }
             if precondition_error_payload:
                 result_payload["production_precondition_error"] = precondition_error_payload
+            if outcome.get("changes_not_sent_for_review"):
+                _write_json(result_json_path, result_payload)
+                print(
+                    "❌ Google Play committed the edit with changesNotSentForReview=true. "
+                    "This release is not publicly live until Play Console 'Send for review' is completed.",
+                    file=sys.stderr,
+                )
+                return 1
             _write_json(result_json_path, result_payload)
             print(
                 f"✅ Uploaded version code {outcome['version_code']} to '{track}' track "
                 f"(requested={requested_track}, status={release_status}, fallback_used={fallback_used})"
             )
-            if outcome.get("changes_not_sent_for_review"):
-                print(
-                    "ℹ️ Google Play committed the edit with changesNotSentForReview=true. "
-                    "Open Play Console and click 'Send for review' for this release.",
-                    file=sys.stderr,
-                )
             return 0
         except PublishError as error:
             payload = {
