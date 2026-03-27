@@ -25,9 +25,9 @@ This repository uses multiple PR review and analysis agents. The table below ref
 | **Claude Review** | **Active** | Runs PR review and `@claude` assist flows through GitHub Actions. | [`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml) |
 | **GitHub Copilot code review** | **Enabled on `develop` and `main`** | Automatically reviews pull requests, including new pushes and drafts on protected branches. | Protected branch rulesets now include `copilot_code_review` with `review_on_push=true` and `review_draft_pull_requests=true` |
 | **SonarQube Cloud** | **Active** | Decorates PRs and enforces a quality gate on analyzed code. | Recent `sonarqubecloud[bot]` PR comments and the live `SonarCloud Code Analysis` check |
-| **Cursor BugBot / `@cursor` agent** | **Repo-ready, app install still required** | BugBot reviews PRs; `@cursor ...` can trigger cloud-agent fixes on PRs and issues. | [`BUGBOT.md`](BUGBOT.md) plus Cursor docs for [Bugbot](https://cursor.com/docs/bugbot) and [GitHub integration](https://cursor.com/docs/integrations/github) |
+| **Cursor BugBot / `@cursor` agent** | **Active** | BugBot reviews PRs; `@cursor ...` can trigger cloud-agent fixes on PRs and issues. | [`BUGBOT.md`](BUGBOT.md), official Cursor docs, and the live `cursor` response comment on verification PR `#916` |
 
-Current note: SonarQube Cloud is green on the long-lived branch currently analyzed by SonarCloud. Cursor remains repo-ready until its external GitHub app install is enabled; Cursor's GitHub docs still require installing `github.com/apps/cursor` with repository access and pull-request write permissions.
+Current note: SonarQube Cloud is green on the long-lived branch currently analyzed by SonarCloud. Cursor is now live and was verified on March 27, 2026 by a direct `@cursor` trigger that produced a `cursor` author comment on PR `#916`.
 
 ## North Star (Defined February 23, 2026)
 
