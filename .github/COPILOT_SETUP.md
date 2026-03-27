@@ -1,5 +1,7 @@
 # GitHub Copilot Setup Checklist
 
+Status as of `2026-03-26`: automatic Copilot code review is already enabled on the protected `develop` and `main` branch rulesets, with both `review_on_push` and `review_draft_pull_requests` enabled. The remaining steps in this checklist are for Copilot memory, coding-agent workflows, and optional Spaces setup.
+
 This document lists the manual GitHub settings you need to configure to fully enable Copilot features for this repo.
 
 ## Required Plan

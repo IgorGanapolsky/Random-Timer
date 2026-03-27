@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 
@@ -47,5 +48,9 @@ def test_runtime_temp_paths_are_environment_backed() -> None:
 def test_hygiene_check_matches_current_repo_policy() -> None:
     contents = (REPO_ROOT / "scripts" / "hygiene-check.sh").read_text(encoding="utf-8")
     assert '"GEMINI.md"' in contents
+    assert '"BUGBOT.md"' in contents
     assert "Possible secret or temp-path leak" not in contents
-    assert r"PRIVATE_KEY\|SECRET_KEY\|password.*=\|/private/tmp/\|/tmp/" not in contents
+    private_tmp = os.path.join(os.sep, "private", "tmp", "")
+    tmp_dir = os.path.join(os.sep, "tmp", "")
+    forbidden_pattern = r"PRIVATE_KEY\|SECRET_KEY\|password.*=\|" + private_tmp + r"\|" + tmp_dir
+    assert forbidden_pattern not in contents
