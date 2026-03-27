@@ -11,6 +11,7 @@ on:
 jobs:
   verify:
     name: Read-Only Console Verification
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: production
     permissions:
