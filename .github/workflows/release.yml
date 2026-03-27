@@ -67,13 +67,13 @@ jobs:
         run: npm ci
 
       - name: Setup EAS
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           format: cyclonedx-json
           output-file: sbom.cdx.json
@@ -139,7 +139,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         if: ${{ github.event.inputs.environment == 'production' }}
         with:
           tag_name: ${{ needs.prepare.outputs.version }}
@@ -164,7 +164,7 @@ jobs:
     if: always() && vars.SLACK_ENABLED == 'true'
     steps:
       - name: Notify release status
-        uses: 8398a7/action-slack@v3
+        uses: 8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703 # v3.9.3
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow

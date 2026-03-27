@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -91,7 +92,7 @@ def test_run_writes_metrics_snapshot(tmp_path: Path, monkeypatch) -> None:
     output = repo_root / "marketing" / "data" / "apple_ads_live_metrics.json"
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["metrics_30d"]["impressions"] == 100
-    assert payload["metrics_30d"]["spend_usd"] == 12.34
+    assert payload["metrics_30d"]["spend_usd"] == pytest.approx(12.34)
     assert payload["metrics_30d"]["installs"] == 4
     assert payload["metrics_30d"]["tap_install_cpi_usd"] > 0
 

@@ -1,7 +1,3 @@
-import os
-import re
-import uuid
-
 project_path = "native-ios/RandomTimer.xcodeproj/project.pbxproj"
 audio_dir = "native-ios/RandomTimer/Resources/Sounds"
 
@@ -26,21 +22,43 @@ files = [
 with open(project_path, 'r') as f:
     content = f.read()
 
+def _section_index(marker: str) -> int:
+    index = content.find(marker)
+    if index == -1:
+        print(f"Could not find marker: {marker}")
+        exit(1)
+    return index
+
+
+def _group_children_insertion_point(group_name: str) -> int:
+    group_marker = f"/* {group_name} */ = {{"
+    group_index = _section_index(group_marker)
+    children_marker = "children = ("
+    children_index = content.find(children_marker, group_index)
+    if children_index == -1:
+        print(f"Could not find children list for group: {group_name}")
+        exit(1)
+    return children_index + len(children_marker)
+
+
+def _resources_files_insertion_point() -> int:
+    resources_marker = "/* Resources */ = {"
+    resources_index = _section_index(resources_marker)
+    files_marker = "files = ("
+    files_index = content.find(files_marker, resources_index)
+    if files_index == -1:
+        print("Could not find PBXResourcesBuildPhase files list")
+        exit(1)
+    return files_index + len(files_marker)
+
 # 1. Create PBXFileReference for each file
 # Find the start of the PBXFileReference section
-file_ref_section_match = re.search(r'/\* Begin PBXFileReference section \*/', content)
-if not file_ref_section_match:
-    print("Could not find PBXFileReference section")
-    exit(1)
+_section_index('/* Begin PBXFileReference section */')
 
 # Map filenames to UUIDs (using deterministic ones based on filename for idempotency)
 file_uuids = {}
-for f in files:
-    # Use a consistent prefix but randomized enough to not collide
-    # Xcode UUIDs are 24 chars.
-    h = hash(f) & 0xFFFFFFFFFFFF
-    u = f"DB1EBA{h:012X}"[:24]
-    file_uuids[f] = u
+for index, f in enumerate(files, start=1):
+    file_uuids[f] = f"DB1EBA{index:018X}"[:24]
 
 new_file_refs = ""
 for f, u in file_uuids.items():
@@ -51,41 +69,24 @@ if new_file_refs:
     content = content.replace('/* Begin PBXFileReference section */', '/* Begin PBXFileReference section */\n' + new_file_refs)
 
 # 2. Add to "Sounds" PBXGroup
-# Find the Sounds group
-sounds_group_match = re.search(r'([0-9A-F]{24}) /\* Sounds \*/ = \{[^{]*isa = PBXGroup;[^{]*children = \(', content)
-if not sounds_group_match:
-    print("Could not find Sounds group")
-    exit(1)
-
 new_children = ""
 for f, u in file_uuids.items():
     if u not in content:
         new_children += f'\t\t\t\t{u} /* {f} */,\n'
 
 if new_children:
-    insertion_point = sounds_group_match.end()
+    insertion_point = _group_children_insertion_point("Sounds")
     content = content[:insertion_point] + '\n' + new_children + content[insertion_point:]
 
 # 3. Add to PBXResourcesBuildPhase
-# Find the main target's resources build phase
-# Main target is RandomTimer
-resources_phase_match = re.search(r'([0-9A-F]{24}) /\* Resources \*/ = \{[^{]*isa = PBXResourcesBuildPhase;[^{]*files = \(', content)
-if not resources_phase_match:
-    print("Could not find PBXResourcesBuildPhase section")
-    exit(1)
-
 # We also need PBXBuildFile entries for each file reference
-build_file_section_match = re.search(r'/\* Begin PBXBuildFile section \*/', content)
-if not build_file_section_match:
-    print("Could not find PBXBuildFile section")
-    exit(1)
+_section_index('/* Begin PBXBuildFile section */')
 
 build_uuids = {}
 new_build_files = ""
-for f, u in file_uuids.items():
+for index, (f, u) in enumerate(file_uuids.items(), start=1):
     # Another set of UUIDs for the build files
-    h = hash(f + "_build") & 0xFFFFFFFFFFFF
-    bu = f"DB1EBB{h:012X}"[:24]
+    bu = f"DB1EBB{index:018X}"[:24]
     build_uuids[f] = bu
     if bu not in content:
         new_build_files += f'\t\t{bu} /* {f} in Resources */ = {{isa = PBXBuildFile; fileRef = {u} /* {f} */; }};\n'
@@ -100,7 +101,7 @@ for f, bu in build_uuids.items():
         new_resource_entries += f'\t\t\t\t{bu} /* {f} in Resources */,\n'
 
 if new_resource_entries:
-    insertion_point = resources_phase_match.end()
+    insertion_point = _resources_files_insertion_point()
     content = content[:insertion_point] + '\n' + new_resource_entries + content[insertion_point:]
 
 with open(project_path, 'w') as f:

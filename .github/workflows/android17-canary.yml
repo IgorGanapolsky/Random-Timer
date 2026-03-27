@@ -33,7 +33,7 @@ jobs:
           cache: gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
 
       - name: Install canary Android platform packages
         env:
@@ -76,4 +76,3 @@ jobs:
             native-android/app/build/reports/tests/testDebugUnitTest
             native-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: warn
-
