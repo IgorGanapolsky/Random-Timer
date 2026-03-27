@@ -21,6 +21,8 @@ ALLOWED_ROOT_MD=(
   "README.md"
   "CLAUDE.md"
   "AGENTS.md"
+  "BUGBOT.md"
+  "GEMINI.md"
   "CONTRIBUTING.md"
   "CODE_OF_CONDUCT.md"
   "SECURITY.md"
@@ -53,11 +55,18 @@ fi
 # ── 3. No secrets or temp paths ─────────────────────────────────────
 echo "3. No secrets or temp paths"
 
-secret_hits=$(git grep -l 'PRIVATE_KEY\|SECRET_KEY\|password.*=\|/private/tmp/\|/tmp/' -- '*.md' '*.sh' '*.yml' '*.yaml' '*.json' '*.kt' '*.swift' 2>/dev/null | grep -v '.gitleaks.toml' | grep -v 'pre-push' | grep -v 'hygiene-check' || true)
+secret_hits=$(git grep -l -E 'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AIza[0-9A-Za-z_-]{35}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}' -- '*.md' '*.sh' '*.yml' '*.yaml' '*.json' '*.kt' '*.swift' '*.py' 2>/dev/null | grep -v '.gitleaks.toml' | grep -v 'pre-push' | grep -v 'hygiene-check' || true)
 if [ -n "$secret_hits" ]; then
   while IFS= read -r hit; do
-    warn "Possible secret or temp-path leak in: $hit"
+    error "Possible committed secret in: $hit"
   done <<< "$secret_hits"
+fi
+
+temp_hits=$(git grep -l '/private/tmp/' -- '*.md' '*.sh' '*.yml' '*.yaml' '*.json' '*.kt' '*.swift' '*.py' 2>/dev/null | grep -v 'hygiene-check' || true)
+if [ -n "$temp_hits" ]; then
+  while IFS= read -r hit; do
+    warn "Machine-local temp path found in: $hit"
+  done <<< "$temp_hits"
 fi
 
 # ── 4. No stale publishing docs ─────────────────────────────────────

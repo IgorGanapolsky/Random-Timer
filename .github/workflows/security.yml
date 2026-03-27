@@ -13,14 +13,13 @@ on:
       - "**/*.ts"
       - "**/*.tsx"
 
-permissions:
-  contents: read
-  security-events: write
-  actions: read
-
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     strategy:
@@ -49,7 +48,7 @@ jobs:
       - name: Run Snyk
         if: matrix.scan-type == 'dependencies' && env.SNYK_TOKEN != ''
         continue-on-error: true
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04 # master
         env:
           SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
         with:
@@ -57,7 +56,7 @@ jobs:
 
       - name: OWASP Dependency Check
         if: matrix.scan-type == 'dependencies'
-        uses: dependency-check/Dependency-Check_Action@main
+        uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c # main
         with:
           project: "RandomTimer-Native"
           path: "."
@@ -121,7 +120,7 @@ jobs:
       - name: Mobile Security Framework (MobSF)
         if: matrix.scan-type == 'mobile'
         continue-on-error: true
-        uses: MobSF/mobsfscan@main
+        uses: MobSF/mobsfscan@ec2927a8cfab6626a67f26b223be3aba52a34b70 # main
         with:
           args: ". --json --output mobile-security-results.json"
 
@@ -145,12 +144,14 @@ jobs:
     needs: security-scan
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Security Issues
         if: always() && env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@v3
+        uses: 8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703 # v3.9.3
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow

@@ -67,7 +67,7 @@ jobs:
           key: avd-api-30-${{ runner.os }}
 
       - name: Run Maestro tests on emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7 # v2
         with:
           api-level: 30
           target: google_apis

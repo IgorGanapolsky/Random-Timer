@@ -12,6 +12,8 @@ Captures clean raw iOS App Store screenshots into:
 The script drives the existing UI test target in a deterministic capture mode
 for one large iPhone and one 13-inch iPad simulator, then prints pixel sizes
 for the captured PNGs.
+
+Set `APPSTORE_SCREENSHOT_OUTPUT_DIR` to override the temporary raw capture path.
 EOF
 }
 
@@ -33,7 +35,7 @@ fi
 
 cd "$REPO_ROOT"
 
-RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.iOS-18-6"
+RUNTIME_ID="${IOS_RUNTIME_ID:-com.apple.CoreSimulator.SimRuntime.iOS-26-4}"
 IPHONE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
 IPAD_TYPE="com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB"
 IPHONE_NAME="RandomTimer AppStore iPhone 16 Pro Max"
@@ -51,7 +53,7 @@ ensure_sim "$IPHONE_NAME" "$IPHONE_TYPE"
 ensure_sim "$IPAD_NAME" "$IPAD_TYPE"
 
 OUT_DIR="native-ios/fastlane/screenshots/$LOCALE/originals"
-TMP_OUT_DIR="/tmp/appstore_screenshots"
+TMP_OUT_DIR="${APPSTORE_SCREENSHOT_OUTPUT_DIR:-${TMPDIR:-/tmp}/appstore_screenshots}"
 mkdir -p "$OUT_DIR"
 
 BACKUP_DIR="$OUT_DIR/_backup/$(date +%Y%m%d_%H%M%S)"
