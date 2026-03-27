@@ -27,7 +27,7 @@ This repository uses multiple PR review and analysis agents. The table below ref
 | **SonarQube Cloud** | **Active** | Decorates PRs and enforces a quality gate on analyzed code. | Recent `sonarqubecloud[bot]` PR comments and the live `SonarCloud Code Analysis` check |
 | **Cursor BugBot / `@cursor` agent** | **Repo-ready, app install still required** | BugBot reviews PRs; `@cursor ...` can trigger cloud-agent fixes on PRs and issues. | [`BUGBOT.md`](BUGBOT.md) plus Cursor docs for [Bugbot](https://cursor.com/docs/bugbot) and [GitHub integration](https://cursor.com/docs/integrations/github) |
 
-Current note: SonarQube Cloud is wired correctly, but its quality gate is still red on `main` until the legacy hotspots and ratings debt are remediated.
+Current note: SonarQube Cloud is green on the long-lived branch currently analyzed by SonarCloud. Cursor remains repo-ready until its external GitHub app install is enabled.
 
 ## North Star (Defined February 23, 2026)
 
