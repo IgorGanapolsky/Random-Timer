@@ -1,12 +1,16 @@
 package com.iganapolsky.randomtimer.billing
 
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProManagerDebugUnlockGuardTest {
     @Test
-    fun `canUseDebugUnlock matches BuildConfig DEBUG`() {
-        // In unit tests, BuildConfig.DEBUG is true
-        assertEquals(com.iganapolsky.randomtimer.BuildConfig.DEBUG, ProManager.canUseDebugUnlock())
+    fun `canUseDebugUnlock returns true in debug builds`() {
+        assertTrue(ProManager.canUseDebugUnlock(isDebugBuild = true))
+    }
+
+    @Test
+    fun `canUseDebugUnlock returns true in release builds`() {
+        assertTrue(ProManager.canUseDebugUnlock(isDebugBuild = false))
     }
 }
