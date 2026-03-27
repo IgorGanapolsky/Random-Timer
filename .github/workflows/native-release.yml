@@ -31,7 +31,7 @@ on:
           - 'false'
           - 'true'
         required: false
-        default: 'true'
+        default: 'false'
 
 concurrency:
   group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
