@@ -99,6 +99,20 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
 
 
+def test_native_release_workflow_submits_ios_for_review_by_default():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    submit_review_block = source.split("submit_review:", 1)[1].split("concurrency:", 1)[0]
+    assert "default: 'true'" in submit_review_block
+
+
+def test_native_release_workflow_verifies_public_play_listing_for_production():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Verify public Google Play listing (production only)" in source
+    assert "python scripts/verify_play_public_listing.py" in source
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
