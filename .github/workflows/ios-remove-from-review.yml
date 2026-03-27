@@ -1,0 +1,83 @@
+name: iOS Remove From Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "iOS marketing version to remove from review"
+        required: true
+        type: string
+      wait:
+        description: "Wait until the version becomes editable"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: ios-remove-from-review-${{ github.ref_name }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fail fast on required App Store secrets
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "❌ Missing required secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
+
+      - name: Write App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          echo "$APPSTORE_PRIVATE_KEY" > /tmp/appstore_key.p8
+
+      - name: Remove App Store version from review
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          WAIT_FOR_EDITABLE: ${{ inputs.wait }}
+        run: |
+          EXTRA_ARGS=()
+          if [ "$WAIT_FOR_EDITABLE" = "true" ]; then
+            EXTRA_ARGS+=(--wait)
+          fi
+          python scripts/asc_remove_from_review.py \
+            --version "${{ inputs.version }}" \
+            "${EXTRA_ARGS[@]}" \
+            --json-out /tmp/asc_remove_from_review.json
+          cat /tmp/asc_remove_from_review.json
+
+      - name: Upload removal artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-remove-from-review
+          path: /tmp/asc_remove_from_review.json
+
+      - name: Cleanup key
+        if: always()
+        run: rm -f /tmp/appstore_key.p8 /tmp/asc_remove_from_review.json
