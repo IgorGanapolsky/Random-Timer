@@ -216,10 +216,12 @@ class TimerForegroundService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        stopTimer(
-            stopSource = STOP_SOURCE_TASK_REMOVED,
-            trackStopAnalytics = true,
-        )
+        // Keep the foreground service running when user swipes app from recents.
+        // The timer should continue counting down and trigger the alarm normally.
+        // Ensure we have a visible notification so the OS doesn't kill us.
+        _timerState.value?.let { state ->
+            updateNotification(state)
+        }
     }
 
     private fun startTimerFromExtras(
@@ -406,6 +408,21 @@ class TimerForegroundService : Service() {
 
     private fun dismissAlarm() {
         alarmCountdownJob?.cancel()
+        // Track completion before cleanup — user heard the alarm and acknowledged it
+        _timerState.value?.let { state ->
+            if (state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_COMPLETED,
+                    mapOf(
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                        "source" to "alarm_dismissed",
+                    ),
+                )
+                analyticsService.trackFirstTimerCompletedIfNeeded()
+                storeReviewManager.recordCompletion()
+                trainingStatsService.recordSession()
+            }
+        }
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()

@@ -173,6 +173,18 @@ final class TimerManager: ObservableObject {
 
     func dismissAlarm() async {
         AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
+        // Track completion — user heard the alarm and acknowledged it
+        if let state = timerState, state.status == .alarm || state.status == .complete {
+            StoreReviewManager.shared.recordCompletion()
+            TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                "target_duration": state.targetDuration,
+                "source": "alarm_dismissed",
+                AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
+            ])
+            AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
+        }
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
         // Schedule re-engagement reminders before clearing timer state
@@ -283,6 +295,15 @@ final class TimerManager: ObservableObject {
                         state.status = .complete
                         state.alarmTimeRemaining = 0
                         timerState = state
+                        StoreReviewManager.shared.recordCompletion()
+                        TrainingStatsService.shared.recordSession()
+                        UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+                        AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                            "target_duration": state.targetDuration,
+                            "source": "foreground_return_alarm_expired",
+                            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
+                        ])
+                        AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
                     }
                     return
                 } else {
@@ -346,6 +367,15 @@ final class TimerManager: ObservableObject {
                     state.alarmTimeRemaining = 0
                     state.alarmStartedAt = alarmStartDate
                     timerState = state
+                    StoreReviewManager.shared.recordCompletion()
+                    TrainingStatsService.shared.recordSession()
+                    UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+                    AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                        "target_duration": state.targetDuration,
+                        "source": "foreground_return_timer_and_alarm_expired",
+                        AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
+                    ])
+                    AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
                 }
                 return
             }
@@ -492,6 +522,16 @@ final class TimerManager: ObservableObject {
         // If the saved state was already in alarm or complete, clear it and go to home
         // This prevents alarm from replaying when force-closing during alarm and reopening
         if saved.status == .alarm || saved.status == .complete {
+            // Timer was in alarm or already complete when app was killed — count as completed
+            StoreReviewManager.shared.recordCompletion()
+            TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
+                "target_duration": saved.targetDuration,
+                "source": "restore_alarm_or_complete",
+                AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
+            ])
+            AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
             await storageService.clearTimerState()
             timerState = nil
             return
@@ -510,14 +550,16 @@ final class TimerManager: ObservableObject {
             await startLiveActivity(state: restored)
             startCountdown()
         } else {
-            // Timer should have completed while app was closed - go to complete state, don't replay alarm
-            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+            // Timer completed while app was closed — track as completion, not abandonment
+            StoreReviewManager.shared.recordCompletion()
+            TrainingStatsService.shared.recordSession()
+            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
+            AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": saved.targetDuration,
-                "remaining_duration": 0,
-                "status": saved.status.rawValue,
-                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonStaleRestoreExpired,
-                AnalyticsProperties.abandonSource: AnalyticsValues.abandonSourceStateRestore,
+                "source": "background_completion",
+                AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
             ])
+            AnalyticsService.shared.trackFirstTimerCompletedIfNeeded()
             await storageService.clearTimerState()
             timerState = nil
         }
