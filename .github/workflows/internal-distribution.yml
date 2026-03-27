@@ -149,7 +149,7 @@ jobs:
           python-version: "3.11"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@e5517072e87f198d9533967ae13d97c11b604005 # v1.99.0
         with:
           ruby-version: "3.2"
           bundler-cache: true
@@ -284,7 +284,7 @@ jobs:
           java-version: "17"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@e5517072e87f198d9533967ae13d97c11b604005 # v1.99.0
         with:
           ruby-version: "3.2"
           bundler-cache: true
@@ -482,7 +482,7 @@ jobs:
           ./gradlew assembleRelease --no-daemon
 
       - name: Distribute to Firebase
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1
         id: firebase_dist
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}

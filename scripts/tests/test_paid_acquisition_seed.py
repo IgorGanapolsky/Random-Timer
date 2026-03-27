@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 
 def _write_paid_campaigns(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -57,7 +59,7 @@ def test_run_acquisition_preserves_unmanaged_campaigns_and_caps_budget(monkeypat
         tmp_path,
         budget_override={**pas.DEFAULT_BUDGET, "daily_budget_usd": 100.0},
     )
-    assert result["budget"]["daily_budget_usd"] == 35.0
+    assert result["budget"]["daily_budget_usd"] == pytest.approx(35.0)
 
     persisted = json.loads((tmp_path / "marketing" / "data" / "paid_campaigns.json").read_text(encoding="utf-8"))
     campaigns = {item["platform"]: item for item in persisted["campaigns"]}
@@ -69,7 +71,6 @@ def test_run_acquisition_preserves_unmanaged_campaigns_and_caps_budget(monkeypat
 
     history = persisted["history"][-1]
     assert history["action"] == "campaign_refresh"
-    assert history["daily_budget_requested_usd"] == 100.0
-    assert history["daily_budget_applied_usd"] == 35.0
+    assert history["daily_budget_requested_usd"] == pytest.approx(100.0)
+    assert history["daily_budget_applied_usd"] == pytest.approx(35.0)
     assert history["budget_capped"] is True
-

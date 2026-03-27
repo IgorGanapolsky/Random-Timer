@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shlex
 import sys
 from pathlib import Path
@@ -16,52 +15,54 @@ class VersionParseError(RuntimeError):
     """Raised when source version metadata cannot be parsed."""
 
 
-ANDROID_VERSION_NAME_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
-ANDROID_VERSION_CODE_RE = re.compile(r"versionCode\s*=\s*(?:[^\n]*?\?:\s*)?(\d+)")
-ANDROID_VERSION_CODE_FALLBACK_RE = re.compile(r"versionCode\s*=\s*[^\n]*?\?:\s*(\d+)")
-IOS_MARKETING_VERSION_RE = re.compile(
-    r"MARKETING_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*;"
-)
-IOS_BUILD_NUMBER_RE = re.compile(r"CURRENT_PROJECT_VERSION\s*=\s*(\d+)\s*;")
-
-
 def _read_text(path: Path) -> str:
     if not path.is_file():
         raise VersionParseError(f"Missing required file: {path}")
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def _extract_assignment_value(
+    text: str,
+    *,
+    key: str,
+    delimiter: str = "=",
+    strip_chars: str = '";',
+) -> str:
+    for line in text.splitlines():
+        if key not in line or delimiter not in line:
+            continue
+        _, raw_value = line.split(delimiter, 1)
+        candidate = raw_value.strip().strip(strip_chars)
+        if candidate:
+            return candidate
+    raise VersionParseError(f"Could not parse {key}")
+
+
 def extract_android_version_name(text: str) -> str:
-    match = ANDROID_VERSION_NAME_RE.search(text)
-    if not match:
-        raise VersionParseError("Could not parse Android versionName")
-    return match.group(1)
+    return _extract_assignment_value(text, key="versionName", strip_chars='"')
 
 
 def extract_android_version_code(text: str) -> int:
-    match = ANDROID_VERSION_CODE_RE.search(text)
-    if match:
-        return int(match.group(1))
-
-    fallback_match = ANDROID_VERSION_CODE_FALLBACK_RE.search(text)
-    if fallback_match:
-        return int(fallback_match.group(1))
-
+    for line in text.splitlines():
+        if "versionCode" not in line or "=" not in line:
+            continue
+        rhs = line.split("=", 1)[1]
+        tokens = [
+            token.strip()
+            for token in rhs.replace("?:", " ").replace("=", " ").split()
+        ]
+        for token in reversed(tokens):
+            if token.isdigit():
+                return int(token)
     raise VersionParseError("Could not parse Android versionCode")
 
 
 def extract_ios_version_name(text: str) -> str:
-    match = IOS_MARKETING_VERSION_RE.search(text)
-    if not match:
-        raise VersionParseError("Could not parse iOS MARKETING_VERSION")
-    return match.group(1)
+    return _extract_assignment_value(text, key="MARKETING_VERSION")
 
 
 def extract_ios_build_number(text: str) -> int:
-    match = IOS_BUILD_NUMBER_RE.search(text)
-    if not match:
-        raise VersionParseError("Could not parse iOS CURRENT_PROJECT_VERSION")
-    return int(match.group(1))
+    return int(_extract_assignment_value(text, key="CURRENT_PROJECT_VERSION"))
 
 
 def read_source_versions(repo_root: Path) -> dict[str, dict[str, Any]]:
