@@ -192,7 +192,7 @@ class ReleaseReadinessGateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = self._make_repo(td, "ios")
             (root / "native-ios" / "fastlane" / "metadata" / "en-US" / "privacy_url.txt").write_text(
-                "http://insecure.com", encoding="utf-8"
+                "insecure.example/privacy", encoding="utf-8"
             )
             gate = Gate(root, "ios")
             result = gate.run_all()
