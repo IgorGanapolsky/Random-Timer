@@ -42,6 +42,20 @@ jobs:
             echo "status=skipped" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Run Engagement Dashboard
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/engagement_dashboard.py --repo-root . || true
+
+      - name: Run Abandon Rate Report
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/abandon_rate_report.py > marketing/data/abandon_rate.json || true
+
       - name: Run Release Readiness Gate
         id: gate
         run: |
@@ -60,6 +74,8 @@ jobs:
           name: wqtu-health-report
           path: |
             marketing/data/wqtu_health.json
+            marketing/data/engagement_dashboard.json
+            marketing/data/abandon_rate.json
             /tmp/readiness.json
 
       - name: Create alert issue if WQTU drops
