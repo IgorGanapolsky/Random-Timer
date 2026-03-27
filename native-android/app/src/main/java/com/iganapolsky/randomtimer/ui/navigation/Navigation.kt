@@ -185,8 +185,23 @@ fun RandomTimerNavHost(
             proPrice = proPrice,
             onPurchase = { productID ->
                 scope.launch {
-                    activity?.let { viewModel.proManager.launchProPurchase(it, paywallEntryPoint) }
-                    showPaywall = false
+                    val launched = activity?.let {
+                        viewModel.proManager.launchProPurchase(it, paywallEntryPoint)
+                    } ?: false
+                    if (!launched) {
+                        // Purchase failed to launch — keep paywall open
+                        // The billing dialog didn't appear, so user needs feedback
+                        android.widget.Toast.makeText(
+                            activity ?: return@launch,
+                            "Purchase unavailable. Please try again later.",
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    // Only dismiss if billing dialog launched (user will see Google Play sheet)
+                    // The actual purchase result comes via onPurchasesUpdated callback
+                    if (launched) {
+                        showPaywall = false
+                    }
                 }
             },
             onDebugUnlock = {

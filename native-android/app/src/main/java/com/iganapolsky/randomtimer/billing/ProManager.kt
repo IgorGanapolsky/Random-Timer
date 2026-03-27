@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -104,7 +105,10 @@ class ProManager
                     }
 
                     override fun onBillingServiceDisconnected() {
-                        // Retry on next purchase attempt
+                        externalScope.launch {
+                            delay(1000)
+                            connectAndRestore()
+                        }
                     }
                 },
             )
@@ -305,6 +309,11 @@ class ProManager
             val details = result.productDetailsList?.firstOrNull()
             if (details != null) {
                 cachedProductDetails[productID] = details
+            } else {
+                analyticsService.track("billing_product_not_found", mapOf(
+                    "product_id" to productID,
+                    "billing_ready" to billingClient.isReady,
+                ))
             }
             return details
         }
@@ -479,13 +488,10 @@ class ProManager
             debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
-            trackPurchaseResult(
-                success = true,
-                source = MonetizationSources.PAYWALL,
-                entryPoint = entryPoint,
-                responseCode = BillingClient.BillingResponseCode.OK,
-                debugMessage = "hidden_hold_override",
-            )
+            analyticsService.track("dev_debug_unlock", mapOf(
+                "entry_point" to entryPoint,
+                "is_developer_action" to true,
+            ))
             return true
         }
     }
