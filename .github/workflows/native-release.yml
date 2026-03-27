@@ -31,7 +31,7 @@ on:
           - 'false'
           - 'true'
         required: false
-        default: 'false'
+        default: 'true'
 
 concurrency:
   group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
@@ -474,6 +474,15 @@ jobs:
             ARGS="$ARGS --version ${{ steps.versions.outputs.ios_version }}"
           fi
           python scripts/verify_release.py $ARGS
+
+      - name: Verify public Google Play listing (production only)
+        if: needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
+        run: |
+          python scripts/verify_play_public_listing.py \
+            --package com.iganapolsky.randomtimer \
+            --country US \
+            --timeout 900 \
+            --poll-interval 60
 
       - name: Cleanup secrets
         if: always()
