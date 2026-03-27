@@ -174,7 +174,7 @@ final class TimerManager: ObservableObject {
     func dismissAlarm() async {
         AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
         // Track completion — user heard the alarm and acknowledged it
-        if let state = timerState, state.status == .alarm || state.status == .complete {
+        if let state = timerState, state.status == .alarm {
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
             UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
