@@ -29,3 +29,5 @@ Cursor BugBot should review this repository with a bug-first mindset.
 - Specific, reproducible, and tied to code behavior
 - Focused on bugs, regressions, security, or operational failures
 - Minimal speculation; prefer evidence from the diff
+
+<!-- Verification touch: confirm live Cursor BugBot activity on this PR, then close the branch without merging. -->
