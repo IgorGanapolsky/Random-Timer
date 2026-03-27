@@ -2,6 +2,7 @@ package com.iganapolsky.randomtimer.billing
 
 import android.app.Activity
 import android.content.Context
+import com.iganapolsky.randomtimer.BuildConfig
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -50,9 +51,7 @@ class ProManager
             const val ELITE_PRODUCT_ID = "elite_tactical"
             const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
-            internal fun canUseDebugUnlock(
-                @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
-            ): Boolean = true
+            internal fun canUseDebugUnlock(): Boolean = BuildConfig.DEBUG
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -250,6 +249,14 @@ class ProManager
                     .setProductDetailsParamsList(productDetailsParamsList)
                     .build()
 
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_PURCHASE_ATTEMPT,
+                mapOf(
+                    "product_id" to productID,
+                    AnalyticsProperties.SOURCE to MonetizationSources.PAYWALL,
+                    AnalyticsProperties.ENTRY_POINT to entryPoint,
+                ),
+            )
             val result = billingClient.launchBillingFlow(activity, flowParams)
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
                 trackPurchaseResult(
@@ -331,6 +338,17 @@ class ProManager
                         externalScope.launch { acknowledgePurchaseIfNeeded(purchase) }
                     }
                 }
+            }
+            if (hasPurchased) {
+                analyticsService.track(
+                    AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
+                    mapOf(
+                        AnalyticsProperties.SOURCE to
+                            (if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL),
+                        AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
+                        AnalyticsProperties.ENTITLEMENT_LEVEL to _entitlementLevel.value.name.lowercase(),
+                    ),
+                )
             }
             trackPurchaseResult(
                 success = hasPurchased,
