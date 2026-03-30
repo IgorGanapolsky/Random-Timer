@@ -43,6 +43,9 @@ DEFAULT_SCREENSHOT_PATH = (
     REPO_ROOT / "native-ios" / "fastlane" / "screenshots" / "en-US" / "3_pro.png"
 )
 DEFAULT_OUTPUT_PATH = REPO_ROOT / "ios-subscription-metadata-fix.json"
+DEFAULT_GROUP_LOCALE = "en-US"
+DEFAULT_GROUP_DISPLAY_NAME = "Pro"
+DEFAULT_GROUP_CUSTOM_APP_NAME = "Random Tactical Timer"
 
 
 def _read_text(path: Path) -> str:
@@ -105,6 +108,55 @@ def _build_review_screenshot_commit_payload(
     }
 
 
+def _build_group_localization_create_payload(
+    group_id: str,
+    *,
+    locale: str,
+    name: str,
+    custom_app_name: str,
+) -> dict[str, Any]:
+    attributes: dict[str, Any] = {
+        "locale": locale,
+        "name": name,
+    }
+    if custom_app_name:
+        attributes["customAppName"] = custom_app_name
+
+    return {
+        "data": {
+            "type": "subscriptionGroupLocalizations",
+            "attributes": attributes,
+            "relationships": {
+                "subscriptionGroup": {
+                    "data": {
+                        "id": group_id,
+                        "type": "subscriptionGroups",
+                    }
+                }
+            },
+        }
+    }
+
+
+def _build_group_localization_update_payload(
+    localization_id: str,
+    *,
+    name: str,
+    custom_app_name: str,
+) -> dict[str, Any]:
+    attributes: dict[str, Any] = {"name": name}
+    if custom_app_name:
+        attributes["customAppName"] = custom_app_name
+
+    return {
+        "data": {
+            "id": localization_id,
+            "type": "subscriptionGroupLocalizations",
+            "attributes": attributes,
+        }
+    }
+
+
 def _headers_dict(request_headers: list[dict[str, Any]] | None) -> dict[str, str]:
     headers: dict[str, str] = {}
     for item in request_headers or []:
@@ -135,6 +187,25 @@ def _find_subscription(client: ASCClient, bundle_id: str, product_id: str) -> tu
     return str(subscription.get("id") or ""), subscription
 
 
+def _find_subscription_and_group(
+    client: ASCClient,
+    bundle_id: str,
+    product_id: str,
+) -> tuple[str, dict[str, Any], str, dict[str, Any]]:
+    app = _asc_find_app(client, bundle_id)
+    subscription, group = _asc_find_matching_subscription(client, app.get("id", ""), product_id)
+    if subscription is None or group is None:
+        raise AscClientError(
+            f"No iOS subscription/group found for bundleId '{bundle_id}' and productId '{product_id}'."
+        )
+    return (
+        str(subscription.get("id") or ""),
+        subscription,
+        str(group.get("id") or ""),
+        group,
+    )
+
+
 def _get_subscription(client: ASCClient, subscription_id: str) -> dict[str, Any]:
     payload = client.get(
         f"/subscriptions/{subscription_id}",
@@ -146,6 +217,87 @@ def _get_subscription(client: ASCClient, subscription_id: str) -> dict[str, Any]
     )
     data = payload.get("data")
     return data if isinstance(data, dict) else {}
+
+
+def _list_group_localizations(
+    client: ASCClient,
+    group_id: str,
+) -> list[dict[str, Any]]:
+    return client.get_all(
+        f"/subscriptionGroups/{group_id}/subscriptionGroupLocalizations",
+        params={
+            "limit": 50,
+            "fields[subscriptionGroupLocalizations]": "name,customAppName,locale,state",
+        },
+    )
+
+
+def _serialize_group_localizations(localizations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for item in localizations:
+        attrs = item.get("attributes", {}) or {}
+        items.append(
+            {
+                "id": item.get("id"),
+                "locale": attrs.get("locale"),
+                "name": attrs.get("name"),
+                "customAppName": attrs.get("customAppName"),
+                "state": attrs.get("state"),
+            }
+        )
+    return items
+
+
+def _find_group_localization_by_locale(
+    localizations: list[dict[str, Any]],
+    locale: str,
+) -> dict[str, Any] | None:
+    for item in localizations:
+        if (item.get("attributes", {}) or {}).get("locale") == locale:
+            return item
+    return None
+
+
+def _create_group_localization(
+    client: ASCClient,
+    group_id: str,
+    *,
+    locale: str,
+    name: str,
+    custom_app_name: str,
+) -> dict[str, Any]:
+    payload = client.request(
+        "POST",
+        "/subscriptionGroupLocalizations",
+        payload=_build_group_localization_create_payload(
+            group_id,
+            locale=locale,
+            name=name,
+            custom_app_name=custom_app_name,
+        ),
+    )
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        raise AscClientError("Create group localization returned no resource data.")
+    return data
+
+
+def _patch_group_localization(
+    client: ASCClient,
+    localization_id: str,
+    *,
+    name: str,
+    custom_app_name: str,
+) -> dict[str, Any]:
+    return client.request(
+        "PATCH",
+        f"/subscriptionGroupLocalizations/{localization_id}",
+        payload=_build_group_localization_update_payload(
+            localization_id,
+            name=name,
+            custom_app_name=custom_app_name,
+        ),
+    )
 
 
 def _patch_review_note(client: ASCClient, subscription_id: str, review_note: str) -> dict[str, Any]:
@@ -373,6 +525,24 @@ def _parse_args() -> argparse.Namespace:
         default=str(DEFAULT_OUTPUT_PATH),
         help=f"Where to write the JSON evidence report (default: {DEFAULT_OUTPUT_PATH})",
     )
+    parser.add_argument(
+        "--group-locale",
+        default=DEFAULT_GROUP_LOCALE,
+        help=f"Subscription group locale to ensure exists (default: {DEFAULT_GROUP_LOCALE})",
+    )
+    parser.add_argument(
+        "--group-display-name",
+        default=DEFAULT_GROUP_DISPLAY_NAME,
+        help=f"Subscription group display name to apply (default: {DEFAULT_GROUP_DISPLAY_NAME})",
+    )
+    parser.add_argument(
+        "--group-custom-app-name",
+        default=DEFAULT_GROUP_CUSTOM_APP_NAME,
+        help=(
+            "Optional custom app name for the subscription group localization "
+            f"(default: {DEFAULT_GROUP_CUSTOM_APP_NAME})"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -393,21 +563,31 @@ def main() -> int:
 
     client = ASCClient.from_env(timeout=max(args.timeout_seconds, 30))
 
-    subscription_id = args.subscription_id.strip()
-    original_subscription = {}
-    if subscription_id:
-        original_subscription = _get_subscription(client, subscription_id)
-    else:
-        subscription_id, original_subscription = _find_subscription(
-            client,
-            args.ios_bundle_id,
-            args.ios_product_id,
+    (
+        discovered_subscription_id,
+        _subscription_resource,
+        subscription_group_id,
+        subscription_group_resource,
+    ) = _find_subscription_and_group(
+        client,
+        args.ios_bundle_id,
+        args.ios_product_id,
+    )
+
+    subscription_id = args.subscription_id.strip() or discovered_subscription_id
+    if subscription_id != discovered_subscription_id:
+        raise SystemExit(
+            "Explicit subscription ID does not match the bundle/product lookup result: "
+            f"{subscription_id} != {discovered_subscription_id}"
         )
+    original_subscription = _get_subscription(client, subscription_id)
+    group_localizations_before = _list_group_localizations(client, subscription_group_id)
 
     evidence: dict[str, Any] = {
         "bundleId": args.ios_bundle_id,
         "productId": args.ios_product_id,
         "subscriptionId": subscription_id,
+        "subscriptionGroupId": subscription_group_id,
         "generatedAtUnix": int(time.time()),
         "input": {
             "reviewNoteLength": len(review_note),
@@ -420,12 +600,63 @@ def main() -> int:
             "screenshotFileName": screenshot_path.name,
             "screenshotFileSize": len(screenshot_bytes),
             "screenshotMd5": screenshot_md5,
+            "groupLocale": args.group_locale,
+            "groupDisplayName": args.group_display_name,
+            "groupCustomAppName": args.group_custom_app_name,
         },
         "subscriptionBefore": {
             "id": original_subscription.get("id"),
             "attributes": original_subscription.get("attributes", {}),
         },
+        "subscriptionGroup": {
+            "id": subscription_group_id,
+            "attributes": subscription_group_resource.get("attributes", {}),
+        },
+        "subscriptionGroupLocalizationsBefore": _serialize_group_localizations(
+            group_localizations_before
+        ),
     }
+
+    target_group_localization = _find_group_localization_by_locale(
+        group_localizations_before,
+        args.group_locale,
+    )
+    group_localization_action: dict[str, Any]
+    if target_group_localization is None:
+        created_group_localization = _create_group_localization(
+            client,
+            subscription_group_id,
+            locale=args.group_locale,
+            name=args.group_display_name,
+            custom_app_name=args.group_custom_app_name,
+        )
+        group_localization_action = {
+            "action": "created",
+            "resource": created_group_localization,
+        }
+    else:
+        attrs = target_group_localization.get("attributes", {}) or {}
+        needs_update = (
+            (attrs.get("name") or "") != args.group_display_name
+            or (attrs.get("customAppName") or "") != args.group_custom_app_name
+        )
+        if needs_update:
+            updated_group_localization = _patch_group_localization(
+                client,
+                str(target_group_localization.get("id") or ""),
+                name=args.group_display_name,
+                custom_app_name=args.group_custom_app_name,
+            )
+            group_localization_action = {
+                "action": "updated",
+                "resource": updated_group_localization.get("data", updated_group_localization),
+            }
+        else:
+            group_localization_action = {
+                "action": "unchanged",
+                "resource": target_group_localization,
+            }
+    evidence["subscriptionGroupLocalizationAction"] = group_localization_action
 
     patched_subscription = _patch_review_note(client, subscription_id, review_note)
     patched_subscription_data = patched_subscription.get("data") or {}
@@ -489,10 +720,14 @@ def main() -> int:
     }
 
     refreshed_subscription = _get_subscription(client, subscription_id)
+    group_localizations_after = _list_group_localizations(client, subscription_group_id)
     evidence["subscriptionAfter"] = {
         "id": refreshed_subscription.get("id"),
         "attributes": refreshed_subscription.get("attributes", {}),
     }
+    evidence["subscriptionGroupLocalizationsAfter"] = _serialize_group_localizations(
+        group_localizations_after
+    )
 
     output_path = Path(args.output).expanduser().resolve()
     _json_dump(output_path, evidence)

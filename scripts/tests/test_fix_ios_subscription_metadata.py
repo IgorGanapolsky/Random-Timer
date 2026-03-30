@@ -60,6 +60,51 @@ def test_build_review_screenshot_commit_payload():
     }
 
 
+def test_build_group_localization_create_payload():
+    payload = mod._build_group_localization_create_payload(
+        "22000894",
+        locale="en-US",
+        name="Pro",
+        custom_app_name="Random Tactical Timer",
+    )
+    assert payload == {
+        "data": {
+            "type": "subscriptionGroupLocalizations",
+            "attributes": {
+                "locale": "en-US",
+                "name": "Pro",
+                "customAppName": "Random Tactical Timer",
+            },
+            "relationships": {
+                "subscriptionGroup": {
+                    "data": {
+                        "id": "22000894",
+                        "type": "subscriptionGroups",
+                    }
+                }
+            },
+        }
+    }
+
+
+def test_build_group_localization_update_payload():
+    payload = mod._build_group_localization_update_payload(
+        "localization-id",
+        name="Pro",
+        custom_app_name="Random Tactical Timer",
+    )
+    assert payload == {
+        "data": {
+            "id": "localization-id",
+            "type": "subscriptionGroupLocalizations",
+            "attributes": {
+                "name": "Pro",
+                "customAppName": "Random Tactical Timer",
+            },
+        }
+    }
+
+
 def test_headers_dict_filters_blank_names():
     assert mod._headers_dict(
         [

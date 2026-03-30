@@ -266,6 +266,7 @@ def _asc_relationship_ids(resource: dict[str, Any], relationship_name: str) -> l
 def _asc_subscription_metadata_details(
     client: ASCClient,
     subscription_id: str,
+    subscription_group_id: str,
 ) -> dict[str, Any]:
     subscription_payload = client.get(
         f"/subscriptions/{subscription_id}",
@@ -307,11 +308,19 @@ def _asc_subscription_metadata_details(
     availability_payload = _safe_get(
         f"/subscriptions/{subscription_id}/subscriptionAvailability",
     )
+    group_localizations_payload = _safe_get(
+        f"/subscriptionGroups/{subscription_group_id}/subscriptionGroupLocalizations",
+        params={
+            "limit": 50,
+            "fields[subscriptionGroupLocalizations]": "name,customAppName,locale,state",
+        },
+    )
 
     localizations = localizations_payload.get("data", []) or []
     prices = prices_payload.get("data", []) or []
     availability_resource = availability_payload.get("data")
     review_screenshot_resource = review_screenshot_payload.get("data")
+    group_localizations = group_localizations_payload.get("data", []) or []
 
     return {
         "reviewNotePresent": bool(subscription.get("attributes", {}).get("reviewNote")),
@@ -364,6 +373,16 @@ def _asc_subscription_metadata_details(
             if isinstance(review_screenshot_resource, dict)
             else []
         ),
+        "subscriptionGroupLocalizations": [
+            {
+                "id": item.get("id"),
+                "locale": item.get("attributes", {}).get("locale"),
+                "name": item.get("attributes", {}).get("name"),
+                "customAppName": item.get("attributes", {}).get("customAppName"),
+                "state": item.get("attributes", {}).get("state"),
+            }
+            for item in group_localizations
+        ],
         "readErrors": read_errors,
     }
 
@@ -388,12 +407,17 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
             _asc_subscription_metadata_details(
                 client,
                 subscription.get("id", ""),
+                subscription_group.get("id", ""),
             )
             if subscription_group is not None
             else {}
         )
         if state in {"MISSING_METADATA", "READY_TO_SUBMIT", "DEVELOPER_ACTION_NEEDED", "REJECTED"}:
             findings.append(f"iOS subscription exists but is not sale-ready (state={state}).")
+        if subscription_group is not None and not metadata_details.get("subscriptionGroupLocalizations"):
+            findings.append(
+                "iOS subscription group exists but has no subscription group localizations."
+            )
 
         return (
             {
@@ -420,9 +444,15 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
                 "priceCount": len(metadata_details.get("prices", [])),
                 "availabilityCount": len(metadata_details.get("availability", [])),
                 "reviewScreenshotCount": len(metadata_details.get("reviewScreenshots", [])),
+                "subscriptionGroupLocalizationCount": len(
+                    metadata_details.get("subscriptionGroupLocalizations", [])
+                ),
                 "prices": metadata_details.get("prices", []),
                 "availability": metadata_details.get("availability", []),
                 "reviewScreenshots": metadata_details.get("reviewScreenshots", []),
+                "subscriptionGroupLocalizations": metadata_details.get(
+                    "subscriptionGroupLocalizations", []
+                ),
                 "metadataReadErrors": metadata_details.get("readErrors", []),
             },
             findings,
