@@ -2,14 +2,14 @@ name: CI
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, 'release/**', 'hotfix/**']
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
   merge_group:
     types: [checks_requested]
-    branches: [develop, main]
+    branches: [develop, main, 'release/**', 'hotfix/**']
   push:
-    branches: [develop, main]
+    branches: [develop, main, 'release/**', 'hotfix/**']
     paths-ignore:
       - '**.md'
       - 'docs/**'
