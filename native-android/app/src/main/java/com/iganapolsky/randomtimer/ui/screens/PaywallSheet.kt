@@ -24,6 +24,7 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
@@ -165,6 +166,32 @@ fun PaywallSheet(
                         .clickable(onClick = onDismiss),
                 textAlign = TextAlign.Center,
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Required by App Store guidelines for subscription disclosures
+            val uriHandler = LocalUriHandler.current
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.TextSecondary,
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+                    },
+                )
+                Text(
+                    text = "Terms of Use",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.TextSecondary,
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
+                    },
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
