@@ -34,7 +34,7 @@ internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
 internal const val PAYWALL_HEADLINE = "Unlock Full Training Mode"
 internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
 internal const val PAYWALL_AUDIENCE_LINE = "Built for dry fire, sparring, drills, and reaction training."
-internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Auto-renews yearly."
+internal const val PAYWALL_PRICING_FOOTER = "One-time purchase. Unlock Pro forever."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
         "Train up to 60-minute sessions",
