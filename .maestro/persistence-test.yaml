@@ -13,7 +13,7 @@ appId: com.iganapolsky.randomtimer
 # Find and interact with volume slider
 # First, scroll down to ensure volume slider is visible
 - scrollUntilVisible:
-    element: 'SOUND'
+    element: '.*Volume.*'
     direction: DOWN
     timeout: 10000
 

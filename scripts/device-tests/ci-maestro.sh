@@ -28,7 +28,7 @@ do
   echo "== Running: $flow =="
   adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
   sleep 2
-  if maestro test "$flow"; then
+  if bash scripts/device-tests/run-maestro-android.sh "$flow"; then
     echo "PASSED: $flow"
     PASS=$((PASS + 1))
   else

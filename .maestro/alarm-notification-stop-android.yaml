@@ -1,14 +1,24 @@
 appId: com.iganapolsky.randomtimer
 ---
-- clearState
+- pressKey: Home
 - launchApp:
+    clearState: true
     arguments:
       -ui-test-state: alarm
+- extendedWaitUntil:
+    visible: "Stop"
+    timeout: 5000
 - assertVisible: "Stop"
+- assertVisible: "Reset"
+- pressKey: Home
+- swipe:
+    start: 50%, 0%
+    end: 50%, 72%
+    duration: 600
+- extendedWaitUntil:
+    visible: "Silence"
+    timeout: 10000
 - assertVisible: "Silence"
-- stopApp
-- openNotifications
 - assertVisible: "Stop"
-- assertVisible: "Silence"
 - tapOn: "Stop"
 - assertVisible: "Start Timer"

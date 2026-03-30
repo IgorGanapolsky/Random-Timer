@@ -22,6 +22,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
@@ -113,6 +114,11 @@ class TimerForegroundService : Service() {
                 isAppInForeground = intent.getBooleanExtra(EXTRA_APP_IN_FOREGROUND, false)
                 _timerState.value?.let { updateNotification(it) } ?: removeForegroundNotification()
             }
+            ACTION_SEED_DEBUG_STATE -> {
+                if (BuildConfig.DEBUG) {
+                    seedDebugState(intent.getStringExtra(EXTRA_UI_TEST_STATE))
+                }
+            }
             ACTION_UPDATE_LOOP -> {
                 val repeatEnabled = intent.getBooleanExtra(EXTRA_REPEAT_ENABLED, false)
                 updateLoopSetting(repeatEnabled)
@@ -200,6 +206,59 @@ class TimerForegroundService : Service() {
                     repeatRounds = current.config.repeatRounds,
                 )
             _timerState.value = current.copy(config = updatedConfig)
+        }
+    }
+
+    private fun seedDebugState(stateName: String?) {
+        val config = TimerConfig.DEFAULT
+        val seededState =
+            when (stateName?.lowercase()) {
+                "running" ->
+                    TimerState(
+                        config = config,
+                        targetDuration = 195.seconds,
+                        remainingDuration = 135.seconds,
+                        status = TimerStatus.RUNNING,
+                    )
+                "paused" ->
+                    TimerState(
+                        config = config,
+                        targetDuration = 195.seconds,
+                        remainingDuration = 135.seconds,
+                        status = TimerStatus.PAUSED,
+                    )
+                "alarm" ->
+                    TimerState(
+                        config = config,
+                        targetDuration = 5.seconds,
+                        remainingDuration = 0.seconds,
+                        status = TimerStatus.ALARM,
+                        alarmTimeRemaining = config.alarmDuration.seconds,
+                    )
+                "complete" ->
+                    TimerState(
+                        config = config,
+                        targetDuration = 5.seconds,
+                        remainingDuration = 0.seconds,
+                        status = TimerStatus.COMPLETE,
+                    )
+                else -> null
+            } ?: return
+
+        timerJob?.cancel()
+        alarmCountdownJob?.cancel()
+        alarmCountdownJob = null
+        voiceCalloutManager.resetSession()
+        abandonAudioFocus()
+        stopAlarmSound()
+        stopVibration()
+        unregisterScreenOffReceiver()
+
+        _timerState.value = seededState
+        if (!isAppInForeground) {
+            updateNotification(seededState)
+        } else {
+            removeForegroundNotification()
         }
     }
 
@@ -1024,7 +1083,9 @@ class TimerForegroundService : Service() {
         const val ACTION_UPDATE_LOOP = "com.iganapolsky.randomtimer.UPDATE_LOOP"
         const val ACTION_UPDATE_VOICE = "com.iganapolsky.randomtimer.UPDATE_VOICE"
         const val ACTION_APP_STATE_CHANGED = "com.iganapolsky.randomtimer.APP_STATE"
+        const val ACTION_SEED_DEBUG_STATE = "com.iganapolsky.randomtimer.SEED_DEBUG_STATE"
         const val EXTRA_APP_IN_FOREGROUND = "app_in_foreground"
+        const val EXTRA_UI_TEST_STATE = "ui_test_state"
         const val EXTRA_TARGET_DURATION_MS = "target_duration_ms"
         const val EXTRA_REMAINING_DURATION_MS = "remaining_duration_ms"
         const val EXTRA_MIN_SECONDS = "min_seconds"

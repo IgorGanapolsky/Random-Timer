@@ -1,26 +1,22 @@
 appId: com.iganapolsky.randomtimer
 ---
 # Smoke test: Tapping circle during alarm silences and stays on timer screen
-- launchApp
+- launchApp:
+    clearState: true
+    arguments:
+      -ui-test-state: alarm
 
-# Start timer with minimum range so it fires quickly
-- tapOn: 'Start Timer'
-
-# Wait for alarm to trigger (timer should fire within the configured range)
-- assertVisible:
-    text: 'Stop'
-    timeout: 330000
+# Alarm seed should already show the active alarm controls
+- assertVisible: 'Stop'
+- assertVisible: 'Reset'
 
 # Tap the timer circle to silence the alarm
-- tapOn:
-    text: '.*Timer complete.*'
-    optional: true
+- tapOn: '.*Timer complete.*'
 
 # Verify we stay on the timer screen (not navigated back to setup)
-- assertVisible:
-    text: 'Stop'
-- assertVisible:
-    text: 'Reset'
+- assertVisible: 'Stop'
+- assertVisible: 'Reset'
 - assertNotVisible:
-    text: 'Start Timer'
+    text: 'Silence'
     optional: true
+- assertNotVisible: 'Start Timer'
