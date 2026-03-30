@@ -1,5 +1,4 @@
 • Pro subscription now available — unlock voice callouts, extended range, and loop mode
-• Fixed purchase flow with clear error feedback
-• Added Privacy Policy and Terms of Use links
+• Fixed purchase flow with clear error messages
 • Improved timer completion tracking accuracy
 • Better session reliability when switching between apps

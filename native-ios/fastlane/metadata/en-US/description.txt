@@ -26,4 +26,4 @@ SUBSCRIPTION INFO
 Pro Tactical is available as an auto-renewable subscription at $29.99/year. Payment is charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID > Subscriptions.
 
 Privacy Policy: https://igorganapolsky.github.io/Random-Timer/privacy-policy/
-Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Terms of Use (EULA): https://igorganapolsky.github.io/Random-Timer/eula/

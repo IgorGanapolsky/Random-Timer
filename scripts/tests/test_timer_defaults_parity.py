@@ -77,7 +77,9 @@ def test_timer_defaults_match_across_mobile_platforms():
 
     assert "minSeconds = 0" in android_config
     assert "maxSeconds = 300" in android_config
-    assert android_repository.count("maxSeconds = preferences[KEY_MAX_SECONDS] ?: 300") == 2
+    assert "private fun Preferences.toTimerConfig()" in android_repository
+    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 300") == 1
+    assert android_repository.count("preferences.toTimerConfig()") == 2
     assert re.search(r"minSeconds: Int = 0,\n\s*maxSeconds: Int = 300,", ios_models)
     assert "defaultValue: 300" in ios_models or "maxSeconds: Int = 300" in ios_models
 

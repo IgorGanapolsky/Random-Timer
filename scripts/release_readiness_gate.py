@@ -96,6 +96,18 @@ class Gate:
             else:
                 self._record(f"ios_{f}", True, "ok")
 
+        desc = meta / "description.txt"
+        if desc.exists():
+            desc_text = desc.read_text(encoding="utf-8").strip().lower()
+            has_eula = "https://" in desc_text and ("eula" in desc_text or "terms of use" in desc_text or "stdeula" in desc_text)
+            self._record(
+                "ios_terms_link",
+                has_eula,
+                "description includes Terms of Use (EULA) link" if has_eula else "description missing Terms of Use (EULA) link",
+            )
+        else:
+            self._record("ios_terms_link", False, "description.txt missing")
+
         # Privacy URL
         pu = meta / "privacy_url.txt"
         if pu.exists():
