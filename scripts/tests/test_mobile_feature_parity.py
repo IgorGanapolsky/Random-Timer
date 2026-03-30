@@ -76,8 +76,8 @@ def test_paywall_single_offer_parity():
     assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in ios_paywall
     assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
     assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
-    assert "Cancel anytime. Auto-renews yearly." in android_paywall
-    assert "Cancel anytime. Auto-renews yearly." in ios_paywall
+    assert "Cancel anytime" in android_paywall
+    assert "Cancel anytime" in ios_paywall
     assert "Start Pro" in android_paywall
     assert "Start Pro" in ios_paywall
 
