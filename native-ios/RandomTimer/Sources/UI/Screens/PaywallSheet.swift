@@ -11,7 +11,7 @@ struct PaywallSheet: View {
     static let headline = "Unlock Full Training Mode"
     static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
     static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
-    static let pricingFooter = "Cancel anytime. Auto-renews yearly."
+    static let pricingFooter = "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
         "Train up to 60-minute sessions",

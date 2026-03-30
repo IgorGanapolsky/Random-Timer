@@ -857,6 +857,56 @@ def _submit_review_submission(
     raise AssertionError("unreachable")
 
 
+def _attach_subscriptions_to_submission(client: ASCClient, app_id: str, submission_id: str) -> None:
+    """Attach any 'Ready to Submit' subscription groups to the review submission."""
+    try:
+        resp = client.request(
+            "GET",
+            f"/apps/{app_id}/subscriptionGroups",
+            params={"limit": 50},
+        )
+        groups = (resp.get("data") if isinstance(resp.get("data"), list) else [resp.get("data")]) if resp.get("data") else []
+        for group in groups:
+            if not group:
+                continue
+            group_id = group.get("id")
+            if not group_id:
+                continue
+            # Get subscriptions in this group
+            subs_resp = client.request(
+                "GET",
+                f"/subscriptionGroups/{group_id}/subscriptions",
+                params={"limit": 50},
+            )
+            subs = subs_resp.get("data") or []
+            if not isinstance(subs, list):
+                subs = [subs]
+            for sub in subs:
+                if not sub:
+                    continue
+                sub_id = sub.get("id")
+                sub_state = ((sub.get("attributes") or {}).get("state") or "").upper()
+                sub_name = (sub.get("attributes") or {}).get("name", "")
+                info(f"Found subscription '{sub_name}' (id={sub_id}, state={sub_state})")
+                if sub_state in ("READY_TO_SUBMIT", "WAITING_FOR_REVIEW", "IN_REVIEW"):
+                    payload = {
+                        "data": {
+                            "type": "reviewSubmissionItems",
+                            "relationships": {
+                                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
+                                "subscription": {"data": {"type": "subscriptions", "id": sub_id}},
+                            },
+                        }
+                    }
+                    try:
+                        client.request("POST", "/reviewSubmissionItems", payload=payload)
+                        info(f"Attached subscription '{sub_name}' to review submission.")
+                    except Exception as e:
+                        info(f"Could not attach subscription '{sub_name}': {e}")
+    except Exception as e:
+        info(f"Warning: could not enumerate subscriptions for review: {e}")
+
+
 def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
     submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
     if submission:
@@ -879,6 +929,9 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
             die("Existing review submission is missing an id.")
         if not item:
             item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+
+    # Attach subscription IAPs to the review submission (Apple requires this)
+    _attach_subscriptions_to_submission(client, app_id=app_id, submission_id=submission_id)
 
     item_id = str((item or {}).get("id") or "")
     item_state = ((item or {}).get("attributes") or {}).get("state", "UNKNOWN")
