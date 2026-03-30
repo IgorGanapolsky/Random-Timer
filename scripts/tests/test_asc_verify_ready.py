@@ -22,7 +22,7 @@ class _FakeAscClient:
                     "type": "appStoreVersionLocalizations",
                     "attributes": {
                         "locale": "en-US",
-                        "description": "desc",
+                        "description": "desc\n\nTerms of Use (EULA): https://example.com/eula/",
                         "keywords": "a,b",
                         "supportUrl": "https://example.com/support",
                     },
@@ -171,6 +171,40 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
         build_check = next(c for c in report["checks"] if c["name"] == "Build Attached")
         self.assertTrue(build_check["passed"])
         self.assertTrue(build_check["evidence"]["skipped"])
+
+    def test_verify_ready_fails_when_description_has_no_terms_link(self):
+        from scripts import asc_verify_ready
+
+        fake = _FakeAscClient(
+            app_screenshots_by_set={
+                "set_iphone": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "ph"),
+                "set_ipad": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "pd"),
+            }
+        )
+
+        original_get = fake.get
+
+        def patched_get(path, params=None):
+            payload = original_get(path, params)
+            if path == "/apps/app1/appStoreVersions":
+                payload["included"][1]["attributes"]["description"] = "desc without terms link"
+            return payload
+
+        fake.get = patched_get
+
+        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+            passed, report = asc_verify_ready.verify_ready(
+                bundle_id="com.igorganapolsky.randomtimer",
+                version="1.1.1",
+                locale="en-US",
+                min_iphone=3,
+                min_ipad=3,
+                require_build=True,
+            )
+
+        self.assertFalse(passed)
+        terms_check = next(c for c in report["checks"] if c["name"] == "Terms of Use Link")
+        self.assertFalse(terms_check["passed"])
 
 
 if __name__ == "__main__":

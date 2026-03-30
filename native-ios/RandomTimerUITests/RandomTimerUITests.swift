@@ -17,6 +17,14 @@ final class RandomTimerUITests: XCTestCase {
         return app
     }
 
+    private func launchProApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-pro", "true"]
+        app.launch()
+        dismissSystemAlertsIfNeeded(app)
+        return app
+    }
+
     private func dismissSystemAlertsIfNeeded(_ app: XCUIApplication) {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -92,9 +100,7 @@ final class RandomTimerUITests: XCTestCase {
     }
 
     func testProSetupShowsExtendedRangeToggleAndHidesPreview() {
-        let app = XCUIApplication()
-        app.launchArguments += ["-ui-test-pro", "true"]
-        app.launch()
+        let app = launchProApp()
         ensureSetupScreen(app)
 
         let rangeToggle = app.buttons["5m"]
@@ -145,6 +151,16 @@ final class RandomTimerUITests: XCTestCase {
 
         XCTAssertTrue(detailTitle.waitForExistence(timeout: 2.0))
         XCTAssertTrue(detailSummary.waitForExistence(timeout: 2.0))
+    }
+
+    func testProSetupShowsVoiceCalloutsOffByDefault() {
+        let app = launchProApp()
+        ensureSetupScreen(app)
+
+        let voiceToggle = app.switches["Voice Enabled"]
+        scrollUntilVisible(voiceToggle, in: app)
+        XCTAssertTrue(voiceToggle.waitForExistence(timeout: 3.0))
+        XCTAssertEqual(voiceToggle.value as? String, "0")
     }
 
     func testRunningStateShowsRunningLabelAndPauseAction() {
