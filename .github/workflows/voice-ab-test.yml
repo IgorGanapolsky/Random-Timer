@@ -1,0 +1,128 @@
+name: Voice A/B Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-samples:
+    name: Generate voice comparison samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate comparison samples
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          mkdir -p /tmp/voice-samples/current /tmp/voice-samples/clyde_v3
+
+          python3 << 'PYEOF'
+          import json, os, urllib.request, urllib.error
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+
+          TESTS = [
+              "[shouting] Move with a purpose!",
+              "[demands] No hesitation. Move.",
+              "[intense] Stay in the fight.",
+          ]
+          FILENAMES = ["sample_move", "sample_no_hesitation", "sample_stay"]
+
+          # Config A: Current (multilingual_v2, auto-discovered voice, current settings)
+          CONFIG_A = {
+              "model_id": "eleven_multilingual_v2",
+              "voice_settings": {"stability": 0.42, "similarity_boost": 0.8, "style": 0.45, "use_speaker_boost": True},
+              "speed": 0.96,
+          }
+
+          # Config B: New (eleven_v3, Clyde voice, optimized settings)
+          CONFIG_B = {
+              "model_id": "eleven_v3",
+              "voice_settings": {"stability": 0.65, "similarity_boost": 0.85, "style": 0.55, "use_speaker_boost": True},
+              "speed": 1.0,
+          }
+
+          CLYDE_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"
+
+          # First, find current voice
+          def list_voices():
+              req = urllib.request.Request(f"{API}/v1/voices", headers={"xi-api-key": KEY, "Accept": "application/json"})
+              with urllib.request.urlopen(req, timeout=30) as resp:
+                  return json.loads(resp.read())
+
+          voices = list_voices()
+          current_voice_id = None
+          for v in voices.get("voices", []):
+              name = v.get("name", "").lower()
+              if any(kw in name for kw in ["marine", "drill", "instructor", "sergeant"]):
+                  current_voice_id = v["voice_id"]
+                  print(f"Found current voice: {v['name']} ({v['voice_id']})")
+                  break
+
+          if not current_voice_id:
+              # Use first available voice as fallback
+              current_voice_id = voices["voices"][0]["voice_id"]
+              print(f"Using fallback voice: {voices['voices'][0]['name']} ({current_voice_id})")
+
+          def generate(voice_id, text, config, output_path):
+              # Strip audio tags for non-v3 models
+              clean_text = text
+              if config["model_id"] != "eleven_v3":
+                  import re
+                  clean_text = re.sub(r'\[.*?\]\s*', '', text)
+
+              payload = {
+                  "text": clean_text,
+                  "model_id": config["model_id"],
+                  "voice_settings": config["voice_settings"],
+              }
+              if "speed" in config:
+                  payload["generation_config"] = {"speed": config["speed"]}
+
+              data = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{API}/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128",
+                  data=data,
+                  headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      audio = resp.read()
+                      with open(output_path, "wb") as f:
+                          f.write(audio)
+                      print(f"  Generated {output_path} ({len(audio)} bytes)")
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode()[:200]
+                  print(f"  FAILED {output_path}: HTTP {e.code} {body}")
+
+          # Generate Config A samples (current)
+          print("\n=== Config A: Current (multilingual_v2) ===")
+          for text, fname in zip(TESTS, FILENAMES):
+              generate(current_voice_id, text, CONFIG_A, f"/tmp/voice-samples/current/{fname}.mp3")
+
+          # Generate Config B samples (Clyde + v3)
+          print("\n=== Config B: Clyde + eleven_v3 + optimized settings ===")
+          for text, fname in zip(TESTS, FILENAMES):
+              generate(CLYDE_VOICE_ID, text, CONFIG_B, f"/tmp/voice-samples/clyde_v3/{fname}.mp3")
+
+          # Summary
+          print("\n=== File sizes ===")
+          for config_name in ["current", "clyde_v3"]:
+              for fname in FILENAMES:
+                  path = f"/tmp/voice-samples/{config_name}/{fname}.mp3"
+                  if os.path.exists(path):
+                      print(f"  {config_name}/{fname}.mp3: {os.path.getsize(path)} bytes")
+          PYEOF
+
+      - name: Upload voice samples
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: voice-ab-test-samples
+          path: /tmp/voice-samples/
