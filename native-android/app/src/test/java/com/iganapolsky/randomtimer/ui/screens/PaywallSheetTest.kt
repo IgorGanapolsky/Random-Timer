@@ -20,7 +20,7 @@ class PaywallSheetTest {
             "Built for dry fire, sparring, drills, and reaction training.",
             PAYWALL_AUDIENCE_LINE,
         )
-        assertEquals("Cancel anytime. Auto-renews yearly.", PAYWALL_PRICING_FOOTER)
+        assertEquals("One-time purchase. Unlock Pro forever.", PAYWALL_PRICING_FOOTER)
         assertEquals(
             listOf(
                 "Train up to 60-minute sessions",

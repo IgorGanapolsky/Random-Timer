@@ -76,7 +76,9 @@ def test_paywall_single_offer_parity():
     assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in ios_paywall
     assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
     assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
-    assert "Cancel anytime. Auto-renews yearly." in android_paywall
+    # Android uses one-time purchase (pro_base) since elite_tactical subscription
+    # doesn't exist in Play Console. iOS uses auto-renewable subscription.
+    assert "One-time purchase. Unlock Pro forever." in android_paywall
     assert "Cancel anytime. Auto-renews yearly." in ios_paywall
     assert "Start Pro" in android_paywall
     assert "Start Pro" in ios_paywall
@@ -161,7 +163,9 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
         assert expected in android_paywall
         assert expected in ios_paywall
 
-    assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
+    # PRO_PRODUCT_ID points to BASE_PRODUCT_ID (one-time purchase) because
+    # elite_tactical subscription doesn't exist in Play Console
+    assert "const val PRO_PRODUCT_ID = BASE_PRODUCT_ID" in android_pro_manager
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
