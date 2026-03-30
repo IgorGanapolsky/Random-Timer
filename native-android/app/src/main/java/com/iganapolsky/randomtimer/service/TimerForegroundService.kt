@@ -118,7 +118,7 @@ class TimerForegroundService : Service() {
                 updateLoopSetting(repeatEnabled)
             }
             ACTION_UPDATE_VOICE -> {
-                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, false)
                 updateVoiceSetting(voiceEnabled)
             }
             ACTION_START -> {
@@ -133,7 +133,7 @@ class TimerForegroundService : Service() {
                 val volume = intent.getFloatExtra(EXTRA_VOLUME, 1.0f)
                 val vibrationEnabled = intent.getBooleanExtra(EXTRA_VIBRATION_ENABLED, true)
                 val useExtendedRange = intent.getBooleanExtra(EXTRA_USE_EXTENDED_RANGE, false)
-                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, false)
                 val repeatRounds = intent.getIntExtra(EXTRA_REPEAT_ROUNDS, 0)
                 val roundCount = intent.getIntExtra(EXTRA_ROUND_COUNT, 1)
 
@@ -236,7 +236,7 @@ class TimerForegroundService : Service() {
         volume: Float,
         vibrationEnabled: Boolean,
         useExtendedRange: Boolean = false,
-        voiceEnabled: Boolean = true,
+        voiceEnabled: Boolean = false,
         repeatRounds: Int = 0,
         roundCount: Int = 1,
     ) {

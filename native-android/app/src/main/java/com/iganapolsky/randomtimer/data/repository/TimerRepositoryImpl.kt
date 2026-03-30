@@ -73,7 +73,7 @@ class TimerRepositoryImpl
                     volume = preferences[KEY_VOLUME] ?: 0.5f,
                     vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
                     useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
-                    voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
+                    voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: false,
                     repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
                 ).clampedForPro()
             }
@@ -120,7 +120,7 @@ class TimerRepositoryImpl
                         volume = preferences[KEY_VOLUME] ?: 0.5f,
                         vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: false,
                         useExtendedRange = preferences[KEY_USE_EXTENDED_RANGE] ?: false,
-                        voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: true,
+                        voiceEnabled = preferences[KEY_VOICE_ENABLED] ?: false,
                         repeatRounds = preferences[KEY_REPEAT_ROUNDS] ?: 0,
                     ).clampedForPro()
 
