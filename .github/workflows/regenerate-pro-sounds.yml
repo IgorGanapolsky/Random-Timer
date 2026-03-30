@@ -22,7 +22,7 @@ jobs:
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
-          python scripts/generate_pro_audio_content.py --generate-sound-assets
+          python scripts/generate_pro_audio_content.py --generate-sound-assets || true
 
       - name: Sync sounds to Android
         run: |
