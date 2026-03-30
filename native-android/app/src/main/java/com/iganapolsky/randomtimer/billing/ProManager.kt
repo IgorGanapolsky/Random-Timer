@@ -49,10 +49,7 @@ class ProManager
         companion object {
             const val BASE_PRODUCT_ID = "pro_base"
             const val ELITE_PRODUCT_ID = "elite_tactical"
-            // Use BASE_PRODUCT_ID (one-time INAPP) because elite_tactical subscription
-            // does not exist in Play Console (account closed, cannot create subscriptions).
-            // Switch back to ELITE_PRODUCT_ID once a new Play account is set up.
-            const val PRO_PRODUCT_ID = BASE_PRODUCT_ID
+            const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
