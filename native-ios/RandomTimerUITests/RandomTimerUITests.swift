@@ -147,6 +147,18 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(detailSummary.waitForExistence(timeout: 2.0))
     }
 
+    func testProSetupShowsVoiceCalloutsOffByDefault() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-ui-test-pro", "true"]
+        app.launch()
+        ensureSetupScreen(app)
+
+        let voiceToggle = app.switches["Voice Enabled"]
+        scrollUntilVisible(voiceToggle, in: app)
+        XCTAssertTrue(voiceToggle.waitForExistence(timeout: 3.0))
+        XCTAssertEqual(voiceToggle.value as? String, "0")
+    }
+
     func testRunningStateShowsRunningLabelAndPauseAction() {
         let app = launchApp(withState: "running")
         XCTAssertTrue(app.staticTexts["Timer running..."].waitForExistence(timeout: 2.0))
