@@ -265,13 +265,11 @@ def _asc_relationship_ids(resource: dict[str, Any], relationship_name: str) -> l
 
 def _asc_subscription_metadata_details(
     client: ASCClient,
-    subscription_group_id: str,
-    product_id: str,
+    subscription_id: str,
 ) -> dict[str, Any]:
     payload = client.get(
-        f"/subscriptionGroups/{subscription_group_id}/subscriptions",
+        f"/subscriptions/{subscription_id}",
         params={
-            "limit": 200,
             "include": "subscriptionLocalizations,appStoreReviewScreenshot,prices,subscriptionAvailability",
             "fields[subscriptions]": (
                 "name,productId,familySharable,state,subscriptionPeriod,reviewNote,"
@@ -284,18 +282,9 @@ def _asc_subscription_metadata_details(
         },
     )
 
-    subscriptions = payload.get("data", [])
+    subscription = payload.get("data", {})
     included = payload.get("included", []) or []
-
-    subscription = next(
-        (
-            item
-            for item in subscriptions
-            if item.get("attributes", {}).get("productId") == product_id
-        ),
-        None,
-    )
-    if subscription is None:
+    if not subscription:
         return {}
 
     included_by_id = {
@@ -393,8 +382,7 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
         metadata_details = (
             _asc_subscription_metadata_details(
                 client,
-                subscription_group.get("id", ""),
-                product_id,
+                subscription.get("id", ""),
             )
             if subscription_group is not None
             else {}
