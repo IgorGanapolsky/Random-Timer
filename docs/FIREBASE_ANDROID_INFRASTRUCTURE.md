@@ -33,6 +33,11 @@ These GitHub secrets drive Android App Distribution:
 - `FIREBASE_ANDROID_APP_ID`
 - `FIREBASE_SERVICE_ACCOUNT_JSON`
 
+This GitHub secret drives runtime Crashlytics CI checks against the production
+Firebase/BigQuery project:
+
+- `CRASHLYTICS_SERVICE_ACCOUNT_JSON`
+
 These GitHub variables drive the tester audience:
 
 - `FIREBASE_INTERNAL_GROUPS`
@@ -42,7 +47,12 @@ These secrets still drive runtime Firebase inside the Android build:
 
 - `GOOGLE_SERVICES_JSON`
 
-Do not rotate `GOOGLE_SERVICES_JSON` when working on App Distribution only. That secret controls runtime Firebase services, not the App Distribution backend.
+Do not rotate `GOOGLE_SERVICES_JSON` when working on App Distribution only. That
+secret controls runtime Firebase services, not the App Distribution backend.
+
+Do not reuse `FIREBASE_SERVICE_ACCOUNT_JSON` for Crashlytics stability checks.
+That service account is for the separate App Distribution project. Runtime
+Crashlytics CI must authenticate with `CRASHLYTICS_SERVICE_ACCOUNT_JSON`.
 
 ## What "Nothing In Firebase" Usually Means
 
@@ -69,10 +79,12 @@ Use the App Distribution service account from `FIREBASE_SERVICE_ACCOUNT_JSON`, n
 python3 - <<'PY'
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+import os
 import requests
 
+key_path = os.environ["FIREBASE_SERVICE_ACCOUNT_JSON_PATH"]
 creds = service_account.Credentials.from_service_account_file(
-    "/tmp/firebase-sa.json",
+    key_path,
     scopes=["https://www.googleapis.com/auth/cloud-platform"],
 )
 creds.refresh(Request())

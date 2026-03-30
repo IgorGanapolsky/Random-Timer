@@ -34,6 +34,13 @@ MANUAL_REVIEW_REQUIRED_MARKERS = (
     "changes cannot be sent for review automatically",
     "changesnotsentforreview",
 )
+LANG_MAP = {
+    "en-US": "en-US",
+    "de-DE": "de-DE",
+    "pt-BR": "pt-BR",
+    "ja-JP": "ja-JP",
+    "ko": "ko-KR",
+}
 
 
 @dataclass
@@ -139,17 +146,32 @@ def _commit_edit(edits_service: Any, package: str, edit_id: str) -> bool:
         edits_service.commit(packageName=package, editId=edit_id).execute()
         return False
     except Exception as error:
-        message = str(error)
         response_text = _extract_response_text(error)
         status = getattr(getattr(error, "resp", None), "status", None)
-        if not _requires_manual_review_submission(message, response_text, status):
+        if _requires_manual_review_submission(str(error), response_text, status):
+            try:
+                edits_service.commit(
+                    packageName=package,
+                    editId=edit_id,
+                    changesNotSentForReview=True,
+                ).execute()
+                return True
+            except Exception:
+                # If retry also fails, changes were likely auto-committed
+                return False
+
+        error_text = f"{error}\n{response_text}".lower()
+        # Google auto-commits changes — no manual commit needed.
+        if (
+            "changesnotsentforreview must not be set" in error_text
+            or (
+                "sent for review automatically" in error_text
+                and "cannot be sent for review automatically" not in error_text
+            )
+        ):
+            return False
+        else:
             raise
-        edits_service.commit(
-            packageName=package,
-            editId=edit_id,
-            changesNotSentForReview=True,
-        ).execute()
-        return True
 
 
 def _update_listing_and_assets(
@@ -159,31 +181,37 @@ def _update_listing_and_assets(
     metadata_dir: Path,
     ios_support_url_path: Path,
 ) -> None:
-    language = "en-US"
-    listing = {}
-    title = _read_text(metadata_dir / "title.txt")
-    short_desc = _read_text(metadata_dir / "short_description.txt")
-    full_desc = _read_text(metadata_dir / "full_description.txt")
-    video = _read_text(metadata_dir / "video.txt")
+    for local_lang, api_lang in LANG_MAP.items():
+        locale_dir = metadata_dir / local_lang
+        listing = {}
+        title = _read_text(locale_dir / "title.txt")
+        short_desc = _read_text(locale_dir / "short_description.txt")
+        full_desc = _read_text(locale_dir / "full_description.txt")
+        video = _read_text(locale_dir / "video.txt")
 
-    if title:
-        listing["title"] = title
-    if short_desc:
-        listing["shortDescription"] = short_desc
-    if full_desc:
-        listing["fullDescription"] = full_desc
-    if video:
-        listing["video"] = video
+        if title:
+            listing["title"] = title
+        if short_desc:
+            listing["shortDescription"] = short_desc
+        if full_desc:
+            listing["fullDescription"] = full_desc
+        if video:
+            listing["video"] = video
 
-    if listing:
-        service.edits().listings().update(
-            packageName=package,
-            editId=edit_id,
-            language=language,
-            body=listing,
-        ).execute()
+        if not listing:
+            continue
 
-    details = {"defaultLanguage": language}
+        try:
+            service.edits().listings().update(
+                packageName=package,
+                editId=edit_id,
+                language=api_lang,
+                body=listing,
+            ).execute()
+        except Exception:
+            continue
+
+    details = {"defaultLanguage": "en-US"}
     support_url = _read_text(ios_support_url_path)
     if support_url:
         details["contactWebsite"] = support_url
@@ -200,25 +228,25 @@ def _update_listing_and_assets(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "icon",
-        str(metadata_dir / "images" / "icon.*"),
+        str(metadata_dir / "en-US" / "images" / "icon.*"),
     )
     _upload_images(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "featureGraphic",
-        str(metadata_dir / "images" / "featureGraphic" / "*.*"),
+        str(metadata_dir / "en-US" / "images" / "featureGraphic" / "*.*"),
     )
     _upload_images(
         service,
         package,
         edit_id,
-        language,
+        "en-US",
         "phoneScreenshots",
-        str(metadata_dir / "images" / "phoneScreenshots" / "*.*"),
+        str(metadata_dir / "en-US" / "images" / "phoneScreenshots" / "*.*"),
     )
 
 
@@ -351,13 +379,13 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--package", required=True)
     parser.add_argument("--aab-path", required=True)
     parser.add_argument("--requested-track", default="production")
-    parser.add_argument("--fallback-track", default="alpha")
+    parser.add_argument("--fallback-track", default="")
     parser.add_argument("--release-status", default="completed")
     parser.add_argument("--retry-window-seconds", type=int, default=10800)
     parser.add_argument("--retry-interval-seconds", type=int, default=300)
     parser.add_argument(
         "--metadata-dir",
-        default="native-android/fastlane/metadata/android/en-US",
+        default="native-android/fastlane/metadata/android",
     )
     parser.add_argument(
         "--ios-support-url-path",
@@ -382,7 +410,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
     requested_track = (args.requested_track or "production").strip()
-    fallback_track = (args.fallback_track or "alpha").strip()
+    fallback_track = (args.fallback_track or "").strip()
     tracks = [requested_track]
     if requested_track == "production" and fallback_track and fallback_track != requested_track:
         tracks.append(fallback_track)
@@ -435,17 +463,19 @@ def main() -> int:
             }
             if precondition_error_payload:
                 result_payload["production_precondition_error"] = precondition_error_payload
+            if outcome.get("changes_not_sent_for_review"):
+                _write_json(result_json_path, result_payload)
+                print(
+                    "❌ Google Play committed the edit with changesNotSentForReview=true. "
+                    "This release is not publicly live until Play Console 'Send for review' is completed.",
+                    file=sys.stderr,
+                )
+                return 1
             _write_json(result_json_path, result_payload)
             print(
                 f"✅ Uploaded version code {outcome['version_code']} to '{track}' track "
                 f"(requested={requested_track}, status={release_status}, fallback_used={fallback_used})"
             )
-            if outcome.get("changes_not_sent_for_review"):
-                print(
-                    "ℹ️ Google Play committed the edit with changesNotSentForReview=true. "
-                    "Open Play Console and click 'Send for review' for this release.",
-                    file=sys.stderr,
-                )
             return 0
         except PublishError as error:
             payload = {

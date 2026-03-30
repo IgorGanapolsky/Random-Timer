@@ -151,7 +151,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         volume: Float = 0.5, // Default to 50%
         vibrationEnabled: Bool = false,
         useExtendedRange: Bool = false,
-        voiceEnabled: Bool = true,
+        voiceEnabled: Bool = false,
         repeatRounds: Int = 0
     ) {
         let sanitized = Self.sanitize(
@@ -270,7 +270,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: false
         )
         let useExtendedRange = try container.decodeIfPresent(Bool.self, forKey: .useExtendedRange) ?? false
-        let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? true
+        let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? false
         let repeatRounds = try container.decodeIfPresent(Int.self, forKey: .repeatRounds) ?? 0
 
         let soundType = container.decodeFirstSoundType(
@@ -405,6 +405,96 @@ enum TimeRangeAdjuster {
 
         return (adjustedMinSeconds, adjustedMaxSeconds)
     }
+}
+
+internal struct RangeToggleProfiles: Equatable {
+    let freeMinSeconds: Int
+    let freeMaxSeconds: Int
+    let extendedMinSeconds: Int
+    let extendedMaxSeconds: Int
+}
+
+internal struct RangeToggleResult: Equatable {
+    let config: TimerConfig
+    let profiles: RangeToggleProfiles
+}
+
+internal func sanitizedStoredRange(
+    minSeconds: Int,
+    maxSeconds: Int,
+    maxSecondsLimit: Int
+) -> (min: Int, max: Int) {
+    let clampedMax = Swift.max(TimeRangeAdjuster.defaultMinGapSeconds, Swift.min(maxSeconds, maxSecondsLimit))
+    let clampedMin = Swift.max(0, Swift.min(minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds))
+    return TimeRangeAdjuster.adjustForMaxChange(
+        currentMinSeconds: clampedMin,
+        currentMaxSeconds: clampedMax,
+        newMaxSeconds: clampedMax,
+        maxSecondsLimit: maxSecondsLimit
+    )
+}
+
+internal func toggleExtendedRange(
+    current: TimerConfig,
+    profiles: RangeToggleProfiles
+) -> RangeToggleResult {
+    if current.useExtendedRange {
+        let nextProfiles = RangeToggleProfiles(
+            freeMinSeconds: profiles.freeMinSeconds,
+            freeMaxSeconds: profiles.freeMaxSeconds,
+            extendedMinSeconds: current.minSeconds,
+            extendedMaxSeconds: current.maxSeconds
+        )
+        let restoredFree = sanitizedStoredRange(
+            minSeconds: profiles.freeMinSeconds,
+            maxSeconds: profiles.freeMaxSeconds,
+            maxSecondsLimit: TimerConfig.maxSecondsFree
+        )
+        return RangeToggleResult(
+            config: TimerConfig(
+                minSeconds: restoredFree.min,
+                maxSeconds: restoredFree.max,
+                alarmDuration: current.alarmDuration,
+                hiddenMode: current.hiddenMode,
+                repeatEnabled: current.repeatEnabled,
+                soundType: current.soundType,
+                volume: current.volume,
+                vibrationEnabled: current.vibrationEnabled,
+                useExtendedRange: false,
+                voiceEnabled: current.voiceEnabled,
+                repeatRounds: current.repeatRounds
+            ),
+            profiles: nextProfiles
+        )
+    }
+
+    let nextProfiles = RangeToggleProfiles(
+        freeMinSeconds: current.minSeconds,
+        freeMaxSeconds: current.maxSeconds,
+        extendedMinSeconds: profiles.extendedMinSeconds,
+        extendedMaxSeconds: profiles.extendedMaxSeconds
+    )
+    let restoredExtended = sanitizedStoredRange(
+        minSeconds: profiles.extendedMinSeconds,
+        maxSeconds: profiles.extendedMaxSeconds,
+        maxSecondsLimit: TimerConfig.maxSecondsPro
+    )
+    return RangeToggleResult(
+        config: TimerConfig(
+            minSeconds: restoredExtended.min,
+            maxSeconds: restoredExtended.max,
+            alarmDuration: current.alarmDuration,
+            hiddenMode: current.hiddenMode,
+            repeatEnabled: current.repeatEnabled,
+            soundType: current.soundType,
+            volume: current.volume,
+            vibrationEnabled: current.vibrationEnabled,
+            useExtendedRange: true,
+            voiceEnabled: current.voiceEnabled,
+            repeatRounds: current.repeatRounds
+        ),
+        profiles: nextProfiles
+    )
 }
 
 // MARK: - Timer Status

@@ -6,6 +6,7 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
+NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -86,7 +87,30 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
 
     assert "check_ios_version_lineage.py" in source
     assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
-    assert 'fastlane submit_review' not in source
+    assert "fastlane submit_review" not in source
+
+
+def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'PLAY_FALLBACK_TRACK: ""' in source
+    assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
+    assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
+    assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
+
+
+def test_native_release_workflow_keeps_ios_review_submission_opt_in():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    submit_review_block = source.split("submit_review:", 1)[1].split("concurrency:", 1)[0]
+    assert "default: 'false'" in submit_review_block
+
+
+def test_native_release_workflow_verifies_public_play_listing_for_production():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Verify public Google Play listing (production only)" in source
+    assert "python scripts/verify_play_public_listing.py" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
@@ -128,3 +152,15 @@ def test_workflow_contract_exists_and_points_at_canonical_proof_commands():
 
 def test_dead_play_precondition_stub_is_removed():
     assert not (ROOT / "scripts/play_precondition_triage.py").exists()
+
+
+def test_ci_crashlytics_job_uses_dedicated_runtime_secret_and_is_not_best_effort():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    crashlytics_section = source.split("crashlytics:", 1)[1].split("notify:", 1)[0]
+    assert "CRASHLYTICS_SERVICE_ACCOUNT_JSON" in crashlytics_section
+    assert "FIREBASE_SERVICE_ACCOUNT_JSON" not in crashlytics_section
+    assert "google-github-actions/auth" not in crashlytics_section
+    assert "google-auth==" in crashlytics_section
+    assert "Missing CRASHLYTICS_SERVICE_ACCOUNT_JSON secret" in crashlytics_section
+    assert "continue-on-error: true" not in crashlytics_section

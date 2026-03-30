@@ -55,8 +55,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,8 +74,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
+import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -137,7 +142,37 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    var showArsenal by remember { mutableStateOf(true) }
+    var showArsenal by remember { mutableStateOf(!isPro) }
+    var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
+    var storedFreeMaxSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.maxSeconds) }
+    var storedExtendedMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
+    var storedExtendedMaxSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.maxSeconds) }
+
+    LaunchedEffect(isPro) {
+        showArsenal = true
+    }
+
+    LaunchedEffect(config.useExtendedRange, config.minSeconds, config.maxSeconds) {
+        if (config.useExtendedRange) {
+            val sanitized =
+                sanitizedStoredRange(
+                    minSeconds = config.minSeconds,
+                    maxSeconds = config.maxSeconds,
+                    maxSecondsLimit = TimerConfig.MAX_SECONDS_PRO,
+                )
+            storedExtendedMinSeconds = sanitized.first
+            storedExtendedMaxSeconds = sanitized.second
+        } else {
+            val sanitized =
+                sanitizedStoredRange(
+                    minSeconds = config.minSeconds,
+                    maxSeconds = config.maxSeconds,
+                    maxSecondsLimit = TimerConfig.MAX_SECONDS_FREE,
+                )
+            storedFreeMinSeconds = sanitized.first
+            storedFreeMaxSeconds = sanitized.second
+        }
+    }
 
     fun updateConfig(
         minSeconds: Int = config.minSeconds,
@@ -279,18 +314,22 @@ fun TimerSetupScreen(
                                     FilterChip(
                                         selected = config.useExtendedRange,
                                         onClick = {
-                                            val newExtended = !config.useExtendedRange
-                                            val clampedMax =
-                                                if (newExtended) {
-                                                    config.maxSeconds
-                                                } else {
-                                                    minOf(
-                                                        config.maxSeconds,
-                                                        TimerConfig.MAX_SECONDS_FREE,
-                                                    )
-                                                }
-                                            val clampedMin = minOf(config.minSeconds, clampedMax)
-                                            updateConfig(useExtendedRange = newExtended, maxSeconds = clampedMax, minSeconds = clampedMin)
+                                            val result =
+                                                toggleExtendedRange(
+                                                    current = config,
+                                                    profiles =
+                                                        RangeToggleProfiles(
+                                                            freeMinSeconds = storedFreeMinSeconds,
+                                                            freeMaxSeconds = storedFreeMaxSeconds,
+                                                            extendedMinSeconds = storedExtendedMinSeconds,
+                                                            extendedMaxSeconds = storedExtendedMaxSeconds,
+                                                        ),
+                                                )
+                                            storedFreeMinSeconds = result.profiles.freeMinSeconds
+                                            storedFreeMaxSeconds = result.profiles.freeMaxSeconds
+                                            storedExtendedMinSeconds = result.profiles.extendedMinSeconds
+                                            storedExtendedMaxSeconds = result.profiles.extendedMaxSeconds
+                                            onConfigChange(result.config)
                                         },
                                         label = {
                                             Text(

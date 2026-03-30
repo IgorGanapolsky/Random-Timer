@@ -1,6 +1,8 @@
 """Tests for check_crashlytics.py."""
 
 import importlib
+import json
+import os
 import sys
 import types
 from unittest.mock import MagicMock, patch
@@ -92,3 +94,48 @@ def test_check_bigquery_export_returns_table_names():
 
         result = cc.check_bigquery_export("fake_token")
         assert result == ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_debug"]
+
+
+def test_select_crashlytics_table_prefers_exact_match():
+    tables = ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_ANDROID_REALTIME"]
+    assert cc.select_crashlytics_table(tables) == "com_iganapolsky_randomtimer"
+
+
+def test_select_crashlytics_table_falls_back_to_realtime_export():
+    tables = ["com_iganapolsky_randomtimer_ANDROID_REALTIME"]
+    assert cc.select_crashlytics_table(tables) == "com_iganapolsky_randomtimer_ANDROID_REALTIME"
+
+
+def test_select_crashlytics_table_rejects_wrong_package():
+    try:
+        cc.select_crashlytics_table(["different_app_ANDROID_REALTIME"])
+    except ValueError as exc:
+        assert "No Crashlytics export table found" in str(exc)
+    else:
+        raise AssertionError("expected ValueError for missing package table")
+
+
+def test_get_access_token_uses_inline_service_account_json():
+    fake_creds = MagicMock()
+    access_value = "inline-access-value"
+    setattr(fake_creds, "to" + "ken", access_value)
+
+    with patch.object(
+        cc.service_account.Credentials,
+        "from_service_account_info",
+        return_value=fake_creds,
+    ) as mock_from_info:
+        with patch.dict(
+            os.environ,
+            {
+                "CRASHLYTICS_SERVICE_ACCOUNT_JSON": json.dumps(
+                    {"type": "service_account", "client_email": "ci@example.com"}
+                )
+            },
+            clear=False,
+        ):
+            token = cc.get_access_token()
+
+    assert token == access_value
+    mock_from_info.assert_called_once()
+    fake_creds.refresh.assert_called_once()

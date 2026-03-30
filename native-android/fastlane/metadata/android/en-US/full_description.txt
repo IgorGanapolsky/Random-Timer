@@ -1,18 +1,20 @@
 TRAIN FOR CHAOS. NOT RHYTHM.
 
-Most timers teach your brain to anticipate the bell. That's comfort training — and it makes you slower when it counts. Random Tactical Timer fires at an unpredictable moment inside your chosen time window, forcing genuine reaction under stress. This is pattern-interrupt training for serious fighters and operators.
+Most timers teach anticipation. Random Tactical Timer trains reaction.
+
+Instead of firing on a predictable beat, it triggers at an unpredictable moment inside your chosen time window, forcing real response under pressure. This is pattern-interrupt training built for dry fire, sparring, drills, and reaction work.
 
 BUILT FOR:
+- Dry fire and draw-to-first-shot drills
 - Boxing pad rounds, bag intervals, and shadowboxing flurries
 - BJJ scramble and positional transition drills
-- MMA, Muay Thai, and Combatives pattern-interrupt work
-- Law enforcement and Military defensive tactics training
+- MMA, Muay Thai, and combatives reaction work
 - HIIT and CrossFit sessions that punish predictability
 
-WHY UNPREDICTABILITY WORKS:
-- Pattern Interrupt: Force your nervous system to stay present, not wait for a buzzer.
-- Stress Inoculation: Build composure by training against uncertain triggers—the same method used in tactical and military stress-conditioning.
-- Eliminate Anticipation: Stop "cruising" through rounds. React when the stimulus hits, not when you expect it.
+WHY IT WORKS:
+- Stop anticipation: react to the cue, not the countdown.
+- Stay present: uncertainty keeps your nervous system engaged.
+- Train under pressure: build composure when the trigger is not on your schedule.
 
 KEY FEATURES:
 - True random trigger within your selected min/max range
@@ -21,6 +23,12 @@ KEY FEATURES:
 - High-intensity alarm + haptic vibration + volume precision
 - Stable background behavior via Foreground Service
 - Full-screen tactical alerts that command attention
+
+PRO FEATURES:
+- 🎙️ AI Voice Callouts: Drill sergeant commands keep you sharp during training — 31 unique ElevenLabs-generated tactical cues
+- ⏱️ Elapsed time announcements on the minute so you never lose track
+- 🔁 Round selection (1–100) for structured training cycles
+- 📏 Extended timer range up to 1 hour
 
 HOW IT WORKS:
 1. Set your range (e.g. 15 seconds to 3 minutes)

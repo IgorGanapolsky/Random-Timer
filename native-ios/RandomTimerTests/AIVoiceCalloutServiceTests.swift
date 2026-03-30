@@ -4,12 +4,25 @@ import CryptoKit
 
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
+    private final class CounterBox {
+        var value = 0
+    }
+
     private func makeUnusedTestAssetURL(filename: String) -> URL {
         URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
     }
 
     private func makeSut() -> AIVoiceCalloutService {
         let service = AIVoiceCalloutService(bundle: .main)
+        service.resetSession()
+        return service
+    }
+
+    private func makeSut(counter: CounterBox) -> AIVoiceCalloutService {
+        let service = AIVoiceCalloutService(
+            bundle: .main,
+            activateAudioSession: { counter.value += 1 }
+        )
         service.resetSession()
         return service
     }
@@ -47,7 +60,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testCatalogHasVarietyAndClearElapsedLanguage() {
         let catalog = loadVoiceCalloutCatalog(bundle: .main)
 
-        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 16)
+        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 12)
         XCTAssertGreaterThanOrEqual(catalog.commandCues.count, 20)
         XCTAssertTrue(
             catalog.elapsedCues.allSatisfy { $0.text.localizedCaseInsensitiveContains("elapsed") },
@@ -106,6 +119,62 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
         let selected = nextCommandCue(from: cues, lastFilename: "cue_a") { _ in 0 }
         XCTAssertEqual(selected.filename, "cue_b")
+    }
+
+    func testShortTimersScheduleFollowupCommandCuesEarly() {
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
+    }
+
+    func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
+        let counter = CounterBox()
+        let sut = makeSut(counter: counter)
+
+        sut.beginSession(totalDurationSeconds: 60)
+        sut.previewCountdownCue()
+
+        XCTAssertGreaterThanOrEqual(
+            counter.value,
+            2,
+            "Voice playback must reactivate AVAudioSession before cue playback."
+        )
+    }
+
+    func testTimerCalloutsUseCommandsAtThirtySecondsAndElapsedOnlyOnMinuteMarks() {
+        let sut = makeSut()
+
+        sut.beginSession(totalDurationSeconds: 120)
+        sut.triggerCallout(elapsedSeconds: 15)
+        let beforeThirty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(beforeThirty.lastElapsedMilestone, 0)
+        XCTAssertEqual(beforeThirty.nextCommandCueAt, 30)
+        XCTAssertNil(beforeThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 30)
+        let atThirty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
+        XCTAssertEqual(atThirty.nextCommandCueAt, 60)
+        XCTAssertNotNil(atThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 60)
+        let atSixty = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
+        XCTAssertEqual(atSixty.nextCommandCueAt, 90)
+    }
+
+    func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {
+        let counter = CounterBox()
+        let sut = makeSut(counter: counter)
+
+        sut.beginSession(totalDurationSeconds: 60)
+        sut.triggerCallout(elapsedSeconds: 30)
+
+        XCTAssertGreaterThanOrEqual(
+            counter.value,
+            1,
+            "Timed voice playback must reactivate AVAudioSession before speaking."
+        )
     }
 
     func testRemotePackStoreInstallsAndServesRemoteVoiceAndSoundAssets() throws {

@@ -53,10 +53,11 @@ def test_time_range_limits_and_gap_match_between_platforms():
 def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
-    ios_pro_manager = _read(IOS_PRO_MANAGER)
 
-    assert "Upgrade to Pro" in android_source and "holdForHiddenUnlock" in android_source
-    assert "Upgrade to Pro" in ios_paywall and "highPriorityGesture" in ios_paywall and "LongPressGesture(minimumDuration: 8.0" in ios_paywall
+    assert "Unlock Full Training Mode" in android_source and "holdForHiddenUnlock" in android_source
+    assert "8_000L" in android_source
+    assert "Unlock Full Training Mode" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
@@ -69,10 +70,16 @@ def test_paywall_single_offer_parity():
     assert "Elite Tactical" not in android_paywall, (
         "Android paywall must not show Elite Tactical; single-offer only per monetization roadmap"
     )
-    assert "One premium plan" in android_paywall
-    assert "One premium plan" in ios_paywall
-    assert "Yearly auto-renewing subscription" in android_paywall
-    assert "Yearly auto-renewing subscription" in ios_paywall
+    assert "Unlock Full Training Mode" in android_paywall
+    assert "Unlock Full Training Mode" in ios_paywall
+    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in android_paywall
+    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in ios_paywall
+    assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
+    assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
+    assert "Cancel anytime" in android_paywall
+    assert "Cancel anytime" in ios_paywall
+    assert "Start Pro" in android_paywall
+    assert "Start Pro" in ios_paywall
 
 
 def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
@@ -144,11 +151,15 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
-    assert "10 alarm sounds" in android_paywall
-    assert "Loop with optional round limits" in android_paywall
-    assert "Loop with optional round limits" in ios_paywall
-    assert "Monthly voice callout and sound arsenal refreshes" in android_paywall
-    assert "Monthly voice callout and sound arsenal refreshes" in ios_paywall
+    for expected in (
+        "Train up to 60-minute sessions",
+        "Get voice callouts during training",
+        "Use loop mode with round limits",
+        "Unlock the full sound library",
+        "New Pro voice callouts and sound packs every 30 days",
+    ):
+        assert expected in android_paywall
+        assert expected in ios_paywall
 
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
@@ -157,11 +168,12 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchProPurchase" in android_nav
 
 
-def test_android_elapsed_voice_cues_short_circuit_before_command_cues():
+def test_android_elapsed_voice_cues_fire_on_minute_marks_only_and_still_gate_command_cues():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert re.search(r"lastElapsedMilestone = elapsedSeconds\s+return", android_voice_manager)
+    assert "runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert "if (elapsedSeconds % 60 != 0) return null" in android_voice_manager
+    assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
 
 
 def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():

@@ -7,10 +7,25 @@ enum PaywallEntryPoint: String {
 }
 
 struct PaywallSheet: View {
+    static let hiddenUnlockHoldDuration: TimeInterval = 8.0
+    static let headline = "Unlock Full Training Mode"
+    static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
+    static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
+    static let pricingFooter = "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+    static let featureTitle = "PRO FEATURES"
+    static let featureRows = [
+        "Train up to 60-minute sessions",
+        "Get voice callouts during training",
+        "Use loop mode with round limits",
+        "Unlock the full sound library",
+        "New Pro voice callouts and sound packs every 30 days",
+    ]
+
     // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
+    @State private var purchaseError: String?
     let entryPoint: PaywallEntryPoint
 
     var body: some View {
@@ -38,14 +53,15 @@ struct PaywallSheet: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("Upgrade to Pro")
+                    Text(Self.headline)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.textPrimary)
 
                     VStack(spacing: 4) {
-                        Text("One premium plan.")
-                        Text("Yearly auto-renewing subscription. Cancel anytime.")
+                        Text(Self.subheadline)
+                        Text(Self.audienceLine)
+                        Text(Self.pricingFooter)
                     }
                     .font(.caption)
                     .foregroundColor(.textSecondary)
@@ -55,7 +71,7 @@ struct PaywallSheet: View {
                 .padding(.vertical, 8)
                 .contentShape(Rectangle())
                 .highPriorityGesture(
-                    LongPressGesture(minimumDuration: 8.0, maximumDistance: 100)
+                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
                         .onEnded { _ in
                             triggerDebugUnlock()
                         }
@@ -63,22 +79,19 @@ struct PaywallSheet: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("PRO FEATURES")
+                        Text(Self.featureTitle)
                             .font(.caption.bold())
                             .foregroundColor(.accentPrimary)
-                        ProFeatureRow(text: "10 alarm sounds (vs 2 free)")
-                        ProFeatureRow(text: "Extended range up to 60 minutes")
-                        ProFeatureRow(text: "Elapsed-time voice callouts")
-                        ProFeatureRow(text: "Loop with optional round limits")
-                        ProFeatureRow(text: "Monthly voice callout and sound arsenal refreshes")
-                        ProFeatureRow(text: "Support independent development")
+                        ForEach(Self.featureRows, id: \.self) { feature in
+                            ProFeatureRow(text: feature)
+                        }
                     }
                 }
                 .padding(.horizontal)
 
                 VStack(spacing: 12) {
                     PrimaryButton(
-                        title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.eliteProductID))"
+                        title: "Start Pro \u{2022} \(normalizedPriceLabel(proManager.formattedPrice(for: ProManager.eliteProductID)))"
                     ) {
                         Task {
                             await purchase(productID: ProManager.eliteProductID)
@@ -109,6 +122,16 @@ struct PaywallSheet: View {
                 }
                 .font(.footnote)
                 .foregroundColor(.textSecondary)
+
+                // Required by App Store Guideline 3.1.2(c)
+                HStack(spacing: 16) {
+                    Link("Privacy Policy",
+                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!)
+                    Link("Terms of Use (EULA)",
+                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!)
+                }
+                .font(.caption2)
+                .foregroundColor(.textSecondary)
             }
             .padding(24)
             .padding(.top, 8)
@@ -127,6 +150,14 @@ struct PaywallSheet: View {
         .onDisappear {
             trackDismiss(method: "system")
         }
+        .alert("Purchase Issue", isPresented: Binding(
+            get: { purchaseError != nil },
+            set: { if !$0 { purchaseError = nil } }
+        )) {
+            Button("OK") { purchaseError = nil }
+        } message: {
+            Text(purchaseError ?? "")
+        }
     }
 
     @MainActor
@@ -144,7 +175,19 @@ struct PaywallSheet: View {
             properties: purchaseProperties(productID: productID, result: result)
         )
 
-        guard result == .success else { return }
+        guard result == .success else {
+            switch result {
+            case .productUnavailable:
+                purchaseError = "This product is currently unavailable. Please try again later."
+            case .failed:
+                purchaseError = "Purchase failed. Please check your connection and try again."
+            case .pending:
+                purchaseError = "Your purchase is pending approval."
+            default:
+                break
+            }
+            return
+        }
 
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseSuccess,
@@ -183,6 +226,15 @@ struct PaywallSheet: View {
         proManager.unlockProForDebug()
         hasTrackedDismiss = true
         dismiss()
+    }
+
+    func normalizedPriceLabel(_ price: String) -> String {
+        let trimmed = price.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowered = trimmed.lowercased()
+        if lowered.contains("/yr") || lowered.contains("/year") {
+            return trimmed
+        }
+        return "\(trimmed)/year"
     }
 }
 

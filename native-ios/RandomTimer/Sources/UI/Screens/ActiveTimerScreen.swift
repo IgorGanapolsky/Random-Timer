@@ -58,7 +58,7 @@ struct ActiveTimerScreen: View {
     }
 
     static func voiceBadgeText(enabled: Bool) -> String {
-        enabled ? "Voice On" : "Voice Off"
+        enabled ? "Voice Callouts On" : "Voice Callouts Off"
     }
 
     static func voiceBadgeAccessibilityLabel(enabled: Bool) -> String {

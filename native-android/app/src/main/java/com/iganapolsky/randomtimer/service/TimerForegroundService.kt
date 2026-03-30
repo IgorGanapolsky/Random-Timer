@@ -118,7 +118,7 @@ class TimerForegroundService : Service() {
                 updateLoopSetting(repeatEnabled)
             }
             ACTION_UPDATE_VOICE -> {
-                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, false)
                 updateVoiceSetting(voiceEnabled)
             }
             ACTION_START -> {
@@ -133,7 +133,7 @@ class TimerForegroundService : Service() {
                 val volume = intent.getFloatExtra(EXTRA_VOLUME, 1.0f)
                 val vibrationEnabled = intent.getBooleanExtra(EXTRA_VIBRATION_ENABLED, true)
                 val useExtendedRange = intent.getBooleanExtra(EXTRA_USE_EXTENDED_RANGE, false)
-                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, true)
+                val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, false)
                 val repeatRounds = intent.getIntExtra(EXTRA_REPEAT_ROUNDS, 0)
                 val roundCount = intent.getIntExtra(EXTRA_ROUND_COUNT, 1)
 
@@ -216,10 +216,12 @@ class TimerForegroundService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        stopTimer(
-            stopSource = STOP_SOURCE_TASK_REMOVED,
-            trackStopAnalytics = true,
-        )
+        // Keep the foreground service running when user swipes app from recents.
+        // The timer should continue counting down and trigger the alarm normally.
+        // Ensure we have a visible notification so the OS doesn't kill us.
+        _timerState.value?.let { state ->
+            updateNotification(state)
+        }
     }
 
     private fun startTimerFromExtras(
@@ -234,7 +236,7 @@ class TimerForegroundService : Service() {
         volume: Float,
         vibrationEnabled: Boolean,
         useExtendedRange: Boolean = false,
-        voiceEnabled: Boolean = true,
+        voiceEnabled: Boolean = false,
         repeatRounds: Int = 0,
         roundCount: Int = 1,
     ) {
@@ -274,6 +276,9 @@ class TimerForegroundService : Service() {
         _timerState.value = initialState
         updateNotification(initialState)
         voiceCalloutManager.resetSession()
+        if (proManager.entitlementLevel.value.isPro && initialState.config.voiceEnabled) {
+            voiceCalloutManager.beginSession(initialState.targetDuration.inWholeSeconds.toInt())
+        }
 
         timerJob?.cancel()
         timerJob =
@@ -403,6 +408,21 @@ class TimerForegroundService : Service() {
 
     private fun dismissAlarm() {
         alarmCountdownJob?.cancel()
+        // Track completion before cleanup — user heard the alarm and acknowledged it
+        _timerState.value?.let { state ->
+            if (state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE) {
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_COMPLETED,
+                    mapOf(
+                        "target_duration" to state.targetDuration.inWholeSeconds,
+                        "source" to "alarm_dismissed",
+                    ),
+                )
+                analyticsService.trackFirstTimerCompletedIfNeeded()
+                storeReviewManager.recordCompletion()
+                trainingStatsService.recordSession()
+            }
+        }
         abandonAudioFocus()
         stopAlarmSound()
         stopVibration()

@@ -31,17 +31,33 @@ def test_marketing_post_index_uses_repo_relative_paths() -> None:
 
 
 def test_runtime_temp_paths_are_environment_backed() -> None:
-    expected_absent = {
-        "scripts/capture_ios_store_screenshots.sh": "/tmp/appstore_screenshots",
-        "native-ios/RandomTimerUITests/RandomTimerUITests.swift": "/tmp/appstore_screenshots",
-        "scripts/device-tests/adb/lib/common.sh": "/tmp/device_test_notif_dump.txt",
-        "native-android/fastlane/Appfile": "/tmp/play-service-account.json",
-        "native-ios/upload_to_testflight.py": "/tmp/RandomTimer.xcarchive",
+    expected_markers = {
+        "scripts/capture_ios_store_screenshots.sh": (
+            "APPSTORE_SCREENSHOT_OUTPUT_DIR",
+            "TMPDIR",
+        ),
+        "native-ios/RandomTimerUITests/RandomTimerUITests.swift": (
+            "APPSTORE_SCREENSHOT_OUTPUT_DIR",
+            "NSTemporaryDirectory",
+        ),
+        "scripts/device-tests/adb/lib/common.sh": (
+            "TMPDIR",
+            "NOTIF_DUMP",
+        ),
+        "native-android/fastlane/Appfile": (
+            "GOOGLE_PLAY_JSON_KEY_PATH",
+            "Dir.tmpdir",
+        ),
+        "native-ios/upload_to_testflight.py": (
+            "RANDOM_TIMER_UPLOAD_TMPDIR",
+            "tempfile.gettempdir",
+        ),
     }
 
-    for relative_path, forbidden_snippet in expected_absent.items():
+    for relative_path, required_markers in expected_markers.items():
         contents = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        assert forbidden_snippet not in contents, f"{relative_path} still hardcodes {forbidden_snippet}"
+        for marker in required_markers:
+            assert marker in contents, f"{relative_path} must stay environment-backed via {marker}"
 
 
 def test_hygiene_check_matches_current_repo_policy() -> None:
@@ -49,3 +65,16 @@ def test_hygiene_check_matches_current_repo_policy() -> None:
     assert '"GEMINI.md"' in contents
     assert '"BUGBOT.md"' in contents
     assert "Possible secret or temp-path leak" not in contents
+
+
+def test_gitignore_covers_known_local_artifact_buckets() -> None:
+    contents = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    expected_entries = (
+        ".venv-chatterbox/",
+        "native-android/.venv-chatterbox/",
+        ".rlhf/feedback.jsonl",
+        ".rlhf/rejection-ledger.jsonl",
+        "evidence/",
+    )
+    for entry in expected_entries:
+        assert entry in contents, f".gitignore must ignore {entry}"

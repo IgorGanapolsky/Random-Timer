@@ -44,13 +44,16 @@ final class ProManager: ObservableObject {
         do {
             products = try await Product.products(for: Self.productIDs)
                 .sorted(by: { $0.price < $1.price })
+            if products.isEmpty {
+                Self.log.error("ProManager: Product.products returned EMPTY for IDs: \(Self.productIDs). Check App Store Connect product configuration.")
+            }
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
         }
     }
 
     func formattedPrice(for productID: String) -> String {
-        products.first(where: { $0.id == productID })?.displayPrice ?? (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99")
+        products.first(where: { $0.id == productID })?.displayPrice ?? (products.isEmpty ? "Unavailable" : (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99"))
     }
 
     // MARK: - Purchase

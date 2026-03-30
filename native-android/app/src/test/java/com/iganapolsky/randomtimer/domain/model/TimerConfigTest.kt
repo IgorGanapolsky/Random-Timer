@@ -14,7 +14,7 @@ class TimerConfigTest {
         assertThat(config.maxSeconds).isEqualTo(300)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
-        assertThat(config.voiceEnabled).isTrue()
+        assertThat(config.voiceEnabled).isFalse()
     }
 
     @Test
@@ -158,5 +158,67 @@ class TimerConfigTest {
         val config = TimerConfig.DEFAULT
 
         assertThat(config.alarmDuration).isEqualTo(10)
+    }
+
+    @Test
+    fun `toggle extended range restores last free range`() {
+        val current =
+            TimerConfig(
+                minSeconds = 900,
+                maxSeconds = 1800,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+                useExtendedRange = true,
+            )
+        val profiles =
+            RangeToggleProfiles(
+                freeMinSeconds = 30,
+                freeMaxSeconds = 120,
+                extendedMinSeconds = 900,
+                extendedMaxSeconds = 1800,
+            )
+
+        val result = toggleExtendedRange(current, profiles)
+
+        assertThat(result.config.useExtendedRange).isFalse()
+        assertThat(result.config.minSeconds).isEqualTo(30)
+        assertThat(result.config.maxSeconds).isEqualTo(120)
+        assertThat(result.profiles.extendedMinSeconds).isEqualTo(900)
+        assertThat(result.profiles.extendedMaxSeconds).isEqualTo(1800)
+    }
+
+    @Test
+    fun `toggle extended range restores last extended range`() {
+        val current =
+            TimerConfig(
+                minSeconds = 45,
+                maxSeconds = 180,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+                useExtendedRange = false,
+            )
+        val profiles =
+            RangeToggleProfiles(
+                freeMinSeconds = 45,
+                freeMaxSeconds = 180,
+                extendedMinSeconds = 1200,
+                extendedMaxSeconds = 2400,
+            )
+
+        val result = toggleExtendedRange(current, profiles)
+
+        assertThat(result.config.useExtendedRange).isTrue()
+        assertThat(result.config.minSeconds).isEqualTo(1200)
+        assertThat(result.config.maxSeconds).isEqualTo(2400)
+        assertThat(result.profiles.freeMinSeconds).isEqualTo(45)
+        assertThat(result.profiles.freeMaxSeconds).isEqualTo(180)
     }
 }

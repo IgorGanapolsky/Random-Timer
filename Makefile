@@ -2,6 +2,7 @@
 .PHONY: verify verify-android verify-android-instrumentation verify-ios verify-ios-ui maestro-android maestro-ios
 .PHONY: playwright-install playwright-install-agent-browser playwright-verify-local playwright-verify-strict playwright-store-console playwright-store-console-agent playwright-sync-auth-secrets
 .PHONY: device-tests device-tests-adb phoneclaw-visual
+.PHONY: memory-doctor memory-summary memory-lessons memory-capture-down memory-capture-up
 
 ANDROID_DIR := native-android
 IOS_DIR := native-ios
@@ -180,6 +181,27 @@ device-tests-adb:
 phoneclaw-visual:
 	@echo "==> PhoneClaw: pushing visual test scripts to device"
 	@bash scripts/device-tests/phoneclaw/setup-device.sh
+
+memory-doctor:
+	@bash scripts/verify_memory_gateway.sh
+
+memory-summary:
+	@echo "==> Memory Gateway: feedback summary"
+	@npx -y mcp-memory-gateway@0.8.0 summary
+
+memory-lessons:
+	@echo "==> Memory Gateway: lesson search"
+	@npx -y mcp-memory-gateway@0.8.0 lessons --query="$(Q)" --limit="$${LIMIT:-5}"
+
+memory-capture-down:
+	@test -n "$(CONTEXT)" || (echo "ERROR: provide CONTEXT=\"...\"" && exit 1)
+	@echo "==> Memory Gateway: capture negative feedback"
+	@npx -y mcp-memory-gateway@0.8.0 capture --feedback=down --context="$(CONTEXT)" --tags="$(TAGS)"
+
+memory-capture-up:
+	@test -n "$(CONTEXT)" || (echo "ERROR: provide CONTEXT=\"...\"" && exit 1)
+	@echo "==> Memory Gateway: capture positive feedback"
+	@npx -y mcp-memory-gateway@0.8.0 capture --feedback=up --context="$(CONTEXT)" --tags="$(TAGS)"
 
 # Forge & Maintenance
 forge-maintenance:

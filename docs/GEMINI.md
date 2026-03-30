@@ -85,3 +85,6 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 2. Dispatch `native-release.yml` → builds + uploads to TestFlight/Google Play
 3. After verification, auto-tags `main` and creates GitHub Release
 4. Auto-PRs sync `main` and merge back to `develop`
+
+### PR management & secrets (cross-reference)
+- Periodic PR audits, branch hygiene, and **no secrets in repo** are spelled out in `CLAUDE.md` (including PAT rotation if a token is ever exposed).

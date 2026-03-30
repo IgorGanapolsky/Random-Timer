@@ -2,6 +2,38 @@ import XCTest
 @testable import RandomTimer
 
 final class TimerConfigProClampingTests: XCTestCase {
+    @MainActor
+    func testPaywallHiddenUnlockHoldDurationIsEightSeconds() {
+        XCTAssertEqual(PaywallSheet.hiddenUnlockHoldDuration, 8.0, accuracy: 0.001)
+    }
+
+    @MainActor
+    func testPaywallCopyFocusesOnTrainingOutcomes() {
+        XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
+        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
+        XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
+        XCTAssertEqual(
+            PaywallSheet.pricingFooter,
+            "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+        )
+        XCTAssertEqual(
+            PaywallSheet.featureRows,
+            [
+                "Train up to 60-minute sessions",
+                "Get voice callouts during training",
+                "Use loop mode with round limits",
+                "Unlock the full sound library",
+                "New Pro voice callouts and sound packs every 30 days",
+            ]
+        )
+    }
+
+    @MainActor
+    func testPaywallPriceLabelNormalizesToYearlyPricing() {
+        let sut = PaywallSheet(entryPoint: .unknown)
+        XCTAssertEqual(sut.normalizedPriceLabel("$29.99"), "$29.99/year")
+        XCTAssertEqual(sut.normalizedPriceLabel("$29.99/yr"), "$29.99/yr")
+    }
 
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
         XCTAssertEqual(

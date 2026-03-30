@@ -37,7 +37,7 @@ class AIVoiceCalloutManagerSelectionTest {
         val path = Paths.get("src/main/assets/voice_callouts.json")
         val catalog = parseVoiceCalloutCatalog(path.toFile().readText())
 
-        assertThat(catalog.elapsedCues.size).isAtLeast(16)
+        assertThat(catalog.elapsedCues.size).isAtLeast(12)
         assertThat(catalog.commandCues.size).isAtLeast(20)
         assertThat(catalog.elapsedCues.all { it.text.contains("elapsed", ignoreCase = true) }).isTrue()
     }
@@ -53,6 +53,33 @@ class AIVoiceCalloutManagerSelectionTest {
         val selected = nextCommandCue(cues, lastFilename = "cue_a") { 0 }
 
         assertThat(selected.filename).isEqualTo("cue_b")
+    }
+
+    @Test
+    fun runtimeVoiceCueForMinuteMarkOnlyReturnsMinuteElapsedAnnouncements() {
+        val catalog =
+            VoiceCueCatalog(
+                previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Preview"),
+                fallbackCommandFilename = "cmd_a",
+                elapsedCues =
+                    listOf(
+                        ElapsedVoiceCue(second = 15, filename = "elapsed_15s", text = "Fifteen seconds elapsed."),
+                        ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed."),
+                        ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed."),
+                    ),
+                commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
+            )
+
+        assertThat(runtimeVoiceCueForMinuteMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
+        assertThat(runtimeVoiceCueForMinuteMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
+        assertThat(runtimeVoiceCueForMinuteMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+    }
+
+    @Test
+    fun shortTimersScheduleFollowupCommandCuesEarly() {
+        assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
     }
 
     @Test

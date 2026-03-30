@@ -126,6 +126,15 @@ internal func nextCommandCue(
     return cues[nextIndex]
 }
 
+internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int {
+    switch totalDurationSeconds {
+    case ...29:
+        return .max
+    default:
+        return 30
+    }
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {
@@ -134,30 +143,42 @@ final class AIVoiceCalloutService {
         let lastCommandCueFilename: String?
     }
 
+    typealias AudioSessionActivator = @MainActor () -> Void
+
     static let shared = AIVoiceCalloutService()
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
+    private static func activateVoiceAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            log.error("Audio session setup failed: \(error.localizedDescription)")
+        }
+    }
 
     private let bundle: Bundle
     private let packStore: ProAudioPackStore
+    private let activateAudioSession: AudioSessionActivator
     private var audioPlayer: AVAudioPlayer?
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
 
-    init(bundle: Bundle = .main, packStore: ProAudioPackStore = .shared) {
+    init(
+        bundle: Bundle = .main,
+        packStore: ProAudioPackStore = .shared,
+        activateAudioSession: @escaping AudioSessionActivator = AIVoiceCalloutService.activateVoiceAudioSession
+    ) {
         self.bundle = bundle
         self.packStore = packStore
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            Self.log.error("Audio session setup failed: \(error.localizedDescription)")
-        }
+        self.activateAudioSession = activateAudioSession
+        self.activateAudioSession()
     }
 
     func speak(_ text: String) {
+        activateAudioSession()
+
         let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
@@ -202,10 +223,17 @@ final class AIVoiceCalloutService {
         speak(catalog.previewElapsed.text)
     }
 
+    func beginSession(totalDurationSeconds: Int) {
+        nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
+    }
+
     func triggerCallout(elapsedSeconds: Int) {
-        if let callout = elapsedMilestone(for: elapsedSeconds) {
+        if let callout = elapsedMilestone(for: elapsedSeconds), elapsedSeconds.isMultiple(of: 60) {
             speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
+            if nextCommandCueAt <= elapsedSeconds {
+                nextCommandCueAt = elapsedSeconds + 30
+            }
             return
         }
 
@@ -213,11 +241,12 @@ final class AIVoiceCalloutService {
             let cue = randomCommandCue()
             speak(cue.text)
             lastCommandCueFilename = cue.filename
-            nextCommandCueAt = elapsedSeconds + secureRandomInt(in: 12...25)
+            nextCommandCueAt = elapsedSeconds + 30
         }
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
+        guard elapsed % 60 == 0 else { return nil }  // Only fire elapsed cues on the minute
         let catalog = packStore.voiceCatalog(bundle: bundle)
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil
@@ -227,7 +256,10 @@ final class AIVoiceCalloutService {
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
         if nextCommandCueAt == 0 {
-            nextCommandCueAt = secureRandomInt(in: 8...20)
+            nextCommandCueAt = 30
+        }
+        if nextCommandCueAt == .max {
+            return false
         }
         return elapsedSeconds >= nextCommandCueAt
     }

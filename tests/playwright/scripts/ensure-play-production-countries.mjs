@@ -2,8 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 
-const defaultPlayUrl =
-  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4974974102541773558/app-dashboard";
+const defaultPlayUrl = "https://play.google.com/console";
 
 function fail(message) {
   throw new Error(message);
@@ -79,6 +78,43 @@ async function clickFirst(page, labels) {
   return null;
 }
 
+async function selectDeveloperAccount(page, accountName) {
+  const chooserHeading = page.getByRole("heading", { name: /choose developer account/i });
+  if (!(await chooserHeading.isVisible().catch(() => false))) {
+    return false;
+  }
+
+  const accountOption = page.getByRole("option", { name: new RegExp(accountName, "i") }).first();
+  if (!(await accountOption.isVisible().catch(() => false))) {
+    fail(`Play developer account chooser is visible, but "${accountName}" was not found.`);
+  }
+
+  await accountOption.click();
+  await page.waitForLoadState("domcontentloaded").catch(() => {});
+  await page.waitForTimeout(3000);
+  return true;
+}
+
+async function openAppFromList(page, appName) {
+  const appLink = page.getByRole("link", { name: new RegExp(appName, "i") }).first();
+  if (await appLink.isVisible().catch(() => false)) {
+    await appLink.click();
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(5000);
+    return true;
+  }
+
+  const appText = page.getByText(new RegExp(appName, "i")).first();
+  if (await appText.isVisible().catch(() => false)) {
+    await appText.click();
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(5000);
+    return true;
+  }
+
+  return false;
+}
+
 async function ensureCountrySelected(page, countryName) {
   const bodyBefore = await page.locator("body").innerText().catch(() => "");
   if (new RegExp(countryName, "i").test(bodyBefore)) {
@@ -143,6 +179,8 @@ async function main() {
 
   const playUrl = process.env.PLAY_CONSOLE_URL ?? defaultPlayUrl;
   const countryName = process.env.PLAY_TARGET_COUNTRY ?? "United States";
+  const accountName = process.env.PLAY_EXPECTED_ACCOUNT_NAME ?? "IgorGanapolsky";
+  const appName = process.env.PLAY_EXPECTED_APP_NAME ?? "Random Tactical Timer";
   const artifactDir =
     process.env.PLAY_COUNTRY_ARTIFACT_DIR ??
     path.resolve(process.cwd(), "test-results/play-production-countries");
@@ -159,24 +197,31 @@ async function main() {
     await page.goto(playUrl, { waitUntil: "domcontentloaded", timeout: 120000 });
     await page.waitForTimeout(5000);
     await expectAuthenticated(page);
-    await saveArtifacts(page, artifactDir, "01-dashboard");
+    await selectDeveloperAccount(page, accountName);
+    await saveArtifacts(page, artifactDir, "01-after-account");
+
+    const openedApp = await openAppFromList(page, appName);
+    if (!openedApp) {
+      fail(`Could not open Play app "${appName}" from the current console page.`);
+    }
+    await saveArtifacts(page, artifactDir, "02-dashboard");
 
     const productionClicked = await clickFirst(page, [/^production$/i, /production/i]);
     if (!productionClicked) {
       fail("Could not navigate to Play Production page.");
     }
     await page.waitForTimeout(4000);
-    await saveArtifacts(page, artifactDir, "02-production");
+    await saveArtifacts(page, artifactDir, "03-production");
 
     const countriesClicked = await clickFirst(page, [/countries\/regions/i, /countries/i]);
     if (!countriesClicked) {
       fail("Could not open Play Countries/regions section.");
     }
     await page.waitForTimeout(4000);
-    await saveArtifacts(page, artifactDir, "03-countries");
+    await saveArtifacts(page, artifactDir, "04-countries");
 
     const result = await ensureCountrySelected(page, countryName);
-    await saveArtifacts(page, artifactDir, "04-after-save");
+    await saveArtifacts(page, artifactDir, "05-after-save");
 
     const resultPath = path.join(artifactDir, "result.json");
     fs.writeFileSync(

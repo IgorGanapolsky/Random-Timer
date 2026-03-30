@@ -1,4 +1,5 @@
-v1.2.0 — Random Tactical Timer
-- Refreshed App Store screenshots and listing metadata for clearer onboarding
-- Improved timer setup and alarm flow copy for faster first-session use
-- Stability fixes and performance improvements
+• Pro subscription now available — unlock voice callouts, extended range, and loop mode
+• Fixed purchase flow with clear error feedback
+• Added Privacy Policy and Terms of Use links
+• Improved timer completion tracking accuracy
+• Better session reliability when switching between apps

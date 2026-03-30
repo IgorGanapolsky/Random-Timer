@@ -24,11 +24,26 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
+
+internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
+internal const val PAYWALL_HEADLINE = "Unlock Full Training Mode"
+internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
+internal const val PAYWALL_AUDIENCE_LINE = "Built for dry fire, sparring, drills, and reaction training."
+internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Auto-renews yearly."
+internal val PAYWALL_FEATURE_ROWS =
+    listOf(
+        "Train up to 60-minute sessions",
+        "Get voice callouts during training",
+        "Use loop mode with round limits",
+        "Unlock the full sound library",
+        "New Pro voice callouts and sound packs every 30 days",
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +80,7 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Upgrade to Pro",
+                text = PAYWALL_HEADLINE,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
@@ -74,7 +89,7 @@ fun PaywallSheet(
                     Modifier.fillMaxWidth().then(
                         if (onDebugUnlock != null) {
                             Modifier.holdForHiddenUnlock(
-                                holdDurationMs = 8_000L,
+                                holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
                                 haptic = haptic,
                                 onHoldComplete = onDebugUnlock,
                             )
@@ -87,14 +102,22 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "One premium plan.",
+                text = PAYWALL_SUBHEADLINE,
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
             )
             Text(
-                text = "Yearly auto-renewing subscription. Cancel anytime.",
+                text = PAYWALL_AUDIENCE_LINE,
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = PAYWALL_PRICING_FOOTER,
+                style = MaterialTheme.typography.bodySmall,
+                color = TimerColors.TextSecondary,
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -109,17 +132,14 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            ProFeatureRow(text = "10 alarm sounds (vs 2 free)")
-            ProFeatureRow(text = "Extended range up to 60 minutes")
-            ProFeatureRow(text = "Elapsed-time voice callouts")
-            ProFeatureRow(text = "Loop with optional round limits")
-            ProFeatureRow(text = "Monthly voice callout and sound arsenal refreshes")
-            ProFeatureRow(text = "Support independent development")
+            PAYWALL_FEATURE_ROWS.forEach { feature ->
+                ProFeatureRow(text = feature)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = "Unlock Pro \u2022 $proPrice",
+                text = "Start Pro \u2022 ${normalizedPriceLabel(proPrice)}",
                 onClick = { onPurchase("elite_tactical") },
             )
 
@@ -147,8 +167,44 @@ fun PaywallSheet(
                 textAlign = TextAlign.Center,
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Required by App Store guidelines for subscription disclosures
+            val uriHandler = LocalUriHandler.current
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.TextSecondary,
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+                    },
+                )
+                Text(
+                    text = "Terms of Use",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TimerColors.TextSecondary,
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
+                    },
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+internal fun normalizedPriceLabel(price: String): String {
+    val trimmed = price.trim()
+    val lowered = trimmed.lowercase()
+    return if ("/yr" in lowered || "/year" in lowered) {
+        trimmed
+    } else {
+        "$trimmed/year"
     }
 }
 

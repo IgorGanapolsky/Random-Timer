@@ -138,7 +138,23 @@ internal fun runtimeVoiceCueForElapsedSecond(
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
     if (elapsedSeconds == lastElapsedMilestone) return null
+    if (elapsedSeconds % 60 != 0) return null  // Only fire elapsed cues on the minute
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
+}
+
+internal fun runtimeVoiceCueForMinuteMark(
+    elapsedSeconds: Int,
+    lastElapsedMilestone: Int,
+    catalog: VoiceCueCatalog,
+): VoiceCue? {
+    if (elapsedSeconds <= 0 || elapsedSeconds % 60 != 0) {
+        return null
+    }
+    return runtimeVoiceCueForElapsedSecond(
+        elapsedSeconds = elapsedSeconds,
+        lastElapsedMilestone = lastElapsedMilestone,
+        catalog = catalog,
+    )
 }
 
 internal fun nextCommandCue(
@@ -160,6 +176,12 @@ internal fun nextCommandCue(
     }
     return cues[(boundedIndex + 1) % cues.size]
 }
+
+internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
+    when {
+        totalDurationSeconds <= 29 -> Int.MAX_VALUE
+        else -> 30
+    }
 
 @Singleton
 class AIVoiceCalloutManager
@@ -183,6 +205,19 @@ class AIVoiceCalloutManager
             mediaPlayer?.setVolume(currentVolume, currentVolume)
         }
 
+        private fun stopPlayback() {
+            val player = mediaPlayer ?: return
+            runCatching {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+            }
+            player.release()
+            if (mediaPlayer == player) {
+                mediaPlayer = null
+            }
+        }
+
         fun speak(text: String) {
             val catalog = packStore.voiceCatalog()
             val mappedResId = voiceResIdForText(context, text, catalog)
@@ -197,13 +232,13 @@ class AIVoiceCalloutManager
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
             try {
-                mediaPlayer?.release()
+                stopPlayback()
                 mediaPlayer =
                     MediaPlayer().apply {
                         setAudioAttributes(
                             AudioAttributes
                                 .Builder()
-                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                                 .build(),
                         )
@@ -237,6 +272,7 @@ class AIVoiceCalloutManager
         }
 
         fun resetSession() {
+            stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             nextCommandCueAt = 0
@@ -256,25 +292,34 @@ class AIVoiceCalloutManager
             speak(catalog.previewElapsed.text)
         }
 
+        fun beginSession(totalDurationSeconds: Int) {
+            nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
+        }
+
         fun triggerCallout(elapsedSeconds: Int) {
             val catalog = packStore.voiceCatalog()
-            runtimeVoiceCueForElapsedSecond(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
+            runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
+                if (nextCommandCueAt <= elapsedSeconds) {
+                    nextCommandCueAt = elapsedSeconds + 30
+                }
                 return
             }
-
             if (shouldFireCommandCue(elapsedSeconds)) {
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + Random.nextInt(12, 26)
+                nextCommandCueAt = elapsedSeconds + 30
             }
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
             if (nextCommandCueAt == 0) {
-                nextCommandCueAt = Random.nextInt(8, 21)
+                nextCommandCueAt = 30
+            }
+            if (nextCommandCueAt == Int.MAX_VALUE) {
+                return false
             }
             return elapsedSeconds >= nextCommandCueAt
         }
@@ -290,7 +335,6 @@ class AIVoiceCalloutManager
         }
 
         fun shutdown() {
-            mediaPlayer?.release()
-            mediaPlayer = null
+            stopPlayback()
         }
     }

@@ -42,6 +42,7 @@ class AnalyticsService
                 }
 
             PostHogAndroid.setup(application, config)
+            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
             analyticsContextProperties =
                 mapOf(
                     "platform" to "android",
@@ -50,6 +51,7 @@ class AnalyticsService
                     AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
                     AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
                     AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
+                    "is_internal" to isInternalUser,
                 )
             initialized = true
             identify(
@@ -201,6 +203,19 @@ class AnalyticsService
         }
 
         private fun environment(): String = if (buildAudience() == "live") "production" else "development"
+
+        private fun isUiTestSession(application: Application): Boolean {
+            // Detect Maestro and other UI test frameworks via launch intent extras
+            // or system properties set by test runners
+            val hasMaestroFlag = System.getProperty("maestro.test") != null
+            val hasTestRunner = try {
+                Class.forName("androidx.test.espresso.Espresso")
+                true
+            } catch (_: ClassNotFoundException) {
+                false
+            }
+            return hasMaestroFlag || hasTestRunner
+        }
 
         private fun isEmulator(): Boolean {
             val fingerprint = Build.FINGERPRINT.lowercase()
