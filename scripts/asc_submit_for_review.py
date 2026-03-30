@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from typing import Any, Dict, Iterable, Optional
 from scripts.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
+REVIEW_SUBMISSION_CONFLICT_RE = re.compile(r"another reviewSubmission with id ([A-Za-z0-9-]+)")
 
 
 def die(msg: str, code: int = 1) -> "None":
@@ -786,6 +788,43 @@ def _find_submission_for_version(
     return None, None
 
 
+def _extract_conflicting_review_submission_id(exc: Exception) -> str | None:
+    msg = str(exc)
+    if "STATE_ERROR.ITEM_PART_OF_ANOTHER_SUBMISSION" not in msg:
+        return None
+    match = REVIEW_SUBMISSION_CONFLICT_RE.search(msg)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def _select_submission_item_for_version(
+    items: list[dict[str, Any]], *, version_id: str
+) -> dict[str, Any] | None:
+    for item in items:
+        rel_version = ((item.get("relationships") or {}).get("appStoreVersion") or {}).get("data") or {}
+        if rel_version.get("id") == version_id:
+            return item
+    if len(items) == 1:
+        return items[0]
+    return None
+
+
+def _load_existing_submission_from_conflict(
+    client: ASCClient, *, submission_id: str, version_id: str
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    info(f"Version already belongs to review submission {submission_id}; reusing it.")
+    submission = client.request("GET", f"/reviewSubmissions/{submission_id}").get("data") or {}
+    items = _list_review_submission_items(client, submission_id)
+    item = _select_submission_item_for_version(items, version_id=version_id)
+    if not item and items:
+        info(
+            f"Review submission {submission_id} has {len(items)} item(s), "
+            "but none matched the expected App Store version id; proceeding without item mutation."
+        )
+    return submission, item
+
+
 def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
     payload = {
         "data": {
@@ -872,24 +911,43 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
         submission_id = str(submission.get("id") or "")
         if not submission_id:
             die("Failed to create review submission (missing submission id in response).")
-        item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        try:
+            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        except AscClientError as exc:
+            conflict_submission_id = _extract_conflicting_review_submission_id(exc)
+            if not conflict_submission_id:
+                raise
+            submission, item = _load_existing_submission_from_conflict(
+                client, submission_id=conflict_submission_id, version_id=version_id
+            )
+            submission_id = str((submission or {}).get("id") or conflict_submission_id)
     else:
         submission_id = str(submission.get("id") or "")
         if not submission_id:
             die("Existing review submission is missing an id.")
         if not item:
-            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+            try:
+                item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+            except AscClientError as exc:
+                conflict_submission_id = _extract_conflicting_review_submission_id(exc)
+                if not conflict_submission_id:
+                    raise
+                submission, item = _load_existing_submission_from_conflict(
+                    client, submission_id=conflict_submission_id, version_id=version_id
+                )
+                submission_id = str((submission or {}).get("id") or conflict_submission_id)
 
     item_id = str((item or {}).get("id") or "")
     item_state = ((item or {}).get("attributes") or {}).get("state", "UNKNOWN")
-    if not item_id:
-        die("Review submission item is missing an id.")
-
     if item_state == "REJECTED":
+        if not item_id:
+            die("Review submission item is REJECTED but missing an id.")
         info(f"Resolving rejected review submission item {item_id} for resubmission…")
         item = _mark_review_submission_item_resolved(client, item_id=item_id)
         item_state = ((item or {}).get("attributes") or {}).get("state", item_state)
         info(f"Review submission item {item_id} state: {item_state}")
+    elif not item_id:
+        info("Review submission item id unavailable; submitting the existing review submission directly.")
 
     submission = _submit_review_submission(client, submission_id=submission_id)
     info(
