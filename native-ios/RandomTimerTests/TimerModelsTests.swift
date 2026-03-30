@@ -10,6 +10,7 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertEqual(config.minSeconds, 0)
         XCTAssertEqual(config.maxSeconds, 300)
         XCTAssertEqual(config.alarmDuration, 10)
+        XCTAssertFalse(config.voiceEnabled)
     }
 
     func testConfigCanEnableVibration() {
@@ -97,7 +98,7 @@ final class TimerConfigTests: XCTestCase {
             volume: 0.5,
             vibrationEnabled: false,
             useExtendedRange: false,
-            voiceEnabled: true,
+            voiceEnabled: false,
             repeatRounds: 0
         )
         XCTAssertEqual(decoded, expected)
