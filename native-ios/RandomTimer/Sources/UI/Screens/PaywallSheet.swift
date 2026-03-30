@@ -25,6 +25,7 @@ struct PaywallSheet: View {
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
+    @State private var purchaseError: String?
     let entryPoint: PaywallEntryPoint
 
     var body: some View {
@@ -139,6 +140,14 @@ struct PaywallSheet: View {
         .onDisappear {
             trackDismiss(method: "system")
         }
+        .alert("Purchase Issue", isPresented: Binding(
+            get: { purchaseError != nil },
+            set: { if !$0 { purchaseError = nil } }
+        )) {
+            Button("OK") { purchaseError = nil }
+        } message: {
+            Text(purchaseError ?? "")
+        }
     }
 
     @MainActor
@@ -156,7 +165,19 @@ struct PaywallSheet: View {
             properties: purchaseProperties(productID: productID, result: result)
         )
 
-        guard result == .success else { return }
+        guard result == .success else {
+            switch result {
+            case .productUnavailable:
+                purchaseError = "This product is currently unavailable. Please try again later."
+            case .failed:
+                purchaseError = "Purchase failed. Please check your connection and try again."
+            case .pending:
+                purchaseError = "Your purchase is pending approval."
+            default:
+                break
+            }
+            return
+        }
 
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseSuccess,

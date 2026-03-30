@@ -46,7 +46,19 @@ final class AnalyticsService {
             AnalyticsProperties.buildAudience: buildAudience,
             AnalyticsProperties.buildType: buildType,
             AnalyticsProperties.runtimeTarget: runtimeTarget,
+            "is_internal": isInternalUser,
         ]
+    }
+
+    private var isInternalUser: Bool {
+        // Exclude: debug builds, simulators, Maestro/UI test sessions
+        #if DEBUG
+        return true
+        #elseif targetEnvironment(simulator)
+        return true
+        #else
+        return ProcessInfo.processInfo.arguments.contains("-ui-test-state")
+        #endif
     }
 
     private var buildAudience: String {
