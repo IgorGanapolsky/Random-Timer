@@ -48,6 +48,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                         "attributes": {"state": "WAITING_FOR_REVIEW"},
                     }
                 },
+                ("GET", "/apps/app-1/subscriptionGroups"): {
+                    "data": []
+                },
             }
         )
 
@@ -55,9 +58,11 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         self.assertEqual(client.calls[0]["path"], "/apps/app-1/reviewSubmissions")
         self.assertEqual(client.calls[1]["path"], f"/reviewSubmissions/{submission_id}/items")
-        self.assertEqual(client.calls[2]["path"], f"/reviewSubmissionItems/{item_id}")
+        # calls[2] is the subscription groups lookup (returns empty)
+        self.assertEqual(client.calls[2]["path"], "/apps/app-1/subscriptionGroups")
+        self.assertEqual(client.calls[3]["path"], f"/reviewSubmissionItems/{item_id}")
         self.assertEqual(
-            client.calls[2]["payload"],
+            client.calls[3]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissionItems",
@@ -66,9 +71,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                 }
             },
         )
-        self.assertEqual(client.calls[3]["path"], f"/reviewSubmissions/{submission_id}")
+        self.assertEqual(client.calls[4]["path"], f"/reviewSubmissions/{submission_id}")
         self.assertEqual(
-            client.calls[3]["payload"],
+            client.calls[4]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissions",
