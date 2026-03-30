@@ -236,6 +236,14 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
   # Support URL
   check_file_nonempty "$IOS_META/support_url.txt" "iOS support_url.txt"
 
+  # Terms of Use (EULA) link must be present in App Store description for subscriptions
+  if check_file_nonempty "$IOS_META/description.txt" "iOS description.txt"; then
+    IOS_DESCRIPTION=$(cat "$IOS_META/description.txt")
+    if ! printf '%s' "$IOS_DESCRIPTION" | grep -Eiq 'https://.*(eula|terms|stdeula)'; then
+      err "iOS description.txt must include a functional Terms of Use (EULA) link"
+    fi
+  fi
+
   # Screenshots (fastlane stores these in screenshots/, not metadata/)
   # Enforce release-grade App Store coverage:
   # - at least 3 iPhone 6.9"/6.5" screenshots

@@ -9,6 +9,7 @@ What it verifies (fail-fast):
   - Target App Store version exists (by versionString)
   - An iOS build is attached to that App Store version AND processingState == VALID
   - Required metadata fields are non-empty (description, keywords, support URL)
+  - App description includes a functional Terms of Use (EULA) link
   - Privacy Policy URL is set (from appInfoLocalizations)
   - App Review contact info exists (from appStoreReviewDetails)
   - Screenshots: at least N delivered screenshots (assetDeliveryState=COMPLETE)
@@ -75,6 +76,11 @@ def _pick_localization(items: List[Dict[str, Any]], locale: str) -> Optional[Dic
         if _normalize(it.get("attributes", {}).get("locale")) == locale:
             return it
     return items[0] if items else None
+
+
+def _has_terms_of_use_link(description: str) -> bool:
+    desc = description.lower()
+    return "https://" in desc and ("eula" in desc or "terms of use" in desc or "stdeula" in desc)
 
 
 def _list_app_store_versions(
@@ -375,6 +381,21 @@ def verify_ready(
                     "description_len": len(desc),
                     "keywords_len": len(keywords),
                     "supportUrl": support_url,
+                },
+            )
+        )
+        checks.append(
+            Check(
+                name="Terms of Use Link",
+                passed=_has_terms_of_use_link(desc),
+                details=(
+                    "Description includes a Terms of Use (EULA) link"
+                    if _has_terms_of_use_link(desc)
+                    else "Description is missing a Terms of Use (EULA) link"
+                ),
+                evidence={
+                    "locale": attrs.get("locale"),
+                    "description_len": len(desc),
                 },
             )
         )
