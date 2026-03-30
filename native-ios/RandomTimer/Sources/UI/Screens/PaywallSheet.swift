@@ -122,6 +122,16 @@ struct PaywallSheet: View {
                 }
                 .font(.footnote)
                 .foregroundColor(.textSecondary)
+
+                // Required by App Store Guideline 3.1.2(c)
+                HStack(spacing: 16) {
+                    Link("Privacy Policy",
+                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!)
+                    Link("Terms of Use (EULA)",
+                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!)
+                }
+                .font(.caption2)
+                .foregroundColor(.textSecondary)
             }
             .padding(24)
             .padding(.top, 8)
