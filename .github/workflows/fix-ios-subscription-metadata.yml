@@ -1,0 +1,106 @@
+name: Fix iOS Subscription Metadata
+
+on:
+  push:
+    branches:
+      - fix/store-product-verification
+    paths:
+      - .github/workflows/fix-ios-subscription-metadata.yml
+      - scripts/fix_ios_subscription_metadata.py
+      - scripts/tests/test_fix_ios_subscription_metadata.py
+      - scripts/verify_store_products.py
+      - native-ios/fastlane/screenshots/en-US/3_pro.png
+  workflow_dispatch:
+    inputs:
+      ios_product_id:
+        description: "App Store Connect subscription product ID"
+        type: string
+        required: true
+        default: com.iganapolsky.randomtimer.elite
+      subscription_id:
+        description: "Optional explicit App Store Connect subscription resource ID"
+        type: string
+        required: false
+        default: 6761282921
+      screenshot_path:
+        description: "Repo-relative PNG screenshot path"
+        type: string
+        required: true
+        default: native-ios/fastlane/screenshots/en-US/3_pro.png
+
+jobs:
+  repair:
+    name: Repair iOS Subscription Metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            pyjwt==2.11.0 \
+            cryptography==46.0.5 \
+            requests==2.32.5 \
+            pytest==8.4.2
+
+      - name: Prepare App Store Connect key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${APPSTORE_PRIVATE_KEY:-}" ] && [ -n "${APPSTORE_KEY_ID:-}" ]; then
+            mkdir -p ~/.appstoreconnect/private_keys
+            printf '%s' "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          fi
+
+      - name: Run focused unit tests
+        run: |
+          set -euo pipefail
+          pytest -q scripts/tests/test_asc_client.py scripts/tests/test_fix_ios_subscription_metadata.py
+
+      - name: Repair review note and review screenshot
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          FIX_IOS_PRODUCT_ID: ${{ github.event.inputs.ios_product_id || 'com.iganapolsky.randomtimer.elite' }}
+          FIX_IOS_SUBSCRIPTION_ID: ${{ github.event.inputs.subscription_id || '6761282921' }}
+          FIX_SCREENSHOT_PATH: ${{ github.event.inputs.screenshot_path || 'native-ios/fastlane/screenshots/en-US/3_pro.png' }}
+        run: |
+          set -euo pipefail
+          python scripts/fix_ios_subscription_metadata.py \
+            --ios-product-id "$FIX_IOS_PRODUCT_ID" \
+            --subscription-id "$FIX_IOS_SUBSCRIPTION_ID" \
+            --screenshot "$FIX_SCREENSHOT_PATH" \
+            --output ios-subscription-metadata-fix.json
+
+      - name: Re-verify iOS product state
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          FIX_IOS_PRODUCT_ID: ${{ github.event.inputs.ios_product_id || 'com.iganapolsky.randomtimer.elite' }}
+        run: |
+          set -euo pipefail
+          python scripts/verify_store_products.py \
+            --platform ios \
+            --ios-product-id "$FIX_IOS_PRODUCT_ID" \
+            --output store-product-verification-after-fix.json
+
+      - name: Upload repair artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-subscription-metadata-fix
+          path: |
+            ios-subscription-metadata-fix.json
+            store-product-verification-after-fix.json
