@@ -12,7 +12,10 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
         XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
         XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
-        XCTAssertEqual(PaywallSheet.pricingFooter, "Cancel anytime. Auto-renews yearly.")
+        XCTAssertEqual(
+            PaywallSheet.pricingFooter,
+            "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+        )
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
