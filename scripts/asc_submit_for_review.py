@@ -17,6 +17,10 @@ from typing import Any, Dict, Iterable, Optional
 from scripts.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
+SUBSCRIPTION_REVIEW_DOC_URL = (
+    "https://developer.apple.com/documentation/appstoreconnectapi/"
+    "submitting-subscriptions-and-subscription-groups-for-app-review"
+)
 
 
 def die(msg: str, code: int = 1) -> "None":
@@ -857,8 +861,16 @@ def _submit_review_submission(
     raise AssertionError("unreachable")
 
 
-def _attach_subscriptions_to_submission(client: ASCClient, app_id: str, submission_id: str) -> None:
-    """Attach any 'Ready to Submit' subscription groups to the review submission."""
+def _guard_pending_subscription_review(client: ASCClient, app_id: str) -> None:
+    """Fail fast when subscriptions require manual App Store Connect review handling.
+
+    Apple does not support attaching the first subscription to an app review submission
+    through the App Store Connect API. Submitting the app version alone produces a false
+    green in CI and gets rejected by App Review, so stop before creating/submitting a
+    review submission when any subscription is still pending review work.
+    """
+    blockers: list[tuple[str, str]] = []
+
     try:
         resp = client.request(
             "GET",
@@ -884,30 +896,32 @@ def _attach_subscriptions_to_submission(client: ASCClient, app_id: str, submissi
             for sub in subs:
                 if not sub:
                     continue
-                sub_id = sub.get("id")
                 sub_state = ((sub.get("attributes") or {}).get("state") or "").upper()
                 sub_name = (sub.get("attributes") or {}).get("name", "")
-                info(f"Found subscription '{sub_name}' (id={sub_id}, state={sub_state})")
                 if sub_state in ("READY_TO_SUBMIT", "WAITING_FOR_REVIEW", "IN_REVIEW"):
-                    payload = {
-                        "data": {
-                            "type": "reviewSubmissionItems",
-                            "relationships": {
-                                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
-                                "subscription": {"data": {"type": "subscriptions", "id": sub_id}},
-                            },
-                        }
-                    }
-                    try:
-                        client.request("POST", "/reviewSubmissionItems", payload=payload)
-                        info(f"Attached subscription '{sub_name}' to review submission.")
-                    except Exception as e:
-                        info(f"Could not attach subscription '{sub_name}': {e}")
+                    blockers.append((sub_name or "Unnamed subscription", sub_state))
     except Exception as e:
         info(f"Warning: could not enumerate subscriptions for review: {e}")
+        return
+
+    if not blockers:
+        return
+
+    details = ", ".join(f"{name} [{state}]" for name, state in blockers)
+    die(
+        "Subscription review cannot be completed through this API submit path. "
+        f"Pending subscription(s): {details}. "
+        "Apple requires the first subscription to be submitted with the app binary "
+        "through appstoreconnect.apple.com, and later subscription-only reviews use "
+        "/v1/subscriptionSubmissions. Attach the subscription from the iOS App version "
+        "page's In-App Purchases and Subscriptions section before retrying this workflow. "
+        f"Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
+    )
 
 
 def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
+    _guard_pending_subscription_review(client, app_id=app_id)
+
     submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
     if submission:
         info(
@@ -929,9 +943,6 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
             die("Existing review submission is missing an id.")
         if not item:
             item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
-
-    # Attach subscription IAPs to the review submission (Apple requires this)
-    _attach_subscriptions_to_submission(client, app_id=app_id, submission_id=submission_id)
 
     item_id = str((item or {}).get("id") or "")
     item_state = ((item or {}).get("attributes") or {}).get("state", "UNKNOWN")
