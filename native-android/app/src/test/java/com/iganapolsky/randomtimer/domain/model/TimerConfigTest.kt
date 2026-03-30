@@ -14,7 +14,7 @@ class TimerConfigTest {
         assertThat(config.maxSeconds).isEqualTo(300)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
-        assertThat(config.voiceEnabled).isTrue()
+        assertThat(config.voiceEnabled).isFalse()
     }
 
     @Test

@@ -872,7 +872,6 @@ def _attach_subscriptions_to_submission(client: ASCClient, app_id: str, submissi
             group_id = group.get("id")
             if not group_id:
                 continue
-            # Get subscriptions in this group
             subs_resp = client.request(
                 "GET",
                 f"/subscriptionGroups/{group_id}/subscriptions",

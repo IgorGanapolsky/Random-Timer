@@ -117,7 +117,9 @@ class ReleaseReadinessGateTests(unittest.TestCase):
             meta.mkdir(parents=True)
             (meta / "name.txt").write_text("Random Timer", encoding="utf-8")
             (meta / "subtitle.txt").write_text("Tactical Timer", encoding="utf-8")
-            (meta / "description.txt").write_text("Description.", encoding="utf-8")
+            (meta / "description.txt").write_text(
+                "Description.\n\nTerms of Use (EULA): https://example.com/eula/", encoding="utf-8"
+            )
             (meta / "keywords.txt").write_text("timer,random,tactical", encoding="utf-8")
             (meta / "release_notes.txt").write_text("Bug fixes.", encoding="utf-8")
             (meta / "privacy_url.txt").write_text("https://example.com/privacy", encoding="utf-8")
@@ -199,6 +201,20 @@ class ReleaseReadinessGateTests(unittest.TestCase):
 
         self.assertFalse(result["ready"])
         self.assertTrue(any("privacy_url" in e for e in result["errors"]))
+
+    def test_ios_missing_terms_link_fails(self):
+        from scripts.release_readiness_gate import Gate
+
+        with tempfile.TemporaryDirectory() as td:
+            root = self._make_repo(td, "ios")
+            (root / "native-ios" / "fastlane" / "metadata" / "en-US" / "description.txt").write_text(
+                "Description only.", encoding="utf-8"
+            )
+            gate = Gate(root, "ios")
+            result = gate.run_all()
+
+        self.assertFalse(result["ready"])
+        self.assertTrue(any("ios_terms_link" in e for e in result["errors"]))
 
 
 if __name__ == "__main__":
