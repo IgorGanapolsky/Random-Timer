@@ -279,9 +279,6 @@ def _asc_subscription_metadata_details(
                 "prices,subscriptionAvailability"
             ),
             "fields[subscriptionLocalizations]": "name,locale,description,state",
-            "fields[subscriptionPrices]": "startDate,preserved,current",
-            "fields[subscriptionAvailabilities]": "availableInNewTerritories,availableTerritories",
-            "fields[subscriptionAppStoreReviewScreenshots]": "fileName,fileSize,assetDeliveryState",
             "limit[subscriptionLocalizations]": 50,
             "limit[prices]": 50,
         },
