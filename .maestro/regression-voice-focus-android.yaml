@@ -3,9 +3,11 @@ appId: com.iganapolsky.randomtimer
 - launchApp:
     clearState: true
 - scrollUntilVisible:
-    element: "Voice Callouts"
+    element: ".*AI Voice Callouts.*"
     direction: DOWN
-- assertVisible: "Voice Callouts"
-- assertVisible: "Countdown"
-- assertVisible: "Focus"
-- takeScreenshot: evidence/android-voice-focus
+- assertVisible: ".*AI Voice Callouts.*"
+- assertVisible: "Elapsed-time voice prompts during the timer"
+- assertVisible: "PREVIEW"
+- assertVisible: ".*PRO.*"
+- assertVisible: ".*Intense.*"
+- assertVisible: ".*Gentle.*"

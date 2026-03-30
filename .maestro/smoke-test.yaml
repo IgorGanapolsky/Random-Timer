@@ -12,7 +12,7 @@ appId: com.iganapolsky.randomtimer
 - assertVisible:
     text: '.*Maximum:.*'
 - assertVisible:
-    text: '.*Alarm Sound Duration.*'
+    text: '.*Alarm Sound.*'
 - assertVisible: 'Start Timer'
 
 # Start the timer

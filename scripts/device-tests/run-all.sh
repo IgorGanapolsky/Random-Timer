@@ -117,7 +117,7 @@ if [ "$ADB_ONLY" = false ]; then
       flow_path="$MAESTRO_DIR/$flow"
       if [ -f "$flow_path" ]; then
         echo -e "\n${BOLD}Running: $flow${RESET}"
-        if maestro test "$flow_path"; then
+        if bash "$SCRIPT_DIR/run-maestro-android.sh" "$flow_path"; then
           MAESTRO_PASS=$((MAESTRO_PASS + 1))
         else
           MAESTRO_FAIL=$((MAESTRO_FAIL + 1))

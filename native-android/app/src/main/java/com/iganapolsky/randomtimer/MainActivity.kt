@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
         handleAlarmNotificationTap(intent)
         handleDeepLink(intent)
+        handleUiTestState(intent)
 
         // User is back — cancel any pending re-engagement reminders
         ReengagementScheduler.cancel(this)
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleAlarmNotificationTap(intent)
         handleDeepLink(intent)
+        handleUiTestState(intent)
     }
 
     override fun onResume() {
@@ -115,6 +117,30 @@ class MainActivity : ComponentActivity() {
     private fun handleDeepLink(intent: Intent?) {
         val uri = intent?.data ?: return
         analyticsService.trackDeepLink(uri)
+    }
+
+    private fun handleUiTestState(intent: Intent?) {
+        if (!BuildConfig.DEBUG) return
+        val launchIntent = intent ?: return
+
+        val state =
+            sequenceOf("-ui-test-state", "ui-test-state", "--ui-test-state")
+                .mapNotNull { key -> launchIntent.extras?.get(key)?.toString()?.takeIf { it.isNotBlank() } }
+                .firstOrNull()
+                ?.lowercase()
+                ?: return
+
+        val seedIntent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_SEED_DEBUG_STATE
+                putExtra(TimerForegroundService.EXTRA_UI_TEST_STATE, state)
+                putExtra(TimerForegroundService.EXTRA_APP_IN_FOREGROUND, true)
+            }
+        startService(seedIntent)
+
+        launchIntent.removeExtra("-ui-test-state")
+        launchIntent.removeExtra("ui-test-state")
+        launchIntent.removeExtra("--ui-test-state")
     }
 
     private fun requestNotificationPermission() {
