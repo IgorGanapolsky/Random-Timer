@@ -267,57 +267,51 @@ def _asc_subscription_metadata_details(
     client: ASCClient,
     subscription_id: str,
 ) -> dict[str, Any]:
-    payload = client.get(
+    subscription_payload = client.get(
         f"/subscriptions/{subscription_id}",
         params={
-            "include": "subscriptionLocalizations,appStoreReviewScreenshot,prices,subscriptionAvailability",
             "fields[subscriptions]": (
                 "name,productId,familySharable,state,subscriptionPeriod,reviewNote,"
                 "groupLevel,subscriptionLocalizations,appStoreReviewScreenshot,"
                 "prices,subscriptionAvailability"
-            ),
-            "fields[subscriptionLocalizations]": "name,locale,description,state",
-            "limit[subscriptionLocalizations]": 50,
-            "limit[prices]": 50,
+            )
         },
     )
-
-    subscription = payload.get("data", {})
-    included = payload.get("included", []) or []
+    subscription = subscription_payload.get("data", {})
     if not subscription:
         return {}
 
-    included_by_id = {
-        item.get("id", ""): item
-        for item in included
-        if item.get("id")
-    }
+    read_errors: list[str] = []
 
-    localization_ids = _asc_relationship_ids(subscription, "subscriptionLocalizations")
-    price_ids = _asc_relationship_ids(subscription, "prices")
-    availability_ids = _asc_relationship_ids(subscription, "subscriptionAvailability")
-    review_screenshot_ids = _asc_relationship_ids(subscription, "appStoreReviewScreenshot")
+    def _safe_get(path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        try:
+            return client.get(path, params=params)
+        except Exception as exc:
+            read_errors.append(f"{path}: {exc}")
+            return {}
 
-    localizations = [
-        included_by_id[item_id]
-        for item_id in localization_ids
-        if item_id in included_by_id
-    ]
-    prices = [
-        included_by_id[item_id]
-        for item_id in price_ids
-        if item_id in included_by_id
-    ]
-    availabilities = [
-        included_by_id[item_id]
-        for item_id in availability_ids
-        if item_id in included_by_id
-    ]
-    review_screenshots = [
-        included_by_id[item_id]
-        for item_id in review_screenshot_ids
-        if item_id in included_by_id
-    ]
+    localizations_payload = _safe_get(
+        f"/subscriptions/{subscription_id}/subscriptionLocalizations",
+        params={
+            "limit": 50,
+            "fields[subscriptionLocalizations]": "name,locale,description,state",
+        },
+    )
+    review_screenshot_payload = _safe_get(
+        f"/subscriptions/{subscription_id}/appStoreReviewScreenshot",
+    )
+    prices_payload = _safe_get(
+        f"/subscriptions/{subscription_id}/prices",
+        params={"limit": 50},
+    )
+    availability_payload = _safe_get(
+        f"/subscriptions/{subscription_id}/subscriptionAvailability",
+    )
+
+    localizations = localizations_payload.get("data", []) or []
+    prices = prices_payload.get("data", []) or []
+    availability_resource = availability_payload.get("data")
+    review_screenshot_resource = review_screenshot_payload.get("data")
 
     return {
         "reviewNotePresent": bool(subscription.get("attributes", {}).get("reviewNote")),
@@ -340,26 +334,37 @@ def _asc_subscription_metadata_details(
             }
             for item in prices
         ],
-        "availability": [
-            {
-                "id": item.get("id"),
-                "availableInNewTerritories": item.get("attributes", {}).get(
-                    "availableInNewTerritories"
-                ),
-            }
-            for item in availabilities
-        ],
-        "reviewScreenshots": [
-            {
-                "id": item.get("id"),
-                "fileName": item.get("attributes", {}).get("fileName"),
-                "fileSize": item.get("attributes", {}).get("fileSize"),
-                "assetDeliveryState": item.get("attributes", {}).get(
-                    "assetDeliveryState"
-                ),
-            }
-            for item in review_screenshots
-        ],
+        "availability": (
+            [
+                {
+                    "id": availability_resource.get("id"),
+                    "availableInNewTerritories": availability_resource.get(
+                        "attributes", {}
+                    ).get("availableInNewTerritories"),
+                }
+            ]
+            if isinstance(availability_resource, dict)
+            else []
+        ),
+        "reviewScreenshots": (
+            [
+                {
+                    "id": review_screenshot_resource.get("id"),
+                    "fileName": review_screenshot_resource.get("attributes", {}).get(
+                        "fileName"
+                    ),
+                    "fileSize": review_screenshot_resource.get("attributes", {}).get(
+                        "fileSize"
+                    ),
+                    "assetDeliveryState": review_screenshot_resource.get(
+                        "attributes", {}
+                    ).get("assetDeliveryState"),
+                }
+            ]
+            if isinstance(review_screenshot_resource, dict)
+            else []
+        ),
+        "readErrors": read_errors,
     }
 
 
@@ -418,6 +423,7 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
                 "prices": metadata_details.get("prices", []),
                 "availability": metadata_details.get("availability", []),
                 "reviewScreenshots": metadata_details.get("reviewScreenshots", []),
+                "metadataReadErrors": metadata_details.get("readErrors", []),
             },
             findings,
         )
