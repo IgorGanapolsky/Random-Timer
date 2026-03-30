@@ -1,0 +1,4 @@
+• Fixed timer completion tracking — alarm acknowledgment now properly counts as completed
+• Timer continues running when you switch apps (no more silent kills)
+• Improved background reliability for uninterrupted training sessions
+• Fixed backup alarm trigger for edge-case recovery

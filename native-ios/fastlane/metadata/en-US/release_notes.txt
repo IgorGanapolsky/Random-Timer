@@ -1,5 +1,4 @@
-• AI Drill Sergeant voice callouts with 31 unique tactical cues
-• Elapsed-time announcements on the minute
-• Redesigned Pro upgrade screen
-• Fixed voice callout timing and variety
-• New tactical compass app icon
+• Fixed timer completion tracking — tapping Stop after the alarm now properly records your session
+• Timer sessions that finish while the app is backgrounded are now counted as completed
+• Improved session reliability when switching between apps
+• Better training stats accuracy for your workout history
