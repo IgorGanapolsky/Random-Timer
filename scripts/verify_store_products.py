@@ -252,6 +252,131 @@ def _asc_find_matching_subscription(
     return None, None
 
 
+def _asc_relationship_ids(resource: dict[str, Any], relationship_name: str) -> list[str]:
+    relationship = resource.get("relationships", {}).get(relationship_name, {})
+    linkage = relationship.get("data")
+    if isinstance(linkage, list):
+        return [item.get("id", "") for item in linkage if item.get("id")]
+    if isinstance(linkage, dict):
+        resource_id = linkage.get("id", "")
+        return [resource_id] if resource_id else []
+    return []
+
+
+def _asc_subscription_metadata_details(
+    client: ASCClient,
+    subscription_group_id: str,
+    product_id: str,
+) -> dict[str, Any]:
+    payload = client.get(
+        f"/subscriptionGroups/{subscription_group_id}/subscriptions",
+        params={
+            "limit": 200,
+            "include": "subscriptionLocalizations,appStoreReviewScreenshot,prices,subscriptionAvailability",
+            "fields[subscriptions]": (
+                "name,productId,familySharable,state,subscriptionPeriod,reviewNote,"
+                "groupLevel,subscriptionLocalizations,appStoreReviewScreenshot,"
+                "prices,subscriptionAvailability"
+            ),
+            "fields[subscriptionLocalizations]": "name,locale,description,state",
+            "fields[subscriptionPrices]": "startDate,preserved,current",
+            "fields[subscriptionAvailabilities]": "availableInNewTerritories,availableTerritories",
+            "fields[subscriptionAppStoreReviewScreenshots]": "fileName,fileSize,assetDeliveryState",
+            "limit[subscriptionLocalizations]": 50,
+            "limit[prices]": 50,
+        },
+    )
+
+    subscriptions = payload.get("data", [])
+    included = payload.get("included", []) or []
+
+    subscription = next(
+        (
+            item
+            for item in subscriptions
+            if item.get("attributes", {}).get("productId") == product_id
+        ),
+        None,
+    )
+    if subscription is None:
+        return {}
+
+    included_by_id = {
+        item.get("id", ""): item
+        for item in included
+        if item.get("id")
+    }
+
+    localization_ids = _asc_relationship_ids(subscription, "subscriptionLocalizations")
+    price_ids = _asc_relationship_ids(subscription, "prices")
+    availability_ids = _asc_relationship_ids(subscription, "subscriptionAvailability")
+    review_screenshot_ids = _asc_relationship_ids(subscription, "appStoreReviewScreenshot")
+
+    localizations = [
+        included_by_id[item_id]
+        for item_id in localization_ids
+        if item_id in included_by_id
+    ]
+    prices = [
+        included_by_id[item_id]
+        for item_id in price_ids
+        if item_id in included_by_id
+    ]
+    availabilities = [
+        included_by_id[item_id]
+        for item_id in availability_ids
+        if item_id in included_by_id
+    ]
+    review_screenshots = [
+        included_by_id[item_id]
+        for item_id in review_screenshot_ids
+        if item_id in included_by_id
+    ]
+
+    return {
+        "reviewNotePresent": bool(subscription.get("attributes", {}).get("reviewNote")),
+        "localizations": [
+            {
+                "id": item.get("id"),
+                "locale": item.get("attributes", {}).get("locale"),
+                "name": item.get("attributes", {}).get("name"),
+                "state": item.get("attributes", {}).get("state"),
+                "hasDescription": bool(item.get("attributes", {}).get("description")),
+            }
+            for item in localizations
+        ],
+        "prices": [
+            {
+                "id": item.get("id"),
+                "startDate": item.get("attributes", {}).get("startDate"),
+                "preserved": item.get("attributes", {}).get("preserved"),
+                "current": item.get("attributes", {}).get("current"),
+            }
+            for item in prices
+        ],
+        "availability": [
+            {
+                "id": item.get("id"),
+                "availableInNewTerritories": item.get("attributes", {}).get(
+                    "availableInNewTerritories"
+                ),
+            }
+            for item in availabilities
+        ],
+        "reviewScreenshots": [
+            {
+                "id": item.get("id"),
+                "fileName": item.get("attributes", {}).get("fileName"),
+                "fileSize": item.get("attributes", {}).get("fileSize"),
+                "assetDeliveryState": item.get("attributes", {}).get(
+                    "assetDeliveryState"
+                ),
+            }
+            for item in review_screenshots
+        ],
+    }
+
+
 def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any], list[str]]:
     client = ASCClient.from_env()
     app = _asc_find_app(client, bundle_id)
@@ -268,6 +393,15 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
     if subscription is not None:
         attributes = subscription.get("attributes", {})
         state = attributes.get("state", "UNKNOWN")
+        metadata_details = (
+            _asc_subscription_metadata_details(
+                client,
+                subscription_group.get("id", ""),
+                product_id,
+            )
+            if subscription_group is not None
+            else {}
+        )
         if state in {"MISSING_METADATA", "READY_TO_SUBMIT", "DEVELOPER_ACTION_NEEDED", "REJECTED"}:
             findings.append(f"iOS subscription exists but is not sale-ready (state={state}).")
 
@@ -291,6 +425,14 @@ def verify_ios_product(bundle_id: str, product_id: str) -> tuple[dict[str, Any],
                     if subscription_group
                     else None
                 ),
+                "reviewNotePresent": metadata_details.get("reviewNotePresent"),
+                "localizations": metadata_details.get("localizations", []),
+                "priceCount": len(metadata_details.get("prices", [])),
+                "availabilityCount": len(metadata_details.get("availability", [])),
+                "reviewScreenshotCount": len(metadata_details.get("reviewScreenshots", [])),
+                "prices": metadata_details.get("prices", []),
+                "availability": metadata_details.get("availability", []),
+                "reviewScreenshots": metadata_details.get("reviewScreenshots", []),
             },
             findings,
         )
