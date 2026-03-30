@@ -21,3 +21,5 @@ TRAINING USES
 - HIIT and conditioning sessions that punish predictability
 
 Stop timing your drills. Start training your response.
+
+Terms of Use (EULA): https://igorganapolsky.github.io/Random-Timer/eula/
