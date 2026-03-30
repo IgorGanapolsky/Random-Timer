@@ -194,6 +194,7 @@ class AIVoiceCalloutManager
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
+        private val usedCommandCueFilenames = mutableSetOf<String>()
         private var nextCommandCueAt = 0
 
         companion object {
@@ -275,6 +276,7 @@ class AIVoiceCalloutManager
             stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
+            usedCommandCueFilenames.clear()
             nextCommandCueAt = 0
         }
 
@@ -326,11 +328,19 @@ class AIVoiceCalloutManager
 
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
+            val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
+            val pool = available.ifEmpty {
+                // All cues used — reset and exclude only the last one
+                usedCommandCueFilenames.clear()
+                catalog.commandCues.filter { it.filename != lastCommandCueFilename }
+                    .ifEmpty { catalog.commandCues }
+            }
             val cue =
-                nextCommandCue(catalog.commandCues, lastCommandCueFilename) { upperBound ->
+                nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
                 }
             lastCommandCueFilename = cue.filename
+            usedCommandCueFilenames.add(cue.filename)
             return cue
         }
 

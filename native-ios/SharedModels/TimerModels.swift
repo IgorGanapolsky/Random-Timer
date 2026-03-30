@@ -151,7 +151,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         volume: Float = 0.5, // Default to 50%
         vibrationEnabled: Bool = false,
         useExtendedRange: Bool = false,
-        voiceEnabled: Bool = true,
+        voiceEnabled: Bool = false,
         repeatRounds: Int = 0
     ) {
         let sanitized = Self.sanitize(
@@ -270,7 +270,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             defaultValue: false
         )
         let useExtendedRange = try container.decodeIfPresent(Bool.self, forKey: .useExtendedRange) ?? false
-        let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? true
+        let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? false
         let repeatRounds = try container.decodeIfPresent(Int.self, forKey: .repeatRounds) ?? 0
 
         let soundType = container.decodeFirstSoundType(
