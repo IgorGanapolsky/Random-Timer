@@ -1,5 +1,4 @@
 • Pro subscription now available — unlock full training mode
 • Fixed purchase flow with clear error feedback
 • Added Terms of Use and Privacy Policy to upgrade screen
-• Improved timer completion tracking accuracy
-• Better session reliability when switching apps
+• Improved timer completion tracking and session reliability
