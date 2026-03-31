@@ -62,7 +62,7 @@ data class TimerConfig(
     val vibrationEnabled: Boolean = false,
     /** Whether to use the extended 60-minute range (Pro only) */
     val useExtendedRange: Boolean = false,
-    /** Whether AI voice callouts are enabled (Pro only) */
+    /** Whether AI voice callouts are enabled (Pro only, off by default) */
     val voiceEnabled: Boolean = false,
     /** Voice gender preference: MALE (drill sergeant) or FEMALE (HIIT instructor) */
     val voiceGender: VoiceGender = VoiceGender.MALE,
