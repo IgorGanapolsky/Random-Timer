@@ -48,27 +48,12 @@ jobs:
               "speed": 1.0,
           }
 
-          CLYDE_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"
-
-          # First, find current voice
-          def list_voices():
-              req = urllib.request.Request(f"{API}/v1/voices", headers={"xi-api-key": KEY, "Accept": "application/json"})
-              with urllib.request.urlopen(req, timeout=30) as resp:
-                  return json.loads(resp.read())
-
-          voices = list_voices()
-          current_voice_id = None
-          for v in voices.get("voices", []):
-              name = v.get("name", "").lower()
-              if any(kw in name for kw in ["marine", "drill", "instructor", "sergeant"]):
-                  current_voice_id = v["voice_id"]
-                  print(f"Found current voice: {v['name']} ({v['voice_id']})")
-                  break
-
-          if not current_voice_id:
-              # Use first available voice as fallback
-              current_voice_id = voices["voices"][0]["voice_id"]
-              print(f"Using fallback voice: {voices['voices'][0]['name']} ({current_voice_id})")
+          # Premade voice IDs (no special permissions needed)
+          ADAM_VOICE_ID = "pNInz6obpgDQGcFmaJgB"     # Deep American male (current-style baseline)
+          CLYDE_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"    # War veteran, gruff (recommended)
+          ARNOLD_VOICE_ID = "VR6AewLTigWG4xSOukaG"    # Crisp middle-aged American
+          current_voice_id = ADAM_VOICE_ID
+          print(f"Config A voice: Adam ({current_voice_id})")
 
           def generate(voice_id, text, config, output_path):
               # Strip audio tags for non-v3 models
