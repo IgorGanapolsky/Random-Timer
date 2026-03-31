@@ -149,7 +149,7 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          APPSTORE_PRIVATE_KEY_PATH: /tmp/appstore_key.p8
           IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           STATE=$(python -c "
@@ -157,7 +157,7 @@ jobs:
           c = ASCClient()
           v = c.get_app_store_version('$IOS_VERSION')
           print(v.get('attributes',{}).get('appStoreState','UNKNOWN') if v else 'NOT_FOUND')
-          " 2>/dev/null || echo "UNKNOWN")
+          " 2>&1 || echo "UNKNOWN")
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
           echo "ASC version state: $STATE"
 
