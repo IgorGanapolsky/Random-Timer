@@ -32,13 +32,34 @@ on:
           - 'true'
         required: false
         default: 'false'
+      confirm_ios_only_release:
+        description: 'Set true only if you intentionally skip Android on a release/v* branch (platform=ios)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
 
 concurrency:
   group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
   cancel-in-progress: false
 
 jobs:
+  release-intent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce release-branch intent (avoid accidental Android skip)
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          RELEASE_INTENT_PLATFORM: ${{ inputs.platform }}
+          RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}
+        run: python3 scripts/release_intent_gate.py
+
   ios-testflight:
+    needs: [release-intent-gate]
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
     runs-on: macos-26
     environment: production
@@ -154,6 +175,7 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
+    needs: [release-intent-gate]
     if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
