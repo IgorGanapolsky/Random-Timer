@@ -144,9 +144,11 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             },
         )
 
-    def test_submit_for_review_fails_when_subscription_requires_manual_review_attachment(self):
+    def test_submit_for_review_allows_already_submitted_subscription_states(self):
         from scripts.asc_submit_for_review import submit_for_review
 
+        submission_id = "sub-1"
+        version_id = "ver-1"
         client = RouterClient(
             {
                 ("GET", "/apps/app-1/subscriptionGroups"): {
@@ -169,6 +171,74 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                         }
                     ]
                 },
+                ("GET", "/apps/app-1/reviewSubmissions"): {
+                    "data": [
+                        {
+                            "id": submission_id,
+                            "type": "reviewSubmissions",
+                            "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
+                        }
+                    ]
+                },
+                ("GET", f"/reviewSubmissions/{submission_id}/items"): {
+                    "data": [
+                        {
+                            "id": "item-1",
+                            "type": "reviewSubmissionItems",
+                            "attributes": {"state": "READY_FOR_REVIEW"},
+                            "relationships": {
+                                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}
+                            },
+                        }
+                    ]
+                },
+                ("PATCH", f"/reviewSubmissions/{submission_id}"): {
+                    "data": {
+                        "id": submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", version_id)
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/subscriptionGroups/group-1/subscriptions",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{submission_id}/items",
+                f"/reviewSubmissions/{submission_id}",
+            ],
+        )
+
+    def test_submit_for_review_fails_when_subscription_is_ready_to_submit(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {
+                    "data": [
+                        {
+                            "id": "group-1",
+                            "type": "subscriptionGroups",
+                        }
+                    ]
+                },
+                ("GET", "/subscriptionGroups/group-1/subscriptions"): {
+                    "data": [
+                        {
+                            "id": "sub-1",
+                            "type": "subscriptions",
+                            "attributes": {
+                                "name": "Pro Tactical Annual",
+                                "state": "READY_TO_SUBMIT",
+                            },
+                        }
+                    ]
+                },
             }
         )
 
@@ -176,13 +246,6 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             submit_for_review(client, "app-1", "ver-1")
 
         self.assertEqual(exc.exception.code, 1)
-        self.assertEqual(
-            [call["path"] for call in client.calls],
-            [
-                "/apps/app-1/subscriptionGroups",
-                "/subscriptionGroups/group-1/subscriptions",
-            ],
-        )
 
 
 if __name__ == "__main__":

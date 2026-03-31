@@ -897,7 +897,7 @@ def _guard_pending_subscription_review(client: ASCClient, app_id: str) -> None:
                     continue
                 sub_state = ((sub.get("attributes") or {}).get("state") or "").upper()
                 sub_name = (sub.get("attributes") or {}).get("name", "")
-                if sub_state in ("READY_TO_SUBMIT", "WAITING_FOR_REVIEW", "IN_REVIEW"):
+                if sub_state in ("READY_TO_SUBMIT",):
                     blockers.append((sub_name or "Unnamed subscription", sub_state))
     except Exception as e:
         info(f"Warning: could not enumerate subscriptions for review: {e}")
