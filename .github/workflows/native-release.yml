@@ -703,11 +703,14 @@ jobs:
       - name: Submit for App Review (App Store)
         if: steps.gate.outputs.enabled == 'true'
         env:
-          CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: fastlane submit_review version:${{ steps.asc_version.outputs.selected_version }}
-        working-directory: native-ios
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+        run: |
+          python scripts/asc_submit_for_review.py \
+            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --locale en-US \
+            --wait
 
       - name: Verify App Store submission state
         if: steps.gate.outputs.enabled == 'true'
