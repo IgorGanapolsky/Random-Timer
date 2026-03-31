@@ -99,8 +99,8 @@ See section **Appendix: PR checks (tail 40)** below.
 ### 6) `git worktree list`
 
 ```
-/Users/igorganapolsky/workspace/git/igor/Random-Timer 530c134f0 [chore/tech-debt-audit-report-2026-03-26]
-/private/tmp/random-timer-ios-voice-session-fix       8bf81b52e [fix/ios-voice-session-reactivation]
+<repo-root> 530c134f0 [chore/tech-debt-audit-report-2026-03-26]
+<temp-worktree> 8bf81b52e [fix/ios-voice-session-reactivation]
 ```
 
 ### 7) Orphan analysis
