@@ -1,9 +1,11 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
@@ -162,26 +164,18 @@ fun ActiveTimerScreen(
 
             @Composable
             fun StatusText() {
-                AnimatedVisibility(
-                    visible = !isComplete && !isPaused,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Text(
-                        text = "Timer running...",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TimerColors.TextSecondary,
-                        textAlign = TextAlign.Center,
-                    )
+                val statusText = when {
+                    isComplete -> ""
+                    isPaused -> "Paused"
+                    else -> "Timer running..."
                 }
-
-                AnimatedVisibility(
-                    visible = isPaused,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
+                Crossfade(
+                    targetState = statusText,
+                    animationSpec = tween(200),
+                    label = "statusText",
+                ) { text ->
                     Text(
-                        text = "Paused",
+                        text = text,
                         style = MaterialTheme.typography.titleLarge,
                         color = TimerColors.TextSecondary,
                         textAlign = TextAlign.Center,

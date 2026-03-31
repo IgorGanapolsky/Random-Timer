@@ -126,14 +126,17 @@ After the PR is approved and CI passes:
 2. **Trigger** the release workflow:
 
 ```bash
-# Release both platforms to production
-gh workflow run native-release.yml -f platform=both -f android_track=production
+# Release both platforms to production (default platform is both — use this for versioned releases)
+gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f android_track=production
 
 # Or release to beta/alpha first
 gh workflow run native-release.yml -f platform=android -f android_track=alpha
 gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=true
 
-# To also submit iOS for App Review
+# On a release/v* branch, iOS-only skips Google Play. That is blocked unless you confirm intent:
+# gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=ios -f confirm_ios_only_release=true
+
+# To also submit iOS for App Review after TestFlight verification
 gh workflow run native-release.yml -f platform=both -f android_track=production -f submit_review=true
 
 # Release/hotfix refs mirror Android to Firebase internal by default.

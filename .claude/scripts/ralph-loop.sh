@@ -1,11 +1,22 @@
 #!/bin/bash
-# Ralph Mode - Continuous Iteration Loop
+# Ralph Mode - Continuous Iteration Loop (Random Tactical Timer)
 # Runs tests, fixes failures, retries until stable
 # Usage: ralph-loop.sh start "<description>" [work-item-id]
+#        ralph-loop.sh check          - Run quality checks once (uv/pytest + Android unit tests)
+#        ralph-loop.sh loop           - Retry loop until checks pass
 #        ralph-loop.sh status
 #        ralph-loop.sh stop
+#
+# Must be run from anywhere; always uses repository root (parent of .claude/).
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT" || {
+  echo "ralph-loop: cannot cd to repo root: $REPO_ROOT"
+  exit 1
+}
 
 RALPH_DIR=".claude/ralph"
 ATTEMPTS_FILE="$RALPH_DIR/ATTEMPTS.md"
@@ -109,33 +120,67 @@ EOF
 }
 
 run_quality_checks() {
-  log "Running quality checks..."
+  log "Running Random-Timer quality checks (repo: $REPO_ROOT)..."
 
-  local result=0
   local output=""
 
-  # TypeScript check
-  log "  → TypeScript compilation..."
-  if ! output=$(npm run compile 2>&1); then
-    error "TypeScript failed"
-    echo "$output"
-    return 1
+  # Python: uv + pytest (matches CI python-scripts job intent)
+  if [[ -f "pyproject.toml" ]]; then
+    if command -v uv >/dev/null 2>&1; then
+      log "  → uv sync..."
+      if ! output=$(uv sync 2>&1); then
+        error "uv sync failed"
+        echo "$output"
+        return 1
+      fi
+      log "  → Python script tests (pytest)..."
+      local pytest_targets=()
+      if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        while IFS= read -r f; do
+          [[ -n "$f" ]] && pytest_targets+=("$f")
+        done < <(git ls-files 'scripts/tests/test_*.py' 2>/dev/null || true)
+      fi
+      if [[ ${#pytest_targets[@]} -gt 0 ]]; then
+        if ! output=$(uv run pytest "${pytest_targets[@]}" -q --tb=line 2>&1); then
+          error "Python tests failed"
+          echo "$output"
+          return 1
+        fi
+      else
+        if ! output=$(uv run pytest scripts/tests/ -q --tb=line 2>&1); then
+          error "Python tests failed"
+          echo "$output"
+          return 1
+        fi
+      fi
+    else
+      error "uv not found; install https://docs.astral.sh/uv/ or use CI"
+      return 1
+    fi
+  else
+    log "  → Skipping Python (no pyproject.toml at repo root)"
   fi
 
-  # Lint check
-  log "  → ESLint..."
-  if ! output=$(npm run lint:check 2>&1); then
-    error "Lint failed"
-    echo "$output"
-    return 1
+  # Android unit tests
+  if [[ -d "native-android" && -f "native-android/gradlew" ]]; then
+    log "  → Android unit tests (Gradle)..."
+    if ! output=$(cd native-android && ./gradlew testDebugUnitTest -q 2>&1); then
+      error "Android unit tests failed"
+      echo "$output"
+      return 1
+    fi
+  else
+    log "  → Skipping Android (native-android/gradlew missing)"
   fi
 
-  # Tests
-  log "  → Running tests..."
-  if ! output=$(npm test 2>&1); then
-    error "Tests failed"
-    echo "$output"
-    return 1
+  # Optional: Playwright marketing site (set RALPH_RUN_PLAYWRIGHT=1)
+  if [[ "${RALPH_RUN_PLAYWRIGHT:-}" == "1" && -f "tests/playwright/package.json" ]]; then
+    log "  → Playwright (RALPH_RUN_PLAYWRIGHT=1)..."
+    if ! output=$(cd tests/playwright && npm run verify:strict 2>&1); then
+      error "Playwright verify:strict failed"
+      echo "$output"
+      return 1
+    fi
   fi
 
   success "All quality checks passed!"
@@ -249,14 +294,20 @@ case "${1:-}" in
   checkpoint)
     add_checkpoint "${2:-Manual checkpoint}"
     ;;
+  check)
+    run_quality_checks
+    ;;
   *)
-    echo "Ralph Mode - Continuous Iteration Loop"
+    echo "Ralph Mode - Random Tactical Timer"
     echo ""
     echo "Usage:"
     echo "  ralph-loop.sh start \"<description>\" [work-item-id]  - Start new session"
-    echo "  ralph-loop.sh loop                                   - Run test/fix loop"
-    echo "  ralph-loop.sh status                                 - Show current status"
-    echo "  ralph-loop.sh stop                                   - Stop session"
-    echo "  ralph-loop.sh checkpoint \"<message>\"                - Add checkpoint"
+    echo "  ralph-loop.sh check                                   - uv sync + pytest + Android unit tests"
+    echo "  ralph-loop.sh loop                                    - Run test/fix retry loop"
+    echo "  ralph-loop.sh status                                  - Show current status"
+    echo "  ralph-loop.sh stop                                    - Stop session"
+    echo "  ralph-loop.sh checkpoint \"<message>\"                 - Add checkpoint"
+    echo ""
+    echo "Optional: RALPH_RUN_PLAYWRIGHT=1 ralph-loop.sh check   - include tests/playwright verify:strict"
     ;;
 esac

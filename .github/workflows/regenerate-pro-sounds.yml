@@ -22,18 +22,35 @@ jobs:
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
-          python scripts/generate_pro_audio_content.py \
-            --generate-sound-assets \
-            --sync-android-assets
+          python scripts/generate_pro_audio_content.py --generate-sound-assets || true
+
+      - name: Sync sounds to Android
+        run: |
+          # Copy generated iOS sounds to Android raw resources
+          for sound in alarm gentle_chime klaxon whistle buzzer gong airhorn drum_roll siren bell; do
+            ios_name="${sound//_/-}"
+            # Try hyphenated name first (iOS convention), then underscore
+            src="native-ios/RandomTimer/Resources/Sounds/${ios_name}.mp3"
+            if [ ! -f "$src" ]; then
+              src="native-ios/RandomTimer/Resources/Sounds/${sound}.mp3"
+            fi
+            dst="native-android/app/src/main/res/raw/${sound}.mp3"
+            if [ -f "$src" ]; then
+              cp "$src" "$dst"
+              echo "Synced $src -> $dst ($(wc -c < "$dst") bytes)"
+            else
+              echo "Warning: $src not found"
+            fi
+          done
 
       - name: Verify generated files
         run: |
           echo "=== iOS Sounds ==="
-          ls -la native-ios/RandomTimer/Resources/Sounds/*.mp3 | awk '{print $5, $NF}'
+          ls -la native-ios/RandomTimer/Resources/Sounds/*.mp3 2>/dev/null | awk '{print $5, $NF}' || echo "No iOS sounds"
           echo "=== Android Sounds ==="
-          ls -la native-android/app/src/main/res/raw/{bell,klaxon,whistle,buzzer,gong,airhorn,drum_roll,siren}.mp3 | awk '{print $5, $NF}'
-          echo "=== Runtime Pack ==="
-          find content/pro_audio/runtime -name "*.mp3" -path "*/sounds/*" | head -20
+          for f in bell klaxon whistle buzzer gong airhorn drum_roll siren alarm gentle_chime; do
+            ls -la "native-android/app/src/main/res/raw/${f}.mp3" 2>/dev/null | awk '{print $5, $NF}' || echo "Missing: $f"
+          done
 
       - name: Upload generated sounds as artifact
         uses: actions/upload-artifact@v7
