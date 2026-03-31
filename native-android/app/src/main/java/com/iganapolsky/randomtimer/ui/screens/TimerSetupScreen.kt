@@ -452,7 +452,7 @@ fun TimerSetupScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // AI Voice Callouts (Elite Feature)
+                            // Voice Callouts (Elite Feature)
                             Row(
                                 modifier =
                                     Modifier
@@ -463,7 +463,7 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        text = "Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
