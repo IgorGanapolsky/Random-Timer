@@ -388,6 +388,7 @@ struct ActiveTimerScreen: View {
                         }
                     }
                 )
+                .animation(nil, value: isPaused)
 
                 // Reset (restart with same duration)
                 SecondaryButton(title: "Reset") {

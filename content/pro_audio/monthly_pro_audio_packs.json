@@ -6,11 +6,11 @@
     "voiceModelId": "eleven_multilingual_v2",
     "expressiveVoiceModelId": "eleven_v3",
     "voiceSettings": {
-      "stability": 0.42,
-      "similarity_boost": 0.8,
-      "style": 0.45,
+      "stability": 0.65,
+      "similarity_boost": 0.85,
+      "style": 0.55,
       "use_speaker_boost": true,
-      "speed": 0.96
+      "speed": 1.0
     }
   },
   "researchNotes": [
