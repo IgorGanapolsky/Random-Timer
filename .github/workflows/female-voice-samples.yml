@@ -25,18 +25,18 @@ jobs:
           API = "https://api.elevenlabs.io"
           KEY = os.environ["ELEVENLABS_API_KEY"]
 
-          # Pre-selected female voices good for commanding/coaching delivery
+          # Commanding female voices for HIIT / CrossFit / Drill Sergeant
           FEMALE_VOICES = {
-              "Rachel": "21m00Tcm4TlvDq8ikWAM",    # Calm, clear American female
-              "Bella": "EXAVITQu4vr4xnSDxMaL",      # Warm, confident female
-              "Elli": "MF3mGyEYCl7XYWbV9V6O",       # Young, energetic female
+              "Natasha": "uxKr2vlA4hYgXZR1oPRT",    # High energy, attention-grabbing
+              "Domi": "AZnzlk1XvdvUeBnXmlld",        # Strong, authoritative American female
+              "Anvi": "sS5fXGlqomdGXa7mxBcy",        # Commanding authority + motivational warmth
           }
 
           TESTS = [
               "Move with a purpose!",
-              "No hesitation. Move.",
-              "Stay in the fight.",
-              "Push through. Don't coast.",
+              "No hesitation. Move!",
+              "Stay in the fight!",
+              "Push through! Don't you dare coast!",
               "Thirty seconds elapsed. Stay locked in.",
           ]
 
