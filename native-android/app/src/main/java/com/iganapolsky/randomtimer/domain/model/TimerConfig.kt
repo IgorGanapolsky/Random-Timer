@@ -31,6 +31,16 @@ enum class SoundType(
 }
 
 /**
+ * Voice gender preference for AI voice callouts.
+ * MALE = marine drill sergeant persona.
+ * FEMALE = female HIIT instructor persona.
+ */
+enum class VoiceGender {
+    MALE,
+    FEMALE,
+}
+
+/**
  * Configuration for a random timer with all settings.
  */
 data class TimerConfig(
@@ -54,6 +64,8 @@ data class TimerConfig(
     val useExtendedRange: Boolean = false,
     /** Whether AI voice callouts are enabled (Pro only) */
     val voiceEnabled: Boolean = false,
+    /** Voice gender preference: MALE (drill sergeant) or FEMALE (HIIT instructor) */
+    val voiceGender: VoiceGender = VoiceGender.MALE,
     /** How many rounds to loop for (0 = infinite). Pro only feature. */
     val repeatRounds: Int = 0,
 ) {
@@ -92,6 +104,7 @@ data class TimerConfig(
                 vibrationEnabled = false,
                 useExtendedRange = false,
                 voiceEnabled = false,
+                voiceGender = VoiceGender.MALE,
                 repeatRounds = 0,
             )
 

@@ -3,7 +3,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.util.Log
-import com.iganapolsky.randomtimer.R
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -196,6 +196,10 @@ class AIVoiceCalloutManager
         private var lastCommandCueFilename: String? = null
         private var nextCommandCueAt = 0
 
+        /** Current voice gender for the active session. */
+        var currentGender: VoiceGender = VoiceGender.MALE
+            private set
+
         companion object {
             val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
         }
@@ -276,6 +280,7 @@ class AIVoiceCalloutManager
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             nextCommandCueAt = 0
+            currentGender = VoiceGender.MALE
         }
 
         fun preview() {
@@ -292,7 +297,8 @@ class AIVoiceCalloutManager
             speak(catalog.previewElapsed.text)
         }
 
-        fun beginSession(totalDurationSeconds: Int) {
+        fun beginSession(totalDurationSeconds: Int, gender: VoiceGender = VoiceGender.MALE) {
+            currentGender = gender
             nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
         }
 
