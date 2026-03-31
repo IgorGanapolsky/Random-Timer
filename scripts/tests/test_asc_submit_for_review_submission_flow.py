@@ -247,6 +247,69 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         self.assertEqual(exc.exception.code, 1)
 
+    def test_submit_for_review_recovers_when_item_already_attached_to_another_submission(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        submission_list_calls = {"count": 0}
+
+        def review_submissions_response():
+            submission_list_calls["count"] += 1
+            if submission_list_calls["count"] == 1:
+                return {"data": []}
+            return {
+                "data": [
+                    {
+                        "id": "sub-existing",
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
+                    }
+                ]
+            }
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                ("GET", "/apps/app-1/reviewSubmissions"): review_submissions_response,
+                ("POST", "/reviewSubmissions"): {
+                    "data": {
+                        "id": "sub-new",
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
+                    }
+                },
+                ("POST", "/reviewSubmissionItems"): RuntimeError(
+                    "POST /reviewSubmissionItems failed: HTTP 409 {'errors': [{'code': "
+                    "'STATE_ERROR.ITEM_PART_OF_ANOTHER_SUBMISSION', 'detail': "
+                    "'appStoreVersions with id ver-1 was already added to another "
+                    "reviewSubmission with id sub-existing'}]}"
+                ),
+                ("GET", "/reviewSubmissions/sub-existing/items"): {
+                    "data": [
+                        {
+                            "id": "item-existing",
+                            "type": "reviewSubmissionItems",
+                            "attributes": {"state": "READY_FOR_REVIEW"},
+                            "relationships": {
+                                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": "ver-1"}}
+                            },
+                        }
+                    ]
+                },
+                ("PATCH", "/reviewSubmissions/sub-existing"): {
+                    "data": {
+                        "id": "sub-existing",
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", "ver-1")
+
+        self.assertGreaterEqual(submission_list_calls["count"], 2)
+        self.assertEqual(client.calls[-1]["path"], "/reviewSubmissions/sub-existing")
+
 
 if __name__ == "__main__":
     unittest.main()

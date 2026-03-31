@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -770,7 +771,6 @@ def _list_review_submission_items(client: ASCClient, submission_id: str) -> list
         params={
             "limit": 200,
             "include": "appStoreVersion,appCustomProductPageVersion",
-            "fields[reviewSubmissionItems]": "state",
         },
     )
     return data.get("data") or []
@@ -934,7 +934,31 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
         submission_id = str(submission.get("id") or "")
         if not submission_id:
             die("Failed to create review submission (missing submission id in response).")
-        item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        try:
+            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        except Exception as exc:
+            msg = str(exc)
+            if "ITEM_PART_OF_ANOTHER_SUBMISSION" not in msg:
+                raise
+            info(
+                "Version is already attached to another review submission; "
+                "reloading App Store submission state."
+            )
+            hinted_submission = ""
+            m = re.search(r"reviewSubmission with id ([A-Za-z0-9-]+)", msg)
+            if m:
+                hinted_submission = m.group(1)
+            submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
+            if not submission or not item:
+                if hinted_submission:
+                    die(
+                        "App Store version is already linked to a review submission "
+                        f"({hinted_submission}) but could not be resolved via API listing."
+                    )
+                raise
+            submission_id = str(submission.get("id") or "")
+            if not submission_id:
+                die("Recovered review submission is missing an id.")
     else:
         submission_id = str(submission.get("id") or "")
         if not submission_id:
