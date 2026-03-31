@@ -8,7 +8,9 @@ on:
         required: false
         type: string
       target:
-        description: "Platform target to distribute"
+        description: >
+          Distribution target. Default all_safe = iOS TestFlight + Play internal only (no Firebase APK).
+          Use android_firebase or all to upload to Firebase App Distribution.
         required: false
         default: all_safe
         type: choice
@@ -471,7 +473,6 @@ jobs:
       - name: Build release APK
         working-directory: native-android
         env:
-          ANDROID_VERSION_CODE: ${{ github.run_number }}
           KEYSTORE_PATH: /tmp/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -479,7 +480,9 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           set -euo pipefail
-          ./gradlew assembleRelease --no-daemon
+          # build.gradle.kts reads ciVersionCode Gradle property only (not ANDROID_VERSION_CODE env)
+          echo "Firebase internal APK: ciVersionCode=${{ github.run_number }} (workflow run_number)"
+          ./gradlew -PciVersionCode="${{ github.run_number }}" assembleRelease --no-daemon
 
       - name: Distribute to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1
