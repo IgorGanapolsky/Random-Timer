@@ -41,6 +41,15 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
 
 
+def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native_release():
+    internal_source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+    release_source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    ruby_pin = "ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd"
+    assert ruby_pin in internal_source
+    assert ruby_pin in release_source
+
+
 def test_internal_distribution_workflow_emits_platform_specific_release_artifacts():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
