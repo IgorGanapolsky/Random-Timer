@@ -131,13 +131,17 @@ gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f andr
 
 # Or release to beta/alpha first
 gh workflow run native-release.yml -f platform=android -f android_track=alpha
-gh workflow run native-release.yml -f platform=ios
+gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=true
 
 # On a release/v* branch, iOS-only skips Google Play. That is blocked unless you confirm intent:
 # gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=ios -f confirm_ios_only_release=true
 
 # To also submit iOS for App Review after TestFlight verification
 gh workflow run native-release.yml -f platform=both -f android_track=production -f submit_review=true
+
+# Release/hotfix refs mirror Android to Firebase internal by default.
+# Use this only when you intentionally want to skip that mirror.
+gh workflow run native-release.yml -f platform=both -f android_track=production -f android_internal_mirror=skip
 ```
 
 ### 6. Automatic Post-Release
@@ -153,6 +157,12 @@ The `native-release.yml` workflow automatically:
 5. **Verifies** builds landed on the correct store track
 6. **Tags the commit** as `vX.Y.Z` (idempotent — skips if tag exists)
 7. **Creates a GitHub Release** with combined Android + iOS release notes
+8. **Mirrors release/hotfix Android builds to Firebase internal** by default for tester recovery
+
+Release branch safety:
+
+- `platform=ios` on `release/v*` now hard-fails unless `confirm_ios_only_release=true` is passed.
+- This prevents silent Google Play skips on versioned releases.
 
 ### Delegation Contract Gate
 
@@ -270,6 +280,6 @@ gh release list
 | Preflight check | `./scripts/preflight-release.sh --platform both --layer 1` |
 | Release both | `gh workflow run native-release.yml -f platform=both -f android_track=production` |
 | Release Android alpha | `gh workflow run native-release.yml -f platform=android -f android_track=alpha` |
-| Release iOS + submit | `gh workflow run native-release.yml -f platform=ios -f submit_review=true` |
+| Release iOS + submit | `gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=true -f submit_review=true` |
 | List tags | `git tag --sort=-v:refname` |
 | List releases | `gh release list` |
