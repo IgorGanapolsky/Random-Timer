@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Timer app color palette - high-intensity tactical red
+/// Timer app color palette - muted tactical burgundy
 extension Color {
 
     // MARK: - Background Colors
@@ -12,8 +12,8 @@ extension Color {
 
     static let timerActive = Color(hex: "10B981")      // Emerald green - running
     static let timerWarning = Color(hex: "F59E0B")     // Amber - < 30 seconds
-    static let timerDanger = Color(hex: "EF4444")      // Tactical red - < 10 seconds
-    static let timerComplete = Color(hex: "DC2626")    // Crimson red - complete/alarm
+    static let timerDanger = Color(hex: "8E4045")      // Muted danger red - < 10 seconds
+    static let timerComplete = Color(hex: "642328")    // Deep burgundy - complete/alarm
 
     // MARK: - Glassmorphism
 
@@ -29,8 +29,8 @@ extension Color {
 
     // MARK: - Accent Colors
 
-    static let accentPrimary = Color(hex: "DC2626")    // Crimson red (matches Android)
-    static let accentSecondary = Color(hex: "EF4444")  // Bright red
+    static let accentPrimary = Color(hex: "6B252A")    // Icon-derived burgundy
+    static let accentSecondary = Color(hex: "8F4C47")  // Warm muted red
 
     // MARK: - Helper
 
@@ -54,7 +54,7 @@ extension Color {
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
-            blue:  Double(b) / 255,
+            blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
     }

@@ -14,8 +14,19 @@ struct PrimaryButton: View {
                 .foregroundColor(foregroundColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .background(
+                    LinearGradient(
+                        colors: [backgroundColor, .accentSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(backgroundColor.opacity(0.45), lineWidth: 1)
+                )
+                .shadow(color: backgroundColor.opacity(0.24), radius: 18, y: 10)
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityLabel(title)
@@ -34,10 +45,10 @@ struct SecondaryButton: View {
                 .foregroundColor(.textPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(Color.glassBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .background(Color.backgroundLight.opacity(0.94))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(Color.glassBorder, lineWidth: 1)
                 )
         }

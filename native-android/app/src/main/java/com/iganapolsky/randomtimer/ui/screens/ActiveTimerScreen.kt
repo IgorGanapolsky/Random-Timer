@@ -123,42 +123,72 @@ fun ActiveTimerScreen(
 
             @Composable
             fun ActionButtons(modifier: Modifier = Modifier) {
-                if (isComplete) {
-                    DangerButton(
-                        text = "Stop",
-                        onClick = onDismissAlarm,
-                        modifier = modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Reset",
-                        onClick = {
-                            resetFeedbackCounter += 1
-                            onReset()
-                        },
-                        modifier = modifier.fillMaxWidth(),
-                    )
-                } else {
-                    PrimaryButton(
-                        text = if (isPaused) "Resume" else "Pause",
-                        onClick = if (isPaused) onResume else onPause,
-                        modifier = modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Reset",
-                        onClick = {
-                            resetFeedbackCounter += 1
-                            onReset()
-                        },
-                        modifier = modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Stop",
-                        onClick = onStop,
-                        modifier = modifier.fillMaxWidth(),
-                    )
+                Surface(
+                    modifier = modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = TimerColors.BackgroundLight.copy(alpha = 0.92f),
+                    border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (isComplete) {
+                            DangerButton(
+                                text = "Stop",
+                                onClick = onDismissAlarm,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
+                            if (state.status == TimerStatus.ALARM && !state.isAlarmSilenced) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    SecondaryButton(
+                                        text = "Silence",
+                                        onClick = onSilence,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    SecondaryButton(
+                                        text = "Reset",
+                                        onClick = {
+                                            resetFeedbackCounter += 1
+                                            onReset()
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            } else {
+                                SecondaryButton(
+                                    text = "Reset",
+                                    onClick = {
+                                        resetFeedbackCounter += 1
+                                        onReset()
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        } else {
+                            PrimaryButton(
+                                text = if (isPaused) "Resume" else "Pause",
+                                onClick = if (isPaused) onResume else onPause,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                SecondaryButton(
+                                    text = "Reset",
+                                    onClick = {
+                                        resetFeedbackCounter += 1
+                                        onReset()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                SecondaryButton(
+                                    text = "Stop",
+                                    onClick = onStop,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -328,7 +358,7 @@ fun ActiveTimerScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     AlarmLoopBadge()
                     Spacer(modifier = Modifier.weight(1f))
-                    ActionButtons()
+                    ActionButtons(modifier = Modifier.widthIn(max = 540.dp))
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -405,11 +435,11 @@ private fun ToggleBadge(
             },
         interactionSource = interactionSource,
         shape = RoundedCornerShape(8.dp),
-        color = TimerColors.GlassBackground,
+        color = if (enabled) TimerColors.AccentPrimary.copy(alpha = 0.24f) else TimerColors.GlassBackground,
         border =
             BorderStroke(
                 width = 1.dp,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.GlassBorder,
+                color = if (enabled) TimerColors.AccentPrimary.copy(alpha = 0.55f) else TimerColors.GlassBorder,
             ),
     ) {
         Row(
@@ -425,7 +455,7 @@ private fun ToggleBadge(
                 text = text,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
-                color = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
+                color = if (enabled) TimerColors.TextPrimary else TimerColors.TextMuted,
             )
         }
     }

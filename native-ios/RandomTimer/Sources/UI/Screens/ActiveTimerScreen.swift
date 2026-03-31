@@ -28,6 +28,8 @@ struct ActiveTimerScreen: View {
         verticalSizeClass == .compact
     }
 
+    private let actionRowMaxWidth: CGFloat = 540
+
     private func formatRangeText(minSeconds: Int, maxSeconds: Int) -> String {
         func formatTime(_ seconds: Int) -> String {
             if seconds >= 60 {
@@ -130,6 +132,7 @@ struct ActiveTimerScreen: View {
                             VStack {
                                 Spacer()
                                 actionButtons(for: state)
+                                    .frame(maxWidth: actionRowMaxWidth)
                                     .padding(.bottom, 8)
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -137,10 +140,11 @@ struct ActiveTimerScreen: View {
                         .padding(.horizontal, 24)
                         .padding(.vertical, 24)
                     } else {
-                        VStack(spacing: 32) {
+                        VStack(spacing: 24) {
                             // Loop badge at top - use fixed height placeholder to prevent layout shift
                             topControlBadges
-                            .frame(height: 36)
+                                .frame(height: 36)
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
                             // Status text - fixed height to prevent layout shift
                             statusText(for: state)
@@ -194,14 +198,16 @@ struct ActiveTimerScreen: View {
                             }
                             .frame(height: 36)
 
-                            Spacer()
+                            Spacer(minLength: 20)
 
                             // Action buttons
                             actionButtons(for: state)
+                                .frame(maxWidth: actionRowMaxWidth)
                                 .padding(.horizontal, 24)
                                 .padding(.bottom, 32)
                         }
-                        .padding(.top, 48)
+                        .padding(.top, 28)
+                        .padding(.horizontal, 20)
                     }
                 }
             }
@@ -248,8 +254,7 @@ struct ActiveTimerScreen: View {
             enabled: isEnabled,
             accessibilityLabel: Self.voiceBadgeAccessibilityLabel(enabled: isEnabled),
             accessibilityHint: "Double-tap to toggle voice callouts"
-        )
-        {
+        ) {
             updateConfig(voiceEnabled: !isEnabled)
         }
     }
@@ -268,16 +273,16 @@ struct ActiveTimerScreen: View {
             Label(text, systemImage: systemImage)
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(enabled ? .accentPrimary : .textMuted)
+                .foregroundColor(enabled ? .textPrimary : .textMuted)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.glassBackground)
+                        .fill(enabled ? .accentPrimary.opacity(0.24) : Color.glassBackground)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(enabled ? .accentPrimary : Color.glassBorder, lineWidth: 1)
+                        .stroke(enabled ? .accentPrimary.opacity(0.55) : Color.glassBorder, lineWidth: 1)
                 )
         }
         .accessibilityLabel(accessibilityLabel)
@@ -293,6 +298,7 @@ struct ActiveTimerScreen: View {
                 loopBadge
                 voiceBadge
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -351,62 +357,76 @@ struct ActiveTimerScreen: View {
 
     @ViewBuilder
     private func actionButtons(for state: TimerState) -> some View {
-        VStack(spacing: 12) {
-            if isComplete {
-                // Silence - only shown during active alarm when sound is still playing
-                if state.status == .alarm && !timerManager.isAlarmSilenced {
-                    SecondaryButton(title: "Silence") {
-                        timerManager.silenceAlarm()
+        GlassCard {
+            VStack(spacing: 12) {
+                if isComplete {
+                    DangerButton(title: "Stop") {
+                        dismissAlarmAction()
                     }
-                }
 
-                // Stop - stops alarm and goes home
-                DangerButton(title: "Stop") {
-                    Task {
-                        await timerManager.dismissAlarm()
-                    }
-                }
+                    if state.status == .alarm && !timerManager.isAlarmSilenced {
+                        HStack(spacing: 12) {
+                            SecondaryButton(title: "Silence") {
+                                timerManager.silenceAlarm()
+                            }
 
-                // Reset - restart with same duration
-                SecondaryButton(title: "Reset") {
-                    Task {
-                        await timerManager.resetTimer()
-                        await MainActor.run {
-                            triggerResetFeedback()
+                            SecondaryButton(title: "Reset") {
+                                resetTimerAction()
+                            }
+                        }
+                    } else {
+                        SecondaryButton(title: "Reset") {
+                            resetTimerAction()
                         }
                     }
-                }
-            } else {
-                // Pause / Resume
-                PrimaryButton(
-                    title: isPaused ? "Resume" : "Pause",
-                    action: {
-                        if isPaused {
-                            timerManager.resumeTimer()
-                        } else {
-                            timerManager.pauseTimer()
+                } else {
+                    PrimaryButton(
+                        title: isPaused ? "Resume" : "Pause",
+                        action: {
+                            togglePauseResume()
                         }
-                    }
-                )
-                .animation(nil, value: isPaused)
+                    )
 
-                // Reset (restart with same duration)
-                SecondaryButton(title: "Reset") {
-                    Task {
-                        await timerManager.resetTimer()
-                        await MainActor.run {
-                            triggerResetFeedback()
+                    HStack(spacing: 12) {
+                        SecondaryButton(title: "Reset") {
+                            resetTimerAction()
                         }
-                    }
-                }
 
-                // Stop (go back to home screen)
-                SecondaryButton(title: "Stop") {
-                    Task {
-                        await timerManager.cancelTimer()
+                        SecondaryButton(title: "Stop") {
+                            cancelTimerAction()
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private func togglePauseResume() {
+        if isPaused {
+            timerManager.resumeTimer()
+        } else {
+            timerManager.pauseTimer()
+        }
+    }
+
+    private func resetTimerAction() {
+        Task {
+            await timerManager.resetTimer()
+            await MainActor.run {
+                triggerResetFeedback()
+            }
+        }
+    }
+
+    private func cancelTimerAction() {
+        Task {
+            await timerManager.cancelTimer()
+        }
+    }
+
+    private func dismissAlarmAction() {
+        Task {
+            await timerManager.dismissAlarm()
         }
     }
 

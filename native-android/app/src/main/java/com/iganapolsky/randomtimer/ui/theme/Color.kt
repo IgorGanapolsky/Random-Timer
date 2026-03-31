@@ -11,7 +11,7 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-// Timer state colors - Tactical crimson palette
+// Timer state colors - muted tactical burgundy palette
 object TimerColors {
     // Background gradient - pure black, no purple tint
     val BackgroundDark = Color(0xFF0A0A0F)
@@ -20,8 +20,8 @@ object TimerColors {
     // Timer ring states
     val TimerActive = Color(0xFF10B981) // Emerald green - running
     val TimerWarning = Color(0xFFF59E0B) // Amber - < 30 seconds
-    val TimerDanger = Color(0xFFEF4444) // Rose red - < 10 seconds
-    val TimerComplete = Color(0xFFDC2626) // Crimson red - complete/alarm
+    val TimerDanger = Color(0xFF8E4045) // Muted danger red - < 10 seconds
+    val TimerComplete = Color(0xFF642328) // Deep burgundy - complete/alarm
 
     // Glassmorphism
     val GlassBackground = Color(0x1AFFFFFF) // 10% white
@@ -34,8 +34,8 @@ object TimerColors {
     val TextMuted = Color(0xFF71717A) // Dim gray
 
     // Accent
-    val AccentPrimary = Color(0xFFDC2626) // Crimson red
-    val AccentSecondary = Color(0xFFEF4444) // Bright red
+    val AccentPrimary = Color(0xFF6B252A) // Icon-derived burgundy
+    val AccentSecondary = Color(0xFF8F4C47) // Warm muted red
 
     // Slider
     val SliderTrack = Color(0xFF3F3F46)

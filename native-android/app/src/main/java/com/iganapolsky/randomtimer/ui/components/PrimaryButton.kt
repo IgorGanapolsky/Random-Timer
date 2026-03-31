@@ -53,12 +53,12 @@ fun PrimaryButton(
 
     val baseModifier = modifier
         .fillMaxWidth()
-        .height(56.dp)
-        .graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-        }
+            .height(56.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            }
 
     val styledModifier = if (useGradient && enabled) {
         baseModifier.background(
@@ -126,9 +126,9 @@ fun SecondaryButton(
         interactionSource = interactionSource,
         shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = TimerColors.GlassBackground,
+            containerColor = TimerColors.BackgroundLight.copy(alpha = 0.94f),
             contentColor = TimerColors.TextPrimary,
-            disabledContainerColor = TimerColors.GlassBackground.copy(alpha = 0.5f),
+            disabledContainerColor = TimerColors.BackgroundLight.copy(alpha = 0.5f),
             disabledContentColor = TimerColors.TextPrimary.copy(alpha = 0.5f),
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
