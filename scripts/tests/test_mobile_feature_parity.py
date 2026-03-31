@@ -57,7 +57,8 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     assert "Unlock Full Training Mode" in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
     assert "Unlock Full Training Mode" in ios_paywall and "highPriorityGesture" in ios_paywall
-    assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
+    assert "minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
+    assert "maximumDistance: Self.hiddenUnlockMaximumDistance" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
