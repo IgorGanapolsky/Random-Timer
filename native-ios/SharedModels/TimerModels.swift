@@ -84,6 +84,13 @@ public enum SoundType: String, Codable, Sendable, CaseIterable {
     }
 }
 
+// MARK: - Voice Gender
+
+public enum VoiceGender: String, Codable, Sendable, CaseIterable {
+    case male
+    case female
+}
+
 // MARK: - Timer Configuration
 
 /// Configuration for a random timer with all settings.
@@ -108,6 +115,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public let useExtendedRange: Bool
     /// Whether AI voice callouts are enabled (Pro only)
     public let voiceEnabled: Bool
+    /// Voice gender preference: male (drill sergeant) or female (HIIT instructor)
+    public let voiceGender: VoiceGender
     /// How many rounds to loop for (0 = infinite). Pro only feature.
     public let repeatRounds: Int
 
@@ -152,6 +161,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         vibrationEnabled: Bool = false,
         useExtendedRange: Bool = false,
         voiceEnabled: Bool = false,
+        voiceGender: VoiceGender = .male,
         repeatRounds: Int = 0
     ) {
         let sanitized = Self.sanitize(
@@ -172,6 +182,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         self.vibrationEnabled = vibrationEnabled
         self.useExtendedRange = useExtendedRange
         self.voiceEnabled = voiceEnabled
+        self.voiceGender = voiceGender
         self.repeatRounds = sanitized.repeatRounds
     }
 
@@ -202,6 +213,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case vibrationEnabled
         case useExtendedRange
         case voiceEnabled
+        case voiceGender
         case repeatRounds
 
         // Legacy / compatibility keys
@@ -235,6 +247,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         case vibrationEnabled
         case useExtendedRange
         case voiceEnabled
+        case voiceGender
         case repeatRounds
     }
 
@@ -271,6 +284,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         )
         let useExtendedRange = try container.decodeIfPresent(Bool.self, forKey: .useExtendedRange) ?? false
         let voiceEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceEnabled) ?? false
+        let voiceGender = try container.decodeIfPresent(VoiceGender.self, forKey: .voiceGender) ?? .male
         let repeatRounds = try container.decodeIfPresent(Int.self, forKey: .repeatRounds) ?? 0
 
         let soundType = container.decodeFirstSoundType(
@@ -289,6 +303,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             vibrationEnabled: vibrationEnabled,
             useExtendedRange: useExtendedRange,
             voiceEnabled: voiceEnabled,
+            voiceGender: voiceGender,
             repeatRounds: repeatRounds
         )
     }
@@ -305,6 +320,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         try container.encode(vibrationEnabled, forKey: .vibrationEnabled)
         try container.encode(useExtendedRange, forKey: .useExtendedRange)
         try container.encode(voiceEnabled, forKey: .voiceEnabled)
+        try container.encode(voiceGender, forKey: .voiceGender)
         try container.encode(repeatRounds, forKey: .repeatRounds)
     }
 
@@ -330,6 +346,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             vibrationEnabled: vibrationEnabled,
             useExtendedRange: isPro ? useExtendedRange : false,
             voiceEnabled: voiceEnabled,
+            voiceGender: voiceGender,
             repeatRounds: isPro ? repeatRounds : 0
         )
     }
@@ -462,6 +479,7 @@ internal func toggleExtendedRange(
                 vibrationEnabled: current.vibrationEnabled,
                 useExtendedRange: false,
                 voiceEnabled: current.voiceEnabled,
+                voiceGender: current.voiceGender,
                 repeatRounds: current.repeatRounds
             ),
             profiles: nextProfiles
@@ -491,6 +509,7 @@ internal func toggleExtendedRange(
             vibrationEnabled: current.vibrationEnabled,
             useExtendedRange: true,
             voiceEnabled: current.voiceEnabled,
+            voiceGender: current.voiceGender,
             repeatRounds: current.repeatRounds
         ),
         profiles: nextProfiles
