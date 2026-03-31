@@ -585,7 +585,7 @@ fun TimerSetupScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 SoundTypeButton(
-                                    label = "\uD83D\uDCAA Intense",
+                                    label = "\uD83D\uDD25 Fire Alarm",
                                     selected = config.soundType == SoundType.INTENSE,
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)

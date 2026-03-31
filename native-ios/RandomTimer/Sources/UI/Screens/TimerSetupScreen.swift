@@ -197,7 +197,7 @@ struct TimerSetupScreen: View {
                         // Core Sounds
                         HStack(spacing: 12) {
                             SoundTypeButton(
-                                label: "Intense",
+                                label: "Fire Alarm",
                                 systemImage: "flame.fill",
                                 selected: config.soundType == .intense,
                                 onTap: {
