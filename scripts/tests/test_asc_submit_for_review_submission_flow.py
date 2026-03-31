@@ -5,6 +5,82 @@ from scripts.tests.router_client import RouterClient
 
 
 class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
+    @staticmethod
+    def _subscription_groups_routes(*, state, group_id="group-1", subscription_id="sub-1"):
+        return {
+            ("GET", "/apps/app-1/subscriptionGroups"): {
+                "data": [
+                    {
+                        "id": group_id,
+                        "type": "subscriptionGroups",
+                    }
+                ]
+            },
+            ("GET", f"/subscriptionGroups/{group_id}/subscriptions"): {
+                "data": [
+                    {
+                        "id": subscription_id,
+                        "type": "subscriptions",
+                        "attributes": {
+                            "name": "Pro Tactical Annual",
+                            "state": state,
+                        },
+                    }
+                ]
+            },
+        }
+
+    @staticmethod
+    def _subscription_submission_routes(*, state_after_submit, subscription_id="sub-1"):
+        return {
+            ("POST", "/subscriptionSubmissions"): {
+                "data": {
+                    "id": "subm-1",
+                    "type": "subscriptionSubmissions",
+                }
+            },
+            ("GET", f"/subscriptions/{subscription_id}"): {
+                "data": {
+                    "id": subscription_id,
+                    "type": "subscriptions",
+                    "attributes": {
+                        "name": "Pro Tactical Annual",
+                        "state": state_after_submit,
+                    },
+                }
+            },
+        }
+
+    @staticmethod
+    def _new_review_submission_routes(*, submission_id, version_id="ver-1"):
+        return {
+            ("GET", "/apps/app-1/reviewSubmissions"): {"data": []},
+            ("POST", "/reviewSubmissions"): {
+                "data": {
+                    "id": submission_id,
+                    "type": "reviewSubmissions",
+                    "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
+                }
+            },
+            ("POST", "/reviewSubmissionItems"): {
+                "data": {
+                    "id": "item-new",
+                    "type": "reviewSubmissionItems",
+                    "attributes": {"state": "READY_FOR_REVIEW"},
+                    "relationships": {
+                        "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}
+                    },
+                }
+            },
+            ("PATCH", f"/reviewSubmissions/{submission_id}"): {
+                "data": {
+                    "id": submission_id,
+                    "type": "reviewSubmissions",
+                    "attributes": {"state": "WAITING_FOR_REVIEW"},
+                }
+            },
+        }
+
     def test_submit_for_review_resolves_rejected_item_and_resubmits_existing_submission(self):
         from scripts.asc_submit_for_review import submit_for_review
 
@@ -91,29 +167,8 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         client = RouterClient(
             {
-                ("GET", "/apps/app-1/reviewSubmissions"): {"data": []},
-                ("POST", "/reviewSubmissions"): {
-                    "data": {
-                        "id": submission_id,
-                        "type": "reviewSubmissions",
-                        "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
-                    }
-                },
-                ("POST", "/reviewSubmissionItems"): {
-                    "data": {
-                        "id": "item-new",
-                        "type": "reviewSubmissionItems",
-                        "attributes": {"state": "READY_FOR_REVIEW"},
-                    }
-                },
-                ("PATCH", f"/reviewSubmissions/{submission_id}"): {
-                    "data": {
-                        "id": submission_id,
-                        "type": "reviewSubmissions",
-                        "attributes": {"state": "WAITING_FOR_REVIEW"},
-                    }
-                },
                 ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                **self._new_review_submission_routes(submission_id=submission_id, version_id=version_id),
             }
         )
 
@@ -152,64 +207,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
         submission_id = "sub-new"
         client = RouterClient(
             {
-                ("GET", "/apps/app-1/subscriptionGroups"): {
-                    "data": [
-                        {
-                            "id": "group-1",
-                            "type": "subscriptionGroups",
-                        }
-                    ]
-                },
-                ("GET", "/subscriptionGroups/group-1/subscriptions"): {
-                    "data": [
-                        {
-                            "id": "sub-1",
-                            "type": "subscriptions",
-                            "attributes": {
-                                "name": "Pro Tactical Annual",
-                                "state": "READY_TO_SUBMIT",
-                            },
-                        }
-                    ]
-                },
-                ("POST", "/subscriptionSubmissions"): {
-                    "data": {
-                        "id": "subm-1",
-                        "type": "subscriptionSubmissions",
-                    }
-                },
-                ("GET", "/subscriptions/sub-1"): {
-                    "data": {
-                        "id": "sub-1",
-                        "type": "subscriptions",
-                        "attributes": {
-                            "name": "Pro Tactical Annual",
-                            "state": "WAITING_FOR_REVIEW",
-                        },
-                    }
-                },
-                ("GET", "/apps/app-1/reviewSubmissions"): {"data": []},
-                ("POST", "/reviewSubmissions"): {
-                    "data": {
-                        "id": submission_id,
-                        "type": "reviewSubmissions",
-                        "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
-                    }
-                },
-                ("POST", "/reviewSubmissionItems"): {
-                    "data": {
-                        "id": "item-new",
-                        "type": "reviewSubmissionItems",
-                        "attributes": {"state": "READY_FOR_REVIEW"},
-                    }
-                },
-                ("PATCH", f"/reviewSubmissions/{submission_id}"): {
-                    "data": {
-                        "id": submission_id,
-                        "type": "reviewSubmissions",
-                        "attributes": {"state": "WAITING_FOR_REVIEW"},
-                    }
-                },
+                **self._subscription_groups_routes(state="READY_TO_SUBMIT"),
+                **self._subscription_submission_routes(state_after_submit="WAITING_FOR_REVIEW"),
+                **self._new_review_submission_routes(submission_id=submission_id),
             }
         )
 
@@ -233,42 +233,8 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         client = RouterClient(
             {
-                ("GET", "/apps/app-1/subscriptionGroups"): {
-                    "data": [
-                        {
-                            "id": "group-1",
-                            "type": "subscriptionGroups",
-                        }
-                    ]
-                },
-                ("GET", "/subscriptionGroups/group-1/subscriptions"): {
-                    "data": [
-                        {
-                            "id": "sub-1",
-                            "type": "subscriptions",
-                            "attributes": {
-                                "name": "Pro Tactical Annual",
-                                "state": "READY_TO_SUBMIT",
-                            },
-                        }
-                    ]
-                },
-                ("POST", "/subscriptionSubmissions"): {
-                    "data": {
-                        "id": "subm-1",
-                        "type": "subscriptionSubmissions",
-                    }
-                },
-                ("GET", "/subscriptions/sub-1"): {
-                    "data": {
-                        "id": "sub-1",
-                        "type": "subscriptions",
-                        "attributes": {
-                            "name": "Pro Tactical Annual",
-                            "state": "READY_TO_SUBMIT",
-                        },
-                    }
-                },
+                **self._subscription_groups_routes(state="READY_TO_SUBMIT"),
+                **self._subscription_submission_routes(state_after_submit="READY_TO_SUBMIT"),
             }
         )
 
