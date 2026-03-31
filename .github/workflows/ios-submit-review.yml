@@ -144,7 +144,25 @@ jobs:
             --wait \
             --timeout 1200
 
+      - name: Check if ASC version is already READY_FOR_REVIEW
+        id: asc_state
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
+        run: |
+          STATE=$(python -c "
+          from scripts.asc_client import ASCClient
+          c = ASCClient()
+          v = c.get_app_store_version('$IOS_VERSION')
+          print(v.get('attributes',{}).get('appStoreState','UNKNOWN') if v else 'NOT_FOUND')
+          " 2>/dev/null || echo "UNKNOWN")
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
+          echo "ASC version state: $STATE"
+
       - name: Upload App Store metadata + screenshots
+        if: steps.asc_state.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state.outputs.state != 'IN_REVIEW'
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
