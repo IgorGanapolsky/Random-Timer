@@ -12,6 +12,9 @@ platform :ios do
     msg = error.to_s
     return true if msg.include?("bundle version must be higher than the previously uploaded version")
     return true if msg.include?("value that has already been used")
+    return true if msg.include?("Redundant Binary Upload")
+    return true if msg.include?("You've already uploaded a build with build number")
+    return true if msg.include?("already exists")
     false
   end
 

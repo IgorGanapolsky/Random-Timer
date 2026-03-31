@@ -1,0 +1,20 @@
+============================================================
+  REAL STORE DATA (from APIs, not PostHog)
+============================================================
+  Android: skipped
+  iOS: skipped
+  Output: /Users/igorganapolsky/workspace/git/igor/Random-Timer/marketing/data/real_store_data.json
+============================================================
+{
+  "generated_at": "2026-03-31T14:27:07+00:00",
+  "source": "store_apis",
+  "note": "Real store API data, not PostHog proxy",
+  "android": {
+    "status": "skipped",
+    "reason": "no GOOGLE_PLAY_JSON_KEY"
+  },
+  "ios": {
+    "status": "skipped",
+    "reason": "Missing env vars: APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH)"
+  }
+}
