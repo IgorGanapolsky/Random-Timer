@@ -8,7 +8,9 @@ on:
         required: false
         type: string
       target:
-        description: "Platform target to distribute"
+        description: >
+          Distribution target. Default all_safe = iOS TestFlight + Play internal only (no Firebase APK).
+          Use android_firebase or all to upload to Firebase App Distribution.
         required: false
         default: all_safe
         type: choice
