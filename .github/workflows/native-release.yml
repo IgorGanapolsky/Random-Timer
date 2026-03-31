@@ -491,8 +491,7 @@ jobs:
 
   ios-submit-review:
     needs: [verify-releases]
-    # Run after verification. Gate privileged steps at runtime by reading the dispatch payload,
-    # because job-level `if:` on workflow_dispatch inputs has been brittle in practice.
+    if: always() && needs.verify-releases.result == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
