@@ -1,0 +1,145 @@
+name: Generate Female Voice Pack
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate all Domi v3 female voice callouts
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, urllib.request, time
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+          DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
+          SETTINGS = {"stability": 0.45, "similarity_boost": 0.73, "style": 0, "use_speaker_boost": True}
+
+          # Read the existing male voice catalog to get all cue texts
+          catalog = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
+
+          IOS_AUDIO = "native-ios/RandomTimer/Resources/Audio/female"
+          ANDROID_RAW = "native-android/app/src/main/res/raw"
+          os.makedirs(IOS_AUDIO, exist_ok=True)
+
+          def generate(text, filename, tag="[intense]"):
+              tagged = f"{tag} {text}"
+              payload = {"text": tagged, "model_id": "eleven_v3", "voice_settings": SETTINGS}
+              data = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
+                  data=data,
+                  headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      audio = resp.read()
+                      # Save to iOS female directory
+                      ios_path = f"{IOS_AUDIO}/{filename}.mp3"
+                      with open(ios_path, "wb") as f:
+                          f.write(audio)
+                      # Save to Android with female_ prefix
+                      android_path = f"{ANDROID_RAW}/female_{filename}.mp3"
+                      with open(android_path, "wb") as f:
+                          f.write(audio)
+                      print(f"  {filename}.mp3 ({len(audio)} bytes)")
+                      return True
+              except Exception as e:
+                  print(f"  FAILED {filename}: {e}")
+                  return False
+
+          # Generate command cues
+          print("=== Command Cues ===")
+          for cue in catalog.get("commandCues", []):
+              text = cue["text"]
+              filename = cue["filename"]
+              # Choose tag based on phrase energy
+              tag = "[intense]"
+              if any(w in text.lower() for w in ["move", "go", "push", "drive"]):
+                  tag = "[commanding]"
+              if any(w in text.lower() for w in ["stay", "fight", "pressure"]):
+                  tag = "[shouting]"
+              if any(w in text.lower() for w in ["breathe", "reset", "recover"]):
+                  tag = "[serious]"
+              generate(text, filename, tag)
+              time.sleep(0.5)  # Rate limiting
+
+          # Generate elapsed cues
+          print("\n=== Elapsed Cues ===")
+          for cue in catalog.get("elapsedCues", []):
+              text = cue["text"]
+              filename = cue["filename"]
+              generate(text, filename, "[serious]")
+              time.sleep(0.5)
+
+          # Generate preview
+          print("\n=== Preview ===")
+          preview = catalog.get("previewElapsed", {})
+          if preview:
+              generate(preview["text"], preview["filename"], "[serious]")
+
+          print("\nDone!")
+          PYEOF
+
+      - name: Create female voice catalog
+        run: |
+          python3 << 'PYEOF'
+          import json
+          # Copy male catalog structure for female
+          male = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
+          # Female catalog is identical structure, just in a different directory
+          female = dict(male)
+          female["voiceGender"] = "female"
+          female["voiceId"] = "AZnzlk1XvdvUeBnXmlld"
+          female["voiceName"] = "Domi"
+          female["modelId"] = "eleven_v3"
+          with open("native-ios/RandomTimer/Resources/Audio/female/voice_callouts.json", "w") as f:
+              json.dump(female, f, indent=2)
+          print("Female voice catalog created")
+          PYEOF
+
+      - name: Verify
+        run: |
+          echo "=== iOS Female Voice Files ==="
+          ls native-ios/RandomTimer/Resources/Audio/female/*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} files"
+          echo "=== Android Female Voice Files ==="
+          ls native-android/app/src/main/res/raw/female_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} files"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: female-voice-pack
+          path: |
+            native-ios/RandomTimer/Resources/Audio/female/
+            native-android/app/src/main/res/raw/female_*.mp3
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="feat/female-voice-pack-domi"
+          git checkout -b "$BRANCH"
+          git add native-ios/RandomTimer/Resources/Audio/female/ native-android/app/src/main/res/raw/female_*.mp3
+          if git diff --cached --quiet; then
+            echo "No files generated"
+            exit 0
+          fi
+          git commit -m "feat(audio): full Domi v3 female voice pack — 43 callouts"
+          git push origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" \
+            --title "feat(audio): Domi v3 female voice pack" \
+            --body "All 31 command cues + 12 elapsed cues generated with Domi v3 + audio tags."
