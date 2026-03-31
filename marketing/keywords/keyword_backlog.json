@@ -1,0 +1,812 @@
+[
+  {
+    "keyword": "app sparring prep",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 5,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 128
+  },
+  {
+    "keyword": "app boxing drills",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 11,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 128
+  },
+  {
+    "keyword": "app focus drills",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 16,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 128
+  },
+  {
+    "keyword": "app reaction training",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 17,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 128
+  },
+  {
+    "keyword": "app home workout timer",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 18,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 128
+  },
+  {
+    "keyword": "app tactical timer",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 27,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 120
+  },
+  {
+    "keyword": "app random timer",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 29,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 120
+  },
+  {
+    "keyword": "app mental readiness",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 44,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 112
+  },
+  {
+    "keyword": "app combat conditioning",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 45,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 112
+  },
+  {
+    "keyword": "app interval timer",
+    "intent": "commercial",
+    "business_potential": 3,
+    "difficulty": 46,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 112
+  },
+  {
+    "keyword": "review interval timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 0,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "review reaction training",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 0,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "review sparring prep",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 0,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "under 20 interval timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 2,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "vs sparring prep",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 6,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "under 20 mental readiness",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 8,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "under 20 reaction training",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 10,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "best tactical timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 11,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "best random timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 13,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "best reaction training",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 16,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "vs mental readiness",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 18,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "under 20 random timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 19,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 98
+  },
+  {
+    "keyword": "vs interval timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 21,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "best mental readiness",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 23,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "under 20 combat conditioning",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 23,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs focus drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 24,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs random timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 25,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "review tactical timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 27,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "under 20 focus drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 27,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "review combat conditioning",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 28,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "under 20 boxing drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 28,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs boxing drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 28,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs tactical timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 28,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "review home workout timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 29,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "review random timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 30,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "review mental readiness",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 32,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "best focus drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 33,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs home workout timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 33,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "under 20 sparring prep",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 35,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 90
+  },
+  {
+    "keyword": "vs combat conditioning",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 36,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "under 20 tactical timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 37,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "best interval timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 39,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "best boxing drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 40,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "review focus drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 40,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "best sparring prep",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 41,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "vs reaction training",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 41,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "review boxing drills",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 44,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "under 20 home workout timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 44,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "best home workout timer",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 49,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "best combat conditioning",
+    "intent": "commercial",
+    "business_potential": 2,
+    "difficulty": 50,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 82
+  },
+  {
+    "keyword": "no ads reaction training",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 0,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "focus drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 1,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "home workout timer for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 1,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "combat conditioning for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 4,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "reaction training",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 4,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "free sparring prep",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 5,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "tactical timer for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 5,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads focus drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 7,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads interval timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 8,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads sparring prep",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 8,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads tactical timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 10,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "tactical timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 10,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads home workout timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 11,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "free reaction training",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 13,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "free boxing drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 16,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "sparring prep for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 17,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "free interval timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 19,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "random timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 19,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 60
+  },
+  {
+    "keyword": "no ads random timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 21,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "no ads boxing drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 23,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "free random timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 24,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "home workout timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 24,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "mental readiness for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 29,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "focus drills for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 30,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "free home workout timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 31,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "free combat conditioning",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 32,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "free focus drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 32,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "free mental readiness",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 34,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "no ads combat conditioning",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 35,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 52
+  },
+  {
+    "keyword": "mental readiness",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 36,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "random timer for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 36,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "no ads mental readiness",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 39,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "reaction training for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 39,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "interval timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 40,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "interval timer for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 42,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "sparring prep",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 44,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "combat conditioning",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 46,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "boxing drills for beginners",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 48,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "free tactical timer",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 49,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  },
+  {
+    "keyword": "boxing drills",
+    "intent": "mixed",
+    "business_potential": 1,
+    "difficulty": 50,
+    "ai_trap": false,
+    "tool_keyword": false,
+    "bid_score": 44
+  }
+]

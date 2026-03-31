@@ -70,10 +70,11 @@ When in Ralph Mode, Claude MUST:
 
 1. **Read ATTEMPTS.md** before each action
 2. **Update checkboxes** as tasks complete
-3. **Run quality checks** after each code change:
+3. **Run quality checks** after each code change (Random Tactical Timer):
    ```bash
-   npm run compile && npm run lint:check && npm test
+   .claude/scripts/ralph-loop.sh check
    ```
+   Runs `uv sync`, tracked `scripts/tests/test_*.py` via `pytest`, and `./gradlew testDebugUnitTest` in `native-android`. Optional: `RALPH_RUN_PLAYWRIGHT=1` adds `tests/playwright` `verify:strict`.
 4. **Log failures** with specific error messages
 5. **Retry with fixes** until tests pass or max attempts reached
 6. **Request superior review** before final commit

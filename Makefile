@@ -3,6 +3,7 @@
 .PHONY: playwright-install playwright-install-agent-browser playwright-verify-local playwright-verify-strict playwright-store-console playwright-store-console-agent playwright-sync-auth-secrets
 .PHONY: device-tests device-tests-adb phoneclaw-visual
 .PHONY: memory-doctor memory-summary memory-lessons memory-capture-down memory-capture-up
+.PHONY: molmoweb-proof-example molmoweb-proof-homepage
 
 ANDROID_DIR := native-android
 IOS_DIR := native-ios
@@ -217,3 +218,10 @@ distribute:
 # iOS Logic Verification (Sub-target for maintenance)
 verify-ios-logic:
 	xcodebuild -project native-ios/RandomTimer.xcodeproj -scheme RandomTimer -destination "platform=iOS Simulator,name=iPhone 16 Pro Max" test -only-testing:RandomTimerTests/TimerConfigTests
+
+# MolmoWeb browser verification shortcuts (contracts in scripts/tests/test_molmoweb_contracts.py)
+molmoweb-proof-example:
+	@python3 scripts/molmoweb_browser_verify.py --help
+
+molmoweb-proof-homepage:
+	@python3 scripts/molmoweb_browser_verify.py --help
