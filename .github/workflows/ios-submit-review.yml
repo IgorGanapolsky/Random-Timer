@@ -154,7 +154,7 @@ jobs:
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
             exit 1
           fi
-          fastlane metadata version:"$IOS_VERSION"
+          fastlane metadata version:"$IOS_VERSION" skip_app_version_update:true
         working-directory: native-ios
 
       - name: Verify App Store submission readiness (hard gate)
