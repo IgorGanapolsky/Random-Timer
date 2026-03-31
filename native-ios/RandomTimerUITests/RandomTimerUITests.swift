@@ -91,11 +91,32 @@ final class RandomTimerUITests: XCTestCase {
         )
     }
 
+    func testFemalePreviewVoiceCueDoesNotCrashSetupScreen() {
+        let app = launchApp()
+        ensureSetupScreen(app)
+
+        let femaleButton = app.buttons["Female"]
+        XCTAssertTrue(femaleButton.waitForExistence(timeout: 3.0))
+        femaleButton.tap()
+
+        let previewButton = app.buttons["PREVIEW"]
+        XCTAssertTrue(previewButton.waitForExistence(timeout: 3.0))
+        previewButton.tap()
+
+        let startButton = app.buttons["Start Timer"]
+        XCTAssertTrue(
+            startButton.waitForExistence(timeout: 3.0),
+            "Female preview must not crash the app or navigate away from setup."
+        )
+    }
+
     func testFreeSetupShowsPreviewWithoutExtendedRangeToggle() {
         let app = launchApp()
         ensureSetupScreen(app)
 
         XCTAssertTrue(app.buttons["PREVIEW"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(app.buttons["Male"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(app.buttons["Female"].waitForExistence(timeout: 3.0))
         XCTAssertFalse(app.buttons["5m"].exists)
     }
 

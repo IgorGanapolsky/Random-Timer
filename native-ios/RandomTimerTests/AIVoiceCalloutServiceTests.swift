@@ -41,6 +41,13 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.preview()
         sut.previewCommandCue()
         sut.previewCountdownCue()
+        sut.previewCommandCue(gender: .female)
+        sut.previewCountdownCue(gender: .female)
+    }
+
+    func testVoicePlaybackModeUsesSystemSynthesisForFemaleVoice() {
+        XCTAssertEqual(voicePlaybackMode(for: .male), .bundledAsset)
+        XCTAssertEqual(voicePlaybackMode(for: .female), .systemSynthesized)
     }
 
     func testResetSessionAllowsElapsedMilestoneToReplay() {
@@ -139,6 +146,22 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             2,
             "Voice playback must reactivate AVAudioSession before cue playback."
         )
+    }
+
+    func testPreviewCommandCueUpdatesCurrentGender() {
+        let sut = makeSut()
+
+        sut.previewCommandCue(gender: .female)
+
+        XCTAssertEqual(sut.currentGender, .female)
+    }
+
+    func testBeginSessionUsesConfiguredGender() {
+        let sut = makeSut()
+
+        sut.beginSession(totalDurationSeconds: 60, gender: .female)
+
+        XCTAssertEqual(sut.currentGender, .female)
     }
 
     func testTimerCalloutsUseCommandsAtThirtySecondsAndElapsedOnlyOnMinuteMarks() {
