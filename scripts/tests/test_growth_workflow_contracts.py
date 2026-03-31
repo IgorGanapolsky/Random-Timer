@@ -92,6 +92,7 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     source = IOS_SUBMIT_REVIEW_WORKFLOW.read_text(encoding="utf-8")
 
     assert "check_ios_version_lineage.py" in source
+    assert 'fastlane metadata version:"$IOS_VERSION" skip_app_version_update:true' in source
     assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
     assert "fastlane submit_review" not in source
 
@@ -110,6 +111,39 @@ def test_native_release_workflow_keeps_ios_review_submission_opt_in():
 
     submit_review_block = source.split("submit_review:", 1)[1].split("concurrency:", 1)[0]
     assert "default: 'false'" in submit_review_block
+
+
+def test_native_release_workflow_defaults_release_branch_android_firebase_mirror_on():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    mirror_block = source.split("android_internal_mirror:", 1)[1].split("submit_review:", 1)[0]
+    assert "default: 'firebase'" in mirror_block
+    assert "'firebase'" in mirror_block
+    assert "'skip'" in mirror_block
+
+
+def test_native_release_workflow_requires_explicit_confirm_for_ios_only_release_branches():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    confirm_block = source.split("confirm_ios_only_release:", 1)[1].split("concurrency:", 1)[0]
+    assert "default: 'false'" in confirm_block
+    assert "release-intent-gate:" in source
+    assert "RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}" in source
+    assert "run: python3 scripts/release_intent_gate.py" in source
+
+
+def test_native_release_workflow_dispatches_android_firebase_mirror_from_release_refs():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "android-firebase-mirror:" in source
+    mirror_job = source.split("android-firebase-mirror:", 1)[1].split("ios-submit-review:", 1)[0]
+    assert "needs: [verify-releases]" in mirror_job
+    assert "inputs.android_internal_mirror == 'firebase'" in mirror_job
+    assert "startsWith(github.ref_name, 'release/')" in mirror_job
+    assert "startsWith(github.ref_name, 'hotfix/')" in mirror_job
+    assert "gh workflow run internal-distribution.yml" in mirror_job
+    assert "-f ref=\"${GITHUB_REF_NAME}\"" in mirror_job
+    assert "-f target=android_firebase" in mirror_job
 
 
 def test_native_release_workflow_verifies_public_play_listing_for_production():

@@ -147,6 +147,10 @@ final class AIVoiceCalloutService {
 
     static let shared = AIVoiceCalloutService()
 
+    /// Current voice gender preference, set from TimerManager based on config.
+    /// Male = drill sergeant, Female = HIIT instructor.
+    var currentGender: VoiceGender = .male
+
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private static func activateVoiceAudioSession() {
         do {
@@ -164,6 +168,7 @@ final class AIVoiceCalloutService {
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
+    private var usedCommandCueFilenames: Set<String> = []
 
     init(
         bundle: Bundle = .main,
@@ -207,6 +212,7 @@ final class AIVoiceCalloutService {
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
         lastCommandCueFilename = nil
+        usedCommandCueFilenames.removeAll()
     }
 
     func preview() {
@@ -265,10 +271,18 @@ final class AIVoiceCalloutService {
 
     private func randomCommandCue() -> VoiceCueCatalog.Cue {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        let cue = nextCommandCue(from: catalog.commandCues, lastFilename: lastCommandCueFilename) { upperBound in
+        var pool = catalog.commandCues.filter { !usedCommandCueFilenames.contains($0.filename) }
+        if pool.isEmpty {
+            // All cues used — reset and exclude only the last one
+            usedCommandCueFilenames.removeAll()
+            pool = catalog.commandCues.filter { $0.filename != lastCommandCueFilename }
+            if pool.isEmpty { pool = catalog.commandCues }
+        }
+        let cue = nextCommandCue(from: pool, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
         }
         lastCommandCueFilename = cue.filename
+        usedCommandCueFilenames.insert(cue.filename)
         return cue
     }
 

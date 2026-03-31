@@ -1,0 +1,88 @@
+name: Generate Female Voice Samples
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    name: Generate female voice comparison samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate female voice samples
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, urllib.request, urllib.error
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+
+          # Commanding female voices for HIIT / CrossFit / Drill Sergeant
+          FEMALE_VOICES = {
+              "Natasha": "uxKr2vlA4hYgXZR1oPRT",    # High energy, attention-grabbing
+              "Domi": "AZnzlk1XvdvUeBnXmlld",        # Strong, authoritative American female
+              "Anvi": "sS5fXGlqomdGXa7mxBcy",        # Commanding authority + motivational warmth
+          }
+
+          TESTS = [
+              "Move with a purpose!",
+              "No hesitation. Move!",
+              "Stay in the fight!",
+              "Push through! Don't you dare coast!",
+              "Thirty seconds elapsed. Stay locked in.",
+          ]
+
+          os.makedirs("/tmp/female-voice-samples", exist_ok=True)
+
+          for vname, vid in FEMALE_VOICES.items():
+              print(f"\n=== {vname} ({vid}) ===")
+              for i, text in enumerate(TESTS):
+                  payload = {
+                      "text": text,
+                      "model_id": "eleven_multilingual_v2",
+                      "voice_settings": {
+                          "stability": 0.65,
+                          "similarity_boost": 0.85,
+                          "style": 0.55,
+                          "use_speaker_boost": True,
+                      },
+                  }
+                  data = json.dumps(payload).encode()
+                  req = urllib.request.Request(
+                      f"{API}/v1/text-to-speech/{vid}?output_format=mp3_44100_128",
+                      data=data,
+                      headers={
+                          "xi-api-key": KEY,
+                          "Content-Type": "application/json",
+                          "Accept": "audio/mpeg",
+                      },
+                  )
+                  fname = text.lower().replace(" ", "_").replace(".", "").replace("!", "").replace(",", "")[:30]
+                  path = f"/tmp/female-voice-samples/{vname.lower()}_{fname}.mp3"
+                  try:
+                      with urllib.request.urlopen(req, timeout=60) as resp:
+                          audio = resp.read()
+                          with open(path, "wb") as f:
+                              f.write(audio)
+                          print(f"  {path} ({len(audio)} bytes)")
+                  except urllib.error.HTTPError as e:
+                      body = e.read().decode()[:200]
+                      print(f"  FAILED: HTTP {e.code} {body}")
+
+          print("\nDone! Download the artifact to listen.")
+          PYEOF
+
+      - name: Upload female voice samples
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: female-voice-samples
+          path: /tmp/female-voice-samples/

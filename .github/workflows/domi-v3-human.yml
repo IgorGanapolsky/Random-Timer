@@ -1,0 +1,70 @@
+name: Domi v3 Human Voice Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate Domi v3 samples with audio tags
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, urllib.request
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+          DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
+
+          # Research-backed settings for human-sounding short commands
+          SETTINGS = {"stability": 0.45, "similarity_boost": 0.73, "style": 0, "use_speaker_boost": True}
+
+          # v3 with audio tags for commanding delivery
+          PHRASES = {
+              "move_intense": "[intense] Move... with a PURPOSE!",
+              "no_hesitation_commanding": "[commanding] No hesitation. Move!",
+              "stay_shouting": "[shouting] Stay in the fight!",
+              "push_intense": "[intense] Push through! Don't you dare coast!",
+              "elapsed_serious": "[serious] Thirty seconds elapsed. Stay locked in.",
+              "move_excited": "[excited] Let's GO! Move with a purpose!",
+              "push_shouting": "[shouting] Push HARDER! You've got this!",
+              "reset_commanding": "[commanding] Reset... breathe... attack again!",
+          }
+
+          os.makedirs("/tmp/domi-v3", exist_ok=True)
+
+          for fname, text in PHRASES.items():
+              payload = {
+                  "text": text,
+                  "model_id": "eleven_v3",
+                  "voice_settings": SETTINGS,
+              }
+              data = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
+                  data=data,
+                  headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+              )
+              path = f"/tmp/domi-v3/{fname}.mp3"
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      audio = resp.read()
+                      with open(path, "wb") as f:
+                          f.write(audio)
+                      print(f"{fname}.mp3 ({len(audio)} bytes) — {text}")
+              except Exception as e:
+                  print(f"FAILED {fname}: {e}")
+
+          print("\nDone! 8 samples with Eleven v3 + audio tags.")
+          PYEOF
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: domi-v3-human-samples
+          path: /tmp/domi-v3/
