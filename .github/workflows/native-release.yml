@@ -21,11 +21,27 @@ on:
           - alpha
         required: false
         default: 'production'
+      android_internal_mirror:
+        description: 'Release/hotfix branches: mirror the released ref to Android Firebase internal'
+        type: choice
+        options:
+          - 'firebase'
+          - 'skip'
+        required: false
+        default: 'firebase'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
         # (we've observed the `ios-submit-review` job being skipped). Use a string choice so UI/CLI/API
         # always pass consistent values.
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
+      confirm_ios_only_release:
+        description: 'Set true only if you intentionally skip Android on a release/v* branch (platform=ios)'
         type: choice
         options:
           - 'false'
@@ -38,7 +54,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-intent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce release-branch intent (avoid accidental Android skip)
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          RELEASE_INTENT_PLATFORM: ${{ inputs.platform }}
+          RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}
+        run: python3 scripts/release_intent_gate.py
+
   ios-testflight:
+    needs: [release-intent-gate]
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
     runs-on: macos-26
     environment: production
@@ -154,6 +183,7 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
+    needs: [release-intent-gate]
     if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
@@ -488,6 +518,30 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/play-service-account.json /tmp/appstore_key.p8
+
+  android-firebase-mirror:
+    needs: [verify-releases]
+    if: >-
+      always() &&
+      needs.verify-releases.result == 'success' &&
+      inputs.android_internal_mirror == 'firebase' &&
+      (startsWith(github.ref_name, 'release/') || startsWith(github.ref_name, 'hotfix/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch Internal Distribution (Android Firebase mirror)
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run internal-distribution.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref develop \
+            -f ref="${GITHUB_REF_NAME}" \
+            -f target=android_firebase
+          echo "✅ Dispatched internal-distribution.yml for Android Firebase mirror on ${GITHUB_REF_NAME}"
 
   ios-submit-review:
     needs: [verify-releases]

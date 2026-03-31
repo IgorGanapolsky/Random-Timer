@@ -255,6 +255,8 @@ platform :ios do
 
     use_live_raw = options.key?(:use_live_version) ? options[:use_live_version] : false
     use_live_version = [true, "true", "1", 1, "yes", "on"].include?(use_live_raw)
+    skip_version_update_raw = options.key?(:skip_app_version_update) ? options[:skip_app_version_update] : use_live_version
+    skip_app_version_update = [true, "true", "1", 1, "yes", "on"].include?(skip_version_update_raw)
 
     version = options[:version] || get_version_number(xcodeproj: "RandomTimer.xcodeproj", target: "RandomTimer")
     if use_live_version
@@ -273,8 +275,8 @@ platform :ios do
       # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
-      # When targeting live version, avoid mutating versionString.
-      skip_app_version_update: use_live_version,
+      # When the target version already exists in ASC, avoid asking deliver to create it again.
+      skip_app_version_update: skip_app_version_update,
       use_live_version: use_live_version,
       force: true,
       api_key: defined?(api_key) ? api_key : nil
