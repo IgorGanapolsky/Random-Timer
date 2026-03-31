@@ -466,7 +466,7 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
@@ -540,7 +540,7 @@ fun TimerSetupScreen(
                             }
 
                             // Voice Gender selector (only shown when voice is enabled)
-                            if (config.voiceEnabled && isPro) {
+                            if (config.voiceEnabled) {
                                 Row(
                                     modifier =
                                         Modifier
