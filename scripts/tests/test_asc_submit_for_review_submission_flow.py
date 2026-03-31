@@ -56,10 +56,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         submit_for_review(client, "app-1", version_id)
 
-        self.assertEqual(client.calls[0]["path"], "/apps/app-1/reviewSubmissions")
-        self.assertEqual(client.calls[1]["path"], f"/reviewSubmissions/{submission_id}/items")
-        # calls[2] is the subscription groups lookup (returns empty)
-        self.assertEqual(client.calls[2]["path"], "/apps/app-1/subscriptionGroups")
+        self.assertEqual(client.calls[0]["path"], "/apps/app-1/subscriptionGroups")
+        self.assertEqual(client.calls[1]["path"], "/apps/app-1/reviewSubmissions")
+        self.assertEqual(client.calls[2]["path"], f"/reviewSubmissions/{submission_id}/items")
         self.assertEqual(client.calls[3]["path"], f"/reviewSubmissionItems/{item_id}")
         self.assertEqual(
             client.calls[3]["payload"],
@@ -118,9 +117,11 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         submit_for_review(client, "app-1", version_id)
 
-        self.assertEqual(client.calls[1]["path"], "/reviewSubmissions")
+        self.assertEqual(client.calls[0]["path"], "/apps/app-1/subscriptionGroups")
+        self.assertEqual(client.calls[1]["path"], "/apps/app-1/reviewSubmissions")
+        self.assertEqual(client.calls[2]["path"], "/reviewSubmissions")
         self.assertEqual(
-            client.calls[1]["payload"],
+            client.calls[2]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissions",
@@ -129,9 +130,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                 }
             },
         )
-        self.assertEqual(client.calls[2]["path"], "/reviewSubmissionItems")
+        self.assertEqual(client.calls[3]["path"], "/reviewSubmissionItems")
         self.assertEqual(
-            client.calls[2]["payload"],
+            client.calls[3]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissionItems",
@@ -141,6 +142,46 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                     },
                 }
             },
+        )
+
+    def test_submit_for_review_fails_when_subscription_requires_manual_review_attachment(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {
+                    "data": [
+                        {
+                            "id": "group-1",
+                            "type": "subscriptionGroups",
+                        }
+                    ]
+                },
+                ("GET", "/subscriptionGroups/group-1/subscriptions"): {
+                    "data": [
+                        {
+                            "id": "sub-1",
+                            "type": "subscriptions",
+                            "attributes": {
+                                "name": "Pro Tactical Annual",
+                                "state": "WAITING_FOR_REVIEW",
+                            },
+                        }
+                    ]
+                },
+            }
+        )
+
+        with self.assertRaises(SystemExit) as exc:
+            submit_for_review(client, "app-1", "ver-1")
+
+        self.assertEqual(exc.exception.code, 1)
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/subscriptionGroups/group-1/subscriptions",
+            ],
         )
 
 
