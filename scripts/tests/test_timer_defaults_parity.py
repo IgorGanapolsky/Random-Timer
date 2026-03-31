@@ -194,7 +194,9 @@ def test_voice_profile_configured_on_both_platforms():
     android_sound_catalog_service = ANDROID_SOUND_CATALOG_SERVICE.read_text(encoding="utf-8")
     ios_voice_service = IOS_VOICE_SERVICE.read_text(encoding="utf-8")
 
-    assert "preferredVoiceNames" in android_voice_service
+    assert "selectPreferredVoice" in android_voice_service
+    assert "internal fun voicePlaybackMode(gender: VoiceGender)" in android_voice_service
+    assert "TextToSpeech" in android_voice_service
     assert "packStore.voiceCatalog()" in android_voice_service
     assert "parseVoiceCalloutCatalog" in android_voice_service
     assert "class ProAudioPackStore" in android_sound_catalog_service
@@ -203,7 +205,7 @@ def test_voice_profile_configured_on_both_platforms():
     assert "loadVoiceCalloutCatalog" in ios_voice_service
     assert "voiceFilenameOrFallback" in ios_voice_service
     assert "AVAudioPlayer" in ios_voice_service
-    assert "AVSpeechSynthesizer" not in ios_voice_service
+    assert "AVSpeechSynthesizer" in ios_voice_service
 
 
 def test_ios_voice_assets_exist_on_disk():
