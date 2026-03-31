@@ -180,17 +180,15 @@ struct TimerSetupScreen: View {
                         .padding(.vertical, 8)
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
-                        if config.voiceEnabled && proManager.isPro {
-                            Picker("Voice", selection: Binding(
-                                get: { config.voiceGender },
-                                set: { updateConfig(voiceGender: $0) }
-                            )) {
-                                Text("Male").tag(VoiceGender.male)
-                                Text("Female").tag(VoiceGender.female)
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.horizontal)
+                        Picker("Voice", selection: Binding(
+                            get: { config.voiceGender },
+                            set: { updateConfig(voiceGender: $0) }
+                        )) {
+                            Text("Male").tag(VoiceGender.male)
+                            Text("Female").tag(VoiceGender.female)
                         }
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal)
 
                         Spacer().frame(height: 20)
 

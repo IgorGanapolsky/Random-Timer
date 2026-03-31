@@ -3,6 +3,20 @@ import Foundation
 import Security
 import os
 
+internal enum VoicePlaybackMode: Equatable {
+    case bundledAsset
+    case systemSynthesized
+}
+
+internal func voicePlaybackMode(for gender: VoiceGender) -> VoicePlaybackMode {
+    switch gender {
+    case .male:
+        return .bundledAsset
+    case .female:
+        return .systemSynthesized
+    }
+}
+
 internal struct VoiceCueCatalog: Codable {
     struct Cue: Codable, Hashable {
         let filename: String
@@ -164,6 +178,7 @@ final class AIVoiceCalloutService {
     private let bundle: Bundle
     private let packStore: ProAudioPackStore
     private let activateAudioSession: AudioSessionActivator
+    private let speechSynthesizer = AVSpeechSynthesizer()
     private var audioPlayer: AVAudioPlayer?
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
@@ -183,6 +198,11 @@ final class AIVoiceCalloutService {
 
     func speak(_ text: String) {
         activateAudioSession()
+
+        if voicePlaybackMode(for: currentGender) == .systemSynthesized {
+            speakWithSystemVoice(text)
+            return
+        }
 
         let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
@@ -209,27 +229,38 @@ final class AIVoiceCalloutService {
     func resetSession() {
         audioPlayer?.stop()
         audioPlayer = nil
+        if speechSynthesizer.isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+        }
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
         lastCommandCueFilename = nil
         usedCommandCueFilenames.removeAll()
+        currentGender = .male
     }
 
     func preview() {
         previewCommandCue()
     }
 
-    func previewCommandCue() {
+    func previewCommandCue(gender: VoiceGender? = nil) {
+        if let gender {
+            currentGender = gender
+        }
         let cue = randomCommandCue()
         speak(cue.text)
     }
 
-    func previewCountdownCue() {
+    func previewCountdownCue(gender: VoiceGender? = nil) {
+        if let gender {
+            currentGender = gender
+        }
         let catalog = packStore.voiceCatalog(bundle: bundle)
         speak(catalog.previewElapsed.text)
     }
 
-    func beginSession(totalDurationSeconds: Int) {
+    func beginSession(totalDurationSeconds: Int, gender: VoiceGender = .male) {
+        currentGender = gender
         nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
     }
 
@@ -297,6 +328,41 @@ final class AIVoiceCalloutService {
         } else {
             return Int.random(in: range)
         }
+    }
+
+    private func speakWithSystemVoice(_ text: String) {
+        if speechSynthesizer.isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+        }
+
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = preferredSpeechVoice(for: currentGender) ?? AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.48
+        utterance.pitchMultiplier = currentGender == .female ? 1.08 : 1.0
+        utterance.volume = 1.0
+        speechSynthesizer.speak(utterance)
+    }
+
+    private func preferredSpeechVoice(for gender: VoiceGender) -> AVSpeechSynthesisVoice? {
+        let voices = AVSpeechSynthesisVoice.speechVoices().filter {
+            $0.language.hasPrefix("en-US") || $0.language == "en_US"
+        }
+
+        let preferredNames: [String]
+        switch gender {
+        case .male:
+            preferredNames = ["Nathan", "Tom", "Aaron"]
+        case .female:
+            preferredNames = ["Samantha", "Ava", "Allison", "Susan"]
+        }
+
+        for name in preferredNames {
+            if let voice = voices.first(where: { $0.name.localizedCaseInsensitiveContains(name) }) {
+                return voice
+            }
+        }
+
+        return voices.first
     }
 
     func _stateSnapshotForTesting() -> StateSnapshot {

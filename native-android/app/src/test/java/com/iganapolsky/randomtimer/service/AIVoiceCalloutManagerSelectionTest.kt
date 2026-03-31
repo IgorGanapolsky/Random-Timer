@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.service
 
 import com.google.common.truth.Truth.assertThat
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import org.junit.Test
 import java.nio.file.Paths
 import java.util.Locale
@@ -14,6 +15,7 @@ class AIVoiceCalloutManagerSelectionTest {
                     VoiceCandidate("hi-IN-x-cfn#male_3-local", Locale("hi", "IN")),
                     VoiceCandidate("en-us-x-sfg#male_1-local", Locale.US),
                 ),
+                gender = VoiceGender.MALE,
             )
 
         assertThat(selected?.name).isEqualTo("en-us-x-sfg#male_1-local")
@@ -27,9 +29,30 @@ class AIVoiceCalloutManagerSelectionTest {
                     VoiceCandidate("hi-IN-x-cfn#male_3-local", Locale("hi", "IN")),
                     VoiceCandidate("es-es-x-eef-local", Locale("es", "ES")),
                 ),
+                gender = VoiceGender.MALE,
             )
 
         assertThat(selected).isNull()
+    }
+
+    @Test
+    fun `selectPreferredVoice prefers english female voices when requested`() {
+        val selected =
+            selectPreferredVoice(
+                listOf(
+                    VoiceCandidate("en-us-x-sfg#male_1-local", Locale.US),
+                    VoiceCandidate("en-us-x-tpc#female_1-local", Locale.US),
+                ),
+                gender = VoiceGender.FEMALE,
+            )
+
+        assertThat(selected?.name).isEqualTo("en-us-x-tpc#female_1-local")
+    }
+
+    @Test
+    fun `voicePlaybackMode uses system synthesis for female voices`() {
+        assertThat(voicePlaybackMode(VoiceGender.MALE)).isEqualTo(VoicePlaybackMode.BUNDLED_ASSET)
+        assertThat(voicePlaybackMode(VoiceGender.FEMALE)).isEqualTo(VoicePlaybackMode.SYSTEM_SYNTHESIZED)
     }
 
     @Test

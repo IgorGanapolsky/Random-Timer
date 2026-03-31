@@ -2,6 +2,7 @@ package com.iganapolsky.randomtimer.service
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -11,6 +12,11 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
+
+internal enum class VoicePlaybackMode {
+    BUNDLED_ASSET,
+    SYSTEM_SYNTHESIZED,
+}
 
 internal data class VoiceCandidate(
     val name: String,
@@ -49,14 +55,29 @@ internal data class VoiceCueCatalog(
             }
 }
 
-internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandidate? =
-    candidates
-        .filter { candidate -> candidate.locale.language.equals(Locale.US.language, ignoreCase = true) }
-        .firstOrNull { candidate ->
-            AIVoiceCalloutManager.preferredVoiceNames.any { preferred ->
-                candidate.name.contains(preferred, ignoreCase = true)
-            }
+internal fun voicePlaybackMode(gender: VoiceGender): VoicePlaybackMode =
+    when (gender) {
+        VoiceGender.MALE -> VoicePlaybackMode.BUNDLED_ASSET
+        VoiceGender.FEMALE -> VoicePlaybackMode.SYSTEM_SYNTHESIZED
+    }
+
+internal fun selectPreferredVoice(
+    candidates: List<VoiceCandidate>,
+    gender: VoiceGender = VoiceGender.MALE,
+): VoiceCandidate? {
+    val englishVoices = candidates.filter { candidate -> candidate.locale.language.equals(Locale.US.language, ignoreCase = true) }
+    val preferred =
+        when (gender) {
+            VoiceGender.MALE -> AIVoiceCalloutManager.preferredMaleVoiceNames
+            VoiceGender.FEMALE -> AIVoiceCalloutManager.preferredFemaleVoiceNames
         }
+
+    return englishVoices.firstOrNull { candidate ->
+        preferred.any { token ->
+            candidate.name.contains(token, ignoreCase = true)
+        }
+    } ?: englishVoices.firstOrNull()
+}
 
 private const val VOICE_CATALOG_ASSET = "voice_callouts.json"
 
@@ -192,6 +213,9 @@ class AIVoiceCalloutManager
     ) {
         private var lastElapsedMilestone = 0
         private var mediaPlayer: MediaPlayer? = null
+        private var textToSpeech: TextToSpeech? = null
+        private var textToSpeechReady = false
+        private var pendingUtterance: String? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
@@ -202,7 +226,8 @@ class AIVoiceCalloutManager
             private set
 
         companion object {
-            val preferredVoiceNames = listOf("en-us-x-tpf", "en-us-x-sfg", "en-US-language")
+            val preferredMaleVoiceNames = listOf("male", "en-us-x-tpf", "en-us-x-sfg", "en-US-language")
+            val preferredFemaleVoiceNames = listOf("female", "en-us-x-tpc", "en-us-x-iol", "en-US-language")
         }
 
         fun setVolume(volume: Float) {
@@ -223,7 +248,16 @@ class AIVoiceCalloutManager
             }
         }
 
+        private fun stopSpeechPlayback() {
+            textToSpeech?.stop()
+            pendingUtterance = null
+        }
+
         fun speak(text: String) {
+            if (voicePlaybackMode(currentGender) == VoicePlaybackMode.SYSTEM_SYNTHESIZED) {
+                speakWithSystemVoice(text)
+                return
+            }
             val catalog = packStore.voiceCatalog()
             val mappedResId = voiceResIdForText(context, text, catalog)
             val resId = mappedResId ?: voiceResIdOrFallback(context, text, catalog)
@@ -278,6 +312,7 @@ class AIVoiceCalloutManager
 
         fun resetSession() {
             stopPlayback()
+            stopSpeechPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             usedCommandCueFilenames.clear()
@@ -289,12 +324,14 @@ class AIVoiceCalloutManager
             previewCommandCue()
         }
 
-        fun previewCommandCue() {
+        fun previewCommandCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
             val cue = randomCommandCue()
             speak(cue.text)
         }
 
-        fun previewCountdownCue() {
+        fun previewCountdownCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
             val catalog = packStore.voiceCatalog()
             speak(catalog.previewElapsed.text)
         }
@@ -352,5 +389,70 @@ class AIVoiceCalloutManager
 
         fun shutdown() {
             stopPlayback()
+            stopSpeechPlayback()
+            textToSpeech?.shutdown()
+            textToSpeech = null
+            textToSpeechReady = false
+        }
+
+        private fun speakWithSystemVoice(text: String) {
+            stopPlayback()
+            val engine = ensureTextToSpeech()
+            if (engine == null || !textToSpeechReady) {
+                pendingUtterance = text
+                return
+            }
+
+            stopSpeechPlayback()
+            configureTextToSpeech(engine, currentGender)
+            engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "voice-preview-${System.currentTimeMillis()}")
+        }
+
+        private fun ensureTextToSpeech(): TextToSpeech? {
+            textToSpeech?.let { return it }
+
+            return try {
+                var createdEngine: TextToSpeech? = null
+                TextToSpeech(context) { status ->
+                    textToSpeechReady = status == TextToSpeech.SUCCESS
+                    val engine = createdEngine ?: textToSpeech ?: return@TextToSpeech
+                    if (textToSpeechReady) {
+                        configureTextToSpeech(engine, currentGender)
+                        pendingUtterance?.let { queued ->
+                            pendingUtterance = null
+                            engine.speak(queued, TextToSpeech.QUEUE_FLUSH, null, "voice-preview-${System.currentTimeMillis()}")
+                        }
+                    } else {
+                        Log.e("AIVoiceCallout", "TextToSpeech init failed with status=$status")
+                    }
+                }.also { engine ->
+                    createdEngine = engine
+                    textToSpeech = engine
+                }
+            } catch (e: Exception) {
+                Log.e("AIVoiceCallout", "Failed to initialize TextToSpeech: ${e.message}", e)
+                null
+            }
+        }
+
+        private fun configureTextToSpeech(
+            engine: TextToSpeech,
+            gender: VoiceGender,
+        ) {
+            engine.language = Locale.US
+            engine.setSpeechRate(0.95f)
+            engine.setPitch(if (gender == VoiceGender.FEMALE) 1.1f else 1.0f)
+
+            val candidates =
+                engine.voices
+                    ?.map { voice -> VoiceCandidate(voice.name, voice.locale) }
+                    .orEmpty()
+
+            val selected = selectPreferredVoice(candidates, gender)
+            if (selected != null) {
+                engine.voices
+                    ?.firstOrNull { voice -> voice.name == selected.name && voice.locale == selected.locale }
+                    ?.let { engine.voice = it }
+            }
         }
     }

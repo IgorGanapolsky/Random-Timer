@@ -300,7 +300,7 @@ class TimerViewModel
         }
 
         fun previewCommandCue() {
-            soundPreviewManager.previewCommandCue()
+            soundPreviewManager.previewCommandCue(config.value.voiceGender)
         }
 
         private fun stopSoundPreview() {
