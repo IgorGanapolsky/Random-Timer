@@ -147,6 +147,10 @@ final class AIVoiceCalloutService {
 
     static let shared = AIVoiceCalloutService()
 
+    /// Current voice gender preference, set from TimerManager based on config.
+    /// Male = drill sergeant, Female = HIIT instructor.
+    var currentGender: VoiceGender = .male
+
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
     private static func activateVoiceAudioSession() {
         do {

@@ -180,6 +180,18 @@ struct TimerSetupScreen: View {
                         .padding(.vertical, 8)
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
+                        if config.voiceEnabled && proManager.isPro {
+                            Picker("Voice", selection: Binding(
+                                get: { config.voiceGender },
+                                set: { updateConfig(voiceGender: $0) }
+                            )) {
+                                Text("Male").tag(VoiceGender.male)
+                                Text("Female").tag(VoiceGender.female)
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.horizontal)
+                        }
+
                         Spacer().frame(height: 20)
 
                         // Core Sounds
@@ -456,6 +468,7 @@ struct TimerSetupScreen: View {
         vibrationEnabled: Bool? = nil,
         useExtendedRange: Bool? = nil,
         voiceEnabled: Bool? = nil,
+        voiceGender: VoiceGender? = nil,
         repeatRounds: Int? = nil
     ) {
         let newConfig = TimerConfig(
@@ -469,6 +482,7 @@ struct TimerSetupScreen: View {
             vibrationEnabled: vibrationEnabled ?? config.vibrationEnabled,
             useExtendedRange: useExtendedRange ?? config.useExtendedRange,
             voiceEnabled: voiceEnabled ?? config.voiceEnabled,
+            voiceGender: voiceGender ?? config.voiceGender,
             repeatRounds: repeatRounds ?? config.repeatRounds
         )
         let effectiveUseExtendedRange = useExtendedRange ?? config.useExtendedRange

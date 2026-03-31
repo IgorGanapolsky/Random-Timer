@@ -74,6 +74,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -184,6 +185,7 @@ fun TimerSetupScreen(
         vibrationEnabled: Boolean = config.vibrationEnabled,
         useExtendedRange: Boolean = config.useExtendedRange,
         voiceEnabled: Boolean = config.voiceEnabled,
+        voiceGender: VoiceGender = config.voiceGender,
         repeatRounds: Int = config.repeatRounds,
     ) {
         onConfigChange(
@@ -198,6 +200,7 @@ fun TimerSetupScreen(
                 vibrationEnabled = vibrationEnabled,
                 useExtendedRange = useExtendedRange,
                 voiceEnabled = voiceEnabled,
+                voiceGender = voiceGender,
                 repeatRounds = repeatRounds,
             ),
         )
@@ -532,6 +535,44 @@ fun TimerSetupScreen(
                                                 )
                                             }
                                         }
+                                    }
+                                }
+                            }
+
+                            // Voice Gender selector (only shown when voice is enabled)
+                            if (config.voiceEnabled && isPro) {
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    VoiceGender.entries.forEach { gender ->
+                                        FilterChip(
+                                            selected = config.voiceGender == gender,
+                                            onClick = { updateConfig(voiceGender = gender) },
+                                            label = {
+                                                Text(
+                                                    if (gender == VoiceGender.MALE) {
+                                                        "Male"
+                                                    } else {
+                                                        "Female"
+                                                    },
+                                                )
+                                            },
+                                            colors =
+                                                FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                    selectedLabelColor = TimerColors.AccentPrimary,
+                                                ),
+                                            border =
+                                                FilterChipDefaults.filterChipBorder(
+                                                    selectedBorderColor = TimerColors.AccentPrimary,
+                                                    enabled = true,
+                                                    selected = config.voiceGender == gender,
+                                                ),
+                                        )
                                     }
                                 }
                             }
