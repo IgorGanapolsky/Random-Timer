@@ -8,10 +8,15 @@ enum PaywallEntryPoint: String {
 
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
+    static let hiddenUnlockMaximumDistance: CGFloat = 240
     static let headline = "Unlock Full Training Mode"
     static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
     static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
     static let pricingFooter = "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+    static let privacyPolicyURL = URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+        ?? URL(fileURLWithPath: "/")
+    static let eulaURL = URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")
+        ?? URL(fileURLWithPath: "/")
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
         "Train up to 60-minute sessions",
@@ -71,7 +76,10 @@ struct PaywallSheet: View {
                 .padding(.vertical, 8)
                 .contentShape(Rectangle())
                 .highPriorityGesture(
-                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
+                    LongPressGesture(
+                        minimumDuration: Self.hiddenUnlockHoldDuration,
+                        maximumDistance: Self.hiddenUnlockMaximumDistance
+                    )
                         .onEnded { _ in
                             triggerDebugUnlock()
                         }
@@ -91,7 +99,10 @@ struct PaywallSheet: View {
 
                 VStack(spacing: 12) {
                     PrimaryButton(
-                        title: "Start Pro \u{2022} \(normalizedPriceLabel(proManager.formattedPrice(for: ProManager.eliteProductID)))"
+                        title: "Start Pro \u{2022} "
+                            + normalizedPriceLabel(
+                                proManager.formattedPrice(for: ProManager.eliteProductID)
+                            )
                     ) {
                         Task {
                             await purchase(productID: ProManager.eliteProductID)
@@ -125,10 +136,8 @@ struct PaywallSheet: View {
 
                 // Required by App Store Guideline 3.1.2(c)
                 HStack(spacing: 16) {
-                    Link("Privacy Policy",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!)
-                    Link("Terms of Use (EULA)",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!)
+                    Link("Privacy Policy", destination: Self.privacyPolicyURL)
+                    Link("Terms of Use (EULA)", destination: Self.eulaURL)
                 }
                 .font(.caption2)
                 .foregroundColor(.textSecondary)

@@ -60,6 +60,16 @@ fun PaywallSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = TimerColors.BackgroundDark,
     ) {
+        val hiddenUnlockModifier =
+            if (onDebugUnlock != null) {
+                Modifier.holdForHiddenUnlock(
+                    holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
+                    haptic = haptic,
+                    onHoldComplete = onDebugUnlock,
+                )
+            } else {
+                Modifier
+            }
         Column(
             modifier =
                 Modifier
@@ -79,46 +89,44 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = PAYWALL_HEADLINE,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.TextPrimary,
-                textAlign = TextAlign.Center,
+            Column(
                 modifier =
-                    Modifier.fillMaxWidth().then(
-                        if (onDebugUnlock != null) {
-                            Modifier.holdForHiddenUnlock(
-                                holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
-                                haptic = haptic,
-                                onHoldComplete = onDebugUnlock,
-                            )
-                        } else {
-                            Modifier
-                        },
-                    ),
-            )
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .then(hiddenUnlockModifier),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = PAYWALL_HEADLINE,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = PAYWALL_SUBHEADLINE,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = PAYWALL_AUDIENCE_LINE,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = PAYWALL_PRICING_FOOTER,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
+                Text(
+                    text = PAYWALL_SUBHEADLINE,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = PAYWALL_AUDIENCE_LINE,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = PAYWALL_PRICING_FOOTER,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
