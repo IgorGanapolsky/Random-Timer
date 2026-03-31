@@ -21,6 +21,14 @@ on:
           - alpha
         required: false
         default: 'production'
+      android_internal_mirror:
+        description: 'Release/hotfix branches: mirror the released ref to Android Firebase internal'
+        type: choice
+        options:
+          - 'firebase'
+          - 'skip'
+        required: false
+        default: 'firebase'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
@@ -488,6 +496,30 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/play-service-account.json /tmp/appstore_key.p8
+
+  android-firebase-mirror:
+    needs: [verify-releases]
+    if: >-
+      always() &&
+      needs.verify-releases.result == 'success' &&
+      inputs.android_internal_mirror == 'firebase' &&
+      (startsWith(github.ref_name, 'release/') || startsWith(github.ref_name, 'hotfix/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch Internal Distribution (Android Firebase mirror)
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run internal-distribution.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref develop \
+            -f ref="${GITHUB_REF_NAME}" \
+            -f target=android_firebase
+          echo "✅ Dispatched internal-distribution.yml for Android Firebase mirror on ${GITHUB_REF_NAME}"
 
   ios-submit-review:
     needs: [verify-releases]

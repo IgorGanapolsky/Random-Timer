@@ -183,6 +183,8 @@ As of March 26, 2026, Android Firebase APK delivery is not the default internal-
 
 Use `target=android_firebase` only when Firebase APK delivery is explicitly required for debugging or appeal evidence collection.
 
+`Native App Release` now mirrors release/hotfix refs to Android Firebase internal by default via the `android_internal_mirror=firebase` input so the latest release candidate does not drift between TestFlight and Firebase. Set `android_internal_mirror=skip` when you intentionally do not want Firebase delivery for that release run.
+
 Important: Android runtime Firebase and Android App Distribution do not currently use the same Firebase project. Check that document before rotating any Firebase secret.
 
 ### Android (Google Play)

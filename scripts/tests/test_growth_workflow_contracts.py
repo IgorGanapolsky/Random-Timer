@@ -112,6 +112,29 @@ def test_native_release_workflow_keeps_ios_review_submission_opt_in():
     assert "default: 'false'" in submit_review_block
 
 
+def test_native_release_workflow_defaults_release_branch_android_firebase_mirror_on():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    mirror_block = source.split("android_internal_mirror:", 1)[1].split("submit_review:", 1)[0]
+    assert "default: 'firebase'" in mirror_block
+    assert "'firebase'" in mirror_block
+    assert "'skip'" in mirror_block
+
+
+def test_native_release_workflow_dispatches_android_firebase_mirror_from_release_refs():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "android-firebase-mirror:" in source
+    mirror_job = source.split("android-firebase-mirror:", 1)[1].split("ios-submit-review:", 1)[0]
+    assert "needs: [verify-releases]" in mirror_job
+    assert "inputs.android_internal_mirror == 'firebase'" in mirror_job
+    assert "startsWith(github.ref_name, 'release/')" in mirror_job
+    assert "startsWith(github.ref_name, 'hotfix/')" in mirror_job
+    assert "gh workflow run internal-distribution.yml" in mirror_job
+    assert "-f ref=\"${GITHUB_REF_NAME}\"" in mirror_job
+    assert "-f target=android_firebase" in mirror_job
+
+
 def test_native_release_workflow_verifies_public_play_listing_for_production():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
