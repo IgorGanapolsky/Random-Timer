@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from scripts.tests.router_client import RouterClient
 
@@ -112,6 +113,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                         "attributes": {"state": "WAITING_FOR_REVIEW"},
                     }
                 },
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
             }
         )
 
@@ -144,7 +146,89 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             },
         )
 
-    def test_submit_for_review_fails_when_subscription_requires_manual_review_attachment(self):
+    def test_submit_for_review_creates_subscription_submission_before_app_submission(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        submission_id = "sub-new"
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {
+                    "data": [
+                        {
+                            "id": "group-1",
+                            "type": "subscriptionGroups",
+                        }
+                    ]
+                },
+                ("GET", "/subscriptionGroups/group-1/subscriptions"): {
+                    "data": [
+                        {
+                            "id": "sub-1",
+                            "type": "subscriptions",
+                            "attributes": {
+                                "name": "Pro Tactical Annual",
+                                "state": "READY_TO_SUBMIT",
+                            },
+                        }
+                    ]
+                },
+                ("POST", "/subscriptionSubmissions"): {
+                    "data": {
+                        "id": "subm-1",
+                        "type": "subscriptionSubmissions",
+                    }
+                },
+                ("GET", "/subscriptions/sub-1"): {
+                    "data": {
+                        "id": "sub-1",
+                        "type": "subscriptions",
+                        "attributes": {
+                            "name": "Pro Tactical Annual",
+                            "state": "WAITING_FOR_REVIEW",
+                        },
+                    }
+                },
+                ("GET", "/apps/app-1/reviewSubmissions"): {"data": []},
+                ("POST", "/reviewSubmissions"): {
+                    "data": {
+                        "id": submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "PREPARE_FOR_SUBMISSION"},
+                    }
+                },
+                ("POST", "/reviewSubmissionItems"): {
+                    "data": {
+                        "id": "item-new",
+                        "type": "reviewSubmissionItems",
+                        "attributes": {"state": "READY_FOR_REVIEW"},
+                    }
+                },
+                ("PATCH", f"/reviewSubmissions/{submission_id}"): {
+                    "data": {
+                        "id": submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", "ver-1")
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/subscriptionGroups/group-1/subscriptions",
+                "/subscriptionSubmissions",
+                "/subscriptions/sub-1",
+                "/apps/app-1/reviewSubmissions",
+                "/reviewSubmissions",
+                "/reviewSubmissionItems",
+                f"/reviewSubmissions/{submission_id}",
+            ],
+        )
+
+    def test_submit_for_review_fails_when_subscription_does_not_transition_to_review_state(self):
         from scripts.asc_submit_for_review import submit_for_review
 
         client = RouterClient(
@@ -164,16 +248,43 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                             "type": "subscriptions",
                             "attributes": {
                                 "name": "Pro Tactical Annual",
-                                "state": "WAITING_FOR_REVIEW",
+                                "state": "READY_TO_SUBMIT",
                             },
                         }
                     ]
                 },
+                ("POST", "/subscriptionSubmissions"): {
+                    "data": {
+                        "id": "subm-1",
+                        "type": "subscriptionSubmissions",
+                    }
+                },
+                ("GET", "/subscriptions/sub-1"): {
+                    "data": {
+                        "id": "sub-1",
+                        "type": "subscriptions",
+                        "attributes": {
+                            "name": "Pro Tactical Annual",
+                            "state": "READY_TO_SUBMIT",
+                        },
+                    }
+                },
             }
         )
 
-        with self.assertRaises(SystemExit) as exc:
-            submit_for_review(client, "app-1", "ver-1")
+        with mock.patch(
+            "scripts.asc_submit_for_review._wait_for_subscription_state",
+            return_value={
+                "id": "sub-1",
+                "type": "subscriptions",
+                "attributes": {
+                    "name": "Pro Tactical Annual",
+                    "state": "READY_TO_SUBMIT",
+                },
+            },
+        ):
+            with self.assertRaises(SystemExit) as exc:
+                submit_for_review(client, "app-1", "ver-1")
 
         self.assertEqual(exc.exception.code, 1)
         self.assertEqual(
@@ -181,6 +292,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             [
                 "/apps/app-1/subscriptionGroups",
                 "/subscriptionGroups/group-1/subscriptions",
+                "/subscriptionSubmissions",
             ],
         )
 

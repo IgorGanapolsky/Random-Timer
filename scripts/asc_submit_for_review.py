@@ -861,64 +861,183 @@ def _submit_review_submission(
     raise AssertionError("unreachable")
 
 
-def _guard_pending_subscription_review(client: ASCClient, app_id: str) -> None:
-    """Fail fast when subscriptions require manual App Store Connect review handling.
+SUBSCRIPTION_SUBMITTABLE_STATES = {"READY_TO_SUBMIT"}
+SUBSCRIPTION_ACCEPTED_STATES = {
+    "WAITING_FOR_REVIEW",
+    "IN_REVIEW",
+    "APPROVED",
+    "PENDING_DEVELOPER_RELEASE",
+    "READY_FOR_SALE",
+}
+SUBSCRIPTION_BLOCKED_STATES = {
+    "MISSING_METADATA",
+    "DEVELOPER_ACTION_NEEDED",
+    "REJECTED",
+    "DEVELOPER_REJECTED",
+    "REMOVED_FROM_SALE",
+}
 
-    Apple does not support attaching the first subscription to an app review submission
-    through the App Store Connect API. Submitting the app version alone produces a false
-    green in CI and gets rejected by App Review, so stop before creating/submitting a
-    review submission when any subscription is still pending review work.
-    """
-    blockers: list[tuple[str, str]] = []
 
-    try:
-        resp = client.request(
+def _subscription_name(sub: dict[str, Any]) -> str:
+    attrs = sub.get("attributes") or {}
+    return str(attrs.get("name") or attrs.get("productId") or sub.get("id") or "Unnamed subscription")
+
+
+def _subscription_state(sub: dict[str, Any]) -> str:
+    return str(((sub.get("attributes") or {}).get("state") or "")).upper()
+
+
+def _list_app_subscriptions(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    resp = client.request(
+        "GET",
+        f"/apps/{app_id}/subscriptionGroups",
+        params={"limit": 50},
+    )
+    groups = (resp.get("data") if isinstance(resp.get("data"), list) else [resp.get("data")]) if resp.get("data") else []
+    for group in groups:
+        if not group:
+            continue
+        group_id = group.get("id")
+        if not group_id:
+            continue
+        subs_resp = client.request(
             "GET",
-            f"/apps/{app_id}/subscriptionGroups",
+            f"/subscriptionGroups/{group_id}/subscriptions",
             params={"limit": 50},
         )
-        groups = (resp.get("data") if isinstance(resp.get("data"), list) else [resp.get("data")]) if resp.get("data") else []
-        for group in groups:
-            if not group:
+        subs = subs_resp.get("data") or []
+        if not isinstance(subs, list):
+            subs = [subs]
+        for sub in subs:
+            if not sub:
                 continue
-            group_id = group.get("id")
-            if not group_id:
-                continue
-            subs_resp = client.request(
-                "GET",
-                f"/subscriptionGroups/{group_id}/subscriptions",
-                params={"limit": 50},
+            items.append(
+                {
+                    "group_id": str(group_id),
+                    "subscription": sub,
+                }
             )
-            subs = subs_resp.get("data") or []
-            if not isinstance(subs, list):
-                subs = [subs]
-            for sub in subs:
-                if not sub:
-                    continue
-                sub_state = ((sub.get("attributes") or {}).get("state") or "").upper()
-                sub_name = (sub.get("attributes") or {}).get("name", "")
-                if sub_state in ("READY_TO_SUBMIT", "WAITING_FOR_REVIEW", "IN_REVIEW"):
-                    blockers.append((sub_name or "Unnamed subscription", sub_state))
+    return items
+
+
+def _get_subscription(client: ASCClient, subscription_id: str) -> dict[str, Any]:
+    data = client.request(
+        "GET",
+        f"/subscriptions/{subscription_id}",
+        params={"fields[subscriptions]": "name,productId,state"},
+    ).get("data")
+    return data if isinstance(data, dict) else {}
+
+
+def _create_subscription_submission(client: ASCClient, subscription_id: str) -> dict[str, Any]:
+    payload = {
+        "data": {
+            "type": "subscriptionSubmissions",
+            "relationships": {
+                "subscription": {"data": {"type": "subscriptions", "id": subscription_id}},
+            },
+        }
+    }
+    return client.request("POST", "/subscriptionSubmissions", payload=payload).get("data") or {}
+
+
+def _wait_for_subscription_state(
+    client: ASCClient,
+    *,
+    subscription_id: str,
+    acceptable_states: set[str],
+    timeout_seconds: int = 60,
+    poll_seconds: int = 5,
+) -> dict[str, Any]:
+    last_seen: dict[str, Any] = {}
+    deadline = time.time() + timeout_seconds
+    while time.time() <= deadline:
+        last_seen = _get_subscription(client, subscription_id)
+        if _subscription_state(last_seen) in acceptable_states:
+            return last_seen
+        time.sleep(poll_seconds)
+    return last_seen
+
+
+def _ensure_subscription_review_state(client: ASCClient, app_id: str) -> None:
+    """Submit pending subscriptions for review and verify the resulting state.
+
+    Apple documents subscription review as a separate submission flow from app review.
+    We therefore submit subscriptions with /v1/subscriptionSubmissions and require a
+    read-back state transition before allowing the app review submission to continue.
+    """
+    try:
+        subscriptions = _list_app_subscriptions(client, app_id)
     except Exception as e:
-        info(f"Warning: could not enumerate subscriptions for review: {e}")
+        die(
+            "Could not enumerate subscriptions before App Review submission: "
+            f"{e}. Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
+        )
+
+    if not subscriptions:
+        info("No subscriptions found for this app; skipping subscription review submission.")
         return
 
-    if not blockers:
-        return
+    blockers: list[tuple[str, str]] = []
 
-    details = ", ".join(f"{name} [{state}]" for name, state in blockers)
-    die(
-        "Subscription review cannot be completed through this API submit path. "
-        f"Pending subscription(s): {details}. "
-        "Apple requires the first subscription to be submitted with the app binary "
-        "through appstoreconnect.apple.com, and later subscription-only reviews use "
-        "/v1/subscriptionSubmissions. Attach the subscription from the iOS App version "
-        "page's In-App Purchases and Subscriptions section before retrying this workflow. "
-        f"Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
-    )
+    for item in subscriptions:
+        sub = item["subscription"]
+        sub_id = str(sub.get("id") or "")
+        sub_name = _subscription_name(sub)
+        sub_state = _subscription_state(sub)
+
+        if not sub_id:
+            blockers.append((sub_name, "MISSING_ID"))
+            continue
+
+        if sub_state in SUBSCRIPTION_ACCEPTED_STATES:
+            info(f"Subscription '{sub_name}' already in acceptable review state: {sub_state}")
+            continue
+
+        if sub_state in SUBSCRIPTION_SUBMITTABLE_STATES:
+            info(f"Submitting subscription '{sub_name}' for App Review via /v1/subscriptionSubmissions.")
+            try:
+                _create_subscription_submission(client, sub_id)
+            except Exception as exc:
+                msg = str(exc)
+                # Treat duplicate-submission style errors as retryable read-back cases.
+                if "already" not in msg.lower() and "exists" not in msg.lower() and "409" not in msg:
+                    die(
+                        f"Failed to create subscription submission for '{sub_name}' ({sub_id}): {exc}. "
+                        f"Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
+                    )
+            refreshed = _wait_for_subscription_state(
+                client,
+                subscription_id=sub_id,
+                acceptable_states=SUBSCRIPTION_ACCEPTED_STATES,
+            )
+            refreshed_state = _subscription_state(refreshed)
+            if refreshed_state in SUBSCRIPTION_ACCEPTED_STATES:
+                info(f"Subscription '{sub_name}' is now in review state: {refreshed_state}")
+                continue
+            blockers.append((sub_name, refreshed_state or sub_state or "UNKNOWN"))
+            continue
+
+        if sub_state in SUBSCRIPTION_BLOCKED_STATES:
+            blockers.append((sub_name, sub_state))
+            continue
+
+        blockers.append((sub_name, sub_state or "UNKNOWN"))
+
+    if blockers:
+        details = ", ".join(f"{name} [{state}]" for name, state in blockers)
+        die(
+            "Subscription review is not in a reviewable state. "
+            f"Problem subscription(s): {details}. "
+            "Apple requires subscriptions to be submitted through the separate "
+            "/v1/subscriptionSubmissions flow and to transition into a review state "
+            "before the app submission can be treated as valid. "
+            f"Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
+        )
 
 def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
-    _guard_pending_subscription_review(client, app_id=app_id)
+    _ensure_subscription_review_state(client, app_id=app_id)
 
     submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
     if submission:
