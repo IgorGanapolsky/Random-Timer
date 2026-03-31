@@ -1,0 +1,67 @@
+name: Fix Alarm Sound
+on: workflow_dispatch
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate alarm variants
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, urllib.request, time
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+          os.makedirs("/tmp/alarm-variants", exist_ok=True)
+
+          VARIANTS = {
+              "alarm_v1_beeping": {
+                  "prompt": "Beep beep beep beep, loud digital alarm clock beeping, repetitive high pitched alarm beeps, annoying wake up alarm, piercing electronic beeping sound repeating",
+                  "duration": 4.0,
+                  "influence": 0.9,
+              },
+              "alarm_v2_siren_pulse": {
+                  "prompt": "Pulsing red alert alarm sound, wee-oo wee-oo alternating tone emergency alarm, sci-fi spaceship alarm blaring, danger warning klaxon pulsating",
+                  "duration": 5.0,
+                  "influence": 0.8,
+              },
+              "alarm_v3_fire_alarm": {
+                  "prompt": "Fire alarm going off in a building, loud continuous ringing fire bell, NFPA fire alarm tone, building evacuation alarm blasting, temporal pattern fire alarm beeping three times then pause",
+                  "duration": 5.0,
+                  "influence": 0.9,
+              },
+          }
+
+          for name, config in VARIANTS.items():
+              payload = {
+                  "text": config["prompt"],
+                  "duration_seconds": config["duration"],
+                  "prompt_influence": config["influence"],
+              }
+              data = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{API}/v1/sound-generation?output_format=mp3_44100_128",
+                  data=data,
+                  headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+              )
+              path = f"/tmp/alarm-variants/{name}.mp3"
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      audio = resp.read()
+                      with open(path, "wb") as f:
+                          f.write(audio)
+                      print(f"{name}.mp3 ({len(audio)} bytes)")
+              except Exception as e:
+                  print(f"FAILED {name}: {e}")
+              time.sleep(1)
+          PYEOF
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: alarm-variants
+          path: /tmp/alarm-variants/
