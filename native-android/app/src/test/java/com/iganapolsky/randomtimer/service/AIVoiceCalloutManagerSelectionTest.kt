@@ -56,7 +56,7 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun runtimeVoiceCueForMinuteMarkOnlyReturnsMinuteElapsedAnnouncements() {
+    fun runtimeVoiceCueForElapsedMarkReturnsConfiguredElapsedAnnouncements() {
         val catalog =
             VoiceCueCatalog(
                 previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Preview"),
@@ -70,16 +70,17 @@ class AIVoiceCalloutManagerSelectionTest {
                 commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
             )
 
-        assertThat(runtimeVoiceCueForMinuteMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
-        assertThat(runtimeVoiceCueForMinuteMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
-        assertThat(runtimeVoiceCueForMinuteMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(14, lastElapsedMilestone = 0, catalog = catalog)).isNull()
+        assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_15s")
+        assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_30s")
+        assertThat(runtimeVoiceCueForElapsedMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
     }
 
     @Test
     fun shortTimersScheduleFollowupCommandCuesEarly() {
         assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
         assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
-        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
+        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(15)
     }
 
     @Test

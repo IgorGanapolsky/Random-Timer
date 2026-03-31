@@ -131,7 +131,7 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     case ...29:
         return .max
     default:
-        return 30
+        return 15
     }
 }
 
@@ -228,7 +228,7 @@ final class AIVoiceCalloutService {
     }
 
     func triggerCallout(elapsedSeconds: Int) {
-        if let callout = elapsedMilestone(for: elapsedSeconds), elapsedSeconds.isMultiple(of: 60) {
+        if let callout = elapsedMilestone(for: elapsedSeconds) {
             speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
             if nextCommandCueAt <= elapsedSeconds {
@@ -246,7 +246,6 @@ final class AIVoiceCalloutService {
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
-        guard elapsed % 60 == 0 else { return nil }  // Only fire elapsed cues on the minute
         let catalog = packStore.voiceCatalog(bundle: bundle)
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil
