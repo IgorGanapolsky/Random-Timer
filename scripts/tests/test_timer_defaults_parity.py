@@ -107,7 +107,7 @@ def test_sound_catalog_matches_across_mobile_platforms():
     android_config = ANDROID_CONFIG.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
     android_sound_block = _extract_block(android_config, "enum class SoundType", "companion object")
-    ios_sound_block = _extract_block(ios_models, "public enum SoundType", "// MARK: - Timer Configuration")
+    ios_sound_block = _extract_block(ios_models, "public enum SoundType", "// MARK: - Voice Gender")
 
     android_sounds = {
         _normalize_name(name)

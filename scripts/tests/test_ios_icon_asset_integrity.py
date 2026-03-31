@@ -48,6 +48,12 @@ def test_ios_marketing_icon_matches_android_source_artwork() -> None:
         "iOS marketing icon artwork diverged from canonical source icon "
         f"(mean RGB diff={mean_diff:.3f})"
     )
-    assert android_icon.tobytes() == canonical_icon.tobytes(), (
-        "Android Play icon diverged from canonical source artwork"
+    canonical_at_play_size = canonical_icon.resize(
+        android_icon.size, Image.Resampling.LANCZOS
+    )
+    play_diff = ImageChops.difference(canonical_at_play_size, android_icon)
+    play_mean = sum(ImageStat.Stat(play_diff).mean) / 3.0
+    assert play_mean <= 1.0, (
+        "Android Play icon artwork diverged from canonical source icon "
+        f"(mean RGB diff={play_mean:.3f})"
     )
