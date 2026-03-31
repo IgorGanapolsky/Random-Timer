@@ -545,10 +545,11 @@ jobs:
 
   ios-submit-review:
     needs: [verify-releases]
-    # Run after verification. Gate privileged steps at runtime by reading the dispatch payload,
-    # because job-level `if:` on workflow_dispatch inputs has been brittle in practice.
+    if: always() && needs.verify-releases.result == 'success'
     runs-on: ubuntu-latest
     environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
 
@@ -587,7 +588,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         id: versions
         run: |
-          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | grep -oP '[\\d.]+' || echo "")
+          IOS_VERSION=$(grep -m1 'MARKETING_VERSION' native-ios/RandomTimer.xcodeproj/project.pbxproj | sed -n 's/.*MARKETING_VERSION *= *\([0-9][0-9.]*\).*/\1/p' || echo "")
           if [ -z "$IOS_VERSION" ]; then
             echo "❌ Could not read iOS version from native-ios/RandomTimer.xcodeproj/project.pbxproj"
             exit 1
