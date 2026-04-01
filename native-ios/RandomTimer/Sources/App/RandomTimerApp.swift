@@ -9,6 +9,11 @@ struct RandomTimerApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Hosted unit tests launch the real app; CI uses a placeholder GoogleService-Info.plist.
+        // Skipping Firebase avoids SIGABRT from Performance/Crashlytics with non-production config.
+        if ProcessInfo.processInfo.arguments.contains("-SkipFirebaseForTesting") {
+            return
+        }
         FirebaseApp.configure()
         CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
