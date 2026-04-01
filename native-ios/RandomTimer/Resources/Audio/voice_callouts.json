@@ -6,9 +6,19 @@
   "fallbackCommandFilename": "cmd_move_with_a_purpose",
   "elapsedCues": [
     {
+      "second": 15,
+      "filename": "elapsed_15s",
+      "text": "Fifteen seconds elapsed. Move with a purpose."
+    },
+    {
       "second": 30,
       "filename": "elapsed_30s",
       "text": "Thirty seconds elapsed. Stay locked in."
+    },
+    {
+      "second": 45,
+      "filename": "elapsed_45s",
+      "text": "Forty-five seconds elapsed. Keep your bearing."
     },
     {
       "second": 60,
@@ -16,9 +26,19 @@
       "text": "One minute elapsed. Keep pressure on."
     },
     {
+      "second": 75,
+      "filename": "elapsed_75s",
+      "text": "One minute fifteen elapsed. No hesitation. Move."
+    },
+    {
       "second": 90,
       "filename": "elapsed_90s",
       "text": "One minute thirty elapsed. Stay disciplined."
+    },
+    {
+      "second": 105,
+      "filename": "elapsed_105s",
+      "text": "One minute forty-five elapsed. Breathe and press."
     },
     {
       "second": 120,
@@ -162,34 +182,6 @@
     {
       "filename": "cmd_finish_rep_keep_pushing",
       "text": "Finish the rep. Then keep pushing."
-    },
-    {
-      "filename": "cmd_drive_forward",
-      "text": "Drive forward. No hesitation."
-    },
-    {
-      "filename": "cmd_keep_pressure",
-      "text": "Keep pressure. Don't let up."
-    },
-    {
-      "filename": "cmd_move_now",
-      "text": "Move now. Sharp and precise."
-    },
-    {
-      "filename": "cmd_push_pace",
-      "text": "Push the pace. Don't coast."
-    },
-    {
-      "filename": "cmd_push_through",
-      "text": "Push through. Stay in the fight."
-    },
-    {
-      "filename": "cmd_reset_breathe",
-      "text": "Reset. Breathe. Attack again."
-    },
-    {
-      "filename": "cmd_stay_sharp",
-      "text": "Stay sharp. Eyes up."
     }
   ]
 }
