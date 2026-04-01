@@ -102,7 +102,7 @@ def test_voice_callouts_present_on_both_platforms():
 
     for source in (android_setup, ios_setup):
         assert "Voice Callouts" in source or "AI Voice Callouts" in source
-        assert "elapsed" in source.lower()
+        assert "coach" in source.lower() or "training" in source.lower()
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models
