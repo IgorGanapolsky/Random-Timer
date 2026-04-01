@@ -112,7 +112,6 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         let filenames = [
             "cmd_move_with_a_purpose",
             "cmd_stay_locked_in",
-            "cmd_drive_forward",
             "cmd_no_hesitation_move",
             "preview_elapsed",
         ]

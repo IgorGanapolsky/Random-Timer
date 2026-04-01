@@ -56,7 +56,6 @@ private enum VoicePreviewSampleCatalog {
     static let maleCommandFilenames = [
         "cmd_move_with_a_purpose",
         "cmd_stay_locked_in",
-        "cmd_drive_forward",
         "cmd_no_hesitation_move",
     ]
     static let maleElapsedFilename = "preview_elapsed"

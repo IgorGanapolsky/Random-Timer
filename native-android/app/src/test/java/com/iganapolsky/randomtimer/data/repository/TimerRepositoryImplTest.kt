@@ -8,6 +8,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
@@ -43,11 +44,23 @@ class TimerRepositoryImplTest {
                     volume = 0.8f,
                     vibrationEnabled = true,
                     voiceEnabled = true,
+                    voiceGender = VoiceGender.FEMALE,
                 )
 
             repo.saveTimerConfig(newConfig)
             val stored = repo.getTimerConfig().first()
             assertThat(stored).isEqualTo(newConfig)
+        }
+
+    @Test
+    fun saveTimerConfig_persists_voice_gender_selection() =
+        runTest {
+            val repo = createRepository(this)
+
+            repo.saveTimerConfig(TimerConfig.DEFAULT.copy(voiceGender = VoiceGender.FEMALE))
+
+            val stored = repo.getTimerConfig().first()
+            assertThat(stored.voiceGender).isEqualTo(VoiceGender.FEMALE)
         }
 
     @Test
