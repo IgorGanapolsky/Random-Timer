@@ -13,13 +13,15 @@ appId: com.iganapolsky.randomtimer
     text: 'While using the app'
     optional: true
 
-# "Start Timer" lives in the scaffold bottom bar; wait long enough for slow runners.
+# Prefer Compose testTag (exposed as view id) — bottom-bar text visibility is flaky on some runners.
 - extendedWaitUntil:
-    visible: 'Start Timer'
+    visible:
+      id: 'start_timer'
     timeout: 120000
 
 # Start the timer
-- tapOn: 'Start Timer'
+- tapOn:
+    id: 'start_timer'
 
 # Verify timer screen is shown
 - assertVisible:

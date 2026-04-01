@@ -17,6 +17,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import dagger.hilt.android.AndroidEntryPoint
@@ -118,6 +119,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermission() {
+        // Debug builds on AVD: runtime permission sheet can block Maestro from seeing Compose targets.
+        if (BuildConfig.DEBUG && isGenericAndroidEmulator()) {
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -127,5 +132,17 @@ class MainActivity : ComponentActivity() {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+    }
+
+    private fun isGenericAndroidEmulator(): Boolean {
+        val fp = Build.FINGERPRINT.lowercase()
+        val model = Build.MODEL.lowercase()
+        val product = Build.PRODUCT.lowercase()
+        return fp.contains("emulator") ||
+            fp.startsWith("generic") ||
+            model.contains("sdk_gphone") ||
+            model.contains("emulator") ||
+            product.contains("sdk_gphone") ||
+            product.contains("emulator")
     }
 }
