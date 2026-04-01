@@ -73,13 +73,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
+import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
-import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
+import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -466,7 +466,7 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
@@ -539,41 +539,39 @@ fun TimerSetupScreen(
                                 }
                             }
 
-                            // Voice Gender selector (only shown when voice is enabled)
-                            if (config.voiceEnabled && isPro) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    VoiceGender.entries.forEach { gender ->
-                                        FilterChip(
-                                            selected = config.voiceGender == gender,
-                                            onClick = { updateConfig(voiceGender = gender) },
-                                            label = {
-                                                Text(
-                                                    if (gender == VoiceGender.MALE) {
-                                                        "Male"
-                                                    } else {
-                                                        "Female"
-                                                    },
-                                                )
-                                            },
-                                            colors =
-                                                FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                    selectedLabelColor = TimerColors.AccentPrimary,
-                                                ),
-                                            border =
-                                                FilterChipDefaults.filterChipBorder(
-                                                    selectedBorderColor = TimerColors.AccentPrimary,
-                                                    enabled = true,
-                                                    selected = config.voiceGender == gender,
-                                                ),
-                                        )
-                                    }
+                            // Voice Gender selector stays visible so free users can preview both voices.
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                VoiceGender.entries.forEach { gender ->
+                                    FilterChip(
+                                        selected = config.voiceGender == gender,
+                                        onClick = { updateConfig(voiceGender = gender) },
+                                        label = {
+                                            Text(
+                                                if (gender == VoiceGender.MALE) {
+                                                    "Male"
+                                                } else {
+                                                    "Female"
+                                                },
+                                            )
+                                        },
+                                        colors =
+                                            FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedLabelColor = TimerColors.AccentPrimary,
+                                            ),
+                                        border =
+                                            FilterChipDefaults.filterChipBorder(
+                                                selectedBorderColor = TimerColors.AccentPrimary,
+                                                enabled = true,
+                                                selected = config.voiceGender == gender,
+                                            ),
+                                    )
                                 }
                             }
 
@@ -585,7 +583,7 @@ fun TimerSetupScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 SoundTypeButton(
-                                    label = "\uD83D\uDCAA Intense",
+                                    label = "\uD83D\uDD25 Fire Alarm",
                                     selected = config.soundType == SoundType.INTENSE,
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)

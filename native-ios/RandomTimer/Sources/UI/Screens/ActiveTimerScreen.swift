@@ -30,10 +30,16 @@ struct ActiveTimerScreen: View {
 
     private func formatRangeText(minSeconds: Int, maxSeconds: Int) -> String {
         func formatTime(_ seconds: Int) -> String {
-            if seconds >= 60 {
+            if seconds >= 3600 {
+                let hrs = seconds / 3600
+                let mins = (seconds % 3600) / 60
+                return mins > 0 ? "\(hrs)h \(mins)m" : "\(hrs)h"
+            } else if seconds >= 60 {
                 let mins = seconds / 60
                 let secs = seconds % 60
-                return secs > 0 ? "\(mins)m \(secs)s" : "\(mins)m"
+                // Drop seconds when range is wide (both sides have minutes)
+                // to keep the text compact inside the circle
+                return secs > 0 ? "\(mins):\(String(format: "%02d", secs))" : "\(mins)m"
             } else {
                 return "\(seconds)s"
             }
