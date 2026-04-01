@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import types
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -140,6 +141,7 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
 
 
 def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: Path):
+    """Stub optional Google HTTP client modules (not all are in CI pip); patch Credentials on real google.oauth2."""
     service_account = tmp_path / "play.json"
     service_account.write_text("{}", encoding="utf-8")
     observed: dict[str, object] = {}
@@ -147,19 +149,12 @@ def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: P
     class _Credentials:
         pass
 
-    class _ServiceAccountCredentials:
-        @staticmethod
-        def from_service_account_file(path: str, scopes):
-            observed["service_account_path"] = path
-            observed["scopes"] = list(scopes)
-            return _Credentials()
-
     def _authorized_http(credentials, http):
         observed["authorized_http_credentials"] = credentials
         observed["authorized_http_http"] = http
         return "authorized-http"
 
-    def _http(timeout=None):
+    def _http_factory(timeout=None):
         observed["http_timeout"] = timeout
         return {"timeout": timeout}
 
@@ -173,15 +168,30 @@ def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: P
         }
         return "service"
 
-    monkeypatch.setitem(sys.modules, "google.oauth2.service_account", types.SimpleNamespace(Credentials=_ServiceAccountCredentials))
-    monkeypatch.setitem(sys.modules, "google_auth_httplib2", types.SimpleNamespace(AuthorizedHttp=_authorized_http))
-    monkeypatch.setitem(sys.modules, "googleapiclient.discovery", types.SimpleNamespace(build=_build))
-    monkeypatch.setitem(sys.modules, "httplib2", types.SimpleNamespace(Http=_http))
+    monkeypatch.setitem(
+        sys.modules,
+        "google_auth_httplib2",
+        types.SimpleNamespace(AuthorizedHttp=_authorized_http),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "googleapiclient.discovery",
+        types.SimpleNamespace(build=_build),
+    )
+    monkeypatch.setitem(sys.modules, "httplib2", types.SimpleNamespace(Http=_http_factory))
 
-    result = calc._load_play_service(service_account, timeout_seconds=240)
+    creds_path = str(service_account)
+    expected_scopes = ["https://www.googleapis.com/auth/androidpublisher"]
+
+    with mock.patch(
+        "google.oauth2.service_account.Credentials.from_service_account_file",
+        autospec=True,
+    ) as mock_from_file:
+        mock_from_file.return_value = _Credentials()
+        result = calc._load_play_service(service_account, timeout_seconds=240)
 
     assert result == "service"
-    assert observed["service_account_path"] == str(service_account)
+    mock_from_file.assert_called_once_with(creds_path, scopes=expected_scopes)
     assert observed["http_timeout"] == 240
     assert observed["build_args"] == {
         "api_name": "androidpublisher",
