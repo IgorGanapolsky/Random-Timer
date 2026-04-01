@@ -36,7 +36,7 @@ jobs:
 
           def generate(text, filename, tag="[intense]"):
               tagged = f"{tag} {text}"
-              payload = {"text": tagged, "model_id": "eleven_v3", "voice_settings": SETTINGS}
+              payload = {"text": tagged, "model_id": "eleven_v3", "voice_settings": SETTINGS, "generation_config": {"speed": 0.90}}
               data = json.dumps(payload).encode()
               req = urllib.request.Request(
                   f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
