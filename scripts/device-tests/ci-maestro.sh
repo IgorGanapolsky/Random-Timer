@@ -20,9 +20,9 @@ for i in $(seq 1 30); do
   fi
   sleep 1
 done
-sleep 3
+sleep 8
 adb shell am force-stop com.iganapolsky.randomtimer
-sleep 3
+sleep 4
 
 export PATH="$HOME/.maestro/bin:$PATH"
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=60000
