@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -77,14 +79,15 @@ def test_compute_next_version_code_prefers_higher_gradle_code_when_tracks_lower(
 
 
 def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
-    events: list[tuple[str, str | None]] = []
+    events: list[tuple[str, str | None, int | None]] = []
 
     class _Tracks:
         def get(self, *, packageName: str, editId: str, track: str):
-            events.append(("get", track))
+            events.append(("get", track, None))
 
             class _Request:
-                def execute(self_nonlocal):
+                def execute(self_nonlocal, num_retries=None):
+                    events.append(("execute", track, num_retries))
                     payloads = {
                         "production": {"releases": [{"versionCodes": ["100", "101"]}]},
                         "beta": {"releases": []},
@@ -95,10 +98,11 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
 
     class _Edits:
         def insert(self, *, body: dict, packageName: str):
-            events.append(("insert", None))
+            events.append(("insert", None, None))
 
             class _Request:
-                def execute(self_nonlocal):
+                def execute(self_nonlocal, num_retries=None):
+                    events.append(("execute", "insert", num_retries))
                     return {"id": "edit-1"}
 
             return _Request()
@@ -107,10 +111,11 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
             return _Tracks()
 
         def delete(self, *, packageName: str, editId: str):
-            events.append(("delete", None))
+            events.append(("delete", None, None))
 
             class _Request:
-                def execute(self_nonlocal):
+                def execute(self_nonlocal, num_retries=None):
+                    events.append(("execute", "delete", num_retries))
                     return {}
 
             return _Request()
@@ -119,15 +124,72 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
         def edits(self):
             return _Edits()
 
-    result = calc._fetch_existing_track_codes(_Service(), "pkg", ["production", "beta"])
+    result = calc._fetch_existing_track_codes(_Service(), "pkg", ["production", "beta"], request_retries=5)
 
     assert result == {"production": [100, 101], "beta": []}
     assert events == [
-        ("insert", None),
-        ("get", "production"),
-        ("get", "beta"),
-        ("delete", None),
+        ("insert", None, None),
+        ("execute", "insert", 5),
+        ("get", "production", None),
+        ("execute", "production", 5),
+        ("get", "beta", None),
+        ("execute", "beta", 5),
+        ("delete", None, None),
+        ("execute", "delete", 5),
     ]
+
+
+def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: Path):
+    service_account = tmp_path / "play.json"
+    service_account.write_text("{}", encoding="utf-8")
+    observed: dict[str, object] = {}
+
+    class _Credentials:
+        pass
+
+    class _ServiceAccountCredentials:
+        @staticmethod
+        def from_service_account_file(path: str, scopes):
+            observed["service_account_path"] = path
+            observed["scopes"] = list(scopes)
+            return _Credentials()
+
+    def _authorized_http(credentials, http):
+        observed["authorized_http_credentials"] = credentials
+        observed["authorized_http_http"] = http
+        return "authorized-http"
+
+    def _http(timeout=None):
+        observed["http_timeout"] = timeout
+        return {"timeout": timeout}
+
+    def _build(api_name, api_version, *, credentials, http, cache_discovery):
+        observed["build_args"] = {
+            "api_name": api_name,
+            "api_version": api_version,
+            "credentials": credentials,
+            "http": http,
+            "cache_discovery": cache_discovery,
+        }
+        return "service"
+
+    monkeypatch.setitem(sys.modules, "google.oauth2.service_account", types.SimpleNamespace(Credentials=_ServiceAccountCredentials))
+    monkeypatch.setitem(sys.modules, "google_auth_httplib2", types.SimpleNamespace(AuthorizedHttp=_authorized_http))
+    monkeypatch.setitem(sys.modules, "googleapiclient.discovery", types.SimpleNamespace(build=_build))
+    monkeypatch.setitem(sys.modules, "httplib2", types.SimpleNamespace(Http=_http))
+
+    result = calc._load_play_service(service_account, timeout_seconds=240)
+
+    assert result == "service"
+    assert observed["service_account_path"] == str(service_account)
+    assert observed["http_timeout"] == 240
+    assert observed["build_args"] == {
+        "api_name": "androidpublisher",
+        "api_version": "v3",
+        "credentials": observed["authorized_http_credentials"],
+        "http": "authorized-http",
+        "cache_discovery": False,
+    }
 
 
 def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]):
@@ -137,11 +199,11 @@ def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.Cap
     service_account.write_text("{}", encoding="utf-8")
     json_output = tmp_path / "result.json"
 
-    monkeypatch.setattr(calc, "_load_play_service", lambda _: object())
+    monkeypatch.setattr(calc, "_load_play_service", lambda _path, timeout_seconds=calc.DEFAULT_HTTP_TIMEOUT_SECONDS: object())
     monkeypatch.setattr(
         calc,
         "_fetch_existing_track_codes",
-        lambda _service, _package, _tracks: {"production": [1774400002], "beta": []},
+        lambda _service, _package, _tracks, request_retries=calc.DEFAULT_REQUEST_RETRIES: {"production": [1774400002], "beta": []},
     )
     monkeypatch.setattr(
         calc,
@@ -154,6 +216,8 @@ def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.Cap
                 "package": "com.iganapolsky.randomtimer",
                 "gradle_file": str(gradle_file),
                 "tracks": "production,beta",
+                "timeout_seconds": 240,
+                "request_retries": 5,
                 "json_output": str(json_output),
             },
         )(),

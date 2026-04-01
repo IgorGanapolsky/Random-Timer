@@ -334,7 +334,9 @@ jobs:
           python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0
           NEXT_CODE="$(python scripts/compute_android_release_version_code.py \
             --service-account-json "$KEY_PATH" \
-            --gradle-file native-android/app/build.gradle.kts)"
+            --gradle-file native-android/app/build.gradle.kts \
+            --timeout-seconds 180 \
+            --request-retries 3)"
           echo "next_version_code=$NEXT_CODE" >> "$GITHUB_OUTPUT"
 
       - name: Create google-services.json
