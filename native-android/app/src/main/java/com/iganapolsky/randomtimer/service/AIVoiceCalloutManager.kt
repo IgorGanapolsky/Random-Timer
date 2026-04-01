@@ -221,6 +221,7 @@ class AIVoiceCalloutManager
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val usedFemaleFilenames = mutableSetOf<String>()
         private var nextCommandCueAt = 0
 
         /** Current voice gender for the active session. */
@@ -266,6 +267,7 @@ class AIVoiceCalloutManager
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             usedCommandCueFilenames.clear()
+            usedFemaleFilenames.clear()
             nextCommandCueAt = 0
             currentGender = VoiceGender.MALE
         }
@@ -277,16 +279,16 @@ class AIVoiceCalloutManager
         fun previewCommandCue(gender: VoiceGender = currentGender) {
             currentGender = gender
 
-            val previewFilename =
-                if (gender == VoiceGender.FEMALE) {
-                    VoicePreviewSampleCatalog.femaleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size),
-                    ]
-                } else {
-                    VoicePreviewSampleCatalog.maleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.maleCommandFilenames.size),
-                    ]
-                }
+            val allNames = if (gender == VoiceGender.FEMALE) {
+                VoicePreviewSampleCatalog.femaleCommandFilenames
+            } else {
+                VoicePreviewSampleCatalog.maleCommandFilenames
+            }
+            val used = if (gender == VoiceGender.FEMALE) usedFemaleFilenames else usedCommandCueFilenames
+            var pool = allNames.filter { it !in used }
+            if (pool.isEmpty()) { used.clear(); pool = allNames }
+            val previewFilename = pool[Random.nextInt(pool.size)]
+            used.add(previewFilename)
             playVoiceFile(
                 filename = previewFilename,
                 fallbackResId = 0,
