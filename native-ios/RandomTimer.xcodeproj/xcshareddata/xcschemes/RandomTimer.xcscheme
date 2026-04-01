@@ -104,6 +104,13 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "RT_SKIP_FIREBASE_FOR_TESTS"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-SkipFirebaseForTesting"

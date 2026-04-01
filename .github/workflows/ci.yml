@@ -288,6 +288,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run unit tests
+        env:
+          RT_SKIP_FIREBASE_FOR_TESTS: "1"
         run: |
           rm -rf build/TestResults.xcresult
           xcodebuild test \
