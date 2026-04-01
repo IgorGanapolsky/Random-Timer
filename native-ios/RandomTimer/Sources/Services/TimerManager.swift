@@ -475,7 +475,8 @@ final class TimerManager: ObservableObject {
         )
     }
 
-    func previewCommandCue() {
+    func previewCommandCue(gender: VoiceGender = .male) {
+        AIVoiceCalloutService.shared.currentGender = gender
         AIVoiceCalloutService.shared.previewCommandCue()
     }
 

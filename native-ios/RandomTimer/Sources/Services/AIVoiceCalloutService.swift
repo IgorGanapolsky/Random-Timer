@@ -188,7 +188,16 @@ final class AIVoiceCalloutService {
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
 
-        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
+        // Try female directory first when gender is female
+        var url: URL?
+        if currentGender == .female {
+            url = bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "female")
+        }
+        // Fall back to default (male) directory
+        if url == nil {
+            url = packStore.voiceAudioURL(for: filename, bundle: bundle)
+        }
+        guard let url else {
             Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
             return
         }

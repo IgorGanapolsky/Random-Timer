@@ -149,7 +149,7 @@ struct TimerSetupScreen: View {
                                 } else {
                                     // Free users see PREVIEW to sell the feature, then PRO lock
                                     Button {
-                                        timerManager.previewCommandCue()
+                                        timerManager.previewCommandCue(gender: config.voiceGender)
                                     } label: {
                                         Text("PREVIEW")
                                             .font(.caption2.weight(.bold))
