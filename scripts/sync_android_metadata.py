@@ -159,7 +159,8 @@ def main():
             ).execute()
             updated.append(api_lang)
             print(f"  Updated listing for {api_lang}: title={'yes' if title else 'no'}, short={'yes' if short_desc else 'no'}, full={'yes' if full_desc else 'no'}")
-            assets = collect_image_assets(local_lang, strict=strict_assets)
+            strict_for_locale = strict_assets and local_lang == "en-US"
+            assets = collect_image_assets(local_lang, strict=strict_for_locale)
             upload_image_assets(edits, edit_id=edit_id, language=api_lang, assets=assets)
             if assets:
                 assets_updated.append(api_lang)
