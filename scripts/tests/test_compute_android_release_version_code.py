@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+import types
 from pathlib import Path
 from unittest import mock
 
@@ -139,7 +141,7 @@ def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
 
 
 def test_load_play_service_uses_authorized_http_timeout(tmp_path: Path):
-    """Patch real Google client entry points — sys.modules stubs lose if another test imported google.oauth2 first."""
+    """Patch the real google-auth entry point, but keep sys.modules stubs for optional Play HTTP deps."""
     service_account = tmp_path / "play.json"
     service_account.write_text("{}", encoding="utf-8")
     observed: dict[str, object] = {}
@@ -169,14 +171,17 @@ def test_load_play_service_uses_authorized_http_timeout(tmp_path: Path):
     creds_path = str(service_account)
     expected_scopes = ["https://www.googleapis.com/auth/androidpublisher"]
 
+    monkeypatch_modules = {
+        "google_auth_httplib2": types.SimpleNamespace(AuthorizedHttp=_authorized_http),
+        "googleapiclient.discovery": types.SimpleNamespace(build=_build),
+        "httplib2": types.SimpleNamespace(Http=_http_factory),
+    }
     with (
         mock.patch(
             "google.oauth2.service_account.Credentials.from_service_account_file",
             autospec=True,
         ) as mock_from_file,
-        mock.patch("google_auth_httplib2.AuthorizedHttp", side_effect=_authorized_http),
-        mock.patch("googleapiclient.discovery.build", side_effect=_build),
-        mock.patch("httplib2.Http", side_effect=_http_factory),
+        mock.patch.dict(sys.modules, monkeypatch_modules),
     ):
         mock_from_file.return_value = _Credentials()
         result = calc._load_play_service(service_account, timeout_seconds=240)
