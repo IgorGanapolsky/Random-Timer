@@ -144,7 +144,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testShortTimersScheduleFollowupCommandCuesEarly() {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
-        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 15)
     }
 
     func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
@@ -161,26 +161,38 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
     }
 
-    func testTimerCalloutsUseCommandsAtThirtySecondsAndElapsedOnlyOnMinuteMarks() {
+    func testTimerCalloutsAlternateBetweenRandomCommandsAndConfiguredElapsedMarks() {
         let sut = makeSut()
 
         sut.beginSession(totalDurationSeconds: 120)
+        sut.triggerCallout(elapsedSeconds: 14)
+        let beforeFirstCommand = sut._stateSnapshotForTesting()
+        XCTAssertEqual(beforeFirstCommand.lastElapsedMilestone, 0)
+        XCTAssertEqual(beforeFirstCommand.nextCommandCueAt, 15)
+        XCTAssertNil(beforeFirstCommand.lastCommandCueFilename)
+
         sut.triggerCallout(elapsedSeconds: 15)
-        let beforeThirty = sut._stateSnapshotForTesting()
-        XCTAssertEqual(beforeThirty.lastElapsedMilestone, 0)
-        XCTAssertEqual(beforeThirty.nextCommandCueAt, 30)
-        XCTAssertNil(beforeThirty.lastCommandCueFilename)
+        let atFifteen = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atFifteen.lastElapsedMilestone, 0)
+        XCTAssertEqual(atFifteen.nextCommandCueAt, 45)
+        XCTAssertNotNil(atFifteen.lastCommandCueFilename)
 
         sut.triggerCallout(elapsedSeconds: 30)
         let atThirty = sut._stateSnapshotForTesting()
-        XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
-        XCTAssertEqual(atThirty.nextCommandCueAt, 60)
+        XCTAssertEqual(atThirty.lastElapsedMilestone, 30)
+        XCTAssertEqual(atThirty.nextCommandCueAt, 45)
         XCTAssertNotNil(atThirty.lastCommandCueFilename)
+
+        sut.triggerCallout(elapsedSeconds: 45)
+        let atFortyFive = sut._stateSnapshotForTesting()
+        XCTAssertEqual(atFortyFive.lastElapsedMilestone, 30)
+        XCTAssertEqual(atFortyFive.nextCommandCueAt, 75)
+        XCTAssertNotNil(atFortyFive.lastCommandCueFilename)
 
         sut.triggerCallout(elapsedSeconds: 60)
         let atSixty = sut._stateSnapshotForTesting()
         XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
-        XCTAssertEqual(atSixty.nextCommandCueAt, 90)
+        XCTAssertEqual(atSixty.nextCommandCueAt, 75)
     }
 
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {

@@ -168,11 +168,11 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchProPurchase" in android_nav
 
 
-def test_android_elapsed_voice_cues_fire_on_minute_marks_only_and_still_gate_command_cues():
+def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert "if (elapsedSeconds % 60 != 0) return null" in android_voice_manager
+    assert "runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert "else -> 15" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
 
 
