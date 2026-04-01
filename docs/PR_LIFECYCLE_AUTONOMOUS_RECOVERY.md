@@ -10,20 +10,16 @@ This document defines the deterministic PR lifecycle used by workflow automation
 
 ## Lifecycle States
 
-PR state is represented by a single label and a commit status context (`pr/state-machine`):
+PR state is represented by a single `pr-state:*` label:
 
 - `pr-state:draft`
   - PR is draft.
-  - Commit status: `pending`.
 - `pr-state:ci_running`
   - PR is ready for review but required checks are still pending, missing, or unresolved.
-  - Commit status: `pending`.
 - `pr-state:ci_green`
   - All required checks are passing.
-  - Commit status: `success`.
 - `pr-state:blocked`
   - One or more required checks are failing.
-  - Commit status: `failure`.
 
 Only one `pr-state:*` label should exist on a PR at any time.
 
@@ -46,7 +42,7 @@ This avoids non-deterministic behavior from optional/non-required checks.
 - `check_suite` reconciliation mutates state only for terminal suite status (`completed`).
 - If `check_suite.pull_requests` is empty, the workflow resolves open PRs by `head_sha`
   (`repos.listPullRequestsAssociatedWithCommit`) before exiting.
-- `pr/state-machine` is explicitly excluded from required-check evaluation to avoid self-referential deadlocks.
+- Required-check evaluation reads the live branch ruleset / protection source directly, without creating a second synthetic status context.
 
 ## Incident Automation
 
