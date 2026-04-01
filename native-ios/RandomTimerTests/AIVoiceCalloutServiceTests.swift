@@ -43,6 +43,26 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.previewCountdownCue()
     }
 
+    func testFemalePreviewSamplesResolveFromMainBundle() {
+        let filenames = [
+            "female_preview_move_with_a_purpose",
+            "female_preview_no_hesitation_move",
+            "female_preview_stay_in_the_fight",
+            "female_preview_push_through_dont_you_dare_coast",
+            "female_preview_thirty_seconds_elapsed_stay_locked_in",
+        ]
+
+        let missing = filenames.filter { bundledVoiceAudioURL(for: $0, bundle: .main) == nil }
+        XCTAssertTrue(missing.isEmpty, "Missing female preview samples: \(missing)")
+    }
+
+    func testFemalePreviewCuesDoNotCrash() {
+        let sut = makeSut()
+
+        sut.previewCommandCue(gender: .female)
+        sut.previewCountdownCue(gender: .female)
+    }
+
     func testResetSessionAllowsElapsedMilestoneToReplay() {
         let sut = makeSut()
         sut.triggerCallout(elapsedSeconds: 30)

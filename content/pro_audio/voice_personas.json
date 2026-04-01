@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "provider": "elevenlabs",
+  "male": {
+    "persona": "Marine Drill Instructor",
+    "modelId": "eleven_multilingual_v2",
+    "voiceId": "DGzg6RaUqxGRTHSBjfgF",
+    "voiceName": "Configured drill instructor voice",
+    "voiceNamePattern": "marine|drill|instructor|sergeant",
+    "probeText": "Stay sharp.",
+    "runtimePackSource": "content/pro_audio/runtime/latest.json"
+  },
+  "female": {
+    "persona": "HIIT Instructor",
+    "modelId": "eleven_multilingual_v2",
+    "primaryVoice": {
+      "voiceId": "AZnzlk1XvdvUeBnXmlld",
+      "voiceName": "Domi",
+      "probeText": "Move with purpose."
+    },
+    "fallbackVoices": [
+      {
+        "voiceId": "sS5fXGlqomdGXa7mxBcy",
+        "voiceName": "Anvi",
+        "probeText": "Stay in the fight."
+      }
+    ],
+    "previewSamples": [
+      {
+        "filename": "female_preview_move_with_a_purpose",
+        "text": "Move with a purpose!"
+      },
+      {
+        "filename": "female_preview_no_hesitation_move",
+        "text": "No hesitation. Move!"
+      },
+      {
+        "filename": "female_preview_stay_in_the_fight",
+        "text": "Stay in the fight!"
+      },
+      {
+        "filename": "female_preview_push_through_dont_you_dare_coast",
+        "text": "Push through! Don't you dare coast!"
+      },
+      {
+        "filename": "female_preview_thirty_seconds_elapsed_stay_locked_in",
+        "text": "Thirty seconds elapsed. Stay locked in."
+      }
+    ]
+  }
+}

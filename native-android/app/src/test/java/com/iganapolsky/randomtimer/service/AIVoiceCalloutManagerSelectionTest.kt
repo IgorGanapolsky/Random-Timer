@@ -43,6 +43,23 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun femalePreviewSamplesExistOnDisk() {
+        val required =
+            listOf(
+                "female_preview_move_with_a_purpose.mp3",
+                "female_preview_no_hesitation_move.mp3",
+                "female_preview_stay_in_the_fight.mp3",
+                "female_preview_push_through_dont_you_dare_coast.mp3",
+                "female_preview_thirty_seconds_elapsed_stay_locked_in.mp3",
+            )
+
+        val rawDir = Paths.get("src/main/res/raw")
+        val missing = required.filterNot { rawDir.resolve(it).toFile().exists() }
+
+        assertThat(missing).isEmpty()
+    }
+
+    @Test
     fun nextCommandCueAvoidsImmediateRepeatsWhenMultipleCuesExist() {
         val cues =
             listOf(
