@@ -280,11 +280,11 @@ class AIVoiceCalloutManager
             val previewFilename =
                 if (gender == VoiceGender.FEMALE) {
                     VoicePreviewSampleCatalog.femaleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size)
+                        Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size),
                     ]
                 } else {
                     VoicePreviewSampleCatalog.maleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.maleCommandFilenames.size)
+                        Random.nextInt(VoicePreviewSampleCatalog.maleCommandFilenames.size),
                     ]
                 }
             playVoiceFile(
@@ -319,7 +319,10 @@ class AIVoiceCalloutManager
             )
         }
 
-        fun beginSession(totalDurationSeconds: Int, gender: VoiceGender = VoiceGender.MALE) {
+        fun beginSession(
+            totalDurationSeconds: Int,
+            gender: VoiceGender = VoiceGender.MALE,
+        ) {
             currentGender = gender
             nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
         }
@@ -441,12 +444,14 @@ class AIVoiceCalloutManager
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
             val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
-            val pool = available.ifEmpty {
-                // All cues used — reset and exclude only the last one
-                usedCommandCueFilenames.clear()
-                catalog.commandCues.filter { it.filename != lastCommandCueFilename }
-                    .ifEmpty { catalog.commandCues }
-            }
+            val pool =
+                available.ifEmpty {
+                    // All cues used — reset and exclude only the last one
+                    usedCommandCueFilenames.clear()
+                    catalog.commandCues
+                        .filter { it.filename != lastCommandCueFilename }
+                        .ifEmpty { catalog.commandCues }
+                }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
