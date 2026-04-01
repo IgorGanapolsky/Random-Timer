@@ -16,47 +16,10 @@ repository:
   enable_automated_security_fixes: true
   enable_vulnerability_alerts: true
 
-branches:
-  - name: main
-    protection:
-      required_status_checks:
-        strict: true
-        # Merge queue readiness: keep required checks stable and deterministic.
-        # Claude Review is intentionally non-required.
-        contexts:
-          - "Android Tests"
-          - "iOS Build Check"
-          - "Security"
-          - "Seer Code Review"
-      enforce_admins: true
-      required_pull_request_reviews:
-        required_approving_review_count: 0
-        dismiss_stale_reviews: true
-        require_code_owner_reviews: false
-        require_last_push_approval: false
-      required_conversation_resolution: true
-      restrictions: null
-      allow_force_pushes: false
-      allow_deletions: false
-
-  - name: develop
-    protection:
-      required_status_checks:
-        strict: true
-        # Merge queue readiness: keep required checks stable and deterministic.
-        # Claude Review is intentionally non-required.
-        contexts:
-          - "Android Tests"
-          - "iOS Build Check"
-          - "Security"
-          - "Seer Code Review"
-      enforce_admins: true
-      required_pull_request_reviews:
-        required_approving_review_count: 0
-        dismiss_stale_reviews: true
-        require_code_owner_reviews: false
-      required_conversation_resolution: true
-      restrictions: null
+# Branch governance is enforced via repository rulesets, not classic branch protection.
+# Audit the live ruleset with:
+#   gh api repos/IgorGanapolsky/Random-Timer/rules/branches/develop
+#   gh api repos/IgorGanapolsky/Random-Timer/rules/branches/main
 
 labels:
   - name: "breaking-change"

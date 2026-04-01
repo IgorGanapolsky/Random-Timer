@@ -18,3 +18,10 @@ def test_pr_state_machine_reads_manual_dispatch_input_from_event_payload():
 
     assert 'core.getInput("pr_number")' in source
     assert "pr_number:" in source
+
+
+def test_pr_state_machine_does_not_emit_legacy_commit_status():
+    source = PR_STATE_MACHINE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "createCommitStatus" not in source
+    assert 'context: "pr/state-machine"' not in source
