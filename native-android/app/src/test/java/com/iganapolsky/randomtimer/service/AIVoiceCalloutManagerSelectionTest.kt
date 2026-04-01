@@ -71,7 +71,6 @@ class AIVoiceCalloutManagerSelectionTest {
             listOf(
                 "cmd_move_with_a_purpose.mp3",
                 "cmd_stay_locked_in.mp3",
-                "cmd_drive_forward.mp3",
                 "cmd_no_hesitation_move.mp3",
                 "preview_elapsed.mp3",
             )
