@@ -1,11 +1,27 @@
+import FirebaseCore
 import SwiftUI
 
 @main
 struct RandomTimerApp: App {
+    // swiftlint:disable:next no_state_object
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
 
+    /// GitHub Actions passes `OTHER_SWIFT_FLAGS=-D RT_SKIP_FIREBASE_FOR_CI` for `xcodebuild test`
+    /// because the simulator app does not inherit shell env vars and CI uses a placeholder plist.
+    private static var shouldSkipFirebaseForHostedTests: Bool {
+        #if RT_SKIP_FIREBASE_FOR_CI
+        return true
+        #else
+        return ProcessInfo.processInfo.environment["RT_SKIP_FIREBASE_FOR_TESTS"] == "1"
+            || ProcessInfo.processInfo.arguments.contains("-SkipFirebaseForTesting")
+        #endif
+    }
+
     init() {
+        guard !Self.shouldSkipFirebaseForHostedTests else { return }
+        FirebaseApp.configure()
+        CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
     }
 
@@ -36,6 +52,7 @@ struct RandomTimerApp: App {
 }
 
 struct ContentView: View {
+    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var timerManager: TimerManager
     @State private var didApplyUITestSeed: Bool = false
 

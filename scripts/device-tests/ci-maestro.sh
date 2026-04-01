@@ -4,6 +4,8 @@
 set -eu
 
 adb install -r native-android/app/build/outputs/apk/debug/app-debug.apk
+# install -r keeps app data; a persisted active timer skips setup so "Start Timer" never appears.
+adb shell pm clear com.iganapolsky.randomtimer 2>/dev/null || true
 adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
 
 # Re-enable animator duration for Compose rendering (Maestro needs it)
@@ -20,9 +22,9 @@ for i in $(seq 1 30); do
   fi
   sleep 1
 done
-sleep 3
+sleep 8
 adb shell am force-stop com.iganapolsky.randomtimer
-sleep 3
+sleep 4
 
 export PATH="$HOME/.maestro/bin:$PATH"
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=60000
@@ -36,6 +38,8 @@ for flow in \
 do
   echo "== Running: $flow =="
   adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
+  adb shell pm clear com.iganapolsky.randomtimer 2>/dev/null || true
+  adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
   sleep 2
   if maestro test "$flow"; then
     echo "PASSED: $flow"

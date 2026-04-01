@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.firebase.perf) apply false
     jacoco
 }
 
@@ -29,6 +30,7 @@ val enableFirebasePlugins =
 if (enableFirebasePlugins) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
+    apply(plugin = "com.google.firebase.firebase-perf")
 } else {
     logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }
@@ -164,6 +166,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.perf)
 
     // Media Session (Bluetooth/Android Auto alarm dismiss)
     implementation(libs.androidx.media)

@@ -66,8 +66,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -236,6 +238,8 @@ fun TimerSetupScreen(
                     onClick = onStartTimer,
                     modifier =
                         Modifier
+                            .semantics { testTagsAsResourceId = true }
+                            .testTag("start_timer")
                             .padding(horizontal = spacing.outerHorizontal)
                             .padding(bottom = 16.dp, top = 8.dp)
                             .navigationBarsPadding()

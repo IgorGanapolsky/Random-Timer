@@ -30,6 +30,8 @@ class AnalyticsService
                 return
             }
 
+            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
+
             val config =
                 PostHogAndroidConfig(
                     apiKey = apiKey,
@@ -39,10 +41,19 @@ class AnalyticsService
                     captureApplicationLifecycleEvents = false
                     captureDeepLinks = true
                     captureScreenViews = false // We track manually for better control
+                    // Session replay: production installs only (enable in PostHog Project Settings → Session replay).
+                    // Jetpack Compose requires screenshot mode. No client sampleRate in SDK 3.8.2 — tune in PostHog + debouncerDelayMs.
+                    if (!isInternalUser) {
+                        sessionReplay = true
+                        sessionReplayConfig.maskAllTextInputs = true
+                        sessionReplayConfig.maskAllImages = true
+                        sessionReplayConfig.captureLogcat = true
+                        sessionReplayConfig.screenshot = true
+                        sessionReplayConfig.debouncerDelayMs = 1000L
+                    }
                 }
 
             PostHogAndroid.setup(application, config)
-            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
             analyticsContextProperties =
                 mapOf(
                     "platform" to "android",
@@ -208,12 +219,13 @@ class AnalyticsService
             // Detect Maestro and other UI test frameworks via launch intent extras
             // or system properties set by test runners
             val hasMaestroFlag = System.getProperty("maestro.test") != null
-            val hasTestRunner = try {
-                Class.forName("androidx.test.espresso.Espresso")
-                true
-            } catch (_: ClassNotFoundException) {
-                false
-            }
+            val hasTestRunner =
+                try {
+                    Class.forName("androidx.test.espresso.Espresso")
+                    true
+                } catch (_: ClassNotFoundException) {
+                    false
+                }
             return hasMaestroFlag || hasTestRunner
         }
 
