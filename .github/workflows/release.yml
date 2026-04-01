@@ -57,6 +57,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Fail fast on required build secrets
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          for name in POSTHOG_API_KEY GOOGLE_SERVICES_JSON; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required secret: $name"
+              exit 1
+            fi
+          done
+          echo "Required build secrets are present."
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -108,6 +122,7 @@ jobs:
       - name: Build iOS
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           # CI builds use 'ci' profile (simulator/APK) - production builds require manual credential setup first via 'eas credentials'
           BUILD_PROFILE: ci
         run: |
@@ -115,9 +130,17 @@ jobs:
           # After build completes on EAS, manually submit via: eas submit --platform ios
           eas build --platform ios --profile "$BUILD_PROFILE" --non-interactive --no-wait
 
+      - name: Create google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          echo "$GOOGLE_SERVICES_JSON" > native-android/app/google-services.json
+
       - name: Build Android
         env:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           # CI builds use 'ci' profile (simulator/APK) - production builds require manual credential setup first via 'eas credentials'
           BUILD_PROFILE: ci
         run: |
