@@ -59,6 +59,17 @@ internal struct VoiceCueCatalog: Codable {
 
 internal let voiceCatalogResourceName = "voice_callouts"
 
+private enum VoicePreviewSampleCatalog {
+    static let femaleCommandFilenames = [
+        "female_preview_move_with_a_purpose",
+        "female_preview_no_hesitation_move",
+        "female_preview_stay_in_the_fight",
+        "female_preview_push_through_dont_you_dare_coast",
+    ]
+
+    static let femaleElapsedFilename = "female_preview_thirty_seconds_elapsed_stay_locked_in"
+}
+
 private let fallbackVoiceCueCatalog = VoiceCueCatalog(
     previewElapsed: .init(
         filename: "preview_elapsed",
@@ -188,22 +199,11 @@ final class AIVoiceCalloutService {
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
 
-        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
-            Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
-            return
-        }
-
         if mappedFilename == nil {
             Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
         }
 
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.volume = 1.0
-            audioPlayer?.play()
-        } catch {
-            Self.log.error("Audio playback failed: \(error.localizedDescription)")
-        }
+        playVoiceFile(named: filename, cueText: text)
     }
 
     func resetSession() {
@@ -216,21 +216,58 @@ final class AIVoiceCalloutService {
     }
 
     func preview() {
-        previewCommandCue()
+        previewCommandCue(gender: currentGender)
     }
 
-    func previewCommandCue() {
+    func previewCommandCue(gender: VoiceGender = .male) {
+        currentGender = gender
+
+        if gender == .female {
+            playVoiceFile(
+                named: VoicePreviewSampleCatalog.femaleCommandFilenames.randomElement()
+                    ?? VoicePreviewSampleCatalog.femaleCommandFilenames[0],
+                cueText: "Female preview command sample"
+            )
+            return
+        }
+
         let cue = randomCommandCue()
         speak(cue.text)
     }
 
-    func previewCountdownCue() {
+    func previewCountdownCue(gender: VoiceGender = .male) {
+        currentGender = gender
+
+        if gender == .female {
+            playVoiceFile(
+                named: VoicePreviewSampleCatalog.femaleElapsedFilename,
+                cueText: "Female preview elapsed sample"
+            )
+            return
+        }
+
         let catalog = packStore.voiceCatalog(bundle: bundle)
         speak(catalog.previewElapsed.text)
     }
 
-    func beginSession(totalDurationSeconds: Int) {
+    func beginSession(totalDurationSeconds: Int, gender: VoiceGender = .male) {
+        currentGender = gender
         nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
+    }
+
+    private func playVoiceFile(named filename: String, cueText: String) {
+        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
+            Self.log.error("Voice asset missing for cue: \(cueText, privacy: .public)")
+            return
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.volume = 1.0
+            audioPlayer?.play()
+        } catch {
+            Self.log.error("Audio playback failed: \(error.localizedDescription)")
+        }
     }
 
     func triggerCallout(elapsedSeconds: Int) {

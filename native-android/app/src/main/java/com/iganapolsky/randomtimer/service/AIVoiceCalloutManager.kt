@@ -28,6 +28,11 @@ internal data class ElapsedVoiceCue(
     val text: String,
 )
 
+private data class VoicePlaybackSource(
+    val remotePath: String? = null,
+    val resourceId: Int = 0,
+)
+
 internal data class VoiceCueCatalog(
     val previewElapsed: VoiceCue,
     val fallbackCommandFilename: String,
@@ -59,6 +64,18 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
         }
 
 private const val VOICE_CATALOG_ASSET = "voice_callouts.json"
+
+private object VoicePreviewSampleCatalog {
+    val femaleCommandFilenames =
+        listOf(
+            "female_preview_move_with_a_purpose",
+            "female_preview_no_hesitation_move",
+            "female_preview_stay_in_the_fight",
+            "female_preview_push_through_dont_you_dare_coast",
+        )
+
+    const val femaleElapsedFilename = "female_preview_thirty_seconds_elapsed_stay_locked_in"
+}
 
 private val fallbackVoiceCueCatalog =
     VoiceCueCatalog(
@@ -228,52 +245,11 @@ class AIVoiceCalloutManager
             val mappedResId = voiceResIdForText(context, text, catalog)
             val resId = mappedResId ?: voiceResIdOrFallback(context, text, catalog)
             val filename = mappedResId?.let { catalog.filenameByText[text] } ?: catalog.fallbackCommandCue.filename
-            val remoteFile = packStore.voiceFile(filename)
-            if (remoteFile == null && resId == 0) {
-                Log.e("AIVoiceCallout", "Missing bundled voice asset for cue: $text")
-                return
-            }
             if (mappedResId == null) {
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
-            try {
-                stopPlayback()
-                mediaPlayer =
-                    MediaPlayer().apply {
-                        setAudioAttributes(
-                            AudioAttributes
-                                .Builder()
-                                .setUsage(AudioAttributes.USAGE_MEDIA)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                .build(),
-                        )
-                        if (remoteFile != null) {
-                            setDataSource(remoteFile.absolutePath)
-                        } else {
-                            val afd = context.resources.openRawResourceFd(resId)
-                            if (afd == null) {
-                                release()
-                                Log.e("AIVoiceCallout", "Missing raw voice asset for cue: $text")
-                                return
-                            }
-                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                            afd.close()
-                        }
-                        prepare()
-                    }
-                mediaPlayer?.apply {
-                    setVolume(currentVolume, currentVolume)
-                    setOnCompletionListener {
-                        it.release()
-                        if (mediaPlayer == it) {
-                            mediaPlayer = null
-                        }
-                    }
-                    start()
-                }
-            } catch (e: Exception) {
-                Log.e("AIVoiceCallout", "Audio playback failed: ${e.message}", e)
-            }
+
+            playVoiceFile(filename = filename, fallbackResId = resId, cueText = text)
         }
 
         fun resetSession() {
@@ -286,15 +262,41 @@ class AIVoiceCalloutManager
         }
 
         fun preview() {
-            previewCommandCue()
+            previewCommandCue(currentGender)
         }
 
-        fun previewCommandCue() {
+        fun previewCommandCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
+
+            if (gender == VoiceGender.FEMALE) {
+                val previewFilename =
+                    VoicePreviewSampleCatalog.femaleCommandFilenames[
+                        Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size)
+                    ]
+                playVoiceFile(
+                    filename = previewFilename,
+                    fallbackResId = 0,
+                    cueText = "Female preview command sample",
+                )
+                return
+            }
+
             val cue = randomCommandCue()
             speak(cue.text)
         }
 
-        fun previewCountdownCue() {
+        fun previewCountdownCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
+
+            if (gender == VoiceGender.FEMALE) {
+                playVoiceFile(
+                    filename = VoicePreviewSampleCatalog.femaleElapsedFilename,
+                    fallbackResId = 0,
+                    cueText = "Female preview elapsed sample",
+                )
+                return
+            }
+
             val catalog = packStore.voiceCatalog()
             speak(catalog.previewElapsed.text)
         }
@@ -302,6 +304,92 @@ class AIVoiceCalloutManager
         fun beginSession(totalDurationSeconds: Int, gender: VoiceGender = VoiceGender.MALE) {
             currentGender = gender
             nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
+        }
+
+        private fun playVoiceFile(
+            filename: String,
+            fallbackResId: Int,
+            cueText: String,
+        ) {
+            val source = resolvePlaybackSource(filename, fallbackResId)
+            if (source == null) {
+                Log.e("AIVoiceCallout", "Missing bundled voice asset for cue: $cueText")
+                return
+            }
+
+            try {
+                stopPlayback()
+                val preparedPlayer = buildVoicePlayer(source, cueText) ?: return
+                mediaPlayer = preparedPlayer
+                startVoicePlayback(preparedPlayer)
+            } catch (e: Exception) {
+                Log.e("AIVoiceCallout", "Audio playback failed: ${e.message}", e)
+            }
+        }
+
+        private fun buildVoicePlayer(
+            source: VoicePlaybackSource,
+            cueText: String,
+        ): MediaPlayer? =
+            MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes
+                        .Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build(),
+                )
+                if (!setVoiceDataSource(source, cueText)) {
+                    release()
+                    return null
+                }
+                prepare()
+            }
+
+        private fun startVoicePlayback(player: MediaPlayer) {
+            player.setVolume(currentVolume, currentVolume)
+            player.setOnCompletionListener {
+                it.release()
+                if (mediaPlayer == it) {
+                    mediaPlayer = null
+                }
+            }
+            player.start()
+        }
+
+        private fun resolvePlaybackSource(
+            filename: String,
+            fallbackResId: Int,
+        ): VoicePlaybackSource? {
+            val remoteFile = packStore.voiceFile(filename)
+            if (remoteFile != null) {
+                return VoicePlaybackSource(remotePath = remoteFile.absolutePath)
+            }
+
+            val bundledResId = context.resources.getIdentifier(filename, "raw", context.packageName)
+            val resolvedResId = bundledResId.takeIf { it != 0 } ?: fallbackResId
+            return resolvedResId.takeIf { it != 0 }?.let { VoicePlaybackSource(resourceId = it) }
+        }
+
+        private fun MediaPlayer.setVoiceDataSource(
+            source: VoicePlaybackSource,
+            cueText: String,
+        ): Boolean {
+            source.remotePath?.let {
+                setDataSource(it)
+                return true
+            }
+
+            val afd = context.resources.openRawResourceFd(source.resourceId)
+            if (afd == null) {
+                Log.e("AIVoiceCallout", "Missing raw voice asset for cue: $cueText")
+                return false
+            }
+
+            afd.use {
+                setDataSource(it.fileDescriptor, it.startOffset, it.length)
+            }
+            return true
         }
 
         fun triggerCallout(elapsedSeconds: Int) {

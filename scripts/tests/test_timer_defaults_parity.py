@@ -211,7 +211,7 @@ def test_ios_voice_assets_exist_on_disk():
     required_assets = _ios_catalog_filenames(catalog)
     actual_assets = {path.stem for path in IOS_VOICE_AUDIO_DIR.glob("*.mp3")}
 
-    assert actual_assets == required_assets
+    assert required_assets <= actual_assets
 
 
 def test_android_voice_assets_exist_on_disk_and_match_ios_catalog():
