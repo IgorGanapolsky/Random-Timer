@@ -46,11 +46,17 @@ class AIVoiceCalloutManagerSelectionTest {
     fun femalePreviewSamplesExistOnDisk() {
         val required =
             listOf(
-                "female_preview_move_with_a_purpose.mp3",
-                "female_preview_no_hesitation_move.mp3",
-                "female_preview_stay_in_the_fight.mp3",
-                "female_preview_push_through_dont_you_dare_coast.mp3",
-                "female_preview_thirty_seconds_elapsed_stay_locked_in.mp3",
+                "female_cmd_move_with_a_purpose.mp3",
+                "female_cmd_no_hesitation_move.mp3",
+                "female_cmd_stay_in_the_fight.mp3",
+                "female_cmd_push_pace.mp3",
+                "female_cmd_keep_tempo_high.mp3",
+                "female_cmd_finish_rep_keep_pushing.mp3",
+                "female_cmd_drive_forward.mp3",
+                "female_cmd_own_this_rep.mp3",
+                "female_cmd_pick_it_up.mp3",
+                "female_cmd_strong_feet_strong_pace.mp3",
+                "female_preview_elapsed.mp3",
             )
 
         val rawDir = Paths.get("src/main/res/raw")
@@ -87,6 +93,21 @@ class AIVoiceCalloutManagerSelectionTest {
         val selected = nextCommandCue(cues, lastFilename = "cue_a") { 0 }
 
         assertThat(selected.filename).isEqualTo("cue_b")
+    }
+
+    @Test
+    fun nextPreviewCueFilenameAvoidsImmediateRepeatsAndCyclesUnusedSamples() {
+        val used = linkedSetOf("cue_a")
+
+        val selected =
+            nextPreviewCueFilename(
+                filenames = listOf("cue_a", "cue_b", "cue_c"),
+                lastFilename = "cue_b",
+                usedFilenames = used,
+            ) { 0 }
+
+        assertThat(selected).isEqualTo("cue_c")
+        assertThat(used).contains("cue_c")
     }
 
     @Test

@@ -78,13 +78,19 @@ private object VoicePreviewSampleCatalog {
 
     val femaleCommandFilenames =
         listOf(
-            "female_preview_move_with_a_purpose",
-            "female_preview_no_hesitation_move",
-            "female_preview_stay_in_the_fight",
-            "female_preview_push_through_dont_you_dare_coast",
+            "female_cmd_move_with_a_purpose",
+            "female_cmd_no_hesitation_move",
+            "female_cmd_stay_in_the_fight",
+            "female_cmd_push_pace",
+            "female_cmd_keep_tempo_high",
+            "female_cmd_finish_rep_keep_pushing",
+            "female_cmd_drive_forward",
+            "female_cmd_own_this_rep",
+            "female_cmd_pick_it_up",
+            "female_cmd_strong_feet_strong_pace",
         )
 
-    const val femaleElapsedFilename = "female_preview_thirty_seconds_elapsed_stay_locked_in"
+    const val femaleElapsedFilename = "female_preview_elapsed"
 }
 
 private val fallbackVoiceCueCatalog =
@@ -203,6 +209,40 @@ internal fun nextCommandCue(
     return cues[(boundedIndex + 1) % cues.size]
 }
 
+internal fun nextPreviewCueFilename(
+    filenames: List<String>,
+    lastFilename: String?,
+    usedFilenames: MutableSet<String>,
+    pickIndex: (Int) -> Int,
+): String {
+    if (filenames.isEmpty()) {
+        return fallbackVoiceCueCatalog.fallbackCommandFilename
+    }
+    if (filenames.size == 1) {
+        val only = filenames[0]
+        usedFilenames.clear()
+        usedFilenames.add(only)
+        return only
+    }
+
+    var pool = filenames.filter { it !in usedFilenames }
+    if (pool.isEmpty()) {
+        usedFilenames.clear()
+        pool = filenames.filter { it != lastFilename }.ifEmpty { filenames }
+    }
+
+    val boundedIndex = pickIndex(pool.size).coerceIn(0, pool.size - 1)
+    val candidate = pool[boundedIndex]
+    val selected =
+        if (candidate == lastFilename && pool.size > 1) {
+            pool[(boundedIndex + 1) % pool.size]
+        } else {
+            candidate
+        }
+    usedFilenames.add(selected)
+    return selected
+}
+
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
         totalDurationSeconds <= 29 -> Int.MAX_VALUE
@@ -221,6 +261,12 @@ class AIVoiceCalloutManager
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
+        private val usedPreviewCommandFilenamesByGender =
+            mutableMapOf(
+                VoiceGender.MALE to mutableSetOf<String>(),
+                VoiceGender.FEMALE to mutableSetOf<String>(),
+            )
         private var nextCommandCueAt = 0
 
         /** Current voice gender for the active session. */
@@ -266,6 +312,8 @@ class AIVoiceCalloutManager
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             usedCommandCueFilenames.clear()
+            lastPreviewCommandFilenameByGender.clear()
+            usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
             currentGender = VoiceGender.MALE
         }
@@ -277,16 +325,25 @@ class AIVoiceCalloutManager
         fun previewCommandCue(gender: VoiceGender = currentGender) {
             currentGender = gender
 
-            val previewFilename =
+            val previewPool =
                 if (gender == VoiceGender.FEMALE) {
-                    VoicePreviewSampleCatalog.femaleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size),
-                    ]
+                    VoicePreviewSampleCatalog.femaleCommandFilenames
                 } else {
-                    VoicePreviewSampleCatalog.maleCommandFilenames[
-                        Random.nextInt(VoicePreviewSampleCatalog.maleCommandFilenames.size),
-                    ]
+                    VoicePreviewSampleCatalog.maleCommandFilenames
                 }
+            val usedFilenames =
+                usedPreviewCommandFilenamesByGender.getOrPut(gender) {
+                    mutableSetOf()
+                }
+            val previewFilename =
+                nextPreviewCueFilename(
+                    filenames = previewPool,
+                    lastFilename = lastPreviewCommandFilenameByGender[gender] ?: null,
+                    usedFilenames = usedFilenames,
+                ) { upperBound ->
+                    Random.nextInt(upperBound)
+                }
+            lastPreviewCommandFilenameByGender[gender] = previewFilename
             playVoiceFile(
                 filename = previewFilename,
                 fallbackResId = 0,
