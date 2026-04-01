@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 
@@ -18,6 +19,7 @@ ANDROID_PREVIEW_IMPL = ROOT / "native-android/app/src/main/java/com/iganapolsky/
 ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 VOICE_VERIFY_SCRIPT = ROOT / "scripts/verify_elevenlabs_voices.py"
+RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
 
 
 def _read(path: Path) -> str:
@@ -30,6 +32,20 @@ def _section(source: str, start_marker: str, end_marker: str) -> str:
 
 def _contract() -> dict:
     return json.loads(VOICE_CONTRACT.read_text(encoding="utf-8"))
+
+
+def _runtime_voice_asset_map() -> dict[str, Path]:
+    manifest = json.loads(RUNTIME_LATEST.read_text(encoding="utf-8"))
+    voice_assets: dict[str, Path] = {}
+    for asset in manifest["assets"]:
+        if asset["kind"] != "voice":
+            continue
+        voice_assets[asset["filename"]] = ROOT / "content/pro_audio/runtime" / asset["relativePath"]
+    return voice_assets
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
@@ -73,10 +89,27 @@ def test_android_male_preview_samples_exist() -> None:
     assert {
         "cmd_move_with_a_purpose",
         "cmd_stay_locked_in",
-        "cmd_drive_forward",
         "cmd_no_hesitation_move",
     }.issubset(android_files)
     assert (ANDROID_RAW_DIR / "preview_elapsed.mp3").exists()
+
+
+def test_male_preview_samples_match_canonical_marine_runtime_pack() -> None:
+    runtime_assets = _runtime_voice_asset_map()
+    male_preview_filenames = {
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "preview_elapsed",
+    }
+
+    assert "cmd_drive_forward" not in male_preview_filenames
+
+    for filename in male_preview_filenames:
+        runtime_path = runtime_assets[filename]
+        assert runtime_path.exists(), f"Missing canonical runtime asset for {filename}"
+        assert _sha256(IOS_AUDIO_DIR / f"{filename}.mp3") == _sha256(runtime_path)
+        assert _sha256(ANDROID_RAW_DIR / f"{filename}.mp3") == _sha256(runtime_path)
 
 
 def test_ios_free_preview_keeps_voice_selector_visible() -> None:
