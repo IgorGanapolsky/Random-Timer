@@ -2,8 +2,7 @@ import Foundation
 import FirebaseCrashlytics
 
 /// Crash reporting service using Firebase Crashlytics
-@MainActor
-final class CrashReportingService {
+final class CrashReportingService: @unchecked Sendable {
     static let shared = CrashReportingService()
 
     private init() {}
