@@ -1,11 +1,16 @@
+import FirebaseCore
+import FirebasePerformance
 import SwiftUI
 
 @main
 struct RandomTimerApp: App {
+    // swiftlint:disable:next no_state_object
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        FirebaseApp.configure()
+        CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
     }
 
@@ -36,6 +41,7 @@ struct RandomTimerApp: App {
 }
 
 struct ContentView: View {
+    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var timerManager: TimerManager
     @State private var didApplyUITestSeed: Bool = false
 
