@@ -54,21 +54,15 @@ internal let voiceCatalogResourceName = "voice_callouts"
 
 private enum VoicePreviewSampleCatalog {
     static let maleCommandFilenames = [
-        "cmd_move_with_a_purpose",
-        "cmd_stay_locked_in",
-        "cmd_no_hesitation_move",
+        "cmd_move_with_a_purpose", "cmd_stay_locked_in", "cmd_no_hesitation_move", "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive", "cmd_stay_disciplined", "cmd_keep_your_bearing", "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus", "cmd_stay_in_the_fight",
     ]
     static let maleElapsedFilename = "preview_elapsed"
     static let femaleCommandFilenames = [
-        "female/cmd_move_with_a_purpose",
-        "female/cmd_no_hesitation_move",
-        "female/cmd_stay_in_the_fight",
-        "female/cmd_push_pace",
-        "female/cmd_keep_tempo_high",
-        "female/cmd_finish_rep_keep_pushing",
-        "female/cmd_drive_forward",
-        "female/cmd_own_this_rep",
-        "female/cmd_pick_it_up",
+        "female/cmd_move_with_a_purpose", "female/cmd_no_hesitation_move", "female/cmd_stay_in_the_fight",
+        "female/cmd_push_pace", "female/cmd_keep_tempo_high", "female/cmd_finish_rep_keep_pushing",
+        "female/cmd_drive_forward", "female/cmd_own_this_rep", "female/cmd_pick_it_up",
         "female/cmd_strong_feet_strong_pace",
     ]
 

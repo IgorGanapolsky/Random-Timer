@@ -84,26 +84,21 @@ def test_female_preview_samples_exist_on_both_platforms() -> None:
 
 
 def test_android_male_preview_samples_exist() -> None:
+    contract = _contract()
+    preview_contract = contract["male"]["previewSamples"]
+    android_command_filenames = set(preview_contract["androidCommandFilenames"])
+    android_elapsed_filename = preview_contract["androidElapsedFilename"]
     android_files = {path.stem for path in ANDROID_RAW_DIR.glob("cmd_*.mp3")}
 
-    assert {
-        "cmd_move_with_a_purpose",
-        "cmd_stay_locked_in",
-        "cmd_no_hesitation_move",
-    }.issubset(android_files)
-    assert (ANDROID_RAW_DIR / "preview_elapsed.mp3").exists()
+    assert android_command_filenames.issubset(android_files)
+    assert (ANDROID_RAW_DIR / f"{android_elapsed_filename}.mp3").exists()
 
 
 def test_male_preview_samples_match_canonical_marine_runtime_pack() -> None:
+    contract = _contract()
+    preview_contract = contract["male"]["previewSamples"]
     runtime_assets = _runtime_voice_asset_map()
-    male_preview_filenames = {
-        "cmd_move_with_a_purpose",
-        "cmd_stay_locked_in",
-        "cmd_no_hesitation_move",
-        "preview_elapsed",
-    }
-
-    assert "cmd_drive_forward" not in male_preview_filenames
+    male_preview_filenames = set(preview_contract["iosCommandFilenames"]) | {preview_contract["iosElapsedFilename"]}
 
     for filename in male_preview_filenames:
         runtime_path = runtime_assets[filename]

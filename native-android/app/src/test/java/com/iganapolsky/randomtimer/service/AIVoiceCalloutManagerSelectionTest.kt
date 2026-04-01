@@ -72,6 +72,13 @@ class AIVoiceCalloutManagerSelectionTest {
                 "cmd_move_with_a_purpose.mp3",
                 "cmd_stay_locked_in.mp3",
                 "cmd_no_hesitation_move.mp3",
+                "cmd_sound_off_and_drive.mp3",
+                "cmd_snap_back_and_drive.mp3",
+                "cmd_stay_disciplined.mp3",
+                "cmd_keep_your_bearing.mp3",
+                "cmd_reset_and_attack.mp3",
+                "cmd_sharp_movement_sharp_focus.mp3",
+                "cmd_stay_in_the_fight.mp3",
                 "preview_elapsed.mp3",
             )
 
