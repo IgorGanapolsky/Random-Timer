@@ -105,6 +105,10 @@
          </TestableReference>
       </Testables>
       <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-SkipFirebaseForTesting"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
    </TestAction>
    <LaunchAction
