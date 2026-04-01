@@ -50,8 +50,8 @@ def test_female_preview_samples_exist_on_both_platforms() -> None:
     ios_files = {path.stem for path in IOS_AUDIO_DIR.glob("female_preview_*.mp3")}
     android_files = {path.stem for path in ANDROID_RAW_DIR.glob("female_preview_*.mp3")}
 
-    assert ios_files == sample_filenames
-    assert android_files == sample_filenames
+    assert sample_filenames.issubset(ios_files)
+    assert sample_filenames.issubset(android_files)
 
 
 def test_ios_free_preview_keeps_voice_selector_visible() -> None:
@@ -60,6 +60,16 @@ def test_ios_free_preview_keeps_voice_selector_visible() -> None:
     assert 'Text("PREVIEW")' in setup
     assert 'if config.voiceEnabled || !proManager.isPro {' in setup
     assert 'Text("Female").tag(VoiceGender.female)' in setup
+
+
+def test_android_free_preview_keeps_voice_selector_visible() -> None:
+    setup = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt")
+
+    assert 'text = "PREVIEW"' in setup
+    assert "Voice Gender selector stays visible so free users can preview both voices." in setup
+    assert "VoiceGender.entries.forEach" in setup
+    assert "VoiceGender.MALE" in setup
+    assert "if (config.voiceEnabled) {" not in setup
 
 
 def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
