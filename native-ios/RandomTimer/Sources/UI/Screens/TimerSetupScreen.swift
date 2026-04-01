@@ -180,7 +180,7 @@ struct TimerSetupScreen: View {
                         .padding(.vertical, 8)
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
-                        if config.voiceEnabled && proManager.isPro {
+                        if config.voiceEnabled || !proManager.isPro {
                             Picker("Voice", selection: Binding(
                                 get: { config.voiceGender },
                                 set: { updateConfig(voiceGender: $0) }
@@ -197,7 +197,7 @@ struct TimerSetupScreen: View {
                         // Core Sounds
                         HStack(spacing: 12) {
                             SoundTypeButton(
-                                label: "Intense",
+                                label: "Fire Alarm",
                                 systemImage: "flame.fill",
                                 selected: config.soundType == .intense,
                                 onTap: {

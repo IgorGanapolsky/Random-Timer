@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.service.AIVoiceCalloutManager
 import com.iganapolsky.randomtimer.service.ProAudioPackStore
 import com.iganapolsky.randomtimer.service.resolveProSoundResId
@@ -55,9 +56,9 @@ class SoundPreviewManagerImpl
             scheduleStop(volumeStopDelayMs)
         }
 
-        override fun previewCommandCue() {
+        override fun previewCommandCue(gender: VoiceGender) {
             stop()
-            voiceCalloutManager.previewCommandCue()
+            voiceCalloutManager.previewCommandCue(gender)
         }
 
         override fun stop() {

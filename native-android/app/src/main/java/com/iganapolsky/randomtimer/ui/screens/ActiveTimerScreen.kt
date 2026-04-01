@@ -465,10 +465,14 @@ private fun formatRangeText(
     maxSeconds: Int,
 ): String {
     fun formatTime(seconds: Int): String =
-        if (seconds >= 60) {
+        if (seconds >= 3600) {
+            val hrs = seconds / 3600
+            val mins = (seconds % 3600) / 60
+            if (mins > 0) "${hrs}h ${mins}m" else "${hrs}h"
+        } else if (seconds >= 60) {
             val mins = seconds / 60
             val secs = seconds % 60
-            if (secs > 0) "${mins}m ${secs}s" else "${mins}m"
+            if (secs > 0) "${mins}:${"%02d".format(secs)}" else "${mins}m"
         } else {
             "${seconds}s"
         }
