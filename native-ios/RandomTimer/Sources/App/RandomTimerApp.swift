@@ -8,10 +8,15 @@ struct RandomTimerApp: App {
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
 
+    /// Scheme Test action sets `RT_SKIP_FIREBASE_FOR_TESTS=1` so the XCTest host skips Firebase
+    /// (headless `xcodebuild test` does not reliably forward scheme launch arguments to the app).
+    private static var shouldSkipFirebaseForHostedTests: Bool {
+        ProcessInfo.processInfo.environment["RT_SKIP_FIREBASE_FOR_TESTS"] == "1"
+            || ProcessInfo.processInfo.arguments.contains("-SkipFirebaseForTesting")
+    }
+
     init() {
-        // Hosted unit tests launch the real app; CI uses a placeholder GoogleService-Info.plist.
-        // Skipping Firebase avoids SIGABRT from Performance/Crashlytics with non-production config.
-        if ProcessInfo.processInfo.arguments.contains("-SkipFirebaseForTesting") {
+        if Self.shouldSkipFirebaseForHostedTests {
             return
         }
         FirebaseApp.configure()
