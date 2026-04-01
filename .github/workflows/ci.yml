@@ -104,6 +104,41 @@ jobs:
           fi
           python -m py_compile "${TARGETS[@]}"
 
+  voice-provider-smoke:
+    name: Voice Provider Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Decide live smoke execution
+        id: gate
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          if [ -n "${ELEVENLABS_API_KEY}" ]; then
+            echo "run_live_smoke=true" >> "$GITHUB_OUTPUT"
+            echo "ElevenLabs secret is available; running live smoke."
+          else
+            echo "run_live_smoke=false" >> "$GITHUB_OUTPUT"
+            echo "ElevenLabs secret is unavailable in this workflow context; recording controlled skip."
+          fi
+
+      - name: Setup Python
+        if: steps.gate.outputs.run_live_smoke == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Verify live ElevenLabs voices
+        if: steps.gate.outputs.run_live_smoke == 'true'
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: python scripts/verify_elevenlabs_voices.py
+
+      - name: Record controlled skip
+        if: steps.gate.outputs.run_live_smoke != 'true'
+        run: echo "Live ElevenLabs smoke was skipped because ELEVENLABS_API_KEY is not exposed in this workflow context."
+
   android:
     name: Autonomous Android Tests
     runs-on: ubuntu-latest

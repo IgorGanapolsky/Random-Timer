@@ -128,7 +128,10 @@ final class TimerManager: ObservableObject {
 
         timerState = state
         if ProManager.shared.isPro && state.config.voiceEnabled {
-            AIVoiceCalloutService.shared.beginSession(totalDurationSeconds: Int(state.targetDuration))
+            AIVoiceCalloutService.shared.beginSession(
+                totalDurationSeconds: Int(state.targetDuration),
+                gender: state.config.voiceGender
+            )
         }
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
@@ -475,9 +478,8 @@ final class TimerManager: ObservableObject {
         )
     }
 
-    func previewCommandCue(gender: VoiceGender = .male) {
-        AIVoiceCalloutService.shared.currentGender = gender
-        AIVoiceCalloutService.shared.previewCommandCue()
+    func previewCommandCue() {
+        AIVoiceCalloutService.shared.previewCommandCue(gender: config.voiceGender)
     }
 
     func updatePreviewVolume() {

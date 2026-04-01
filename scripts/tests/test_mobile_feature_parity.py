@@ -130,13 +130,13 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
     ios_voice_service = _read(IOS_VOICE_SERVICE)
 
-    assert "fun previewCommandCue()" in android_preview
-    assert "previewCommandCue()" in android_preview_impl
+    assert "fun previewCommandCue(gender: VoiceGender)" in android_preview
+    assert "previewCommandCue(gender)" in android_preview_impl
     assert "fun previewCommandCue()" in android_viewmodel
     assert "onCommandCuePreview = viewModel::previewCommandCue" in android_nav
 
-    assert "func previewCommandCue(" in ios_timer_manager
-    assert "func previewCommandCue()" in ios_voice_service
+    assert "func previewCommandCue()" in ios_timer_manager
+    assert "func previewCommandCue(gender: VoiceGender" in ios_voice_service
 
 
 def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
