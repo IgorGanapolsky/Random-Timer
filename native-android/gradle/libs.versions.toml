@@ -24,6 +24,7 @@ playBilling = "7.1.1"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 crashlyticsPlugin = "3.0.2"
+firebasePerfPlugin = "1.4.2"
 media = "1.7.0"
 
 [libraries]
@@ -64,6 +65,7 @@ play-billing = { group = "com.android.billingclient", name = "billing-ktx", vers
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-perf = { group = "com.google.firebase", name = "firebase-perf" }
 androidx-media = { group = "androidx.media", name = "media", version.ref = "media" }
 
 [plugins]
@@ -74,3 +76,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsPlugin" }
+firebase-perf = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerfPlugin" }

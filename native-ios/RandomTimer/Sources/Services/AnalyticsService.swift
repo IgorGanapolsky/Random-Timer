@@ -7,10 +7,13 @@ import PostHog
 import AdServices
 #endif
 
+// Large service: funnel + attribution + lifecycle. Split in a dedicated refactor if it grows further.
+// swiftlint:disable file_length
+
 /// Analytics Service for PostHog integration
 /// To enable: Add PostHog Swift SDK via SPM (https://github.com/PostHog/posthog-ios)
 @MainActor
-final class AnalyticsService {
+final class AnalyticsService { // swiftlint:disable:this type_body_length
     static let shared = AnalyticsService()
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "RandomTimer", category: "Analytics")
 
@@ -115,6 +118,18 @@ final class AnalyticsService {
         // Emit lifecycle events manually so every event includes our live/dev context tags.
         config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
+        // Session replay: live device only; enable "Record user sessions" in PostHog.
+        // SwiftUI needs screenshotMode. Masking protects text/images. Tune volume in PostHog project settings
+        // (SDK has no client sampleRate on this pinned version).
+        if !isInternalUser {
+            config.sessionReplay = true
+            config.sessionReplayConfig.maskAllTextInputs = true
+            config.sessionReplayConfig.maskAllImages = true
+            config.sessionReplayConfig.captureLogs = true
+            config.sessionReplayConfig.captureNetworkTelemetry = true
+            config.sessionReplayConfig.screenshotMode = true
+            config.sessionReplayConfig.throttleDelay = 1.0
+        }
         PostHogSDK.shared.setup(config)
 #endif
         initialized = true
@@ -209,6 +224,7 @@ final class AnalyticsService {
 
     // MARK: - Apple Search Ads Attribution
 
+    // swiftlint:disable:next function_body_length
     func fetchAppleSearchAdsAttribution() {
         guard initialized else { return }
         guard !UserDefaults.standard.bool(forKey: appleAdsAttributionFetchedKey) else { return }
@@ -220,14 +236,19 @@ final class AnalyticsService {
                 return
             }
 
-            var request = URLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
+            guard let adsUrl = URL(string: "https://api-adservices.apple.com/api/v1/") else {
+                logger.error("Apple Ads attribution: invalid API URL")
+                return
+            }
+            var request = URLRequest(url: adsUrl)
             request.httpMethod = "POST"
             request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
             request.httpBody = Data(token.utf8)
 
-            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
                 guard let data = data, error == nil else {
-                    self?.logger.error("Apple Ads attribution request failed: \(error?.localizedDescription ?? "unknown")")
+                    let message = error?.localizedDescription ?? "unknown"
+                    self?.logger.error("Apple Ads attribution request failed: \(message)")
                     return
                 }
 
@@ -272,7 +293,8 @@ final class AnalyticsService {
                     )
                     PostHogSDK.shared.capture(AnalyticsEvents.appleAdsAttribution, properties: attribution)
 #endif
-                    self.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
+                    let campaign = attribution["utm_campaign"] as? String ?? "?"
+                    self.logger.info("Apple Ads attribution captured: campaign=\(campaign)")
                 }
             }.resume()
         }
