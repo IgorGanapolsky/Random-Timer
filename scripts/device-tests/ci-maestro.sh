@@ -12,11 +12,20 @@ adb shell settings put global animator_duration_scale 1.0
 # Warm-start: launch app, wait for Compose to fully render, then kill.
 # CI emulators are slow — Compose UI needs extra time on first launch.
 adb shell am start -n com.iganapolsky.randomtimer/.MainActivity
-sleep 15
+# Wait for activity to be fully drawn
+for i in $(seq 1 30); do
+  if adb shell dumpsys activity activities 2>/dev/null | grep -q 'mResumed=true.*randomtimer'; then
+    echo "App activity resumed after ${i}s"
+    break
+  fi
+  sleep 1
+done
+sleep 3
 adb shell am force-stop com.iganapolsky.randomtimer
 sleep 3
 
 export PATH="$HOME/.maestro/bin:$PATH"
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=60000
 PASS=0
 FAIL=0
 

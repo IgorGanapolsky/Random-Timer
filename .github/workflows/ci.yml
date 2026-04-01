@@ -226,6 +226,7 @@ jobs:
           # the first iOS Simulator destination it accepts.
           SIM_ID=$(xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | \
             grep 'platform:iOS Simulator' | \
+            grep -i 'iPhone' | \
             grep -v 'Any iOS Simulator Device' | \
             sed -nE 's/.*id:([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}).*/\1/p' | \
             head -n 1)
@@ -236,6 +237,12 @@ jobs:
           fi
           echo "sim_id=${SIM_ID}" >> "$GITHUB_OUTPUT"
           echo "Using xcodebuild destination simulator ID: ${SIM_ID}"
+
+      - name: Pre-boot simulator
+        run: |
+          xcrun simctl boot '${{ steps.sim.outputs.sim_id }}' || true
+          xcrun simctl bootstatus '${{ steps.sim.outputs.sim_id }}' -b
+          sleep 5
 
       - name: Build for testing
         run: |
@@ -248,6 +255,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run unit tests
+        timeout-minutes: 10
         run: |
           rm -rf build/TestResults.xcresult
           xcodebuild test \
