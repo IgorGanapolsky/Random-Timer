@@ -99,10 +99,11 @@ def test_voice_callouts_present_on_both_platforms():
     ios_setup = _read(IOS_SETUP)
     android_timer_config = _read(ANDROID_TIMER_CONFIG)
     ios_timer_models = _read(IOS_TIMER_MODELS)
+    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
     for source in (android_setup, ios_setup):
         assert "Voice Callouts" in source or "AI Voice Callouts" in source
-        assert "coach" in source.lower() or "training" in source.lower() or "elapsed" in source.lower()
+        assert expected_supporting_copy in source
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models
