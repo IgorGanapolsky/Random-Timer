@@ -66,6 +66,16 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
 private const val VOICE_CATALOG_ASSET = "voice_callouts.json"
 
 private object VoicePreviewSampleCatalog {
+    val maleCommandFilenames =
+        listOf(
+            "cmd_move_with_a_purpose",
+            "cmd_stay_locked_in",
+            "cmd_drive_forward",
+            "cmd_no_hesitation_move",
+        )
+
+    const val maleElapsedFilename = "preview_elapsed"
+
     val femaleCommandFilenames =
         listOf(
             "female_preview_move_with_a_purpose",
@@ -267,37 +277,46 @@ class AIVoiceCalloutManager
         fun previewCommandCue(gender: VoiceGender = currentGender) {
             currentGender = gender
 
-            if (gender == VoiceGender.FEMALE) {
-                val previewFilename =
+            val previewFilename =
+                if (gender == VoiceGender.FEMALE) {
                     VoicePreviewSampleCatalog.femaleCommandFilenames[
                         Random.nextInt(VoicePreviewSampleCatalog.femaleCommandFilenames.size)
                     ]
-                playVoiceFile(
-                    filename = previewFilename,
-                    fallbackResId = 0,
-                    cueText = "Female preview command sample",
-                )
-                return
-            }
-
-            val cue = randomCommandCue()
-            speak(cue.text)
+                } else {
+                    VoicePreviewSampleCatalog.maleCommandFilenames[
+                        Random.nextInt(VoicePreviewSampleCatalog.maleCommandFilenames.size)
+                    ]
+                }
+            playVoiceFile(
+                filename = previewFilename,
+                fallbackResId = 0,
+                cueText =
+                    if (gender == VoiceGender.FEMALE) {
+                        "Female preview command sample"
+                    } else {
+                        "Male preview command sample"
+                    },
+            )
         }
 
         fun previewCountdownCue(gender: VoiceGender = currentGender) {
             currentGender = gender
 
-            if (gender == VoiceGender.FEMALE) {
-                playVoiceFile(
-                    filename = VoicePreviewSampleCatalog.femaleElapsedFilename,
-                    fallbackResId = 0,
-                    cueText = "Female preview elapsed sample",
-                )
-                return
-            }
-
-            val catalog = packStore.voiceCatalog()
-            speak(catalog.previewElapsed.text)
+            playVoiceFile(
+                filename =
+                    if (gender == VoiceGender.FEMALE) {
+                        VoicePreviewSampleCatalog.femaleElapsedFilename
+                    } else {
+                        VoicePreviewSampleCatalog.maleElapsedFilename
+                    },
+                fallbackResId = 0,
+                cueText =
+                    if (gender == VoiceGender.FEMALE) {
+                        "Female preview elapsed sample"
+                    } else {
+                        "Male preview elapsed sample"
+                    },
+            )
         }
 
         fun beginSession(totalDurationSeconds: Int, gender: VoiceGender = VoiceGender.MALE) {
