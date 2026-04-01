@@ -71,6 +71,13 @@ private object VoicePreviewSampleCatalog {
             "cmd_move_with_a_purpose",
             "cmd_stay_locked_in",
             "cmd_no_hesitation_move",
+            "cmd_sound_off_and_drive",
+            "cmd_snap_back_and_drive",
+            "cmd_stay_disciplined",
+            "cmd_keep_your_bearing",
+            "cmd_reset_and_attack",
+            "cmd_sharp_movement_sharp_focus",
+            "cmd_stay_in_the_fight",
         )
 
     const val maleElapsedFilename = "preview_elapsed"
