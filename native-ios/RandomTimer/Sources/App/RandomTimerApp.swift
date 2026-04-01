@@ -1,3 +1,4 @@
+import FirebaseCore
 import SwiftUI
 
 @main
@@ -6,6 +7,8 @@ struct RandomTimerApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        FirebaseApp.configure()
+        CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
     }
 
