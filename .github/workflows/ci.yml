@@ -198,6 +198,46 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Create dummy GoogleService-Info.plist for CI
+        run: |
+          mkdir -p RandomTimer
+          {
+            printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+            printf '%s\n' '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            printf '%s\n' '<plist version="1.0">'
+            printf '%s\n' '<dict>'
+            printf '%s\n' '	<key>CLIENT_ID</key>'
+            printf '%s\n' '	<string>000000000000-ci-placeholder.apps.googleusercontent.com</string>'
+            printf '%s\n' '	<key>REVERSED_CLIENT_ID</key>'
+            printf '%s\n' '	<string>com.googleusercontent.apps.000000000000-ci-placeholder</string>'
+            printf '%s\n' '	<key>API_KEY</key>'
+            printf '%s\n' '	<string>AIzaSyCiPlaceholderOnlyNotReal0000000</string>'
+            printf '%s\n' '	<key>GCM_SENDER_ID</key>'
+            printf '%s\n' '	<string>000000000000</string>'
+            printf '%s\n' '	<key>PLIST_VERSION</key>'
+            printf '%s\n' '	<string>1</string>'
+            printf '%s\n' '	<key>BUNDLE_ID</key>'
+            printf '%s\n' '	<string>com.iganapolsky.randomtimer</string>'
+            printf '%s\n' '	<key>PROJECT_ID</key>'
+            printf '%s\n' '	<string>random-timer-ci-placeholder</string>'
+            printf '%s\n' '	<key>STORAGE_BUCKET</key>'
+            printf '%s\n' '	<string>random-timer-ci-placeholder.appspot.com</string>'
+            printf '%s\n' '	<key>IS_ADS_ENABLED</key>'
+            printf '%s\n' '	<false/>'
+            printf '%s\n' '	<key>IS_ANALYTICS_ENABLED</key>'
+            printf '%s\n' '	<false/>'
+            printf '%s\n' '	<key>IS_APPINVITE_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>IS_GCM_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>IS_SIGNIN_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>GOOGLE_APP_ID</key>'
+            printf '%s\n' '	<string>1:000000000000:ios:0000000000000000000000</string>'
+            printf '%s\n' '</dict>'
+            printf '%s\n' '</plist>'
+          } > RandomTimer/GoogleService-Info.plist
+
       - name: Select Xcode
         run: |
           XCODE_PATH=""
