@@ -292,7 +292,8 @@ jobs:
             -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
             -skip-testing:RandomTimerUITests \
             -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
 
       - name: Run unit tests
         timeout-minutes: 10
@@ -306,7 +307,8 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath build/TestResults.xcresult \
             -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
 
       - name: Upload iOS xcresult
         if: always()

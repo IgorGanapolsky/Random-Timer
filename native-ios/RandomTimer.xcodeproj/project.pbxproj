@@ -74,7 +74,6 @@
 		PH00112233445566778899AA /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = PH00112233445566778899BB /* PostHog */; };
 		PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */; };
 		FCBFIR001122334455667788AA /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FPDFIR00112233445566778801 /* FirebaseCrashlytics */; };
-		FCBFIRPERF0011223344556677AA /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = FPDFIRPERF0011223344556677BB /* FirebasePerformance */; };
 		CRSVC00112233445566778802 /* CrashReportingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CRSVC00112233445566778801 /* CrashReportingService.swift */; };
 		GSIPL00112233445566778802 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = GSIPL00112233445566778801 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
@@ -197,7 +196,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FCBFIR001122334455667788AA /* FirebaseCrashlytics in Frameworks */,
-				FCBFIRPERF0011223344556677AA /* FirebasePerformance in Frameworks */,
 				PH00112233445566778899AA /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -432,7 +430,6 @@
 			name = RandomTimer;
 			packageProductDependencies = (
 				FPDFIR00112233445566778801 /* FirebaseCrashlytics */,
-				FPDFIRPERF0011223344556677BB /* FirebasePerformance */,
 				PH00112233445566778899BB /* PostHog */,
 			);
 			productName = RandomTimer;
@@ -1011,11 +1008,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FPRFIR00112233445566778801 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
-		};
-		FPDFIRPERF0011223344556677BB /* FirebasePerformance */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FPRFIR00112233445566778801 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebasePerformance;
 		};
 		PH00112233445566778899BB /* PostHog */ = {
 			isa = XCSwiftPackageProductDependency;

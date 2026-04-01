@@ -1,5 +1,4 @@
 import FirebaseCore
-import FirebasePerformance
 import SwiftUI
 
 @main
@@ -8,17 +7,19 @@ struct RandomTimerApp: App {
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
 
-    /// Scheme Test action sets `RT_SKIP_FIREBASE_FOR_TESTS=1` so the XCTest host skips Firebase
-    /// (headless `xcodebuild test` does not reliably forward scheme launch arguments to the app).
+    /// GitHub Actions passes `OTHER_SWIFT_FLAGS=-D RT_SKIP_FIREBASE_FOR_CI` for `xcodebuild test`
+    /// because the simulator app does not inherit shell env vars and CI uses a placeholder plist.
     private static var shouldSkipFirebaseForHostedTests: Bool {
-        ProcessInfo.processInfo.environment["RT_SKIP_FIREBASE_FOR_TESTS"] == "1"
+        #if RT_SKIP_FIREBASE_FOR_CI
+        return true
+        #else
+        return ProcessInfo.processInfo.environment["RT_SKIP_FIREBASE_FOR_TESTS"] == "1"
             || ProcessInfo.processInfo.arguments.contains("-SkipFirebaseForTesting")
+        #endif
     }
 
     init() {
-        if Self.shouldSkipFirebaseForHostedTests {
-            return
-        }
+        guard !Self.shouldSkipFirebaseForHostedTests else { return }
         FirebaseApp.configure()
         CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
