@@ -67,6 +67,17 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
 
 
+def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    compute_section = source.split("- name: Compute monotonic Play version code", 1)[1].split(
+        "- name: Create google-services.json", 1
+    )[0]
+    assert "scripts/compute_android_release_version_code.py" in compute_section
+    assert "--timeout-seconds 180" in compute_section
+    assert "--request-retries 3" in compute_section
+
+
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
