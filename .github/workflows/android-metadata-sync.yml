@@ -10,6 +10,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: native-android
+
+      - name: Install Fastlane
+        run: gem install fastlane
+        working-directory: native-android
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -32,6 +43,12 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY_PATH: ${{ runner.temp }}/play-service-account.json
         run: python3 scripts/sync_android_metadata.py
+
+      - name: Upload Android listing images + screenshots
+        env:
+          SUPPLY_JSON_KEY: ${{ runner.temp }}/play-service-account.json
+        run: fastlane metadata_legacy
+        working-directory: native-android
 
       - name: Cleanup secrets
         if: always()
