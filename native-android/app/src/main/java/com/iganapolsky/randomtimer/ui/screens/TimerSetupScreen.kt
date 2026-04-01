@@ -73,13 +73,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
+import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
-import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
+import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
