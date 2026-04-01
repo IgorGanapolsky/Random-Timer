@@ -180,6 +180,7 @@ final class AIVoiceCalloutService {
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
     private var usedCommandCueFilenames: Set<String> = []
+    private var usedFemaleCommandFilenames: Set<String> = []
 
     init(
         bundle: Bundle = .main,
@@ -213,6 +214,7 @@ final class AIVoiceCalloutService {
         nextCommandCueAt = 0
         lastCommandCueFilename = nil
         usedCommandCueFilenames.removeAll()
+        usedFemaleCommandFilenames.removeAll()
     }
 
     func preview() {
@@ -223,11 +225,15 @@ final class AIVoiceCalloutService {
         currentGender = gender
 
         if gender == .female {
-            playVoiceFile(
-                named: VoicePreviewSampleCatalog.femaleCommandFilenames.randomElement()
-                    ?? VoicePreviewSampleCatalog.femaleCommandFilenames[0],
-                cueText: "Female preview command sample"
-            )
+            let allFemale = VoicePreviewSampleCatalog.femaleCommandFilenames
+            var pool = allFemale.filter { !usedFemaleCommandFilenames.contains($0) }
+            if pool.isEmpty {
+                usedFemaleCommandFilenames.removeAll()
+                pool = allFemale
+            }
+            let picked = pool.randomElement() ?? allFemale[0]
+            usedFemaleCommandFilenames.insert(picked)
+            playVoiceFile(named: picked, cueText: "Female command cue")
             return
         }
 
