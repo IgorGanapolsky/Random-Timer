@@ -539,8 +539,8 @@ fun TimerSetupScreen(
                                 }
                             }
 
-                            // Voice Gender selector (only shown when voice is enabled)
-                            if (config.voiceEnabled) {
+                            // Voice Gender selector (always visible to match iOS)
+                            if (true) {
                                 Row(
                                     modifier =
                                         Modifier
