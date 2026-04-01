@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
 from scripts import sync_android_metadata
 
@@ -69,3 +70,13 @@ def test_commit_edit_does_not_swallow_unrelated_failures() -> None:
 
     with pytest.raises(Exception, match="some other commit failure"):
         sync_android_metadata.commit_edit(edits, edit_id="123")
+
+
+def test_collect_image_assets_requires_core_play_assets_when_strict(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    metadata_root = tmp_path / "metadata"
+    (metadata_root / "en-US" / "images" / "phoneScreenshots").mkdir(parents=True, exist_ok=True)
+    (metadata_root / "en-US" / "images" / "phoneScreenshots" / "1.png").write_bytes(b"png")
+    monkeypatch.setattr(sync_android_metadata, "METADATA_ROOT", metadata_root)
+
+    with pytest.raises(RuntimeError, match="missing required"):
+        sync_android_metadata.collect_image_assets("en-US", strict=True)

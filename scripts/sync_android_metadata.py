@@ -17,6 +17,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Dict, List
 
 PACKAGE_NAME = "com.iganapolsky.randomtimer"
 METADATA_ROOT = Path(__file__).resolve().parent.parent / "native-android" / "fastlane" / "metadata" / "android"
@@ -29,6 +30,12 @@ LANG_MAP = {
     "pt-BR": "pt-BR",
     "ja-JP": "ja-JP",
     "ko": "ko-KR",
+}
+
+IMAGE_REQUIREMENTS = {
+    "icon": {"pattern": "images/icon.png", "min": 1},
+    "featureGraphic": {"pattern": "images/featureGraphic/*.png", "min": 1},
+    "phoneScreenshots": {"pattern": "images/phoneScreenshots/*.png", "min": 3},
 }
 
 
@@ -72,6 +79,44 @@ def commit_edit(edits, *, edit_id: str):
         raise
 
 
+def collect_image_assets(lang_dir: str, *, strict: bool) -> Dict[str, List[Path]]:
+    lang_root = METADATA_ROOT / lang_dir
+    assets: Dict[str, List[Path]] = {}
+    for image_type, cfg in IMAGE_REQUIREMENTS.items():
+        files = sorted(lang_root.glob(str(cfg["pattern"])))
+        if strict and len(files) < int(cfg["min"]):
+            raise RuntimeError(
+                f"{lang_dir}: missing required {image_type} assets "
+                f"(need >= {cfg['min']}, found {len(files)})"
+            )
+        if files:
+            assets[image_type] = files
+    return assets
+
+
+def upload_image_assets(edits, *, edit_id: str, language: str, assets: Dict[str, List[Path]]) -> None:
+    if not assets:
+        return
+
+    from googleapiclient.http import MediaFileUpload
+
+    for image_type, files in assets.items():
+        edits.images().deleteall(
+            packageName=PACKAGE_NAME,
+            editId=edit_id,
+            language=language,
+            imageType=image_type,
+        ).execute()
+        for path in files:
+            edits.images().upload(
+                packageName=PACKAGE_NAME,
+                editId=edit_id,
+                language=language,
+                imageType=image_type,
+                media_body=MediaFileUpload(str(path), mimetype="image/png"),
+            ).execute()
+
+
 def main():
     key_path = os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH", os.path.join(os.environ.get("RUNNER_TEMP", os.getcwd()), "play-service-account.json"))
     if not os.path.exists(key_path):
@@ -85,7 +130,9 @@ def main():
     edit_id = edit["id"]
     print(f"Created edit: {edit_id}")
 
+    strict_assets = (os.environ.get("ANDROID_ASSET_SYNC_STRICT", "false").strip().lower() == "true")
     updated = []
+    assets_updated = []
     skipped = []
     for local_lang, api_lang in LANG_MAP.items():
         title = read_metadata(local_lang, "title.txt")
@@ -112,6 +159,12 @@ def main():
             ).execute()
             updated.append(api_lang)
             print(f"  Updated listing for {api_lang}: title={'yes' if title else 'no'}, short={'yes' if short_desc else 'no'}, full={'yes' if full_desc else 'no'}")
+            assets = collect_image_assets(local_lang, strict=strict_assets)
+            upload_image_assets(edits, edit_id=edit_id, language=api_lang, assets=assets)
+            if assets:
+                assets_updated.append(api_lang)
+                summary = ", ".join(f"{k}={len(v)}" for k, v in assets.items())
+                print(f"  Updated image assets for {api_lang}: {summary}")
         except Exception as e:
             err_msg = str(e).lower()
             if "invalid" in err_msg or "404" in err_msg or "not found" in err_msg:
@@ -130,6 +183,8 @@ def main():
 
     commit_edit(edits, edit_id=edit_id)
     print(f"Committed edit. Updated {len(updated)} languages: {', '.join(updated)}")
+    if assets_updated:
+        print(f"Updated listing assets for locales: {', '.join(assets_updated)}")
 
 
 if __name__ == "__main__":
