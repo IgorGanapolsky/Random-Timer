@@ -25,27 +25,33 @@
         "probeText": "Stay in the fight."
       }
     ],
-    "previewSamples": [
-      {
-        "filename": "female_preview_move_with_a_purpose",
-        "text": "Move with a purpose!"
-      },
-      {
-        "filename": "female_preview_no_hesitation_move",
-        "text": "No hesitation. Move!"
-      },
-      {
-        "filename": "female_preview_stay_in_the_fight",
-        "text": "Stay in the fight!"
-      },
-      {
-        "filename": "female_preview_push_through_dont_you_dare_coast",
-        "text": "Push through! Don't you dare coast!"
-      },
-      {
-        "filename": "female_preview_thirty_seconds_elapsed_stay_locked_in",
-        "text": "Thirty seconds elapsed. Stay locked in."
-      }
-    ]
+    "previewSamples": {
+      "androidCommandFilenames": [
+        "female_cmd_move_with_a_purpose",
+        "female_cmd_no_hesitation_move",
+        "female_cmd_stay_in_the_fight",
+        "female_cmd_push_pace",
+        "female_cmd_keep_tempo_high",
+        "female_cmd_finish_rep_keep_pushing",
+        "female_cmd_drive_forward",
+        "female_cmd_own_this_rep",
+        "female_cmd_pick_it_up",
+        "female_cmd_strong_feet_strong_pace"
+      ],
+      "androidElapsedFilename": "female_preview_elapsed",
+      "iosCommandFilenames": [
+        "female/cmd_move_with_a_purpose",
+        "female/cmd_no_hesitation_move",
+        "female/cmd_stay_in_the_fight",
+        "female/cmd_push_pace",
+        "female/cmd_keep_tempo_high",
+        "female/cmd_finish_rep_keep_pushing",
+        "female/cmd_drive_forward",
+        "female/cmd_own_this_rep",
+        "female/cmd_pick_it_up",
+        "female/cmd_strong_feet_strong_pace"
+      ],
+      "iosElapsedFilename": "female/preview_elapsed"
+    }
   }
 }

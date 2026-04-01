@@ -2,33 +2,79 @@ import XCTest
 import CryptoKit
 @testable import RandomTimer
 
+private final class CounterBox {
+    var value = 0
+}
+
+private func makeUnusedTestAssetURL(filename: String) -> URL {
+    URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
+}
+
+@MainActor
+private func makeVoiceCalloutService() -> AIVoiceCalloutService {
+    let service = AIVoiceCalloutService(bundle: .main)
+    service.resetSession()
+    return service
+}
+
+@MainActor
+private func makeVoiceCalloutService(counter: CounterBox) -> AIVoiceCalloutService {
+    let service = AIVoiceCalloutService(
+        bundle: .main,
+        activateAudioSession: { counter.value += 1 }
+    )
+    service.resetSession()
+    return service
+}
+
+private func sha256Hex(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+}
+
+private func makeRemoteManifest(voicePayload: Data, soundPayload: Data) -> RemoteProAudioManifest {
+    RemoteProAudioManifest(
+        schemaVersion: 1,
+        packId: "2026-04_field",
+        releaseMonth: "2026-04",
+        entitlement: "pro",
+        generatedAt: "2026-04-01T15:00:00Z",
+        voiceCatalog: VoiceCueCatalog(
+            previewElapsed: .init(filename: "preview_elapsed", text: "Fifteen seconds elapsed. Move."),
+            fallbackCommandFilename: "cmd_move",
+            elapsedCues: [.init(second: 15, filename: "elapsed_15s", text: "Fifteen seconds elapsed. Move.")],
+            commandCues: [.init(filename: "cmd_move", text: "Move.")]
+        ),
+        soundCatalog: ProSoundCatalog(
+            packId: "2026-04_field",
+            releaseMonth: "2026-04",
+            entitlement: "pro",
+            sounds: [.init(soundType: "intense", filename: "alarm", durationSeconds: 4)]
+        ),
+        assets: [
+            .init(
+                kind: .voice,
+                filename: "preview_elapsed",
+                relativePath: "packs/2026-04_field/voice/preview_elapsed.mp3",
+                url: makeUnusedTestAssetURL(filename: "preview_elapsed.mp3"),
+                sha256: sha256Hex(voicePayload),
+                bytes: voicePayload.count
+            ),
+            .init(
+                kind: .sound,
+                filename: "alarm",
+                relativePath: "packs/2026-04_field/sounds/alarm.mp3",
+                url: makeUnusedTestAssetURL(filename: "alarm.mp3"),
+                sha256: sha256Hex(soundPayload),
+                bytes: soundPayload.count
+            ),
+        ]
+    )
+}
+
 @MainActor
 final class AIVoiceCalloutServiceTests: XCTestCase {
-    private final class CounterBox {
-        var value = 0
-    }
-
-    private func makeUnusedTestAssetURL(filename: String) -> URL {
-        URL(filePath: NSTemporaryDirectory()).appendingPathComponent(filename)
-    }
-
-    private func makeSut() -> AIVoiceCalloutService {
-        let service = AIVoiceCalloutService(bundle: .main)
-        service.resetSession()
-        return service
-    }
-
-    private func makeSut(counter: CounterBox) -> AIVoiceCalloutService {
-        let service = AIVoiceCalloutService(
-            bundle: .main,
-            activateAudioSession: { counter.value += 1 }
-        )
-        service.resetSession()
-        return service
-    }
-
     func testTriggerCalloutElapsedMilestonesDoNotCrash() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
         let catalog = loadVoiceCalloutCatalog(bundle: .main)
 
         catalog.elapsedCues.map(\.second).forEach { elapsed in
@@ -37,7 +83,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     }
 
     func testPreviewCuesDoNotCrash() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
         sut.preview()
         sut.previewCommandCue()
         sut.previewCountdownCue()
@@ -45,33 +91,52 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
     func testFemalePreviewSamplesResolveFromMainBundle() {
         let filenames = [
-            "female_preview_move_with_a_purpose",
-            "female_preview_no_hesitation_move",
-            "female_preview_stay_in_the_fight",
-            "female_preview_push_through_dont_you_dare_coast",
-            "female_preview_thirty_seconds_elapsed_stay_locked_in",
+            "female/cmd_move_with_a_purpose",
+            "female/cmd_no_hesitation_move",
+            "female/cmd_stay_in_the_fight",
+            "female/cmd_push_pace",
+            "female/cmd_keep_tempo_high",
+            "female/cmd_finish_rep_keep_pushing",
+            "female/cmd_drive_forward",
+            "female/cmd_own_this_rep",
+            "female/cmd_pick_it_up",
+            "female/cmd_strong_feet_strong_pace",
+            "female/preview_elapsed",
         ]
 
         let missing = filenames.filter { bundledVoiceAudioURL(for: $0, bundle: .main) == nil }
         XCTAssertTrue(missing.isEmpty, "Missing female preview samples: \(missing)")
     }
 
+    func testMalePreviewSamplesResolveFromMainBundle() {
+        let filenames = [
+            "cmd_move_with_a_purpose",
+            "cmd_stay_locked_in",
+            "cmd_drive_forward",
+            "cmd_no_hesitation_move",
+            "preview_elapsed",
+        ]
+
+        let missing = filenames.filter { bundledVoiceAudioURL(for: $0, bundle: .main) == nil }
+        XCTAssertTrue(missing.isEmpty, "Missing male preview samples: \(missing)")
+    }
+
     func testFemalePreviewCuesDoNotCrash() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
 
         sut.previewCommandCue(gender: .female)
         sut.previewCountdownCue(gender: .female)
     }
 
     func testResetSessionAllowsElapsedMilestoneToReplay() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
         sut.triggerCallout(elapsedSeconds: 30)
         sut.resetSession()
         sut.triggerCallout(elapsedSeconds: 30)
     }
 
     func testCommandCueScheduleDoesNotCrashAcrossLongRun() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
         for elapsed in 1...180 {
             sut.triggerCallout(elapsedSeconds: elapsed)
         }
@@ -141,6 +206,19 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(selected.filename, "cue_b")
     }
 
+    func testNextPreviewFilenameAvoidsImmediateRepeatWhenPossible() {
+        var usedFilenames: Set<String> = ["cue_a"]
+
+        let selected = nextPreviewFilename(
+            from: ["cue_a", "cue_b", "cue_c"],
+            lastFilename: "cue_b",
+            usedFilenames: &usedFilenames
+        ) { _ in 0 }
+
+        XCTAssertEqual(selected, "cue_c")
+        XCTAssertTrue(usedFilenames.contains("cue_c"))
+    }
+
     func testShortTimersScheduleFollowupCommandCuesEarly() {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
@@ -149,7 +227,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
     func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
         let counter = CounterBox()
-        let sut = makeSut(counter: counter)
+        let sut = makeVoiceCalloutService(counter: counter)
 
         sut.beginSession(totalDurationSeconds: 60)
         sut.previewCountdownCue()
@@ -162,7 +240,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     }
 
     func testTimerCalloutsAlternateBetweenRandomCommandsAndConfiguredElapsedMarks() {
-        let sut = makeSut()
+        let sut = makeVoiceCalloutService()
 
         sut.beginSession(totalDurationSeconds: 120)
         sut.triggerCallout(elapsedSeconds: 14)
@@ -197,7 +275,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {
         let counter = CounterBox()
-        let sut = makeSut(counter: counter)
+        let sut = makeVoiceCalloutService(counter: counter)
 
         sut.beginSession(totalDurationSeconds: 60)
         sut.triggerCallout(elapsedSeconds: 30)
@@ -236,50 +314,6 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(
             try Data(contentsOf: XCTUnwrap(store.soundAudioURL(for: .intense, bundle: .main))),
             soundPayload
-        )
-    }
-
-    private func sha256Hex(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-    }
-
-    private func makeRemoteManifest(voicePayload: Data, soundPayload: Data) -> RemoteProAudioManifest {
-        RemoteProAudioManifest(
-            schemaVersion: 1,
-            packId: "2026-04_field",
-            releaseMonth: "2026-04",
-            entitlement: "pro",
-            generatedAt: "2026-04-01T15:00:00Z",
-            voiceCatalog: VoiceCueCatalog(
-                previewElapsed: .init(filename: "preview_elapsed", text: "Fifteen seconds elapsed. Move."),
-                fallbackCommandFilename: "cmd_move",
-                elapsedCues: [.init(second: 15, filename: "elapsed_15s", text: "Fifteen seconds elapsed. Move.")],
-                commandCues: [.init(filename: "cmd_move", text: "Move.")]
-            ),
-            soundCatalog: ProSoundCatalog(
-                packId: "2026-04_field",
-                releaseMonth: "2026-04",
-                entitlement: "pro",
-                sounds: [.init(soundType: "intense", filename: "alarm", durationSeconds: 4)]
-            ),
-            assets: [
-                .init(
-                    kind: .voice,
-                    filename: "preview_elapsed",
-                    relativePath: "packs/2026-04_field/voice/preview_elapsed.mp3",
-                    url: makeUnusedTestAssetURL(filename: "preview_elapsed.mp3"),
-                    sha256: sha256Hex(voicePayload),
-                    bytes: voicePayload.count
-                ),
-                .init(
-                    kind: .sound,
-                    filename: "alarm",
-                    relativePath: "packs/2026-04_field/sounds/alarm.mp3",
-                    url: makeUnusedTestAssetURL(filename: "alarm.mp3"),
-                    sha256: sha256Hex(soundPayload),
-                    bytes: soundPayload.count
-                ),
-            ]
         )
     }
 }

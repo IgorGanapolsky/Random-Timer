@@ -49,13 +49,22 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
 
 def test_female_preview_samples_exist_on_both_platforms() -> None:
     contract = _contract()
-    sample_filenames = {sample["filename"] for sample in contract["female"]["previewSamples"]}
+    preview_contract = contract["female"]["previewSamples"]
+    android_command_filenames = set(preview_contract["androidCommandFilenames"])
+    android_elapsed_filename = preview_contract["androidElapsedFilename"]
+    ios_command_filenames = set(preview_contract["iosCommandFilenames"])
+    ios_elapsed_filename = preview_contract["iosElapsedFilename"]
 
-    ios_files = {path.stem for path in IOS_AUDIO_DIR.glob("female_preview_*.mp3")}
-    android_files = {path.stem for path in ANDROID_RAW_DIR.glob("female_preview_*.mp3")}
+    android_files = {path.stem for path in ANDROID_RAW_DIR.glob("female_*.mp3")}
+    ios_files = {
+        str(path.relative_to(IOS_AUDIO_DIR).with_suffix(""))
+        for path in IOS_AUDIO_DIR.rglob("female/*.mp3")
+    }
 
-    assert sample_filenames.issubset(ios_files)
-    assert sample_filenames.issubset(android_files)
+    assert android_command_filenames.issubset(android_files)
+    assert android_elapsed_filename in android_files
+    assert ios_command_filenames.issubset(ios_files)
+    assert ios_elapsed_filename in ios_files
 
 
 def test_android_male_preview_samples_exist() -> None:
@@ -107,19 +116,34 @@ def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
 
 def test_android_voice_playback_stays_off_system_tts() -> None:
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+    ios_voice_service = _read(IOS_VOICE_SERVICE)
     command_preview = _section(android_voice_manager, "fun previewCommandCue", "fun previewCountdownCue")
     countdown_preview = _section(android_voice_manager, "fun previewCountdownCue", "fun beginSession")
+    ios_command_preview = _section(ios_voice_service, "func previewCommandCue", "func previewCountdownCue")
+    ios_countdown_preview = _section(ios_voice_service, "func previewCountdownCue", "func beginSession")
 
     assert "TextToSpeech" not in android_voice_manager
     assert "SYSTEM_SYNTHESIZED" not in android_voice_manager
     assert "VoicePreviewSampleCatalog.femaleCommandFilenames" in command_preview
     assert "VoicePreviewSampleCatalog.maleCommandFilenames" in command_preview
+    assert "nextPreviewCueFilename(" in android_voice_manager
     assert "speak(" not in command_preview
     assert "packStore.voiceCatalog()" not in command_preview
     assert "VoicePreviewSampleCatalog.femaleElapsedFilename" in countdown_preview
     assert "VoicePreviewSampleCatalog.maleElapsedFilename" in countdown_preview
     assert "speak(" not in countdown_preview
     assert "packStore.voiceCatalog()" not in countdown_preview
+    assert "female_preview_thirty_seconds_elapsed_stay_locked_in" not in android_voice_manager
+    assert "VoicePreviewSampleCatalog.femaleCommandFilenames" in ios_command_preview
+    assert "VoicePreviewSampleCatalog.maleCommandFilenames" in ios_command_preview
+    assert "nextPreviewFilename(" in ios_voice_service
+    assert "speak(" not in ios_command_preview
+    assert "randomCommandCue()" not in ios_command_preview
+    assert "VoicePreviewSampleCatalog.femaleElapsedFilename" in ios_countdown_preview
+    assert "VoicePreviewSampleCatalog.maleElapsedFilename" in ios_countdown_preview
+    assert "speak(" not in ios_countdown_preview
+    assert "packStore.voiceCatalog(bundle: bundle)" not in ios_countdown_preview
+    assert "female_preview_thirty_seconds_elapsed_stay_locked_in" not in ios_voice_service
 
 
 def test_ci_runs_static_and_live_voice_regression_guards() -> None:
