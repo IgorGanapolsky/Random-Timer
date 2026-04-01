@@ -196,6 +196,15 @@ As of March 26, 2026, Android Firebase APK delivery is not the default internal-
 
 Use `target=android_firebase` only when Firebase APK delivery is explicitly required for debugging or appeal evidence collection.
 
+Target behavior:
+- `all_safe`: iOS TestFlight + Android Google Play internal
+- `all`: iOS TestFlight + Android Google Play internal + Android Firebase App Distribution
+- `ios`: iOS TestFlight only
+- `android_play`: Android Google Play internal only
+- `android_firebase`: Android Firebase App Distribution only
+
+There is no iOS Firebase App Distribution path in CI. iOS internal delivery is TestFlight-only.
+
 Important: Android runtime Firebase and Android App Distribution do not currently use the same Firebase project. Check that document before rotating any Firebase secret.
 
 ### Android (Google Play)
