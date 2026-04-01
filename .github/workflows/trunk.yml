@@ -1,0 +1,66 @@
+name: Trunk CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  # Required for Trunk Merge Queue
+  merge_group:
+
+jobs:
+  trunk-check:
+    name: Trunk Check
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write        # post PR annotations
+      contents: read
+      pull-requests: write # allow Trunk to annotate PRs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history needed for Trunk to compare against base branch
+          fetch-depth: 0
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+        with:
+          # Uploads metrics, analytics, Flaky Test results, and enables Merge Queue API.
+          # Add TRUNK_TOKEN as a Repository Secret in GitHub Settings -> Secrets -> Actions.
+          trunk-token: ${{ secrets.TRUNK_TOKEN }}
+
+  trunk-upload-flaky-tests:
+    name: Upload Flaky Test Results
+    runs-on: ubuntu-latest
+    # Only run on push to develop/main (not on PRs) so results are aggregated per merge
+    if: github.event_name == 'push'
+    needs: trunk-check
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Upload Android test results (JUnit XML) to Trunk Flaky Tests
+      - name: Upload Android Test Results
+        uses: trunk-io/analytics-uploader@main
+        with:
+          junit-paths: '**/build/outputs/androidTest-results/**/*.xml,**/build/test-results/**/*.xml'
+          org-slug: igor-personal
+          token: ${{ secrets.TRUNK_TOKEN }}
+        continue-on-error: true
+
+      # Upload iOS/XCTest results to Trunk Flaky Tests
+      - name: Upload iOS Test Results
+        uses: trunk-io/analytics-uploader@main
+        with:
+          junit-paths: '**/build/reports/junit/*.xml,**/*.xcresult/**/*.xml'
+          org-slug: igor-personal
+          token: ${{ secrets.TRUNK_TOKEN }}
+        continue-on-error: true
