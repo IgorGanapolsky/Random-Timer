@@ -539,41 +539,39 @@ fun TimerSetupScreen(
                                 }
                             }
 
-                            // Voice Gender selector (only shown when voice is enabled)
-                            if (config.voiceEnabled) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    VoiceGender.entries.forEach { gender ->
-                                        FilterChip(
-                                            selected = config.voiceGender == gender,
-                                            onClick = { updateConfig(voiceGender = gender) },
-                                            label = {
-                                                Text(
-                                                    if (gender == VoiceGender.MALE) {
-                                                        "Male"
-                                                    } else {
-                                                        "Female"
-                                                    },
-                                                )
-                                            },
-                                            colors =
-                                                FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                    selectedLabelColor = TimerColors.AccentPrimary,
-                                                ),
-                                            border =
-                                                FilterChipDefaults.filterChipBorder(
-                                                    selectedBorderColor = TimerColors.AccentPrimary,
-                                                    enabled = true,
-                                                    selected = config.voiceGender == gender,
-                                                ),
-                                        )
-                                    }
+                            // Voice Gender selector stays visible so free users can preview both voices.
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                VoiceGender.entries.forEach { gender ->
+                                    FilterChip(
+                                        selected = config.voiceGender == gender,
+                                        onClick = { updateConfig(voiceGender = gender) },
+                                        label = {
+                                            Text(
+                                                if (gender == VoiceGender.MALE) {
+                                                    "Male"
+                                                } else {
+                                                    "Female"
+                                                },
+                                            )
+                                        },
+                                        colors =
+                                            FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedLabelColor = TimerColors.AccentPrimary,
+                                            ),
+                                        border =
+                                            FilterChipDefaults.filterChipBorder(
+                                                selectedBorderColor = TimerColors.AccentPrimary,
+                                                enabled = true,
+                                                selected = config.voiceGender == gender,
+                                            ),
+                                    )
                                 }
                             }
 
