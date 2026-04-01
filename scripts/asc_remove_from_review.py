@@ -69,8 +69,15 @@ def remove_from_review(
         die(f"Could not resolve app id for bundleId={bundle_id}", code=2)
 
     version_id, initial_state = find_app_store_version_id(client, app_id=app_id, version=version)
-    submission_payload = client.request("GET", f"/appStoreVersions/{version_id}/appStoreVersionSubmission")
-    submission_id = _submission_id(submission_payload)
+    try:
+        submission_payload = client.request("GET", f"/appStoreVersions/{version_id}/appStoreVersionSubmission")
+        submission_id = _submission_id(submission_payload)
+    except AscClientError as exc:
+        msg = str(exc)
+        if "HTTP 404" in msg and "appStoreVersionSubmission" in msg:
+            submission_id = ""
+        else:
+            raise
 
     if not submission_id:
         final_state = get_version_state(client, version_id)

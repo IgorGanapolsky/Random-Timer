@@ -27,6 +27,15 @@ class _FakeClient:
         raise AssertionError(f"Unhandled request: {method} {path}")
 
 
+class _FakeClientSubmission404(_FakeClient):
+    def request(self, method, path, params=None, payload=None):
+        if method == "GET" and path.endswith("/appStoreVersionSubmission"):
+            raise asc_remove_from_review.AscClientError(
+                "GET /appStoreVersions/version-1/appStoreVersionSubmission failed: HTTP 404 {'errors':[{'code':'NOT_FOUND'}]}"
+            )
+        return super().request(method, path, params=params, payload=payload)
+
+
 class AscRemoveFromReviewTests(unittest.TestCase):
     def test_submission_id_extracts_dict_payload(self):
         self.assertEqual(
@@ -84,6 +93,34 @@ class AscRemoveFromReviewTests(unittest.TestCase):
 
         self.assertFalse(result.removed)
         self.assertTrue(result.became_editable)
+        self.assertEqual(result.reason, "no_submission_found")
+
+    def test_remove_from_review_treats_submission_404_as_no_submission(self):
+        client = _FakeClientSubmission404(
+            initial_state="WAITING_FOR_REVIEW",
+            final_state="WAITING_FOR_REVIEW",
+            submission_id="",
+        )
+        with (
+            patch.object(asc_remove_from_review, "get_app", return_value={"id": "app-1"}),
+            patch.object(
+                asc_remove_from_review,
+                "find_app_store_version_id",
+                return_value=("version-1", "WAITING_FOR_REVIEW"),
+            ),
+            patch.object(asc_remove_from_review, "get_version_state", return_value="WAITING_FOR_REVIEW"),
+        ):
+            result = asc_remove_from_review.remove_from_review(
+                client,
+                bundle_id="com.example.app",
+                version="1.2.6",
+                wait=False,
+                timeout=0,
+                poll_interval=1,
+            )
+
+        self.assertFalse(result.removed)
+        self.assertFalse(result.became_editable)
         self.assertEqual(result.reason, "no_submission_found")
 
     def test_main_writes_json_output(self):
