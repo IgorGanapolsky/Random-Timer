@@ -104,6 +104,8 @@ final class AnalyticsService {
     func initialize() {
         guard !initialized else { return }
         guard !apiKey.isEmpty else {
+            let distinctId = getOrCreateDistinctId()
+            CrashReportingService.shared.setUserId(distinctId)
             logger.notice("No API key configured - analytics disabled")
             return
         }
@@ -118,6 +120,7 @@ final class AnalyticsService {
         initialized = true
         let distinctId = getOrCreateDistinctId()
         identify(userId: distinctId, properties: analyticsContextProperties)
+        CrashReportingService.shared.setUserId(distinctId)
         trackApplicationLifecycleEvents()
         logger.info("PostHog initialized")
 

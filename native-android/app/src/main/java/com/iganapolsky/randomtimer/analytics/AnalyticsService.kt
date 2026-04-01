@@ -63,6 +63,17 @@ class AnalyticsService
             trackFirstOpenIfNeeded()
         }
 
+        /**
+         * Stable anonymous id aligned with PostHog `distinct_id` after init; use for Crashlytics correlation.
+         */
+        fun observabilityDeviceId(application: Application): String {
+            if (initialized) {
+                val fromSdk = runCatching { PostHog.distinctId() }.getOrNull()
+                if (!fromSdk.isNullOrBlank()) return fromSdk
+            }
+            return getOrCreateDistinctId(application)
+        }
+
         fun track(
             event: String,
             properties: Map<String, Any>? = null,

@@ -25,5 +25,6 @@ class RandomTimerApp : Application() {
         }
 
         analyticsService.initialize(this)
+        crashReportingService.setUserId(analyticsService.observabilityDeviceId(this))
     }
 }
