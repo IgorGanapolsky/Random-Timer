@@ -130,7 +130,7 @@ struct TimerSetupScreen: View {
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
                                 
-                                Text("Elapsed-time voice prompts during the timer")
+                                Text("Time checks and command cues that keep you sharp under pressure")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
