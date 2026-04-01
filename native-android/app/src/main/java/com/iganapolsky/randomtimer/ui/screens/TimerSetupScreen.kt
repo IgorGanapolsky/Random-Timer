@@ -472,7 +472,7 @@ fun TimerSetupScreen(
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Elapsed-time voice prompts during the timer",
+                                        text = "Time checks and command cues that keep you sharp under pressure",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
