@@ -132,7 +132,7 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
 
     assert "fun previewCommandCue(gender: VoiceGender)" in android_preview
     assert "previewCommandCue(gender)" in android_preview_impl
-    assert "fun previewCommandCue()" in android_viewmodel
+    assert "fun previewCommandCue(gender: VoiceGender)" in android_viewmodel
     assert "onCommandCuePreview = viewModel::previewCommandCue" in android_nav
 
     assert "func previewCommandCue()" in ios_timer_manager

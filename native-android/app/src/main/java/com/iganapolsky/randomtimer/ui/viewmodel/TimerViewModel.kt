@@ -15,6 +15,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -299,8 +300,8 @@ class TimerViewModel
             soundPreviewManager.previewVolume(config.value.soundType, volume)
         }
 
-        fun previewCommandCue() {
-            soundPreviewManager.previewCommandCue(config.value.voiceGender)
+        fun previewCommandCue(gender: VoiceGender) {
+            soundPreviewManager.previewCommandCue(gender)
         }
 
         private fun stopSoundPreview() {

@@ -24,6 +24,10 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _section(source: str, start_marker: str, end_marker: str) -> str:
+    return source.split(start_marker, 1)[1].split(end_marker, 1)[0]
+
+
 def _contract() -> dict:
     return json.loads(VOICE_CONTRACT.read_text(encoding="utf-8"))
 
@@ -54,6 +58,18 @@ def test_female_preview_samples_exist_on_both_platforms() -> None:
     assert sample_filenames.issubset(android_files)
 
 
+def test_android_male_preview_samples_exist() -> None:
+    android_files = {path.stem for path in ANDROID_RAW_DIR.glob("cmd_*.mp3")}
+
+    assert {
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_drive_forward",
+        "cmd_no_hesitation_move",
+    }.issubset(android_files)
+    assert (ANDROID_RAW_DIR / "preview_elapsed.mp3").exists()
+
+
 def test_ios_free_preview_keeps_voice_selector_visible() -> None:
     setup = _read(IOS_SETUP)
 
@@ -75,23 +91,35 @@ def test_android_free_preview_keeps_voice_selector_visible() -> None:
 def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
     ios_voice_service = _read(IOS_VOICE_SERVICE)
+    android_setup = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt")
     android_viewmodel = _read(ANDROID_VIEWMODEL)
     android_preview_manager = _read(ANDROID_PREVIEW_MANAGER)
     android_preview_impl = _read(ANDROID_PREVIEW_IMPL)
 
     assert "previewCommandCue(gender: config.voiceGender)" in ios_timer_manager
     assert "func previewCommandCue(gender: VoiceGender" in ios_voice_service
-    assert "soundPreviewManager.previewCommandCue(config.value.voiceGender)" in android_viewmodel
+    assert "onCommandCuePreview(config.voiceGender)" in android_setup
+    assert "fun previewCommandCue(gender: VoiceGender)" in android_viewmodel
+    assert "soundPreviewManager.previewCommandCue(gender)" in android_viewmodel
     assert "fun previewCommandCue(gender: VoiceGender)" in android_preview_manager
     assert "voiceCalloutManager.previewCommandCue(gender)" in android_preview_impl
 
 
 def test_android_voice_playback_stays_off_system_tts() -> None:
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+    command_preview = _section(android_voice_manager, "fun previewCommandCue", "fun previewCountdownCue")
+    countdown_preview = _section(android_voice_manager, "fun previewCountdownCue", "fun beginSession")
 
     assert "TextToSpeech" not in android_voice_manager
     assert "SYSTEM_SYNTHESIZED" not in android_voice_manager
-    assert "female_preview_move_with_a_purpose" in android_voice_manager
+    assert "VoicePreviewSampleCatalog.femaleCommandFilenames" in command_preview
+    assert "VoicePreviewSampleCatalog.maleCommandFilenames" in command_preview
+    assert "speak(" not in command_preview
+    assert "packStore.voiceCatalog()" not in command_preview
+    assert "VoicePreviewSampleCatalog.femaleElapsedFilename" in countdown_preview
+    assert "VoicePreviewSampleCatalog.maleElapsedFilename" in countdown_preview
+    assert "speak(" not in countdown_preview
+    assert "packStore.voiceCatalog()" not in countdown_preview
 
 
 def test_ci_runs_static_and_live_voice_regression_guards() -> None:

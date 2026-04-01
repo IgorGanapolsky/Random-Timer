@@ -132,7 +132,7 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
-    onCommandCuePreview: () -> Unit,
+    onCommandCuePreview: (VoiceGender) -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
@@ -486,7 +486,7 @@ fun TimerSetupScreen(
                                         Surface(
                                             onClick = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onCommandCuePreview()
+                                                onCommandCuePreview(config.voiceGender)
                                             },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -1307,7 +1307,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
-            onCommandCuePreview = {},
+            onCommandCuePreview = { _ -> },
         )
     }
 }
