@@ -13,6 +13,7 @@ import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
@@ -73,6 +74,14 @@ class TimerRepositoryImpl
                 vibrationEnabled = this[KEY_VIBRATION_ENABLED] ?: false,
                 useExtendedRange = this[KEY_USE_EXTENDED_RANGE] ?: false,
                 voiceEnabled = this[KEY_VOICE_ENABLED] ?: false,
+                voiceGender =
+                    this[KEY_VOICE_GENDER]?.let {
+                        try {
+                            VoiceGender.valueOf(it)
+                        } catch (_: Exception) {
+                            VoiceGender.MALE
+                        }
+                    } ?: VoiceGender.MALE,
                 repeatRounds = this[KEY_REPEAT_ROUNDS] ?: 0,
             ).clampedForPro()
 
@@ -91,6 +100,7 @@ class TimerRepositoryImpl
                 preferences[KEY_VIBRATION_ENABLED] = config.vibrationEnabled
                 preferences[KEY_USE_EXTENDED_RANGE] = config.useExtendedRange
                 preferences[KEY_VOICE_ENABLED] = config.voiceEnabled
+                preferences[KEY_VOICE_GENDER] = config.voiceGender.name
                 preferences[KEY_REPEAT_ROUNDS] = config.repeatRounds
             }
         }
@@ -147,6 +157,7 @@ class TimerRepositoryImpl
             private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
             private val KEY_USE_EXTENDED_RANGE = booleanPreferencesKey("use_extended_range")
             private val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
+            private val KEY_VOICE_GENDER = stringPreferencesKey("voice_gender")
             private val KEY_REPEAT_ROUNDS = intPreferencesKey("repeat_rounds")
 
             // Active timer keys
