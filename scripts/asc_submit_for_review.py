@@ -1109,7 +1109,11 @@ def main() -> int:
         return 0
 
     build_id = select_valid_build_id(client, app_id, args.version)
-    attach_build(client, version_id, build_id)
+    # Skip build attachment if version is already submitted (build already attached)
+    if state not in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
+        attach_build(client, version_id, build_id)
+    else:
+        info(f"Version is {state}; skipping build attachment (already attached).")
     submit_for_review(client, app_id, version_id, attach_subscriptions=args.attach_subscriptions)
 
     if args.wait:
