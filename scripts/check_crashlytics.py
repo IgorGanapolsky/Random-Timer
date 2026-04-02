@@ -169,6 +169,91 @@ def query_crash_free_rate(token, hours, table_id):
     return bq_query(token, sql)
 
 
+def collect_crashlytics_snapshot(hours=24):
+    """Return a structured Crashlytics BigQuery snapshot for automation."""
+    payload = {
+        "status": "ok",
+        "source": "crashlytics_bigquery",
+        "project_id": PROJECT_ID,
+        "dataset": BQ_DATASET,
+        "package": PACKAGE,
+        "hours": hours,
+        "table_id": None,
+        "fatal_events": 0,
+        "affected_users": 0,
+        "total_users": 0,
+        "crash_free_users": 0,
+        "crash_free_pct": None,
+        "top_fatal_issues": [],
+    }
+
+    token = get_access_token()
+    tables = check_bigquery_export(token)
+    if tables is None:
+        payload["status"] = "skipped"
+        payload["reason"] = "Crashlytics BigQuery export not set up"
+        return payload
+    if not tables:
+        payload["reason"] = "BigQuery dataset exists but no tables yet"
+        return payload
+
+    table_id = select_crashlytics_table(tables)
+    payload["table_id"] = table_id
+
+    summary = query_crash_summary(token, hours, table_id)
+    if "error" in summary:
+        return {
+            **payload,
+            "status": "error",
+            "reason": str(summary["error"]),
+            "code": summary.get("code"),
+        }
+
+    summary_rows = summary.get("rows") or []
+    payload["fatal_events"] = sum(int((row.get("f") or [{}])[0].get("v") or 0) for row in summary_rows)
+    payload["top_fatal_issues"] = [
+        {
+            "crash_count": int(fields[0].get("v") or 0),
+            "affected_users": int(fields[1].get("v") or 0),
+            "error_type": fields[2].get("v") or "",
+            "file": fields[3].get("v") or "",
+            "line": fields[4].get("v") or "",
+            "issue_title": fields[5].get("v") or "",
+            "issue_subtitle": fields[6].get("v") or "",
+            "version": fields[7].get("v") or "",
+        }
+        for row in summary_rows[:10]
+        for fields in [row.get("f") or []]
+        if len(fields) >= 8
+    ]
+
+    rate_result = query_crash_free_rate(token, hours, table_id)
+    if "error" in rate_result:
+        return {
+            **payload,
+            "status": "error",
+            "reason": str(rate_result["error"]),
+            "code": rate_result.get("code"),
+        }
+
+    rate_rows = rate_result.get("rows") or []
+    if not rate_rows:
+        payload["reason"] = "No session data found"
+        return payload
+
+    fields = rate_rows[0].get("f") or []
+    if len(fields) >= 3:
+        total_users = int(fields[0].get("v") or 0)
+        crash_free_users = int(fields[1].get("v") or 0)
+        crash_free_pct = float(fields[2].get("v") or 100)
+        payload["total_users"] = total_users
+        payload["crash_free_users"] = crash_free_users
+        payload["crash_free_pct"] = crash_free_pct
+        payload["affected_users"] = max(total_users - crash_free_users, 0)
+
+    return payload
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check Crashlytics stability via BigQuery")
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD,
