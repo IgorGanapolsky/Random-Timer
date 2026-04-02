@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
+IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
@@ -115,6 +116,18 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     assert 'fastlane metadata version:"$IOS_VERSION" skip_app_version_update:true' in source
     assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
     assert "fastlane submit_review" not in source
+
+
+def test_ios_metadata_sync_falls_back_to_live_storefront_when_metadata_only_version_is_review_locked():
+    source = IOS_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    resolve_section = source.split("- name: Resolve editable App Store version", 1)[1].split(
+        "- name: Strict screenshot replacement + metadata upload", 1
+    )[0]
+    assert 'if [[ "$IOS_METADATA_ONLY" == "true" ]]' in resolve_section
+    assert "from scripts.asc_resolve_version import _is_editable_state" in resolve_section
+    assert "selected version state '$SELECTED_STATE' is not editable" in resolve_section
+    assert 'SELECTED_VERSION="LIVE"' in resolve_section
 
 
 def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():

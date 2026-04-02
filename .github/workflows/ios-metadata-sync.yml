@@ -138,6 +138,12 @@ jobs:
             echo "⚠️ Cannot create/find editable version $SELECTED_VERSION — will use live version for metadata"
             SELECTED_VERSION="LIVE"
           fi
+          # In metadata-only mode, review-locked versions are not editable. Push to the
+          # current live storefront instead of pretending the pending review version can change.
+          if [[ "$IOS_METADATA_ONLY" == "true" ]] && ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
+            echo "⚠️ metadata_only=true and selected version state '$SELECTED_STATE' is not editable — using live version storefront"
+            SELECTED_VERSION="LIVE"
+          fi
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "Using editable App Store version: $SELECTED_VERSION"
 
