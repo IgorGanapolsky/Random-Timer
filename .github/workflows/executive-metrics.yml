@@ -1,0 +1,53 @@
+name: Executive metrics snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      posthog_days:
+        description: PostHog rolling window (days)
+        type: string
+        default: "30"
+      crashlytics_hours:
+        description: Crashlytics BigQuery lookback (hours)
+        type: string
+        default: "168"
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests google-api-python-client google-auth google-auth-httplib2 pyjwt cryptography
+
+      - name: Generate executive_metrics.json
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          python3 scripts/executive_metrics_snapshot.py \
+            --repo-root . \
+            --days "${{ inputs.posthog_days }}" \
+            --crashlytics-hours "${{ inputs.crashlytics_hours }}" \
+            --no-dotenv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: executive-metrics
+          path: marketing/data/executive_metrics.json
