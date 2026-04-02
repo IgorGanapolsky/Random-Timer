@@ -33,4 +33,4 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in description
     assert "Built for dry fire, sparring, drills, and reaction training." in description
     assert "trains reaction under pressure" in promotional_text
-    assert subtitle == "Train Reaction Under Pressure"
+    assert subtitle == "Train Reaction Under Stress"

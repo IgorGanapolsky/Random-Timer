@@ -16,9 +16,9 @@ def test_generate_android_store_creatives_writes_expected_outputs(tmp_path: Path
 
     raw_colors = {
         "android-setup.png": (10, 40, 70),
-        "android-active.png": (40, 70, 100),
-        "android-settings.png": (70, 100, 130),
-        "android-loop.png": (100, 130, 160),
+        "android-sounds.png": (40, 70, 100),
+        "android-arsenal.png": (70, 100, 130),
+        "android-running.png": (100, 130, 160),
     }
     for name, color in raw_colors.items():
         _write_png(tmp_path / "screenshots" / name, (1080, 2340), color)
