@@ -38,7 +38,7 @@ class _FakeClient:
                     {
                         "id": "shot_b",
                         "attributes": {
-                            "fileName": "2_active.png",
+                            "fileName": "2_running.png",
                             "assetDeliveryState": {"state": "COMPLETE"},
                         },
                     },

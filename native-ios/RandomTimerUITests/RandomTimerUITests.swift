@@ -267,7 +267,7 @@ final class RandomTimerUITests: XCTestCase {
         sleep(2)
         saveScreenshot(
             app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "6_ipad_running.png" : "2_active.png",
+            named: isPadCapture ? "6_ipad_running.png" : "2_running.png",
             outputDir: outputDir
         )
 
@@ -278,7 +278,7 @@ final class RandomTimerUITests: XCTestCase {
         sleep(2)
         saveScreenshot(
             app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "7_ipad_stopped.png" : "3_pro.png",
+            named: isPadCapture ? "7_ipad_stopped.png" : "3_sounds.png",
             outputDir: outputDir
         )
     }

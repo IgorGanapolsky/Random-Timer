@@ -1,25 +1,23 @@
 {
   "status": "success",
-  "generated_at": "2026-03-23T19:37:23.266537+00:00",
+  "generated_at": "2026-04-02T15:30:00.000000+00:00",
   "locale": "en-US",
   "written_files": [
     "native-ios/fastlane/screenshots/en-US/1_setup.png",
-    "native-ios/fastlane/screenshots/en-US/2_active.png",
-    "native-ios/fastlane/screenshots/en-US/3_alarm.png",
-    "native-ios/fastlane/screenshots/en-US/4_running.png",
+    "native-ios/fastlane/screenshots/en-US/2_running.png",
+    "native-ios/fastlane/screenshots/en-US/3_sounds.png",
     "native-ios/fastlane/screenshots/en-US/5_ipad_setup.png",
     "native-ios/fastlane/screenshots/en-US/6_ipad_running.png",
     "native-ios/fastlane/screenshots/en-US/7_ipad_stopped.png"
   ],
   "source_files": {
-    "1_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/1_setup.png",
-    "2_active.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/2_active.png",
-    "3_alarm.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/3_alarm.png",
-    "4_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/4_running.png",
+    "1_setup.png": "maestro capture from Store_iPhone15ProMax",
+    "2_running.png": "maestro capture from Store_iPhone15ProMax",
+    "3_sounds.png": "maestro capture from Store_iPhone15ProMax",
     "5_ipad_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/5_ipad_setup.png",
     "6_ipad_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/6_ipad_running.png",
     "7_ipad_stopped.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/7_ipad_stopped.png"
   },
-  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260323_193721",
+  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260402_153000",
   "report_path": "native-ios/fastlane/screenshots/en-US/report.json"
 }

@@ -18,9 +18,9 @@ Color = Tuple[int, int, int]
 
 SCREENSHOT_MAP = {
     "1_setup.png": "android-setup.png",
-    "2_active.png": "android-active.png",
-    "3_settings.png": "android-settings.png",
-    "4_loop.png": "android-loop.png",
+    "2_sounds.png": "android-sounds.png",
+    "3_arsenal.png": "android-arsenal.png",
+    "4_running.png": "android-running.png",
 }
 
 PLAY_SCREENSHOT_SIZE = (1344, 2992)

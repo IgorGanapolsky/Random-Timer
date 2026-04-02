@@ -33,6 +33,7 @@ expo-env.d.ts
 **/build/
 native-android/fastlane/README.md
 native-android/fastlane/report.xml
+native-ios/fastlane/report.xml
 
 # debug
 npm-debug.*

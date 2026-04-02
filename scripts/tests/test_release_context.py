@@ -60,8 +60,8 @@ class ReleaseContextLocalTests(unittest.TestCase):
 
             # iPhone large
             _write_png(shots / "1_setup.png", 1320, 2868, (10, 20, 30))
-            _write_png(shots / "2_active.png", 1320, 2868, (11, 20, 30))
-            _write_png(shots / "3_pro.png", 1320, 2868, (12, 20, 30))
+            _write_png(shots / "2_running.png", 1320, 2868, (11, 20, 30))
+            _write_png(shots / "3_sounds.png", 1320, 2868, (12, 20, 30))
             # iPad large + required file names
             _write_png(shots / "5_ipad_setup.png", 2064, 2752, (20, 20, 30))
             _write_png(shots / "6_ipad_running.png", 2064, 2752, (21, 20, 30))
@@ -89,7 +89,7 @@ class ReleaseContextLocalTests(unittest.TestCase):
             meta.mkdir(parents=True)
 
             _write_png(shots / "1_setup.png", 1320, 2868)
-            _write_png(shots / "2_active.png", 1320, 2868)
+            _write_png(shots / "2_running.png", 1320, 2868)
             _write_png(shots / "5_ipad_setup.png", 2064, 2752)
 
             (meta / "description.txt").write_text("", encoding="utf-8")

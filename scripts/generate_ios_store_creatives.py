@@ -36,17 +36,17 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
         subtitle="Set a live range and let randomness punish lazy rhythm.",
         badge="DRY FIRE • MMA • HIIT",
     ),
-    "2_active.png": CreativeText(
+    "2_running.png": CreativeText(
         eyebrow="STAY HONEST",
         title="NO COUNTDOWN TO CHEAT",
         subtitle="Unpredictable start cues stop anticipation before it starts.",
         badge="PURE REACTION WORK",
     ),
-    "3_pro.png": CreativeText(
+    "3_sounds.png": CreativeText(
         eyebrow="CUT THROUGH CHAOS",
-        title="UNLOCK FULL TRAINING MODE",
-        subtitle="Longer sessions, voice coaching, and the full sound library for Pro users.",
-        badge="PRO UPGRADE",
+        title="SOUND ARSENAL",
+        subtitle="8 Pro sounds and voice callouts to keep you sharp under pressure.",
+        badge="PRO SOUNDS",
     ),
     "5_ipad_setup.png": CreativeText(
         eyebrow="COACH MODE",
@@ -71,8 +71,8 @@ CREATIVE_COPY: Dict[str, CreativeText] = {
 # Fixed SOURCE_MAP to avoid nested compositions.
 SOURCE_MAP: Dict[str, str] = {
     "1_setup.png": "1_setup.png",
-    "2_active.png": "2_active.png",
-    "3_pro.png": "3_pro.png",
+    "2_running.png": "2_running.png",
+    "3_sounds.png": "3_sounds.png",
     "5_ipad_setup.png": "5_ipad_setup.png",
     "6_ipad_running.png": "6_ipad_running.png",
     "7_ipad_stopped.png": "7_ipad_stopped.png",

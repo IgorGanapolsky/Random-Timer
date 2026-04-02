@@ -103,7 +103,7 @@ def check_bigquery_export(token):
             return None  # Dataset doesn't exist
         error_body = e.read().decode()
         print(f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}", file=sys.stderr)
-        return None
+        return {"http_error": e.code, "message": error_body[:200]}
 
 
 def select_crashlytics_table(tables):
@@ -191,7 +191,11 @@ def collect_crashlytics_snapshot(hours: int = 168) -> Dict[str, Any]:
 
     tables = check_bigquery_export(token)
     if tables is None:
-        out["reason"] = "bigquery_dataset_missing_or_inaccessible"
+        out["reason"] = "bigquery_dataset_not_found"
+        return out
+    if isinstance(tables, dict) and "http_error" in tables:
+        out["status"] = "error"
+        out["reason"] = f"bigquery_http_{tables['http_error']}: {tables['message']}"
         return out
     if not tables:
         out["status"] = "ok"

@@ -249,9 +249,8 @@ native-ios/fastlane/metadata/en-US/
 
 native-ios/fastlane/screenshots/en-US/
 ├── 1_setup.png
-├── 2_active.png
-├── 3_alarm.png
-├── 4_running.png
+├── 2_running.png
+├── 3_sounds.png
 ├── 5_ipad_setup.png       # Required iPad screenshots
 ├── 6_ipad_running.png
 └── 7_ipad_stopped.png
