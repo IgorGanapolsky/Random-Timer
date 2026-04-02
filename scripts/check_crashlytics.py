@@ -25,6 +25,7 @@ import os
 import sys
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 import google.auth
 from google.auth.transport.requests import Request
@@ -148,6 +149,103 @@ def query_crash_summary(token, hours, table_id):
     LIMIT 20
     """
     return bq_query(token, sql)
+
+
+def query_fatal_event_count(token, hours, table_id) -> Dict[str, Any]:
+    """Count fatal Crashlytics events in the lookback window."""
+    sql = f"""
+    SELECT COUNT(*) as fatal_events
+    FROM `{PROJECT_ID}.{BQ_DATASET}.{table_id}`
+    WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {hours} HOUR)
+      AND COALESCE(is_fatal, FALSE) = TRUE
+    """
+    return bq_query(token, sql)
+
+
+def _bq_first_row_values(result: Dict[str, Any]) -> Optional[List[Any]]:
+    rows = result.get("rows") or []
+    if not rows:
+        return None
+    return [f.get("v") for f in rows[0].get("f", [])]
+
+
+def collect_crashlytics_snapshot(hours: int = 168) -> Dict[str, Any]:
+    """Return a JSON-serializable Crashlytics summary via BigQuery export.
+
+    Does not call sys.exit. Used by executive_metrics_snapshot and automation.
+    """
+    out: Dict[str, Any] = {
+        "status": "skipped",
+        "source": "firebase_crashlytics_bigquery",
+        "project_id": PROJECT_ID,
+        "package": PACKAGE,
+        "dataset": BQ_DATASET,
+        "lookback_hours": hours,
+    }
+    try:
+        token = get_access_token()
+    except Exception as exc:
+        out["status"] = "error"
+        out["reason"] = f"credentials: {exc}"
+        return out
+
+    tables = check_bigquery_export(token)
+    if tables is None:
+        out["reason"] = "bigquery_dataset_missing_or_inaccessible"
+        return out
+    if not tables:
+        out["status"] = "ok"
+        out["reason"] = "no_export_tables_yet"
+        out["fatal_crash_events"] = 0
+        out["bigquery_tables"] = []
+        return out
+
+    out["bigquery_tables"] = tables
+    try:
+        table_id = select_crashlytics_table(tables)
+    except ValueError as exc:
+        out["status"] = "error"
+        out["reason"] = str(exc)
+        return out
+
+    out["table_id"] = table_id
+
+    fatal_result = query_fatal_event_count(token, hours, table_id)
+    if "error" in fatal_result:
+        out["status"] = "error"
+        out["reason"] = fatal_result.get("error", "bq_query_failed")
+        return out
+    fatal_vals = _bq_first_row_values(fatal_result)
+    fatal_count = int(fatal_vals[0] or 0) if fatal_vals else 0
+    out["fatal_crash_events"] = fatal_count
+
+    summary = query_crash_summary(token, hours, table_id)
+    top: List[Dict[str, Any]] = []
+    if "error" not in summary and summary.get("rows"):
+        for row in summary["rows"][:10]:
+            vals = [f.get("v", "") for f in row.get("f", [])]
+            if len(vals) >= 8:
+                top.append(
+                    {
+                        "crash_events": vals[0],
+                        "affected_users": vals[1],
+                        "error_type": vals[2],
+                        "issue_title": vals[5],
+                        "version": vals[7],
+                    }
+                )
+    out["top_fatal_issues"] = top
+
+    rate_result = query_crash_free_rate(token, hours, table_id)
+    if "error" not in rate_result:
+        rv = _bq_first_row_values(rate_result)
+        if rv and len(rv) >= 3:
+            out["session_installations_observed"] = int(rv[0] or 0)
+            out["crash_free_installations"] = int(rv[1] or 0)
+            out["crash_free_percent"] = float(rv[2] or 0)
+
+    out["status"] = "ok"
+    return out
 
 
 def query_crash_free_rate(token, hours, table_id):

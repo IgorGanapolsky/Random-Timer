@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# Generated executive dashboard snapshot (use CI artifact or run locally)
+marketing/data/executive_metrics.json
+
 # Expo
 .expo/
 dist/

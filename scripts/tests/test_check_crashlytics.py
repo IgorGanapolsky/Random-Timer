@@ -1,6 +1,7 @@
 """Tests for check_crashlytics.py."""
 
 import importlib
+import importlib.util
 import json
 import os
 import sys
@@ -139,3 +140,20 @@ def test_get_access_token_uses_inline_service_account_json():
     assert token == access_value
     mock_from_info.assert_called_once()
     fake_creds.refresh.assert_called_once()
+
+
+def test_collect_crashlytics_snapshot_no_tables_yet():
+    with patch.object(cc, "get_access_token", return_value="tok"):
+        with patch.object(cc, "check_bigquery_export", return_value=[]):
+            snap = cc.collect_crashlytics_snapshot(hours=24)
+    assert snap["status"] == "ok"
+    assert snap["fatal_crash_events"] == 0
+    assert snap["reason"] == "no_export_tables_yet"
+
+
+def test_collect_crashlytics_snapshot_missing_dataset():
+    with patch.object(cc, "get_access_token", return_value="tok"):
+        with patch.object(cc, "check_bigquery_export", return_value=None):
+            snap = cc.collect_crashlytics_snapshot(hours=24)
+    assert snap["status"] == "skipped"
+    assert "bigquery_dataset" in snap.get("reason", "")
