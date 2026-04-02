@@ -250,7 +250,14 @@ def collect_crashlytics_snapshot(hours=24):
         payload["reason"] = "BigQuery dataset exists but no tables yet"
         return payload
 
-    table_id = select_crashlytics_table(tables)
+    try:
+        table_id = select_crashlytics_table(tables)
+    except ValueError as exc:
+        return {
+            **payload,
+            "status": "error",
+            "reason": str(exc),
+        }
     payload["table_id"] = table_id
 
     summary = query_crash_summary(token, hours, table_id)

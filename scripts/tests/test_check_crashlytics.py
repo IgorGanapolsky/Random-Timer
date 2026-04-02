@@ -185,3 +185,12 @@ def test_collect_crashlytics_snapshot_handles_missing_export():
 
     assert payload["status"] == "skipped"
     assert payload["reason"] == "Crashlytics BigQuery export not set up"
+
+
+def test_collect_crashlytics_snapshot_handles_missing_package_table():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=["other_app_ANDROID_REALTIME"]):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["status"] == "error"
+    assert "No Crashlytics export table found" in payload["reason"]
