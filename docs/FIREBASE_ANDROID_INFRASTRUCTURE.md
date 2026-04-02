@@ -8,8 +8,10 @@ Android Firebase is intentionally split across two backends:
 
 | Purpose | Project ID | Project Number | App ID |
 |---|---|---:|---|
-| Runtime services (`google-services.json`, Crashlytics BigQuery export) | `random-timer-486213` | `624873778337` | Runtime app ID is supplied by `GOOGLE_SERVICES_JSON` |
+| Runtime Android config in CI/release (`google-services.json` from secret) | Varies by secret | Varies | Supplied by `GOOGLE_SERVICES_JSON` |
+| **Crashlytics → BigQuery streaming export** (automated queries / `check_crashlytics.py`) | **`random-timer-dist-new`** | Per GCP console | Same app; dataset `firebase_crashlytics` |
 | Firebase App Distribution | `random-timer-dist-new` | Verify from `FIREBASE_ANDROID_APP_ID` secret or live run log | Supplied by `FIREBASE_ANDROID_APP_ID` |
+| Legacy / historical project (some docs and older keys) | `random-timer-486213` | `624873778337` | Do not assume current BQ export lives here |
 
 ## Why The Split Exists
 
