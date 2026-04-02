@@ -74,6 +74,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write GoogleService-Info.plist from secret (Firebase)
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+            echo "✅ Wrote RandomTimer/GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST"
+          else
+            echo "ℹ️ GOOGLE_SERVICE_INFO_PLIST not set; using any plist already in the workspace"
+          fi
+        working-directory: native-ios
+
       - name: Fail fast on required iOS release secrets
         env:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
