@@ -1,0 +1,55 @@
+{
+  "device_frame_version": "latest",
+  "default": {
+    "keyword": {
+      "fonts": [
+        {
+          "font": "/System/Library/Fonts/Helvetica.ttc",
+          "supported": ["en-US"]
+        }
+      ],
+      "font_size": 80,
+      "color": "#FFFFFF"
+    },
+    "title": {
+      "fonts": [
+        {
+          "font": "/System/Library/Fonts/Helvetica.ttc",
+          "supported": ["en-US"]
+        }
+      ],
+      "font_size": 44,
+      "color": "#AAAAAA"
+    },
+    "background": "#1A1A2E",
+    "padding": 60,
+    "show_complete_frame": false,
+    "stack_title": true
+  },
+  "data": [
+    {
+      "filter": "1_setup",
+      "background": "#1A1A2E"
+    },
+    {
+      "filter": "2_running",
+      "background": "#1A1A2E"
+    },
+    {
+      "filter": "3_sounds",
+      "background": "#1A1A2E"
+    },
+    {
+      "filter": "5_ipad",
+      "background": "#1A1A2E"
+    },
+    {
+      "filter": "6_ipad",
+      "background": "#1A1A2E"
+    },
+    {
+      "filter": "7_ipad",
+      "background": "#1A1A2E"
+    }
+  ]
+}
