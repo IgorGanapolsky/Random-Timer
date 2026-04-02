@@ -40,6 +40,14 @@ do
   adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
   adb shell pm clear com.iganapolsky.randomtimer 2>/dev/null || true
   adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
+  adb shell am start -W -n com.iganapolsky.randomtimer/.MainActivity >/dev/null
+  for i in $(seq 1 20); do
+    if adb shell dumpsys activity activities 2>/dev/null | grep -q 'mResumed=true.*randomtimer'; then
+      echo "Flow app launch resumed after ${i}s"
+      break
+    fi
+    sleep 1
+  done
   sleep 2
   if maestro test "$flow"; then
     echo "PASSED: $flow"

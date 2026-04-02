@@ -1,9 +1,6 @@
 appId: com.iganapolsky.randomtimer
 ---
-# CI Smoke test: Works on any screen size (compact or regular).
-# Does NOT assert on "Random Tactical Timer" title which is hidden in compact mode.
-- launchApp:
-    clearState: true
+# CI Smoke test: the harness pre-launches a clean app instance before Maestro attaches.
 - waitForAnimationToEnd
 
 # Cold CI emulators + first Compose frame can exceed 30s.
