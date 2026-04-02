@@ -1,4 +1,9 @@
-1_setup.png	2064x2752
-2_active.png	2064x2752
-3_alarm.png	2064x2752
-4_running.png	2064x2752
+# Reference dimensions for App Store screenshots (en-US) — update when captures change.
+# iPhone 6.7" class (1290x2796) — see scripts/refresh_ios_screenshot_creatives.py SCREENSHOT_SPECS.
+1_setup.png	1290x2796
+2_running.png	1290x2796
+3_sounds.png	1290x2796
+# iPad 13" class (2048x2732 or 2064x2752)
+5_ipad_setup.png	2048x2732
+6_ipad_running.png	2048x2732
+7_ipad_stopped.png	2048x2732

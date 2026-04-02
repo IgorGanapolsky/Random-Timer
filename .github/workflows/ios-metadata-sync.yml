@@ -163,9 +163,9 @@ jobs:
 
           # If using live version, use fastlane deliver directly instead of strict sync
           if [[ "$SELECTED_VERSION" == "LIVE" ]]; then
-            echo "Using fastlane deliver with use_live_version for metadata-only sync"
+            echo "Using fastlane ios metadata with use_live_version for metadata-only sync"
             cd native-ios
-            fastlane metadata use_live_version:true
+            fastlane ios metadata use_live_version:true
             exit $?
           fi
 
