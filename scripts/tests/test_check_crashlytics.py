@@ -2,6 +2,7 @@
 
 import importlib
 import json
+import math
 import os
 import sys
 import types
@@ -173,7 +174,7 @@ def test_collect_crashlytics_snapshot_returns_structured_payload():
     assert payload["affected_users"] == 2
     assert payload["total_users"] == 10
     assert payload["crash_free_users"] == 8
-    assert payload["crash_free_pct"] == 80.0
+    assert math.isclose(payload["crash_free_pct"], 80.0)
     assert payload["top_fatal_issues"][0]["issue_title"] == "Crash title"
 
 

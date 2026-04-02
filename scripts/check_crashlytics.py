@@ -169,9 +169,8 @@ def query_crash_free_rate(token, hours, table_id):
     return bq_query(token, sql)
 
 
-def collect_crashlytics_snapshot(hours=24):
-    """Return a structured Crashlytics BigQuery snapshot for automation."""
-    payload = {
+def _base_snapshot(hours):
+    return {
         "status": "ok",
         "source": "crashlytics_bigquery",
         "project_id": PROJECT_ID,
@@ -186,6 +185,60 @@ def collect_crashlytics_snapshot(hours=24):
         "crash_free_pct": None,
         "top_fatal_issues": [],
     }
+
+
+def _error_snapshot(payload, result):
+    return {
+        **payload,
+        "status": "error",
+        "reason": str(result["error"]),
+        "code": result.get("code"),
+    }
+
+
+def _parse_summary_rows(rows):
+    parsed_rows = []
+    for row in rows[:10]:
+        fields = row.get("f") or []
+        if len(fields) < 8:
+            continue
+        parsed_rows.append(
+            {
+                "crash_count": int(fields[0].get("v") or 0),
+                "affected_users": int(fields[1].get("v") or 0),
+                "error_type": fields[2].get("v") or "",
+                "file": fields[3].get("v") or "",
+                "line": fields[4].get("v") or "",
+                "issue_title": fields[5].get("v") or "",
+                "issue_subtitle": fields[6].get("v") or "",
+                "version": fields[7].get("v") or "",
+            }
+        )
+    return parsed_rows
+
+
+def _apply_rate_snapshot(payload, rate_rows):
+    if not rate_rows:
+        payload["reason"] = "No session data found"
+        return payload
+
+    fields = rate_rows[0].get("f") or []
+    if len(fields) < 3:
+        return payload
+
+    total_users = int(fields[0].get("v") or 0)
+    crash_free_users = int(fields[1].get("v") or 0)
+    crash_free_pct = float(fields[2].get("v") or 100)
+    payload["total_users"] = total_users
+    payload["crash_free_users"] = crash_free_users
+    payload["crash_free_pct"] = crash_free_pct
+    payload["affected_users"] = max(total_users - crash_free_users, 0)
+    return payload
+
+
+def collect_crashlytics_snapshot(hours=24):
+    """Return a structured Crashlytics BigQuery snapshot for automation."""
+    payload = _base_snapshot(hours)
 
     token = get_access_token()
     tables = check_bigquery_export(token)
@@ -202,56 +255,17 @@ def collect_crashlytics_snapshot(hours=24):
 
     summary = query_crash_summary(token, hours, table_id)
     if "error" in summary:
-        return {
-            **payload,
-            "status": "error",
-            "reason": str(summary["error"]),
-            "code": summary.get("code"),
-        }
+        return _error_snapshot(payload, summary)
 
     summary_rows = summary.get("rows") or []
-    payload["fatal_events"] = sum(int((row.get("f") or [{}])[0].get("v") or 0) for row in summary_rows)
-    payload["top_fatal_issues"] = [
-        {
-            "crash_count": int(fields[0].get("v") or 0),
-            "affected_users": int(fields[1].get("v") or 0),
-            "error_type": fields[2].get("v") or "",
-            "file": fields[3].get("v") or "",
-            "line": fields[4].get("v") or "",
-            "issue_title": fields[5].get("v") or "",
-            "issue_subtitle": fields[6].get("v") or "",
-            "version": fields[7].get("v") or "",
-        }
-        for row in summary_rows[:10]
-        for fields in [row.get("f") or []]
-        if len(fields) >= 8
-    ]
+    payload["top_fatal_issues"] = _parse_summary_rows(summary_rows)
+    payload["fatal_events"] = sum(issue["crash_count"] for issue in payload["top_fatal_issues"])
 
     rate_result = query_crash_free_rate(token, hours, table_id)
     if "error" in rate_result:
-        return {
-            **payload,
-            "status": "error",
-            "reason": str(rate_result["error"]),
-            "code": rate_result.get("code"),
-        }
+        return _error_snapshot(payload, rate_result)
 
-    rate_rows = rate_result.get("rows") or []
-    if not rate_rows:
-        payload["reason"] = "No session data found"
-        return payload
-
-    fields = rate_rows[0].get("f") or []
-    if len(fields) >= 3:
-        total_users = int(fields[0].get("v") or 0)
-        crash_free_users = int(fields[1].get("v") or 0)
-        crash_free_pct = float(fields[2].get("v") or 100)
-        payload["total_users"] = total_users
-        payload["crash_free_users"] = crash_free_users
-        payload["crash_free_pct"] = crash_free_pct
-        payload["affected_users"] = max(total_users - crash_free_users, 0)
-
-    return payload
+    return _apply_rate_snapshot(payload, rate_result.get("rows") or [])
 
 
 def main():
