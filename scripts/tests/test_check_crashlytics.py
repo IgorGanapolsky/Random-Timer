@@ -23,7 +23,7 @@ cc = _import_script()
 
 
 def test_constants():
-    assert cc.PROJECT_ID == "random-timer-486213"
+    assert cc.PROJECT_ID == "random-timer-dist-new"
     assert cc.PACKAGE == "com.iganapolsky.randomtimer"
     assert cc.BQ_DATASET == "firebase_crashlytics"
     assert int(cc.DEFAULT_THRESHOLD) == 99

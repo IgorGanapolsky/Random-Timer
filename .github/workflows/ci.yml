@@ -632,6 +632,7 @@ jobs:
       - name: Check crash-free rate
         env:
           CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
+          CRASHLYTICS_PROJECT_ID: random-timer-dist-new
         run: python scripts/check_crashlytics.py --threshold 99.0 --hours 24
 
   notify:
