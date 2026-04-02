@@ -39,6 +39,8 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
+          # Must match the Firebase project where Crashlytics → BigQuery streaming is linked.
+          CRASHLYTICS_PROJECT_ID: random-timer-dist-new
         run: |
           set -euo pipefail
           python3 scripts/executive_metrics_snapshot.py \

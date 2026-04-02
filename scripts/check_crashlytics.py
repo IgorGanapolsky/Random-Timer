@@ -6,16 +6,15 @@ Usage:
 
 Setup (one-time in Firebase Console):
     1. Firebase Console > Crashlytics > BigQuery integration > Link
-    2. This enables streaming export to: random-timer-486213.firebase_crashlytics.{app_id}
+    2. Streaming export lands in: <project>.firebase_crashlytics (see CRASHLYTICS_PROJECT_ID).
 
 Requires:
     - CRASHLYTICS_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
-    - BigQuery API enabled on random-timer-486213
-    - Firebase project: random-timer-486213
+    - BigQuery API enabled on the Firebase/GCP project that owns the export
+    - Env CRASHLYTICS_PROJECT_ID must match that project (default: random-timer-dist-new)
 
-This script reads runtime Crashlytics data only. Android App Distribution is
-owned by a separate Firebase project and is documented in
-docs/FIREBASE_ANDROID_INFRASTRUCTURE.md.
+This script reads runtime Crashlytics data only. See docs/FIREBASE_ANDROID_INFRASTRUCTURE.md
+for project history (App Distribution vs runtime).
 """
 
 import ssl
@@ -31,7 +30,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 
 
-PROJECT_ID = os.environ.get("CRASHLYTICS_PROJECT_ID", "random-timer-486213")
+PROJECT_ID = os.environ.get("CRASHLYTICS_PROJECT_ID", "random-timer-dist-new")
 PACKAGE = os.environ.get("CRASHLYTICS_PACKAGE", "com.iganapolsky.randomtimer")
 # BigQuery dataset created by Crashlytics streaming export
 BQ_DATASET = os.environ.get("CRASHLYTICS_BQ_DATASET", "firebase_crashlytics")
