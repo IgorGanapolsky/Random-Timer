@@ -61,7 +61,8 @@ class ReleaseContextLocalTests(unittest.TestCase):
             # iPhone large
             _write_png(shots / "1_setup.png", 1320, 2868, (10, 20, 30))
             _write_png(shots / "2_active.png", 1320, 2868, (11, 20, 30))
-            _write_png(shots / "3_pro.png", 1320, 2868, (12, 20, 30))
+            _write_png(shots / "3_alarm.png", 1320, 2868, (12, 20, 30))
+            _write_png(shots / "4_running.png", 1320, 2868, (13, 20, 30))
             # iPad large + required file names
             _write_png(shots / "5_ipad_setup.png", 2064, 2752, (20, 20, 30))
             _write_png(shots / "6_ipad_running.png", 2064, 2752, (21, 20, 30))
@@ -75,9 +76,11 @@ class ReleaseContextLocalTests(unittest.TestCase):
             local = collect_local_context(repo, "en-US")
 
             self.assertTrue(local["local_ready"])
-            self.assertEqual(local["screenshots"]["iphone_large_count"], 3)
+            self.assertEqual(local["screenshots"]["iphone_large_count"], 4)
             self.assertEqual(local["screenshots"]["ipad_large_count"], 3)
+            self.assertEqual(local["screenshots"]["missing_required_iphone_files"], [])
             self.assertEqual(local["screenshots"]["missing_required_ipad_files"], [])
+            self.assertEqual(local["screenshots"]["disallowed_files"], [])
             self.assertEqual(local["metadata"]["missing_required_fields"], [])
 
     def test_collect_local_context_reports_missing_requirements(self):
@@ -100,6 +103,7 @@ class ReleaseContextLocalTests(unittest.TestCase):
             self.assertFalse(local["local_ready"])
             self.assertIn("support_url", local["metadata"]["missing_required_fields"])
             self.assertIn("privacy_url", local["metadata"]["missing_required_fields"])
+            self.assertIn("3_alarm.png", local["screenshots"]["missing_required_iphone_files"])
             self.assertIn("7_ipad_stopped.png", local["screenshots"]["missing_required_ipad_files"])
 
 

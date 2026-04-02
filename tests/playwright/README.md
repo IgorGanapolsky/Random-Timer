@@ -60,9 +60,11 @@ Optional:
 
 Set `STRICT_STORE_READINESS=1` when running local checks to enforce:
 
-- At least 3 screenshots in iPhone 6.9"/6.5" class
+- At least 4 screenshots in iPhone 6.9"/6.5" class
 - At least 3 screenshots in iPad 13" class
+- Required iPhone captures: `1_setup.png`, `2_active.png`, `3_alarm.png`, `4_running.png`
 - Required iPad captures: `5_ipad_setup.png`, `6_ipad_running.png`, `7_ipad_stopped.png`
+- No paywall storefront screenshot (`3_pro.png`)
 - At least 2 unique images per iPhone/iPad class (to prevent placeholder duplicates)
 
 ```bash

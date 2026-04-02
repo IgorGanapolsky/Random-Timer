@@ -55,8 +55,8 @@ test.describe("Local Store Metadata", () => {
 
     expect(
       iosShots.length,
-      "Expected at least 3 iOS screenshots in fastlane/screenshots/en-US.",
-    ).toBeGreaterThanOrEqual(3);
+      "Expected exactly 7 iOS storefront screenshots in fastlane/screenshots/en-US.",
+    ).toBe(7);
   });
 
   test("strict App Store readiness requires iPhone and iPad screenshot coverage", async () => {
@@ -77,12 +77,18 @@ test.describe("Local Store Metadata", () => {
       "6_ipad_running.png",
       "7_ipad_stopped.png",
     ];
+    const requiredIphoneFiles = [
+      "1_setup.png",
+      "2_active.png",
+      "3_alarm.png",
+      "4_running.png",
+    ];
     const iosShotNames = new Set(iosShots.map((filePath) => path.basename(filePath)));
 
     expect(
       counts.iphone_69_or_65,
-      "Need at least 3 screenshots for iPhone 6.9\"/6.5\" class.",
-    ).toBeGreaterThanOrEqual(3);
+      "Need at least 4 screenshots for iPhone 6.9\"/6.5\" class.",
+    ).toBeGreaterThanOrEqual(4);
     expect(
       counts.ipad_13,
       "Need at least 3 screenshots for iPad 13\" class.",
@@ -97,8 +103,13 @@ test.describe("Local Store Metadata", () => {
       "Need at least 2 distinct iPad-class screenshots.",
     ).toBeGreaterThanOrEqual(2);
 
+    for (const fileName of requiredIphoneFiles) {
+      expect(iosShotNames.has(fileName), `Missing required iPhone screenshot ${fileName}`).toBeTruthy();
+    }
     for (const fileName of requiredIpadFiles) {
       expect(iosShotNames.has(fileName), `Missing required iPad screenshot ${fileName}`).toBeTruthy();
     }
+
+    expect(iosShotNames.has("3_pro.png"), "Paywall screenshot must not ship in App Store storefront set").toBeFalsy();
   });
 });
