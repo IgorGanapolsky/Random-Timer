@@ -290,6 +290,10 @@ def main():
         print("This is required for automated crash monitoring in CI.")
         sys.exit(0)
 
+    if isinstance(tables, dict) and "http_error" in tables:
+        print(f"ERROR: BigQuery API returned HTTP {tables['http_error']}: {tables['message']}")
+        sys.exit(1)
+
     if not tables:
         print("BigQuery dataset exists but no tables yet.")
         print("Tables auto-create when the next crash event streams in.")
