@@ -250,7 +250,10 @@ fun TimerSetupScreen(
                 )
             },
             containerColor = TimerColors.BackgroundDark,
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .semantics { testTagsAsResourceId = true },
         ) { paddingValues ->
             LazyColumn(
                 modifier =

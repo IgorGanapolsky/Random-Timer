@@ -14,10 +14,10 @@ appId: com.iganapolsky.randomtimer
     text: 'While using the app'
     optional: true
 
-# Prefer Compose testTag (exposed as view id) — bottom-bar text visibility is flaky on some runners.
+# Wait on the visible CTA text first, then tap the Compose testTag-backed id.
+# Some runners fail to surface the resource id until the screen is fully settled.
 - extendedWaitUntil:
-    visible:
-      id: 'start_timer'
+    visible: 'Start Timer'
     timeout: 120000
 
 # Start the timer
