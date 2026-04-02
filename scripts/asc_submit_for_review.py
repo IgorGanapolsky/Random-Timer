@@ -1078,10 +1078,13 @@ def main() -> int:
     verify_review_detail(client, version_id)
     verify_age_rating(client, app_id, version_id)
 
-    # If already in a submitted/in-review state, do nothing.
+    # If already in a submitted/in-review state, do nothing — unless attaching subscriptions.
     if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
-        info(f"Already submitted: {state}")
-        return 0
+        if args.attach_subscriptions:
+            info(f"Already submitted ({state}) but --attach-subscriptions requested; will cancel and recreate.")
+        else:
+            info(f"Already submitted: {state}")
+            return 0
 
     loc = get_version_localization(client, version_id, args.locale)
     loc_id = loc["id"]
