@@ -38,6 +38,12 @@ if (enableFirebasePlugins) {
 val ciCompileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toIntOrNull()
 val ciTargetSdk = providers.gradleProperty("ciTargetSdk").orNull?.toIntOrNull()
 val ciVersionCode = providers.gradleProperty("ciVersionCode").orNull?.toIntOrNull()
+val analyticsInternalBuild =
+    (
+        System.getenv("ANALYTICS_INTERNAL_BUILD")
+            ?: project.findProperty("ANALYTICS_INTERNAL_BUILD")?.toString()
+            ?: "false"
+    ).trim().lowercase() in setOf("1", "true", "yes", "on")
 
 android {
     namespace = "com.iganapolsky.randomtimer"
@@ -54,6 +60,7 @@ android {
 
         // PostHog Analytics - from gradle.properties or CI secret
         buildConfigField("String", "POSTHOG_API_KEY", "\"${System.getenv("POSTHOG_API_KEY") ?: project.findProperty("POSTHOG_API_KEY") ?: ""}\"")
+        buildConfigField("boolean", "ANALYTICS_INTERNAL_BUILD", analyticsInternalBuild.toString())
         buildConfigField(
             "String",
             "PRO_AUDIO_MANIFEST_URL",

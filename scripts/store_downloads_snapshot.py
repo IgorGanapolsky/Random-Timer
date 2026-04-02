@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate store_downloads.json from live PostHog analytics.
+"""Generate store_downloads.json from live PostHog analytics proxies.
 
 This snapshot feeds wiki_sync.py so dashboard download/user sections stay populated.
-When store console export data is unavailable, we use PostHog lifecycle events as
-the source of truth for current growth reporting.
+It is not store truth. Use App Store Connect / Google Play Console and
+scripts/real_store_downloads.py for platform-side verification.
 """
 
 from __future__ import annotations

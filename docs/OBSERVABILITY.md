@@ -34,6 +34,49 @@ App Store Connect and Google Play Console remain the **source of truth** for ins
 
 ---
 
+## Not You, Not Bots
+
+This repo standardizes on **Option 1: internal builds**.
+
+- Developer-installed release builds must set `ANALYTICS_INTERNAL_BUILD=true`.
+- Debug builds, simulators/emulators, and UI test sessions are already tagged as internal in code.
+- Internal/TestFlight/Play-internal/Firebase-internal distribution must preserve `is_internal=true`.
+- Product charts, funnels, and executive scripts must exclude internal traffic with the same predicate used by `scripts/executive_metrics_snapshot.py` and `scripts/store_downloads_snapshot.py`.
+- Automation must not use production PostHog keys. Test automation should use internal builds or a separate dev PostHog project.
+
+Examples:
+
+```bash
+# Local Android internal release build
+cd native-android && ANALYTICS_INTERNAL_BUILD=true ./gradlew assembleRelease
+
+# Local iOS internal release build
+cd native-ios && xcodebuild -scheme RandomTimer ANALYTICS_INTERNAL_BUILD=YES build
+```
+
+## Store And Revenue Truth
+
+- **Installs / reviews:** use App Store Connect and Google Play Console first. `scripts/real_store_downloads.py` is a supplemental API read, not a full console replacement.
+- **Funnels:** use PostHog for product events such as `paywall_viewed`, `paywall_purchase_attempt`, and `paywall_purchase_success`.
+- **Ledger truth for paid upgrades:** use RevenueCat or Apple/Google server notifications plus backend state. PostHog paywall events are not accounting truth.
+
+## Local Snapshot
+
+Copy these secrets into local `.env` when you want the same snapshot on your laptop:
+
+- `GOOGLE_PLAY_JSON_KEY`
+- `APPSTORE_PRIVATE_KEY`
+- `CRASHLYTICS_SERVICE_ACCOUNT_JSON`
+- existing PostHog variables already used by the repo
+
+Run:
+
+```bash
+python3 scripts/executive_metrics_snapshot.py --repo-root .
+```
+
+---
+
 ## What you need to provide (CEO / operator checklist)
 
 Nothing below should be pasted into chat or committed to git. Use Xcode, Gradle local files, GitHub Actions secrets, and consoles.

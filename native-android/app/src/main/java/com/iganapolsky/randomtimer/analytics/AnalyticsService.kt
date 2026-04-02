@@ -30,7 +30,11 @@ class AnalyticsService
                 return
             }
 
-            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
+            val isInternalUser =
+                isEmulator() ||
+                    BuildConfig.DEBUG ||
+                    BuildConfig.ANALYTICS_INTERNAL_BUILD ||
+                    isUiTestSession(application)
 
             val config =
                 PostHogAndroidConfig(
@@ -210,7 +214,9 @@ class AnalyticsService
 
         private fun buildAudience(): String {
             if (BuildConfig.DEBUG) return "dev"
-            return if (isEmulator()) "dev" else "live"
+            if (isEmulator()) return "dev"
+            if (BuildConfig.ANALYTICS_INTERNAL_BUILD) return "internal"
+            return "live"
         }
 
         private fun environment(): String = if (buildAudience() == "live") "production" else "development"

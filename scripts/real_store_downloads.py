@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Pull REAL download/install numbers from Google Play and App Store Connect APIs.
+"""Pull store-platform signals from Google Play and App Store Connect APIs.
 
-Unlike store_downloads_snapshot.py (PostHog proxy), this queries the actual store APIs:
-- Google Play: androidpublisher v3 reviews endpoint (review count as install proxy)
-  and acquisitions data via the Play Developer Reporting API
-- App Store Connect: Sales and Trends reports for units sold/downloaded
+Unlike store_downloads_snapshot.py (PostHog proxy), this queries store APIs for
+release, review, and platform-account signals. It is still not a full replacement
+for every console chart:
+- Google Play: release state + review count; installs/uninstalls still require console/reporting views
+- App Store Connect: release state + customer reviews; Sales and Trends downloads are not implemented here
 
 Requires:
   Android: GOOGLE_PLAY_JSON_KEY or GOOGLE_PLAY_JSON_KEY_PATH
@@ -32,7 +33,7 @@ sys.path.append(str(Path(__file__).parent.resolve()))
 
 
 def _get_android_data(days: int) -> dict[str, Any]:
-    """Query Google Play Developer API for real install data."""
+    """Query Google Play Developer API for release and review signals."""
     try:
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
@@ -64,7 +65,8 @@ def _get_android_data(days: int) -> dict[str, Any]:
     try:
         service = build("androidpublisher", "v3", credentials=credentials)
 
-        # Get reviews (as a proxy for real users — only real users can leave reviews)
+        # Get reviews as a real-user signal. The Play API still does not expose
+        # first-class install totals the way the console reports do.
         reviews_result = service.reviews().list(
             packageName=ANDROID_PACKAGE,
         ).execute()
@@ -105,7 +107,7 @@ def _get_android_data(days: int) -> dict[str, Any]:
             "status": "ok",
             "review_count": review_count,
             "production_release": production_version,
-            "note": "Google Play API does not expose download counts directly. Review count is from real users only.",
+            "note": "Use Google Play Console or reporting exports for install/uninstall truth. This API snapshot reports release state plus review count.",
         }
     except Exception as e:
         return {"status": "error", "reason": str(e)}
@@ -200,12 +202,11 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     except Exception as e:
         result["reviews_error"] = str(e)
 
-    # Note: Sales and Trends API requires a separate report request
-    # which takes time to generate. For now, we use the review count
-    # and version state as ground truth.
+    # Sales and Trends download truth requires a separate async report flow and
+    # is intentionally not implied by this lightweight API snapshot.
     result["note"] = (
-        "App Store Connect Sales reports require async report generation. "
-        "Review count and version state are live from the API."
+        "Use App Store Connect Sales and Trends for download truth. "
+        "This API snapshot reports version state plus customer reviews."
     )
 
     return result
@@ -223,7 +224,7 @@ def run(repo_root: Path, days: int = 30) -> dict:
     payload = {
         "generated_at": generated_at,
         "source": "store_apis",
-        "note": "Real store API data, not PostHog proxy",
+        "note": "Store API signals, not a replacement for every App Store Connect / Play Console chart",
         "android": android,
         "ios": ios,
     }
@@ -232,7 +233,7 @@ def run(repo_root: Path, days: int = 30) -> dict:
 
     # Print summary
     print("=" * 60)
-    print("  REAL STORE DATA (from APIs, not PostHog)")
+    print("  STORE PLATFORM SIGNALS (from APIs, not PostHog)")
     print("=" * 60)
     print(f"  Android: {android.get('status')}")
     if android.get("review_count") is not None:

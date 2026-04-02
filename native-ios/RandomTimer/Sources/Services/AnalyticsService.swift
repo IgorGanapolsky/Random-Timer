@@ -53,14 +53,26 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         ]
     }
 
+    private var configuredInternalBuild: Bool {
+        let rawValue = Bundle.main.object(forInfoDictionaryKey: "ANALYTICS_INTERNAL_BUILD")
+        if let boolValue = rawValue as? Bool {
+            return boolValue
+        }
+        let normalized = String(describing: rawValue ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return ["1", "true", "yes", "on"].contains(normalized)
+    }
+
     private var isInternalUser: Bool {
-        // Exclude: debug builds, simulators, Maestro/UI test sessions
+        // Exclude: debug builds, simulators, release builds explicitly marked internal,
+        // and Maestro/UI test sessions.
         #if DEBUG
         return true
         #elseif targetEnvironment(simulator)
         return true
         #else
-        return ProcessInfo.processInfo.arguments.contains("-ui-test-state")
+        return configuredInternalBuild || ProcessInfo.processInfo.arguments.contains("-ui-test-state")
         #endif
     }
 
@@ -71,7 +83,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         #if targetEnvironment(simulator)
         return "dev"
         #else
-        return "live"
+        return configuredInternalBuild ? "internal" : "live"
         #endif
 #endif
     }

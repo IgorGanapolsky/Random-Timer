@@ -679,6 +679,7 @@
 		03FF5C3C9BD88526D12DEA51 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ANALYTICS_INTERNAL_BUILD = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CURRENT_PROJECT_VERSION = 434;
@@ -789,6 +790,7 @@
 		4F6D27440DCBFEA2B7BABE45 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ANALYTICS_INTERNAL_BUILD = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 434;

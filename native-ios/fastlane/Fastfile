@@ -1,6 +1,14 @@
 default_platform(:ios)
 
 platform :ios do
+  def analytics_xcargs(allow_provisioning_updates: false)
+    args = []
+    args << "-allowProvisioningUpdates" if allow_provisioning_updates
+    args << "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+    args << "ANALYTICS_INTERNAL_BUILD=#{ENV['ANALYTICS_INTERNAL_BUILD']}" unless ENV["ANALYTICS_INTERNAL_BUILD"].to_s.empty?
+    args.join(" ")
+  end
+
   def screenshot_delete_submit_lock_error?(error)
     msg = error.to_s
     return true if msg.include?("Can't Delete Screenshot After Submit for review")
@@ -121,15 +129,14 @@ platform :ios do
           }
         }
       }
-      build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+      build_opts[:xcargs] = analytics_xcargs
       build_app(**build_opts)
     else
       # Local/dev fallback when match is not configured.
-      posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
       build_app(
         scheme: "RandomTimer",
         export_method: "app-store",
-        xcargs: posthog_xcargs
+        xcargs: analytics_xcargs(allow_provisioning_updates: true)
       )
     end
 
@@ -167,14 +174,13 @@ platform :ios do
             }
           }
         }
-        build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+        build_opts[:xcargs] = analytics_xcargs
         build_app(**build_opts)
       else
-        posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
         build_app(
           scheme: "RandomTimer",
           export_method: "app-store",
-          xcargs: posthog_xcargs
+          xcargs: analytics_xcargs(allow_provisioning_updates: true)
         )
       end
 

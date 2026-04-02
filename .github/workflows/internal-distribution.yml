@@ -239,6 +239,7 @@ jobs:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          ANALYTICS_INTERNAL_BUILD: "true"
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
           TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}
@@ -375,6 +376,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANALYTICS_INTERNAL_BUILD: "true"
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           set -euo pipefail
@@ -492,6 +494,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANALYTICS_INTERNAL_BUILD: "true"
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           set -euo pipefail
