@@ -19,7 +19,8 @@ class RangeSliderUiTest {
     @Test
     fun draggingMinBeyondGapPushesMaxForward() {
         // Reduce max to 60s.
-        composeRule.onNodeWithContentDescription("Maximum time slider")
+        composeRule
+            .onNodeWithContentDescription("Maximum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(60f)
             }
@@ -27,7 +28,8 @@ class RangeSliderUiTest {
         composeRule.onNodeWithText("Maximum: 1m").assertExists()
 
         // Move min close to max; max should be pushed to keep a 30s gap.
-        composeRule.onNodeWithContentDescription("Minimum time slider")
+        composeRule
+            .onNodeWithContentDescription("Minimum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(50f)
             }
@@ -39,7 +41,8 @@ class RangeSliderUiTest {
     @Test
     fun draggingMaxBelowGapPullsMinBack() {
         // Set min to 150s (2m 30s). Max is still 5m so this should not push max.
-        composeRule.onNodeWithContentDescription("Minimum time slider")
+        composeRule
+            .onNodeWithContentDescription("Minimum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(150f)
             }
@@ -47,7 +50,8 @@ class RangeSliderUiTest {
         composeRule.onNodeWithText("Minimum: 2m 30s").assertExists()
 
         // Move max below min + 30s; min should be pulled back.
-        composeRule.onNodeWithContentDescription("Maximum time slider")
+        composeRule
+            .onNodeWithContentDescription("Maximum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(160f)
             }
