@@ -1,5 +1,5 @@
-• Pro subscription now available — unlock voice callouts, extended range, and loop mode
-• Fixed purchase flow with clear error feedback
-• Added Privacy Policy and Terms of Use links
-• Improved timer completion tracking accuracy
-• Better session reliability when switching between apps
+• Upgraded Sound Arsenal — gong, siren, bell, whistle regenerated at studio quality
+• Added voice callout and feature usage analytics
+• Fixed timer progress indicator for true unpredictability
+• Improved alarm response tracking
+• Bug fixes and performance improvements
