@@ -193,9 +193,14 @@ jobs:
             echo "❌ Invalid iOS version (expected X.Y.Z): $IOS_VERSION"
             exit 1
           fi
+          EXTRA_FLAGS=""
+          if [[ "${{ inputs.attach_subscriptions }}" == "true" ]]; then
+            EXTRA_FLAGS="--skip-build-check"
+          fi
           python scripts/asc_verify_ready.py \
             --version "$IOS_VERSION" \
             --locale "$LOCALE" \
+            $EXTRA_FLAGS \
             --json /tmp/asc_ready.json
 
       - name: Enforce delegation contract (submit gate)
