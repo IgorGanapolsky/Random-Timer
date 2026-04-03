@@ -9,8 +9,8 @@ import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.service.TimerServiceController
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
 
 class RandomTimerAppFunctionHandler
     @Inject
@@ -102,8 +102,9 @@ class RandomTimerAppFunctionHandler
         }
 
         suspend fun pauseTimer(): TimerFunctionResult {
-            val activeTimer = repository.getActiveTimer().first()
-                ?: return idleResult(ACTION_PAUSE, "No active timer to pause.")
+            val activeTimer =
+                repository.getActiveTimer().first()
+                    ?: return idleResult(ACTION_PAUSE, "No active timer to pause.")
 
             analyticsService.track(
                 AnalyticsEvents.TIMER_PAUSED,
@@ -118,8 +119,9 @@ class RandomTimerAppFunctionHandler
         }
 
         suspend fun resumeTimer(): TimerFunctionResult {
-            val activeTimer = repository.getActiveTimer().first()
-                ?: return idleResult(ACTION_RESUME, "No active timer to resume.")
+            val activeTimer =
+                repository.getActiveTimer().first()
+                    ?: return idleResult(ACTION_RESUME, "No active timer to resume.")
 
             analyticsService.track(
                 AnalyticsEvents.TIMER_RESUMED,
@@ -134,8 +136,9 @@ class RandomTimerAppFunctionHandler
         }
 
         suspend fun stopTimer(): TimerFunctionResult {
-            val activeTimer = repository.getActiveTimer().first()
-                ?: return idleResult(ACTION_STOP, "No active timer to stop.")
+            val activeTimer =
+                repository.getActiveTimer().first()
+                    ?: return idleResult(ACTION_STOP, "No active timer to stop.")
 
             repository.clearActiveTimer()
             serviceController.stopTimer()
@@ -221,7 +224,9 @@ class RandomTimerAppFunctionHandler
                 voiceGender = "",
             )
 
-        private fun entitlementLevelName(): String = proManager.entitlementLevel.value.name.lowercase()
+        private fun entitlementLevelName(): String =
+            proManager.entitlementLevel.value.name
+                .lowercase()
 
         companion object {
             private const val ENTRY_POINT = "app_function"

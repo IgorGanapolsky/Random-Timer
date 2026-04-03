@@ -52,17 +52,17 @@ class RandomTimerAppFunctions(
         vibrationEnabled: Boolean = false,
     ): TimerFunctionResult =
         appFunctionContext.let {
-        handler.configureRandomTimer(
-            minSeconds = minSeconds,
-            maxSeconds = maxSeconds,
-            alarmDuration = alarmDuration,
-            soundType = soundType,
-            voiceEnabled = voiceEnabled,
-            voiceGender = voiceGender,
-            hiddenMode = hiddenMode,
-            repeatEnabled = repeatEnabled,
-            vibrationEnabled = vibrationEnabled,
-        )
+            handler.configureRandomTimer(
+                minSeconds = minSeconds,
+                maxSeconds = maxSeconds,
+                alarmDuration = alarmDuration,
+                soundType = soundType,
+                voiceEnabled = voiceEnabled,
+                voiceGender = voiceGender,
+                hiddenMode = hiddenMode,
+                repeatEnabled = repeatEnabled,
+                vibrationEnabled = vibrationEnabled,
+            )
         }
 
     /**
@@ -109,17 +109,17 @@ class RandomTimerAppFunctions(
         vibrationEnabled: Boolean = false,
     ): TimerFunctionResult =
         appFunctionContext.let {
-        handler.startRandomTimer(
-            minSeconds = minSeconds,
-            maxSeconds = maxSeconds,
-            alarmDuration = alarmDuration,
-            soundType = soundType,
-            voiceEnabled = voiceEnabled,
-            voiceGender = voiceGender,
-            hiddenMode = hiddenMode,
-            repeatEnabled = repeatEnabled,
-            vibrationEnabled = vibrationEnabled,
-        )
+            handler.startRandomTimer(
+                minSeconds = minSeconds,
+                maxSeconds = maxSeconds,
+                alarmDuration = alarmDuration,
+                soundType = soundType,
+                voiceEnabled = voiceEnabled,
+                voiceGender = voiceGender,
+                hiddenMode = hiddenMode,
+                repeatEnabled = repeatEnabled,
+                vibrationEnabled = vibrationEnabled,
+            )
         }
 
     /**
@@ -128,8 +128,7 @@ class RandomTimerAppFunctions(
      * @return The active timer state after the pause request.
      */
     @AppFunction(isDescribedByKDoc = true)
-    suspend fun pauseTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult =
-        appFunctionContext.let { handler.pauseTimer() }
+    suspend fun pauseTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult = appFunctionContext.let { handler.pauseTimer() }
 
     /**
      * Resumes the currently paused timer.
@@ -137,8 +136,7 @@ class RandomTimerAppFunctions(
      * @return The active timer state after the resume request.
      */
     @AppFunction(isDescribedByKDoc = true)
-    suspend fun resumeTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult =
-        appFunctionContext.let { handler.resumeTimer() }
+    suspend fun resumeTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult = appFunctionContext.let { handler.resumeTimer() }
 
     /**
      * Stops the current timer and clears its active state.
@@ -146,8 +144,7 @@ class RandomTimerAppFunctions(
      * @return The active timer state after the stop request.
      */
     @AppFunction(isDescribedByKDoc = true)
-    suspend fun stopTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult =
-        appFunctionContext.let { handler.stopTimer() }
+    suspend fun stopTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult = appFunctionContext.let { handler.stopTimer() }
 }
 
 private object TimerDefaults {

@@ -65,11 +65,9 @@ class RandomTimerAppFunctionConfigFactory
             }
         }
 
-        private fun parseSoundType(rawValue: String): SoundType =
-            parseEnum(rawValue, "soundType")
+        private fun parseSoundType(rawValue: String): SoundType = parseEnum(rawValue, "soundType")
 
-        private fun parseVoiceGender(rawValue: String): VoiceGender =
-            parseEnum(rawValue, "voiceGender")
+        private fun parseVoiceGender(rawValue: String): VoiceGender = parseEnum(rawValue, "voiceGender")
 
         private inline fun <reified T : Enum<T>> parseEnum(
             rawValue: String,
@@ -82,7 +80,5 @@ class RandomTimerAppFunctionConfigFactory
                 )
         }
 
-        private fun invalidArgument(message: String): Nothing {
-            throw AppFunctionInvalidArgumentException(message)
-        }
+        private fun invalidArgument(message: String): Nothing = throw AppFunctionInvalidArgumentException(message)
     }
