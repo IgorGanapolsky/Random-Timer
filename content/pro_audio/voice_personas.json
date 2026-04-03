@@ -40,7 +40,7 @@
   },
   "female": {
     "persona": "HIIT Instructor",
-    "modelId": "eleven_multilingual_v2",
+    "modelId": "eleven_v3",
     "primaryVoice": {
       "voiceId": "AZnzlk1XvdvUeBnXmlld",
       "voiceName": "Domi",

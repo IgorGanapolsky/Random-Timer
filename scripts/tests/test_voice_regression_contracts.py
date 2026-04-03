@@ -56,6 +56,7 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["male"]["modelId"] == "eleven_multilingual_v2"
     assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
     assert contract["male"]["probeText"] == "Stay sharp."
+    assert contract["female"]["modelId"] == "eleven_v3"
     assert contract["female"]["primaryVoice"]["voiceName"] == "Domi"
     assert contract["female"]["primaryVoice"]["voiceId"] == "AZnzlk1XvdvUeBnXmlld"
     assert contract["female"]["primaryVoice"]["probeText"] == "Move with purpose."
@@ -187,3 +188,16 @@ def test_ci_runs_static_and_live_voice_regression_guards() -> None:
     assert "content/pro_audio/voice_personas.json" in verify_script
     assert "/v1/text-to-speech/" in verify_script
     assert "verifiedProbes" in verify_script
+
+
+def test_female_voice_pack_workflow_keeps_natural_baseline() -> None:
+    workflow = _read(ROOT / ".github/workflows/generate-female-voice-pack.yml")
+
+    assert 'MODEL_ID = "eleven_v3"' in workflow
+    assert '"stability": 0.50' in workflow
+    assert '"similarity_boost": 0.75' in workflow
+    assert '"style": 0.0' in workflow
+    assert '"use_speaker_boost": True' in workflow
+    assert "[shouting]" not in workflow
+    assert '"speed": 0.90' not in workflow
+    assert '"generation_config"' not in workflow

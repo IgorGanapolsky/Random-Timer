@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate all Domi v3 female voice callouts
+      - name: Generate natural Domi female voice callouts
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
@@ -25,7 +25,13 @@ jobs:
           API = "https://api.elevenlabs.io"
           KEY = os.environ["ELEVENLABS_API_KEY"]
           DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
-          SETTINGS = {"stability": 0.45, "similarity_boost": 0.73, "style": 0, "use_speaker_boost": True}
+          MODEL_ID = "eleven_v3"
+          SETTINGS = {
+              "stability": 0.50,
+              "similarity_boost": 0.75,
+              "style": 0.0,
+              "use_speaker_boost": True,
+          }
 
           # Read the existing male voice catalog to get all cue texts
           catalog = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
@@ -34,9 +40,19 @@ jobs:
           ANDROID_RAW = "native-android/app/src/main/res/raw"
           os.makedirs(IOS_AUDIO, exist_ok=True)
 
-          def generate(text, filename, tag="[intense]"):
+          def choose_tag(text):
+              lower = text.lower()
+              if any(word in lower for word in ["move", "go", "push", "drive"]):
+                  return "[commanding]"
+              if any(word in lower for word in ["stay", "fight", "pressure"]):
+                  return "[focused]"
+              if any(word in lower for word in ["breathe", "reset", "recover"]):
+                  return "[steady]"
+              return "[firm]"
+
+          def generate(text, filename, tag="[firm]"):
               tagged = f"{tag} {text}"
-              payload = {"text": tagged, "model_id": "eleven_v3", "voice_settings": SETTINGS}
+              payload = {"text": tagged, "model_id": MODEL_ID, "voice_settings": SETTINGS}
               data = json.dumps(payload).encode()
               req = urllib.request.Request(
                   f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
@@ -65,15 +81,7 @@ jobs:
           for cue in catalog.get("commandCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              # Choose tag based on phrase energy
-              tag = "[intense]"
-              if any(w in text.lower() for w in ["move", "go", "push", "drive"]):
-                  tag = "[commanding]"
-              if any(w in text.lower() for w in ["stay", "fight", "pressure"]):
-                  tag = "[shouting]"
-              if any(w in text.lower() for w in ["breathe", "reset", "recover"]):
-                  tag = "[serious]"
-              generate(text, filename, tag)
+              generate(text, filename, choose_tag(text))
               time.sleep(0.5)  # Rate limiting
 
           # Generate elapsed cues
@@ -81,14 +89,14 @@ jobs:
           for cue in catalog.get("elapsedCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              generate(text, filename, "[serious]")
+              generate(text, filename, "[steady]")
               time.sleep(0.5)
 
           # Generate preview
           print("\n=== Preview ===")
           preview = catalog.get("previewElapsed", {})
           if preview:
-              generate(preview["text"], preview["filename"], "[serious]")
+              generate(preview["text"], preview["filename"], "[steady]")
 
           print("\nDone!")
           PYEOF
@@ -138,8 +146,8 @@ jobs:
             echo "No files generated"
             exit 0
           fi
-          git commit -m "feat(audio): full Domi v3 female voice pack — 43 callouts"
+          git commit -m "feat(audio): regenerate natural Domi female voice pack"
           git push origin "$BRANCH"
           gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): Domi v3 female voice pack" \
-            --body "All 31 command cues + 12 elapsed cues generated with Domi v3 + audio tags."
+            --title "feat(audio): regenerate natural Domi female voice pack" \
+            --body "All 31 command cues + 12 elapsed cues regenerated with Eleven v3 using default-speed, lower-exaggeration settings and less theatrical tags."
