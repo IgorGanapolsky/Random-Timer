@@ -1,15 +1,32 @@
 package com.iganapolsky.randomtimer
 
 import android.app.Application
+import androidx.appfunctions.service.AppFunctionConfiguration
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.appfunctions.RandomTimerAppFunctionEntryPoint
+import com.iganapolsky.randomtimer.appfunctions.RandomTimerAppFunctions
 import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.android.EntryPointAccessors
 import javax.inject.Inject
 
 @HiltAndroidApp
-class RandomTimerApp : Application() {
+class RandomTimerApp : Application(), AppFunctionConfiguration.Provider {
 
     @Inject lateinit var analyticsService: AnalyticsService
+
+    override val appFunctionConfiguration: AppFunctionConfiguration by lazy {
+        AppFunctionConfiguration
+            .Builder()
+            .addEnclosingClassFactory(RandomTimerAppFunctions::class.java) {
+                val entryPoint =
+                    EntryPointAccessors.fromApplication(
+                        this,
+                        RandomTimerAppFunctionEntryPoint::class.java,
+                    )
+                RandomTimerAppFunctions(entryPoint.randomTimerAppFunctionHandler())
+            }.build()
+    }
 
     override fun onCreate() {
         super.onCreate()

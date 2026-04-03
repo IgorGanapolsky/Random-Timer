@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.3"
+agp = "8.9.1"
 kotlin = "2.1.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -14,7 +14,9 @@ hiltNavigationCompose = "1.2.0"
 navigationCompose = "2.8.5"
 datastore = "1.1.1"
 coroutines = "1.9.0"
+appfunctions = "1.0.0-alpha08"
 mockk = "1.13.13"
+robolectric = "4.16"
 orgJson = "20240303"
 turbine = "1.2.0"
 truth = "1.4.4"
@@ -55,7 +57,12 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+androidx-appfunctions = { group = "androidx.appfunctions", name = "appfunctions", version.ref = "appfunctions" }
+androidx-appfunctions-service = { group = "androidx.appfunctions", name = "appfunctions-service", version.ref = "appfunctions" }
+androidx-appfunctions-compiler = { group = "androidx.appfunctions", name = "appfunctions-compiler", version.ref = "appfunctions" }
+androidx-appfunctions-testing = { group = "androidx.appfunctions", name = "appfunctions-testing", version.ref = "appfunctions" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }

@@ -32,6 +32,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -134,6 +135,7 @@ class TimerForegroundService : Service() {
                 val vibrationEnabled = intent.getBooleanExtra(EXTRA_VIBRATION_ENABLED, true)
                 val useExtendedRange = intent.getBooleanExtra(EXTRA_USE_EXTENDED_RANGE, false)
                 val voiceEnabled = intent.getBooleanExtra(EXTRA_VOICE_ENABLED, false)
+                val voiceGender = intent.getStringExtra(EXTRA_VOICE_GENDER) ?: VoiceGender.MALE.name
                 val repeatRounds = intent.getIntExtra(EXTRA_REPEAT_ROUNDS, 0)
                 val roundCount = intent.getIntExtra(EXTRA_ROUND_COUNT, 1)
 
@@ -151,6 +153,7 @@ class TimerForegroundService : Service() {
                         vibrationEnabled = vibrationEnabled,
                         useExtendedRange = useExtendedRange,
                         voiceEnabled = voiceEnabled,
+                        voiceGender = voiceGender,
                         repeatRounds = repeatRounds,
                         roundCount = roundCount,
                     )
@@ -237,26 +240,23 @@ class TimerForegroundService : Service() {
         vibrationEnabled: Boolean,
         useExtendedRange: Boolean = false,
         voiceEnabled: Boolean = false,
+        voiceGender: String = VoiceGender.MALE.name,
         repeatRounds: Int = 0,
         roundCount: Int = 1,
     ) {
         val config =
-            TimerConfig(
+            timerConfigFromStartExtras(
                 minSeconds = minSeconds,
                 maxSeconds = maxSeconds,
                 alarmDuration = alarmDuration,
                 hiddenMode = hiddenMode,
                 repeatEnabled = repeatEnabled,
-                soundType =
-                    try {
-                        SoundType.valueOf(soundType)
-                    } catch (_: Exception) {
-                        SoundType.INTENSE
-                    },
+                soundType = soundType,
                 volume = volume,
                 vibrationEnabled = vibrationEnabled,
                 useExtendedRange = useExtendedRange,
                 voiceEnabled = voiceEnabled,
+                voiceGender = voiceGender,
                 repeatRounds = repeatRounds,
             )
 
@@ -1052,6 +1052,7 @@ class TimerForegroundService : Service() {
         const val EXTRA_VIBRATION_ENABLED = "vibration_enabled"
         const val EXTRA_USE_EXTENDED_RANGE = "use_extended_range"
         const val EXTRA_VOICE_ENABLED = "voice_enabled"
+        const val EXTRA_VOICE_GENDER = "voice_gender"
         const val EXTRA_REPEAT_ROUNDS = "repeat_rounds"
         const val EXTRA_ROUND_COUNT = "round_count"
         const val EXTRA_FROM_ALARM_NOTIFICATION = "from_alarm_notification"
@@ -1066,3 +1067,42 @@ class TimerForegroundService : Service() {
         private const val CHANNEL_MEDIA = "timer_media"
     }
 }
+
+internal fun timerConfigFromStartExtras(
+    minSeconds: Int,
+    maxSeconds: Int,
+    alarmDuration: Int,
+    hiddenMode: Boolean,
+    repeatEnabled: Boolean,
+    soundType: String,
+    volume: Float,
+    vibrationEnabled: Boolean,
+    useExtendedRange: Boolean,
+    voiceEnabled: Boolean,
+    voiceGender: String,
+    repeatRounds: Int,
+): TimerConfig =
+    TimerConfig(
+        minSeconds = minSeconds,
+        maxSeconds = maxSeconds,
+        alarmDuration = alarmDuration,
+        hiddenMode = hiddenMode,
+        repeatEnabled = repeatEnabled,
+        soundType =
+            try {
+                SoundType.valueOf(soundType)
+            } catch (_: Exception) {
+                SoundType.INTENSE
+            },
+        volume = volume,
+        vibrationEnabled = vibrationEnabled,
+        useExtendedRange = useExtendedRange,
+        voiceEnabled = voiceEnabled,
+        voiceGender =
+            try {
+                VoiceGender.valueOf(voiceGender)
+            } catch (_: Exception) {
+                VoiceGender.MALE
+            },
+        repeatRounds = repeatRounds,
+    )

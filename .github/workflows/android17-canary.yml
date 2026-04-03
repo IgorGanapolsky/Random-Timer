@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           yes | sdkmanager --licenses >/dev/null
-          sdkmanager "platforms;android-${API_LEVEL}" "build-tools;35.0.0"
+          sdkmanager "platforms;android-${API_LEVEL}" "build-tools;36.0.0"
 
       - name: Grant execute permission
         run: chmod +x gradlew

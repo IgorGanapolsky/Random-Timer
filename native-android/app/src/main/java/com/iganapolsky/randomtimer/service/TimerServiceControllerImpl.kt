@@ -40,6 +40,7 @@ class TimerServiceControllerImpl
                     putExtra(TimerForegroundService.EXTRA_VIBRATION_ENABLED, state.config.vibrationEnabled)
                     putExtra(TimerForegroundService.EXTRA_USE_EXTENDED_RANGE, state.config.useExtendedRange)
                     putExtra(TimerForegroundService.EXTRA_VOICE_ENABLED, state.config.voiceEnabled)
+                    putExtra(TimerForegroundService.EXTRA_VOICE_GENDER, state.config.voiceGender.name)
                     putExtra(TimerForegroundService.EXTRA_REPEAT_ROUNDS, state.config.repeatRounds)
                     putExtra(TimerForegroundService.EXTRA_ROUND_COUNT, state.roundCount)
                 }

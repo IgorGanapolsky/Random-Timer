@@ -41,7 +41,7 @@ val ciVersionCode = providers.gradleProperty("ciVersionCode").orNull?.toIntOrNul
 
 android {
     namespace = "com.iganapolsky.randomtimer"
-    compileSdk = ciCompileSdk ?: 35
+    compileSdk = ciCompileSdk ?: 36
 
     defaultConfig {
         applicationId = "com.iganapolsky.randomtimer"
@@ -124,6 +124,10 @@ android {
     }
 }
 
+ksp {
+    arg("appfunctions:aggregateAppFunctions", "true")
+}
+
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -153,6 +157,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    // App Functions
+    implementation(libs.androidx.appfunctions)
+    implementation(libs.androidx.appfunctions.service)
+    ksp(libs.androidx.appfunctions.compiler)
+
     // Analytics
     implementation(libs.posthog)
 
@@ -173,11 +182,15 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.appfunctions.testing)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
     testImplementation(libs.org.json)
+    kspTest(libs.androidx.appfunctions.compiler)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
