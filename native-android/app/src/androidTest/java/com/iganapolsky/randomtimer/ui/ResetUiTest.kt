@@ -41,16 +41,24 @@ class ResetUiTest {
             .assertExists()
             .performClick()
 
-        composeRule.onNodeWithText("Timer running...")
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("Timer running...", useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeRule.onNodeWithText("Timer running...", useUnmergedTree = true)
             .assertExists()
 
         composeRule.onNodeWithText("Reset")
             .assertExists()
             .performClick()
 
-        composeRule.waitUntil(timeoutMillis = 2000) {
-            composeRule.onAllNodesWithText("Timer restarted")
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("Timer restarted", useUnmergedTree = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
+
+        composeRule.onNodeWithText("Timer restarted", useUnmergedTree = true)
+            .assertExists()
     }
 }

@@ -13,4 +13,5 @@ chmod +x gradlew
 # Compose instrumentation is more reliable than Maestro for this setup screen on CI emulators.
 ./gradlew connectedDebugAndroidTest \
   --no-daemon -q \
+  -PenableFirebasePlugins=false \
   -Pandroid.testInstrumentationRunnerArguments.class=com.iganapolsky.randomtimer.ui.ResetUiTest

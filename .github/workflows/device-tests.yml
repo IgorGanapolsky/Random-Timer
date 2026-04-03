@@ -44,7 +44,7 @@ jobs:
         working-directory: native-android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon -q
+          ./gradlew assembleDebug --no-daemon -q -PenableFirebasePlugins=false
 
       - name: Enable KVM
         run: |
