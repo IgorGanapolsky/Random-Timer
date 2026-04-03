@@ -7,8 +7,8 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = RandomTimer.TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 0)
-        XCTAssertEqual(config.maxSeconds, 300)
+        XCTAssertEqual(config.minSeconds, 30)
+        XCTAssertEqual(config.maxSeconds, 120)
         XCTAssertEqual(config.alarmDuration, 10)
         XCTAssertFalse(config.voiceEnabled)
     }
@@ -89,8 +89,8 @@ final class TimerConfigTests: XCTestCase {
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
         let expected = RandomTimer.TimerConfig(
-            minSeconds: 0,
-            maxSeconds: 300,
+            minSeconds: 30,
+            maxSeconds: 120,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,

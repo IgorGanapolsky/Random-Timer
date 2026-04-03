@@ -8,6 +8,7 @@ struct TimerSetupScreen: View {
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
+    @State private var bannerDismissed = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -32,6 +33,25 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
+                if !hasCompletedFirstTimer && !bannerDismissed {
+                    HStack {
+                        Text("Tap Start for a random 30s\u{2013}2min drill. Customize later.")
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Button {
+                            bannerDismissed = true
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
                 // 1. Timer Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
@@ -44,10 +64,11 @@ struct TimerSetupScreen: View {
                             Spacer()
 
                             if !proManager.isPro {
-                                Text("PRO: 1H \u{1F512}")
+                                Text(hasCompletedFirstTimer ? "PRO: 1H \u{1F512}" : "PRO: 1H")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
                                     .onTapGesture {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .rangeGate)
                                     }
                             } else {
@@ -84,6 +105,10 @@ struct TimerSetupScreen: View {
                                 }
                             }
                         }
+
+                        Text("Each timer picks a random duration in your range \u{2014} stay ready for anything.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
 
                         Spacer().frame(height: 16)
 
@@ -162,11 +187,14 @@ struct TimerSetupScreen: View {
                                     }
 
                                     Button {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            Image(systemName: "lock.fill")
+                                            if hasCompletedFirstTimer {
+                                                Image(systemName: "lock.fill")
+                                            }
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -308,11 +336,14 @@ struct TimerSetupScreen: View {
                                     .labelsHidden()
                                 } else {
                                     Button {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            Image(systemName: "lock.fill")
+                                            if hasCompletedFirstTimer {
+                                                Image(systemName: "lock.fill")
+                                            }
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -412,6 +443,7 @@ struct TimerSetupScreen: View {
                                         .foregroundColor(.textMuted)
 
                                     Button("Unlock Pro") {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     }
                                     .font(.caption2.weight(.semibold))
@@ -860,7 +892,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)? = nil
+    var onSliding: ((Float) -> Void)?
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {

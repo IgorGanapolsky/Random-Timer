@@ -94,8 +94,8 @@ data class TimerConfig(
 
         val DEFAULT =
             TimerConfig(
-                minSeconds = 0,
-                maxSeconds = 300,
+                minSeconds = 30,
+                maxSeconds = 120,
                 alarmDuration = 10,
                 hiddenMode = false,
                 repeatEnabled = false,

@@ -151,8 +151,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     }
 
     public init(
-        minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        minSeconds: Int = 30,
+        maxSeconds: Int = 120,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -256,11 +256,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
-            defaultValue: 0
+            defaultValue: 30
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
-            defaultValue: 300
+            defaultValue: 120
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],

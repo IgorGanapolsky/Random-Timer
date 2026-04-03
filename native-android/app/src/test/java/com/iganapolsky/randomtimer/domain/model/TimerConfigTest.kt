@@ -10,8 +10,8 @@ class TimerConfigTest {
     fun `default config has valid range`() {
         val config = TimerConfig.DEFAULT
 
-        assertThat(config.minSeconds).isEqualTo(0)
-        assertThat(config.maxSeconds).isEqualTo(300)
+        assertThat(config.minSeconds).isEqualTo(30)
+        assertThat(config.maxSeconds).isEqualTo(120)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
         assertThat(config.voiceEnabled).isFalse()
