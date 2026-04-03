@@ -195,7 +195,6 @@ def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: P
     assert observed["build_args"] == {
         "api_name": "androidpublisher",
         "api_version": "v3",
-        "credentials": observed["authorized_http_credentials"],
         "http": "authorized-http",
         "cache_discovery": False,
     }
