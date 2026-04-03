@@ -234,6 +234,8 @@ jobs:
         id: fastlane_beta
         env:
           CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "6"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
