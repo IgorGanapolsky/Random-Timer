@@ -7,6 +7,7 @@ struct TimerSetupScreen: View {
     @State private var showPaywall = false
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
+    @State private var screenAppearedAt: Date?
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -450,6 +451,7 @@ struct TimerSetupScreen: View {
                 .interactiveDismissDisabled(false)
         }
         .onAppear {
+            screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true
             persistActiveRangeProfile(
@@ -457,6 +459,16 @@ struct TimerSetupScreen: View {
                 maxSeconds: config.maxSeconds,
                 useExtendedRange: config.useExtendedRange
             )
+        }
+        .onDisappear {
+            if let appearedAt = screenAppearedAt {
+                let dwellSeconds = Date().timeIntervalSince(appearedAt)
+                AnalyticsService.shared.track(AnalyticsEvents.screenDwellTime, properties: [
+                    AnalyticsProperties.screen: "timer_setup",
+                    AnalyticsProperties.durationSeconds: round(dwellSeconds * 10) / 10,
+                ])
+            }
+            screenAppearedAt = nil
         }
         .onChange(of: proManager.isPro) { _, isPro in
             if isPro {

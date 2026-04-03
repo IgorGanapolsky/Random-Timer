@@ -232,6 +232,14 @@ final class TimerManager: ObservableObject {
 
     func restartTimer() async {
         let currentRound = timerState?.roundCount ?? 1
+        let roundDuration = timerState?.targetDuration ?? 0
+
+        // Fire loop_round_completed before restarting
+        AnalyticsService.shared.track(AnalyticsEvents.loopRoundCompleted, properties: [
+            AnalyticsProperties.roundNumber: currentRound,
+            AnalyticsProperties.roundDurationSeconds: roundDuration,
+        ])
+
         // Restart with a NEW random duration (used after alarm completes with loop)
         notificationService.stopAlarmSound()
         await cancelTimer()
@@ -242,6 +250,18 @@ final class TimerManager: ObservableObject {
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
+        // Track abandonment when timer is running (not alarm/complete) and app goes to background
+        if let state = timerState,
+           state.status != .alarm && state.status != .complete {
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": state.targetDuration,
+                "remaining_duration": state.remainingDuration,
+                "status": state.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonAppBackgrounded,
+                AnalyticsProperties.abandonSource: "app_lifecycle",
+            ])
+        }
+
         guard let state = timerState, state.status == .alarm else { return }
         // Silence alarm — stops sound/vibration AND marks as silenced so
         // handleForeground() won't restart the alarm when the user returns.

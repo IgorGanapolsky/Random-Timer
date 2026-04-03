@@ -1,0 +1,59 @@
+name: PostHog Analytics Dashboard
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Lookback window in days'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run PostHog dashboard
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          CI: 'true'
+        run: |
+          DAYS="${{ github.event.inputs.days || '30' }}"
+          python scripts/posthog_dashboard.py \
+            --days "$DAYS" \
+            --output marketing/data/posthog_dashboard.json \
+            --json-stdout > posthog_dashboard_output.json
+
+      - name: Upload dashboard JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: posthog-dashboard
+          path: posthog_dashboard_output.json
+          retention-days: 90
+
+      - name: Upload marketing data
+        uses: actions/upload-artifact@v4
+        with:
+          name: posthog-dashboard-marketing
+          path: marketing/data/posthog_dashboard.json
+          retention-days: 90
+          if-no-files-found: ignore

@@ -185,6 +185,26 @@ struct PaywallSheet: View {
         )
 
         guard result == .success else {
+            // Track purchase_failed with categorized reason
+            let failReason: String
+            switch result {
+            case .userCancelled:
+                failReason = "user_cancelled"
+            case .productUnavailable:
+                failReason = "product_unavailable"
+            case .failed:
+                failReason = "network"
+            case .pending:
+                failReason = "pending"
+            default:
+                failReason = "unknown"
+            }
+            AnalyticsService.shared.track(AnalyticsEvents.purchaseFailed, properties: [
+                AnalyticsProperties.reason: failReason,
+                AnalyticsProperties.productId: productID,
+                AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            ])
+
             switch result {
             case .productUnavailable:
                 purchaseError = "This product is currently unavailable. Please try again later."

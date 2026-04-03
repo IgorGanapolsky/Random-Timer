@@ -392,6 +392,15 @@ enum AnalyticsEvents {
     static let deepLinkOpened = "deep_link_opened"
     static let appleAdsAttribution = "apple_ads_attribution"
 
+    // Loop
+    static let loopRoundCompleted = "loop_round_completed"
+
+    // Purchase
+    static let purchaseFailed = "purchase_failed"
+
+    // Screen engagement
+    static let screenDwellTime = "screen_dwell_time"
+
     // Onboarding Funnel
     static let firstOpen = "first_open"
     static let firstTimerConfigured = "first_timer_configured"
@@ -413,10 +422,16 @@ enum AnalyticsProperties {
     static let buildAudience = "build_audience"
     static let buildType = "build_type"
     static let runtimeTarget = "runtime_target"
+    static let roundNumber = "round_number"
+    static let roundDurationSeconds = "round_duration_seconds"
+    static let durationSeconds = "duration_seconds"
+    static let screen = "screen"
+    static let reason = "reason"
 }
 
 enum AnalyticsValues {
     static let abandonReasonUserCancelled = "user_cancelled"
+    static let abandonReasonAppBackgrounded = "app_backgrounded"
     static let abandonReasonStaleRestoreExpired = "stale_restore_expired"
     static let abandonSourceTimerControls = "timer_controls"
     static let abandonSourceStateRestore = "state_restore"

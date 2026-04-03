@@ -6,6 +6,7 @@ struct ActiveTimerScreen: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
+    @State private var screenAppearedAt: Date?
 
     private var state: TimerState? {
         timerManager.timerState
@@ -214,9 +215,18 @@ struct ActiveTimerScreen: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
+            screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
         }
         .onDisappear {
+            if let appearedAt = screenAppearedAt {
+                let dwellSeconds = Date().timeIntervalSince(appearedAt)
+                AnalyticsService.shared.track(AnalyticsEvents.screenDwellTime, properties: [
+                    AnalyticsProperties.screen: "active_timer",
+                    AnalyticsProperties.durationSeconds: round(dwellSeconds * 10) / 10,
+                ])
+            }
+            screenAppearedAt = nil
             resetFeedbackTask?.cancel()
             resetFeedbackTask = nil
             showResetFeedback = false

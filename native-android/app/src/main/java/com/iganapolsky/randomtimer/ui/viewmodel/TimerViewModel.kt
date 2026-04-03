@@ -268,6 +268,19 @@ class TimerViewModel
             analyticsService.screen(screen)
         }
 
+        fun trackScreenDwellTime(
+            screen: String,
+            durationSeconds: Double,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.SCREEN_DWELL_TIME,
+                mapOf(
+                    AnalyticsProperties.SCREEN to screen,
+                    "duration_seconds" to durationSeconds,
+                ),
+            )
+        }
+
         fun trackPaywallViewed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEWED,
