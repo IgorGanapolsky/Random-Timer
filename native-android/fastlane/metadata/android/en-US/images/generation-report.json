@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "generated_at": "2026-04-03T13:51:15+00:00",
+  "source_icon": "/Users/igorganapolsky/workspace/git/igor/Random-Timer/branding/app-icon-source.png",
+  "written_files": [
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/icon.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_setup.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_active.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_settings.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_voice.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/4_loop.png",
+    "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/featureGraphic/feature-graphic.png"
+  ],
+  "backup_dir": "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/_backup/20260403_135114",
+  "report_path": "/Users/igorganapolsky/workspace/git/igor/Random-Timer/native-android/fastlane/metadata/android/en-US/images/generation-report.json"
+}

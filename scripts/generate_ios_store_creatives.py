@@ -22,60 +22,103 @@ Color = Tuple[int, int, int]
 
 
 @dataclass(frozen=True)
-class CreativeText:
+class CreativeSpec:
     eyebrow: str
     title: str
     subtitle: str
     badge: str
+    source_candidates: Tuple[str, ...]
+    centering: Tuple[float, float] = (0.5, 0.08)
 
 
-CREATIVE_COPY: Dict[str, CreativeText] = {
-    "1_setup.png": CreativeText(
-        eyebrow="CONTROL THE DRILL",
-        title="REACT UNDER STRESS",
-        subtitle="Set a live range and let randomness punish lazy rhythm.",
-        badge="DRY FIRE • MMA • HIIT",
+CREATIVE_COPY: Dict[str, CreativeSpec] = {
+    "1_setup.png": CreativeSpec(
+        eyebrow="SET THE WINDOW",
+        title="RANDOMIZE EVERY REP",
+        subtitle="Choose the range. The app chooses the moment. Your job is to react.",
+        badge="DRY FIRE • STRIKING • HIIT",
+        source_candidates=(
+            "originals/_backup/*/iphone_setup_raw.png",
+            "originals/1_setup.png",
+            "1_setup.png",
+        ),
+        centering=(0.5, 0.16),
     ),
-    "2_active.png": CreativeText(
-        eyebrow="STAY HONEST",
+    "2_active.png": CreativeSpec(
+        eyebrow="KILL ANTICIPATION",
         title="NO COUNTDOWN TO CHEAT",
-        subtitle="Unpredictable start cues stop anticipation before it starts.",
+        subtitle="Unpredictable start cues stop rhythm gaming and force a real reaction.",
         badge="PURE REACTION WORK",
+        source_candidates=(
+            "originals/_backup/*/iphone_running_raw.png",
+            "originals/2_active.png",
+            "2_active.png",
+        ),
+        centering=(0.5, 0.18),
     ),
-    "3_pro.png": CreativeText(
-        eyebrow="CUT THROUGH CHAOS",
-        title="UNLOCK FULL TRAINING MODE",
-        subtitle="Longer sessions, voice coaching, and the full sound library for Pro users.",
-        badge="PRO UPGRADE",
+    "3_alarm.png": CreativeSpec(
+        eyebrow="CUT THROUGH FATIGUE",
+        title="VOICE CUES THAT PUSH BACK",
+        subtitle="Sharp alarms and command cues keep pressure on when the round gets ugly.",
+        badge="VOICE + SOUND ARSENAL",
+        source_candidates=(
+            "originals/_backup/*/iphone_sound_raw.png",
+            "originals/3_alarm.png",
+            "originals/_backup/*/3_alarm.png",
+            "3_alarm.png",
+        ),
+        centering=(0.5, 0.42),
     ),
-    "5_ipad_setup.png": CreativeText(
+    "4_running.png": CreativeSpec(
+        eyebrow="BETWEEN ROUNDS",
+        title="RESET FAST. GO AGAIN.",
+        subtitle="Pause, resume, and loop rounds without breaking the flow of the drill.",
+        badge="ROUND CONTROL",
+        source_candidates=(
+            "originals/_backup/*/iphone_paused_raw.png",
+            "originals/4_running.png",
+            "originals/_backup/*/4_running.png",
+            "4_running.png",
+            "2_active.png",
+        ),
+        centering=(0.5, 0.20),
+    ),
+    "5_ipad_setup.png": CreativeSpec(
         eyebrow="COACH MODE",
         title="RUN THE WHOLE ROOM",
         subtitle="Big-screen controls make partner and class drills easy to manage.",
         badge="IPAD-READY",
+        source_candidates=(
+            "originals/_backup/*/ipad_setup_raw.png",
+            "originals/1_setup.png",
+            "5_ipad_setup.png",
+        ),
+        centering=(0.5, 0.16),
     ),
-    "6_ipad_running.png": CreativeText(
+    "6_ipad_running.png": CreativeSpec(
         eyebrow="VISIBLE AT DISTANCE",
         title="SEE IT ACROSS THE MAT",
         subtitle="High-contrast timer views stay legible from the floor, bag, or line.",
         badge="NO SQUINTING",
+        source_candidates=(
+            "originals/_backup/*/ipad_running_raw.png",
+            "originals/2_active.png",
+            "6_ipad_running.png",
+        ),
+        centering=(0.5, 0.18),
     ),
-    "7_ipad_stopped.png": CreativeText(
+    "7_ipad_stopped.png": CreativeSpec(
         eyebrow="BETWEEN ROUNDS",
         title="RESET. ADJUST. GO AGAIN.",
         subtitle="Change settings in seconds and get right back to work.",
         badge="ZERO FRICTION",
+        source_candidates=(
+            "originals/_backup/*/ipad_setup_raw.png",
+            "originals/1_setup.png",
+            "7_ipad_stopped.png",
+        ),
+        centering=(0.5, 0.42),
     ),
-}
-
-# Fixed SOURCE_MAP to avoid nested compositions.
-SOURCE_MAP: Dict[str, str] = {
-    "1_setup.png": "1_setup.png",
-    "2_active.png": "2_active.png",
-    "3_pro.png": "3_pro.png",
-    "5_ipad_setup.png": "5_ipad_setup.png",
-    "6_ipad_running.png": "6_ipad_running.png",
-    "7_ipad_stopped.png": "7_ipad_stopped.png",
 }
 
 
@@ -141,35 +184,15 @@ def _draw_multiline(
     return current_y
 
 
-def _resolve_source_path(screenshots_dir: Path, filename: str) -> Path:
-    def candidate_matches_device(path: Path) -> bool:
-        if not path.is_file():
-            return False
-        width, _height = Image.open(path).size
-        is_ipad = filename.startswith(("5_", "6_", "7_"))
-        return width >= 1600 if is_ipad else width < 1600
-
-    candidates = [screenshots_dir / "originals" / filename]
-
-    backup_root = screenshots_dir / "_backup"
-    if backup_root.is_dir():
-        for backup_dir in sorted(path for path in backup_root.iterdir() if path.is_dir()):
-            candidates.append(backup_dir / filename)
-
-    candidates.append(screenshots_dir / filename)
-
+def _resolve_source_path(screenshots_dir: Path, candidates: Tuple[str, ...]) -> Path:
     for candidate in candidates:
-        if candidate_matches_device(candidate):
-            return candidate
-
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-
-    raise FileNotFoundError(f"Source screenshot not found for {filename} in {screenshots_dir}")
+        for match in sorted(screenshots_dir.glob(candidate)):
+            if match.is_file():
+                return match
+    raise FileNotFoundError(f"Source screenshot not found. Tried: {candidates}")
 
 
-def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
+def _render_one(source: Image.Image, spec: CreativeSpec) -> Image.Image:
     w, h = source.size
     base = Image.new("RGBA", (w, h), (9, 11, 16, 255))
 
@@ -225,10 +248,10 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     badge_font = _load_font(max(28, int(h * 0.014)), bold=True)
 
     current_y = int(h * 0.08)
-    draw.text((content_left, current_y), text.eyebrow, font=eyebrow_font, fill=(255, 143, 107))
+    draw.text((content_left, current_y), spec.eyebrow, font=eyebrow_font, fill=(255, 143, 107))
     current_y += int(h * 0.038)
 
-    title_lines = _wrapped_lines(draw, text.title, title_font, content_width)
+    title_lines = _wrapped_lines(draw, spec.title, title_font, content_width)
     current_y = _draw_multiline(
         draw,
         title_lines,
@@ -240,7 +263,7 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
     )
 
     current_y += int(h * 0.006)
-    subtitle_lines = _wrapped_lines(draw, text.subtitle, subtitle_font, content_width)
+    subtitle_lines = _wrapped_lines(draw, spec.subtitle, subtitle_font, content_width)
     current_y = _draw_multiline(
         draw,
         subtitle_lines,
@@ -251,7 +274,7 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
         line_spacing=max(4, int(h * 0.003)),
     )
 
-    badge_bbox = draw.textbbox((0, 0), text.badge, font=badge_font)
+    badge_bbox = draw.textbbox((0, 0), spec.badge, font=badge_font)
     badge_width = (badge_bbox[2] - badge_bbox[0]) + 48
     badge_height = (badge_bbox[3] - badge_bbox[1]) + 26
     badge_y = current_y + int(h * 0.02)
@@ -260,7 +283,7 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
         radius=16,
         fill=(220, 38, 38),
     )
-    draw.text((content_left + 24, badge_y + 10), text.badge, font=badge_font, fill=(255, 255, 255))
+    draw.text((content_left + 24, badge_y + 10), spec.badge, font=badge_font, fill=(255, 255, 255))
 
     panel_top = int(h * 0.34)
     panel_left = int(w * 0.05)
@@ -293,7 +316,7 @@ def _render_one(source: Image.Image, text: CreativeText) -> Image.Image:
         source,
         (target_w, target_h),
         method=Image.Resampling.LANCZOS,
-        centering=(0.5, 0.06),
+        centering=spec.centering,
     )
 
     mask = Image.new("L", (target_w, target_h), 0)
@@ -318,9 +341,16 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_dir = backup_root / timestamp
     source_files: dict[str, str] = {}
+
+    legacy_targets = [screenshots_dir / "3_pro.png"]
+    for legacy in legacy_targets:
+        if legacy.exists():
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(legacy, backup_dir / legacy.name)
+            legacy.unlink()
     
-    for filename, text in CREATIVE_COPY.items():
-        source_path = _resolve_source_path(screenshots_dir, SOURCE_MAP.get(filename, filename))
+    for filename, spec in CREATIVE_COPY.items():
+        source_path = _resolve_source_path(screenshots_dir, spec.source_candidates)
         source_files[filename] = str(source_path)
 
         # If target file exists, move to backup
@@ -330,7 +360,7 @@ def generate(repo_root: Path, locale: str) -> Dict[str, object]:
             shutil.copy2(target, backup_dir / filename)
 
         source = Image.open(source_path).convert("RGB")
-        out = _render_one(source, text)
+        out = _render_one(source, spec)
         
         out.save(target, format="PNG", optimize=True)
         written.append(str(target))

@@ -8,18 +8,15 @@ internal struct VoiceCueCatalog: Codable {
         let filename: String
         let text: String
     }
-
     struct ElapsedCue: Codable, Hashable {
         let second: Int
         let filename: String
         let text: String
     }
-
     let previewElapsed: Cue
     let fallbackCommandFilename: String
     let elapsedCues: [ElapsedCue]
     let commandCues: [Cue]
-
     var elapsedCueBySecond: [Int: ElapsedCue] {
         var mapping = [Int: ElapsedCue]()
         for cue in elapsedCues where mapping[cue.second] == nil {
@@ -34,19 +31,15 @@ internal struct VoiceCueCatalog: Codable {
 
     var filenameByText: [String: String] {
         var mapping = [String: String]()
-
         if mapping[previewElapsed.text] == nil {
             mapping[previewElapsed.text] = previewElapsed.filename
         }
-
         for cue in elapsedCues where mapping[cue.text] == nil {
             mapping[cue.text] = cue.filename
         }
-
         for cue in commandCues where mapping[cue.text] == nil {
             mapping[cue.text] = cue.filename
         }
-
         return mapping
     }
 
@@ -58,6 +51,23 @@ internal struct VoiceCueCatalog: Codable {
 }
 
 internal let voiceCatalogResourceName = "voice_callouts"
+
+private enum VoicePreviewSampleCatalog {
+    static let maleCommandFilenames = [
+        "cmd_move_with_a_purpose", "cmd_stay_locked_in", "cmd_no_hesitation_move", "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive", "cmd_stay_disciplined", "cmd_keep_your_bearing", "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus", "cmd_stay_in_the_fight",
+    ]
+    static let maleElapsedFilename = "preview_elapsed"
+    static let femaleCommandFilenames = [
+        "female/cmd_move_with_a_purpose", "female/cmd_no_hesitation_move", "female/cmd_stay_in_the_fight",
+        "female/cmd_push_pace", "female/cmd_keep_tempo_high", "female/cmd_finish_rep_keep_pushing",
+        "female/cmd_drive_forward", "female/cmd_own_this_rep", "female/cmd_pick_it_up",
+        "female/cmd_strong_feet_strong_pace",
+    ]
+
+    static let femaleElapsedFilename = "female/preview_elapsed"
+}
 
 private let fallbackVoiceCueCatalog = VoiceCueCatalog(
     previewElapsed: .init(
@@ -96,6 +106,14 @@ internal func voiceFilename(for text: String, bundle: Bundle = .main) -> String?
 internal func bundledVoiceAudioURL(for filename: String, bundle: Bundle = .main) -> URL? {
     bundle.url(forResource: filename, withExtension: "mp3", subdirectory: "Audio")
         ?? bundle.url(forResource: filename, withExtension: "mp3")
+        ?? {
+            let path = filename as NSString
+            let subdirectory = path.deletingLastPathComponent
+            guard !subdirectory.isEmpty else { return nil }
+            let resource = path.lastPathComponent
+            return bundle.url(forResource: resource, withExtension: "mp3", subdirectory: "Audio/\(subdirectory)")
+                ?? bundle.url(forResource: resource, withExtension: "mp3", subdirectory: subdirectory)
+        }()
 }
 
 internal func voiceFilenameOrFallback(for text: String, bundle: Bundle = .main) -> String {
@@ -126,12 +144,41 @@ internal func nextCommandCue(
     return cues[nextIndex]
 }
 
+internal func nextPreviewFilename(
+    from filenames: [String],
+    lastFilename: String?,
+    usedFilenames: inout Set<String>,
+    pickIndex: (Int) -> Int
+) -> String {
+    guard !filenames.isEmpty else {
+        return fallbackVoiceCueCatalog.fallbackCommandFilename
+    }
+    if filenames.count == 1 {
+        let only = filenames[0]
+        usedFilenames = [only]
+        return only
+    }
+    var pool = filenames.filter { !usedFilenames.contains($0) }
+    if pool.isEmpty {
+        usedFilenames.removeAll()
+        pool = filenames.filter { $0 != lastFilename }
+        if pool.isEmpty {
+            pool = filenames
+        }
+    }
+    let boundedIndex = max(0, min(pool.count - 1, pickIndex(pool.count)))
+    let candidate = pool[boundedIndex]
+    let selected = candidate == lastFilename && pool.count > 1 ? pool[(boundedIndex + 1) % pool.count] : candidate
+    usedFilenames.insert(selected)
+    return selected
+}
+
 internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int {
     switch totalDurationSeconds {
     case ...29:
         return .max
     default:
-        return 30
+        return 15
     }
 }
 
@@ -169,6 +216,8 @@ final class AIVoiceCalloutService {
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
     private var usedCommandCueFilenames: Set<String> = []
+    private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
+    private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
 
     init(
         bundle: Bundle = .main,
@@ -188,13 +237,75 @@ final class AIVoiceCalloutService {
         let mappedFilename = catalog.filenameByText[text]
         let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
 
-        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
-            Self.log.error("Voice asset missing for cue: \(text, privacy: .public)")
-            return
-        }
-
         if mappedFilename == nil {
             Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
+        }
+
+        playVoiceFile(named: filename, cueText: text)
+    }
+
+    func resetSession() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        lastElapsedMilestone = 0
+        nextCommandCueAt = 0
+        lastCommandCueFilename = nil
+        usedCommandCueFilenames.removeAll()
+        lastPreviewCommandFilenameByGender.removeAll()
+        usedPreviewCommandFilenamesByGender.removeAll()
+    }
+
+    func preview() {
+        previewCommandCue(gender: currentGender)
+    }
+
+    func previewCommandCue(gender: VoiceGender = .male) {
+        currentGender = gender
+        activateAudioSession()
+
+        let previewPool =
+            gender == .female
+            ? VoicePreviewSampleCatalog.femaleCommandFilenames
+            : VoicePreviewSampleCatalog.maleCommandFilenames
+        var usedFilenames = usedPreviewCommandFilenamesByGender[gender] ?? []
+        let previewFilename = nextPreviewFilename(
+            from: previewPool,
+            lastFilename: lastPreviewCommandFilenameByGender[gender],
+            usedFilenames: &usedFilenames
+        ) { upperBound in
+            secureRandomInt(in: 0...(upperBound - 1))
+        }
+        usedPreviewCommandFilenamesByGender[gender] = usedFilenames
+        lastPreviewCommandFilenameByGender[gender] = previewFilename
+        playVoiceFile(
+            named: previewFilename,
+            cueText: gender == .female ? "Female preview command sample" : "Male preview command sample"
+        )
+    }
+
+    func previewCountdownCue(gender: VoiceGender = .male) {
+        currentGender = gender
+        activateAudioSession()
+
+        let previewElapsedFilename =
+            gender == .female
+            ? VoicePreviewSampleCatalog.femaleElapsedFilename
+            : VoicePreviewSampleCatalog.maleElapsedFilename
+        playVoiceFile(
+            named: previewElapsedFilename,
+            cueText: gender == .female ? "Female preview elapsed sample" : "Male preview elapsed sample"
+        )
+    }
+
+    func beginSession(totalDurationSeconds: Int, gender: VoiceGender = .male) {
+        currentGender = gender
+        nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
+    }
+
+    private func playVoiceFile(named filename: String, cueText: String) {
+        guard let url = packStore.voiceAudioURL(for: filename, bundle: bundle) else {
+            Self.log.error("Voice asset missing for cue: \(cueText, privacy: .public)")
+            return
         }
 
         do {
@@ -206,35 +317,8 @@ final class AIVoiceCalloutService {
         }
     }
 
-    func resetSession() {
-        audioPlayer?.stop()
-        audioPlayer = nil
-        lastElapsedMilestone = 0
-        nextCommandCueAt = 0
-        lastCommandCueFilename = nil
-        usedCommandCueFilenames.removeAll()
-    }
-
-    func preview() {
-        previewCommandCue()
-    }
-
-    func previewCommandCue() {
-        let cue = randomCommandCue()
-        speak(cue.text)
-    }
-
-    func previewCountdownCue() {
-        let catalog = packStore.voiceCatalog(bundle: bundle)
-        speak(catalog.previewElapsed.text)
-    }
-
-    func beginSession(totalDurationSeconds: Int) {
-        nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: totalDurationSeconds)
-    }
-
     func triggerCallout(elapsedSeconds: Int) {
-        if let callout = elapsedMilestone(for: elapsedSeconds), elapsedSeconds.isMultiple(of: 60) {
+        if let callout = elapsedMilestone(for: elapsedSeconds) {
             speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
             if nextCommandCueAt <= elapsedSeconds {
@@ -252,7 +336,6 @@ final class AIVoiceCalloutService {
     }
 
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
-        guard elapsed % 60 == 0 else { return nil }  // Only fire elapsed cues on the minute
         let catalog = packStore.voiceCatalog(bundle: bundle)
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil

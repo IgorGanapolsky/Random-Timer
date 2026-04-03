@@ -104,6 +104,41 @@ jobs:
           fi
           python -m py_compile "${TARGETS[@]}"
 
+  voice-provider-smoke:
+    name: Voice Provider Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Decide live smoke execution
+        id: gate
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          if [ -n "${ELEVENLABS_API_KEY}" ]; then
+            echo "run_live_smoke=true" >> "$GITHUB_OUTPUT"
+            echo "ElevenLabs secret is available; running live smoke."
+          else
+            echo "run_live_smoke=false" >> "$GITHUB_OUTPUT"
+            echo "ElevenLabs secret is unavailable in this workflow context; recording controlled skip."
+          fi
+
+      - name: Setup Python
+        if: steps.gate.outputs.run_live_smoke == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Verify live ElevenLabs voices
+        if: steps.gate.outputs.run_live_smoke == 'true'
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: python scripts/verify_elevenlabs_voices.py
+
+      - name: Record controlled skip
+        if: steps.gate.outputs.run_live_smoke != 'true'
+        run: echo "Live ElevenLabs smoke was skipped because ELEVENLABS_API_KEY is not exposed in this workflow context."
+
   android:
     name: Autonomous Android Tests
     runs-on: ubuntu-latest
@@ -163,6 +198,46 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Create dummy GoogleService-Info.plist for CI
+        run: |
+          mkdir -p RandomTimer
+          {
+            printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+            printf '%s\n' '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            printf '%s\n' '<plist version="1.0">'
+            printf '%s\n' '<dict>'
+            printf '%s\n' '	<key>CLIENT_ID</key>'
+            printf '%s\n' '	<string>000000000000-ci-placeholder.apps.googleusercontent.com</string>'
+            printf '%s\n' '	<key>REVERSED_CLIENT_ID</key>'
+            printf '%s\n' '	<string>com.googleusercontent.apps.000000000000-ci-placeholder</string>'
+            printf '%s\n' '	<key>API_KEY</key>'
+            printf '%s\n' '	<string>AIzaSyCiPlaceholderOnlyNotReal0000000</string>'
+            printf '%s\n' '	<key>GCM_SENDER_ID</key>'
+            printf '%s\n' '	<string>000000000000</string>'
+            printf '%s\n' '	<key>PLIST_VERSION</key>'
+            printf '%s\n' '	<string>1</string>'
+            printf '%s\n' '	<key>BUNDLE_ID</key>'
+            printf '%s\n' '	<string>com.iganapolsky.randomtimer</string>'
+            printf '%s\n' '	<key>PROJECT_ID</key>'
+            printf '%s\n' '	<string>random-timer-ci-placeholder</string>'
+            printf '%s\n' '	<key>STORAGE_BUCKET</key>'
+            printf '%s\n' '	<string>random-timer-ci-placeholder.appspot.com</string>'
+            printf '%s\n' '	<key>IS_ADS_ENABLED</key>'
+            printf '%s\n' '	<false/>'
+            printf '%s\n' '	<key>IS_ANALYTICS_ENABLED</key>'
+            printf '%s\n' '	<false/>'
+            printf '%s\n' '	<key>IS_APPINVITE_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>IS_GCM_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>IS_SIGNIN_ENABLED</key>'
+            printf '%s\n' '	<true/>'
+            printf '%s\n' '	<key>GOOGLE_APP_ID</key>'
+            printf '%s\n' '	<string>1:000000000000:ios:0000000000000000000000</string>'
+            printf '%s\n' '</dict>'
+            printf '%s\n' '</plist>'
+          } > RandomTimer/GoogleService-Info.plist
+
       - name: Select Xcode
         run: |
           XCODE_PATH=""
@@ -191,6 +266,7 @@ jobs:
           # the first iOS Simulator destination it accepts.
           SIM_ID=$(xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | \
             grep 'platform:iOS Simulator' | \
+            grep -i 'iPhone' | \
             grep -v 'Any iOS Simulator Device' | \
             sed -nE 's/.*id:([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}).*/\1/p' | \
             head -n 1)
@@ -202,6 +278,12 @@ jobs:
           echo "sim_id=${SIM_ID}" >> "$GITHUB_OUTPUT"
           echo "Using xcodebuild destination simulator ID: ${SIM_ID}"
 
+      - name: Pre-boot simulator
+        run: |
+          xcrun simctl boot '${{ steps.sim.outputs.sim_id }}' || true
+          xcrun simctl bootstatus '${{ steps.sim.outputs.sim_id }}' -b
+          sleep 5
+
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \
@@ -210,9 +292,11 @@ jobs:
             -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
             -skip-testing:RandomTimerUITests \
             -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
 
       - name: Run unit tests
+        timeout-minutes: 10
         run: |
           rm -rf build/TestResults.xcresult
           xcodebuild test \
@@ -223,7 +307,8 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath build/TestResults.xcresult \
             -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
 
       - name: Upload iOS xcresult
         if: always()
@@ -547,6 +632,7 @@ jobs:
       - name: Check crash-free rate
         env:
           CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
+          CRASHLYTICS_PROJECT_ID: random-timer-dist-new
         run: python scripts/check_crashlytics.py --threshold 99.0 --hours 24
 
   notify:

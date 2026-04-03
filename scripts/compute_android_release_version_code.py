@@ -17,6 +17,8 @@ except ModuleNotFoundError:
 
 ANDROID_PACKAGE_DEFAULT = "com.iganapolsky.randomtimer"
 DEFAULT_TRACKS = ("production", "beta", "alpha", "internal")
+DEFAULT_HTTP_TIMEOUT_SECONDS = 180
+DEFAULT_REQUEST_RETRIES = 3
 
 
 def _read_gradle_version_code(gradle_file: Path) -> int:
@@ -26,15 +28,25 @@ def _read_gradle_version_code(gradle_file: Path) -> int:
         raise ValueError(f"Unable to find versionCode in {gradle_file}") from exc
 
 
-def _load_play_service(service_account_json: Path):
+def _load_play_service(
+    service_account_json: Path,
+    timeout_seconds: int = DEFAULT_HTTP_TIMEOUT_SECONDS,
+):
     from google.oauth2 import service_account
+    from google_auth_httplib2 import AuthorizedHttp
     from googleapiclient.discovery import build
+    import httplib2
 
     credentials = service_account.Credentials.from_service_account_file(
         str(service_account_json),
         scopes=["https://www.googleapis.com/auth/androidpublisher"],
     )
-    return build("androidpublisher", "v3", credentials=credentials)
+    http = AuthorizedHttp(credentials, http=httplib2.Http(timeout=timeout_seconds))
+    return build("androidpublisher", "v3", http=http, cache_discovery=False)
+
+
+def _execute_request(request: Any, request_retries: int = DEFAULT_REQUEST_RETRIES):
+    return request.execute(num_retries=request_retries)
 
 
 def _extract_release_codes(track_payload: dict[str, Any]) -> list[int]:
@@ -48,22 +60,33 @@ def _extract_release_codes(track_payload: dict[str, Any]) -> list[int]:
     return codes
 
 
-def _fetch_existing_track_codes(service: Any, package_name: str, tracks: list[str]) -> dict[str, list[int]]:
+def _fetch_existing_track_codes(
+    service: Any,
+    package_name: str,
+    tracks: list[str],
+    request_retries: int = DEFAULT_REQUEST_RETRIES,
+) -> dict[str, list[int]]:
     edits = service.edits()
     edit_id = None
     codes_by_track: dict[str, list[int]] = {}
 
     try:
-        edit = edits.insert(body={}, packageName=package_name).execute()
+        edit = _execute_request(
+            edits.insert(body={}, packageName=package_name),
+            request_retries=request_retries,
+        )
         edit_id = edit["id"]
 
         for track in tracks:
             try:
-                payload = edits.tracks().get(
-                    packageName=package_name,
-                    editId=edit_id,
-                    track=track,
-                ).execute()
+                payload = _execute_request(
+                    edits.tracks().get(
+                        packageName=package_name,
+                        editId=edit_id,
+                        track=track,
+                    ),
+                    request_retries=request_retries,
+                )
                 codes_by_track[track] = _extract_release_codes(payload)
             except Exception as error:
                 status = getattr(getattr(error, "resp", None), "status", None)
@@ -76,7 +99,10 @@ def _fetch_existing_track_codes(service: Any, package_name: str, tracks: list[st
     finally:
         if edit_id is not None:
             try:
-                edits.delete(packageName=package_name, editId=edit_id).execute()
+                _execute_request(
+                    edits.delete(packageName=package_name, editId=edit_id),
+                    request_retries=request_retries,
+                )
             except Exception:
                 pass
 
@@ -95,6 +121,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--package", default=ANDROID_PACKAGE_DEFAULT)
     parser.add_argument("--gradle-file", default="native-android/app/build.gradle.kts")
     parser.add_argument("--tracks", default=",".join(DEFAULT_TRACKS))
+    parser.add_argument("--timeout-seconds", type=int, default=DEFAULT_HTTP_TIMEOUT_SECONDS)
+    parser.add_argument("--request-retries", type=int, default=DEFAULT_REQUEST_RETRIES)
     parser.add_argument("--json-output", default="")
     return parser.parse_args()
 
@@ -115,8 +143,13 @@ def main() -> int:
 
     try:
         base_version_code = _read_gradle_version_code(gradle_file)
-        service = _load_play_service(service_account_json)
-        existing_track_codes = _fetch_existing_track_codes(service, args.package, tracks)
+        service = _load_play_service(service_account_json, timeout_seconds=args.timeout_seconds)
+        existing_track_codes = _fetch_existing_track_codes(
+            service,
+            args.package,
+            tracks,
+            request_retries=args.request_retries,
+        )
         next_version_code = compute_next_version_code(base_version_code, existing_track_codes)
     except Exception as error:
         print(f"❌ Failed to compute Android release versionCode: {error}", file=sys.stderr)

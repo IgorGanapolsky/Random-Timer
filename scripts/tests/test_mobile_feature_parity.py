@@ -16,6 +16,7 @@ ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtim
 ANDROID_PRO_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/billing/ProManager.kt"
 ANDROID_ACTIVE_SCREEN = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/ActiveTimerScreen.kt"
 ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
+ANDROID_REPOSITORY = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/data/repository/TimerRepositoryImpl.kt"
 
 IOS_TIMER_MODELS = ROOT / "native-ios/SharedModels/TimerModels.swift"
 IOS_PRO_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/ProManager.swift"
@@ -98,10 +99,11 @@ def test_voice_callouts_present_on_both_platforms():
     ios_setup = _read(IOS_SETUP)
     android_timer_config = _read(ANDROID_TIMER_CONFIG)
     ios_timer_models = _read(IOS_TIMER_MODELS)
+    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
     for source in (android_setup, ios_setup):
         assert "Voice Callouts" in source or "AI Voice Callouts" in source
-        assert "elapsed" in source.lower()
+        assert expected_supporting_copy in source
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models
@@ -130,13 +132,25 @@ def test_voice_preview_supports_command_cues_on_both_platforms():
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
     ios_voice_service = _read(IOS_VOICE_SERVICE)
 
-    assert "fun previewCommandCue()" in android_preview
-    assert "previewCommandCue()" in android_preview_impl
-    assert "fun previewCommandCue()" in android_viewmodel
+    assert "fun previewCommandCue(gender: VoiceGender)" in android_preview
+    assert "previewCommandCue(gender)" in android_preview_impl
+    assert "fun previewCommandCue(gender: VoiceGender)" in android_viewmodel
     assert "onCommandCuePreview = viewModel::previewCommandCue" in android_nav
 
     assert "func previewCommandCue()" in ios_timer_manager
-    assert "func previewCommandCue()" in ios_voice_service
+    assert "func previewCommandCue(gender: VoiceGender" in ios_voice_service
+
+
+def test_android_persists_voice_gender_selection_like_ios():
+    android_repository = _read(ANDROID_REPOSITORY)
+    android_timer_config = _read(ANDROID_TIMER_CONFIG)
+    ios_timer_models = _read(IOS_TIMER_MODELS)
+
+    assert 'val voiceGender: VoiceGender = VoiceGender.MALE' in android_timer_config
+    assert 'case male' in ios_timer_models and 'case female' in ios_timer_models
+    assert 'private val KEY_VOICE_GENDER = stringPreferencesKey("voice_gender")' in android_repository
+    assert 'preferences[KEY_VOICE_GENDER] = config.voiceGender.name' in android_repository
+    assert 'VoiceGender.valueOf(it)' in android_repository
 
 
 def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
@@ -168,11 +182,11 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchProPurchase" in android_nav
 
 
-def test_android_elapsed_voice_cues_fire_on_minute_marks_only_and_still_gate_command_cues():
+def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert "if (elapsedSeconds % 60 != 0) return null" in android_voice_manager
+    assert "runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
+    assert "else -> 15" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
 
 

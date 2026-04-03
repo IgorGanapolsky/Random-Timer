@@ -80,6 +80,11 @@ All AI replies, code comments, commit messages, and documentation use **English*
 - `git fetch --prune` regularly to clean stale remote tracking refs
 - Naming enforcement: `validate_release_branch.py` blocks non-`release/vX.Y.Z` and non-`hotfix/vX.Y.Z` PRs to `main`
 
+### PR merge gate (evidence)
+- Merge only when GitHub reports a green required check set for that PR (use `gh pr checks <n>` / `gh pr view --json mergeStateStatus,statusCheckRollup`).
+- **Never** paste GitHub PATs into chat or commit them; use `gh auth login` / Actions secrets. Rotate any token that appears in logs or messages.
+- External “RAG” / LangSmith / MCP memory: use only if that integration is verified in the current session; do not claim lessons were stored otherwise.
+
 ## Store Publishing Rule (MANDATORY)
 
 Every release MUST include complete store listing metadata before publishing:
@@ -88,25 +93,6 @@ Every release MUST include complete store listing metadata before publishing:
 - NEVER publish a build without verifying store listing content is present and up to date
 - Update changelogs for every new version code
 - Privacy policy MUST exist at `PRIVACY_POLICY.md` and be linked in store metadata
-
-# Session Directive: PR Management & System Hygiene
-
-## Your Role
-You are the **CTO**. The user is the **CEO**. You have full agentic authority and are expected to act autonomously.
-
-## Task: PR & Branch Management
-1. **Inspect All Open PRs**: List, review for readiness, report blockers.
-2. **Identify Orphan Branches**: Evaluate for merge, stale, or deletion.
-3. **Merge Ready PRs**: Merge passing PRs and provide evidence (SHA, CI status).
-4. **Clean Up**: Delete stale branches and redundant files/logs.
-5. **Verify CI**: Ensure CI passes on `main`/`develop` after all merges.
-6. **Confirm Completion**: Only after exhaustive verification.
-
-## Operational Directives
-- **Evidence-Based**: Show proof for every claim. Never claim completion without verification.
-- **No Manual Handoffs**: Perform every possible step autonomously.
-- **Honesty**: Report failures immediately. Log hallucinations or violations.
-- **Continuous Learning**: Use only the memory/recall tooling that is actually exposed in the current session. Read back stored state before claiming a lesson exists.
 
 ## TDD Protocol (MANDATORY)
 

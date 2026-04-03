@@ -6,6 +6,7 @@ struct ActiveTimerScreen: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showResetFeedback: Bool = false
     @State private var resetFeedbackTask: Task<Void, Never>?
+    @State private var screenAppearedAt: Date?
 
     private var state: TimerState? {
         timerManager.timerState
@@ -30,10 +31,16 @@ struct ActiveTimerScreen: View {
 
     private func formatRangeText(minSeconds: Int, maxSeconds: Int) -> String {
         func formatTime(_ seconds: Int) -> String {
-            if seconds >= 60 {
+            if seconds >= 3600 {
+                let hrs = seconds / 3600
+                let mins = (seconds % 3600) / 60
+                return mins > 0 ? "\(hrs)h \(mins)m" : "\(hrs)h"
+            } else if seconds >= 60 {
                 let mins = seconds / 60
                 let secs = seconds % 60
-                return secs > 0 ? "\(mins)m \(secs)s" : "\(mins)m"
+                // Drop seconds when range is wide (both sides have minutes)
+                // to keep the text compact inside the circle
+                return secs > 0 ? "\(mins):\(String(format: "%02d", secs))" : "\(mins)m"
             } else {
                 return "\(seconds)s"
             }
@@ -208,9 +215,18 @@ struct ActiveTimerScreen: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
+            screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.activeTimer)
         }
         .onDisappear {
+            if let appearedAt = screenAppearedAt {
+                let dwellSeconds = Date().timeIntervalSince(appearedAt)
+                AnalyticsService.shared.track(AnalyticsEvents.screenDwellTime, properties: [
+                    AnalyticsProperties.screen: "active_timer",
+                    AnalyticsProperties.durationSeconds: round(dwellSeconds * 10) / 10,
+                ])
+            }
+            screenAppearedAt = nil
             resetFeedbackTask?.cancel()
             resetFeedbackTask = nil
             showResetFeedback = false

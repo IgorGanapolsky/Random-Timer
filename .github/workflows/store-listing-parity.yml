@@ -1,0 +1,32 @@
+name: Store Listing Parity Check
+
+on:
+  pull_request:
+    paths:
+      - "native-ios/fastlane/metadata/**"
+      - "native-ios/fastlane/screenshots/**"
+      - "native-android/fastlane/metadata/**"
+  push:
+    branches: [develop, main]
+    paths:
+      - "native-ios/fastlane/metadata/**"
+      - "native-ios/fastlane/screenshots/**"
+      - "native-android/fastlane/metadata/**"
+  workflow_dispatch:
+
+jobs:
+  parity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pillow
+
+      - name: Check store listing parity
+        run: python scripts/check_store_listing_parity.py --repo-root .

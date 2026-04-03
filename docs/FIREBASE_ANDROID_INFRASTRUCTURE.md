@@ -4,12 +4,14 @@ This document is the canonical reference for Android Firebase wiring in Random T
 
 ## Current Split
 
-Android Firebase is intentionally split across two projects:
+Android Firebase is intentionally split across two backends:
 
 | Purpose | Project ID | Project Number | App ID |
 |---|---|---:|---|
-| Runtime services (`google-services.json`, Crashlytics BigQuery export) | `random-timer-486213` | `624873778337` | Runtime app ID is supplied by `GOOGLE_SERVICES_JSON` |
-| Firebase App Distribution | `random-timer-dist-20260323` | `712918404489` | `1:712918404489:android:5fb1dfde1d712f53e7a558` |
+| Runtime Android config in CI/release (`google-services.json` from secret) | Varies by secret | Varies | Supplied by `GOOGLE_SERVICES_JSON` |
+| **Crashlytics → BigQuery streaming export** (automated queries / `check_crashlytics.py`) | **`random-timer-dist-new`** | Per GCP console | Same app; dataset `firebase_crashlytics` |
+| Firebase App Distribution | `random-timer-dist-new` | Verify from `FIREBASE_ANDROID_APP_ID` secret or live run log | Supplied by `FIREBASE_ANDROID_APP_ID` |
+| Legacy / historical project (some docs and older keys) | `random-timer-486213` | `624873778337` | Do not assume current BQ export lives here |
 
 ## Why The Split Exists
 
@@ -60,7 +62,9 @@ If you look in `random-timer-486213`, you will not see current Android App Distr
 
 The current Android internal distribution console is:
 
-- `https://console.firebase.google.com/project/random-timer-dist-20260323/appdistribution/app/android:com.iganapolsky.randomtimer`
+- `https://console.firebase.google.com/project/random-timer-dist-new/appdistribution/app/android:com.iganapolsky.randomtimer`
+
+If you are looking in an older Firebase App Distribution project, the console will appear empty even when GitHub Actions distribution succeeded.
 
 ## Verification Commands
 
@@ -90,10 +94,13 @@ creds = service_account.Credentials.from_service_account_file(
 creds.refresh(Request())
 headers = {"Authorization": f"Bearer {creds.token}"}
 
+project_number = os.environ["FIREBASE_PROJECT_NUMBER"]
+app_id = os.environ["FIREBASE_ANDROID_APP_ID"]
+
 for url in [
-    "https://firebaseappdistribution.googleapis.com/v1/projects/712918404489/groups",
-    "https://firebaseappdistribution.googleapis.com/v1/projects/712918404489/testers",
-    "https://firebaseappdistribution.googleapis.com/v1/projects/712918404489/apps/1:712918404489:android:5fb1dfde1d712f53e7a558/releases",
+    f"https://firebaseappdistribution.googleapis.com/v1/projects/{project_number}/groups",
+    f"https://firebaseappdistribution.googleapis.com/v1/projects/{project_number}/testers",
+    f"https://firebaseappdistribution.googleapis.com/v1/projects/{project_number}/apps/{app_id}/releases",
 ]:
     resp = requests.get(url, headers=headers, timeout=30)
     print(resp.status_code, url)
@@ -110,13 +117,15 @@ PY
 
 ## Release Evidence
 
-First healthy Android Firebase release on the new backend:
+Most recent verified Android Firebase release evidence:
 
-- GitHub Actions run: `23440692946`
-- Version: `1.3.9`
-- Build version: `1773900000`
-- Firebase release resource:
-  - `projects/712918404489/apps/1:712918404489:android:5fb1dfde1d712f53e7a558/releases/28u136g4k64ag`
+- GitHub Actions run: `23806206042`
+- Version: `1.3.15`
+- Build version: `504`
+- Console project in live run log:
+  - `random-timer-dist-new`
+- Distribution audience in live run log:
+  - tester `iganapolsky@gmail.com`
 
 ## Change Rules
 

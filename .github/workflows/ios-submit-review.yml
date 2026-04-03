@@ -22,6 +22,11 @@ on:
         required: true
         type: boolean
         default: true
+      attach_subscriptions:
+        description: "Attach pending subscriptions to the review submission via API"
+        required: true
+        type: boolean
+        default: true
 
 concurrency:
   group: ios-submit-review-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
@@ -211,6 +216,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           LOCALE: ${{ inputs.locale }}
           WAIT_FOR_STATE: ${{ inputs.wait }}
+          ATTACH_SUBSCRIPTIONS: ${{ inputs.attach_subscriptions }}
           IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
@@ -227,14 +233,21 @@ jobs:
           STATE="$(python -c 'import json,sys; print(json.loads(sys.argv[1])["state"])' "$STATE_JSON")"
 
           if [[ "$STATE" == "WAITING_FOR_REVIEW" || "$STATE" == "IN_REVIEW" || "$STATE" == "PENDING_DEVELOPER_RELEASE" || "$STATE" == "READY_FOR_SALE" ]]; then
-            echo "Already submitted ($STATE); skipping submit_review."
-          else
-            SUBMIT_ARGS=(--version "$IOS_VERSION" --locale "$LOCALE")
-            if [[ "$WAIT_FOR_STATE" == "true" ]]; then
-              SUBMIT_ARGS+=(--wait)
+            if [[ "$ATTACH_SUBSCRIPTIONS" == "true" ]]; then
+              echo "Existing submission found ($STATE); will cancel and recreate with subscription items…"
+            else
+              echo "Already submitted ($STATE); skipping submit_review."
+              exit 0
             fi
-            python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"
           fi
+          SUBMIT_ARGS=(--version "$IOS_VERSION" --locale "$LOCALE")
+          if [[ "$WAIT_FOR_STATE" == "true" ]]; then
+            SUBMIT_ARGS+=(--wait)
+          fi
+          if [[ "$ATTACH_SUBSCRIPTIONS" == "true" ]]; then
+            SUBMIT_ARGS+=(--attach-subscriptions)
+          fi
+          python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"
 
       - name: Upload version resolution report
         if: always()

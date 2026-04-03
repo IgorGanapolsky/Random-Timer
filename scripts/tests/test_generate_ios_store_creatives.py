@@ -64,6 +64,18 @@ class GenerateIosStoreCreativesTests(unittest.TestCase):
 
             assert report["source_files"]["1_setup.png"].endswith("originals/1_setup.png")
 
+    def test_generate_prefers_recovered_raw_iphone_sources_when_available(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            self._seed_screenshots(repo, size=(300, 600))
+            raw_dir = repo / "native-ios" / "fastlane" / "screenshots" / "en-US" / "originals" / "_backup" / "20260317_085115"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (320, 640), (30, 220, 30)).save(raw_dir / "iphone_setup_raw.png", format="PNG")
+
+            report = creatives.generate(repo, "en-US")
+
+            assert report["source_files"]["1_setup.png"].endswith("iphone_setup_raw.png")
+
 
 if __name__ == "__main__":
     unittest.main()

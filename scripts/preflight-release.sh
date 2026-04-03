@@ -284,8 +284,11 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
 
     info "iOS screenshots: $IOS_SHOTS total (iPhone 6.9/6.5: $IPHONE_CLASS, iPad 13\": $IPAD_CLASS, other: $OTHER_CLASS)"
 
-    if (( IPHONE_CLASS < 3 )); then
-      err "iOS screenshots: need >=3 iPhone 6.9\"/6.5\" screenshots (found $IPHONE_CLASS)"
+    if (( IOS_SHOTS != 7 )); then
+      err "iOS screenshots: expected exactly 7 PNG storefront screenshots (found $IOS_SHOTS)"
+    fi
+    if (( IPHONE_CLASS < 4 )); then
+      err "iOS screenshots: need >=4 iPhone 6.9\"/6.5\" screenshots (found $IPHONE_CLASS)"
     fi
     if (( IPAD_CLASS < 3 )); then
       err "iOS screenshots: need >=3 iPad 13\" screenshots (found $IPAD_CLASS)"
@@ -305,11 +308,21 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
       err "shasum is required to detect duplicate iOS screenshots"
     fi
 
+    for required_iphone in 1_setup.png 2_active.png 3_alarm.png 4_running.png; do
+      if [[ ! -f "$IOS_SCREENSHOTS_DIR/$required_iphone" ]]; then
+        err "iOS screenshots: missing required iPhone capture $required_iphone"
+      fi
+    done
+
     for required_ipad in 5_ipad_setup.png 6_ipad_running.png 7_ipad_stopped.png; do
       if [[ ! -f "$IOS_SCREENSHOTS_DIR/$required_ipad" ]]; then
         err "iOS screenshots: missing required iPad capture $required_ipad"
       fi
     done
+
+    if [[ -f "$IOS_SCREENSHOTS_DIR/3_pro.png" ]]; then
+      err "iOS screenshots: paywall screenshot 3_pro.png must not ship as a storefront asset"
+    fi
   else
     err "iOS screenshots directory missing: $IOS_SCREENSHOTS_DIR"
   fi

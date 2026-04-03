@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "provider": "elevenlabs",
+  "male": {
+    "persona": "Marine Drill Instructor",
+    "modelId": "eleven_multilingual_v2",
+    "voiceId": "DGzg6RaUqxGRTHSBjfgF",
+    "voiceName": "Configured drill instructor voice",
+    "voiceNamePattern": "marine|drill|instructor|sergeant",
+    "probeText": "Stay sharp.",
+    "runtimePackSource": "content/pro_audio/runtime/latest.json",
+    "previewSamples": {
+      "androidCommandFilenames": [
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_disciplined",
+        "cmd_keep_your_bearing",
+        "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight"
+      ],
+      "androidElapsedFilename": "preview_elapsed",
+      "iosCommandFilenames": [
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_disciplined",
+        "cmd_keep_your_bearing",
+        "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight"
+      ],
+      "iosElapsedFilename": "preview_elapsed"
+    }
+  },
+  "female": {
+    "persona": "HIIT Instructor",
+    "modelId": "eleven_multilingual_v2",
+    "primaryVoice": {
+      "voiceId": "AZnzlk1XvdvUeBnXmlld",
+      "voiceName": "Domi",
+      "probeText": "Move with purpose."
+    },
+    "fallbackVoices": [
+      {
+        "voiceId": "sS5fXGlqomdGXa7mxBcy",
+        "voiceName": "Anvi",
+        "probeText": "Stay in the fight."
+      }
+    ],
+    "previewSamples": {
+      "androidCommandFilenames": [
+        "female_cmd_move_with_a_purpose",
+        "female_cmd_no_hesitation_move",
+        "female_cmd_stay_in_the_fight",
+        "female_cmd_push_pace",
+        "female_cmd_keep_tempo_high",
+        "female_cmd_finish_rep_keep_pushing",
+        "female_cmd_drive_forward",
+        "female_cmd_own_this_rep",
+        "female_cmd_pick_it_up",
+        "female_cmd_strong_feet_strong_pace"
+      ],
+      "androidElapsedFilename": "female_preview_elapsed",
+      "iosCommandFilenames": [
+        "female/cmd_move_with_a_purpose",
+        "female/cmd_no_hesitation_move",
+        "female/cmd_stay_in_the_fight",
+        "female/cmd_push_pace",
+        "female/cmd_keep_tempo_high",
+        "female/cmd_finish_rep_keep_pushing",
+        "female/cmd_drive_forward",
+        "female/cmd_own_this_rep",
+        "female/cmd_pick_it_up",
+        "female/cmd_strong_feet_strong_pace"
+      ],
+      "iosElapsedFilename": "female/preview_elapsed"
+    }
+  }
+}

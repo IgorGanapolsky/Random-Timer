@@ -28,6 +28,11 @@ internal data class ElapsedVoiceCue(
     val text: String,
 )
 
+private data class VoicePlaybackSource(
+    val remotePath: String? = null,
+    val resourceId: Int = 0,
+)
+
 internal data class VoiceCueCatalog(
     val previewElapsed: VoiceCue,
     val fallbackCommandFilename: String,
@@ -59,6 +64,40 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
         }
 
 private const val VOICE_CATALOG_ASSET = "voice_callouts.json"
+
+private object VoicePreviewSampleCatalog {
+    val maleCommandFilenames =
+        listOf(
+            "cmd_move_with_a_purpose",
+            "cmd_stay_locked_in",
+            "cmd_no_hesitation_move",
+            "cmd_sound_off_and_drive",
+            "cmd_snap_back_and_drive",
+            "cmd_stay_disciplined",
+            "cmd_keep_your_bearing",
+            "cmd_reset_and_attack",
+            "cmd_sharp_movement_sharp_focus",
+            "cmd_stay_in_the_fight",
+        )
+
+    const val maleElapsedFilename = "preview_elapsed"
+
+    val femaleCommandFilenames =
+        listOf(
+            "female_cmd_move_with_a_purpose",
+            "female_cmd_no_hesitation_move",
+            "female_cmd_stay_in_the_fight",
+            "female_cmd_push_pace",
+            "female_cmd_keep_tempo_high",
+            "female_cmd_finish_rep_keep_pushing",
+            "female_cmd_drive_forward",
+            "female_cmd_own_this_rep",
+            "female_cmd_pick_it_up",
+            "female_cmd_strong_feet_strong_pace",
+        )
+
+    const val femaleElapsedFilename = "female_preview_elapsed"
+}
 
 private val fallbackVoiceCueCatalog =
     VoiceCueCatalog(
@@ -138,16 +177,15 @@ internal fun runtimeVoiceCueForElapsedSecond(
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
     if (elapsedSeconds == lastElapsedMilestone) return null
-    if (elapsedSeconds % 60 != 0) return null  // Only fire elapsed cues on the minute
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
 }
 
-internal fun runtimeVoiceCueForMinuteMark(
+internal fun runtimeVoiceCueForElapsedMark(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
-    if (elapsedSeconds <= 0 || elapsedSeconds % 60 != 0) {
+    if (elapsedSeconds <= 0) {
         return null
     }
     return runtimeVoiceCueForElapsedSecond(
@@ -177,10 +215,44 @@ internal fun nextCommandCue(
     return cues[(boundedIndex + 1) % cues.size]
 }
 
+internal fun nextPreviewCueFilename(
+    filenames: List<String>,
+    lastFilename: String?,
+    usedFilenames: MutableSet<String>,
+    pickIndex: (Int) -> Int,
+): String {
+    if (filenames.isEmpty()) {
+        return fallbackVoiceCueCatalog.fallbackCommandFilename
+    }
+    if (filenames.size == 1) {
+        val only = filenames[0]
+        usedFilenames.clear()
+        usedFilenames.add(only)
+        return only
+    }
+
+    var pool = filenames.filter { it !in usedFilenames }
+    if (pool.isEmpty()) {
+        usedFilenames.clear()
+        pool = filenames.filter { it != lastFilename }.ifEmpty { filenames }
+    }
+
+    val boundedIndex = pickIndex(pool.size).coerceIn(0, pool.size - 1)
+    val candidate = pool[boundedIndex]
+    val selected =
+        if (candidate == lastFilename && pool.size > 1) {
+            pool[(boundedIndex + 1) % pool.size]
+        } else {
+            candidate
+        }
+    usedFilenames.add(selected)
+    return selected
+}
+
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
         totalDurationSeconds <= 29 -> Int.MAX_VALUE
-        else -> 30
+        else -> 15
     }
 
 @Singleton
@@ -195,6 +267,12 @@ class AIVoiceCalloutManager
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
+        private val usedPreviewCommandFilenamesByGender =
+            mutableMapOf(
+                VoiceGender.MALE to mutableSetOf<String>(),
+                VoiceGender.FEMALE to mutableSetOf<String>(),
+            )
         private var nextCommandCueAt = 0
 
         /** Current voice gender for the active session. */
@@ -228,52 +306,11 @@ class AIVoiceCalloutManager
             val mappedResId = voiceResIdForText(context, text, catalog)
             val resId = mappedResId ?: voiceResIdOrFallback(context, text, catalog)
             val filename = mappedResId?.let { catalog.filenameByText[text] } ?: catalog.fallbackCommandCue.filename
-            val remoteFile = packStore.voiceFile(filename)
-            if (remoteFile == null && resId == 0) {
-                Log.e("AIVoiceCallout", "Missing bundled voice asset for cue: $text")
-                return
-            }
             if (mappedResId == null) {
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
-            try {
-                stopPlayback()
-                mediaPlayer =
-                    MediaPlayer().apply {
-                        setAudioAttributes(
-                            AudioAttributes
-                                .Builder()
-                                .setUsage(AudioAttributes.USAGE_MEDIA)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                .build(),
-                        )
-                        if (remoteFile != null) {
-                            setDataSource(remoteFile.absolutePath)
-                        } else {
-                            val afd = context.resources.openRawResourceFd(resId)
-                            if (afd == null) {
-                                release()
-                                Log.e("AIVoiceCallout", "Missing raw voice asset for cue: $text")
-                                return
-                            }
-                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                            afd.close()
-                        }
-                        prepare()
-                    }
-                mediaPlayer?.apply {
-                    setVolume(currentVolume, currentVolume)
-                    setOnCompletionListener {
-                        it.release()
-                        if (mediaPlayer == it) {
-                            mediaPlayer = null
-                        }
-                    }
-                    start()
-                }
-            } catch (e: Exception) {
-                Log.e("AIVoiceCallout", "Audio playback failed: ${e.message}", e)
-            }
+
+            playVoiceFile(filename = filename, fallbackResId = resId, cueText = text)
         }
 
         fun resetSession() {
@@ -281,32 +318,167 @@ class AIVoiceCalloutManager
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
             usedCommandCueFilenames.clear()
+            lastPreviewCommandFilenameByGender.clear()
+            usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
             currentGender = VoiceGender.MALE
         }
 
         fun preview() {
-            previewCommandCue()
+            previewCommandCue(currentGender)
         }
 
-        fun previewCommandCue() {
-            val cue = randomCommandCue()
-            speak(cue.text)
+        fun previewCommandCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
+
+            val previewPool =
+                if (gender == VoiceGender.FEMALE) {
+                    VoicePreviewSampleCatalog.femaleCommandFilenames
+                } else {
+                    VoicePreviewSampleCatalog.maleCommandFilenames
+                }
+            val usedFilenames =
+                usedPreviewCommandFilenamesByGender.getOrPut(gender) {
+                    mutableSetOf()
+                }
+            val previewFilename =
+                nextPreviewCueFilename(
+                    filenames = previewPool,
+                    lastFilename = lastPreviewCommandFilenameByGender[gender] ?: null,
+                    usedFilenames = usedFilenames,
+                ) { upperBound ->
+                    Random.nextInt(upperBound)
+                }
+            lastPreviewCommandFilenameByGender[gender] = previewFilename
+            playVoiceFile(
+                filename = previewFilename,
+                fallbackResId = 0,
+                cueText =
+                    if (gender == VoiceGender.FEMALE) {
+                        "Female preview command sample"
+                    } else {
+                        "Male preview command sample"
+                    },
+            )
         }
 
-        fun previewCountdownCue() {
-            val catalog = packStore.voiceCatalog()
-            speak(catalog.previewElapsed.text)
+        fun previewCountdownCue(gender: VoiceGender = currentGender) {
+            currentGender = gender
+
+            playVoiceFile(
+                filename =
+                    if (gender == VoiceGender.FEMALE) {
+                        VoicePreviewSampleCatalog.femaleElapsedFilename
+                    } else {
+                        VoicePreviewSampleCatalog.maleElapsedFilename
+                    },
+                fallbackResId = 0,
+                cueText =
+                    if (gender == VoiceGender.FEMALE) {
+                        "Female preview elapsed sample"
+                    } else {
+                        "Male preview elapsed sample"
+                    },
+            )
         }
 
-        fun beginSession(totalDurationSeconds: Int, gender: VoiceGender = VoiceGender.MALE) {
+        fun beginSession(
+            totalDurationSeconds: Int,
+            gender: VoiceGender = VoiceGender.MALE,
+        ) {
             currentGender = gender
             nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds)
         }
 
+        private fun playVoiceFile(
+            filename: String,
+            fallbackResId: Int,
+            cueText: String,
+        ) {
+            val source = resolvePlaybackSource(filename, fallbackResId)
+            if (source == null) {
+                Log.e("AIVoiceCallout", "Missing bundled voice asset for cue: $cueText")
+                return
+            }
+
+            try {
+                stopPlayback()
+                val preparedPlayer = buildVoicePlayer(source, cueText) ?: return
+                mediaPlayer = preparedPlayer
+                startVoicePlayback(preparedPlayer)
+            } catch (e: Exception) {
+                Log.e("AIVoiceCallout", "Audio playback failed: ${e.message}", e)
+            }
+        }
+
+        private fun buildVoicePlayer(
+            source: VoicePlaybackSource,
+            cueText: String,
+        ): MediaPlayer? =
+            MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes
+                        .Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build(),
+                )
+                if (!setVoiceDataSource(source, cueText)) {
+                    release()
+                    return null
+                }
+                prepare()
+            }
+
+        private fun startVoicePlayback(player: MediaPlayer) {
+            player.setVolume(currentVolume, currentVolume)
+            player.setOnCompletionListener {
+                it.release()
+                if (mediaPlayer == it) {
+                    mediaPlayer = null
+                }
+            }
+            player.start()
+        }
+
+        private fun resolvePlaybackSource(
+            filename: String,
+            fallbackResId: Int,
+        ): VoicePlaybackSource? {
+            val remoteFile = packStore.voiceFile(filename)
+            if (remoteFile != null) {
+                return VoicePlaybackSource(remotePath = remoteFile.absolutePath)
+            }
+
+            val bundledResId = context.resources.getIdentifier(filename, "raw", context.packageName)
+            val resolvedResId = bundledResId.takeIf { it != 0 } ?: fallbackResId
+            return resolvedResId.takeIf { it != 0 }?.let { VoicePlaybackSource(resourceId = it) }
+        }
+
+        private fun MediaPlayer.setVoiceDataSource(
+            source: VoicePlaybackSource,
+            cueText: String,
+        ): Boolean {
+            source.remotePath?.let {
+                setDataSource(it)
+                return true
+            }
+
+            val afd = context.resources.openRawResourceFd(source.resourceId)
+            if (afd == null) {
+                Log.e("AIVoiceCallout", "Missing raw voice asset for cue: $cueText")
+                return false
+            }
+
+            afd.use {
+                setDataSource(it.fileDescriptor, it.startOffset, it.length)
+            }
+            return true
+        }
+
         fun triggerCallout(elapsedSeconds: Int) {
             val catalog = packStore.voiceCatalog()
-            runtimeVoiceCueForMinuteMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
+            runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
                 if (nextCommandCueAt <= elapsedSeconds) {
@@ -335,12 +507,14 @@ class AIVoiceCalloutManager
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
             val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
-            val pool = available.ifEmpty {
-                // All cues used — reset and exclude only the last one
-                usedCommandCueFilenames.clear()
-                catalog.commandCues.filter { it.filename != lastCommandCueFilename }
-                    .ifEmpty { catalog.commandCues }
-            }
+            val pool =
+                available.ifEmpty {
+                    // All cues used — reset and exclude only the last one
+                    usedCommandCueFilenames.clear()
+                    catalog.commandCues
+                        .filter { it.filename != lastCommandCueFilename }
+                        .ifEmpty { catalog.commandCues }
+                }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)

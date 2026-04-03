@@ -204,13 +204,19 @@ data class TimerState(
     val isAlarmSilenced: Boolean = false,
     val roundCount: Int = 1,
 ) {
+    /**
+     * Unpredictable progress based on maxSeconds (not targetDuration).
+     * This prevents the user from deducing the random target by watching the arc.
+     * Capped at 0.98 so the arc never visually "completes" before the alarm fires.
+     * Matches iOS `unpredictableProgress` in TimerModels.swift.
+     */
     val progress: Float
-        get() =
-            if (targetDuration == Duration.ZERO) {
-                0f
-            } else {
-                1f - (remainingDuration / targetDuration).toFloat()
-            }
+        get() {
+            val maxDuration = config.maxDuration
+            if (maxDuration == Duration.ZERO) return 0f
+            val elapsed = targetDuration - remainingDuration
+            return (elapsed / maxDuration).toFloat().coerceIn(0f, 0.98f)
+        }
 
     val isComplete: Boolean
         get() = status == TimerStatus.COMPLETE

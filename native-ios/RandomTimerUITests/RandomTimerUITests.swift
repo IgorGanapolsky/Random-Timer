@@ -57,11 +57,6 @@ final class RandomTimerUITests: XCTestCase {
         }
     }
 
-    private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
-        let path = "\(outputDir)/\(name)"
-        FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
-    }
-
     func testSetupStateShowsStartTimer() {
         let app = launchApp()
         ensureSetupScreen(app)
@@ -243,44 +238,14 @@ final class RandomTimerUITests: XCTestCase {
             return false
         }
 
-        // 1. Setup screen (with Round Selection visible)
         app.launch()
-        // Toggle loop on to show round selection
-        let loopToggle = app.switches["Loop Enabled"]
-        if loopToggle.waitForExistence(timeout: 3.0) && loopToggle.value as? String == "0" {
-            loopToggle.tap()
-        }
-        sleep(2)
-        saveScreenshot(
-            app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "5_ipad_setup.png" : "1_setup.png",
-            outputDir: outputDir
-        )
-
-        // 2. Active timer (running state)
+        captureSetupStorefront(app, isPadCapture: isPadCapture, outputDir: outputDir)
+        captureSoundStorefrontIfNeeded(app, isPadCapture: isPadCapture, outputDir: outputDir)
         let startButton = app.buttons["Start Timer"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         startButton.tap()
-        sleep(1)
-        // Dismiss notification permission if it appears
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        sleep(2)
-        saveScreenshot(
-            app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "6_ipad_running.png" : "2_active.png",
-            outputDir: outputDir
-        )
-
-        // 3. Alarm state (timer just went off)
-        app.terminate()
-        app.launchArguments = ["-ui-test-state", "alarm", "-ui-test-pro", "true"]
-        app.launch()
-        sleep(2)
-        saveScreenshot(
-            app.windows.firstMatch.screenshot(),
-            named: isPadCapture ? "7_ipad_stopped.png" : "3_pro.png",
-            outputDir: outputDir
-        )
+        captureRunningStorefront(app, isPadCapture: isPadCapture, outputDir: outputDir)
+        capturePausedStorefront(app, isPadCapture: isPadCapture, outputDir: outputDir)
     }
 
     func testLandscapeShowsActionButtons() {
@@ -297,4 +262,60 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
         XCTAssertTrue(stopButton.isHittable)
     }
+}
+
+private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
+    let path = "\(outputDir)/\(name)"
+    FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
+}
+
+private func captureSetupStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
+    let loopToggle = app.switches["Loop Enabled"]
+    if loopToggle.waitForExistence(timeout: 3.0) && loopToggle.value as? String == "0" {
+        loopToggle.tap()
+    }
+    sleep(2)
+    saveScreenshot(
+        app.windows.firstMatch.screenshot(),
+        named: isPadCapture ? "5_ipad_setup.png" : "1_setup.png",
+        outputDir: outputDir
+    )
+}
+
+private func captureSoundStorefrontIfNeeded(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
+    guard !isPadCapture else { return }
+
+    app.swipeUp()
+    sleep(1)
+    saveScreenshot(
+        app.windows.firstMatch.screenshot(),
+        named: "3_alarm.png",
+        outputDir: outputDir
+    )
+    app.swipeDown()
+    sleep(1)
+}
+
+private func captureRunningStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
+    sleep(1)
+    app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    sleep(2)
+    saveScreenshot(
+        app.windows.firstMatch.screenshot(),
+        named: isPadCapture ? "6_ipad_running.png" : "2_active.png",
+        outputDir: outputDir
+    )
+}
+
+private func capturePausedStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
+    let pauseButton = app.buttons["Pause"]
+    if pauseButton.waitForExistence(timeout: 3.0) {
+        pauseButton.tap()
+    }
+    sleep(2)
+    saveScreenshot(
+        app.windows.firstMatch.screenshot(),
+        named: isPadCapture ? "7_ipad_stopped.png" : "4_running.png",
+        outputDir: outputDir
+    )
 }

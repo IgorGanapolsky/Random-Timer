@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
@@ -100,6 +102,13 @@ fun RandomTimerNavHost(
             LaunchedEffect(Unit) {
                 viewModel.trackScreen(AnalyticsScreens.TIMER_SETUP)
             }
+            val setupEnterTimeMs = remember { System.currentTimeMillis() }
+            DisposableEffect(Unit) {
+                onDispose {
+                    val dwellSeconds = (System.currentTimeMillis() - setupEnterTimeMs) / 1000.0
+                    viewModel.trackScreenDwellTime("timer_setup", dwellSeconds)
+                }
+            }
             TimerSetupScreen(
                 config = config,
                 onConfigChange = viewModel::updateConfig,
@@ -118,6 +127,12 @@ fun RandomTimerNavHost(
                         paywallEntryPoint = "setup_upgrade_cta"
                         showPaywall = true
                     }
+                },
+                onFeatureGateHit = { feature ->
+                    viewModel.trackFeatureGateHit(feature)
+                },
+                onVoiceGenderSelected = { gender ->
+                    viewModel.trackVoiceGenderSelected(gender)
                 },
                 onSecretUnlock = {
                     viewModel.proManager.forcePro()
@@ -185,17 +200,19 @@ fun RandomTimerNavHost(
             proPrice = proPrice,
             onPurchase = { productID ->
                 scope.launch {
-                    val launched = activity?.let {
-                        viewModel.proManager.launchProPurchase(it, paywallEntryPoint)
-                    } ?: false
+                    val launched =
+                        activity?.let {
+                            viewModel.proManager.launchProPurchase(it, paywallEntryPoint)
+                        } ?: false
                     if (!launched) {
                         // Purchase failed to launch — keep paywall open
                         // The billing dialog didn't appear, so user needs feedback
-                        android.widget.Toast.makeText(
-                            activity ?: return@launch,
-                            "Purchase unavailable. Please try again later.",
-                            android.widget.Toast.LENGTH_LONG,
-                        ).show()
+                        android.widget.Toast
+                            .makeText(
+                                activity ?: return@launch,
+                                "Purchase unavailable. Please try again later.",
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
                     }
                     // Only dismiss if billing dialog launched (user will see Google Play sheet)
                     // The actual purchase result comes via onPurchasesUpdated callback

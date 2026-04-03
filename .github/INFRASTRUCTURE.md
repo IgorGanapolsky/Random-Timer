@@ -124,11 +124,14 @@ We follow a modified GitFlow approach:
 
 ## Setup Instructions
 
-1. **Branch Protection**
+1. **Branch Governance**
+
+   Repository rulesets are the canonical merge gate for `develop` and `main`.
+   Audit the live ruleset with:
 
    ```bash
-   export GITHUB_REPOSITORY="IgorGanapolsky/RandomTimer-Native"
-   ./.github/scripts/setup-branch-protection.sh
+   gh api repos/IgorGanapolsky/Random-Timer/rules/branches/develop
+   gh api repos/IgorGanapolsky/Random-Timer/rules/branches/main
    ```
 
 2. **Environments**

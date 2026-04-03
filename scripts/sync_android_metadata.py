@@ -120,8 +120,65 @@ def main():
             else:
                 raise
 
-    if not updated:
-        print("No metadata to upload. Discarding edit.")
+    # Upload screenshots for en-US
+    screenshots_dir = METADATA_ROOT / "en-US" / "images" / "phoneScreenshots"
+    screenshot_count = 0
+    if screenshots_dir.is_dir():
+        pngs = sorted(p for p in screenshots_dir.iterdir() if p.suffix == ".png" and not p.name.startswith("_"))
+        if pngs:
+            # Delete existing screenshots first
+            try:
+                edits.images().deleteall(
+                    packageName=PACKAGE_NAME,
+                    editId=edit_id,
+                    language="en-US",
+                    imageType="phoneScreenshots",
+                ).execute()
+                print("  Deleted existing phone screenshots")
+            except Exception as e:
+                print(f"  Warning: could not delete existing screenshots: {e}", file=sys.stderr)
+
+            for png_path in pngs:
+                try:
+                    from googleapiclient.http import MediaFileUpload
+                    media = MediaFileUpload(str(png_path), mimetype="image/png")
+                    edits.images().upload(
+                        packageName=PACKAGE_NAME,
+                        editId=edit_id,
+                        language="en-US",
+                        imageType="phoneScreenshots",
+                        media_body=media,
+                    ).execute()
+                    screenshot_count += 1
+                    print(f"  Uploaded screenshot: {png_path.name}")
+                except Exception as e:
+                    print(f"  Warning: failed to upload {png_path.name}: {e}", file=sys.stderr)
+
+    # Upload feature graphic
+    feature_graphic = METADATA_ROOT / "en-US" / "images" / "featureGraphic" / "feature-graphic.png"
+    if feature_graphic.is_file():
+        try:
+            from googleapiclient.http import MediaFileUpload
+            edits.images().deleteall(
+                packageName=PACKAGE_NAME,
+                editId=edit_id,
+                language="en-US",
+                imageType="featureGraphic",
+            ).execute()
+            media = MediaFileUpload(str(feature_graphic), mimetype="image/png")
+            edits.images().upload(
+                packageName=PACKAGE_NAME,
+                editId=edit_id,
+                language="en-US",
+                imageType="featureGraphic",
+                media_body=media,
+            ).execute()
+            print("  Uploaded feature graphic")
+        except Exception as e:
+            print(f"  Warning: failed to upload feature graphic: {e}", file=sys.stderr)
+
+    if not updated and screenshot_count == 0:
+        print("No metadata or screenshots to upload. Discarding edit.")
         edits.delete(packageName=PACKAGE_NAME, editId=edit_id).execute()
         return
 
@@ -129,7 +186,7 @@ def main():
         print(f"Skipped {len(skipped)} locales (enable in Play Console if needed): {', '.join(skipped)}", file=sys.stderr)
 
     commit_edit(edits, edit_id=edit_id)
-    print(f"Committed edit. Updated {len(updated)} languages: {', '.join(updated)}")
+    print(f"Committed edit. Updated {len(updated)} languages, {screenshot_count} screenshots uploaded.")
 
 
 if __name__ == "__main__":
