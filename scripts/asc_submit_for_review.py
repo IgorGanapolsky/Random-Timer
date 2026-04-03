@@ -790,6 +790,22 @@ def _find_submission_for_version(
     return None, None
 
 
+def _find_reusable_empty_submission(client: ASCClient, *, app_id: str) -> dict[str, Any] | None:
+    for submission in _list_review_submissions(client, app_id):
+        submission_id = submission.get("id")
+        if not isinstance(submission_id, str) or not submission_id:
+            continue
+        attrs = submission.get("attributes") or {}
+        if (attrs.get("state") or "").upper() != "READY_FOR_REVIEW":
+            continue
+        if attrs.get("submittedDate"):
+            continue
+        if _list_review_submission_items(client, submission_id):
+            continue
+        return submission
+    return None
+
+
 def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
     payload = {
         "data": {
@@ -961,8 +977,10 @@ def _guard_pending_subscription_review(client: ASCClient, app_id: str) -> None:
     )
 
 def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach_subscriptions: bool = False) -> None:
+    pending_subs: list[tuple[str, str]] = []
     if attach_subscriptions:
         info("--attach-subscriptions: bypassing subscription guard; will attach subscriptions to submission.")
+        pending_subs = _find_pending_subscription_ids(client, app_id)
     else:
         _guard_pending_subscription_review(client, app_id=app_id)
 
@@ -971,12 +989,24 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach
         sub_state = (submission.get("attributes") or {}).get("state", "UNKNOWN")
         info(f"Found existing review submission {submission.get('id')} (state={sub_state}).")
         if attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
-            info(f"Cancelling existing submission {submission.get('id')} to recreate with subscription items…")
-            client.request("DELETE", f"/reviewSubmissions/{submission.get('id')}")
-            submission = None
-            item = None
+            if pending_subs:
+                pending_names = ", ".join(name or sub_id for sub_id, name in pending_subs)
+                die(
+                    "Existing review submission is already waiting for review, and App Store Connect "
+                    "does not support deleting review submissions via API. "
+                    f"Pending subscriptions still need manual handling: {pending_names}."
+                )
+            info(
+                f"Existing review submission {submission.get('id')} is already waiting for review and "
+                "no pending subscriptions were found; skipping resubmission."
+            )
+            return
     else:
-        info("No existing review submission found for this version; creating one.")
+        submission = _find_reusable_empty_submission(client, app_id=app_id)
+        if submission:
+            info(f"Reusing empty review submission {submission.get('id')} to avoid ASC concurrency-limit failures.")
+        else:
+            info("No existing review submission found for this version; creating one.")
 
     if not submission:
         submission = _create_review_submission(client, app_id=app_id)
@@ -1003,7 +1033,6 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach
         info(f"Review submission item {item_id} state: {item_state}")
 
     if attach_subscriptions:
-        pending_subs = _find_pending_subscription_ids(client, app_id)
         if pending_subs:
             for sub_id, sub_name in pending_subs:
                 info(f"Attaching subscription '{sub_name}' (id={sub_id}) to review submission {submission_id}…")
