@@ -5,7 +5,6 @@ set -eu
 
 adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
 adb shell pm clear com.iganapolsky.randomtimer 2>/dev/null || true
-adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
 
 cd native-android
 chmod +x gradlew
