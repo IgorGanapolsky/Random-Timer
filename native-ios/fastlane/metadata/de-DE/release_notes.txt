@@ -1,5 +1,5 @@
-• Pro-Abonnement jetzt verfuegbar — schalte Sprachansagen, erweiterten Bereich und Schleifenmodus frei
-• Kaufablauf mit klaren Fehlermeldungen behoben
-• Links zu Datenschutzrichtlinie und Nutzungsbedingungen hinzugefuegt
-• Genauigkeit der Timer-Abschlussverfolgung verbessert
-• Bessere Sitzungsstabilitaet beim Wechsel zwischen Apps
+• Upgraded Sound Arsenal — gong, siren, bell, whistle regenerated at studio quality
+• Added voice callout and feature usage analytics
+• Fixed timer progress indicator for true unpredictability
+• Improved alarm response tracking
+• Bug fixes and performance improvements
