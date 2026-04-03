@@ -1,0 +1,5 @@
+• Assinatura Pro disponivel — desbloqueie chamadas de voz, alcance estendido e modo de repeticao
+• Fluxo de compra corrigido com mensagens de erro mais claras
+• Adicionados links para Politica de Privacidade e Termos de Uso
+• Melhorada a precisao do rastreamento de conclusao do timer
+• Maior confiabilidade da sessao ao alternar entre apps

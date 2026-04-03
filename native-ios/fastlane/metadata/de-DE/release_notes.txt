@@ -1,0 +1,5 @@
+• Pro-Abonnement jetzt verfuegbar — schalte Sprachansagen, erweiterten Bereich und Schleifenmodus frei
+• Kaufablauf mit klaren Fehlermeldungen behoben
+• Links zu Datenschutzrichtlinie und Nutzungsbedingungen hinzugefuegt
+• Genauigkeit der Timer-Abschlussverfolgung verbessert
+• Bessere Sitzungsstabilitaet beim Wechsel zwischen Apps
