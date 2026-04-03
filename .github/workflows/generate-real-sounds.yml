@@ -43,9 +43,9 @@ jobs:
                   "influence": 0.8,
               },
               "whistle": {
-                  "prompt": "Sharp referee whistle blast in a gymnasium, coach blowing a metal pea whistle loudly, clear piercing sports whistle tweet, single long whistle blow",
-                  "duration": 3.0,
-                  "influence": 0.9,
+                  "prompt": "Extremely loud piercing human whistle using two fingers in mouth, marine drill sergeant whistle blast at close range, shrill sharp ear-splitting finger whistle, military instructor commanding attention with a deafening two-finger mouth whistle",
+                  "duration": 4.0,
+                  "influence": 1.0,
               },
               "buzzer": {
                   "prompt": "Game show wrong answer buzzer, loud harsh buzzing sound like a basketball shot clock buzzer, flat electronic buzz, end of round buzzer in boxing",
@@ -53,9 +53,9 @@ jobs:
                   "influence": 0.8,
               },
               "gong": {
-                  "prompt": "Large brass gong being struck once with a mallet, deep resonant metallic ring, temple gong with long sustain and decay, rich harmonics, single powerful hit",
+                  "prompt": "Massive loud brass gong struck hard with a heavy mallet, thunderous deep reverberating metallic crash, temple gong hit at maximum force, overwhelmingly loud resonant boom that fills the room, LOUD impact",
                   "duration": 6.0,
-                  "influence": 0.8,
+                  "influence": 1.0,
               },
               "airhorn": {
                   "prompt": "Stadium compressed air horn blast, loud foghorn at a sports event, deep resonant air horn honk, celebration horn, single powerful blast",
@@ -68,14 +68,14 @@ jobs:
                   "influence": 0.8,
               },
               "siren": {
-                  "prompt": "Emergency vehicle siren wailing up and down, police car siren alternating high and low tones, ambulance siren warbling, classic wee-woo siren sound",
+                  "prompt": "Loud police car siren wailing at close range, American cop car siren alternating between high wail and low yelp, emergency vehicle driving past with blaring siren, classic NYPD police siren wee-woo wee-woo getting louder, ambulance siren urgent",
                   "duration": 5.0,
-                  "influence": 0.8,
+                  "influence": 1.0,
               },
               "bell": {
-                  "prompt": "Boxing ring bell, loud clear metallic bell struck repeatedly like round start bell, ding ding ding ding, steel boxing bell ringing, fight bell",
-                  "duration": 4.0,
-                  "influence": 0.9,
+                  "prompt": "Loud school alarm bell ringing urgently, classic fire drill bell clanging rapidly and loudly, old-fashioned mechanical school bell ringing BRRRRRING at maximum volume, industrial alarm bell non-stop ringing, impossible to ignore",
+                  "duration": 5.0,
+                  "influence": 1.0,
               },
           }
 
