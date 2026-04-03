@@ -4,6 +4,15 @@ enum PaywallEntryPoint: String {
     case rangeGate = "range_gate"
     case soundGate = "sound_gate"
     case unknown = "unknown"
+
+    /// Maps to the analytics feature name for feature_gate_hit events.
+    var featureGateName: String {
+        switch self {
+        case .rangeGate: return "extended_range"
+        case .soundGate: return "pro_sounds"
+        case .unknown: return "unknown"
+        }
+    }
 }
 
 struct PaywallSheet: View {

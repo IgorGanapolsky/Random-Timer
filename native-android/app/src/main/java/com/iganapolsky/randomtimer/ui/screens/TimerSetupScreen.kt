@@ -141,6 +141,8 @@ fun TimerSetupScreen(
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
+    onFeatureGateHit: (String) -> Unit = {},
+    onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -310,7 +312,10 @@ fun TimerSetupScreen(
                                             Modifier.combinedClickable(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
-                                                onClick = { onUpgradeTap() },
+                                                onClick = {
+                                                    onFeatureGateHit("extended_range")
+                                                    onUpgradeTap()
+                                                },
                                                 onLongClick = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                     onSecretUnlock()
@@ -518,7 +523,10 @@ fun TimerSetupScreen(
                                         )
                                     } else {
                                         Surface(
-                                            onClick = onUpgradeTap,
+                                            onClick = {
+                                                onFeatureGateHit("voice_callouts")
+                                                onUpgradeTap()
+                                            },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
@@ -554,7 +562,10 @@ fun TimerSetupScreen(
                                 VoiceGender.entries.forEach { gender ->
                                     FilterChip(
                                         selected = config.voiceGender == gender,
-                                        onClick = { updateConfig(voiceGender = gender) },
+                                        onClick = {
+                                            updateConfig(voiceGender = gender)
+                                            onVoiceGenderSelected(gender)
+                                        },
                                         label = {
                                             Text(
                                                 if (gender == VoiceGender.MALE) {
@@ -740,7 +751,10 @@ fun TimerSetupScreen(
                                         }
                                     } else {
                                         Surface(
-                                            onClick = onUpgradeTap,
+                                            onClick = {
+                                                onFeatureGateHit("pro_sounds")
+                                                onUpgradeTap()
+                                            },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
@@ -849,6 +863,7 @@ fun TimerSetupScreen(
                                 },
                                 onPreviewSound = onSoundPreview,
                                 onUpgradeTap = onUpgradeTap,
+                                onFeatureGateHit = onFeatureGateHit,
                             )
                         }
                     }
@@ -873,6 +888,7 @@ fun TimerSetupScreen(
                         },
                         onPreviewSound = onSoundPreview,
                         onUpgradeTap = onUpgradeTap,
+                        onFeatureGateHit = onFeatureGateHit,
                     )
                 }
             }
@@ -901,6 +917,7 @@ private fun SoundArsenalCard(
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
     onUpgradeTap: () -> Unit,
+    onFeatureGateHit: (String) -> Unit = {},
 ) {
     GlassCard(
         modifier =
@@ -967,7 +984,11 @@ private fun SoundArsenalCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = TimerColors.AccentPrimary,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(onClick = onUpgradeTap),
+                        modifier =
+                            Modifier.clickable(onClick = {
+                                onFeatureGateHit("pro_sounds")
+                                onUpgradeTap()
+                            }),
                     )
                 }
             }

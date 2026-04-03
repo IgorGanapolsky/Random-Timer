@@ -22,7 +22,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -129,14 +129,14 @@ struct TimerSetupScreen: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                
+
                                 Text("Time checks and command cues that keep you sharp under pressure")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-                            
+
                             Spacer()
-                            
+
                             HStack(spacing: 8) {
                                 if proManager.isPro {
                                     // Pro users see only the voice toggle
@@ -161,7 +161,7 @@ struct TimerSetupScreen: View {
                                     }
 
                                     Button {
-                                        presentPaywall(entryPoint: .soundGate)
+                                        presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
@@ -183,7 +183,15 @@ struct TimerSetupScreen: View {
                         if config.voiceEnabled || !proManager.isPro {
                             Picker("Voice", selection: Binding(
                                 get: { config.voiceGender },
-                                set: { updateConfig(voiceGender: $0) }
+                                set: { newGender in
+                                    updateConfig(voiceGender: newGender)
+                                    AnalyticsService.shared.track(
+                                        AnalyticsEvents.voiceGenderSelected,
+                                        properties: [
+                                            AnalyticsProperties.gender: newGender.rawValue,
+                                        ]
+                                    )
+                                }
                             )) {
                                 Text("Male").tag(VoiceGender.male)
                                 Text("Female").tag(VoiceGender.female)
@@ -260,9 +268,9 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             Spacer()
-                            
+
                             Toggle("Loop Enabled", isOn: Binding(
                                 get: { config.repeatEnabled },
                                 set: { updateConfig(repeatEnabled: $0) }
@@ -270,7 +278,7 @@ struct TimerSetupScreen: View {
                             .tint(.accentPrimary)
                             .labelsHidden()
                         }
-                        
+
                         if config.repeatEnabled {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -278,7 +286,7 @@ struct TimerSetupScreen: View {
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                    
+
                                     Text(
                                         repeatLoopDetailSummary(
                                             isPro: proManager.isPro,
@@ -288,9 +296,9 @@ struct TimerSetupScreen: View {
                                         .font(.caption2)
                                         .foregroundColor(.accentPrimary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 if proManager.isPro {
                                     Stepper("", value: Binding(
                                         get: { config.repeatRounds },
@@ -325,13 +333,13 @@ struct TimerSetupScreen: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                    
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
                     }
-                    
+
                     Spacer()
 
                     Button {
@@ -339,7 +347,9 @@ struct TimerSetupScreen: View {
                             showArsenal.toggle()
                         }
                     } label: {
-                        Text(showArsenal ? "Hide Sound Arsenal" : (proManager.isPro ? "View Sound Arsenal" : "Preview Sounds"))
+                        let label = showArsenal ? "Hide Sound Arsenal"
+                            : (proManager.isPro ? "View Sound Arsenal" : "Preview Sounds")
+                        Text(label)
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.accentPrimary)
@@ -506,7 +516,14 @@ struct TimerSetupScreen: View {
         return repeatRounds == 0 ? "Infinite Rounds" : "\(repeatRounds) Rounds"
     }
 
-    private func presentPaywall(entryPoint: PaywallEntryPoint) {
+    private func presentPaywall(entryPoint: PaywallEntryPoint, feature: String? = nil) {
+        let featureName = feature ?? entryPoint.featureGateName
+        AnalyticsService.shared.track(
+            AnalyticsEvents.featureGateHit,
+            properties: [
+                AnalyticsProperties.feature: featureName,
+            ]
+        )
         paywallEntryPoint = entryPoint
         showPaywall = true
     }

@@ -384,6 +384,10 @@ enum AnalyticsEvents {
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
+    // Feature gates & voice
+    static let voiceGenderSelected = "voice_gender_selected"
+    static let featureGateHit = "feature_gate_hit"
+
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
     static let appleAdsAttribution = "apple_ads_attribution"
@@ -402,6 +406,9 @@ enum AnalyticsProperties {
     static let dismissMethod = "dismiss_method"
     static let productId = "product_id"
     static let entitlementLevel = "entitlement_level"
+    static let gender = "gender"
+    static let feature = "feature"
+    static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"

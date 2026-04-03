@@ -291,6 +291,10 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
 
+    // Feature engagement
+    const val VOICE_GENDER_SELECTED = "voice_gender_selected"
+    const val FEATURE_GATE_HIT = "feature_gate_hit"
+
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
     const val APPLE_ADS_ATTRIBUTION = "apple_ads_attribution"
@@ -314,6 +318,9 @@ object AnalyticsProperties {
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"
     const val RUNTIME_TARGET = "runtime_target"
+    const val GENDER = "gender"
+    const val FEATURE = "feature"
+    const val ALARM_RESPONSE_TIME = "alarm_response_time"
 }
 
 object AnalyticsScreens {

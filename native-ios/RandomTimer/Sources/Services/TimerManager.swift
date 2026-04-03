@@ -97,6 +97,7 @@ final class TimerManager: ObservableObject {
             "sound_type": String(describing: newConfig.soundType),
             "repeat_enabled": newConfig.repeatEnabled,
             "voice_callouts_enabled": newConfig.voiceEnabled,
+            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
         ])
 
         Task {
@@ -138,6 +139,7 @@ final class TimerManager: ObservableObject {
             "min_duration": config.minDuration,
             "max_duration": config.maxDuration,
             "target_duration": randomDuration,
+            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
         ])
         AnalyticsService.shared.trackFirstTimerConfiguredIfNeeded()
 
@@ -175,7 +177,13 @@ final class TimerManager: ObservableObject {
     }
 
     func dismissAlarm() async {
-        AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
+        // Calculate alarm response time (seconds between alarm_triggered and dismissed)
+        var dismissProperties: [String: Any] = [:]
+        if let alarmStart = timerState?.alarmStartedAt {
+            let responseTime = Date().timeIntervalSince(alarmStart)
+            dismissProperties[AnalyticsProperties.alarmResponseTime] = round(responseTime * 10) / 10
+        }
+        AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed, properties: dismissProperties)
         // Track completion — user heard the alarm and acknowledged it
         if let state = timerState, state.status == .alarm {
             StoreReviewManager.shared.recordCompletion()

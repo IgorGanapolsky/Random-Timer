@@ -67,6 +67,9 @@ class TimerViewModel
         private val _timerState = MutableStateFlow<TimerState?>(null)
         val timerState: StateFlow<TimerState?> = _timerState
 
+        /** Epoch millis when the alarm was triggered, used to compute alarm_response_time. */
+        private var alarmTriggeredAtMs: Long = 0L
+
         private var service: TimerForegroundService? = null
         private var bound = false
         private var previousTimerStatus: TimerStatus? = null
@@ -115,6 +118,9 @@ class TimerViewModel
                     "max_duration" to newConfig.maxSeconds,
                     "sound_type" to newConfig.soundType.name,
                     "repeat_enabled" to newConfig.repeatEnabled,
+                    AnalyticsProperties.ENTITLEMENT_LEVEL to
+                        proManager.entitlementLevel.value.name
+                            .lowercase(),
                 ),
             )
             viewModelScope.launch {
@@ -135,6 +141,9 @@ class TimerViewModel
                         "min_duration" to config.value.minSeconds,
                         "max_duration" to config.value.maxSeconds,
                         "target_duration" to state.targetDuration.inWholeSeconds,
+                        AnalyticsProperties.ENTITLEMENT_LEVEL to
+                            proManager.entitlementLevel.value.name
+                                .lowercase(),
                     ),
                 )
                 analyticsService.trackFirstTimerConfiguredIfNeeded()
@@ -150,7 +159,14 @@ class TimerViewModel
         }
 
         fun dismissAlarm() {
-            analyticsService.track(AnalyticsEvents.ALARM_DISMISSED)
+            val responseProps =
+                buildMap<String, Any> {
+                    if (alarmTriggeredAtMs > 0L) {
+                        val responseTimeSec = (System.currentTimeMillis() - alarmTriggeredAtMs) / 1000.0
+                        put(AnalyticsProperties.ALARM_RESPONSE_TIME, responseTimeSec)
+                    }
+                }
+            analyticsService.track(AnalyticsEvents.ALARM_DISMISSED, responseProps.ifEmpty { null })
             viewModelScope.launch {
                 repository.clearActiveTimer()
                 _timerState.value = null
@@ -208,6 +224,9 @@ class TimerViewModel
                     "max_duration" to updatedConfig.maxSeconds,
                     "sound_type" to updatedConfig.soundType.name,
                     "repeat_enabled" to updatedConfig.repeatEnabled,
+                    AnalyticsProperties.ENTITLEMENT_LEVEL to
+                        proManager.entitlementLevel.value.name
+                            .lowercase(),
                 ),
             )
             viewModelScope.launch {
@@ -234,6 +253,9 @@ class TimerViewModel
                     "sound_type" to updatedConfig.soundType.name,
                     "repeat_enabled" to updatedConfig.repeatEnabled,
                     "voice_callouts_enabled" to updatedConfig.voiceEnabled,
+                    AnalyticsProperties.ENTITLEMENT_LEVEL to
+                        proManager.entitlementLevel.value.name
+                            .lowercase(),
                 ),
             )
             viewModelScope.launch {
@@ -253,6 +275,20 @@ class TimerViewModel
             )
         }
 
+        fun trackVoiceGenderSelected(gender: VoiceGender) {
+            analyticsService.track(
+                AnalyticsEvents.VOICE_GENDER_SELECTED,
+                mapOf(AnalyticsProperties.GENDER to gender.name.lowercase()),
+            )
+        }
+
+        fun trackFeatureGateHit(feature: String) {
+            analyticsService.track(
+                AnalyticsEvents.FEATURE_GATE_HIT,
+                mapOf(AnalyticsProperties.FEATURE to feature),
+            )
+        }
+
         fun trackPaywallDismissed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
@@ -267,6 +303,7 @@ class TimerViewModel
             val currentStatus = state?.status ?: return
 
             if (previousStatus != null && previousStatus != TimerStatus.ALARM && currentStatus == TimerStatus.ALARM) {
+                alarmTriggeredAtMs = System.currentTimeMillis()
                 analyticsService.track(
                     AnalyticsEvents.TIMER_COUNTDOWN_FINISHED,
                     mapOf("target_duration" to state.targetDuration.inWholeSeconds),
