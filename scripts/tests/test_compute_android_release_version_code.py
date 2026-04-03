@@ -158,11 +158,10 @@ def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: P
         observed["http_timeout"] = timeout
         return {"timeout": timeout}
 
-    def _build(api_name, api_version, *, credentials, http, cache_discovery):
+    def _build(api_name, api_version, *, http, cache_discovery, **kwargs):
         observed["build_args"] = {
             "api_name": api_name,
             "api_version": api_version,
-            "credentials": credentials,
             "http": http,
             "cache_discovery": cache_discovery,
         }
@@ -196,7 +195,6 @@ def test_load_play_service_uses_authorized_http_timeout(monkeypatch, tmp_path: P
     assert observed["build_args"] == {
         "api_name": "androidpublisher",
         "api_version": "v3",
-        "credentials": observed["authorized_http_credentials"],
         "http": "authorized-http",
         "cache_discovery": False,
     }
