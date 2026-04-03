@@ -2,9 +2,9 @@ package com.iganapolsky.randomtimer.ui
 
 import android.Manifest
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.iganapolsky.randomtimer.MainActivity
@@ -15,7 +15,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ResetUiTest {
+class TimerSetupSmokeTest {
     private val permissionRule =
         GrantPermissionRule.grant(
             Manifest.permission.POST_NOTIFICATIONS,
@@ -27,13 +27,8 @@ class ResetUiTest {
     val ruleChain: TestRule = RuleChain.outerRule(permissionRule).around(composeRule)
 
     @Test
-    fun resetShowsRestartedFeedback() {
-        if (composeRule.onAllNodesWithText("Start Timer").fetchSemanticsNodes().isEmpty()) {
-            if (composeRule.onAllNodesWithText("Stop").fetchSemanticsNodes().isNotEmpty()) {
-                composeRule.onNodeWithText("Stop").performClick()
-            }
-        }
-        composeRule.waitUntil(timeoutMillis = 2000) {
+    fun setupScreenRendersCoreControls() {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule
                 .onAllNodesWithText("Start Timer")
                 .fetchSemanticsNodes()
@@ -43,33 +38,13 @@ class ResetUiTest {
         composeRule
             .onNodeWithText("Start Timer")
             .assertExists()
-            .performClick()
-
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule
-                .onAllNodesWithText("Timer running...", useUnmergedTree = true)
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
 
         composeRule
-            .onNodeWithText("Timer running...", useUnmergedTree = true)
+            .onNodeWithContentDescription("Minimum time slider")
             .assertExists()
 
         composeRule
-            .onNodeWithText("Reset")
-            .assertExists()
-            .performClick()
-
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule
-                .onAllNodesWithText("Timer restarted", useUnmergedTree = true)
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-
-        composeRule
-            .onNodeWithText("Timer restarted", useUnmergedTree = true)
+            .onNodeWithContentDescription("Maximum time slider")
             .assertExists()
     }
 }

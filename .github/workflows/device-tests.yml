@@ -71,3 +71,12 @@ jobs:
           disable-animations: false
           emulator-boot-timeout: 300
           script: sh scripts/device-tests/ci-maestro.sh
+
+      - name: Upload Android device test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-device-test-reports
+          path: |
+            native-android/app/build/reports/androidTests/connected
+            native-android/app/build/outputs/androidTest-results/connected
