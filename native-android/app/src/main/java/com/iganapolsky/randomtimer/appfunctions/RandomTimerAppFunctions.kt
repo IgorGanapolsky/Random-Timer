@@ -1,8 +1,6 @@
 package com.iganapolsky.randomtimer.appfunctions
 
 import androidx.appfunctions.AppFunctionContext
-import androidx.appfunctions.AppFunctionIntValueConstraint
-import androidx.appfunctions.AppFunctionStringValueConstraint
 import androidx.appfunctions.service.AppFunction
 
 class RandomTimerAppFunctions(
@@ -11,122 +9,26 @@ class RandomTimerAppFunctions(
     /**
      * Saves a random tactical timer preset without starting it.
      *
-     * @param minSeconds Lowest possible timer duration in seconds.
-     * @param maxSeconds Highest possible timer duration in seconds.
-     * @param alarmDuration Alarm length in seconds after the random countdown completes.
-     * @param soundType Alarm sound to use.
-     * @param voiceEnabled Whether AI voice callouts should be enabled.
-     * @param voiceGender Which voice persona should be used for callouts.
-     * @param hiddenMode Whether the countdown should stay hidden while the timer runs.
-     * @param repeatEnabled Whether the timer should automatically loop after each round.
-     * @param vibrationEnabled Whether vibration should fire with the alarm.
+     * @param request Timer options to save.
      * @return The saved timer configuration summary.
      */
     @AppFunction(isDescribedByKDoc = true)
     suspend fun configureRandomTimer(
         appFunctionContext: AppFunctionContext,
-        minSeconds: Int,
-        maxSeconds: Int,
-        @AppFunctionIntValueConstraint(enumValues = [5, 10, 15, 30, 60])
-        alarmDuration: Int = TimerDefaults.ALARM_DURATION_SECONDS,
-        @AppFunctionStringValueConstraint(
-            enumValues = [
-                "INTENSE",
-                "GENTLE",
-                "KLAXON",
-                "WHISTLE",
-                "BUZZER",
-                "GONG",
-                "AIRHORN",
-                "DRUM_ROLL",
-                "SIREN",
-                "BELL",
-            ],
-        )
-        soundType: String,
-        voiceEnabled: Boolean = false,
-        @AppFunctionStringValueConstraint(enumValues = ["MALE", "FEMALE"])
-        voiceGender: String,
-        hiddenMode: Boolean = false,
-        repeatEnabled: Boolean = false,
-        vibrationEnabled: Boolean = false,
-    ): TimerFunctionResult =
-        appFunctionContext.let {
-            handler.configureRandomTimer(
-                request =
-                    timerFunctionRequest(
-                        minSeconds = minSeconds,
-                        maxSeconds = maxSeconds,
-                        alarmDuration = alarmDuration,
-                        soundType = soundType,
-                        voiceEnabled = voiceEnabled,
-                        voiceGender = voiceGender,
-                        hiddenMode = hiddenMode,
-                        repeatEnabled = repeatEnabled,
-                        vibrationEnabled = vibrationEnabled,
-                    ),
-            )
-        }
+        request: TimerFunctionRequest,
+    ): TimerFunctionResult = appFunctionContext.let { handler.configureRandomTimer(request) }
 
     /**
      * Starts a random tactical timer immediately.
      *
-     * @param minSeconds Lowest possible timer duration in seconds.
-     * @param maxSeconds Highest possible timer duration in seconds.
-     * @param alarmDuration Alarm length in seconds after the random countdown completes.
-     * @param soundType Alarm sound to use.
-     * @param voiceEnabled Whether AI voice callouts should be enabled.
-     * @param voiceGender Which voice persona should be used for callouts.
-     * @param hiddenMode Whether the countdown should stay hidden while the timer runs.
-     * @param repeatEnabled Whether the timer should automatically loop after each round.
-     * @param vibrationEnabled Whether vibration should fire with the alarm.
+     * @param request Timer options to start with immediately.
      * @return The started timer summary, including the chosen target duration.
      */
     @AppFunction(isDescribedByKDoc = true)
     suspend fun startRandomTimer(
         appFunctionContext: AppFunctionContext,
-        minSeconds: Int,
-        maxSeconds: Int,
-        @AppFunctionIntValueConstraint(enumValues = [5, 10, 15, 30, 60])
-        alarmDuration: Int = TimerDefaults.ALARM_DURATION_SECONDS,
-        @AppFunctionStringValueConstraint(
-            enumValues = [
-                "INTENSE",
-                "GENTLE",
-                "KLAXON",
-                "WHISTLE",
-                "BUZZER",
-                "GONG",
-                "AIRHORN",
-                "DRUM_ROLL",
-                "SIREN",
-                "BELL",
-            ],
-        )
-        soundType: String,
-        voiceEnabled: Boolean = false,
-        @AppFunctionStringValueConstraint(enumValues = ["MALE", "FEMALE"])
-        voiceGender: String,
-        hiddenMode: Boolean = false,
-        repeatEnabled: Boolean = false,
-        vibrationEnabled: Boolean = false,
-    ): TimerFunctionResult =
-        appFunctionContext.let {
-            handler.startRandomTimer(
-                request =
-                    timerFunctionRequest(
-                        minSeconds = minSeconds,
-                        maxSeconds = maxSeconds,
-                        alarmDuration = alarmDuration,
-                        soundType = soundType,
-                        voiceEnabled = voiceEnabled,
-                        voiceGender = voiceGender,
-                        hiddenMode = hiddenMode,
-                        repeatEnabled = repeatEnabled,
-                        vibrationEnabled = vibrationEnabled,
-                    ),
-            )
-        }
+        request: TimerFunctionRequest,
+    ): TimerFunctionResult = appFunctionContext.let { handler.startRandomTimer(request) }
 
     /**
      * Pauses the currently running timer.
@@ -152,30 +54,3 @@ class RandomTimerAppFunctions(
     @AppFunction(isDescribedByKDoc = true)
     suspend fun stopTimer(appFunctionContext: AppFunctionContext): TimerFunctionResult = appFunctionContext.let { handler.stopTimer() }
 }
-
-private object TimerDefaults {
-    const val ALARM_DURATION_SECONDS = 10
-}
-
-private fun timerFunctionRequest(
-    minSeconds: Int,
-    maxSeconds: Int,
-    alarmDuration: Int,
-    soundType: String,
-    voiceEnabled: Boolean,
-    voiceGender: String,
-    hiddenMode: Boolean,
-    repeatEnabled: Boolean,
-    vibrationEnabled: Boolean,
-): TimerFunctionRequest =
-    TimerFunctionRequest(
-        minSeconds = minSeconds,
-        maxSeconds = maxSeconds,
-        alarmDuration = alarmDuration,
-        soundType = soundType,
-        voiceEnabled = voiceEnabled,
-        voiceGender = voiceGender,
-        hiddenMode = hiddenMode,
-        repeatEnabled = repeatEnabled,
-        vibrationEnabled = vibrationEnabled,
-    )

@@ -20,6 +20,7 @@ data class TimerFunctionResult(
     val vibrationEnabled: Boolean = false,
 )
 
+@AppFunctionSerializable(isDescribedByKDoc = true)
 data class TimerFunctionRequest(
     val minSeconds: Int,
     val maxSeconds: Int,

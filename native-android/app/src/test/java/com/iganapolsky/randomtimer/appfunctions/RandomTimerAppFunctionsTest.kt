@@ -49,15 +49,7 @@ class RandomTimerAppFunctionsTest {
             val result =
                 functions.configureRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = request.minSeconds,
-                    maxSeconds = request.maxSeconds,
-                    alarmDuration = request.alarmDuration,
-                    soundType = request.soundType,
-                    voiceEnabled = request.voiceEnabled,
-                    voiceGender = request.voiceGender,
-                    hiddenMode = request.hiddenMode,
-                    repeatEnabled = request.repeatEnabled,
-                    vibrationEnabled = request.vibrationEnabled,
+                    request = request,
                 )
 
             assertThat(result).isEqualTo(expected)
@@ -80,61 +72,7 @@ class RandomTimerAppFunctionsTest {
             val result =
                 functions.startRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = request.minSeconds,
-                    maxSeconds = request.maxSeconds,
-                    alarmDuration = request.alarmDuration,
-                    soundType = request.soundType,
-                    voiceEnabled = request.voiceEnabled,
-                    voiceGender = request.voiceGender,
-                    hiddenMode = request.hiddenMode,
-                    repeatEnabled = request.repeatEnabled,
-                    vibrationEnabled = request.vibrationEnabled,
-                )
-
-            assertThat(result).isEqualTo(expected)
-        }
-
-    @Test
-    fun configureRandomTimerAppliesDefaultAlarmDurationWhenOmitted() =
-        runBlocking {
-            val request = defaultRequest
-            val expected = timerResult(action = "configure_random_timer", status = "configured", message = "Saved timer configuration.")
-
-            coEvery { handler.configureRandomTimer(request) } returns expected
-
-            val result =
-                functions.configureRandomTimer(
-                    appFunctionContext = appFunctionContext,
-                    minSeconds = request.minSeconds,
-                    maxSeconds = request.maxSeconds,
-                    soundType = request.soundType,
-                    voiceGender = request.voiceGender,
-                )
-
-            assertThat(result).isEqualTo(expected)
-        }
-
-    @Test
-    fun startRandomTimerAppliesDefaultAlarmDurationWhenOmitted() =
-        runBlocking {
-            val request = defaultRequest.copy(minSeconds = 20, maxSeconds = 20)
-            val expected =
-                timerResult(
-                    action = "start_random_timer",
-                    status = "running",
-                    message = "Started random timer.",
-                    targetDurationSeconds = 20,
-                )
-
-            coEvery { handler.startRandomTimer(request) } returns expected
-
-            val result =
-                functions.startRandomTimer(
-                    appFunctionContext = appFunctionContext,
-                    minSeconds = request.minSeconds,
-                    maxSeconds = request.maxSeconds,
-                    soundType = request.soundType,
-                    voiceGender = request.voiceGender,
+                    request = request,
                 )
 
             assertThat(result).isEqualTo(expected)

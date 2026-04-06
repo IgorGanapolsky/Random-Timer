@@ -51,16 +51,23 @@ class RandomTimerAppFunctionsE2ETest {
                     functionParameters =
                         AppFunctionData
                             .Builder(functionMetadata.parameters, functionMetadata.components)
-                            .setInt("minSeconds", 20)
-                            .setInt("maxSeconds", 20)
-                            .setInt("alarmDuration", 10)
-                            .setString("soundType", "INTENSE")
-                            .setBoolean("voiceEnabled", false)
-                            .setString("voiceGender", "MALE")
-                            .setBoolean("hiddenMode", false)
-                            .setBoolean("repeatEnabled", false)
-                            .setBoolean("vibrationEnabled", false)
-                            .build(),
+                            .setAppFunctionData(
+                                "request",
+                                AppFunctionData.serialize(
+                                    TimerFunctionRequest(
+                                        minSeconds = 20,
+                                        maxSeconds = 20,
+                                        alarmDuration = 10,
+                                        soundType = "INTENSE",
+                                        voiceEnabled = false,
+                                        voiceGender = "MALE",
+                                        hiddenMode = false,
+                                        repeatEnabled = false,
+                                        vibrationEnabled = false,
+                                    ),
+                                    TimerFunctionRequest::class.java,
+                                ),
+                            ).build(),
                 )
 
             val response = manager.executeAppFunction(request)
