@@ -151,8 +151,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     }
 
     public init(
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120,
+        minSeconds: Int = 0,
+        maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -202,20 +202,15 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
-    /// Min seconds for first-session activation preset (mirrors Android `TimerConfig`).
-    public static let activationFirstRunMinSeconds = 20
-
-    /// Max seconds for first-session activation preset (mirrors Android `TimerConfig`).
-    public static let activationFirstRunMaxSeconds = 60
-
-    /// Tighter 20–60s range when the user has not completed a first timer and is still on canonical free defaults.
+    /// Migrates legacy canonical defaults (30–120s) to activation-first 0–30s when the user
+    /// has not completed a first timer. Returns nil when no migration applies.
     public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
         guard !hasCompletedFirstTimer else { return nil }
         guard !useExtendedRange else { return nil }
         guard minSeconds == 30, maxSeconds == 120 else { return nil }
         return TimerConfig(
-            minSeconds: Self.activationFirstRunMinSeconds,
-            maxSeconds: Self.activationFirstRunMaxSeconds,
+            minSeconds: 0,
+            maxSeconds: 30,
             alarmDuration: alarmDuration,
             hiddenMode: hiddenMode,
             repeatEnabled: repeatEnabled,
@@ -283,11 +278,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
-            defaultValue: 30
+            defaultValue: 0
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
-            defaultValue: 120
+            defaultValue: 30
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -755,8 +750,8 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public init(
         timerName: String = "Random Tactical Timer",
         endDate: Date,
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120
+        minSeconds: Int = 0,
+        maxSeconds: Int = 30
     ) {
         self.timerName = timerName
         self.endDate = endDate
