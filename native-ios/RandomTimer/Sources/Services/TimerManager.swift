@@ -557,7 +557,9 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
     private func generateRandomDuration(min: TimeInterval, max: TimeInterval) -> TimeInterval {
         guard min < max else { return min }
-        return TimeInterval.random(in: min...max)
+        let lowerCandidate = max >= 1.0 ? Swift.max(min, 1.0) : min
+        let lower = Swift.min(lowerCandidate, max)
+        return TimeInterval.random(in: lower...max)
     }
 
     private func loadSavedConfig() async {
