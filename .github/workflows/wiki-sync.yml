@@ -70,7 +70,7 @@ jobs:
         with:
           strategy: init
           path: wiki/
-          token: ${{ secrets.PROJECT_PAT }}
+          token: ${{ github.token }}
 
       - name: Upload dashboard snapshot
         if: always()
