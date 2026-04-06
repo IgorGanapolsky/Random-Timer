@@ -84,6 +84,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
+import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
@@ -159,6 +160,18 @@ fun TimerSetupScreen(
 
     LaunchedEffect(isPro) {
         showArsenal = true
+    }
+
+    LaunchedEffect(
+        hasCompletedFirstTimer,
+        config.useExtendedRange,
+        config.minSeconds,
+        config.maxSeconds,
+    ) {
+        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        if (next != null) {
+            onConfigChange(next)
+        }
     }
 
     LaunchedEffect(config.useExtendedRange, config.minSeconds, config.maxSeconds) {
@@ -284,7 +297,7 @@ fun TimerSetupScreen(
                         ) {
                             Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                                 Text(
-                                    text = "Tap Start for a random 30s\u20132min drill. Customize later.",
+                                    text = "Tap Start for a random 20s\u20131min drill. Customize later.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.padding(end = 32.dp),

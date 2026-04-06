@@ -75,13 +75,13 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "minSeconds = 0" in android_config
-    assert "maxSeconds = 300" in android_config
+    assert "minSeconds = 30" in android_config
+    assert "maxSeconds = 120" in android_config
     assert "private fun Preferences.toTimerConfig()" in android_repository
-    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 300") == 1
+    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 120") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
-    assert re.search(r"minSeconds: Int = 0,\n\s*maxSeconds: Int = 300,", ios_models)
-    assert "defaultValue: 300" in ios_models or "maxSeconds: Int = 300" in ios_models
+    assert re.search(r"minSeconds: Int = 30,\n\s*maxSeconds: Int = 120,", ios_models)
+    assert "maxSecondsFree = 300" in ios_models
 
 
 def test_timer_limits_and_gap_rules_match_across_mobile_platforms():

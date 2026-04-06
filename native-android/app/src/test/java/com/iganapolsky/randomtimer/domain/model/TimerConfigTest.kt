@@ -192,6 +192,72 @@ class TimerConfigTest {
     }
 
     @Test
+    fun `activation preset tightens canonical default range when first timer not done`() {
+        val next =
+            activationPresetForFirstCompletionIfEligible(
+                hasCompletedFirstTimer = false,
+                current = TimerConfig.DEFAULT,
+            )
+        assertThat(next).isNotNull()
+        assertThat(next!!.minSeconds).isEqualTo(TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS)
+        assertThat(next.maxSeconds).isEqualTo(TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS)
+        assertThat(next.soundType).isEqualTo(TimerConfig.DEFAULT.soundType)
+    }
+
+    @Test
+    fun `activation preset skipped after first timer completed`() {
+        val next =
+            activationPresetForFirstCompletionIfEligible(
+                hasCompletedFirstTimer = true,
+                current = TimerConfig.DEFAULT,
+            )
+        assertThat(next).isNull()
+    }
+
+    @Test
+    fun `activation preset skipped when user already customized range`() {
+        val custom =
+            TimerConfig(
+                minSeconds = 45,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
+        val next =
+            activationPresetForFirstCompletionIfEligible(
+                hasCompletedFirstTimer = false,
+                current = custom,
+            )
+        assertThat(next).isNull()
+    }
+
+    @Test
+    fun `activation preset skipped in extended range mode`() {
+        val extended =
+            TimerConfig(
+                minSeconds = 30,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+                useExtendedRange = true,
+            )
+        val next =
+            activationPresetForFirstCompletionIfEligible(
+                hasCompletedFirstTimer = false,
+                current = extended,
+            )
+        assertThat(next).isNull()
+    }
+
+    @Test
     fun `toggle extended range restores last extended range`() {
         val current =
             TimerConfig(

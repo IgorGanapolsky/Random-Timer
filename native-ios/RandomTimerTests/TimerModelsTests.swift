@@ -13,6 +13,33 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertFalse(config.voiceEnabled)
     }
 
+    func testActivationPresetTightensDefaultWhenFirstTimerNotDone() {
+        let base = TimerConfig.default
+        let next = base.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNotNil(next)
+        XCTAssertEqual(next?.minSeconds, TimerConfig.activationFirstRunMinSeconds)
+        XCTAssertEqual(next?.maxSeconds, TimerConfig.activationFirstRunMaxSeconds)
+        XCTAssertEqual(next?.soundType, base.soundType)
+    }
+
+    func testActivationPresetSkippedAfterFirstTimer() {
+        let next = TimerConfig.default
+            .applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: true)
+        XCTAssertNil(next)
+    }
+
+    func testActivationPresetSkippedWhenRangeCustomized() {
+        let custom = TimerConfig(minSeconds: 45, maxSeconds: 120)
+        let next = custom.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNil(next)
+    }
+
+    func testActivationPresetSkippedWhenExtendedRange() {
+        let ext = TimerConfig(minSeconds: 30, maxSeconds: 120, useExtendedRange: true)
+        let next = ext.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNil(next)
+    }
+
     func testConfigCanEnableVibration() {
         let config = RandomTimer.TimerConfig(
             minSeconds: 30,

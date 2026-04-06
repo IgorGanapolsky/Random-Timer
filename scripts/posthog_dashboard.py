@@ -29,6 +29,8 @@ SCRIPTS = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPTS.parent
 sys.path.insert(0, str(SCRIPTS))
 
+from repo_dotenv import load_repo_dotenv
+
 POSTHOG_HOST = "https://us.posthog.com"
 
 # Audience filter: non-debug, real device, not internal
@@ -37,20 +39,6 @@ PRAGMATIC_LIVE = """(
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
   AND coalesce(toString(properties.is_internal), 'false') != 'true'
 )"""
-
-
-def _load_env_file(repo_root: Path) -> None:
-    env_path = repo_root / ".env"
-    if not env_path.is_file():
-        return
-    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        s = line.strip()
-        if not s or s.startswith("#") or "=" not in s:
-            continue
-        k, _, v = s.partition("=")
-        key = k.strip()
-        if key and key not in os.environ:
-            os.environ[key] = v.strip().strip('"').strip("'")
 
 
 def _posthog_credentials() -> tuple[str, str]:
@@ -421,7 +409,7 @@ def build_dashboard(
     load_dotenv: bool = True,
 ) -> Dict[str, Any]:
     if load_dotenv:
-        _load_env_file(REPO_ROOT)
+        load_repo_dotenv(REPO_ROOT)
 
     api_key, project_id = _posthog_credentials()
     errors: List[str] = []

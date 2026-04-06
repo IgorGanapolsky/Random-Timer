@@ -22,25 +22,13 @@ SCRIPTS = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPTS.parent
 sys.path.insert(0, str(SCRIPTS))
 
+from repo_dotenv import load_repo_dotenv
+
 PRAGMATIC_LIVE = """(
   lower(coalesce(properties.build_type, 'release')) != 'debug'
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
   AND coalesce(toString(properties.is_internal), 'false') != 'true'
 )"""
-
-
-def _load_env_file(repo_root: Path) -> None:
-    env_path = repo_root / ".env"
-    if not env_path.is_file():
-        return
-    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        s = line.strip()
-        if not s or s.startswith("#") or "=" not in s:
-            continue
-        k, _, v = s.partition("=")
-        key = k.strip()
-        if key and key not in os.environ:
-            os.environ[key] = v.strip().strip('"').strip("'")
 
 
 def _posthog_credentials() -> tuple[str, str]:
@@ -102,6 +90,29 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
     )
     out["timer_started_events"] = started
     out["timer_completed_events"] = completed
+    out["distinct_persons_timer_started"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'timer_started' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["distinct_persons_timer_completed"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'timer_completed' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["distinct_persons_timer_started_and_completed"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'timer_completed' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"AND person_id IN ("
+        f"SELECT person_id FROM events WHERE event = 'timer_started' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+        f")"
+    )
+    out["wqtu_distinct_persons"] = scalar(
+        f"SELECT count() FROM ("
+        f"SELECT person_id FROM events WHERE event = 'timer_completed' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"GROUP BY person_id HAVING count() >= 3"
+        f")"
+    )
     if started and started > 0 and completed is not None:
         out["timer_abandon_rate_event_level_pct"] = round(
             (started - completed) / started * 100, 2
@@ -157,7 +168,7 @@ def run(
     load_dotenv: bool = True,
 ) -> Dict[str, Any]:
     if load_dotenv:
-        _load_env_file(repo_root)
+        load_repo_dotenv(repo_root)
 
     generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
@@ -166,12 +177,18 @@ def run(
 
     try:
         from real_store_downloads import _get_android_data, _get_ios_data
-
-        android = _get_android_data(days)
-        ios = _get_ios_data(days)
     except Exception as exc:
-        android = {"status": "error", "reason": str(exc)}
-        ios = {"status": "error", "reason": str(exc)}
+        android = {"status": "error", "reason": f"import real_store_downloads: {exc}"}
+        ios = {"status": "error", "reason": f"import real_store_downloads: {exc}"}
+    else:
+        try:
+            android = _get_android_data(days)
+        except Exception as exc:
+            android = {"status": "error", "reason": str(exc)}
+        try:
+            ios = _get_ios_data(days)
+        except Exception as exc:
+            ios = {"status": "error", "reason": str(exc)}
 
     try:
         from check_crashlytics import collect_crashlytics_snapshot
@@ -190,6 +207,8 @@ def run(
             "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
             "crashes": "Crashlytics via BigQuery export; PostHog $exception also listed if captured.",
             "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
+            "wqtu": "Distinct persons with >=3 timer_completed events in the same window (North Star proxy for that window).",
+            "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
         },
         "posthog": posthog,
         "store_apis": {"android": android, "ios": ios},
@@ -229,6 +248,15 @@ def main() -> int:
     print(f"  Written: {out_path}")
     ph = payload.get("posthog") or {}
     print(f"  PostHog: {ph.get('status')}  installs(persons)={ph.get('distinct_persons_application_installed')}")
+    if ph.get("status") == "ok":
+        print(
+            f"    timer: started(events)={ph.get('timer_started_events')} "
+            f"completed(events)={ph.get('timer_completed_events')} "
+            f"distinct_started={ph.get('distinct_persons_timer_started')} "
+            f"distinct_completed={ph.get('distinct_persons_timer_completed')} "
+            f"starters_who_completed={ph.get('distinct_persons_timer_started_and_completed')} "
+            f"wqtu_window={ph.get('wqtu_distinct_persons')}"
+        )
     st = payload.get("store_apis") or {}
     print(f"  Android API: {(st.get('android') or {}).get('status')}")
     print(f"  iOS API: {(st.get('ios') or {}).get('status')}")

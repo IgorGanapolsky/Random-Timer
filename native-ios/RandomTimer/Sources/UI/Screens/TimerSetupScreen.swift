@@ -35,7 +35,7 @@ struct TimerSetupScreen: View {
 
                 if !hasCompletedFirstTimer && !bannerDismissed {
                     HStack {
-                        Text("Tap Start for a random 30s\u{2013}2min drill. Customize later.")
+                        Text("Tap Start for a random 20s\u{2013}1min drill. Customize later.")
                             .font(.subheadline)
                             .foregroundStyle(.white)
                         Spacer()
@@ -483,6 +483,7 @@ struct TimerSetupScreen: View {
                 .interactiveDismissDisabled(false)
         }
         .onAppear {
+            timerManager.applyActivationPresetForFirstCompletionIfNeeded()
             screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true

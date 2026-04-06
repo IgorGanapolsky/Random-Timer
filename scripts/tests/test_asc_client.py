@@ -52,6 +52,7 @@ def test_request_raises_on_http_error(monkeypatch):
 def test_get_all_follows_next_links(monkeypatch):
     auth = ac.ASCAuth(key_id="kid", issuer_id="iss", private_key="pk")
     client = ac.ASCClient(auth=auth)
+    monkeypatch.setattr(client, "token_value", lambda: "tok")
 
     payloads = [
         {"data": [{"id": "1"}], "links": {"next": f"{ac.APP_STORE_CONNECT_API}/apps?page=2"}},

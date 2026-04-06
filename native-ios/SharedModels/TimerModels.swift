@@ -202,6 +202,33 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
+    /// Min seconds for first-session activation preset (mirrors Android `TimerConfig`).
+    public static let activationFirstRunMinSeconds = 20
+
+    /// Max seconds for first-session activation preset (mirrors Android `TimerConfig`).
+    public static let activationFirstRunMaxSeconds = 60
+
+    /// Tighter 20–60s range when the user has not completed a first timer and is still on canonical free defaults.
+    public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
+        guard !hasCompletedFirstTimer else { return nil }
+        guard !useExtendedRange else { return nil }
+        guard minSeconds == 30, maxSeconds == 120 else { return nil }
+        return TimerConfig(
+            minSeconds: Self.activationFirstRunMinSeconds,
+            maxSeconds: Self.activationFirstRunMaxSeconds,
+            alarmDuration: alarmDuration,
+            hiddenMode: hiddenMode,
+            repeatEnabled: repeatEnabled,
+            soundType: soundType,
+            volume: volume,
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: useExtendedRange,
+            voiceEnabled: voiceEnabled,
+            voiceGender: voiceGender,
+            repeatRounds: repeatRounds
+        )
+    }
+
     fileprivate enum DecodingKeys: String, CodingKey {
         case minSeconds
         case maxSeconds

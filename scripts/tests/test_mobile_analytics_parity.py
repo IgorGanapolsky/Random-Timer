@@ -7,8 +7,13 @@ ROOT = Path(__file__).resolve().parents[2]
 ANDROID_ANALYTICS = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/analytics/AnalyticsService.kt"
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 IOS_ANALYTICS = ROOT / "native-ios/RandomTimer/Sources/Services/AnalyticsService.swift"
+IOS_TIMER_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift"
 IOS_SETUP_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 IOS_ACTIVE_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/ActiveTimerScreen.swift"
+ANDROID_TIMER_VM = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/viewmodel/TimerViewModel.kt"
+ANDROID_TIMER_SERVICE = (
+    ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/TimerForegroundService.kt"
+)
 
 
 def _extract_block(source: str, marker: str) -> str:
@@ -85,6 +90,22 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         self.assertIn('const val APPLICATION_OPENED = "Application Opened"', android_source)
         self.assertIn('static let applicationInstalled = "Application Installed"', ios_source)
         self.assertIn('static let applicationOpened = "Application Opened"', ios_source)
+
+    def test_timer_completed_emission_site_counts_match_documentation(self):
+        """Keep in sync with docs/POSTHOG_ANALYTICS.md § timer_completed emission paths."""
+        ios_tm = IOS_TIMER_MANAGER.read_text(encoding="utf-8")
+        ios_hits = ios_tm.count(
+            "AnalyticsService.shared.track(AnalyticsEvents.timerCompleted",
+        )
+        self.assertEqual(ios_hits, 6)
+
+        vm = ANDROID_TIMER_VM.read_text(encoding="utf-8")
+        svc = ANDROID_TIMER_SERVICE.read_text(encoding="utf-8")
+        kt_pattern = re.compile(
+            r"analyticsService\.track\(\s*\n\s*AnalyticsEvents\.TIMER_COMPLETED",
+        )
+        self.assertEqual(len(kt_pattern.findall(vm)), 1)
+        self.assertEqual(len(kt_pattern.findall(svc)), 1)
 
 
 if __name__ == "__main__":
