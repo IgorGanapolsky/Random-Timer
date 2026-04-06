@@ -2,10 +2,13 @@
 
 import importlib
 import json
+import math
 import os
 import sys
 import types
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _import_script():
@@ -23,7 +26,7 @@ cc = _import_script()
 
 
 def test_constants():
-    assert cc.PROJECT_ID == "random-timer-486213"
+    assert cc.PROJECT_ID == "random-timer-dist-new"
     assert cc.PACKAGE == "com.iganapolsky.randomtimer"
     assert cc.BQ_DATASET == "firebase_crashlytics"
     assert int(cc.DEFAULT_THRESHOLD) == 99
@@ -139,3 +142,76 @@ def test_get_access_token_uses_inline_service_account_json():
     assert token == access_value
     mock_from_info.assert_called_once()
     fake_creds.refresh.assert_called_once()
+
+
+def test_collect_crashlytics_snapshot_returns_structured_payload():
+    summary = {
+        "rows": [
+            {
+                "f": [
+                    {"v": "3"},
+                    {"v": "2"},
+                    {"v": "FATAL"},
+                    {"v": "TimerViewModel.kt"},
+                    {"v": "42"},
+                    {"v": "Crash title"},
+                    {"v": "Crash subtitle"},
+                    {"v": "1.3.15"},
+                ]
+            }
+        ]
+    }
+    rate = {"rows": [{"f": [{"v": "10"}, {"v": "8"}, {"v": "80.0"}]}]}
+
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=["com_iganapolsky_randomtimer"]), \
+         patch.object(cc, "query_crash_summary", return_value=summary), \
+         patch.object(cc, "query_crash_free_rate", return_value=rate):
+        payload = cc.collect_crashlytics_snapshot(hours=168)
+
+    assert payload["status"] == "ok"
+    assert payload["project_id"] == "random-timer-dist-new"
+    assert payload["table_id"] == "com_iganapolsky_randomtimer"
+    assert payload["fatal_events"] == 3
+    assert payload["affected_users"] == 2
+    assert payload["total_users"] == 10
+    assert payload["crash_free_users"] == 8
+    assert math.isclose(payload["crash_free_pct"], 80.0)
+    assert payload["top_fatal_issues"][0]["issue_title"] == "Crash title"
+
+
+def test_collect_crashlytics_snapshot_handles_missing_export():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=None):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["status"] == "skipped"
+    assert payload["reason"] == "Crashlytics BigQuery export not set up"
+
+
+def test_collect_crashlytics_snapshot_handles_missing_package_table():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=["other_app_ANDROID_REALTIME"]):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["status"] == "error"
+    assert "No Crashlytics export table found" in payload["reason"]
+
+
+def test_collect_crashlytics_snapshot_handles_runtime_error_from_export_check():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", side_effect=RuntimeError("BigQuery API 403: denied")):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["status"] == "error"
+    assert "403" in payload["reason"]
+    assert payload.get("source") == "crashlytics"
+
+
+def test_main_exits_zero_when_bigquery_export_raises_runtime_error():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", side_effect=RuntimeError("BigQuery API 500")), \
+         patch.object(sys, "argv", ["check_crashlytics.py"]):
+        with pytest.raises(SystemExit) as exc_info:
+            cc.main()
+    assert exc_info.value.code == 0

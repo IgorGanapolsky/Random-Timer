@@ -15,6 +15,7 @@ import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -37,11 +38,12 @@ class TimerRepositoryImpl
         private fun TimerConfig.clampedForPro(): TimerConfig {
             val level = proManager.entitlementLevel.value
             val isPro = level.isPro
-            val maxAllowed = if (isPro && useExtendedRange) {
-                TimerConfig.MAX_SECONDS_PRO
-            } else {
-                TimerConfig.MAX_SECONDS_FREE
-            }
+            val maxAllowed =
+                if (isPro && useExtendedRange) {
+                    TimerConfig.MAX_SECONDS_PRO
+                } else {
+                    TimerConfig.MAX_SECONDS_FREE
+                }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
             val clampedMin = minSeconds.coerceAtMost(clampedMax)
@@ -50,14 +52,14 @@ class TimerRepositoryImpl
                 minSeconds = clampedMin,
                 maxSeconds = clampedMax,
                 soundType = clampedSound,
-                useExtendedRange = if (isPro) useExtendedRange else false
+                useExtendedRange = if (isPro) useExtendedRange else false,
             )
         }
 
         private fun Preferences.toTimerConfig(): TimerConfig =
             TimerConfig(
-                minSeconds = this[KEY_MIN_SECONDS] ?: 0,
-                maxSeconds = this[KEY_MAX_SECONDS] ?: 300,
+                minSeconds = this[KEY_MIN_SECONDS] ?: 30,
+                maxSeconds = this[KEY_MAX_SECONDS] ?: 120,
                 alarmDuration = this[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = this[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = this[KEY_REPEAT_ENABLED] ?: false,
@@ -73,11 +75,18 @@ class TimerRepositoryImpl
                 vibrationEnabled = this[KEY_VIBRATION_ENABLED] ?: false,
                 useExtendedRange = this[KEY_USE_EXTENDED_RANGE] ?: false,
                 voiceEnabled = this[KEY_VOICE_ENABLED] ?: false,
+                voiceGender =
+                    this[KEY_VOICE_GENDER]?.let {
+                        try {
+                            VoiceGender.valueOf(it)
+                        } catch (_: Exception) {
+                            VoiceGender.MALE
+                        }
+                    } ?: VoiceGender.MALE,
                 repeatRounds = this[KEY_REPEAT_ROUNDS] ?: 0,
             ).clampedForPro()
 
-        override fun getTimerConfig(): Flow<TimerConfig> =
-            dataStore.data.map { preferences -> preferences.toTimerConfig() }
+        override fun getTimerConfig(): Flow<TimerConfig> = dataStore.data.map { preferences -> preferences.toTimerConfig() }
 
         override suspend fun saveTimerConfig(config: TimerConfig) {
             dataStore.edit { preferences ->
@@ -91,6 +100,7 @@ class TimerRepositoryImpl
                 preferences[KEY_VIBRATION_ENABLED] = config.vibrationEnabled
                 preferences[KEY_USE_EXTENDED_RANGE] = config.useExtendedRange
                 preferences[KEY_VOICE_ENABLED] = config.voiceEnabled
+                preferences[KEY_VOICE_GENDER] = config.voiceGender.name
                 preferences[KEY_REPEAT_ROUNDS] = config.repeatRounds
             }
         }
@@ -147,6 +157,7 @@ class TimerRepositoryImpl
             private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
             private val KEY_USE_EXTENDED_RANGE = booleanPreferencesKey("use_extended_range")
             private val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
+            private val KEY_VOICE_GENDER = stringPreferencesKey("voice_gender")
             private val KEY_REPEAT_ROUNDS = intPreferencesKey("repeat_rounds")
 
             // Active timer keys

@@ -43,6 +43,52 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun femalePreviewSamplesExistOnDisk() {
+        val required =
+            listOf(
+                "female_cmd_move_with_a_purpose.mp3",
+                "female_cmd_no_hesitation_move.mp3",
+                "female_cmd_stay_in_the_fight.mp3",
+                "female_cmd_push_pace.mp3",
+                "female_cmd_keep_tempo_high.mp3",
+                "female_cmd_finish_rep_keep_pushing.mp3",
+                "female_cmd_drive_forward.mp3",
+                "female_cmd_own_this_rep.mp3",
+                "female_cmd_pick_it_up.mp3",
+                "female_cmd_strong_feet_strong_pace.mp3",
+                "female_preview_elapsed.mp3",
+            )
+
+        val rawDir = Paths.get("src/main/res/raw")
+        val missing = required.filterNot { rawDir.resolve(it).toFile().exists() }
+
+        assertThat(missing).isEmpty()
+    }
+
+    @Test
+    fun malePreviewSamplesExistOnDisk() {
+        val required =
+            listOf(
+                "cmd_move_with_a_purpose.mp3",
+                "cmd_stay_locked_in.mp3",
+                "cmd_no_hesitation_move.mp3",
+                "cmd_sound_off_and_drive.mp3",
+                "cmd_snap_back_and_drive.mp3",
+                "cmd_stay_disciplined.mp3",
+                "cmd_keep_your_bearing.mp3",
+                "cmd_reset_and_attack.mp3",
+                "cmd_sharp_movement_sharp_focus.mp3",
+                "cmd_stay_in_the_fight.mp3",
+                "preview_elapsed.mp3",
+            )
+
+        val rawDir = Paths.get("src/main/res/raw")
+        val missing = required.filterNot { rawDir.resolve(it).toFile().exists() }
+
+        assertThat(missing).isEmpty()
+    }
+
+    @Test
     fun nextCommandCueAvoidsImmediateRepeatsWhenMultipleCuesExist() {
         val cues =
             listOf(
@@ -56,7 +102,22 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun runtimeVoiceCueForMinuteMarkOnlyReturnsMinuteElapsedAnnouncements() {
+    fun nextPreviewCueFilenameAvoidsImmediateRepeatsAndCyclesUnusedSamples() {
+        val used = linkedSetOf("cue_a")
+
+        val selected =
+            nextPreviewCueFilename(
+                filenames = listOf("cue_a", "cue_b", "cue_c"),
+                lastFilename = "cue_b",
+                usedFilenames = used,
+            ) { 0 }
+
+        assertThat(selected).isEqualTo("cue_c")
+        assertThat(used).contains("cue_c")
+    }
+
+    @Test
+    fun runtimeVoiceCueForElapsedMarkReturnsConfiguredElapsedAnnouncements() {
         val catalog =
             VoiceCueCatalog(
                 previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Preview"),
@@ -70,16 +131,17 @@ class AIVoiceCalloutManagerSelectionTest {
                 commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
             )
 
-        assertThat(runtimeVoiceCueForMinuteMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
-        assertThat(runtimeVoiceCueForMinuteMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
-        assertThat(runtimeVoiceCueForMinuteMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(14, lastElapsedMilestone = 0, catalog = catalog)).isNull()
+        assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_15s")
+        assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_30s")
+        assertThat(runtimeVoiceCueForElapsedMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
     }
 
     @Test
     fun shortTimersScheduleFollowupCommandCuesEarly() {
         assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
         assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
-        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
+        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(15)
     }
 
     @Test

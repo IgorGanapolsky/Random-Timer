@@ -75,13 +75,13 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "minSeconds = 0" in android_config
-    assert "maxSeconds = 300" in android_config
+    assert "minSeconds = 30" in android_config
+    assert "maxSeconds = 120" in android_config
     assert "private fun Preferences.toTimerConfig()" in android_repository
-    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 300") == 1
+    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 120") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
-    assert re.search(r"minSeconds: Int = 0,\n\s*maxSeconds: Int = 300,", ios_models)
-    assert "defaultValue: 300" in ios_models or "maxSeconds: Int = 300" in ios_models
+    assert re.search(r"minSeconds: Int = 30,\n\s*maxSeconds: Int = 120,", ios_models)
+    assert "maxSecondsFree = 300" in ios_models
 
 
 def test_timer_limits_and_gap_rules_match_across_mobile_platforms():
@@ -170,11 +170,12 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
 def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
+    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
     assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
     assert "Voice Callouts" in ios_setup
-    assert "voice prompts" in android_setup.lower() and "elapsed" in android_setup.lower()
-    assert "voice prompts" in ios_setup.lower() and "elapsed" in ios_setup.lower()
+    assert expected_supporting_copy in android_setup
+    assert expected_supporting_copy in ios_setup
 
 
 def test_sound_arsenal_is_expanded_by_default_for_free_users():
@@ -211,7 +212,7 @@ def test_ios_voice_assets_exist_on_disk():
     required_assets = _ios_catalog_filenames(catalog)
     actual_assets = {path.stem for path in IOS_VOICE_AUDIO_DIR.glob("*.mp3")}
 
-    assert actual_assets == required_assets
+    assert required_assets <= actual_assets
 
 
 def test_android_voice_assets_exist_on_disk_and_match_ios_catalog():

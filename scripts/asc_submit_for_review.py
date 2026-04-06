@@ -790,6 +790,22 @@ def _find_submission_for_version(
     return None, None
 
 
+def _find_reusable_empty_submission(client: ASCClient, *, app_id: str) -> dict[str, Any] | None:
+    for submission in _list_review_submissions(client, app_id):
+        submission_id = submission.get("id")
+        if not isinstance(submission_id, str) or not submission_id:
+            continue
+        attrs = submission.get("attributes") or {}
+        if (attrs.get("state") or "").upper() != "READY_FOR_REVIEW":
+            continue
+        if attrs.get("submittedDate"):
+            continue
+        if _list_review_submission_items(client, submission_id):
+            continue
+        return submission
+    return None
+
+
 def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
     payload = {
         "data": {
@@ -812,6 +828,49 @@ def _create_review_submission_item(client: ASCClient, *, submission_id: str, ver
         }
     }
     return client.request("POST", "/reviewSubmissionItems", payload=payload).get("data") or {}
+
+
+def _create_subscription_review_item(client: ASCClient, *, submission_id: str, subscription_id: str) -> dict[str, Any]:
+    """Attach a subscription to a review submission as a reviewSubmissionItem."""
+    payload = {
+        "data": {
+            "type": "reviewSubmissionItems",
+            "relationships": {
+                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
+                "subscription": {"data": {"type": "subscriptions", "id": subscription_id}},
+            },
+        }
+    }
+    return client.request("POST", "/reviewSubmissionItems", payload=payload).get("data") or {}
+
+
+def _find_pending_subscription_ids(client: ASCClient, app_id: str) -> list[tuple[str, str]]:
+    """Return list of (subscription_id, name) for subscriptions pending review."""
+    results: list[tuple[str, str]] = []
+    try:
+        resp = client.request("GET", f"/apps/{app_id}/subscriptionGroups", params={"limit": 50})
+        groups = (resp.get("data") if isinstance(resp.get("data"), list) else [resp.get("data")]) if resp.get("data") else []
+        for group in groups:
+            if not group:
+                continue
+            group_id = group.get("id")
+            if not group_id:
+                continue
+            subs_resp = client.request("GET", f"/subscriptionGroups/{group_id}/subscriptions", params={"limit": 50})
+            subs = subs_resp.get("data") or []
+            if not isinstance(subs, list):
+                subs = [subs]
+            for sub in subs:
+                if not sub:
+                    continue
+                sub_state = ((sub.get("attributes") or {}).get("state") or "").upper()
+                sub_name = (sub.get("attributes") or {}).get("name", "")
+                sub_id = sub.get("id", "")
+                if sub_state in ("READY_TO_SUBMIT", "WAITING_FOR_REVIEW"):
+                    results.append((sub_id, sub_name))
+    except Exception as e:
+        die(f"Failed to enumerate subscriptions for review attachment: {e}")
+    return results
 
 
 def _mark_review_submission_item_resolved(client: ASCClient, *, item_id: str) -> dict[str, Any]:
@@ -917,17 +976,37 @@ def _guard_pending_subscription_review(client: ASCClient, app_id: str) -> None:
         f"Reference: {SUBSCRIPTION_REVIEW_DOC_URL}"
     )
 
-def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
-    _guard_pending_subscription_review(client, app_id=app_id)
+def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach_subscriptions: bool = False) -> None:
+    pending_subs: list[tuple[str, str]] = []
+    if attach_subscriptions:
+        info("--attach-subscriptions: bypassing subscription guard; will attach subscriptions to submission.")
+        pending_subs = _find_pending_subscription_ids(client, app_id)
+    else:
+        _guard_pending_subscription_review(client, app_id=app_id)
 
     submission, item = _find_submission_for_version(client, app_id=app_id, version_id=version_id)
     if submission:
-        info(
-            "Found existing review submission "
-            f"{submission.get('id')} (state={(submission.get('attributes') or {}).get('state', 'UNKNOWN')})."
-        )
+        sub_state = (submission.get("attributes") or {}).get("state", "UNKNOWN")
+        info(f"Found existing review submission {submission.get('id')} (state={sub_state}).")
+        if attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
+            if pending_subs:
+                pending_names = ", ".join(name or sub_id for sub_id, name in pending_subs)
+                die(
+                    "Existing review submission is already waiting for review, and App Store Connect "
+                    "does not support deleting review submissions via API. "
+                    f"Pending subscriptions still need manual handling: {pending_names}."
+                )
+            info(
+                f"Existing review submission {submission.get('id')} is already waiting for review and "
+                "no pending subscriptions were found; skipping resubmission."
+            )
+            return
     else:
-        info("No existing review submission found for this version; creating one.")
+        submission = _find_reusable_empty_submission(client, app_id=app_id)
+        if submission:
+            info(f"Reusing empty review submission {submission.get('id')} to avoid ASC concurrency-limit failures.")
+        else:
+            info("No existing review submission found for this version; creating one.")
 
     if not submission:
         submission = _create_review_submission(client, app_id=app_id)
@@ -952,6 +1031,16 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str) -> None:
         item = _mark_review_submission_item_resolved(client, item_id=item_id)
         item_state = ((item or {}).get("attributes") or {}).get("state", item_state)
         info(f"Review submission item {item_id} state: {item_state}")
+
+    if attach_subscriptions:
+        if pending_subs:
+            for sub_id, sub_name in pending_subs:
+                info(f"Attaching subscription '{sub_name}' (id={sub_id}) to review submission {submission_id}…")
+                sub_item = _create_subscription_review_item(client, submission_id=submission_id, subscription_id=sub_id)
+                sub_item_id = (sub_item or {}).get("id", "")
+                info(f"Subscription review item created: {sub_item_id}")
+        else:
+            info("No pending subscriptions found to attach.")
 
     submission = _submit_review_submission(client, submission_id=submission_id)
     info(
@@ -991,6 +1080,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--locale", default="en-US")
     p.add_argument("--dry-run", action="store_true", help="Run preflight only; do not attach/submit.")
     p.add_argument("--wait", action="store_true", help="Wait and read back submitted state.")
+    p.add_argument("--attach-subscriptions", action="store_true",
+                   help="Attach pending subscriptions to the review submission via API.")
     p.add_argument("--timeout", type=int, default=900)
     p.add_argument("--poll-interval", type=int, default=20)
     return p.parse_args()
@@ -1016,10 +1107,13 @@ def main() -> int:
     verify_review_detail(client, version_id)
     verify_age_rating(client, app_id, version_id)
 
-    # If already in a submitted/in-review state, do nothing.
+    # If already in a submitted/in-review state, do nothing — unless attaching subscriptions.
     if state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
-        info(f"Already submitted: {state}")
-        return 0
+        if args.attach_subscriptions:
+            info(f"Already submitted ({state}) but --attach-subscriptions requested; will cancel and recreate.")
+        else:
+            info(f"Already submitted: {state}")
+            return 0
 
     loc = get_version_localization(client, version_id, args.locale)
     loc_id = loc["id"]
@@ -1044,8 +1138,12 @@ def main() -> int:
         return 0
 
     build_id = select_valid_build_id(client, app_id, args.version)
-    attach_build(client, version_id, build_id)
-    submit_for_review(client, app_id, version_id)
+    # Skip build attachment if version is already submitted (build already attached)
+    if state not in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE"):
+        attach_build(client, version_id, build_id)
+    else:
+        info(f"Version is {state}; skipping build attachment (already attached).")
+    submit_for_review(client, app_id, version_id, attach_subscriptions=args.attach_subscriptions)
 
     if args.wait:
         wait_for_state(client, version_id, timeout=args.timeout, poll_interval=args.poll_interval)

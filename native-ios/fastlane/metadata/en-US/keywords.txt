@@ -1,1 +1,1 @@
-dry fire,boxing,mma,bjj,hiit,sparring,shooting,agility,drills,range,interval,beep
+mma,muay thai,sparring,draw,reaction,interval,shot timer,par timer,combat,drill,beep

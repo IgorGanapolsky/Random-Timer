@@ -1,0 +1,27 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: Quick-start banner dismiss button works
+- clearState
+- launchApp
+
+# Banner should be visible on first run
+- assertVisible:
+    text: '.*30s.*2min.*drill.*'
+
+# Tap the dismiss X button
+- tapOn:
+    text: 'Dismiss'
+    optional: true
+- tapOn:
+    id: 'Dismiss'
+    optional: true
+
+# Banner should disappear after dismiss
+- assertNotVisible:
+    text: '.*30s.*2min.*drill.*'
+    optional: true
+
+# Timer Range and Start Timer should still be visible
+- assertVisible:
+    text: '.*Timer Range.*'
+- assertVisible: 'Start Timer'

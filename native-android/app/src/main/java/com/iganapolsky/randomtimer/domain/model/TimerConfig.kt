@@ -94,8 +94,8 @@ data class TimerConfig(
 
         val DEFAULT =
             TimerConfig(
-                minSeconds = 0,
-                maxSeconds = 300,
+                minSeconds = 30,
+                maxSeconds = 120,
                 alarmDuration = 10,
                 hiddenMode = false,
                 repeatEnabled = false,
@@ -109,6 +109,12 @@ data class TimerConfig(
             )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)
+
+        /** Min seconds for first-session activation preset (mirrors iOS SharedModels). */
+        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = 20
+
+        /** Max seconds for first-session activation preset (mirrors iOS SharedModels). */
+        const val ACTIVATION_FIRST_RUN_MAX_SECONDS = 60
     }
 }
 
@@ -192,6 +198,27 @@ fun toggleExtendedRange(
     }
 
 /**
+ * Tighter 20–60s range for users who have not completed their first timer while still on
+ * canonical free-tier defaults (30–120, not extended). Returns null if no change applies.
+ */
+fun activationPresetForFirstCompletionIfEligible(
+    hasCompletedFirstTimer: Boolean,
+    current: TimerConfig,
+): TimerConfig? {
+    if (hasCompletedFirstTimer) return null
+    if (current.useExtendedRange) return null
+    if (current.minSeconds != TimerConfig.DEFAULT.minSeconds ||
+        current.maxSeconds != TimerConfig.DEFAULT.maxSeconds
+    ) {
+        return null
+    }
+    return current.copy(
+        minSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS,
+        maxSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS,
+    )
+}
+
+/**
  * Represents the current state of an active timer.
  */
 data class TimerState(
@@ -204,13 +231,19 @@ data class TimerState(
     val isAlarmSilenced: Boolean = false,
     val roundCount: Int = 1,
 ) {
+    /**
+     * Unpredictable progress based on maxSeconds (not targetDuration).
+     * This prevents the user from deducing the random target by watching the arc.
+     * Capped at 0.98 so the arc never visually "completes" before the alarm fires.
+     * Matches iOS `unpredictableProgress` in TimerModels.swift.
+     */
     val progress: Float
-        get() =
-            if (targetDuration == Duration.ZERO) {
-                0f
-            } else {
-                1f - (remainingDuration / targetDuration).toFloat()
-            }
+        get() {
+            val maxDuration = config.maxDuration
+            if (maxDuration == Duration.ZERO) return 0f
+            val elapsed = targetDuration - remainingDuration
+            return (elapsed / maxDuration).toFloat().coerceIn(0f, 0.98f)
+        }
 
     val isComplete: Boolean
         get() = status == TimerStatus.COMPLETE

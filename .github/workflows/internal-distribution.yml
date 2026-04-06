@@ -124,6 +124,19 @@ jobs:
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
+      - name: Write GoogleService-Info.plist from secret (Firebase)
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+            echo "✅ Wrote RandomTimer/GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST"
+          else
+            echo "ℹ️ GOOGLE_SERVICE_INFO_PLIST not set; using any plist already in the workspace"
+          fi
+        working-directory: native-ios
+
       - name: Fail fast on required iOS distribution secrets
         env:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
@@ -153,7 +166,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.3"
           bundler-cache: true
           working-directory: native-ios
 
@@ -221,6 +234,8 @@ jobs:
         id: fastlane_beta
         env:
           CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "6"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
@@ -288,7 +303,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.3"
           bundler-cache: true
           working-directory: native-android
 
@@ -334,7 +349,9 @@ jobs:
           python -m pip install google-api-python-client==2.190.0 google-auth==2.48.0 google-auth-httplib2==0.3.0
           NEXT_CODE="$(python scripts/compute_android_release_version_code.py \
             --service-account-json "$KEY_PATH" \
-            --gradle-file native-android/app/build.gradle.kts)"
+            --gradle-file native-android/app/build.gradle.kts \
+            --timeout-seconds 180 \
+            --request-retries 3)"
           echo "next_version_code=$NEXT_CODE" >> "$GITHUB_OUTPUT"
 
       - name: Create google-services.json

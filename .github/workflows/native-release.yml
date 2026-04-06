@@ -74,6 +74,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write GoogleService-Info.plist from secret (Firebase)
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+            echo "✅ Wrote RandomTimer/GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST"
+          else
+            echo "ℹ️ GOOGLE_SERVICE_INFO_PLIST not set; using any plist already in the workspace"
+          fi
+        working-directory: native-ios
+
       - name: Fail fast on required iOS release secrets
         env:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
@@ -166,6 +179,8 @@ jobs:
       - name: Build and upload to TestFlight
         env:
           CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "6"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
@@ -609,7 +624,11 @@ jobs:
             --create-if-needed \
             --json-out /tmp/asc_version.json
           SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
+          SELECTED_VERSION_ID=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("selected_id") or "")')
+          APP_ID=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("app_id") or "")')
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "selected_version_id=$SELECTED_VERSION_ID" >> "$GITHUB_OUTPUT"
+          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
           echo "Using editable App Store version: $SELECTED_VERSION"
 
       - name: Write App Store Connect key (for API)
@@ -654,20 +673,60 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
 
-      - name: Upload App Store metadata/screenshots + attach build
-        if: >-
-          steps.gate.outputs.enabled == 'true' &&
-          steps.asc_state.outputs.state != 'READY_FOR_REVIEW' &&
-          steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' &&
-          steps.asc_state.outputs.state != 'IN_REVIEW' &&
-          steps.asc_state.outputs.state != 'PENDING_DEVELOPER_RELEASE' &&
-          steps.asc_state.outputs.state != 'READY_FOR_SALE'
+      - name: Check current App Store version state
+        if: steps.gate.outputs.enabled == 'true'
+        id: asc_state
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
+        run: |
+          STATE_JSON="$(python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --json 2>/dev/null)" || true
+          STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; print(json.loads(sys.stdin.read()).get("state","UNKNOWN"))' 2>/dev/null)" || STATE="UNKNOWN"
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
+          echo "ASC version state: $STATE"
+
+      - name: Upload App Store metadata/screenshots
+        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state.outputs.state != 'IN_REVIEW' }}
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: fastlane metadata version:${{ steps.asc_version.outputs.selected_version }}
         working-directory: native-ios
+
+      - name: Attach VALID build to editable App Store version
+        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state.outputs.state != 'IN_REVIEW' && steps.asc_state.outputs.state != 'PENDING_DEVELOPER_RELEASE' && steps.asc_state.outputs.state != 'READY_FOR_SALE' }}
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          APP_ID: ${{ steps.asc_version.outputs.app_id }}
+          APP_STORE_VERSION_ID: ${{ steps.asc_version.outputs.selected_version_id }}
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
+        run: |
+          if [ -z "$APP_ID" ]; then
+            echo "❌ Missing App Store Connect app id from asc_resolve_version.py"
+            exit 1
+          fi
+          if [ -z "$APP_STORE_VERSION_ID" ]; then
+            echo "❌ Missing editable App Store version id from asc_resolve_version.py"
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          from scripts.asc_client import ASCClient
+          from scripts.asc_submit_for_review import attach_build, select_valid_build_id
+
+          client = ASCClient.from_env(timeout=30)
+          app_id = os.environ["APP_ID"]
+          version_id = os.environ["APP_STORE_VERSION_ID"]
+          marketing_version = os.environ["IOS_VERSION"]
+          build_id = select_valid_build_id(client, app_id, marketing_version)
+          attach_build(client, version_id, build_id)
+          print(f"Attached VALID build {build_id} to App Store version {version_id}")
+          PY
 
       - name: Verify App Store submission readiness (hard gate)
         if: steps.gate.outputs.enabled == 'true'
@@ -706,9 +765,10 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
           python scripts/asc_submit_for_review.py \
-            --version "${{ steps.asc_version.outputs.selected_version }}" \
+            --version "$IOS_VERSION" \
             --locale en-US \
             --wait
 

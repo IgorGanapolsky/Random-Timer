@@ -151,8 +151,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     }
 
     public init(
-        minSeconds: Int = 0,
-        maxSeconds: Int = 300,
+        minSeconds: Int = 30,
+        maxSeconds: Int = 120,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -201,6 +201,33 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     public static let `default` = TimerConfig()
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
+
+    /// Min seconds for first-session activation preset (mirrors Android `TimerConfig`).
+    public static let activationFirstRunMinSeconds = 20
+
+    /// Max seconds for first-session activation preset (mirrors Android `TimerConfig`).
+    public static let activationFirstRunMaxSeconds = 60
+
+    /// Tighter 20–60s range when the user has not completed a first timer and is still on canonical free defaults.
+    public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
+        guard !hasCompletedFirstTimer else { return nil }
+        guard !useExtendedRange else { return nil }
+        guard minSeconds == 30, maxSeconds == 120 else { return nil }
+        return TimerConfig(
+            minSeconds: Self.activationFirstRunMinSeconds,
+            maxSeconds: Self.activationFirstRunMaxSeconds,
+            alarmDuration: alarmDuration,
+            hiddenMode: hiddenMode,
+            repeatEnabled: repeatEnabled,
+            soundType: soundType,
+            volume: volume,
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: useExtendedRange,
+            voiceEnabled: voiceEnabled,
+            voiceGender: voiceGender,
+            repeatRounds: repeatRounds
+        )
+    }
 
     fileprivate enum DecodingKeys: String, CodingKey {
         case minSeconds
@@ -256,11 +283,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
-            defaultValue: 0
+            defaultValue: 30
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
-            defaultValue: 300
+            defaultValue: 120
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],

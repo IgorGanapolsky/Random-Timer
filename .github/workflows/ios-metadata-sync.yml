@@ -22,6 +22,11 @@ on:
         required: true
         type: boolean
         default: true
+      use_live_version:
+        description: "Force metadata sync against the current live App Store version."
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: ios-metadata-sync-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
@@ -36,6 +41,7 @@ jobs:
       IOS_METADATA_LOCALE: ${{ inputs.locale }}
       IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
       IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
+      IOS_USE_LIVE_VERSION: ${{ inputs.use_live_version }}
     steps:
       - uses: actions/checkout@v6
 
@@ -121,6 +127,12 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           VERSION_RESOLVED: ${{ steps.version.outputs.version }}
         run: |
+          if [[ "$IOS_USE_LIVE_VERSION" == "true" ]]; then
+            echo "selected_version=LIVE" >> "$GITHUB_OUTPUT"
+            echo "Using live App Store version for metadata sync"
+            exit 0
+          fi
+
           python scripts/asc_resolve_version.py \
             --preferred-version "$VERSION_RESOLVED" \
             --create-if-needed \
@@ -136,6 +148,12 @@ jobs:
           # If version is blocked/unknown, fall back to live version metadata update
           if echo "$SELECTED_STATE" | grep -qiE "UNKNOWN|409|BLOCKED"; then
             echo "⚠️ Cannot create/find editable version $SELECTED_VERSION — will use live version for metadata"
+            SELECTED_VERSION="LIVE"
+          fi
+          # In metadata-only mode, review-locked versions are not editable. Push to the
+          # current live storefront instead of pretending the pending review version can change.
+          if [[ "$IOS_METADATA_ONLY" == "true" ]] && ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
+            echo "⚠️ metadata_only=true and selected version state '$SELECTED_STATE' is not editable — using live version storefront"
             SELECTED_VERSION="LIVE"
           fi
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"

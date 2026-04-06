@@ -356,6 +356,8 @@ class TimerForegroundService : Service() {
             mapOf(AnalyticsProperties.SOURCE to stopSource),
         )
         if (state != null && state.status != TimerStatus.ALARM && state.status != TimerStatus.COMPLETE) {
+            val abandonReason =
+                if (!isAppInForeground) "app_backgrounded" else "user_cancelled"
             analyticsService.track(
                 AnalyticsEvents.TIMER_ABANDONED,
                 mapOf(
@@ -363,6 +365,7 @@ class TimerForegroundService : Service() {
                     "remaining_duration" to state.remainingDuration.inWholeSeconds,
                     "status" to state.status.name,
                     AnalyticsProperties.SOURCE to stopSource,
+                    AnalyticsProperties.ABANDON_REASON to abandonReason,
                 ),
             )
         }
@@ -547,6 +550,15 @@ class TimerForegroundService : Service() {
         val currentState = _timerState.value ?: return
         val currentConfig = currentState.config
         val currentRound = currentState.roundCount
+
+        // Track loop round completion before restarting
+        analyticsService.track(
+            AnalyticsEvents.LOOP_ROUND_COMPLETED,
+            mapOf(
+                "round_number" to currentRound,
+                "round_duration_seconds" to currentState.targetDuration.inWholeSeconds,
+            ),
+        )
 
         // Generate new random duration
         val minMs = currentConfig.minSeconds * 1000L

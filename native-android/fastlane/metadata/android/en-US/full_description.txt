@@ -1,8 +1,12 @@
 TRAIN FOR CHAOS. NOT RHYTHM.
 
-Most timers teach anticipation. Random Tactical Timer trains reaction.
+Random Tactical Timer is a random timer and reaction timer for dry fire, boxing, BJJ, HIIT, and sparring drills.
 
-Instead of firing on a predictable beat, it triggers at an unpredictable moment inside your chosen time window, forcing real response under pressure. This is pattern-interrupt training built for dry fire, sparring, drills, and reaction work.
+Most timers teach anticipation. This one trains reaction under pressure.
+
+Instead of firing on a predictable beat, it triggers at an unpredictable moment inside your chosen time window, forcing genuine reaction under stress.
+
+Use it as a dry fire timer, boxing timer, BJJ timer, or HIIT timer when you need unpredictability instead of a fixed rhythm.
 
 BUILT FOR:
 - Dry fire and draw-to-first-shot drills
@@ -37,4 +41,10 @@ HOW IT WORKS:
 4. React with explosive intensity when the cue hits
 5. Loop for continuous stress rounds
 
-Zero ads. No tracking. Free core timer with an optional Pro upgrade for advanced training features.
+WORKS FOR:
+- Random countdown timer for any training discipline
+- Par timer and shot timer replacement for range work
+- Reaction time training for combat sports athletes
+- Pattern-interrupt conditioning for first responders and military
+
+Zero ads. No tracking. Free core random timer with an optional Pro upgrade for advanced tactical training features.

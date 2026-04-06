@@ -1,0 +1,21 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: Activation smoke — banner + explainer + quick start
+- launchApp
+
+# First-run: quick-start banner should be visible
+- assertVisible:
+    text: '.*30s.*2min.*drill.*'
+
+# Random explainer text should be visible
+- assertVisible:
+    text: '.*random duration.*'
+
+# Start Timer button should be visible
+- assertVisible: 'Start Timer'
+
+# Tap Start
+- tapOn: 'Start Timer'
+
+# Should navigate to active timer screen (Start Timer gone)
+- assertNotVisible: 'Start Timer'

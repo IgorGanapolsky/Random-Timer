@@ -1,6 +1,6 @@
 {
   "status": "success",
-  "generated_at": "2026-03-23T19:37:23.266537+00:00",
+  "generated_at": "2026-04-02T15:27:56.081348+00:00",
   "locale": "en-US",
   "written_files": [
     "native-ios/fastlane/screenshots/en-US/1_setup.png",
@@ -12,14 +12,14 @@
     "native-ios/fastlane/screenshots/en-US/7_ipad_stopped.png"
   ],
   "source_files": {
-    "1_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/1_setup.png",
-    "2_active.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/2_active.png",
-    "3_alarm.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/3_alarm.png",
-    "4_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/4_running.png",
-    "5_ipad_setup.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/5_ipad_setup.png",
-    "6_ipad_running.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/6_ipad_running.png",
-    "7_ipad_stopped.png": "native-ios/fastlane/screenshots/en-US/_backup/20260310_132454/7_ipad_stopped.png"
+    "1_setup.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/iphone_setup_raw.png",
+    "2_active.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/iphone_running_raw.png",
+    "3_alarm.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/iphone_sound_raw.png",
+    "4_running.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/iphone_paused_raw.png",
+    "5_ipad_setup.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/ipad_setup_raw.png",
+    "6_ipad_running.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/ipad_running_raw.png",
+    "7_ipad_stopped.png": "native-ios/fastlane/screenshots/en-US/originals/_backup/20260317_085115/ipad_setup_raw.png"
   },
-  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260323_193721",
+  "backup_dir": "native-ios/fastlane/screenshots/en-US/_backup/20260402_152754",
   "report_path": "native-ios/fastlane/screenshots/en-US/report.json"
 }

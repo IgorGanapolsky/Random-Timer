@@ -1,0 +1,154 @@
+name: Generate Real Alarm Sounds
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate sounds with detailed prompts
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, urllib.request, time
+
+          API = "https://api.elevenlabs.io"
+          KEY = os.environ["ELEVENLABS_API_KEY"]
+
+          # Highly specific prompts - research says detailed descriptions produce recognizable sounds
+          SOUNDS = {
+              "alarm": {
+                  "prompt": "Loud electronic alarm beeping rapidly, urgent warning signal, high pitched alternating tones, emergency alert buzzer, clean digital alarm clock sound",
+                  "duration": 5.0,
+                  "influence": 0.8,
+              },
+              "gentle-chime": {
+                  "prompt": "Gentle wind chimes tinkling softly in a breeze, peaceful melodic chime, xylophone-like pleasant notification sound, soft and calming bell tones",
+                  "duration": 5.0,
+                  "influence": 0.7,
+              },
+              "klaxon": {
+                  "prompt": "Military submarine dive klaxon horn, loud AOOGAH horn blast, two-tone mechanical warning horn, old fashioned car horn klaxon, pulsing warning signal",
+                  "duration": 5.0,
+                  "influence": 0.8,
+              },
+              "whistle": {
+                  "prompt": "Extremely loud piercing human whistle using two fingers in mouth, marine drill sergeant whistle blast at close range, shrill sharp ear-splitting finger whistle, military instructor commanding attention with a deafening two-finger mouth whistle",
+                  "duration": 4.0,
+                  "influence": 1.0,
+              },
+              "buzzer": {
+                  "prompt": "Game show wrong answer buzzer, loud harsh buzzing sound like a basketball shot clock buzzer, flat electronic buzz, end of round buzzer in boxing",
+                  "duration": 3.0,
+                  "influence": 0.8,
+              },
+              "gong": {
+                  "prompt": "Massive loud brass gong struck hard with a heavy mallet, thunderous deep reverberating metallic crash, temple gong hit at maximum force, overwhelmingly loud resonant boom that fills the room, LOUD impact",
+                  "duration": 6.0,
+                  "influence": 1.0,
+              },
+              "airhorn": {
+                  "prompt": "Stadium compressed air horn blast, loud foghorn at a sports event, deep resonant air horn honk, celebration horn, single powerful blast",
+                  "duration": 3.0,
+                  "influence": 0.9,
+              },
+              "drum_roll": {
+                  "prompt": "Snare drum roll building to a crescendo and cymbal crash, orchestra percussion roll on a military snare drum, drumroll with finale cymbal hit",
+                  "duration": 5.0,
+                  "influence": 0.8,
+              },
+              "siren": {
+                  "prompt": "Loud police car siren wailing at close range, American cop car siren alternating between high wail and low yelp, emergency vehicle driving past with blaring siren, classic NYPD police siren wee-woo wee-woo getting louder, ambulance siren urgent",
+                  "duration": 5.0,
+                  "influence": 1.0,
+              },
+              "bell": {
+                  "prompt": "Loud school alarm bell ringing urgently, classic fire drill bell clanging rapidly and loudly, old-fashioned mechanical school bell ringing BRRRRRING at maximum volume, industrial alarm bell non-stop ringing, impossible to ignore",
+                  "duration": 5.0,
+                  "influence": 1.0,
+              },
+          }
+
+          os.makedirs("/tmp/gen-sounds", exist_ok=True)
+
+          for name, config in SOUNDS.items():
+              payload = {
+                  "text": config["prompt"],
+                  "duration_seconds": config["duration"],
+                  "prompt_influence": config["influence"],
+              }
+              data = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{API}/v1/sound-generation?output_format=mp3_44100_128",
+                  data=data,
+                  headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+              )
+              path = f"/tmp/gen-sounds/{name}.mp3"
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      audio = resp.read()
+                      with open(path, "wb") as f:
+                          f.write(audio)
+                      print(f"{name}.mp3 ({len(audio)} bytes, {config['duration']}s) — {config['prompt'][:60]}...")
+              except Exception as e:
+                  print(f"FAILED {name}: {e}")
+              time.sleep(1)
+
+          print("\nDone!")
+          PYEOF
+
+      - name: Sync to both platforms
+        run: |
+          for sound in alarm gentle-chime klaxon whistle buzzer gong airhorn drum_roll siren bell; do
+            src="/tmp/gen-sounds/${sound}.mp3"
+            [ -f "$src" ] || continue
+            # iOS
+            cp "$src" "native-ios/RandomTimer/Resources/Sounds/${sound}.mp3"
+            # Android (underscores)
+            android_name="${sound//-/_}"
+            cp "$src" "native-android/app/src/main/res/raw/${android_name}.mp3"
+            echo "Synced $sound"
+          done
+
+      - name: Verify
+        run: |
+          echo "=== Generated Sounds ==="
+          for f in /tmp/gen-sounds/*.mp3; do
+            SIZE=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f" 2>/dev/null)
+            echo "$SIZE bytes | $(basename $f)"
+          done
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: real-alarm-sounds
+          path: /tmp/gen-sounds/
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="feat/real-alarm-sounds-v2"
+          git checkout -b "$BRANCH"
+          git add native-ios/RandomTimer/Resources/Sounds/ native-android/app/src/main/res/raw/
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "feat(audio): regenerate alarm sounds with detailed ElevenLabs prompts"
+          git push origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" \
+            --title "feat(audio): proper alarm sounds — bell sounds like a bell" \
+            --body "Generated with highly specific ElevenLabs Sound Effects prompts. Each sound has a detailed description to ensure recognizable output."

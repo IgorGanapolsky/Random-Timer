@@ -3,8 +3,6 @@ name: PR State Machine
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-  check_suite:
-    types: [completed]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -12,8 +10,8 @@ on:
         required: false
 
 concurrency:
-  group: pr-state-machine-${{ github.event.pull_request.number || github.event.check_suite.pull_requests[0].number || github.event.check_suite.head_sha || github.run_id }}
-  cancel-in-progress: true
+  group: pr-state-machine-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   reconcile:
@@ -356,16 +354,6 @@ jobs:
               return `${pendingCount}/${requiredCount} required checks pending.`;
             }
 
-            function commitStatusState(stateLabel) {
-              if (stateLabel === "pr-state:ci_green") {
-                return "success";
-              }
-              if (stateLabel === "pr-state:blocked") {
-                return "failure";
-              }
-              return "pending";
-            }
-
             async function reconcilePr(prNumber) {
               const pr = (await github.rest.pulls.get({
                 owner,
@@ -386,7 +374,7 @@ jobs:
               const prUrl = pr.html_url;
 
               const required = await getRequiredContexts(baseRef);
-              const requiredContexts = required.contexts.filter((contextName) => contextName !== "pr/state-machine");
+              const requiredContexts = required.contexts;
 
               const checkRunMap = await getCheckRunMap(headSha);
               const statusContextMap = await getStatusContextMap(headSha);
@@ -427,15 +415,9 @@ jobs:
                 pendingCount
               );
 
-              await github.rest.repos.createCommitStatus({
-                owner,
-                repo,
-                sha: headSha,
-                state: commitStatusState(stateLabel),
-                context: "pr/state-machine",
-                description,
-                target_url: runUrl
-              });
+              core.info(
+                `PR #${prNumber} => ${stateLabel} (${description}) [required=${requiredContexts.length} passed=${passedCount} pending=${pendingCount} failed=${failedChecks.length}]`
+              );
 
               await setStateLabel(prNumber, stateLabel);
 

@@ -4,7 +4,7 @@ import os
 
 /// Main timer management class using Swift 6 concurrency
 @MainActor
-final class TimerManager: ObservableObject {
+final class TimerManager: ObservableObject { // swiftlint:disable:this no_observable_object
 
     // MARK: - Published State
 
@@ -82,6 +82,22 @@ final class TimerManager: ObservableObject {
 
     // MARK: - Public Methods
 
+    private static let activationRangeNudgeAppliedKey = "activation_first_run_range_nudge_applied"
+
+    /// Applies 20–60s range once for users on canonical 30–120 defaults who have not finished a timer yet.
+    func applyActivationPresetForFirstCompletionIfNeeded() {
+        if UserDefaults.standard.bool(forKey: Self.activationRangeNudgeAppliedKey) { return }
+        let done = UserDefaults.standard.bool(forKey: "hasCompletedFirstTimer")
+        let preset = config.applyingActivationPresetForFirstCompletionIfEligible(
+            hasCompletedFirstTimer: done
+        )
+        guard let next = preset else {
+            return
+        }
+        updateConfig(next)
+        UserDefaults.standard.set(true, forKey: Self.activationRangeNudgeAppliedKey)
+    }
+
     func updateConfig(_ newConfig: TimerConfig) {
         config = newConfig
 
@@ -97,6 +113,7 @@ final class TimerManager: ObservableObject {
             "sound_type": String(describing: newConfig.soundType),
             "repeat_enabled": newConfig.repeatEnabled,
             "voice_callouts_enabled": newConfig.voiceEnabled,
+            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
         ])
 
         Task {
@@ -128,13 +145,17 @@ final class TimerManager: ObservableObject {
 
         timerState = state
         if ProManager.shared.isPro && state.config.voiceEnabled {
-            AIVoiceCalloutService.shared.beginSession(totalDurationSeconds: Int(state.targetDuration))
+            AIVoiceCalloutService.shared.beginSession(
+                totalDurationSeconds: Int(state.targetDuration),
+                gender: state.config.voiceGender
+            )
         }
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,
             "max_duration": config.maxDuration,
             "target_duration": randomDuration,
+            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
         ])
         AnalyticsService.shared.trackFirstTimerConfiguredIfNeeded()
 
@@ -172,7 +193,13 @@ final class TimerManager: ObservableObject {
     }
 
     func dismissAlarm() async {
-        AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed)
+        // Calculate alarm response time (seconds between alarm_triggered and dismissed)
+        var dismissProperties: [String: Any] = [:]
+        if let alarmStart = timerState?.alarmStartedAt {
+            let responseTime = Date().timeIntervalSince(alarmStart)
+            dismissProperties[AnalyticsProperties.alarmResponseTime] = round(responseTime * 10) / 10
+        }
+        AnalyticsService.shared.track(AnalyticsEvents.alarmDismissed, properties: dismissProperties)
         // Track completion — user heard the alarm and acknowledged it
         if let state = timerState, state.status == .alarm {
             StoreReviewManager.shared.recordCompletion()
@@ -221,6 +248,14 @@ final class TimerManager: ObservableObject {
 
     func restartTimer() async {
         let currentRound = timerState?.roundCount ?? 1
+        let roundDuration = timerState?.targetDuration ?? 0
+
+        // Fire loop_round_completed before restarting
+        AnalyticsService.shared.track(AnalyticsEvents.loopRoundCompleted, properties: [
+            AnalyticsProperties.roundNumber: currentRound,
+            AnalyticsProperties.roundDurationSeconds: roundDuration,
+        ])
+
         // Restart with a NEW random duration (used after alarm completes with loop)
         notificationService.stopAlarmSound()
         await cancelTimer()
@@ -231,6 +266,18 @@ final class TimerManager: ObservableObject {
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
+        // Track abandonment when timer is running (not alarm/complete) and app goes to background
+        if let state = timerState,
+           state.status != .alarm && state.status != .complete {
+            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+                "target_duration": state.targetDuration,
+                "remaining_duration": state.remainingDuration,
+                "status": state.status.rawValue,
+                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonAppBackgrounded,
+                AnalyticsProperties.abandonSource: "app_lifecycle",
+            ])
+        }
+
         guard let state = timerState, state.status == .alarm else { return }
         // Silence alarm — stops sound/vibration AND marks as silenced so
         // handleForeground() won't restart the alarm when the user returns.
@@ -283,7 +330,8 @@ final class TimerManager: ObservableObject {
                     isAlarmSilenced = true
 
                     if state.config.repeatEnabled {
-                        let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                        let noLimit = state.config.repeatRounds == 0
+                        let shouldContinue = noLimit || state.roundCount < state.config.repeatRounds
                         if shouldContinue {
                             await restartTimer()
                         } else {
@@ -455,7 +503,10 @@ final class TimerManager: ObservableObject {
         await startLiveActivity(state: newState)
 
         // Schedule notification with the configured alarm sound
-        await notificationService.scheduleAlarmNotification(at: newState.endDate, soundType: currentState.config.soundType)
+        await notificationService.scheduleAlarmNotification(
+            at: newState.endDate,
+            soundType: currentState.config.soundType
+        )
 
         // Start countdown
         startCountdown()
@@ -476,7 +527,7 @@ final class TimerManager: ObservableObject {
     }
 
     func previewCommandCue() {
-        AIVoiceCalloutService.shared.previewCommandCue()
+        AIVoiceCalloutService.shared.previewCommandCue(gender: config.voiceGender)
     }
 
     func updatePreviewVolume() {
@@ -619,7 +670,8 @@ final class TimerManager: ObservableObject {
                 "target_duration": state.targetDuration,
             ])
 
-            Logger.timer.info("ALARM! Playing sound type: \(String(describing: state.config.soundType)), volume: \(state.config.volume)")
+            let soundDesc = String(describing: state.config.soundType)
+            Logger.timer.info("ALARM! Playing sound type: \(soundDesc), volume: \(state.config.volume)")
             notificationService.playAlarmSound(
                 type: state.config.soundType,
                 volume: state.config.volume

@@ -1,0 +1,33 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: First-run activation flow — quick-start banner visible, timer completes, banner gone
+- clearState
+- launchApp
+
+# First-run: quick-start banner should be visible
+- assertVisible:
+    text: '.*30s.*2min.*drill.*'
+
+# Random explainer text should be visible
+- assertVisible:
+    text: '.*random duration.*'
+
+# Start Timer button should be visible
+- assertVisible: 'Start Timer'
+
+# Tap Start — timer starts with new 30s-120s defaults
+- tapOn: 'Start Timer'
+
+# Timer screen should appear
+- assertVisible:
+    text: '.*Pause.*'
+    optional: true
+
+# Wait for the timer to complete (max 130s for 120s timer + alarm)
+- extendedWaitUntil:
+    visible: 'Start Timer'
+    timeout: 140000
+
+# After completing, the quick-start banner should NOT appear
+- assertNotVisible:
+    text: '.*30s.*2min.*drill.*'

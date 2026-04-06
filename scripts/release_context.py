@@ -46,6 +46,8 @@ IPAD_LARGE_DIMENSIONS = {
 }
 
 REQUIRED_IPAD_FILES = {"5_ipad_setup.png", "6_ipad_running.png", "7_ipad_stopped.png"}
+REQUIRED_IPHONE_FILES = {"1_setup.png", "2_active.png", "3_alarm.png", "4_running.png"}
+DISALLOWED_SCREENSHOT_FILES = {"3_pro.png"}
 
 REQUIRED_METADATA_FILES = {
     "description": "description.txt",
@@ -151,15 +153,24 @@ def collect_screenshot_inventory(screenshots_dir: Path) -> Dict[str, Any]:
         )
 
     duplicate_groups = [names for names in hash_to_files.values() if len(names) > 1]
+    missing_required_iphone_files = sorted(
+        [name for name in REQUIRED_IPHONE_FILES if not (screenshots_dir / name).is_file()]
+    )
     missing_required_ipad_files = sorted(
         [name for name in REQUIRED_IPAD_FILES if not (screenshots_dir / name).is_file()]
     )
+    disallowed_files = sorted(
+        [name for name in DISALLOWED_SCREENSHOT_FILES if (screenshots_dir / name).is_file()]
+    )
+    expected_total = len(REQUIRED_IPHONE_FILES) + len(REQUIRED_IPAD_FILES)
 
     passes = {
-        "total_minimum": len(files) >= 6,
+        "total_exact": len(files) == expected_total,
         "iphone_large_minimum": iphone_count >= 3,
         "ipad_large_minimum": ipad_count >= 3,
+        "required_iphone_files": len(missing_required_iphone_files) == 0,
         "required_ipad_files": len(missing_required_ipad_files) == 0,
+        "no_disallowed_files": len(disallowed_files) == 0,
         "no_duplicate_image_bytes": len(duplicate_groups) == 0,
     }
 
@@ -169,7 +180,9 @@ def collect_screenshot_inventory(screenshots_dir: Path) -> Dict[str, Any]:
         "iphone_large_count": iphone_count,
         "ipad_large_count": ipad_count,
         "other_count": other_count,
+        "missing_required_iphone_files": missing_required_iphone_files,
         "missing_required_ipad_files": missing_required_ipad_files,
+        "disallowed_files": disallowed_files,
         "duplicate_groups": duplicate_groups,
         "passes": passes,
         "files": records,

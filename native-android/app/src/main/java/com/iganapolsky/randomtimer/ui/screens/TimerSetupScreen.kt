@@ -17,6 +17,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,8 +35,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -65,21 +69,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
+import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
-import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
+import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
+import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -132,16 +140,19 @@ fun TimerSetupScreen(
     onStartTimer: () -> Unit,
     onSoundPreview: (SoundType) -> Unit,
     onVolumePreview: (Float) -> Unit,
-    onCommandCuePreview: () -> Unit,
+    onCommandCuePreview: (VoiceGender) -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: () -> Unit = {},
+    onFeatureGateHit: (String) -> Unit = {},
+    onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(!isPro) }
     var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
@@ -151,6 +162,21 @@ fun TimerSetupScreen(
 
     LaunchedEffect(isPro) {
         showArsenal = true
+    }
+
+    LaunchedEffect(
+        hasCompletedFirstTimer,
+        config.useExtendedRange,
+        config.minSeconds,
+        config.maxSeconds,
+    ) {
+        val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("activation_first_run_range_nudge_applied", false)) return@LaunchedEffect
+        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        if (next != null) {
+            prefs.edit().putBoolean("activation_first_run_range_nudge_applied", true).apply()
+            onConfigChange(next)
+        }
     }
 
     LaunchedEffect(config.useExtendedRange, config.minSeconds, config.maxSeconds) {
@@ -206,6 +232,8 @@ fun TimerSetupScreen(
         )
     }
 
+    var bannerDismissed by remember { mutableStateOf(false) }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isCompactHeight = TimerSetupLayoutPolicy.isCompactHeightViewport(maxHeight.value.toInt())
         val spacing = if (isCompactHeight) SetupSpacing.compact else SetupSpacing.regular
@@ -236,6 +264,8 @@ fun TimerSetupScreen(
                     onClick = onStartTimer,
                     modifier =
                         Modifier
+                            .semantics { testTagsAsResourceId = true }
+                            .testTag("start_timer")
                             .padding(horizontal = spacing.outerHorizontal)
                             .padding(bottom = 16.dp, top = 8.dp)
                             .navigationBarsPadding()
@@ -261,6 +291,38 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
+                if (!hasCompletedFirstTimer && !bannerDismissed) {
+                    item {
+                        Card(
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                                Text(
+                                    text = "Tap Start for a random 20s\u20131min drill. Customize later.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(end = 32.dp),
+                                )
+                                IconButton(
+                                    onClick = { bannerDismissed = true },
+                                    modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Dismiss",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -306,7 +368,10 @@ fun TimerSetupScreen(
                                             Modifier.combinedClickable(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
-                                                onClick = { onUpgradeTap() },
+                                                onClick = {
+                                                    onFeatureGateHit("extended_range")
+                                                    onUpgradeTap()
+                                                },
                                                 onLongClick = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                     onSecretUnlock()
@@ -357,6 +422,12 @@ fun TimerSetupScreen(
                                     )
                                 }
                             }
+                            Spacer(modifier = Modifier.height(spacing.headerToContent))
+                            Text(
+                                text = "Each timer picks a random duration in your range \u2014 stay ready for anything.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
                             val maxRange =
@@ -466,13 +537,13 @@ fun TimerSetupScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "\uD83D\uDCE2 AI Voice Callouts",
+                                        text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
                                     Text(
-                                        text = "Elapsed-time voice prompts during the timer",
+                                        text = "Time checks and command cues that keep you sharp under pressure",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TimerColors.TextMuted,
                                     )
@@ -486,7 +557,7 @@ fun TimerSetupScreen(
                                         Surface(
                                             onClick = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onCommandCuePreview()
+                                                onCommandCuePreview(config.voiceGender)
                                             },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -514,7 +585,10 @@ fun TimerSetupScreen(
                                         )
                                     } else {
                                         Surface(
-                                            onClick = onUpgradeTap,
+                                            onClick = {
+                                                onFeatureGateHit("voice_callouts")
+                                                onUpgradeTap()
+                                            },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
@@ -539,41 +613,42 @@ fun TimerSetupScreen(
                                 }
                             }
 
-                            // Voice Gender selector (only shown when voice is enabled)
-                            if (config.voiceEnabled && isPro) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    VoiceGender.entries.forEach { gender ->
-                                        FilterChip(
-                                            selected = config.voiceGender == gender,
-                                            onClick = { updateConfig(voiceGender = gender) },
-                                            label = {
-                                                Text(
-                                                    if (gender == VoiceGender.MALE) {
-                                                        "Male"
-                                                    } else {
-                                                        "Female"
-                                                    },
-                                                )
-                                            },
-                                            colors =
-                                                FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                    selectedLabelColor = TimerColors.AccentPrimary,
-                                                ),
-                                            border =
-                                                FilterChipDefaults.filterChipBorder(
-                                                    selectedBorderColor = TimerColors.AccentPrimary,
-                                                    enabled = true,
-                                                    selected = config.voiceGender == gender,
-                                                ),
-                                        )
-                                    }
+                            // Voice Gender selector stays visible so free users can preview both voices.
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                VoiceGender.entries.forEach { gender ->
+                                    FilterChip(
+                                        selected = config.voiceGender == gender,
+                                        onClick = {
+                                            updateConfig(voiceGender = gender)
+                                            onVoiceGenderSelected(gender)
+                                        },
+                                        label = {
+                                            Text(
+                                                if (gender == VoiceGender.MALE) {
+                                                    "Male"
+                                                } else {
+                                                    "Female"
+                                                },
+                                            )
+                                        },
+                                        colors =
+                                            FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedLabelColor = TimerColors.AccentPrimary,
+                                            ),
+                                        border =
+                                            FilterChipDefaults.filterChipBorder(
+                                                selectedBorderColor = TimerColors.AccentPrimary,
+                                                enabled = true,
+                                                selected = config.voiceGender == gender,
+                                            ),
+                                    )
                                 }
                             }
 
@@ -585,7 +660,7 @@ fun TimerSetupScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 SoundTypeButton(
-                                    label = "\uD83D\uDCAA Intense",
+                                    label = "\uD83D\uDD25 Fire Alarm",
                                     selected = config.soundType == SoundType.INTENSE,
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -738,7 +813,10 @@ fun TimerSetupScreen(
                                         }
                                     } else {
                                         Surface(
-                                            onClick = onUpgradeTap,
+                                            onClick = {
+                                                onFeatureGateHit("pro_sounds")
+                                                onUpgradeTap()
+                                            },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                         ) {
@@ -847,6 +925,7 @@ fun TimerSetupScreen(
                                 },
                                 onPreviewSound = onSoundPreview,
                                 onUpgradeTap = onUpgradeTap,
+                                onFeatureGateHit = onFeatureGateHit,
                             )
                         }
                     }
@@ -871,6 +950,7 @@ fun TimerSetupScreen(
                         },
                         onPreviewSound = onSoundPreview,
                         onUpgradeTap = onUpgradeTap,
+                        onFeatureGateHit = onFeatureGateHit,
                     )
                 }
             }
@@ -899,6 +979,7 @@ private fun SoundArsenalCard(
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
     onUpgradeTap: () -> Unit,
+    onFeatureGateHit: (String) -> Unit = {},
 ) {
     GlassCard(
         modifier =
@@ -965,7 +1046,11 @@ private fun SoundArsenalCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = TimerColors.AccentPrimary,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(onClick = onUpgradeTap),
+                        modifier =
+                            Modifier.clickable(onClick = {
+                                onFeatureGateHit("pro_sounds")
+                                onUpgradeTap()
+                            }),
                     )
                 }
             }
@@ -1309,7 +1394,7 @@ private fun TimerSetupScreenPreview() {
             onStartTimer = {},
             onSoundPreview = { _ -> },
             onVolumePreview = { _ -> },
-            onCommandCuePreview = {},
+            onCommandCuePreview = { _ -> },
         )
     }
 }

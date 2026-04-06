@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
+IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
@@ -67,6 +68,17 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
 
 
+def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    compute_section = source.split("- name: Compute monotonic Play version code", 1)[1].split(
+        "- name: Create google-services.json", 1
+    )[0]
+    assert "scripts/compute_android_release_version_code.py" in compute_section
+    assert "--timeout-seconds 180" in compute_section
+    assert "--request-retries 3" in compute_section
+
+
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
@@ -104,6 +116,18 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     assert 'fastlane metadata version:"$IOS_VERSION" skip_app_version_update:true' in source
     assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
     assert "fastlane submit_review" not in source
+
+
+def test_ios_metadata_sync_falls_back_to_live_storefront_when_metadata_only_version_is_review_locked():
+    source = IOS_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    resolve_section = source.split("- name: Resolve editable App Store version", 1)[1].split(
+        "- name: Strict screenshot replacement + metadata upload", 1
+    )[0]
+    assert 'if [[ "$IOS_METADATA_ONLY" == "true" ]]' in resolve_section
+    assert "from scripts.asc_resolve_version import _is_editable_state" in resolve_section
+    assert "selected version state '$SELECTED_STATE' is not editable" in resolve_section
+    assert 'SELECTED_VERSION="LIVE"' in resolve_section
 
 
 def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():

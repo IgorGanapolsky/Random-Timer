@@ -14,14 +14,10 @@ def _write_png(path: Path, size: tuple[int, int], color: tuple[int, int, int]) -
 def test_generate_android_store_creatives_writes_expected_outputs(tmp_path: Path) -> None:
     _write_png(tmp_path / "branding" / "app-icon-source.png", (1024, 1024), (20, 30, 40))
 
-    raw_colors = {
-        "android-setup.png": (10, 40, 70),
-        "android-active.png": (40, 70, 100),
-        "android-settings.png": (70, 100, 130),
-        "android-loop.png": (100, 130, 160),
-    }
-    for name, color in raw_colors.items():
-        _write_png(tmp_path / "screenshots" / name, (1080, 2340), color)
+    # Pre-populate the screenshots dir with raw source files (the new script reads from phoneScreenshots/)
+    screenshots_dir = tmp_path / "native-android/fastlane/metadata/android/en-US/images/phoneScreenshots"
+    for filename in creatives.CREATIVE_COPY:
+        _write_png(screenshots_dir / filename, (1080, 2340), (40, 70, 100))
 
     report = creatives.generate(tmp_path)
 
@@ -34,8 +30,7 @@ def test_generate_android_store_creatives_writes_expected_outputs(tmp_path: Path
     play_icon = tmp_path / "native-android/fastlane/metadata/android/en-US/images/icon.png"
     assert Image.open(play_icon).size == (1024, 1024)
 
-    screenshots_dir = tmp_path / "native-android/fastlane/metadata/android/en-US/images/phoneScreenshots"
-    for filename in creatives.SCREENSHOT_MAP:
+    for filename in creatives.CREATIVE_COPY:
         assert Image.open(screenshots_dir / filename).size == creatives.PLAY_SCREENSHOT_SIZE
 
     feature_graphic = (
@@ -45,8 +40,9 @@ def test_generate_android_store_creatives_writes_expected_outputs(tmp_path: Path
 
 
 def test_generate_android_store_creatives_fails_without_canonical_icon(tmp_path: Path) -> None:
-    for name in creatives.SCREENSHOT_MAP.values():
-        _write_png(tmp_path / "screenshots" / name, (1080, 2340), (12, 34, 56))
+    screenshots_dir = tmp_path / "native-android/fastlane/metadata/android/en-US/images/phoneScreenshots"
+    for filename in creatives.CREATIVE_COPY:
+        _write_png(screenshots_dir / filename, (1080, 2340), (12, 34, 56))
 
     try:
         creatives.generate(tmp_path)

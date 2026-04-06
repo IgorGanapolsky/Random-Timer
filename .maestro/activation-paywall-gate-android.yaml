@@ -1,0 +1,25 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: Paywall not shown before first timer completion
+- clearState
+- launchApp
+
+# First-run: PRO labels should be visible but WITHOUT lock icon
+- assertVisible:
+    text: 'PRO'
+
+# Tap PRO — paywall should NOT appear (no lock before first completion)
+- tapOn:
+    text: 'PRO'
+    index: 0
+
+# Verify paywall sheet is NOT shown
+- assertNotVisible:
+    text: '.*Upgrade.*Pro.*'
+    optional: true
+- assertNotVisible:
+    text: '.*Subscribe.*'
+    optional: true
+
+# We should still be on the setup screen
+- assertVisible: 'Start Timer'

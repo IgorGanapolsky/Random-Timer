@@ -349,6 +349,29 @@ class ProManager
                     }
                 }
             }
+            // Track purchase_failed for non-success, non-cancellation outcomes
+            if (!hasPurchased && result.responseCode != BillingClient.BillingResponseCode.USER_CANCELED) {
+                val failedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: "unknown"
+                val reason =
+                    when (result.responseCode) {
+                        BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
+                        BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
+                        BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
+                        BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> "billing_unavailable"
+                        BillingClient.BillingResponseCode.ERROR -> "billing_error"
+                        BillingClient.BillingResponseCode.NETWORK_ERROR -> "network_error"
+                        else -> "unknown_${result.responseCode}"
+                    }
+                analyticsService.track(
+                    AnalyticsEvents.PURCHASE_FAILED,
+                    mapOf(
+                        AnalyticsProperties.REASON to reason,
+                        AnalyticsProperties.PRODUCT_ID to failedProductId,
+                        AnalyticsProperties.RESPONSE_CODE to result.responseCode,
+                        AnalyticsProperties.DEBUG_MESSAGE to (result.debugMessage ?: ""),
+                    ),
+                )
+            }
             if (hasPurchased) {
                 analyticsService.track(
                     AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,

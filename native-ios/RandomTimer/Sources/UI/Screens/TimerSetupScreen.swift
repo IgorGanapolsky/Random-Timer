@@ -7,6 +7,8 @@ struct TimerSetupScreen: View {
     @State private var showPaywall = false
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
+    @State private var screenAppearedAt: Date?
+    @State private var bannerDismissed = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -22,7 +24,7 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 // Zone 1: Standard Ops
                 Text("STANDARD OPS")
                     .font(.caption2)
@@ -30,6 +32,25 @@ struct TimerSetupScreen: View {
                     .foregroundColor(.textMuted)
                     .padding(.top, 16)
                     .padding(.leading, 4)
+
+                if !hasCompletedFirstTimer && !bannerDismissed {
+                    HStack {
+                        Text("Tap Start for a random 20s\u{2013}1min drill. Customize later.")
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Button {
+                            bannerDismissed = true
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
 
                 // 1. Timer Range Card
                 GlassCard {
@@ -43,10 +64,11 @@ struct TimerSetupScreen: View {
                             Spacer()
 
                             if !proManager.isPro {
-                                Text("PRO: 1H \u{1F512}")
+                                Text(hasCompletedFirstTimer ? "PRO: 1H \u{1F512}" : "PRO: 1H")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
                                     .onTapGesture {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .rangeGate)
                                     }
                             } else {
@@ -83,6 +105,10 @@ struct TimerSetupScreen: View {
                                 }
                             }
                         }
+
+                        Text("Each timer picks a random duration in your range \u{2014} stay ready for anything.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
 
                         Spacer().frame(height: 16)
 
@@ -129,14 +155,14 @@ struct TimerSetupScreen: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                
-                                Text("Elapsed-time voice prompts during the timer")
+
+                                Text("Time checks and command cues that keep you sharp under pressure")
                                     .font(.caption2)
                                     .foregroundColor(.textMuted)
                             }
-                            
+
                             Spacer()
-                            
+
                             HStack(spacing: 8) {
                                 if proManager.isPro {
                                     // Pro users see only the voice toggle
@@ -161,11 +187,14 @@ struct TimerSetupScreen: View {
                                     }
 
                                     Button {
-                                        presentPaywall(entryPoint: .soundGate)
+                                        guard hasCompletedFirstTimer else { return }
+                                        presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            Image(systemName: "lock.fill")
+                                            if hasCompletedFirstTimer {
+                                                Image(systemName: "lock.fill")
+                                            }
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -180,10 +209,18 @@ struct TimerSetupScreen: View {
                         .padding(.vertical, 8)
                         .opacity(proManager.isPro ? 1.0 : 0.6)
 
-                        if config.voiceEnabled && proManager.isPro {
+                        if config.voiceEnabled || !proManager.isPro {
                             Picker("Voice", selection: Binding(
                                 get: { config.voiceGender },
-                                set: { updateConfig(voiceGender: $0) }
+                                set: { newGender in
+                                    updateConfig(voiceGender: newGender)
+                                    AnalyticsService.shared.track(
+                                        AnalyticsEvents.voiceGenderSelected,
+                                        properties: [
+                                            AnalyticsProperties.gender: newGender.rawValue,
+                                        ]
+                                    )
+                                }
                             )) {
                                 Text("Male").tag(VoiceGender.male)
                                 Text("Female").tag(VoiceGender.female)
@@ -197,7 +234,7 @@ struct TimerSetupScreen: View {
                         // Core Sounds
                         HStack(spacing: 12) {
                             SoundTypeButton(
-                                label: "Intense",
+                                label: "Fire Alarm",
                                 systemImage: "flame.fill",
                                 selected: config.soundType == .intense,
                                 onTap: {
@@ -260,9 +297,9 @@ struct TimerSetupScreen: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.textPrimary)
-                            
+
                             Spacer()
-                            
+
                             Toggle("Loop Enabled", isOn: Binding(
                                 get: { config.repeatEnabled },
                                 set: { updateConfig(repeatEnabled: $0) }
@@ -270,7 +307,7 @@ struct TimerSetupScreen: View {
                             .tint(.accentPrimary)
                             .labelsHidden()
                         }
-                        
+
                         if config.repeatEnabled {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -278,7 +315,7 @@ struct TimerSetupScreen: View {
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                                    
+
                                     Text(
                                         repeatLoopDetailSummary(
                                             isPro: proManager.isPro,
@@ -288,9 +325,9 @@ struct TimerSetupScreen: View {
                                         .font(.caption2)
                                         .foregroundColor(.accentPrimary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 if proManager.isPro {
                                     Stepper("", value: Binding(
                                         get: { config.repeatRounds },
@@ -299,11 +336,14 @@ struct TimerSetupScreen: View {
                                     .labelsHidden()
                                 } else {
                                     Button {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            Image(systemName: "lock.fill")
+                                            if hasCompletedFirstTimer {
+                                                Image(systemName: "lock.fill")
+                                            }
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -325,13 +365,13 @@ struct TimerSetupScreen: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
-                    
+
                     if !proManager.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.textMuted)
                     }
-                    
+
                     Spacer()
 
                     Button {
@@ -339,7 +379,9 @@ struct TimerSetupScreen: View {
                             showArsenal.toggle()
                         }
                     } label: {
-                        Text(showArsenal ? "Hide Sound Arsenal" : (proManager.isPro ? "View Sound Arsenal" : "Preview Sounds"))
+                        let label = showArsenal ? "Hide Sound Arsenal"
+                            : (proManager.isPro ? "View Sound Arsenal" : "Preview Sounds")
+                        Text(label)
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.accentPrimary)
@@ -401,6 +443,7 @@ struct TimerSetupScreen: View {
                                         .foregroundColor(.textMuted)
 
                                     Button("Unlock Pro") {
+                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     }
                                     .font(.caption2.weight(.semibold))
@@ -440,6 +483,8 @@ struct TimerSetupScreen: View {
                 .interactiveDismissDisabled(false)
         }
         .onAppear {
+            timerManager.applyActivationPresetForFirstCompletionIfNeeded()
+            screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true
             persistActiveRangeProfile(
@@ -447,6 +492,16 @@ struct TimerSetupScreen: View {
                 maxSeconds: config.maxSeconds,
                 useExtendedRange: config.useExtendedRange
             )
+        }
+        .onDisappear {
+            if let appearedAt = screenAppearedAt {
+                let dwellSeconds = Date().timeIntervalSince(appearedAt)
+                AnalyticsService.shared.track(AnalyticsEvents.screenDwellTime, properties: [
+                    AnalyticsProperties.screen: "timer_setup",
+                    AnalyticsProperties.durationSeconds: round(dwellSeconds * 10) / 10,
+                ])
+            }
+            screenAppearedAt = nil
         }
         .onChange(of: proManager.isPro) { _, isPro in
             if isPro {
@@ -506,7 +561,14 @@ struct TimerSetupScreen: View {
         return repeatRounds == 0 ? "Infinite Rounds" : "\(repeatRounds) Rounds"
     }
 
-    private func presentPaywall(entryPoint: PaywallEntryPoint) {
+    private func presentPaywall(entryPoint: PaywallEntryPoint, feature: String? = nil) {
+        let featureName = feature ?? entryPoint.featureGateName
+        AnalyticsService.shared.track(
+            AnalyticsEvents.featureGateHit,
+            properties: [
+                AnalyticsProperties.feature: featureName,
+            ]
+        )
         paywallEntryPoint = entryPoint
         showPaywall = true
     }
@@ -831,7 +893,7 @@ private struct SoundTypeButton: View {
 private struct VolumeSliderView: View {
     let value: Float
     let onChanged: (Float) -> Void
-    var onSliding: ((Float) -> Void)? = nil
+    var onSliding: ((Float) -> Void)?
     var systemImage: String = "speaker.wave.3.fill"
 
     var body: some View {

@@ -7,10 +7,13 @@ import PostHog
 import AdServices
 #endif
 
+// Large service: funnel + attribution + lifecycle. Split in a dedicated refactor if it grows further.
+// swiftlint:disable file_length
+
 /// Analytics Service for PostHog integration
 /// To enable: Add PostHog Swift SDK via SPM (https://github.com/PostHog/posthog-ios)
 @MainActor
-final class AnalyticsService {
+final class AnalyticsService { // swiftlint:disable:this type_body_length
     static let shared = AnalyticsService()
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "RandomTimer", category: "Analytics")
 
@@ -104,6 +107,8 @@ final class AnalyticsService {
     func initialize() {
         guard !initialized else { return }
         guard !apiKey.isEmpty else {
+            let distinctId = getOrCreateDistinctId()
+            CrashReportingService.shared.setUserId(distinctId)
             logger.notice("No API key configured - analytics disabled")
             return
         }
@@ -113,11 +118,24 @@ final class AnalyticsService {
         // Emit lifecycle events manually so every event includes our live/dev context tags.
         config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
+        // Session replay: live device only; enable "Record user sessions" in PostHog.
+        // SwiftUI needs screenshotMode. Masking protects text/images. Tune volume in PostHog project settings
+        // (SDK has no client sampleRate on this pinned version).
+        if !isInternalUser {
+            config.sessionReplay = true
+            config.sessionReplayConfig.maskAllTextInputs = true
+            config.sessionReplayConfig.maskAllImages = true
+            config.sessionReplayConfig.captureLogs = true
+            config.sessionReplayConfig.captureNetworkTelemetry = true
+            config.sessionReplayConfig.screenshotMode = true
+            config.sessionReplayConfig.throttleDelay = 1.0
+        }
         PostHogSDK.shared.setup(config)
 #endif
         initialized = true
         let distinctId = getOrCreateDistinctId()
         identify(userId: distinctId, properties: analyticsContextProperties)
+        CrashReportingService.shared.setUserId(distinctId)
         trackApplicationLifecycleEvents()
         logger.info("PostHog initialized")
 
@@ -206,6 +224,7 @@ final class AnalyticsService {
 
     // MARK: - Apple Search Ads Attribution
 
+    // swiftlint:disable:next function_body_length
     func fetchAppleSearchAdsAttribution() {
         guard initialized else { return }
         guard !UserDefaults.standard.bool(forKey: appleAdsAttributionFetchedKey) else { return }
@@ -217,14 +236,19 @@ final class AnalyticsService {
                 return
             }
 
-            var request = URLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
+            guard let adsUrl = URL(string: "https://api-adservices.apple.com/api/v1/") else {
+                logger.error("Apple Ads attribution: invalid API URL")
+                return
+            }
+            var request = URLRequest(url: adsUrl)
             request.httpMethod = "POST"
             request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
             request.httpBody = Data(token.utf8)
 
-            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
                 guard let data = data, error == nil else {
-                    self?.logger.error("Apple Ads attribution request failed: \(error?.localizedDescription ?? "unknown")")
+                    let message = error?.localizedDescription ?? "unknown"
+                    self?.logger.error("Apple Ads attribution request failed: \(message)")
                     return
                 }
 
@@ -269,7 +293,8 @@ final class AnalyticsService {
                     )
                     PostHogSDK.shared.capture(AnalyticsEvents.appleAdsAttribution, properties: attribution)
 #endif
-                    self.logger.info("Apple Ads attribution captured: campaign=\(attribution["utm_campaign"] as? String ?? "?")")
+                    let campaign = attribution["utm_campaign"] as? String ?? "?"
+                    self.logger.info("Apple Ads attribution captured: campaign=\(campaign)")
                 }
             }.resume()
         }
@@ -359,9 +384,22 @@ enum AnalyticsEvents {
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
+    // Feature gates & voice
+    static let voiceGenderSelected = "voice_gender_selected"
+    static let featureGateHit = "feature_gate_hit"
+
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
     static let appleAdsAttribution = "apple_ads_attribution"
+
+    // Loop
+    static let loopRoundCompleted = "loop_round_completed"
+
+    // Purchase
+    static let purchaseFailed = "purchase_failed"
+
+    // Screen engagement
+    static let screenDwellTime = "screen_dwell_time"
 
     // Onboarding Funnel
     static let firstOpen = "first_open"
@@ -377,14 +415,23 @@ enum AnalyticsProperties {
     static let dismissMethod = "dismiss_method"
     static let productId = "product_id"
     static let entitlementLevel = "entitlement_level"
+    static let gender = "gender"
+    static let feature = "feature"
+    static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"
     static let runtimeTarget = "runtime_target"
+    static let roundNumber = "round_number"
+    static let roundDurationSeconds = "round_duration_seconds"
+    static let durationSeconds = "duration_seconds"
+    static let screen = "screen"
+    static let reason = "reason"
 }
 
 enum AnalyticsValues {
     static let abandonReasonUserCancelled = "user_cancelled"
+    static let abandonReasonAppBackgrounded = "app_backgrounded"
     static let abandonReasonStaleRestoreExpired = "stale_restore_expired"
     static let abandonSourceTimerControls = "timer_controls"
     static let abandonSourceStateRestore = "state_restore"
