@@ -171,12 +171,13 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
 def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
-    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
     assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
     assert "Voice Callouts" in ios_setup
-    assert expected_supporting_copy in android_setup
-    assert expected_supporting_copy in ios_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in ios_setup
+    assert "VoiceGender.entries.forEach" in android_setup
+    assert "horizontalArrangement = Arrangement.spacedBy(8.dp)" in android_setup
+    assert "onCommandCuePreview(config.voiceGender)" in android_setup
 
 
 def test_sound_arsenal_is_expanded_by_default_for_free_users():
