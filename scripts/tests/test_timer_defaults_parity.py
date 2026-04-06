@@ -52,6 +52,14 @@ def _load_runtime_manifest() -> dict:
     return json.loads(RUNTIME_MANIFEST.read_text(encoding="utf-8"))
 
 
+def _assert_in_order(source: str, *parts: str) -> None:
+    cursor = 0
+    for part in parts:
+        cursor = source.find(part, cursor)
+        assert cursor != -1
+        cursor += len(part)
+
+
 def _ios_catalog_filenames(catalog: dict) -> set[str]:
     return (
         {catalog["previewElapsed"]["filename"]}
@@ -75,15 +83,21 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert re.search(
-        r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,\s*\n\s*maxSeconds = 30,",
+    _assert_in_order(
         android_config,
-        re.DOTALL,
+        "val DEFAULT =",
+        "TimerConfig(",
+        "minSeconds = 5,",
+        "maxSeconds = 30,",
     )
     assert "private fun Preferences.toTimerConfig()" in android_repository
     assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 30") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
-    assert re.search(r"minSeconds: Int = 0,\n\s*maxSeconds: Int = 30,", ios_models)
+    _assert_in_order(
+        ios_models,
+        "minSeconds: Int = 0,",
+        "maxSeconds: Int = 30,",
+    )
     assert "maxSecondsFree = 300" in ios_models
 
 
