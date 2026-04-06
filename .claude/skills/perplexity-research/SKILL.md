@@ -60,3 +60,4 @@ This skill augments existing workflows:
 - Perplexity Computer (cloud worker) is NOT controllable via this API — it's a separate Perplexity product requiring their web UI
 - Comet browser is a Perplexity-internal component, not externally launchable
 - API rate limits apply per your Perplexity subscription tier
+- HTTP **401** from `api.perplexity.ai` may mean **`insufficient_quota`** (plan/billing), not a missing key — check [Perplexity API settings](https://www.perplexity.ai/settings/api). Scripts must load `.env` via `repo_dotenv` (or export `PERPLEXITY_API_KEY`) because bare `os.environ` in CI/agents often has no key.

@@ -60,7 +60,7 @@ When a task depends on credentials, the agent must verify local and CI credentia
 
 ### Operating Budget Mandate (Effective March 2, 2026)
 
-**Hard budget cap: `$10 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
+**Hard budget cap: `$20 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
 
 Enforcement rules:
 - Prefer zero-cost approaches first (existing CI minutes, local tooling, OSS, existing subscriptions).
