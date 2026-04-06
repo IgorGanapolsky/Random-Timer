@@ -169,7 +169,7 @@ jobs:
         with:
           strategy: init
           path: ${{ inputs.wiki_path }}
-          token: ${{ secrets.PROJECT_PAT }}
+          token: ${{ github.token }}
 
       - name: Create issue from report
         if: inputs.issue_title != '' && inputs.issue_content_path != ''
