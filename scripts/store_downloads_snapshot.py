@@ -12,8 +12,11 @@ import argparse
 import datetime as dt
 import json
 import os
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+_POSTHOG_RETRYABLE_STATUS = frozenset({429, 502, 503, 504})
 
 LIVE_EVENTS_PREDICATE = """
 (
@@ -37,35 +40,63 @@ def _requests_module():
         return None
 
 
-def posthog_query(query: str, api_key: str, project_id: str, errors: List[str]) -> Optional[Dict[str, Any]]:
-    """Execute a HogQL query and return JSON payload."""
+def posthog_query(
+    query: str,
+    api_key: str,
+    project_id: str,
+    errors: List[str],
+    *,
+    timeout: float = 90.0,
+    max_retries: int = 3,
+) -> Optional[Dict[str, Any]]:
+    """Execute a HogQL query and return JSON payload.
+
+    Retries on transient PostHog/network failures (504s, timeouts) with backoff.
+    """
     requests = _requests_module()
     if requests is None:
         errors.append("missing_dependency: requests")
         return None
 
-    try:
-        response = requests.post(
-            f"https://us.posthog.com/api/projects/{project_id}/query/",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={"query": {"kind": "HogQLQuery", "query": query}},
-            timeout=30,
-        )
-    except requests.RequestException as exc:
-        errors.append(f"request_error: {exc}")
-        return None
+    url = f"https://us.posthog.com/api/projects/{project_id}/query/"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {"query": {"kind": "HogQLQuery", "query": query}}
 
-    if response.status_code >= 300:
-        errors.append(f"http_{response.status_code}")
-        return None
-    try:
-        return response.json()
-    except Exception as exc:
-        errors.append(f"invalid_json: {exc}")
-        return None
+    last_error: Optional[str] = None
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+        except requests.RequestException as exc:
+            last_error = f"request_error: {exc}"
+            if attempt < max_retries - 1:
+                time.sleep(min(8.0, 2.0**attempt))
+                continue
+            errors.append(last_error)
+            return None
+
+        if response.status_code >= 300:
+            code = response.status_code
+            last_error = f"http_{code}"
+            if code in _POSTHOG_RETRYABLE_STATUS and attempt < max_retries - 1:
+                time.sleep(min(8.0, 2.0**attempt))
+                continue
+            errors.append(last_error)
+            return None
+
+        try:
+            return response.json()
+        except Exception as exc:
+            last_error = f"invalid_json: {exc}"
+            if attempt < max_retries - 1:
+                time.sleep(min(8.0, 2.0**attempt))
+                continue
+            errors.append(last_error)
+            return None
+
+    return None
 
 
 def query_scalar(query: str, api_key: str, project_id: str, errors: List[str]) -> int:

@@ -113,6 +113,13 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         f"GROUP BY person_id HAVING count() >= 3"
         f")"
     )
+    out["wqtu_7d_distinct_persons"] = scalar(
+        f"SELECT count() FROM ("
+        f"SELECT person_id FROM events WHERE event = 'timer_completed' "
+        f"AND timestamp > now() - interval 7 day AND {f} "
+        f"GROUP BY person_id HAVING count() >= 3"
+        f")"
+    )
     if started and started > 0 and completed is not None:
         out["timer_abandon_rate_event_level_pct"] = round(
             (started - completed) / started * 100, 2
@@ -207,7 +214,8 @@ def run(
             "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
             "crashes": "Crashlytics via BigQuery export; PostHog $exception also listed if captured.",
             "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
-            "wqtu": "Distinct persons with >=3 timer_completed events in the same window (North Star proxy for that window).",
+            "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
+            "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
             "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
         },
         "posthog": posthog,
@@ -255,7 +263,8 @@ def main() -> int:
             f"distinct_started={ph.get('distinct_persons_timer_started')} "
             f"distinct_completed={ph.get('distinct_persons_timer_completed')} "
             f"starters_who_completed={ph.get('distinct_persons_timer_started_and_completed')} "
-            f"wqtu_window={ph.get('wqtu_distinct_persons')}"
+            f"wqtu_{ph.get('window_days')}d={ph.get('wqtu_distinct_persons')} "
+            f"wqtu_7d={ph.get('wqtu_7d_distinct_persons')}"
         )
     st = payload.get("store_apis") or {}
     print(f"  Android API: {(st.get('android') or {}).get('status')}")
