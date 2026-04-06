@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-06T19:26:46+00:00",
+  "generated_at": "2026-04-06T12:51:00+00:00",
   "source": "executive_metrics_snapshot",
   "definitions": {
     "install_proxy_posthog": "Distinct persons with event Application Installed (not store units).",
@@ -8,8 +8,7 @@
     "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
     "crashes": "Crashlytics via BigQuery export; PostHog $exception also listed if captured.",
     "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
-    "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
-    "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
+    "wqtu": "Distinct persons with >=3 timer_completed events in the same window (North Star proxy for that window).",
     "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window."
   },
   "posthog": {
@@ -18,32 +17,31 @@
     "project_id": "299775",
     "audience": "pragmatic_live",
     "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n)",
-    "window_days": 30,
+    "window_days": 7,
     "errors": [],
-    "distinct_persons_application_installed": 392,
-    "distinct_persons_first_open": 351,
-    "timer_started_events": 1216,
-    "timer_completed_events": 216,
-    "distinct_persons_timer_started": 326,
-    "distinct_persons_timer_completed": 37,
-    "distinct_persons_timer_started_and_completed": 37,
-    "wqtu_distinct_persons": 12,
-    "wqtu_7d_distinct_persons": 2,
-    "timer_abandon_rate_event_level_pct": 82.24,
+    "distinct_persons_application_installed": 82,
+    "distinct_persons_first_open": 78,
+    "timer_started_events": 385,
+    "timer_completed_events": 143,
+    "distinct_persons_timer_started": 78,
+    "distinct_persons_timer_completed": 8,
+    "distinct_persons_timer_started_and_completed": 8,
+    "wqtu_distinct_persons": 1,
+    "timer_abandon_rate_event_level_pct": 62.86,
     "distinct_persons_paywall_purchase_success": 1,
     "events_paywall_purchase_success": 1,
-    "in_app_review_prompt_events": 7,
-    "in_app_review_prompt_distinct_persons": 7,
+    "in_app_review_prompt_events": 1,
+    "in_app_review_prompt_distinct_persons": 1,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        391,
-        2334
+        84,
+        596
       ],
       [
         "Active Timer",
-        323,
-        1495
+        78,
+        480
       ]
     ],
     "posthog_exception_events": 0
@@ -54,10 +52,10 @@
       "review_count": 0,
       "production_release": {
         "version_codes": [
-          "1774900018"
+          "1774900016"
         ],
         "status": "completed",
-        "name": "v1774900018"
+        "name": "v1774900016"
       },
       "note": "Google Play API does not expose download counts directly. Review count is from real users only."
     },
@@ -67,11 +65,6 @@
       "bundle_id": "com.igorganapolsky.randomtimer",
       "sku": "randomtimer2026",
       "versions": [
-        {
-          "version": "1.3.17",
-          "state": "IN_REVIEW",
-          "created": "2026-04-06T09:08:34-07:00"
-        },
         {
           "version": "1.3.16",
           "state": "READY_FOR_SALE",
