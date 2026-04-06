@@ -118,27 +118,6 @@ data class TimerConfig(
     }
 }
 
-/**
- * Tighter 20–60s range for users who have not completed their first timer while still on
- * canonical free-tier defaults (30–120, not extended). Returns null if no change applies.
- */
-fun activationPresetForFirstCompletionIfEligible(
-    hasCompletedFirstTimer: Boolean,
-    current: TimerConfig,
-): TimerConfig? {
-    if (hasCompletedFirstTimer) return null
-    if (current.useExtendedRange) return null
-    if (current.minSeconds != TimerConfig.DEFAULT.minSeconds ||
-        current.maxSeconds != TimerConfig.DEFAULT.maxSeconds
-    ) {
-        return null
-    }
-    return current.copy(
-        minSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS,
-        maxSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS,
-    )
-}
-
 data class RangeToggleProfiles(
     val freeMinSeconds: Int,
     val freeMaxSeconds: Int,
@@ -217,6 +196,27 @@ fun toggleExtendedRange(
             profiles = nextProfiles,
         )
     }
+
+/**
+ * Tighter 20–60s range for users who have not completed their first timer while still on
+ * canonical free-tier defaults (30–120, not extended). Returns null if no change applies.
+ */
+fun activationPresetForFirstCompletionIfEligible(
+    hasCompletedFirstTimer: Boolean,
+    current: TimerConfig,
+): TimerConfig? {
+    if (hasCompletedFirstTimer) return null
+    if (current.useExtendedRange) return null
+    if (current.minSeconds != TimerConfig.DEFAULT.minSeconds ||
+        current.maxSeconds != TimerConfig.DEFAULT.maxSeconds
+    ) {
+        return null
+    }
+    return current.copy(
+        minSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS,
+        maxSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS,
+    )
+}
 
 /**
  * Represents the current state of an active timer.
