@@ -6,13 +6,13 @@ import kotlin.time.Duration.Companion.seconds
 
 class ActivationDefaultsTest {
     @Test
-    fun `default min is 30 seconds for quick start`() {
-        assertThat(TimerConfig.DEFAULT.minSeconds).isEqualTo(30)
+    fun `default min is 0 seconds for activation-first quick start`() {
+        assertThat(TimerConfig.DEFAULT.minSeconds).isEqualTo(0)
     }
 
     @Test
-    fun `default max is 120 seconds for quick start`() {
-        assertThat(TimerConfig.DEFAULT.maxSeconds).isEqualTo(120)
+    fun `default max is 30 seconds for activation-first quick start`() {
+        assertThat(TimerConfig.DEFAULT.maxSeconds).isEqualTo(30)
     }
 
     @Test
@@ -23,13 +23,13 @@ class ActivationDefaultsTest {
     }
 
     @Test
-    fun `default min duration is 30 seconds`() {
-        assertThat(TimerConfig.DEFAULT.minDuration).isEqualTo(30.seconds)
+    fun `default min duration is 0 seconds`() {
+        assertThat(TimerConfig.DEFAULT.minDuration).isEqualTo(0.seconds)
     }
 
     @Test
-    fun `default max duration is 120 seconds`() {
-        assertThat(TimerConfig.DEFAULT.maxDuration).isEqualTo(120.seconds)
+    fun `default max duration is 30 seconds`() {
+        assertThat(TimerConfig.DEFAULT.maxDuration).isEqualTo(30.seconds)
     }
 
     @Test
