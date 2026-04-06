@@ -434,6 +434,8 @@ jobs:
           if not m:
               m = re.search(r"versionCode\s*=\s*(\d+)", gradle)
           code = m.group(1) if m else ""
+          m_version = re.search(r'versionName\s*=\s*"([0-9.]+)"', gradle)
+          android = m_version.group(1) if m_version else ""
 
           pbx = Path("native-ios/RandomTimer.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
           m2 = re.search(r"MARKETING_VERSION = ([0-9.]+);", pbx)
@@ -442,6 +444,7 @@ jobs:
           out = os.environ["GITHUB_OUTPUT"]
           with open(out, "a", encoding="utf-8") as fh:
               fh.write(f"version_code={code}\n")
+              fh.write(f"android_version={android}\n")
               fh.write(f"ios_version={ios}\n")
           PY
 
@@ -526,6 +529,7 @@ jobs:
           python scripts/verify_play_public_listing.py \
             --package com.iganapolsky.randomtimer \
             --country US \
+            --expected-version "${{ steps.versions.outputs.android_version }}" \
             --timeout 900 \
             --poll-interval 60
 
