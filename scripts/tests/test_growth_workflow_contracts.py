@@ -184,6 +184,8 @@ def test_native_release_workflow_verifies_public_play_listing_for_production():
 
     assert "Verify public Google Play listing (production only)" in source
     assert "python scripts/verify_play_public_listing.py" in source
+    assert "--expected-version" in source
+    assert "steps.versions.outputs.android_version" in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
