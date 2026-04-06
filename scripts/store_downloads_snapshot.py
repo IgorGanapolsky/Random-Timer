@@ -14,7 +14,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 _POSTHOG_RETRYABLE_STATUS = frozenset({429, 502, 503, 504})
 
@@ -38,6 +38,33 @@ def _requests_module():
         return requests
     except ImportError:
         return None
+
+
+def _posthog_backoff(attempt: int) -> None:
+    time.sleep(min(8.0, 2.0**attempt))
+
+
+def _posthog_execute_once(
+    requests: Any,
+    url: str,
+    headers: Dict[str, str],
+    payload: Dict[str, Any],
+    timeout: float,
+) -> Tuple[Optional[Dict[str, Any]], Optional[str], bool]:
+    """POST once; returns (json_body, error_message, should_retry)."""
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+    except requests.RequestException as exc:
+        return None, f"request_error: {exc}", True
+
+    if response.status_code >= 300:
+        code = response.status_code
+        return None, f"http_{code}", code in _POSTHOG_RETRYABLE_STATUS
+
+    try:
+        return response.json(), None, False
+    except Exception as exc:
+        return None, f"invalid_json: {exc}", True
 
 
 def posthog_query(
@@ -65,36 +92,18 @@ def posthog_query(
     }
     payload = {"query": {"kind": "HogQLQuery", "query": query}}
 
-    last_error: Optional[str] = None
     for attempt in range(max_retries):
-        try:
-            response = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        except requests.RequestException as exc:
-            last_error = f"request_error: {exc}"
-            if attempt < max_retries - 1:
-                time.sleep(min(8.0, 2.0**attempt))
-                continue
-            errors.append(last_error)
+        data, err, should_retry = _posthog_execute_once(requests, url, headers, payload, timeout)
+        if data is not None:
+            return data
+
+        final_attempt = attempt >= max_retries - 1
+        if final_attempt or not should_retry:
+            if err:
+                errors.append(err)
             return None
 
-        if response.status_code >= 300:
-            code = response.status_code
-            last_error = f"http_{code}"
-            if code in _POSTHOG_RETRYABLE_STATUS and attempt < max_retries - 1:
-                time.sleep(min(8.0, 2.0**attempt))
-                continue
-            errors.append(last_error)
-            return None
-
-        try:
-            return response.json()
-        except Exception as exc:
-            last_error = f"invalid_json: {exc}"
-            if attempt < max_retries - 1:
-                time.sleep(min(8.0, 2.0**attempt))
-                continue
-            errors.append(last_error)
-            return None
+        _posthog_backoff(attempt)
 
     return None
 

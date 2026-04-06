@@ -76,10 +76,6 @@ def test_timer_defaults_match_across_mobile_platforms():
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
     assert re.search(
-        r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,",
-        android_config,
-    )
-    assert re.search(
         r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,\s*\n\s*maxSeconds = 30,",
         android_config,
         re.DOTALL,
