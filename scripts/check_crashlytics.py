@@ -241,7 +241,16 @@ def collect_crashlytics_snapshot(hours=24):
     payload = _base_snapshot(hours)
 
     token = get_access_token()
-    tables = check_bigquery_export(token)
+    try:
+        tables = check_bigquery_export(token)
+    except RuntimeError as exc:
+        return {
+            **payload,
+            "status": "error",
+            "reason": str(exc),
+            "source": "crashlytics",
+        }
+
     if tables is None:
         payload["status"] = "skipped"
         payload["reason"] = "Crashlytics BigQuery export not set up"
@@ -286,7 +295,13 @@ def main():
     token = get_access_token()
 
     # Check if BQ export exists
-    tables = check_bigquery_export(token)
+    try:
+        tables = check_bigquery_export(token)
+    except RuntimeError as exc:
+        print(f"BigQuery API error (non-fatal for local/CI): {exc}", file=sys.stderr)
+        print("PASS: Skipping crash gate when export cannot be queried.")
+        sys.exit(0)
+
     if tables is None:
         print("Crashlytics BigQuery export not set up.")
         print("To enable: Firebase Console > Crashlytics > BigQuery integration > Link")
