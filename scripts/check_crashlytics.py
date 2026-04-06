@@ -301,6 +301,7 @@ def main():
         print(f"BigQuery API error (non-fatal for local/CI): {exc}", file=sys.stderr)
         print("PASS: Skipping crash gate when export cannot be queried.")
         sys.exit(0)
+        return
 
     if tables is None:
         print("Crashlytics BigQuery export not set up.")
