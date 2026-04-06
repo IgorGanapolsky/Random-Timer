@@ -16,7 +16,10 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in full_description
     assert "pattern-interrupt training built for combat sports, sparring, drills, and reaction work." in full_description
     assert "serious fighters and operators" not in full_description
-    assert short_description.strip() == "Random timer with male & female AI coach voice for combat sports and HIIT."
+    assert (
+        short_description.strip()
+        == "Random timer with male & female AI coach voice for combat sports and HIIT."
+    )
 
 
 def test_ios_store_copy_matches_reaction_positioning() -> None:
@@ -36,7 +39,10 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     assert "TRAIN FOR CHAOS. NOT RHYTHM." in description
     assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in description
     assert "Built for combat sports, HIIT, CrossFit, and reaction training." in description
-    assert promotional_text.strip() == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
+    assert (
+        promotional_text.strip()
+        == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
+    )
     assert subtitle == "Dry Fire, Boxing, BJJ, HIIT"
     assert "muay thai" in keywords
     assert "crossfit" in keywords
