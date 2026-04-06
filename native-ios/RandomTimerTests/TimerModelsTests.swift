@@ -7,7 +7,7 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = RandomTimer.TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 0)
+        XCTAssertEqual(config.minSeconds, 5)
         XCTAssertEqual(config.maxSeconds, 30)
         XCTAssertEqual(config.alarmDuration, 10)
         XCTAssertFalse(config.voiceEnabled)
@@ -17,7 +17,7 @@ final class TimerConfigTests: XCTestCase {
         let legacy = TimerConfig(minSeconds: 30, maxSeconds: 120)
         let next = legacy.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
         XCTAssertNotNil(next)
-        XCTAssertEqual(next?.minSeconds, 0)
+        XCTAssertEqual(next?.minSeconds, 5)
         XCTAssertEqual(next?.maxSeconds, 30)
         XCTAssertEqual(next?.soundType, legacy.soundType)
     }
@@ -85,7 +85,7 @@ final class TimerConfigTests: XCTestCase {
 
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
-        XCTAssertEqual(decoded.minSeconds, 0)
+        XCTAssertEqual(decoded.minSeconds, 5)
         XCTAssertEqual(decoded.maxSeconds, RandomTimer.TimerConfig.maxSecondsPro)
         XCTAssertEqual(decoded.alarmDuration, 1)
         XCTAssertTrue(decoded.hiddenMode)
@@ -123,7 +123,7 @@ final class TimerConfigTests: XCTestCase {
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
         let expected = RandomTimer.TimerConfig(
-            minSeconds: 0,
+            minSeconds: 5,
             maxSeconds: 30,
             alarmDuration: 10,
             hiddenMode: false,
@@ -153,7 +153,7 @@ final class TimerConfigTests: XCTestCase {
             repeatRounds: -4
         )
 
-        XCTAssertEqual(config.minSeconds, 0)
+        XCTAssertEqual(config.minSeconds, 5)
         XCTAssertEqual(config.maxSeconds, RandomTimer.TimerConfig.maxSecondsPro)
         XCTAssertEqual(config.alarmDuration, 1)
         XCTAssertEqual(config.volume, 1.0, accuracy: 0.0001)
@@ -243,7 +243,7 @@ final class TimerConfigTests: XCTestCase {
             repeatRounds: 0
         )
         let profiles = RangeToggleProfiles(
-            freeMinSeconds: 0,
+            freeMinSeconds: 5,
             freeMaxSeconds: 30,
             extendedMinSeconds: 900,
             extendedMaxSeconds: 1800
@@ -252,7 +252,7 @@ final class TimerConfigTests: XCTestCase {
         let result = toggleExtendedRange(current: current, profiles: profiles)
 
         XCTAssertFalse(result.config.useExtendedRange)
-        XCTAssertEqual(result.config.minSeconds, 0)
+        XCTAssertEqual(result.config.minSeconds, 5)
         XCTAssertEqual(result.config.maxSeconds, 30)
         XCTAssertEqual(result.profiles.extendedMinSeconds, 900)
         XCTAssertEqual(result.profiles.extendedMaxSeconds, 1800)

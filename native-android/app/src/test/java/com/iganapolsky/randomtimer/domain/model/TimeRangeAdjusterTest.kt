@@ -8,7 +8,7 @@ class TimeRangeAdjusterTest {
     fun `min change within gap keeps max unchanged`() {
         val (min, max) =
             TimeRangeAdjuster.adjustForMinChange(
-                currentMinSeconds = 0,
+                currentMinSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
                 currentMaxSeconds = 300,
                 newMinSeconds = 120,
             )
@@ -21,7 +21,7 @@ class TimeRangeAdjusterTest {
     fun `min change beyond max minus gap pushes max forward`() {
         val (min, max) =
             TimeRangeAdjuster.adjustForMinChange(
-                currentMinSeconds = 0,
+                currentMinSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
                 currentMaxSeconds = 60,
                 newMinSeconds = 60,
             )
@@ -51,12 +51,12 @@ class TimeRangeAdjusterTest {
     fun `max change within gap keeps min unchanged`() {
         val (min, max) =
             TimeRangeAdjuster.adjustForMaxChange(
-                currentMinSeconds = 0,
+                currentMinSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
                 currentMaxSeconds = 300,
                 newMaxSeconds = 200,
             )
 
-        assertThat(min).isEqualTo(0)
+        assertThat(min).isEqualTo(TimeRangeAdjuster.DEFAULT_MIN_SECONDS)
         assertThat(max).isEqualTo(200)
     }
 
@@ -118,5 +118,10 @@ class TimeRangeAdjusterTest {
         assertThat(max).isEqualTo(cap)
         assertThat(min).isEqualTo(cap - TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
         assertThat(max - min).isAtLeast(TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS)
+    }
+
+    @Test
+    fun `default minimum stays at 5 seconds to prevent instant fire`() {
+        assertThat(TimeRangeAdjuster.DEFAULT_MIN_SECONDS).isEqualTo(5)
     }
 }

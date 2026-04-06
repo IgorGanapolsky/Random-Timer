@@ -31,27 +31,17 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _assert_in_order(source: str, *parts: str) -> None:
-    cursor = 0
-    for part in parts:
-        cursor = source.find(part, cursor)
-        assert cursor != -1
-        cursor += len(part)
-
-
-def test_default_timer_range_is_0_to_30_on_both_platforms():
-    """Android DEFAULT uses 5–30s min/max; iOS defaults 0–30 (random pick floors at 1s on both). Free-tier cap 300s."""
+def test_default_timer_range_is_5_to_30_on_both_platforms():
+    """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
+    android_range_adjuster = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/domain/model/TimeRangeAdjuster.kt")
     ios_source = _read(IOS_TIMER_MODELS)
 
-    _assert_in_order(
-        android_source,
-        "val DEFAULT =",
-        "TimerConfig(",
-        "minSeconds = 5,",
-        "maxSeconds = 30,",
-    )
-    assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
+    assert "const val DEFAULT_MIN_SECONDS = 5" in android_range_adjuster
+    assert "minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS" in android_source
+    assert re.search(r"maxSeconds\s*=\s*30", android_source)
+    assert "public static let minimumFloorSeconds = 5" in ios_source
+    assert re.search(r"minSeconds:\s*Int\s*=\s*minimumFloorSeconds", ios_source)
     assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
 
 

@@ -8,7 +8,7 @@ package com.iganapolsky.randomtimer.domain.model
  * - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
  */
 object TimeRangeAdjuster {
-    const val DEFAULT_MIN_SECONDS = 0
+    const val DEFAULT_MIN_SECONDS = 5
     const val DEFAULT_MAX_SECONDS = 3600
     const val DEFAULT_MIN_GAP_SECONDS = 5
 
