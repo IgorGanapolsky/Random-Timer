@@ -22,6 +22,11 @@ on:
         required: true
         type: boolean
         default: true
+      use_live_version:
+        description: "Force metadata sync against the current live App Store version."
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: ios-metadata-sync-${{ github.ref_name }}-${{ inputs.version || 'auto' }}-${{ inputs.locale }}
@@ -36,6 +41,7 @@ jobs:
       IOS_METADATA_LOCALE: ${{ inputs.locale }}
       IOS_METADATA_ONLY: ${{ inputs.metadata_only }}
       IOS_STRICT_RETRY_ON_EDITABLE: ${{ inputs.strict_retry_on_editable }}
+      IOS_USE_LIVE_VERSION: ${{ inputs.use_live_version }}
     steps:
       - uses: actions/checkout@v6
 
@@ -121,6 +127,12 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           VERSION_RESOLVED: ${{ steps.version.outputs.version }}
         run: |
+          if [[ "$IOS_USE_LIVE_VERSION" == "true" ]]; then
+            echo "selected_version=LIVE" >> "$GITHUB_OUTPUT"
+            echo "Using live App Store version for metadata sync"
+            exit 0
+          fi
+
           python scripts/asc_resolve_version.py \
             --preferred-version "$VERSION_RESOLVED" \
             --create-if-needed \
