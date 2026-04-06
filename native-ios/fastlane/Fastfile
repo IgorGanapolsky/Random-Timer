@@ -375,11 +375,11 @@ platform :ios do
         )
       end
 
-      # Distribution profiles for App Store export
+      # CI only needs to fetch existing signing assets; keep local setup writable.
       match(
         type: "appstore",
         app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
-        readonly: false,
+        readonly: ENV["CI"] == "true",
         api_key: api_key
       )
     else
