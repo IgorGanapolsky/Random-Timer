@@ -58,7 +58,7 @@ class TimerRepositoryImpl
 
         private fun Preferences.toTimerConfig(): TimerConfig =
             TimerConfig(
-                minSeconds = this[KEY_MIN_SECONDS] ?: 0,
+                minSeconds = this[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
                 maxSeconds = this[KEY_MAX_SECONDS] ?: 30,
                 alarmDuration = this[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = this[KEY_HIDDEN_MODE] ?: false,
