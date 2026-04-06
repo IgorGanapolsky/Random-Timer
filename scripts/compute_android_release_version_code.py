@@ -42,7 +42,7 @@ def _load_play_service(
         scopes=["https://www.googleapis.com/auth/androidpublisher"],
     )
     http = AuthorizedHttp(credentials, http=httplib2.Http(timeout=timeout_seconds))
-    return build("androidpublisher", "v3", credentials=credentials, http=http, cache_discovery=False)
+    return build("androidpublisher", "v3", http=http, cache_discovery=False)
 
 
 def _execute_request(request: Any, request_retries: int = DEFAULT_REQUEST_RETRIES):

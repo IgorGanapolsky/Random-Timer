@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-04-02T15:26:39+00:00",
+  "source": "executive_metrics_snapshot",
+  "definitions": {
+    "install_proxy_posthog": "Distinct persons with event Application Installed (not store units).",
+    "reviews_store": "From Play/App Store APIs in store section (sample/pagination limits apply).",
+    "reviews_in_app": "PostHog review_prompt_requested / write_review_tapped (not published star count).",
+    "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
+    "crashes": "Crashlytics via BigQuery export; PostHog $exception also listed if captured.",
+    "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet)."
+  },
+  "posthog": {
+    "status": "ok",
+    "host": "https://us.posthog.com",
+    "project_id": "299775",
+    "audience": "pragmatic_live",
+    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n)",
+    "window_days": 30,
+    "errors": [],
+    "distinct_persons_application_installed": 451,
+    "distinct_persons_first_open": 405,
+    "timer_started_events": 1298,
+    "timer_completed_events": 69,
+    "timer_abandon_rate_event_level_pct": 94.68,
+    "distinct_persons_paywall_purchase_success": 1,
+    "events_paywall_purchase_success": 1,
+    "in_app_review_prompt_events": 5,
+    "in_app_review_prompt_distinct_persons": 5,
+    "top_screens_by_distinct_persons": [
+      [
+        "Timer Setup",
+        454,
+        2654
+      ],
+      [
+        "Active Timer",
+        367,
+        1657
+      ]
+    ],
+    "posthog_exception_events": 0
+  },
+  "store_apis": {
+    "android": {
+      "status": "skipped",
+      "reason": "no GOOGLE_PLAY_JSON_KEY"
+    },
+    "ios": {
+      "status": "skipped",
+      "reason": "Missing env vars: APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH)"
+    }
+  },
+  "crashlytics_bigquery": {
+    "status": "error",
+    "source": "firebase_crashlytics_bigquery",
+    "project_id": "random-timer-486213",
+    "package": "com.iganapolsky.randomtimer",
+    "dataset": "firebase_crashlytics",
+    "lookback_hours": 168,
+    "reason": "credentials: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information."
+  }
+}

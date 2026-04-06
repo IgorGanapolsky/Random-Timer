@@ -384,9 +384,22 @@ enum AnalyticsEvents {
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
 
+    // Feature gates & voice
+    static let voiceGenderSelected = "voice_gender_selected"
+    static let featureGateHit = "feature_gate_hit"
+
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
     static let appleAdsAttribution = "apple_ads_attribution"
+
+    // Loop
+    static let loopRoundCompleted = "loop_round_completed"
+
+    // Purchase
+    static let purchaseFailed = "purchase_failed"
+
+    // Screen engagement
+    static let screenDwellTime = "screen_dwell_time"
 
     // Onboarding Funnel
     static let firstOpen = "first_open"
@@ -402,14 +415,23 @@ enum AnalyticsProperties {
     static let dismissMethod = "dismiss_method"
     static let productId = "product_id"
     static let entitlementLevel = "entitlement_level"
+    static let gender = "gender"
+    static let feature = "feature"
+    static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"
     static let buildType = "build_type"
     static let runtimeTarget = "runtime_target"
+    static let roundNumber = "round_number"
+    static let roundDurationSeconds = "round_duration_seconds"
+    static let durationSeconds = "duration_seconds"
+    static let screen = "screen"
+    static let reason = "reason"
 }
 
 enum AnalyticsValues {
     static let abandonReasonUserCancelled = "user_cancelled"
+    static let abandonReasonAppBackgrounded = "app_backgrounded"
     static let abandonReasonStaleRestoreExpired = "stale_restore_expired"
     static let abandonSourceTimerControls = "timer_controls"
     static let abandonSourceStateRestore = "state_restore"

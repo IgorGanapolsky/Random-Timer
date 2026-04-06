@@ -204,6 +204,7 @@ fun ActiveTimerScreen(
                                     Modifier
                                 },
                             ),
+                    isHiddenMode = state.config.hiddenMode,
                     rangeText = rangeText,
                 )
             }

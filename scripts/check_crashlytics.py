@@ -6,16 +6,15 @@ Usage:
 
 Setup (one-time in Firebase Console):
     1. Firebase Console > Crashlytics > BigQuery integration > Link
-    2. This enables streaming export to: random-timer-486213.firebase_crashlytics.{app_id}
+    2. Streaming export lands in: <project>.firebase_crashlytics (see CRASHLYTICS_PROJECT_ID).
 
 Requires:
     - CRASHLYTICS_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
-    - BigQuery API enabled on random-timer-486213
-    - Firebase project: random-timer-486213
+    - BigQuery API enabled on the Firebase/GCP project that owns the export
+    - Env CRASHLYTICS_PROJECT_ID must match that project (default: random-timer-dist-new)
 
-This script reads runtime Crashlytics data only. Android App Distribution is
-owned by a separate Firebase project and is documented in
-docs/FIREBASE_ANDROID_INFRASTRUCTURE.md.
+This script reads runtime Crashlytics data only. See docs/FIREBASE_ANDROID_INFRASTRUCTURE.md
+for project history (App Distribution vs runtime).
 """
 
 import ssl
@@ -31,7 +30,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 
 
-PROJECT_ID = os.environ.get("CRASHLYTICS_PROJECT_ID", "random-timer-486213")
+PROJECT_ID = os.environ.get("CRASHLYTICS_PROJECT_ID", "random-timer-dist-new")
 PACKAGE = os.environ.get("CRASHLYTICS_PACKAGE", "com.iganapolsky.randomtimer")
 # BigQuery dataset created by Crashlytics streaming export
 BQ_DATASET = os.environ.get("CRASHLYTICS_BQ_DATASET", "firebase_crashlytics")
@@ -168,6 +167,112 @@ def query_crash_free_rate(token, hours, table_id):
     FROM sessions
     """
     return bq_query(token, sql)
+
+
+def _base_snapshot(hours):
+    return {
+        "status": "ok",
+        "source": "crashlytics_bigquery",
+        "project_id": PROJECT_ID,
+        "dataset": BQ_DATASET,
+        "package": PACKAGE,
+        "hours": hours,
+        "table_id": None,
+        "fatal_events": 0,
+        "affected_users": 0,
+        "total_users": 0,
+        "crash_free_users": 0,
+        "crash_free_pct": None,
+        "top_fatal_issues": [],
+    }
+
+
+def _error_snapshot(payload, result):
+    return {
+        **payload,
+        "status": "error",
+        "reason": str(result["error"]),
+        "code": result.get("code"),
+    }
+
+
+def _parse_summary_rows(rows):
+    parsed_rows = []
+    for row in rows[:10]:
+        fields = row.get("f") or []
+        if len(fields) < 8:
+            continue
+        parsed_rows.append(
+            {
+                "crash_count": int(fields[0].get("v") or 0),
+                "affected_users": int(fields[1].get("v") or 0),
+                "error_type": fields[2].get("v") or "",
+                "file": fields[3].get("v") or "",
+                "line": fields[4].get("v") or "",
+                "issue_title": fields[5].get("v") or "",
+                "issue_subtitle": fields[6].get("v") or "",
+                "version": fields[7].get("v") or "",
+            }
+        )
+    return parsed_rows
+
+
+def _apply_rate_snapshot(payload, rate_rows):
+    if not rate_rows:
+        payload["reason"] = "No session data found"
+        return payload
+
+    fields = rate_rows[0].get("f") or []
+    if len(fields) < 3:
+        return payload
+
+    total_users = int(fields[0].get("v") or 0)
+    crash_free_users = int(fields[1].get("v") or 0)
+    crash_free_pct = float(fields[2].get("v") or 100)
+    payload["total_users"] = total_users
+    payload["crash_free_users"] = crash_free_users
+    payload["crash_free_pct"] = crash_free_pct
+    payload["affected_users"] = max(total_users - crash_free_users, 0)
+    return payload
+
+
+def collect_crashlytics_snapshot(hours=24):
+    """Return a structured Crashlytics BigQuery snapshot for automation."""
+    payload = _base_snapshot(hours)
+
+    token = get_access_token()
+    tables = check_bigquery_export(token)
+    if tables is None:
+        payload["status"] = "skipped"
+        payload["reason"] = "Crashlytics BigQuery export not set up"
+        return payload
+    if not tables:
+        payload["reason"] = "BigQuery dataset exists but no tables yet"
+        return payload
+
+    try:
+        table_id = select_crashlytics_table(tables)
+    except ValueError as exc:
+        return {
+            **payload,
+            "status": "error",
+            "reason": str(exc),
+        }
+    payload["table_id"] = table_id
+
+    summary = query_crash_summary(token, hours, table_id)
+    if "error" in summary:
+        return _error_snapshot(payload, summary)
+
+    summary_rows = summary.get("rows") or []
+    payload["top_fatal_issues"] = _parse_summary_rows(summary_rows)
+    payload["fatal_events"] = sum(issue["crash_count"] for issue in payload["top_fatal_issues"])
+
+    rate_result = query_crash_free_rate(token, hours, table_id)
+    if "error" in rate_result:
+        return _error_snapshot(payload, rate_result)
+
+    return _apply_rate_snapshot(payload, rate_result.get("rows") or [])
 
 
 def main():

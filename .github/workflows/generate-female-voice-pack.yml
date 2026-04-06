@@ -15,9 +15,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate all Domi v3 female voice callouts
+      - name: Generate natural Domi female voice callouts
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
           python3 << 'PYEOF'
           import json, os, urllib.request, time
@@ -25,7 +26,13 @@ jobs:
           API = "https://api.elevenlabs.io"
           KEY = os.environ["ELEVENLABS_API_KEY"]
           DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
-          SETTINGS = {"stability": 0.45, "similarity_boost": 0.73, "style": 0, "use_speaker_boost": True}
+          MODEL_ID = "eleven_multilingual_v2"
+          SETTINGS = {
+              "stability": 0.65,
+              "similarity_boost": 0.85,
+              "style": 0.55,
+              "use_speaker_boost": True,
+          }
 
           # Read the existing male voice catalog to get all cue texts
           catalog = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
@@ -34,9 +41,8 @@ jobs:
           ANDROID_RAW = "native-android/app/src/main/res/raw"
           os.makedirs(IOS_AUDIO, exist_ok=True)
 
-          def generate(text, filename, tag="[intense]"):
-              tagged = f"{tag} {text}"
-              payload = {"text": tagged, "model_id": "eleven_v3", "voice_settings": SETTINGS}
+          def generate(text, filename):
+              payload = {"text": text, "model_id": MODEL_ID, "voice_settings": SETTINGS}
               data = json.dumps(payload).encode()
               req = urllib.request.Request(
                   f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
@@ -65,15 +71,7 @@ jobs:
           for cue in catalog.get("commandCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              # Choose tag based on phrase energy
-              tag = "[intense]"
-              if any(w in text.lower() for w in ["move", "go", "push", "drive"]):
-                  tag = "[commanding]"
-              if any(w in text.lower() for w in ["stay", "fight", "pressure"]):
-                  tag = "[shouting]"
-              if any(w in text.lower() for w in ["breathe", "reset", "recover"]):
-                  tag = "[serious]"
-              generate(text, filename, tag)
+              generate(text, filename)
               time.sleep(0.5)  # Rate limiting
 
           # Generate elapsed cues
@@ -81,14 +79,14 @@ jobs:
           for cue in catalog.get("elapsedCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              generate(text, filename, "[serious]")
+              generate(text, filename)
               time.sleep(0.5)
 
           # Generate preview
           print("\n=== Preview ===")
           preview = catalog.get("previewElapsed", {})
           if preview:
-              generate(preview["text"], preview["filename"], "[serious]")
+              generate(preview["text"], preview["filename"])
 
           print("\nDone!")
           PYEOF
@@ -104,7 +102,7 @@ jobs:
           female["voiceGender"] = "female"
           female["voiceId"] = "AZnzlk1XvdvUeBnXmlld"
           female["voiceName"] = "Domi"
-          female["modelId"] = "eleven_v3"
+          female["modelId"] = "eleven_multilingual_v2"
           with open("native-ios/RandomTimer/Resources/Audio/female/voice_callouts.json", "w") as f:
               json.dump(female, f, indent=2)
           print("Female voice catalog created")
@@ -128,18 +126,19 @@ jobs:
       - name: Create PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BRANCH="feat/female-voice-pack-domi"
+          BRANCH="feat/female-voice-pack-${GITHUB_RUN_ID}"
           git checkout -b "$BRANCH"
           git add native-ios/RandomTimer/Resources/Audio/female/ native-android/app/src/main/res/raw/female_*.mp3
           if git diff --cached --quiet; then
             echo "No files generated"
             exit 0
           fi
-          git commit -m "feat(audio): full Domi v3 female voice pack — 43 callouts"
+          git commit -m "feat(audio): regenerate natural Domi female voice pack"
           git push origin "$BRANCH"
           gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): Domi v3 female voice pack" \
-            --body "All 31 command cues + 12 elapsed cues generated with Domi v3 + audio tags."
+            --title "feat(audio): regenerate natural Domi female voice pack" \
+            --body "All 31 command cues + 12 elapsed cues regenerated with Domi on eleven_multilingual_v2 using plain-text prompts and the natural baseline settings."

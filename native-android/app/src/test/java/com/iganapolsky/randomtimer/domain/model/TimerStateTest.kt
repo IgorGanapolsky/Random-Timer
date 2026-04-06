@@ -23,27 +23,46 @@ class TimerStateTest {
     }
 
     @Test
-    fun `progress is 0_5 at halfway`() {
+    fun `progress uses maxSeconds not targetDuration`() {
+        // Config maxSeconds=300 (5min). Target=2min, elapsed=1min.
+        // Old behavior: progress = elapsed/target = 60/120 = 0.5
+        // New behavior: progress = elapsed/max = 60/300 = 0.2
         val state = TimerState(
-            config = defaultConfig,
-            targetDuration = 10.minutes,
-            remainingDuration = 5.minutes,
+            config = defaultConfig, // maxSeconds = 300
+            targetDuration = 2.minutes,
+            remainingDuration = 1.minutes,
             status = TimerStatus.RUNNING
         )
 
-        assertThat(state.progress).isWithin(0.001f).of(0.5f)
+        assertThat(state.progress).isWithin(0.001f).of(0.2f)
     }
 
     @Test
-    fun `progress is 1 when complete`() {
+    fun `progress caps at 0_98 never reaches 1`() {
+        // Even when target equals maxSeconds and remaining is 0,
+        // progress should cap at 0.98 (matching iOS unpredictableProgress)
         val state = TimerState(
-            config = defaultConfig,
+            config = defaultConfig, // maxSeconds = 300
             targetDuration = 5.minutes,
             remainingDuration = Duration.ZERO,
             status = TimerStatus.COMPLETE
         )
 
-        assertThat(state.progress).isEqualTo(1f)
+        assertThat(state.progress).isEqualTo(0.98f)
+    }
+
+    @Test
+    fun `progress for short target within large max range`() {
+        // Config maxSeconds=300. Target=30s, elapsed=15s.
+        // progress = 15/300 = 0.05
+        val state = TimerState(
+            config = defaultConfig,
+            targetDuration = 30.seconds,
+            remainingDuration = 15.seconds,
+            status = TimerStatus.RUNNING
+        )
+
+        assertThat(state.progress).isWithin(0.001f).of(0.05f)
     }
 
     @Test
@@ -136,9 +155,10 @@ class TimerStateTest {
     }
 
     @Test
-    fun `progress handles zero target duration`() {
+    fun `progress handles zero max duration`() {
+        val zeroConfig = defaultConfig.copy(minSeconds = 0, maxSeconds = 0)
         val state = TimerState(
-            config = defaultConfig,
+            config = zeroConfig,
             targetDuration = Duration.ZERO,
             remainingDuration = Duration.ZERO,
             status = TimerStatus.COMPLETE

@@ -119,9 +119,13 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
 
         self.assertEqual(client.calls[0]["path"], "/apps/app-1/subscriptionGroups")
         self.assertEqual(client.calls[1]["path"], "/apps/app-1/reviewSubmissions")
-        self.assertEqual(client.calls[2]["path"], "/reviewSubmissions")
+        self.assertEqual(client.calls[2]["path"], "/apps/app-1/reviewSubmissions")
         self.assertEqual(
-            client.calls[2]["payload"],
+            client.calls[3]["path"],
+            "/reviewSubmissions",
+        )
+        self.assertEqual(
+            client.calls[3]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissions",
@@ -130,9 +134,9 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                 }
             },
         )
-        self.assertEqual(client.calls[3]["path"], "/reviewSubmissionItems")
+        self.assertEqual(client.calls[4]["path"], "/reviewSubmissionItems")
         self.assertEqual(
-            client.calls[3]["payload"],
+            client.calls[4]["payload"],
             {
                 "data": {
                     "type": "reviewSubmissionItems",
@@ -142,6 +146,101 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
                     },
                 }
             },
+        )
+
+    def test_submit_for_review_reuses_empty_ready_for_review_submission_when_limit_shell_exists(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        submission_id = "sub-empty"
+        version_id = "ver-1"
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                ("GET", "/apps/app-1/reviewSubmissions"): {
+                    "data": [
+                        {
+                            "id": submission_id,
+                            "type": "reviewSubmissions",
+                            "attributes": {"state": "READY_FOR_REVIEW", "submittedDate": None},
+                        }
+                    ]
+                },
+                ("GET", f"/reviewSubmissions/{submission_id}/items"): {"data": []},
+                ("POST", "/reviewSubmissionItems"): {
+                    "data": {
+                        "id": "item-new",
+                        "type": "reviewSubmissionItems",
+                        "attributes": {"state": "READY_FOR_REVIEW"},
+                    }
+                },
+                ("PATCH", f"/reviewSubmissions/{submission_id}"): {
+                    "data": {
+                        "id": submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", version_id)
+
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{submission_id}/items",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{submission_id}/items",
+                "/reviewSubmissionItems",
+                f"/reviewSubmissions/{submission_id}",
+            ],
+        )
+
+    def test_submit_for_review_with_attach_subscriptions_skips_existing_waiting_submission_when_none_pending(self):
+        from scripts.asc_submit_for_review import submit_for_review
+
+        submission_id = "sub-1"
+        version_id = "ver-1"
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                ("GET", "/apps/app-1/reviewSubmissions"): {
+                    "data": [
+                        {
+                            "id": submission_id,
+                            "type": "reviewSubmissions",
+                            "attributes": {"state": "WAITING_FOR_REVIEW"},
+                        }
+                    ]
+                },
+                ("GET", f"/reviewSubmissions/{submission_id}/items"): {
+                    "data": [
+                        {
+                            "id": "item-1",
+                            "type": "reviewSubmissionItems",
+                            "attributes": {"state": "READY_FOR_REVIEW"},
+                            "relationships": {
+                                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}
+                            },
+                        }
+                    ]
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", version_id, attach_subscriptions=True)
+
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{submission_id}/items",
+            ],
         )
 
     def test_submit_for_review_fails_when_subscription_requires_manual_review_attachment(self):
