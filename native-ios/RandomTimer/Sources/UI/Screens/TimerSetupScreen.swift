@@ -10,9 +10,9 @@ struct TimerSetupScreen: View {
     @State private var screenAppearedAt: Date?
     @State private var bannerDismissed = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
-    @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = 0
+    @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
-    @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = 0
+    @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_extended_max") private var storedExtendedMaxSeconds = TimerConfig.maxSecondsPro
 
     // Read directly from timerManager.config to avoid animation issues
@@ -629,7 +629,7 @@ private struct TimeRangeSliders: View {
     private let minGap = TimeRangeAdjuster.defaultMinGapSeconds
 
     private var minSliderUpperBound: Int {
-        Swift.max(0, maxValue - minGap)
+        Swift.max(TimeRangeAdjuster.defaultMinSecondsLimit, maxValue - minGap)
     }
 
     private var maxSliderLowerBound: Int {
@@ -637,7 +637,7 @@ private struct TimeRangeSliders: View {
     }
 
     private var minSliderRange: ClosedRange<Double> {
-        let lower = 0.0
+        let lower = Double(TimeRangeAdjuster.defaultMinSecondsLimit)
         let upper = Double(minSliderUpperBound)
         return lower < upper ? lower...upper : lower...(lower + 1)
     }
@@ -686,7 +686,14 @@ private struct TimeRangeSliders: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(Swift.min(Swift.max(minValue, 0), minSliderUpperBound)) },
+                            get: {
+                                Double(
+                                    Swift.min(
+                                        Swift.max(minValue, TimeRangeAdjuster.defaultMinSecondsLimit),
+                                        minSliderUpperBound
+                                    )
+                                )
+                            },
                             set: { newValue in
                                 let snapped = Int((newValue / Double(coarseStep)).rounded()) * coarseStep
                                 adjustMin(to: snapped)
@@ -783,7 +790,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMinChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMinSeconds: Swift.max(0, newValue),
+            newMinSeconds: Swift.max(TimeRangeAdjuster.defaultMinSecondsLimit, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
@@ -792,7 +799,7 @@ private struct TimeRangeSliders: View {
         TimeRangeAdjuster.adjustForMaxChange(
             currentMinSeconds: minValue,
             currentMaxSeconds: maxValue,
-            newMaxSeconds: Swift.max(minGap, newValue),
+            newMaxSeconds: Swift.max(TimeRangeAdjuster.defaultMinSecondsLimit + minGap, newValue),
             maxSecondsLimit: maxSecondsLimit
         )
     }
