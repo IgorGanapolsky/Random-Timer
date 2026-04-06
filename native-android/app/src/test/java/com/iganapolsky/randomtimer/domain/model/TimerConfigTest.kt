@@ -10,11 +10,17 @@ class TimerConfigTest {
     fun `default config has valid range`() {
         val config = TimerConfig.DEFAULT
 
-        assertThat(config.minSeconds).isEqualTo(0)
+        assertThat(config.minSeconds).isEqualTo(5)
         assertThat(config.maxSeconds).isEqualTo(30)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
         assertThat(config.voiceEnabled).isFalse()
+    }
+
+    @Test
+    fun `minimum seconds must be at least 5 to prevent instant fire`() {
+        assertThat(TimerConfig.DEFAULT.minSeconds).isAtLeast(5)
+        assertThat(TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS).isAtLeast(5)
     }
 
     @Test
@@ -176,7 +182,7 @@ class TimerConfigTest {
             )
         val profiles =
             RangeToggleProfiles(
-                freeMinSeconds = 0,
+                freeMinSeconds = 5,
                 freeMaxSeconds = 30,
                 extendedMinSeconds = 900,
                 extendedMaxSeconds = 1800,
@@ -185,14 +191,14 @@ class TimerConfigTest {
         val result = toggleExtendedRange(current, profiles)
 
         assertThat(result.config.useExtendedRange).isFalse()
-        assertThat(result.config.minSeconds).isEqualTo(0)
+        assertThat(result.config.minSeconds).isEqualTo(5)
         assertThat(result.config.maxSeconds).isEqualTo(30)
         assertThat(result.profiles.extendedMinSeconds).isEqualTo(900)
         assertThat(result.profiles.extendedMaxSeconds).isEqualTo(1800)
     }
 
     @Test
-    fun `activation preset migrates legacy 30-120 to 0-30 when first timer not done`() {
+    fun `activation preset migrates legacy 30-120 to 5-30 when first timer not done`() {
         val legacy =
             TimerConfig(
                 minSeconds = 30,
@@ -210,7 +216,7 @@ class TimerConfigTest {
                 current = legacy,
             )
         assertThat(next).isNotNull()
-        assertThat(next!!.minSeconds).isEqualTo(0)
+        assertThat(next!!.minSeconds).isEqualTo(5)
         assertThat(next.maxSeconds).isEqualTo(30)
         assertThat(next.soundType).isEqualTo(legacy.soundType)
     }
