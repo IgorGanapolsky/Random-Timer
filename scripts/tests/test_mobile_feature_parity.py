@@ -32,12 +32,15 @@ def _read(path: Path) -> str:
 
 
 def test_default_timer_range_is_0_to_30_on_both_platforms():
-    """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
+    """Android DEFAULT uses 5–30s min/max; iOS defaults 0–30 (random pick floors at 1s on both). Free-tier cap 300s."""
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
-    assert re.search(r"minSeconds\s*=\s*0", android_source)
-    assert re.search(r"maxSeconds\s*=\s*30", android_source)
+    assert re.search(
+        r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,\s*\n\s*maxSeconds = 30,",
+        android_source,
+        re.DOTALL,
+    )
     assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
     assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
 

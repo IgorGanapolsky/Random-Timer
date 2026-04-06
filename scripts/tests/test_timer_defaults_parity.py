@@ -75,8 +75,15 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "minSeconds = 0" in android_config
-    assert "maxSeconds = 30" in android_config
+    assert re.search(
+        r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,",
+        android_config,
+    )
+    assert re.search(
+        r"val DEFAULT\s*=\s*\n\s*TimerConfig\(\s*\n\s*minSeconds = 5,\s*\n\s*maxSeconds = 30,",
+        android_config,
+        re.DOTALL,
+    )
     assert "private fun Preferences.toTimerConfig()" in android_repository
     assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 30") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
