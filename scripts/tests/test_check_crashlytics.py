@@ -8,6 +8,8 @@ import sys
 import types
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 
 def _import_script():
     """Import check_crashlytics as a module."""
@@ -194,3 +196,22 @@ def test_collect_crashlytics_snapshot_handles_missing_package_table():
 
     assert payload["status"] == "error"
     assert "No Crashlytics export table found" in payload["reason"]
+
+
+def test_collect_crashlytics_snapshot_handles_runtime_error_from_export_check():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", side_effect=RuntimeError("BigQuery API 403: denied")):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["status"] == "error"
+    assert "403" in payload["reason"]
+    assert payload.get("source") == "crashlytics"
+
+
+def test_main_exits_zero_when_bigquery_export_raises_runtime_error():
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", side_effect=RuntimeError("BigQuery API 500")), \
+         patch.object(sys, "argv", ["check_crashlytics.py"]):
+        with pytest.raises(SystemExit) as exc_info:
+            cc.main()
+    assert exc_info.value.code == 0

@@ -82,8 +82,11 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
     // MARK: - Public Methods
 
+    private static let activationRangeNudgeAppliedKey = "activation_first_run_range_nudge_applied"
+
     /// Applies 20–60s range once for users on canonical 30–120 defaults who have not finished a timer yet.
     func applyActivationPresetForFirstCompletionIfNeeded() {
+        if UserDefaults.standard.bool(forKey: Self.activationRangeNudgeAppliedKey) { return }
         let done = UserDefaults.standard.bool(forKey: "hasCompletedFirstTimer")
         let preset = config.applyingActivationPresetForFirstCompletionIfEligible(
             hasCompletedFirstTimer: done
@@ -92,6 +95,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             return
         }
         updateConfig(next)
+        UserDefaults.standard.set(true, forKey: Self.activationRangeNudgeAppliedKey)
     }
 
     func updateConfig(_ newConfig: TimerConfig) {

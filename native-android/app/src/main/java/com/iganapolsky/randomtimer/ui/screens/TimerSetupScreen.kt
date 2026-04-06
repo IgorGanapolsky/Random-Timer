@@ -69,6 +69,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -151,6 +152,7 @@ fun TimerSetupScreen(
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(!isPro) }
     var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
@@ -168,8 +170,11 @@ fun TimerSetupScreen(
         config.minSeconds,
         config.maxSeconds,
     ) {
+        val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("activation_first_run_range_nudge_applied", false)) return@LaunchedEffect
         val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
         if (next != null) {
+            prefs.edit().putBoolean("activation_first_run_range_nudge_applied", true).apply()
             onConfigChange(next)
         }
     }
