@@ -1,4 +1,5 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
+import { sharedDesktopBrowser } from "./src/browserSelection";
 
 const isCI = Boolean(process.env.CI);
 
@@ -18,6 +19,7 @@ export default defineConfig({
   ],
   outputDir: "test-results",
   use: {
+    ...sharedDesktopBrowser,
     trace: "retain-on-failure",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -33,9 +35,6 @@ export default defineConfig({
     {
       name: "store-console",
       testMatch: /specs\/store\/.*\.spec\.ts$/,
-      use: {
-        ...devices["Desktop Chrome"],
-      },
     },
   ],
 });

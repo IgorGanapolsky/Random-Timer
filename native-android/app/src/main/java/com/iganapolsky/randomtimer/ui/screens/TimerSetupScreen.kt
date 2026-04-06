@@ -17,6 +17,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,8 +35,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -80,6 +84,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
+import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
@@ -157,6 +162,18 @@ fun TimerSetupScreen(
         showArsenal = true
     }
 
+    LaunchedEffect(
+        hasCompletedFirstTimer,
+        config.useExtendedRange,
+        config.minSeconds,
+        config.maxSeconds,
+    ) {
+        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        if (next != null) {
+            onConfigChange(next)
+        }
+    }
+
     LaunchedEffect(config.useExtendedRange, config.minSeconds, config.maxSeconds) {
         if (config.useExtendedRange) {
             val sanitized =
@@ -209,6 +226,8 @@ fun TimerSetupScreen(
             ),
         )
     }
+
+    var bannerDismissed by remember { mutableStateOf(false) }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isCompactHeight = TimerSetupLayoutPolicy.isCompactHeightViewport(maxHeight.value.toInt())
@@ -267,6 +286,38 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
+                if (!hasCompletedFirstTimer && !bannerDismissed) {
+                    item {
+                        Card(
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                                Text(
+                                    text = "Tap Start for a random 20s\u20131min drill. Customize later.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(end = 32.dp),
+                                )
+                                IconButton(
+                                    onClick = { bannerDismissed = true },
+                                    modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Dismiss",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -366,6 +417,12 @@ fun TimerSetupScreen(
                                     )
                                 }
                             }
+                            Spacer(modifier = Modifier.height(spacing.headerToContent))
+                            Text(
+                                text = "Each timer picks a random duration in your range \u2014 stay ready for anything.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                             Spacer(modifier = Modifier.height(spacing.headerToContent))
 
                             val maxRange =

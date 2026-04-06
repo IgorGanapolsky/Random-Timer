@@ -36,6 +36,7 @@ def _get_android_data(days: int) -> dict[str, Any]:
     try:
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
+        from pem_env import load_google_play_service_account_dict
     except ImportError:
         return {"status": "skipped", "reason": "google-api-python-client not installed"}
 
@@ -46,18 +47,11 @@ def _get_android_data(days: int) -> dict[str, Any]:
         return {"status": "skipped", "reason": "no GOOGLE_PLAY_JSON_KEY"}
 
     try:
-        if os.path.isfile(key_path):
-            credentials = service_account.Credentials.from_service_account_file(
-                key_path,
-                scopes=["https://www.googleapis.com/auth/androidpublisher"],
-            )
-        else:
-            import json as json_mod
-            info = json_mod.loads(key_path)
-            credentials = service_account.Credentials.from_service_account_info(
-                info,
-                scopes=["https://www.googleapis.com/auth/androidpublisher"],
-            )
+        info = load_google_play_service_account_dict(key_path)
+        credentials = service_account.Credentials.from_service_account_info(
+            info,
+            scopes=["https://www.googleapis.com/auth/androidpublisher"],
+        )
     except Exception as e:
         return {"status": "error", "reason": f"credential error: {e}"}
 

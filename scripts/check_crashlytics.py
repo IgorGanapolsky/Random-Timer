@@ -101,7 +101,7 @@ def check_bigquery_export(token):
             return None  # Dataset doesn't exist
         error_body = e.read().decode()
         print(f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}", file=sys.stderr)
-        return None
+        raise RuntimeError(f"BigQuery API {e.code}: {error_body[:200]}")
 
 
 def select_crashlytics_table(tables):

@@ -4,9 +4,20 @@
 from __future__ import annotations
 
 import os
+import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Optional
+
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from pem_env import normalize_inline_pem
+from repo_dotenv import load_repo_dotenv
+
+load_repo_dotenv(Path(__file__).resolve().parent.parent)
 
 APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
@@ -21,26 +32,39 @@ def _read_file(path: str) -> str:
 
 
 def read_private_key_material(key_id: str) -> str:
-    value = (os.environ.get("APPSTORE_PRIVATE_KEY") or "").strip()
-    if not value:
-        value = (os.environ.get("APPSTORE_PRIVATE_KEY_PATH") or "").strip()
-    if not value:
-        default_path = os.path.expanduser(
-            f"~/.appstoreconnect/private_keys/AuthKey_{key_id}.p8"
-        )
-        if os.path.isfile(default_path):
-            value = default_path
-    if not value:
-        # Try reading from GitHub Actions secret format
-        github_key = os.environ.get("APPSTORE_PRIVATE_KEY_GITHUB")
-        if github_key:
-            return github_key
-        return ""
+    """Resolve .p8 material from env, path, base64 secret, or Fastlane default path."""
+    for env_name in ("APPSTORE_PRIVATE_KEY", "APPSTORE_PRIVATE_KEY_PATH"):
+        raw = (os.environ.get(env_name) or "").strip()
+        if not raw:
+            continue
+        expanded = os.path.expanduser(raw)
+        if os.path.isfile(expanded):
+            return normalize_inline_pem(_read_file(expanded))
+        return normalize_inline_pem(raw)
 
-    expanded = os.path.expanduser(value)
-    if os.path.isfile(expanded):
-        return _read_file(expanded)
-    return value
+    b64 = (os.environ.get("APP_STORE_CONNECT_KEY_B64") or "").strip()
+    if b64:
+        try:
+            import base64
+
+            decoded = base64.b64decode("".join(b64.split()), validate=False).decode(
+                "utf-8"
+            )
+            return normalize_inline_pem(decoded)
+        except Exception:
+            pass
+
+    github_key = (os.environ.get("APPSTORE_PRIVATE_KEY_GITHUB") or "").strip()
+    if github_key:
+        return normalize_inline_pem(github_key)
+
+    default_path = os.path.expanduser(
+        f"~/.appstoreconnect/private_keys/AuthKey_{key_id}.p8"
+    )
+    if os.path.isfile(default_path):
+        return normalize_inline_pem(_read_file(default_path))
+
+    return ""
 
 
 def safe_json_response(resp: Any) -> dict[str, Any]:
@@ -80,14 +104,31 @@ class ASCAuth:
     def jwt(self) -> str:
         try:
             import jwt  # PyJWT
+            from cryptography.hazmat.primitives import serialization
         except ImportError as exc:
-            raise AscClientError("Missing PyJWT. Install: pip install pyjwt cryptography") from exc
+            raise AscClientError(
+                "Missing PyJWT/cryptography. Install: pip install pyjwt cryptography"
+            ) from exc
+
+        try:
+            signing_key = serialization.load_pem_private_key(
+                self.private_key.encode("utf-8"),
+                password=None,
+            )
+        except Exception as exc:
+            raise AscClientError(
+                "Could not parse App Store Connect API private key as PEM (.p8). "
+                "Re-download the key from App Store Connect (Users and Access → Keys) or set "
+                "APPSTORE_PRIVATE_KEY, APP_STORE_CONNECT_KEY_B64, or APPSTORE_PRIVATE_KEY_PATH. "
+                f"If using the Fastlane default file, verify "
+                f"~/.appstoreconnect/private_keys/AuthKey_{self.key_id}.p8 is intact. Details: {exc}"
+            ) from exc
 
         now = int(time.time())
         exp = now + 20 * 60
         payload = {"iss": self.issuer_id, "iat": now, "exp": exp, "aud": "appstoreconnect-v1"}
         headers = {"alg": "ES256", "kid": self.key_id, "typ": "JWT"}
-        return jwt.encode(payload, self.private_key, algorithm="ES256", headers=headers)
+        return jwt.encode(payload, signing_key, algorithm="ES256", headers=headers)
 
 
 class ASCClient:

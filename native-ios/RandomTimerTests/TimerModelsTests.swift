@@ -7,10 +7,37 @@ final class TimerConfigTests: XCTestCase {
     func testDefaultConfigHasValidRange() {
         let config = RandomTimer.TimerConfig.default
 
-        XCTAssertEqual(config.minSeconds, 0)
-        XCTAssertEqual(config.maxSeconds, 300)
+        XCTAssertEqual(config.minSeconds, 30)
+        XCTAssertEqual(config.maxSeconds, 120)
         XCTAssertEqual(config.alarmDuration, 10)
         XCTAssertFalse(config.voiceEnabled)
+    }
+
+    func testActivationPresetTightensDefaultWhenFirstTimerNotDone() {
+        let base = TimerConfig.default
+        let next = base.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNotNil(next)
+        XCTAssertEqual(next?.minSeconds, TimerConfig.activationFirstRunMinSeconds)
+        XCTAssertEqual(next?.maxSeconds, TimerConfig.activationFirstRunMaxSeconds)
+        XCTAssertEqual(next?.soundType, base.soundType)
+    }
+
+    func testActivationPresetSkippedAfterFirstTimer() {
+        let next = TimerConfig.default
+            .applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: true)
+        XCTAssertNil(next)
+    }
+
+    func testActivationPresetSkippedWhenRangeCustomized() {
+        let custom = TimerConfig(minSeconds: 45, maxSeconds: 120)
+        let next = custom.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNil(next)
+    }
+
+    func testActivationPresetSkippedWhenExtendedRange() {
+        let ext = TimerConfig(minSeconds: 30, maxSeconds: 120, useExtendedRange: true)
+        let next = ext.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        XCTAssertNil(next)
     }
 
     func testConfigCanEnableVibration() {
@@ -89,8 +116,8 @@ final class TimerConfigTests: XCTestCase {
         let decoded = try JSONDecoder().decode(RandomTimer.TimerConfig.self, from: payload)
 
         let expected = RandomTimer.TimerConfig(
-            minSeconds: 0,
-            maxSeconds: 300,
+            minSeconds: 30,
+            maxSeconds: 120,
             alarmDuration: 10,
             hiddenMode: false,
             repeatEnabled: false,

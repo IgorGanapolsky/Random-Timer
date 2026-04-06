@@ -4,7 +4,7 @@ import os
 
 /// Main timer management class using Swift 6 concurrency
 @MainActor
-final class TimerManager: ObservableObject {
+final class TimerManager: ObservableObject { // swiftlint:disable:this no_observable_object
 
     // MARK: - Published State
 
@@ -81,6 +81,18 @@ final class TimerManager: ObservableObject {
     }
 
     // MARK: - Public Methods
+
+    /// Applies 20–60s range once for users on canonical 30–120 defaults who have not finished a timer yet.
+    func applyActivationPresetForFirstCompletionIfNeeded() {
+        let done = UserDefaults.standard.bool(forKey: "hasCompletedFirstTimer")
+        let preset = config.applyingActivationPresetForFirstCompletionIfEligible(
+            hasCompletedFirstTimer: done
+        )
+        guard let next = preset else {
+            return
+        }
+        updateConfig(next)
+    }
 
     func updateConfig(_ newConfig: TimerConfig) {
         config = newConfig
@@ -314,7 +326,8 @@ final class TimerManager: ObservableObject {
                     isAlarmSilenced = true
 
                     if state.config.repeatEnabled {
-                        let shouldContinue = state.config.repeatRounds == 0 || state.roundCount < state.config.repeatRounds
+                        let noLimit = state.config.repeatRounds == 0
+                        let shouldContinue = noLimit || state.roundCount < state.config.repeatRounds
                         if shouldContinue {
                             await restartTimer()
                         } else {
@@ -486,7 +499,10 @@ final class TimerManager: ObservableObject {
         await startLiveActivity(state: newState)
 
         // Schedule notification with the configured alarm sound
-        await notificationService.scheduleAlarmNotification(at: newState.endDate, soundType: currentState.config.soundType)
+        await notificationService.scheduleAlarmNotification(
+            at: newState.endDate,
+            soundType: currentState.config.soundType
+        )
 
         // Start countdown
         startCountdown()
@@ -650,7 +666,8 @@ final class TimerManager: ObservableObject {
                 "target_duration": state.targetDuration,
             ])
 
-            Logger.timer.info("ALARM! Playing sound type: \(String(describing: state.config.soundType)), volume: \(state.config.volume)")
+            let soundDesc = String(describing: state.config.soundType)
+            Logger.timer.info("ALARM! Playing sound type: \(soundDesc), volume: \(state.config.volume)")
             notificationService.playAlarmSound(
                 type: state.config.soundType,
                 volume: state.config.volume

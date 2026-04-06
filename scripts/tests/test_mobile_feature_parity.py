@@ -31,14 +31,15 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_zero_to_300_on_both_platforms():
+def test_default_timer_range_is_30_to_120_on_both_platforms():
+    """Canonical quick-start range in TimerConfig.default / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
-    assert re.search(r"minSeconds\s*=\s*0", android_source)
-    assert re.search(r"maxSeconds\s*=\s*300", android_source)
-    assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*300", ios_source)
+    assert re.search(r"minSeconds\s*=\s*30", android_source)
+    assert re.search(r"maxSeconds\s*=\s*120", android_source)
+    assert re.search(r"minSeconds:\s*Int\s*=\s*30", ios_source)
+    assert re.search(r"maxSeconds:\s*Int\s*=\s*120", ios_source)
 
 
 def test_time_range_limits_and_gap_match_between_platforms():
@@ -289,5 +290,5 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
     assert 'Text(config.useExtendedRange ? "1H" : "5m")' in ios_setup
     assert "config.useExtendedRange ? proManager.maxSecondsLimit : 300" in ios_setup
     assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
-    assert 'Text("PRO: 1H' in ios_setup
+    assert 'Text(hasCompletedFirstTimer ? "PRO: 1H' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup
