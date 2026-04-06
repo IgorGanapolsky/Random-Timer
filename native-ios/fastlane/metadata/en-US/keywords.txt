@@ -1,1 +1,1 @@
-random,countdown,par,shot,reaction,drill,dry fire,boxing,mma,bjj,hiit,sparring,shooting,interval
+mma,muay thai,sparring,draw,reaction,interval,shot timer,par timer,combat,drill,beep
