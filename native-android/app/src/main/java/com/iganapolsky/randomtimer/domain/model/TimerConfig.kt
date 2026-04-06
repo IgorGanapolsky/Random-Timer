@@ -109,24 +109,13 @@ data class TimerConfig(
             )
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)
-    }
-}
 
-/**
- * Migrates legacy canonical defaults (30–120s) to activation-first 0–30s for users who have
- * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
- * when no migration applies.
- */
-fun activationPresetForFirstCompletionIfEligible(
-    hasCompletedFirstTimer: Boolean,
-    current: TimerConfig,
-): TimerConfig? {
-    if (hasCompletedFirstTimer) return null
-    if (current.useExtendedRange) return null
-    if (current.minSeconds != 30 || current.maxSeconds != 120) {
-        return null
+        /** Min seconds for first-session activation preset (mirrors iOS TimerModels). */
+        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = 0
+
+        /** Max seconds for first-session activation preset (mirrors iOS TimerModels). */
+        const val ACTIVATION_FIRST_RUN_MAX_SECONDS = 30
     }
-    return current.copy(minSeconds = 0, maxSeconds = 30)
 }
 
 data class RangeToggleProfiles(
@@ -207,6 +196,26 @@ fun toggleExtendedRange(
             profiles = nextProfiles,
         )
     }
+
+/**
+ * Migrates legacy canonical defaults (30–120s) to activation-first 0–30s for users who have
+ * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
+ * when no migration applies.
+ */
+fun activationPresetForFirstCompletionIfEligible(
+    hasCompletedFirstTimer: Boolean,
+    current: TimerConfig,
+): TimerConfig? {
+    if (hasCompletedFirstTimer) return null
+    if (current.useExtendedRange) return null
+    if (current.minSeconds != 30 || current.maxSeconds != 120) {
+        return null
+    }
+    return current.copy(
+        minSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS,
+        maxSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS,
+    )
+}
 
 /**
  * Represents the current state of an active timer.
