@@ -527,51 +527,23 @@ fun TimerSetupScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             // AI Voice Callouts (Elite Feature)
-                            Row(
+                            Column(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
                                     Text(
                                         text = "\uD83D\uDCE2 Voice Callouts",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                     )
-                                    Text(
-                                        text = "Time checks and command cues that keep you sharp under pressure",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TimerColors.TextMuted,
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (isPro) {
-                                        // Pro users only see the voice toggle
-                                    } else {
-                                        // Preview Button only for free users (to sell the feature)
-                                        Surface(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onCommandCuePreview(config.voiceGender)
-                                            },
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                            modifier = Modifier.padding(end = 8.dp),
-                                        ) {
-                                            Text(
-                                                text = "PREVIEW",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            )
-                                        }
-                                    }
 
                                     if (isPro) {
                                         Switch(
@@ -611,44 +583,64 @@ fun TimerSetupScreen(
                                         }
                                     }
                                 }
-                            }
 
-                            // Voice Gender selector stays visible so free users can preview both voices.
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                VoiceGender.entries.forEach { gender ->
-                                    FilterChip(
-                                        selected = config.voiceGender == gender,
-                                        onClick = {
-                                            updateConfig(voiceGender = gender)
-                                            onVoiceGenderSelected(gender)
-                                        },
-                                        label = {
+                                // Male/Female chips + Preview — always visible, right below the title
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    VoiceGender.entries.forEach { gender ->
+                                        FilterChip(
+                                            selected = config.voiceGender == gender,
+                                            onClick = {
+                                                updateConfig(voiceGender = gender)
+                                                onVoiceGenderSelected(gender)
+                                            },
+                                            label = {
+                                                Text(
+                                                    if (gender == VoiceGender.MALE) {
+                                                        "Male"
+                                                    } else {
+                                                        "Female"
+                                                    },
+                                                )
+                                            },
+                                            colors =
+                                                FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                    selectedLabelColor = TimerColors.AccentPrimary,
+                                                ),
+                                            border =
+                                                FilterChipDefaults.filterChipBorder(
+                                                    selectedBorderColor = TimerColors.AccentPrimary,
+                                                    enabled = true,
+                                                    selected = config.voiceGender == gender,
+                                                ),
+                                        )
+                                    }
+
+                                    if (!isPro) {
+                                        Surface(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onCommandCuePreview(config.voiceGender)
+                                            },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        ) {
                                             Text(
-                                                if (gender == VoiceGender.MALE) {
-                                                    "Male"
-                                                } else {
-                                                    "Female"
-                                                },
+                                                text = "PREVIEW",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             )
-                                        },
-                                        colors =
-                                            FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                selectedLabelColor = TimerColors.AccentPrimary,
-                                            ),
-                                        border =
-                                            FilterChipDefaults.filterChipBorder(
-                                                selectedBorderColor = TimerColors.AccentPrimary,
-                                                enabled = true,
-                                                selected = config.voiceGender == gender,
-                                            ),
-                                    )
+                                        }
+                                    }
                                 }
                             }
 

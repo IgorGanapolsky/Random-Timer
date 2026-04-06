@@ -103,11 +103,13 @@ def test_voice_callouts_present_on_both_platforms():
     ios_setup = _read(IOS_SETUP)
     android_timer_config = _read(ANDROID_TIMER_CONFIG)
     ios_timer_models = _read(IOS_TIMER_MODELS)
-    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
-    for source in (android_setup, ios_setup):
-        assert "Voice Callouts" in source or "AI Voice Callouts" in source
-        assert expected_supporting_copy in source
+    assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
+    assert "Voice Callouts" in ios_setup or "AI Voice Callouts" in ios_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in ios_setup
+    assert "VoiceGender.entries.forEach" in android_setup
+    assert 'text = "PREVIEW"' in android_setup
+    assert 'if (gender == VoiceGender.MALE)' in android_setup
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models

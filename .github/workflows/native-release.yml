@@ -677,9 +677,9 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
 
-      - name: Check current App Store version state
+      - name: Check current App Store version state (pre-metadata)
         if: steps.gate.outputs.enabled == 'true'
-        id: asc_state
+        id: asc_state_meta
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
@@ -689,10 +689,10 @@ jobs:
           STATE_JSON="$(python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --json 2>/dev/null)" || true
           STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; print(json.loads(sys.stdin.read()).get("state","UNKNOWN"))' 2>/dev/null)" || STATE="UNKNOWN"
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
-          echo "ASC version state: $STATE"
+          echo "ASC version state (pre-metadata): $STATE"
 
       - name: Upload App Store metadata/screenshots
-        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state.outputs.state != 'IN_REVIEW' }}
+        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state_meta.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'IN_REVIEW' }}
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
