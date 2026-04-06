@@ -13,9 +13,10 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     ).read_text(encoding="utf-8")
 
     assert "TRAIN FOR CHAOS. NOT RHYTHM." in full_description
-    assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in full_description
+    assert "Random Tactical Timer is a random timer and reaction timer" in full_description
+    assert "dry fire timer, boxing timer, BJJ timer, or HIIT timer" in full_description
     assert "serious fighters and operators" not in full_description
-    assert "trains reaction under pressure" in short_description
+    assert short_description.strip() == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
 
 
 def test_ios_store_copy_matches_reaction_positioning() -> None:
@@ -28,9 +29,13 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     subtitle = (
         REPO_ROOT / "native-ios" / "fastlane" / "metadata" / "en-US" / "subtitle.txt"
     ).read_text(encoding="utf-8").strip()
+    keywords = (
+        REPO_ROOT / "native-ios" / "fastlane" / "metadata" / "en-US" / "keywords.txt"
+    ).read_text(encoding="utf-8").strip()
 
     assert "TRAIN FOR CHAOS. NOT RHYTHM." in description
-    assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in description
-    assert "Built for dry fire, sparring, drills, and reaction training." in description
-    assert "trains reaction under pressure" in promotional_text
-    assert subtitle == "Train Reaction Under Pressure"
+    assert "Random Tactical Timer is a random timer and reaction timer" in description
+    assert "dry fire timer, boxing timer, BJJ timer, or HIIT timer" in description
+    assert promotional_text.strip() == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
+    assert subtitle == "Dry Fire, Boxing, BJJ, HIIT"
+    assert "shot timer" in keywords
