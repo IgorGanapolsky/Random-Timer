@@ -75,12 +75,13 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "minSeconds = 0" in android_config
+    assert "minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS" in android_config
     assert "maxSeconds = 30" in android_config
     assert "private fun Preferences.toTimerConfig()" in android_repository
     assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 30") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
-    assert re.search(r"minSeconds: Int = 0,\n\s*maxSeconds: Int = 30,", ios_models)
+    assert "public static let minimumFloorSeconds = 5" in ios_models
+    assert re.search(r"minSeconds: Int = minimumFloorSeconds,\n\s*maxSeconds: Int = 30,", ios_models)
     assert "maxSecondsFree = 300" in ios_models
 
 
@@ -95,10 +96,10 @@ def test_timer_limits_and_gap_rules_match_across_mobile_platforms():
     assert "public static let maxSecondsFree = 300" in ios_models
     assert "public static let maxSecondsPro = 3600" in ios_models
 
-    assert "const val DEFAULT_MIN_SECONDS = 0" in android_range_adjuster
+    assert "const val DEFAULT_MIN_SECONDS = 5" in android_range_adjuster
     assert "const val DEFAULT_MAX_SECONDS = 3600" in android_range_adjuster
     assert "const val DEFAULT_MIN_GAP_SECONDS = 5" in android_range_adjuster
-    assert "static let defaultMinSecondsLimit = 0" in ios_models
+    assert "static let defaultMinSecondsLimit = TimerConfig.minimumFloorSeconds" in ios_models
     assert "static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree" in ios_models
     assert "static let defaultMinGapSeconds = 5" in ios_models
 

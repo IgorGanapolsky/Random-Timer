@@ -1072,6 +1072,7 @@ private fun TimeRangeSliders(
     val haptic = LocalHapticFeedback.current
     val coarseNudgeStep = 5
     val fineNudgeStep = 1
+    val minFloorSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
     val minSliderMaxInt = minSliderMax.toInt()
@@ -1120,7 +1121,7 @@ private fun TimeRangeSliders(
             ) {
                 NudgeButton(
                     label = "\u2212",
-                    enabled = enabled && minValue >= coarseNudgeStep,
+                    enabled = enabled && minValue >= (minFloorSeconds + coarseNudgeStep),
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
@@ -1128,11 +1129,11 @@ private fun TimeRangeSliders(
                 Slider(
                     value = minValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, coarseNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
+                        val snapped = snapToStep(raw, coarseNudgeStep, minFloorSeconds, maxSliderRangeInt - minGapSeconds)
                         onMinChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
+                    valueRange = minFloorSeconds.toFloat()..(maxSliderRangeInt - minGapSeconds).toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
                     colors =
                         SliderDefaults.colors(

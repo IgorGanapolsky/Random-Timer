@@ -94,7 +94,7 @@ data class TimerConfig(
 
         val DEFAULT =
             TimerConfig(
-                minSeconds = 5,
+                minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
                 maxSeconds = 30,
                 alarmDuration = 10,
                 hiddenMode = false,
@@ -111,7 +111,7 @@ data class TimerConfig(
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)
 
         /** Min seconds for first-session activation preset (mirrors iOS TimerModels). */
-        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = 5
+        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = TimeRangeAdjuster.DEFAULT_MIN_SECONDS
 
         /** Max seconds for first-session activation preset (mirrors iOS TimerModels). */
         const val ACTIVATION_FIRST_RUN_MAX_SECONDS = 30
@@ -198,7 +198,7 @@ fun toggleExtendedRange(
     }
 
 /**
- * Migrates legacy canonical defaults (30–120s) to activation-first 0–30s for users who have
+ * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s for users who have
  * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
  * when no migration applies.
  */
