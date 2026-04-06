@@ -1,1 +1,1 @@
-Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills.
+Random timer with male & female AI coach voice for combat sports and HIIT.
