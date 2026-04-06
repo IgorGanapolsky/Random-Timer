@@ -31,15 +31,15 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_30_to_120_on_both_platforms():
-    """Canonical quick-start range in TimerConfig.default / Swift defaults (free-tier cap remains 300s)."""
+def test_default_timer_range_is_0_to_30_on_both_platforms():
+    """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
     ios_source = _read(IOS_TIMER_MODELS)
 
-    assert re.search(r"minSeconds\s*=\s*30", android_source)
-    assert re.search(r"maxSeconds\s*=\s*120", android_source)
-    assert re.search(r"minSeconds:\s*Int\s*=\s*30", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*120", ios_source)
+    assert re.search(r"minSeconds\s*=\s*0", android_source)
+    assert re.search(r"maxSeconds\s*=\s*30", android_source)
+    assert re.search(r"minSeconds:\s*Int\s*=\s*0", ios_source)
+    assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
 
 
 def test_time_range_limits_and_gap_match_between_platforms():
