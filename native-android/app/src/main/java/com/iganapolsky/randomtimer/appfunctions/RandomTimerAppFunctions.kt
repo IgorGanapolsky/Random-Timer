@@ -53,15 +53,18 @@ class RandomTimerAppFunctions(
     ): TimerFunctionResult =
         appFunctionContext.let {
             handler.configureRandomTimer(
-                minSeconds = minSeconds,
-                maxSeconds = maxSeconds,
-                alarmDuration = alarmDuration,
-                soundType = soundType,
-                voiceEnabled = voiceEnabled,
-                voiceGender = voiceGender,
-                hiddenMode = hiddenMode,
-                repeatEnabled = repeatEnabled,
-                vibrationEnabled = vibrationEnabled,
+                request =
+                    timerFunctionRequest(
+                        minSeconds = minSeconds,
+                        maxSeconds = maxSeconds,
+                        alarmDuration = alarmDuration,
+                        soundType = soundType,
+                        voiceEnabled = voiceEnabled,
+                        voiceGender = voiceGender,
+                        hiddenMode = hiddenMode,
+                        repeatEnabled = repeatEnabled,
+                        vibrationEnabled = vibrationEnabled,
+                    ),
             )
         }
 
@@ -110,15 +113,18 @@ class RandomTimerAppFunctions(
     ): TimerFunctionResult =
         appFunctionContext.let {
             handler.startRandomTimer(
-                minSeconds = minSeconds,
-                maxSeconds = maxSeconds,
-                alarmDuration = alarmDuration,
-                soundType = soundType,
-                voiceEnabled = voiceEnabled,
-                voiceGender = voiceGender,
-                hiddenMode = hiddenMode,
-                repeatEnabled = repeatEnabled,
-                vibrationEnabled = vibrationEnabled,
+                request =
+                    timerFunctionRequest(
+                        minSeconds = minSeconds,
+                        maxSeconds = maxSeconds,
+                        alarmDuration = alarmDuration,
+                        soundType = soundType,
+                        voiceEnabled = voiceEnabled,
+                        voiceGender = voiceGender,
+                        hiddenMode = hiddenMode,
+                        repeatEnabled = repeatEnabled,
+                        vibrationEnabled = vibrationEnabled,
+                    ),
             )
         }
 
@@ -150,3 +156,26 @@ class RandomTimerAppFunctions(
 private object TimerDefaults {
     const val ALARM_DURATION_SECONDS = 10
 }
+
+private fun timerFunctionRequest(
+    minSeconds: Int,
+    maxSeconds: Int,
+    alarmDuration: Int,
+    soundType: String,
+    voiceEnabled: Boolean,
+    voiceGender: String,
+    hiddenMode: Boolean,
+    repeatEnabled: Boolean,
+    vibrationEnabled: Boolean,
+): TimerFunctionRequest =
+    TimerFunctionRequest(
+        minSeconds = minSeconds,
+        maxSeconds = maxSeconds,
+        alarmDuration = alarmDuration,
+        soundType = soundType,
+        voiceEnabled = voiceEnabled,
+        voiceGender = voiceGender,
+        hiddenMode = hiddenMode,
+        repeatEnabled = repeatEnabled,
+        vibrationEnabled = vibrationEnabled,
+    )

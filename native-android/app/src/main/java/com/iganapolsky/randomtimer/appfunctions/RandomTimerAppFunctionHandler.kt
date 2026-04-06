@@ -22,29 +22,8 @@ class RandomTimerAppFunctionHandler
         private val proManager: ProManager,
         private val configFactory: RandomTimerAppFunctionConfigFactory,
     ) {
-        suspend fun configureRandomTimer(
-            minSeconds: Int,
-            maxSeconds: Int,
-            alarmDuration: Int,
-            soundType: String,
-            voiceEnabled: Boolean,
-            voiceGender: String,
-            hiddenMode: Boolean,
-            repeatEnabled: Boolean,
-            vibrationEnabled: Boolean,
-        ): TimerFunctionResult {
-            val config =
-                buildConfig(
-                    minSeconds = minSeconds,
-                    maxSeconds = maxSeconds,
-                    alarmDuration = alarmDuration,
-                    soundType = soundType,
-                    voiceEnabled = voiceEnabled,
-                    voiceGender = voiceGender,
-                    hiddenMode = hiddenMode,
-                    repeatEnabled = repeatEnabled,
-                    vibrationEnabled = vibrationEnabled,
-                )
+        suspend fun configureRandomTimer(request: TimerFunctionRequest): TimerFunctionResult {
+            val config = buildConfig(request)
 
             repository.saveTimerConfig(config)
             analyticsService.track(
@@ -60,29 +39,8 @@ class RandomTimerAppFunctionHandler
             )
         }
 
-        suspend fun startRandomTimer(
-            minSeconds: Int,
-            maxSeconds: Int,
-            alarmDuration: Int,
-            soundType: String,
-            voiceEnabled: Boolean,
-            voiceGender: String,
-            hiddenMode: Boolean,
-            repeatEnabled: Boolean,
-            vibrationEnabled: Boolean,
-        ): TimerFunctionResult {
-            val config =
-                buildConfig(
-                    minSeconds = minSeconds,
-                    maxSeconds = maxSeconds,
-                    alarmDuration = alarmDuration,
-                    soundType = soundType,
-                    voiceEnabled = voiceEnabled,
-                    voiceGender = voiceGender,
-                    hiddenMode = hiddenMode,
-                    repeatEnabled = repeatEnabled,
-                    vibrationEnabled = vibrationEnabled,
-                )
+        suspend fun startRandomTimer(request: TimerFunctionRequest): TimerFunctionResult {
+            val config = buildConfig(request)
 
             val state = startTimerUseCase(config)
             serviceController.startTimer(state)
@@ -101,77 +59,70 @@ class RandomTimerAppFunctionHandler
             )
         }
 
-        suspend fun pauseTimer(): TimerFunctionResult {
-            val activeTimer =
-                repository.getActiveTimer().first()
-                    ?: return idleResult(ACTION_PAUSE, "No active timer to pause.")
-
-            analyticsService.track(
-                AnalyticsEvents.TIMER_PAUSED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to ENTRY_POINT),
-            )
-            serviceController.pauseTimer()
-            return activeTimer.config.result(
+        suspend fun pauseTimer(): TimerFunctionResult =
+            withActiveTimer(
                 action = ACTION_PAUSE,
-                status = STATUS_PAUSED,
-                message = "Paused active timer.",
-            )
-        }
+                idleVerb = "pause",
+            ) { activeTimer ->
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_PAUSED,
+                    mapOf(AnalyticsProperties.ENTRY_POINT to ENTRY_POINT),
+                )
+                serviceController.pauseTimer()
+                activeTimer.config.result(
+                    action = ACTION_PAUSE,
+                    status = STATUS_PAUSED,
+                    message = "Paused active timer.",
+                )
+            }
 
-        suspend fun resumeTimer(): TimerFunctionResult {
-            val activeTimer =
-                repository.getActiveTimer().first()
-                    ?: return idleResult(ACTION_RESUME, "No active timer to resume.")
-
-            analyticsService.track(
-                AnalyticsEvents.TIMER_RESUMED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to ENTRY_POINT),
-            )
-            serviceController.resumeTimer()
-            return activeTimer.config.result(
+        suspend fun resumeTimer(): TimerFunctionResult =
+            withActiveTimer(
                 action = ACTION_RESUME,
-                status = STATUS_RUNNING,
-                message = "Resumed active timer.",
-            )
-        }
+                idleVerb = "resume",
+            ) { activeTimer ->
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_RESUMED,
+                    mapOf(AnalyticsProperties.ENTRY_POINT to ENTRY_POINT),
+                )
+                serviceController.resumeTimer()
+                activeTimer.config.result(
+                    action = ACTION_RESUME,
+                    status = STATUS_RUNNING,
+                    message = "Resumed active timer.",
+                )
+            }
 
-        suspend fun stopTimer(): TimerFunctionResult {
-            val activeTimer =
-                repository.getActiveTimer().first()
-                    ?: return idleResult(ACTION_STOP, "No active timer to stop.")
-
-            repository.clearActiveTimer()
-            serviceController.stopTimer()
-            return activeTimer.config.result(
+        suspend fun stopTimer(): TimerFunctionResult =
+            withActiveTimer(
                 action = ACTION_STOP,
-                status = STATUS_STOPPED,
-                message = "Stopped active timer.",
-            )
-        }
+                idleVerb = "stop",
+            ) { activeTimer ->
+                repository.clearActiveTimer()
+                serviceController.stopTimer()
+                activeTimer.config.result(
+                    action = ACTION_STOP,
+                    status = STATUS_STOPPED,
+                    message = "Stopped active timer.",
+                )
+            }
 
-        private fun buildConfig(
-            minSeconds: Int,
-            maxSeconds: Int,
-            alarmDuration: Int,
-            soundType: String,
-            voiceEnabled: Boolean,
-            voiceGender: String,
-            hiddenMode: Boolean,
-            repeatEnabled: Boolean,
-            vibrationEnabled: Boolean,
-        ): TimerConfig =
+        private fun buildConfig(request: TimerFunctionRequest): TimerConfig =
             configFactory.create(
-                minSeconds = minSeconds,
-                maxSeconds = maxSeconds,
-                alarmDuration = alarmDuration,
-                soundType = soundType,
-                voiceEnabled = voiceEnabled,
-                voiceGender = voiceGender,
-                hiddenMode = hiddenMode,
-                repeatEnabled = repeatEnabled,
-                vibrationEnabled = vibrationEnabled,
+                request = request,
                 entitlementLevel = proManager.entitlementLevel.value,
             )
+
+        private suspend fun withActiveTimer(
+            action: String,
+            idleVerb: String,
+            onActiveTimer: suspend (TimerState) -> TimerFunctionResult,
+        ): TimerFunctionResult {
+            val activeTimer =
+                repository.getActiveTimer().first()
+                    ?: return idleResult(action, "No active timer to $idleVerb.")
+            return onActiveTimer(activeTimer)
+        }
 
         private fun TimerConfig.analyticsProperties(): Map<String, Any> =
             mapOf(

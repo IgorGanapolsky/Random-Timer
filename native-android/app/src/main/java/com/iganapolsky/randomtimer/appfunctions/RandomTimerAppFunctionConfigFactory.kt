@@ -12,27 +12,19 @@ class RandomTimerAppFunctionConfigFactory
     @Inject
     constructor() {
         fun create(
-            minSeconds: Int,
-            maxSeconds: Int,
-            alarmDuration: Int,
-            soundType: String,
-            voiceEnabled: Boolean,
-            voiceGender: String,
-            hiddenMode: Boolean,
-            repeatEnabled: Boolean,
-            vibrationEnabled: Boolean,
+            request: TimerFunctionRequest,
             entitlementLevel: EntitlementLevel,
         ): TimerConfig {
-            if (alarmDuration !in TimerConfig.ALARM_DURATION_OPTIONS) {
+            if (request.alarmDuration !in TimerConfig.ALARM_DURATION_OPTIONS) {
                 invalidArgument(
                     "alarmDuration must be one of ${TimerConfig.ALARM_DURATION_OPTIONS.joinToString(", ")} seconds.",
                 )
             }
 
-            val parsedSoundType = parseSoundType(soundType)
-            val parsedVoiceGender = parseVoiceGender(voiceGender)
+            val parsedSoundType = parseSoundType(request.soundType)
+            val parsedVoiceGender = parseVoiceGender(request.voiceGender)
             val usesExtendedRange =
-                minSeconds > TimerConfig.MAX_SECONDS_FREE || maxSeconds > TimerConfig.MAX_SECONDS_FREE
+                request.minSeconds > TimerConfig.MAX_SECONDS_FREE || request.maxSeconds > TimerConfig.MAX_SECONDS_FREE
 
             if (usesExtendedRange && !entitlementLevel.isPro) {
                 invalidArgument("Extended timer ranges above ${TimerConfig.MAX_SECONDS_FREE} seconds require Pro.")
@@ -42,22 +34,22 @@ class RandomTimerAppFunctionConfigFactory
                 invalidArgument("Sound type ${parsedSoundType.name} requires Pro.")
             }
 
-            if (voiceEnabled && !entitlementLevel.isPro) {
+            if (request.voiceEnabled && !entitlementLevel.isPro) {
                 invalidArgument("Voice callouts require Pro.")
             }
 
             return try {
                 TimerConfig(
-                    minSeconds = minSeconds,
-                    maxSeconds = maxSeconds,
-                    alarmDuration = alarmDuration,
-                    hiddenMode = hiddenMode,
-                    repeatEnabled = repeatEnabled,
+                    minSeconds = request.minSeconds,
+                    maxSeconds = request.maxSeconds,
+                    alarmDuration = request.alarmDuration,
+                    hiddenMode = request.hiddenMode,
+                    repeatEnabled = request.repeatEnabled,
                     soundType = parsedSoundType,
                     volume = TimerConfig.DEFAULT.volume,
-                    vibrationEnabled = vibrationEnabled,
+                    vibrationEnabled = request.vibrationEnabled,
                     useExtendedRange = usesExtendedRange,
-                    voiceEnabled = voiceEnabled,
+                    voiceEnabled = request.voiceEnabled,
                     voiceGender = parsedVoiceGender,
                 )
             } catch (error: IllegalArgumentException) {

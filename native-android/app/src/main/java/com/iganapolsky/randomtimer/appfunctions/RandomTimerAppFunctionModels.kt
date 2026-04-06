@@ -19,3 +19,15 @@ data class TimerFunctionResult(
     val repeatEnabled: Boolean = false,
     val vibrationEnabled: Boolean = false,
 )
+
+data class TimerFunctionRequest(
+    val minSeconds: Int,
+    val maxSeconds: Int,
+    val alarmDuration: Int,
+    val soundType: String,
+    val voiceEnabled: Boolean,
+    val voiceGender: String,
+    val hiddenMode: Boolean,
+    val repeatEnabled: Boolean,
+    val vibrationEnabled: Boolean,
+)

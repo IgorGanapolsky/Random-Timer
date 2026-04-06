@@ -13,6 +13,18 @@ class RandomTimerAppFunctionsTest {
     private lateinit var handler: RandomTimerAppFunctionHandler
     private lateinit var functions: RandomTimerAppFunctions
     private val appFunctionContext = mockk<AppFunctionContext>(relaxed = true)
+    private val defaultRequest =
+        TimerFunctionRequest(
+            minSeconds = 10,
+            maxSeconds = 20,
+            alarmDuration = 10,
+            soundType = "INTENSE",
+            voiceEnabled = false,
+            voiceGender = "MALE",
+            hiddenMode = false,
+            repeatEnabled = false,
+            vibrationEnabled = false,
+        )
 
     @Before
     fun setUp() {
@@ -21,226 +33,167 @@ class RandomTimerAppFunctionsTest {
     }
 
     @Test
-    fun `configureRandomTimer delegates to handler`() =
+    fun configureRandomTimerDelegatesToHandler() =
         runBlocking {
+            val request = defaultRequest.copy(voiceEnabled = true, voiceGender = "FEMALE", vibrationEnabled = true)
             val expected =
-                TimerFunctionResult(
+                timerResult(
                     action = "configure_random_timer",
                     status = "configured",
                     message = "Saved timer configuration.",
-                    entitlementLevel = "elite",
-                    soundType = "INTENSE",
                     voiceGender = "FEMALE",
                 )
-            coEvery {
-                handler.configureRandomTimer(
-                    minSeconds = 10,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = true,
-                    voiceGender = "FEMALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = true,
-                )
-            } returns expected
+
+            coEvery { handler.configureRandomTimer(request) } returns expected
 
             val result =
                 functions.configureRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = 10,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = true,
-                    voiceGender = "FEMALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = true,
+                    minSeconds = request.minSeconds,
+                    maxSeconds = request.maxSeconds,
+                    alarmDuration = request.alarmDuration,
+                    soundType = request.soundType,
+                    voiceEnabled = request.voiceEnabled,
+                    voiceGender = request.voiceGender,
+                    hiddenMode = request.hiddenMode,
+                    repeatEnabled = request.repeatEnabled,
+                    vibrationEnabled = request.vibrationEnabled,
                 )
 
             assertThat(result).isEqualTo(expected)
         }
 
     @Test
-    fun `startRandomTimer delegates to handler`() =
+    fun startRandomTimerDelegatesToHandler() =
         runBlocking {
+            val request = defaultRequest.copy(minSeconds = 20, maxSeconds = 20)
             val expected =
-                TimerFunctionResult(
+                timerResult(
                     action = "start_random_timer",
                     status = "running",
                     message = "Started random timer.",
-                    entitlementLevel = "elite",
                     targetDurationSeconds = 20,
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
                 )
-            coEvery {
-                handler.startRandomTimer(
-                    minSeconds = 20,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = false,
-                    voiceGender = "MALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = false,
-                )
-            } returns expected
+
+            coEvery { handler.startRandomTimer(request) } returns expected
 
             val result =
                 functions.startRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = 20,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = false,
-                    voiceGender = "MALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = false,
+                    minSeconds = request.minSeconds,
+                    maxSeconds = request.maxSeconds,
+                    alarmDuration = request.alarmDuration,
+                    soundType = request.soundType,
+                    voiceEnabled = request.voiceEnabled,
+                    voiceGender = request.voiceGender,
+                    hiddenMode = request.hiddenMode,
+                    repeatEnabled = request.repeatEnabled,
+                    vibrationEnabled = request.vibrationEnabled,
                 )
 
             assertThat(result).isEqualTo(expected)
         }
 
     @Test
-    fun `configureRandomTimer applies default alarm duration when omitted`() =
+    fun configureRandomTimerAppliesDefaultAlarmDurationWhenOmitted() =
         runBlocking {
-            val expected =
-                TimerFunctionResult(
-                    action = "configure_random_timer",
-                    status = "configured",
-                    message = "Saved timer configuration.",
-                    entitlementLevel = "elite",
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
-                )
-            coEvery {
-                handler.configureRandomTimer(
-                    minSeconds = 10,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = false,
-                    voiceGender = "MALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = false,
-                )
-            } returns expected
+            val request = defaultRequest
+            val expected = timerResult(action = "configure_random_timer", status = "configured", message = "Saved timer configuration.")
+
+            coEvery { handler.configureRandomTimer(request) } returns expected
 
             val result =
                 functions.configureRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = 10,
-                    maxSeconds = 20,
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
+                    minSeconds = request.minSeconds,
+                    maxSeconds = request.maxSeconds,
+                    soundType = request.soundType,
+                    voiceGender = request.voiceGender,
                 )
 
             assertThat(result).isEqualTo(expected)
         }
 
     @Test
-    fun `startRandomTimer applies default alarm duration when omitted`() =
+    fun startRandomTimerAppliesDefaultAlarmDurationWhenOmitted() =
         runBlocking {
+            val request = defaultRequest.copy(minSeconds = 20, maxSeconds = 20)
             val expected =
-                TimerFunctionResult(
+                timerResult(
                     action = "start_random_timer",
                     status = "running",
                     message = "Started random timer.",
-                    entitlementLevel = "elite",
                     targetDurationSeconds = 20,
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
                 )
-            coEvery {
-                handler.startRandomTimer(
-                    minSeconds = 20,
-                    maxSeconds = 20,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = false,
-                    voiceGender = "MALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = false,
-                )
-            } returns expected
+
+            coEvery { handler.startRandomTimer(request) } returns expected
 
             val result =
                 functions.startRandomTimer(
                     appFunctionContext = appFunctionContext,
-                    minSeconds = 20,
-                    maxSeconds = 20,
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
+                    minSeconds = request.minSeconds,
+                    maxSeconds = request.maxSeconds,
+                    soundType = request.soundType,
+                    voiceGender = request.voiceGender,
                 )
 
             assertThat(result).isEqualTo(expected)
         }
 
     @Test
-    fun `pauseTimer delegates to handler`() =
-        runBlocking {
-            val expected =
-                TimerFunctionResult(
-                    action = "pause_timer",
-                    status = "paused",
-                    message = "Paused active timer.",
-                    entitlementLevel = "elite",
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
-                )
-            coEvery { handler.pauseTimer() } returns expected
-
-            val result = functions.pauseTimer(appFunctionContext)
-
-            assertThat(result).isEqualTo(expected)
-            coVerify(exactly = 1) { handler.pauseTimer() }
-        }
+    fun pauseTimerDelegatesToHandler() =
+        assertLifecycleDelegation(
+            expected = timerResult(action = "pause_timer", status = "paused", message = "Paused active timer."),
+            callHandler = { handler.pauseTimer() },
+            callFunction = { functions.pauseTimer(appFunctionContext) },
+            verifyHandler = { coVerify(exactly = 1) { handler.pauseTimer() } },
+        )
 
     @Test
-    fun `resumeTimer delegates to handler`() =
-        runBlocking {
-            val expected =
-                TimerFunctionResult(
-                    action = "resume_timer",
-                    status = "running",
-                    message = "Resumed active timer.",
-                    entitlementLevel = "elite",
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
-                )
-            coEvery { handler.resumeTimer() } returns expected
-
-            val result = functions.resumeTimer(appFunctionContext)
-
-            assertThat(result).isEqualTo(expected)
-            coVerify(exactly = 1) { handler.resumeTimer() }
-        }
+    fun resumeTimerDelegatesToHandler() =
+        assertLifecycleDelegation(
+            expected = timerResult(action = "resume_timer", status = "running", message = "Resumed active timer."),
+            callHandler = { handler.resumeTimer() },
+            callFunction = { functions.resumeTimer(appFunctionContext) },
+            verifyHandler = { coVerify(exactly = 1) { handler.resumeTimer() } },
+        )
 
     @Test
-    fun `stopTimer delegates to handler`() =
-        runBlocking {
-            val expected =
-                TimerFunctionResult(
-                    action = "stop_timer",
-                    status = "stopped",
-                    message = "Stopped active timer.",
-                    entitlementLevel = "elite",
-                    soundType = "INTENSE",
-                    voiceGender = "MALE",
-                )
-            coEvery { handler.stopTimer() } returns expected
+    fun stopTimerDelegatesToHandler() =
+        assertLifecycleDelegation(
+            expected = timerResult(action = "stop_timer", status = "stopped", message = "Stopped active timer."),
+            callHandler = { handler.stopTimer() },
+            callFunction = { functions.stopTimer(appFunctionContext) },
+            verifyHandler = { coVerify(exactly = 1) { handler.stopTimer() } },
+        )
 
-            val result = functions.stopTimer(appFunctionContext)
+    private fun assertLifecycleDelegation(
+        expected: TimerFunctionResult,
+        callHandler: suspend () -> TimerFunctionResult,
+        callFunction: suspend () -> TimerFunctionResult,
+        verifyHandler: () -> Unit,
+    ) = runBlocking {
+        coEvery { callHandler() } returns expected
 
-            assertThat(result).isEqualTo(expected)
-            coVerify(exactly = 1) { handler.stopTimer() }
-        }
+        val result = callFunction()
+
+        assertThat(result).isEqualTo(expected)
+        verifyHandler()
+    }
+
+    private fun timerResult(
+        action: String,
+        status: String,
+        message: String,
+        targetDurationSeconds: Int = 0,
+        voiceGender: String = "MALE",
+    ) = TimerFunctionResult(
+        action = action,
+        status = status,
+        message = message,
+        entitlementLevel = "elite",
+        targetDurationSeconds = targetDurationSeconds,
+        soundType = "INTENSE",
+        voiceGender = voiceGender,
+    )
 }

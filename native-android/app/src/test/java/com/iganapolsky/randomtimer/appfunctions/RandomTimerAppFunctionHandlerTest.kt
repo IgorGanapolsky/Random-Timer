@@ -31,6 +31,18 @@ class RandomTimerAppFunctionHandlerTest {
     private lateinit var analyticsService: AnalyticsService
     private lateinit var proManager: ProManager
     private lateinit var handler: RandomTimerAppFunctionHandler
+    private val defaultRequest =
+        TimerFunctionRequest(
+            minSeconds = 20,
+            maxSeconds = 40,
+            alarmDuration = 10,
+            soundType = "INTENSE",
+            voiceEnabled = false,
+            voiceGender = "MALE",
+            hiddenMode = false,
+            repeatEnabled = false,
+            vibrationEnabled = false,
+        )
 
     @Before
     fun setUp() {
@@ -53,19 +65,16 @@ class RandomTimerAppFunctionHandlerTest {
     }
 
     @Test
-    fun `configureRandomTimer saves config and tracks settings`() =
+    fun configureRandomTimerSavesConfigAndTracksSettings() =
         runBlocking {
             val result =
                 handler.configureRandomTimer(
-                    minSeconds = 20,
-                    maxSeconds = 40,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = true,
-                    voiceGender = "FEMALE",
-                    hiddenMode = true,
-                    repeatEnabled = false,
-                    vibrationEnabled = true,
+                    defaultRequest.copy(
+                        voiceEnabled = true,
+                        voiceGender = "FEMALE",
+                        hiddenMode = true,
+                        vibrationEnabled = true,
+                    ),
                 )
 
             assertThat(result.status).isEqualTo("configured")
@@ -84,21 +93,18 @@ class RandomTimerAppFunctionHandlerTest {
         }
 
     @Test
-    fun `startRandomTimer persists state starts service and tracks analytics`() =
+    fun startRandomTimerPersistsStateStartsServiceAndTracksAnalytics() =
         runBlocking {
             val stateSlot = slot<TimerState>()
 
             val result =
                 handler.startRandomTimer(
-                    minSeconds = 25,
-                    maxSeconds = 25,
-                    alarmDuration = 10,
-                    soundType = "INTENSE",
-                    voiceEnabled = true,
-                    voiceGender = "FEMALE",
-                    hiddenMode = false,
-                    repeatEnabled = false,
-                    vibrationEnabled = false,
+                    defaultRequest.copy(
+                        minSeconds = 25,
+                        maxSeconds = 25,
+                        voiceEnabled = true,
+                        voiceGender = "FEMALE",
+                    ),
                 )
 
             verify { serviceController.startTimer(capture(stateSlot)) }
@@ -119,7 +125,7 @@ class RandomTimerAppFunctionHandlerTest {
         }
 
     @Test
-    fun `pause resume and stop act on active timer`() =
+    fun pauseResumeAndStopActOnActiveTimer() =
         runBlocking {
             repository.savedConfig = TimerConfig.DEFAULT.copy(voiceGender = VoiceGender.FEMALE)
             repository.activeTimer =
@@ -144,37 +150,22 @@ class RandomTimerAppFunctionHandlerTest {
         }
 
     @Test
-    fun `pauseTimer returns idle result when no active timer exists`() =
+    fun lifecycleActionsReturnIdleResultWhenNoActiveTimerExists() =
         runBlocking {
             repository.activeTimer = null
 
-            val result = handler.pauseTimer()
-
-            assertThat(result.status).isEqualTo("idle")
-            assertThat(result.message).contains("No active timer")
+            assertIdleResult(verb = "pause", result = handler.pauseTimer())
+            assertIdleResult(verb = "resume", result = handler.resumeTimer())
+            assertIdleResult(verb = "stop", result = handler.stopTimer())
         }
 
-    @Test
-    fun `resumeTimer returns idle result when no active timer exists`() =
-        runBlocking {
-            repository.activeTimer = null
-
-            val result = handler.resumeTimer()
-
-            assertThat(result.status).isEqualTo("idle")
-            assertThat(result.message).contains("No active timer")
-        }
-
-    @Test
-    fun `stopTimer returns idle result when no active timer exists`() =
-        runBlocking {
-            repository.activeTimer = null
-
-            val result = handler.stopTimer()
-
-            assertThat(result.status).isEqualTo("idle")
-            assertThat(result.message).contains("No active timer")
-        }
+    private fun assertIdleResult(
+        verb: String,
+        result: TimerFunctionResult,
+    ) {
+        assertThat(result.status).isEqualTo("idle")
+        assertThat(result.message).isEqualTo("No active timer to $verb.")
+    }
 
     private class FakeTimerRepository : TimerRepository {
         var savedConfig: TimerConfig = TimerConfig.DEFAULT
