@@ -2,8 +2,8 @@ package com.iganapolsky.randomtimer.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.domain.model.SoundType
-import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import org.junit.Test
 
 /**
@@ -12,7 +12,6 @@ import org.junit.Test
  * and Pro soundTypes reset to SoundType.INTENSE.
  */
 class TimerConfigProClampingTest {
-
     // Simulate the clamping logic extracted from TimerRepositoryImpl.
     // Mirrors the exact copy() logic used in the production clampedForPro() helper.
     private fun TimerConfig.clampedForPro(isPro: Boolean): TimerConfig {
@@ -30,7 +29,7 @@ class TimerConfigProClampingTest {
             minSeconds = sanitizedRange.first,
             maxSeconds = sanitizedRange.second,
             soundType = clampedSound,
-            useExtendedRange = if (isPro) useExtendedRange else false
+            useExtendedRange = if (isPro) useExtendedRange else false,
         )
     }
 
