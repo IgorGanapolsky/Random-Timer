@@ -224,7 +224,7 @@ struct TimerSetupScreen: View {
                             )
                             SoundTypeButton(
                                 label: "Gentle",
-                                systemImage: "bolt.fill",
+                                systemImage: "wind",
                                 selected: config.soundType == .gentle,
                                 onTap: {
                                     updateConfig(soundType: .gentle)

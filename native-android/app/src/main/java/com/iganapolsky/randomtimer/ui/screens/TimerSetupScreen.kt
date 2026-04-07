@@ -628,7 +628,7 @@ fun TimerSetupScreen(
                                     modifier = Modifier.weight(1f),
                                 )
                                 SoundTypeButton(
-                                    label = "\u26A1 Gentle",
+                                    label = "\uD83C\uDF43 Gentle",
                                     selected = config.soundType == SoundType.GENTLE,
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
