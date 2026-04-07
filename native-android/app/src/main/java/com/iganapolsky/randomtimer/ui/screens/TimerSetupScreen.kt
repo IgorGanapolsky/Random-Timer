@@ -232,8 +232,6 @@ fun TimerSetupScreen(
         )
     }
 
-    var bannerDismissed by remember { mutableStateOf(false) }
-
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isCompactHeight = TimerSetupLayoutPolicy.isCompactHeightViewport(maxHeight.value.toInt())
         val spacing = if (isCompactHeight) SetupSpacing.compact else SetupSpacing.regular
@@ -291,38 +289,6 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                if (!hasCompletedFirstTimer && !bannerDismissed) {
-                    item {
-                        Card(
-                            colors =
-                                CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                ),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                                Text(
-                                    text = "Tap Start for a random 20s\u20131min drill. Customize later.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.padding(end = 32.dp),
-                                )
-                                IconButton(
-                                    onClick = { bannerDismissed = true },
-                                    modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Dismiss",
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {

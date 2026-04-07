@@ -8,7 +8,6 @@ struct TimerSetupScreen: View {
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
-    @State private var bannerDismissed = false
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -32,25 +31,6 @@ struct TimerSetupScreen: View {
                     .foregroundColor(.textMuted)
                     .padding(.top, 16)
                     .padding(.leading, 4)
-
-                if !hasCompletedFirstTimer && !bannerDismissed {
-                    HStack {
-                        Text("Tap Start for a random 20s\u{2013}1min drill. Customize later.")
-                            .font(.subheadline)
-                            .foregroundStyle(.white)
-                        Spacer()
-                        Button {
-                            bannerDismissed = true
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.white.opacity(0.8))
-                        }
-                    }
-                    .padding(12)
-                    .background(Color.accentColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
 
                 // 1. Timer Range Card
                 GlassCard {
