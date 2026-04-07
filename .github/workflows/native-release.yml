@@ -22,13 +22,13 @@ on:
         required: false
         default: 'production'
       android_internal_mirror:
-        description: 'Release/hotfix branches: mirror the released ref to Android Firebase internal'
+        description: 'Deprecated. Internal Firebase signoff must happen before production release.'
         type: choice
         options:
           - 'firebase'
           - 'skip'
         required: false
-        default: 'firebase'
+        default: 'skip'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
@@ -66,11 +66,29 @@ jobs:
           RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}
         run: python3 scripts/release_intent_gate.py
 
-  ios-testflight:
+  require-internal-signoff:
     needs: [release-intent-gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read commit status proofs for release SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
+          python scripts/internal_signoff_gate.py \
+            --platform "${{ inputs.platform }}" \
+            --statuses-json /tmp/internal-signoff-status.json
+
+  ios-testflight:
+    needs: [release-intent-gate, require-internal-signoff]
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
     runs-on: macos-26
-    environment: testflight-signoff
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
@@ -198,7 +216,7 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
-    needs: [release-intent-gate]
+    needs: [release-intent-gate, require-internal-signoff]
     if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
     runs-on: ubuntu-latest
     environment: production
@@ -538,30 +556,6 @@ jobs:
         run: |
           rm -f /tmp/play-service-account.json /tmp/appstore_key.p8
 
-  android-firebase-mirror:
-    needs: [verify-releases]
-    if: >-
-      always() &&
-      needs.verify-releases.result == 'success' &&
-      inputs.android_internal_mirror == 'firebase' &&
-      (startsWith(github.ref_name, 'release/') || startsWith(github.ref_name, 'hotfix/'))
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Dispatch Internal Distribution (Android Firebase mirror)
-        env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
-        run: |
-          set -euo pipefail
-          gh workflow run internal-distribution.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref develop \
-            -f ref="${GITHUB_REF_NAME}" \
-            -f target=android_firebase
-          echo "✅ Dispatched internal-distribution.yml for Android Firebase mirror on ${GITHUB_REF_NAME}"
-
   ios-submit-review:
     needs: [verify-releases]
     if: always() && needs.verify-releases.result == 'success'
@@ -818,17 +812,9 @@ jobs:
       - name: Extract version from source
         id: version
         run: |
-          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
-          VERSION_CODE=$(python3 <<'PY'
-          import re
-          from pathlib import Path
-          text = Path("native-android/app/build.gradle.kts").read_text(encoding="utf-8")
-          m = re.search(r"versionCode\s*=\s*ciVersionCode\s*\?:\s*(\d+)", text)
-          if not m:
-              m = re.search(r"versionCode\s*=\s*(\d+)", text)
-          print(m.group(1) if m else "")
-          PY
-          )
+          VERSION_JSON=$(python3 scripts/source_versions.py --repo-root . --format json)
+          VERSION_NAME=$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
+          VERSION_CODE=$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_code"])')
           TAG="v${VERSION_NAME}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
@@ -850,7 +836,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.tag }}" \
+          git tag -a "${{ steps.version.outputs.tag }}" "${GITHUB_SHA}" \
             -m "Release ${{ steps.version.outputs.tag }} (Android code=${{ steps.version.outputs.version_code }})"
           git push origin "${{ steps.version.outputs.tag }}"
           echo "✅ Created and pushed tag ${{ steps.version.outputs.tag }}"
@@ -883,7 +869,15 @@ jobs:
             NOTES="Release ${{ steps.version.outputs.tag }}"
           fi
 
+          NOTES="${NOTES}
+
+          ### Release metadata
+          - Commit: ${GITHUB_SHA}
+          - Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
           gh release create "${{ steps.version.outputs.tag }}" \
+            --verify-tag \
+            --target "${GITHUB_SHA}" \
             --title "${{ steps.version.outputs.tag }}" \
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
