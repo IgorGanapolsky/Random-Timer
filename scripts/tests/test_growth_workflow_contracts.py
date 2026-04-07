@@ -206,7 +206,6 @@ def test_native_release_workflow_creates_annotated_release_from_exact_sha():
     assert '--target "${GITHUB_SHA}" \\' in tag_block
     assert "### Release metadata" in tag_block
 
-
 def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_title():
     source = ANDROID_PRODUCTION_RETRY_WORKFLOW.read_text(encoding="utf-8")
 
