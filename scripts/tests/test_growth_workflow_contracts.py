@@ -206,6 +206,19 @@ def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_
     assert "ISSUE_TITLE: Android production publish blocked by Play FAILED_PRECONDITION" not in source
 
 
+def test_ci_workflow_has_dedicated_regression_guards_job():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "regression-guards:" in source
+    guard_job = source.split("regression-guards:", 1)[1].split("\n  android:\n", 1)[0]
+    assert "python scripts/regression_guards.py --mode ci" in guard_job
+    assert "scripts/tests/test_regression_guards.py" in guard_job
+    assert "scripts/tests/test_mobile_feature_parity.py" in guard_job
+    assert "scripts/tests/test_voice_regression_contracts.py" in guard_job
+    assert "TimerRepositoryImplTest" in guard_job
+    assert "AIVoiceCalloutManagerSelectionTest" in guard_job
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
