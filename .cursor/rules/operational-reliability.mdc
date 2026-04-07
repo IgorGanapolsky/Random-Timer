@@ -1,0 +1,16 @@
+---
+description: Operational reliability — evidence, metric semantics, contradiction protocol
+alwaysApply: true
+---
+
+## Operational reliability (binding)
+
+Follow `docs/OPERATIONAL_RELIABILITY.md` for the full contract. In every session:
+
+1. **Label proxies:** Store/API metrics MUST carry correct semantics (see `review_count_metric_id` in executive and `real_store_downloads` payloads). Never equate Play `reviews.list` counts with public listing totals.
+2. **Evidence:** Status claims need reproducible proof (command + path + sanitized output). No “done” without verified state.
+3. **Contradictions:** If the CEO sees different reality than automation, stop, reconcile with docs + re-run, or mark unverified.
+4. **Uncertainty:** Say “unknown” / “not verified” instead of guessing.
+5. **Secrets:** Never commit credentials; verify env/CI key names before blocking on access.
+
+English only for all output (see `english-only.mdc`).

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Query Firebase Crashlytics crash data via BigQuery streaming export.
 
+Snapshot payloads include fatal_events_in_window (full COUNT(*) of fatal rows in
+the lookback window) and fatal_events (sum of crash_count in the parsed top-issue
+sample — see metric_field_ids).
+
 Usage:
     python scripts/check_crashlytics.py [--threshold 99.0] [--hours 24]
 
@@ -149,6 +153,17 @@ def query_crash_summary(token, hours, table_id):
     return bq_query(token, sql)
 
 
+def query_fatal_events_total(token, hours, table_id):
+    """Count every fatal crash row in the lookback window (not limited to top issue groups)."""
+    sql = f"""
+    SELECT COUNT(*) as fatal_row_count
+    FROM `{PROJECT_ID}.{BQ_DATASET}.{table_id}`
+    WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {hours} HOUR)
+      AND COALESCE(is_fatal, FALSE) = TRUE
+    """
+    return bq_query(token, sql)
+
+
 def query_crash_free_rate(token, hours, table_id):
     """Calculate crash-free user rate from BigQuery."""
     sql = f"""
@@ -169,16 +184,36 @@ def query_crash_free_rate(token, hours, table_id):
     return bq_query(token, sql)
 
 
+CRASHLYTICS_SNAPSHOT_METRIC_BUNDLE_ID = "crashlytics_bq_streaming_fatal_window_v1"
+
+
 def _base_snapshot(hours):
     return {
         "status": "ok",
         "source": "crashlytics_bigquery",
+        "metric_bundle_id": CRASHLYTICS_SNAPSHOT_METRIC_BUNDLE_ID,
+        "metric_field_ids": {
+            "fatal_events": (
+                "crashlytics_bq_sum_crash_count_in_top_20_issue_groups_only_not_total_window"
+            ),
+            "fatal_events_in_window": (
+                "crashlytics_bq_count_star_all_fatal_rows_in_lookback_window"
+            ),
+            "top_fatal_issues": (
+                "crashlytics_bq_fatal_groups_limited_20_order_by_crash_count_desc"
+            ),
+            "crash_free_pct": "crashlytics_bq_session_crash_free_rate_by_installation_uuid",
+            "total_users": "crashlytics_bq_distinct_installation_uuids_in_window",
+            "crash_free_users": "crashlytics_bq_installation_uuids_without_fatal_in_window",
+            "affected_users": "crashlytics_bq_total_users_minus_crash_free_users",
+        },
         "project_id": PROJECT_ID,
         "dataset": BQ_DATASET,
         "package": PACKAGE,
         "hours": hours,
         "table_id": None,
         "fatal_events": 0,
+        "fatal_events_in_window": 0,
         "affected_users": 0,
         "total_users": 0,
         "crash_free_users": 0,
@@ -276,6 +311,15 @@ def collect_crashlytics_snapshot(hours=24):
     summary_rows = summary.get("rows") or []
     payload["top_fatal_issues"] = _parse_summary_rows(summary_rows)
     payload["fatal_events"] = sum(issue["crash_count"] for issue in payload["top_fatal_issues"])
+
+    total_fatal = query_fatal_events_total(token, hours, table_id)
+    if "error" in total_fatal:
+        return _error_snapshot(payload, total_fatal)
+    total_rows = total_fatal.get("rows") or []
+    if total_rows and total_rows[0].get("f"):
+        payload["fatal_events_in_window"] = int(total_rows[0]["f"][0].get("v") or 0)
+    else:
+        payload["fatal_events_in_window"] = 0
 
     rate_result = query_crash_free_rate(token, hours, table_id)
     if "error" in rate_result:

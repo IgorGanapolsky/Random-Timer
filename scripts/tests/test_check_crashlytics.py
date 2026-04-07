@@ -32,6 +32,15 @@ def test_constants():
     assert int(cc.DEFAULT_THRESHOLD) == 99
 
 
+def test_base_snapshot_includes_metric_metadata():
+    snap = cc._base_snapshot(24)
+    assert snap["metric_bundle_id"] == cc.CRASHLYTICS_SNAPSHOT_METRIC_BUNDLE_ID
+    assert "fatal_events" in snap["metric_field_ids"]
+    assert "top_20" in snap["metric_field_ids"]["fatal_events"]
+    assert "fatal_events_in_window" in snap["metric_field_ids"]
+    assert snap["fatal_events_in_window"] == 0
+
+
 def test_bq_query_returns_error_on_failure():
     with patch.object(cc.urllib.request, "urlopen") as mock_urlopen:
         import urllib.error
@@ -144,6 +153,18 @@ def test_get_access_token_uses_inline_service_account_json():
     fake_creds.refresh.assert_called_once()
 
 
+def test_query_fatal_events_total_uses_count_star_and_fatal_predicate():
+    with patch.object(cc, "bq_query") as mock_bq:
+        mock_bq.return_value = {"rows": [{"f": [{"v": "17"}]}]}
+        out = cc.query_fatal_events_total("tok", 6, "com_iganapolsky_randomtimer")
+    assert out == mock_bq.return_value
+    sql = mock_bq.call_args[0][1]
+    assert "COUNT(*)" in sql
+    assert "is_fatal" in sql
+    assert "INTERVAL 6 HOUR" in sql
+    assert "com_iganapolsky_randomtimer" in sql
+
+
 def test_collect_crashlytics_snapshot_returns_structured_payload():
     summary = {
         "rows": [
@@ -161,11 +182,13 @@ def test_collect_crashlytics_snapshot_returns_structured_payload():
             }
         ]
     }
+    total_fatal = {"rows": [{"f": [{"v": "3"}]}]}
     rate = {"rows": [{"f": [{"v": "10"}, {"v": "8"}, {"v": "80.0"}]}]}
 
     with patch.object(cc, "get_access_token", return_value="token"), \
          patch.object(cc, "check_bigquery_export", return_value=["com_iganapolsky_randomtimer"]), \
          patch.object(cc, "query_crash_summary", return_value=summary), \
+         patch.object(cc, "query_fatal_events_total", return_value=total_fatal), \
          patch.object(cc, "query_crash_free_rate", return_value=rate):
         payload = cc.collect_crashlytics_snapshot(hours=168)
 
@@ -173,11 +196,60 @@ def test_collect_crashlytics_snapshot_returns_structured_payload():
     assert payload["project_id"] == "random-timer-dist-new"
     assert payload["table_id"] == "com_iganapolsky_randomtimer"
     assert payload["fatal_events"] == 3
+    assert payload["fatal_events_in_window"] == 3
     assert payload["affected_users"] == 2
     assert payload["total_users"] == 10
     assert payload["crash_free_users"] == 8
     assert math.isclose(payload["crash_free_pct"], 80.0)
     assert payload["top_fatal_issues"][0]["issue_title"] == "Crash title"
+
+
+def test_collect_crashlytics_snapshot_top20_sum_can_differ_from_window_total():
+    """fatal_events sums only top 20 groups; fatal_events_in_window is full COUNT(*)."""
+    summary = {
+        "rows": [
+            {
+                "f": [
+                    {"v": "2"},
+                    {"v": "1"},
+                    {"v": "FATAL"},
+                    {"v": "A.kt"},
+                    {"v": "1"},
+                    {"v": "Issue A"},
+                    {"v": ""},
+                    {"v": "1.0"},
+                ]
+            }
+        ]
+    }
+    total_fatal = {"rows": [{"f": [{"v": "9"}]}]}
+    rate = {"rows": [{"f": [{"v": "5"}, {"v": "4"}, {"v": "80.0"}]}]}
+
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=["com_iganapolsky_randomtimer"]), \
+         patch.object(cc, "query_crash_summary", return_value=summary), \
+         patch.object(cc, "query_fatal_events_total", return_value=total_fatal), \
+         patch.object(cc, "query_crash_free_rate", return_value=rate):
+        payload = cc.collect_crashlytics_snapshot(hours=24)
+
+    assert payload["fatal_events"] == 2
+    assert payload["fatal_events_in_window"] == 9
+
+
+def test_collect_crashlytics_snapshot_errors_when_fatal_total_query_fails():
+    summary = {"rows": []}
+    with patch.object(cc, "get_access_token", return_value="token"), \
+         patch.object(cc, "check_bigquery_export", return_value=["com_iganapolsky_randomtimer"]), \
+         patch.object(cc, "query_crash_summary", return_value=summary), \
+         patch.object(
+             cc,
+             "query_fatal_events_total",
+             return_value={"error": "Syntax error", "code": 400},
+         ):
+        payload = cc.collect_crashlytics_snapshot(hours=1)
+
+    assert payload["status"] == "error"
+    assert "Syntax error" in payload["reason"]
 
 
 def test_collect_crashlytics_snapshot_handles_missing_export():
