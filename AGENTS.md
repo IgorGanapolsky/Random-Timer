@@ -14,6 +14,14 @@ All AI replies, code comments, commit messages, and documentation use **English*
 4. **When the CEO asks for action steps, respond with action steps only.**
 5. **If a deeper explanation is necessary, keep it brief and evidence-based.**
 
+## Operational reliability contract
+
+**Canonical doc:** `docs/OPERATIONAL_RELIABILITY.md` (evidence protocol, proxy vs ground truth, contradiction handling, metric semantics).
+
+**Cursor:** `.cursor/rules/operational-reliability.mdc` (always applied).
+
+Store and executive JSON expose **`review_count_metric_id`** where applicable so counts are never read as undefined “total reviews.”
+
 ## PR management & secrets (cross-reference)
 
 Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.

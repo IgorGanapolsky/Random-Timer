@@ -13,6 +13,18 @@ FEATURE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/feature_request.md"
 MAIN_WORKFLOW = ROOT / ".github/workflows/main.yml"
 
 
+def test_operational_reliability_contract_doc_exists() -> None:
+    path = ROOT / "docs" / "OPERATIONAL_RELIABILITY.md"
+    text = path.read_text(encoding="utf-8")
+    assert path.is_file()
+    for marker in (
+        "Ground truth vs proxy",
+        "Contradiction protocol",
+        "review_count_metric_id",
+    ):
+        assert marker in text, f"{path} must document {marker}"
+
+
 def test_instruction_docs_do_not_claim_unwired_memory_backends() -> None:
     for relative_path in ("CLAUDE.md", "AGENTS.md"):
         contents = (ROOT / relative_path).read_text(encoding="utf-8")

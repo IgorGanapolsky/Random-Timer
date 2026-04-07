@@ -12,6 +12,40 @@ def test_posthog_section_skipped_without_credentials() -> None:
     assert out["status"] == "skipped"
 
 
+def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    import store_downloads_snapshot as sds
+
+    def fake_posthog_query(
+        query: str,
+        api_key: str,
+        project_id: str,
+        errors: list,
+        **kwargs: object,
+    ):
+        if "interval 7 day" in query and "HAVING count() >= 3" in query:
+            return {"results": [[0]]}
+        if "review_prompt_requested" in query:
+            return {"results": [[0, 0]]}
+        if "$screen" in query:
+            return {"results": []}
+        return {"results": [[0]]}
+
+    monkeypatch.setattr(sds, "posthog_query", fake_posthog_query)
+
+    out = ems._posthog_section("299775", "test-key", 30)
+    assert out["status"] == "ok"
+    assert out.get("metric_bundle_id") == ems.POSTHOG_EXECUTIVE_METRIC_BUNDLE_ID
+    mf = out.get("metric_field_ids") or {}
+    assert mf.get("wqtu_7d_distinct_persons") == (
+        "posthog_hogql_wqtu_timer_completed_ge3_trailing_7d_fixed"
+    )
+    assert mf.get("distinct_persons_application_installed") == (
+        "posthog_hogql_distinct_persons_event_application_installed"
+    )
+
+
 def test_posthog_section_includes_wqtu_7d_from_queries(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import executive_metrics_snapshot as ems
 

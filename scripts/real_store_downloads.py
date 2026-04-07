@@ -30,6 +30,34 @@ IOS_APP_ID = "6758355312"
 
 sys.path.append(str(Path(__file__).parent.resolve()))
 
+# Google Play Reply-to-Reviews API: list only includes reviews with user *comments*
+# (star-only ratings are omitted), and only those created or modified in the last 7 days.
+# Public Play Store totals can be higher. See:
+# https://developers.google.com/android-publisher/reply-to-reviews
+
+ANDROID_REVIEW_COUNT_METRIC_ID = (
+    "google_play_androidpublisher_reviews_list_7d_commented_paginated"
+)
+IOS_REVIEW_COUNT_METRIC_ID = (
+    "app_store_connect_customer_reviews_sort_created_desc_limit_50"
+)
+
+
+def _fetch_all_play_reviews_list(service: Any, package_name: str) -> list[dict[str, Any]]:
+    """Paginate reviews.list (max 100 per page per API)."""
+    accumulated: list[dict[str, Any]] = []
+    page_token: str | None = None
+    while True:
+        kwargs: dict[str, Any] = {"packageName": package_name, "maxResults": 100}
+        if page_token:
+            kwargs["token"] = page_token
+        result = service.reviews().list(**kwargs).execute()
+        accumulated.extend(result.get("reviews", []))
+        page_token = (result.get("tokenPagination") or {}).get("nextPageToken")
+        if not page_token:
+            break
+    return accumulated
+
 
 def _get_android_data(days: int) -> dict[str, Any]:
     """Query Google Play Developer API for real install data."""
@@ -58,11 +86,8 @@ def _get_android_data(days: int) -> dict[str, Any]:
     try:
         service = build("androidpublisher", "v3", credentials=credentials)
 
-        # Get reviews (as a proxy for real users — only real users can leave reviews)
-        reviews_result = service.reviews().list(
-            packageName=ANDROID_PACKAGE,
-        ).execute()
-        reviews = reviews_result.get("reviews", [])
+        # Recent, comment-bearing reviews only (Google API rules — not public listing total).
+        reviews = _fetch_all_play_reviews_list(service, ANDROID_PACKAGE)
         review_count = len(reviews)
 
         # Get the current track info to confirm we're live
@@ -98,8 +123,13 @@ def _get_android_data(days: int) -> dict[str, Any]:
         return {
             "status": "ok",
             "review_count": review_count,
+            "review_count_metric_id": ANDROID_REVIEW_COUNT_METRIC_ID,
             "production_release": production_version,
-            "note": "Google Play API does not expose download counts directly. Review count is from real users only.",
+            "note": (
+                "Play reviews.list: comment-bearing reviews created or modified in the last "
+                "7 days only; star-only ratings are excluded. Not equal to public Play "
+                "review totals. No per-app download count in this API."
+            ),
         }
     except Exception as e:
         return {"status": "error", "reason": str(e)}
@@ -180,6 +210,8 @@ def _get_ios_data(days: int) -> dict[str, Any]:
         if resp.status_code == 200:
             reviews = resp.json().get("data", [])
             result["review_count"] = len(reviews)
+            result["review_count_metric_id"] = IOS_REVIEW_COUNT_METRIC_ID
+            result["review_count_request_limit"] = 50
             result["reviews"] = [
                 {
                     "rating": r["attributes"].get("rating"),
@@ -199,7 +231,8 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     # and version state as ground truth.
     result["note"] = (
         "App Store Connect Sales reports require async report generation. "
-        "Review count and version state are live from the API."
+        "customerReviews count is the first page only (limit 50, newest first), "
+        "not total lifetime App Store reviews. Version state is live from the API."
     )
 
     return result
@@ -217,6 +250,7 @@ def run(repo_root: Path, days: int = 30) -> dict:
     payload = {
         "generated_at": generated_at,
         "source": "store_apis",
+        "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
         "note": "Real store API data, not PostHog proxy",
         "android": android,
         "ios": ios,
@@ -230,13 +264,17 @@ def run(repo_root: Path, days: int = 30) -> dict:
     print("=" * 60)
     print(f"  Android: {android.get('status')}")
     if android.get("review_count") is not None:
-        print(f"    Reviews: {android['review_count']}")
+        mid = android.get("review_count_metric_id") or ""
+        suffix = f" [{mid}]" if mid else ""
+        print(f"    Reviews: {android['review_count']}{suffix}")
     if android.get("production_release"):
         pr = android["production_release"]
         print(f"    Production: {pr.get('name')} ({pr.get('status')})")
     print(f"  iOS: {ios.get('status')}")
     if ios.get("review_count") is not None:
-        print(f"    Reviews: {ios['review_count']}")
+        mid = ios.get("review_count_metric_id") or ""
+        suffix = f" [{mid}]" if mid else ""
+        print(f"    Reviews: {ios['review_count']}{suffix}")
     if ios.get("versions"):
         for v in ios["versions"][:3]:
             print(f"    Version {v['version']}: {v['state']}")
