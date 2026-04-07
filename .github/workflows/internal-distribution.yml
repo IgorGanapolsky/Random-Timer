@@ -118,7 +118,7 @@ jobs:
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
-    environment: production
+    environment: testflight-signoff
     steps:
       - uses: actions/checkout@v6
         with:
@@ -271,7 +271,7 @@ jobs:
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_play')
     runs-on: ubuntu-latest
-    environment: production
+    environment: internal-play
     steps:
       - uses: actions/checkout@v6
         with:
@@ -424,7 +424,7 @@ jobs:
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
     runs-on: ubuntu-latest
-    environment: production
+    environment: firebase-signoff
     steps:
       - name: Note Play Protect mitigation
         run: |
