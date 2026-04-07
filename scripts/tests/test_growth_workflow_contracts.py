@@ -33,6 +33,9 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
 
     assert "preflight-release" in source or "Preflight release" in source
     assert "ios-testflight-internal" in source or "android-internal" in source
+    assert "environment: testflight-signoff" in source
+    assert "environment: internal-play" in source
+    assert "environment: firebase-signoff" in source
     assert "check_ios_version_lineage.py" in source
     assert "Install App Store Connect Python dependencies" in source
     assert source.index("Install App Store Connect Python dependencies") < source.index(
@@ -182,6 +185,7 @@ def test_native_release_workflow_dispatches_android_firebase_mirror_from_release
 def test_native_release_workflow_verifies_public_play_listing_for_production():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
+    assert "environment: testflight-signoff" in source
     assert "Verify public Google Play listing (production only)" in source
     assert "python scripts/verify_play_public_listing.py" in source
     assert "--expected-version" in source

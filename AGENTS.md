@@ -4,6 +4,16 @@
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## Communication Style
+
+**Default to concise, action-first replies.** This is a standing rule.
+
+1. **Keep routine replies short.** Prefer `1-3` bullets or a short paragraph.
+2. **Lead with the action being taken.** Example: "I am patching `AGENTS.md` now."
+3. **Do not give long explanations unless explicitly requested.**
+4. **When the CEO asks for action steps, respond with action steps only.**
+5. **If a deeper explanation is necessary, keep it brief and evidence-based.**
+
 ## PR management & secrets (cross-reference)
 
 Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
@@ -154,6 +164,15 @@ Do not infer progress from draft campaign configs.
 ### Release Flow
 1. `develop` → `release/vX.Y.Z` → TestFlight + Google Play → tag on `main` → merge back to `develop`
 2. Hotfix: `main` → `hotfix/vX.Y.Z` → stores → tag on `main` → merge to `develop`
+
+## Internal Distribution Approval
+
+**CEO sign-off is mandatory before any internal mobile distribution leaves CI.**
+
+1. **TestFlight internal runs must target the `testflight-signoff` environment.**
+2. **Firebase internal Android runs must target the `firebase-signoff` environment.**
+3. **Google Play internal Android runs use the `internal-play` environment and stay branch-restricted to `develop`, `release/*`, or `hotfix/*`.**
+4. **Do not claim an internal iOS or Firebase build was queued or started unless the required environment approval was actually granted.**
 
 ## Commands
 
