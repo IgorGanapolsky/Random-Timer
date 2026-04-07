@@ -40,6 +40,9 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert "environment: testflight-signoff" in source
+    assert "environment: internal-play" in source
+    assert "environment: firebase-signoff" in source
 
 
 def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native_release():
@@ -134,6 +137,7 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     assert 'PLAY_FALLBACK_TRACK: ""' in source
+    assert "environment: testflight-signoff" in source
     assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
     assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
     assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source

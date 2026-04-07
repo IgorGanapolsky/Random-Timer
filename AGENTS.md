@@ -4,6 +4,16 @@
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## Communication Style
+
+**Default to concise, action-first replies.** This is a standing rule.
+
+1. **Keep routine replies short.** Prefer `1-3` bullets or a short paragraph.
+2. **Lead with the action being taken.** Example: "I am patching `AGENTS.md` now."
+3. **Do not give long explanations unless explicitly requested.**
+4. **When the CEO asks for action steps, respond with action steps only.**
+5. **If a deeper explanation is necessary, keep it brief and evidence-based.**
+
 ## PR management & secrets (cross-reference)
 
 Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
@@ -154,6 +164,13 @@ Do not infer progress from draft campaign configs.
 ### Release Flow
 1. `develop` → `release/vX.Y.Z` → TestFlight + Google Play → tag on `main` → merge back to `develop`
 2. Hotfix: `main` → `hotfix/vX.Y.Z` → stores → tag on `main` → merge to `develop`
+
+## Internal Distribution Approval
+
+- **CEO sign-off is mandatory before TestFlight internal distribution starts.**
+- **CEO sign-off is mandatory before Firebase internal distribution starts.**
+- GitHub Actions environments enforce this via `testflight-signoff` and `firebase-signoff`.
+- Do not claim an internal iOS/Firebase build is queued or running until the environment approval is granted.
 
 ## Commands
 

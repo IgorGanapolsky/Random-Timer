@@ -70,7 +70,7 @@ jobs:
     needs: [release-intent-gate]
     if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
     runs-on: macos-26
-    environment: production
+    environment: testflight-signoff
     steps:
       - uses: actions/checkout@v4
 
