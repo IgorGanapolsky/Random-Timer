@@ -198,6 +198,7 @@ def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_
 
     assert "actions/checkout@v4" in source
     assert "actions/setup-python@v5" in source
+    assert "python -m pip install --upgrade pip requests==2.32.5" in source
     assert "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME" in source
     assert "from scripts.verify_play_public_listing import build_store_url, verify_public_listing" in source
     assert 'build_store_url("com.iganapolsky.randomtimer", "US")' in source
