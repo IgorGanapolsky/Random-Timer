@@ -22,10 +22,9 @@ categories:
       - team: product
     voting: true
     status_labels:
-      - "status: planning"
       - "status: in-progress"
       - "status: needs-review"
-      - "status: completed"
+      - "status: blocked"
 
   security:
     labels: ["type: security"]
@@ -92,6 +91,10 @@ project_board:
 
 # Labels Configuration
 labels:
+  - name: "triage"
+    color: "fbca04"
+    description: "Needs initial triage"
+
   # Type Labels
   - name: "type: bug"
     color: "d73a4a"

@@ -2,7 +2,7 @@
 name: Bug Report
 about: Report a bug in Random Tactical Timer
 title: "[Bug] "
-labels: bug
+labels: type: bug, triage
 assignees: ''
 ---
 

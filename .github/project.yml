@@ -1,6 +1,6 @@
 # Project Configuration
 name: RandomTimer-Native
-description: Mobile password management application built with React Native and Expo
+description: Native Android and iOS tactical timer app
 
 # Issue Management
 issues:
@@ -23,8 +23,8 @@ issues:
       - name: "type: security"
         color: "d93f0b"
         description: "Security related issue"
-      - name: "type: feature"
-        color: "0075ca"
+      - name: "type: enhancement"
+        color: "a2eeef"
         description: "New feature request"
       - name: "type: performance"
         color: "0e8a16"

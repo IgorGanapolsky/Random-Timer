@@ -140,8 +140,12 @@ gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=t
 gh workflow run native-release.yml -f platform=both -f android_track=production -f submit_review=true
 
 # Release/hotfix refs mirror Android to Firebase internal by default.
-# Use this only when you intentionally want to skip that mirror.
-gh workflow run native-release.yml -f platform=both -f android_track=production -f android_internal_mirror=skip
+# Production release now requires prior internal signoff on the exact release SHA:
+# 1. Run internal distribution first.
+# 2. Approve TestFlight and Firebase internal builds.
+# 3. Then run native-release.yml.
+gh workflow run internal-distribution.yml --ref release/vX.Y.Z -f ref=release/vX.Y.Z -f target=all
+gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f android_track=production
 ```
 
 ### 6. Automatic Post-Release
@@ -157,7 +161,7 @@ The `native-release.yml` workflow automatically:
 5. **Verifies** builds landed on the correct store track
 6. **Tags the commit** as `vX.Y.Z` (idempotent — skips if tag exists)
 7. **Creates a GitHub Release** with combined Android + iOS release notes
-8. **Mirrors release/hotfix Android builds to Firebase internal** by default for tester recovery
+8. **Creates annotated GitHub tag + release** on the exact release commit SHA
 
 Release branch safety:
 
@@ -190,15 +194,16 @@ CI/workflows persist contract artifacts under the runner temp directory so every
 
 Android Firebase App Distribution is documented separately in [FIREBASE_ANDROID_INFRASTRUCTURE.md](FIREBASE_ANDROID_INFRASTRUCTURE.md).
 
-As of March 26, 2026, Android Firebase APK delivery is not the default internal-distribution path. A Firebase-distributed APK was flagged by Google Play Protect on tester install with a harmful-app warning, so the default `Internal Distribution` workflow target is now `all_safe`:
+As of April 7, 2026, production release is blocked until CEO signoff exists for internal builds on the exact release SHA. The default `Internal Distribution` target is now `all` so the approval path produces both artifacts you need to review:
 - iOS TestFlight
 - Android Google Play internal
+- Android Firebase App Distribution
 
-Use `target=android_firebase` only when Firebase APK delivery is explicitly required for debugging or appeal evidence collection.
+Use `target=all_safe` only when Firebase APK delivery must be skipped for explicit debugging reasons.
 
 Target behavior:
-- `all_safe`: iOS TestFlight + Android Google Play internal
 - `all`: iOS TestFlight + Android Google Play internal + Android Firebase App Distribution
+- `all_safe`: iOS TestFlight + Android Google Play internal
 - `ios`: iOS TestFlight only
 - `android_play`: Android Google Play internal only
 - `android_firebase`: Android Firebase App Distribution only
