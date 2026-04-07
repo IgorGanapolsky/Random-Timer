@@ -15,6 +15,7 @@ API_BASE_URL = "https://api.elevenlabs.io"
 OUTPUT_FORMAT = "mp3_44100_128"
 SUPPORTED_VOICE_ENDPOINTS = {
     "DGzg6RaUqxGRTHSBjfgF": f"{API_BASE_URL}/v1/text-to-speech/DGzg6RaUqxGRTHSBjfgF?output_format={OUTPUT_FORMAT}",
+    "gE0owC0H9C8SzfDyIUtB": f"{API_BASE_URL}/v1/text-to-speech/gE0owC0H9C8SzfDyIUtB?output_format={OUTPUT_FORMAT}",
     "AZnzlk1XvdvUeBnXmlld": f"{API_BASE_URL}/v1/text-to-speech/AZnzlk1XvdvUeBnXmlld?output_format={OUTPUT_FORMAT}",
     "sS5fXGlqomdGXa7mxBcy": f"{API_BASE_URL}/v1/text-to-speech/sS5fXGlqomdGXa7mxBcy?output_format={OUTPUT_FORMAT}",
 }
