@@ -57,8 +57,8 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
     assert contract["male"]["probeText"] == "Stay sharp."
     assert contract["female"]["modelId"] == "eleven_multilingual_v2"
-    assert contract["female"]["primaryVoice"]["voiceName"] == "Domi"
-    assert contract["female"]["primaryVoice"]["voiceId"] == "AZnzlk1XvdvUeBnXmlld"
+    assert contract["female"]["primaryVoice"]["voiceName"] == "Ivanna"
+    assert contract["female"]["primaryVoice"]["voiceId"] == "gE0owC0H9C8SzfDyIUtB"
     assert contract["female"]["primaryVoice"]["probeText"] == "Move with purpose."
     assert {voice["voiceName"] for voice in contract["female"]["fallbackVoices"]} == {"Anvi"}
     assert {voice["probeText"] for voice in contract["female"]["fallbackVoices"]} == {"Stay in the fight."}
