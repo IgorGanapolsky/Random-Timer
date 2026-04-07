@@ -308,6 +308,20 @@ if [ -n "$STAGED_SWIFT" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
+# REGRESSION GUARDS — Voice + Play release workflow truth
+# ═══════════════════════════════════════════════════════════════════
+
+if [ -n "$STAGED_ALL" ]; then
+  if command -v python3 > /dev/null 2>&1; then
+    if ! python3 scripts/regression_guards.py --mode staged; then
+      err "Regression guard failed — fix voice/store workflow regressions before committing"
+    fi
+  else
+    err "python3 is required to run scripts/regression_guards.py"
+  fi
+fi
+
+# ═══════════════════════════════════════════════════════════════════
 # RESULT
 # ═══════════════════════════════════════════════════════════════════
 
