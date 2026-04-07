@@ -62,6 +62,7 @@ def test_compute_next_version_code_prefers_higher_play_code():
             "beta": [],
             "internal": [1774399999],
         },
+        monotonic_floor=1774300000,
     )
 
     assert next_code == 1774400006
@@ -74,9 +75,23 @@ def test_compute_next_version_code_prefers_higher_gradle_code_when_tracks_lower(
             "production": [1773900000],
             "alpha": [1773899999],
         },
+        monotonic_floor=1774300000,
     )
 
     assert next_code == 1774400001
+
+
+def test_compute_next_version_code_uses_monotonic_floor_to_avoid_historical_reuse():
+    next_code = calc.compute_next_version_code(
+        1774900001,
+        {
+            "production": [1774900021],
+            "internal": [],
+        },
+        monotonic_floor=1775592800,
+    )
+
+    assert next_code == 1775592801
 
 
 def test_fetch_existing_track_codes_reads_each_track_and_cleans_up():
@@ -213,6 +228,7 @@ def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.Cap
         "_fetch_existing_track_codes",
         lambda _service, _package, _tracks, request_retries=calc.DEFAULT_REQUEST_RETRIES: {"production": [1774400002], "beta": []},
     )
+    monkeypatch.setattr(calc.time, "time", lambda: 1774400002)
     monkeypatch.setattr(
         calc,
         "_parse_args",
@@ -234,3 +250,4 @@ def test_main_writes_json_output(monkeypatch, tmp_path: Path, capsys: pytest.Cap
     assert calc.main() == 0
     assert capsys.readouterr().out.strip() == "1774400003"
     assert '"next_version_code": 1774400003' in json_output.read_text(encoding="utf-8")
+    assert '"monotonic_floor": 1774400002' in json_output.read_text(encoding="utf-8")
