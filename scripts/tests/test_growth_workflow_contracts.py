@@ -8,6 +8,7 @@ IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
+ANDROID_PRODUCTION_RETRY_WORKFLOW = ROOT / ".github/workflows/android-production-retry.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -190,6 +191,19 @@ def test_native_release_workflow_verifies_public_play_listing_for_production():
     assert "python scripts/verify_play_public_listing.py" in source
     assert "--expected-version" in source
     assert "steps.versions.outputs.android_version" in source
+
+
+def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_title():
+    source = ANDROID_PRODUCTION_RETRY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "actions/checkout@v4" in source
+    assert "actions/setup-python@v5" in source
+    assert "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME" in source
+    assert "from scripts.verify_play_public_listing import build_store_url, verify_public_listing" in source
+    assert 'build_store_url("com.iganapolsky.randomtimer", "US")' in source
+    assert "play_public_current" in source
+    assert "play_public_" in source
+    assert "ISSUE_TITLE: Android production publish blocked by Play FAILED_PRECONDITION" not in source
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
