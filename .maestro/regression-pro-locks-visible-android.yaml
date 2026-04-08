@@ -15,5 +15,5 @@ appId: com.iganapolsky.randomtimer
 - scrollUntilVisible:
     element: "Sound Arsenal"
     direction: DOWN
-- assertVisible: "Sound Arsenal"
+- assertVisible: "Unlock Sound Arsenal"
 - takeScreenshot: evidence/android-pro-locks-visible
