@@ -297,4 +297,5 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
     assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
     assert 'Text("PRO: 1H \\u{1F512}")' in ios_setup
     assert 'guard hasCompletedFirstTimer else { return }' not in ios_setup
+    assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup
