@@ -1,8 +1,14 @@
 import FirebaseCore
+import OSLog
 import SwiftUI
 
 @main
 struct RandomTimerApp: App {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.igorganapolsky.randomtimer",
+        category: "App"
+    )
+
     // swiftlint:disable:next no_state_object
     @StateObject private var timerManager = TimerManager()
     @Environment(\.scenePhase) private var scenePhase
@@ -18,8 +24,20 @@ struct RandomTimerApp: App {
         #endif
     }
 
+    private static var hasBundledFirebaseConfig: Bool {
+        Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil
+    }
+
     init() {
         guard !Self.shouldSkipFirebaseForHostedTests else { return }
+        guard Self.hasBundledFirebaseConfig else {
+            #if DEBUG
+            Self.logger.warning("Skipping Firebase initialization because GoogleService-Info.plist is not bundled.")
+            return
+            #else
+            preconditionFailure("Missing bundled GoogleService-Info.plist in release build.")
+            #endif
+        }
         FirebaseApp.configure()
         CrashReportingService.shared.initialize()
         AnalyticsService.shared.initialize()
@@ -52,7 +70,6 @@ struct RandomTimerApp: App {
 }
 
 struct ContentView: View {
-    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var timerManager: TimerManager
     @State private var didApplyUITestSeed: Bool = false
 

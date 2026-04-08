@@ -54,7 +54,7 @@ def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native
     internal_source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
     release_source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    ruby_pin = "ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd"
+    ruby_pin = "ruby/setup-ruby@v1.300.0"
     assert ruby_pin in internal_source
     assert ruby_pin in release_source
 
@@ -144,6 +144,8 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
 
     assert 'PLAY_FALLBACK_TRACK: ""' in source
     assert "require-internal-signoff:" in source
+    assert "require-production-signoff:" in source
+    assert "environment: production-signoff" in source
     assert "internal_signoff_gate.py" in source
     assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
     assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
@@ -183,7 +185,9 @@ def test_native_release_workflow_blocks_production_without_internal_signoff_proo
     assert "require-internal-signoff:" in source
     assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
     assert 'python scripts/internal_signoff_gate.py \\' in source
-    assert "needs: [release-intent-gate, require-internal-signoff]" in source
+    assert "require-production-signoff:" in source
+    assert "Await fresh CEO production release approval" in source
+    assert "needs: [release-intent-gate, require-internal-signoff, require-production-signoff]" in source
     assert "android-firebase-mirror:" not in source
 
 
@@ -210,8 +214,8 @@ def test_native_release_workflow_creates_annotated_release_from_exact_sha():
 def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_title():
     source = ANDROID_PRODUCTION_RETRY_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "actions/checkout@v4" in source
-    assert "actions/setup-python@v5" in source
+    assert "actions/checkout@v6.0.2" in source
+    assert "actions/setup-python@v6.2.0" in source
     assert "python -m pip install --upgrade pip requests==2.32.5" in source
     assert "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME" in source
     assert "from scripts.verify_play_public_listing import build_store_url, verify_public_listing" in source

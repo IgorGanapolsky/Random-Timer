@@ -16,12 +16,14 @@ def test_relevant_paths_detects_release_and_voice_regression_surfaces():
         [
             ".github/workflows/android-production-retry.yml",
             "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt",
+            "native-ios/RandomTimer.xcodeproj/project.pbxproj",
             "README.md",
         ]
     )
 
     assert ".github/workflows/android-production-retry.yml" in paths
     assert "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt" in paths
+    assert "native-ios/RandomTimer.xcodeproj/project.pbxproj" in paths
     assert "README.md" not in paths
 
 
@@ -30,7 +32,7 @@ def test_relevant_paths_skips_unrelated_files():
 
 
 def test_run_checks_passes_on_current_repo():
-    assert guards.run_checks(ROOT, include_voice=True) == []
+    assert guards.run_checks(ROOT, include_voice=True, include_ios_firebase=True) == []
 
 
 def test_cli_skips_unrelated_paths():
@@ -68,4 +70,3 @@ def test_pre_commit_invokes_regression_guards():
     source = (ROOT / "scripts" / "pre-commit").read_text(encoding="utf-8")
 
     assert "python3 scripts/regression_guards.py --mode staged" in source
-

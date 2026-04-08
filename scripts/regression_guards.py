@@ -38,6 +38,12 @@ VOICE_GUARD_PATH_FRAGMENTS = (
     "scripts/tests/test_voice_regression_contracts.py",
 )
 
+IOS_FIREBASE_GUARD_PATH_FRAGMENTS = (
+    "native-ios/RandomTimer.xcodeproj/project.pbxproj",
+    "native-ios/RandomTimer/Sources/App/RandomTimerApp.swift",
+    "docs/OBSERVABILITY.md",
+)
+
 
 def _read(repo_root: Path, relative_path: str) -> str:
     return (repo_root / relative_path).read_text(encoding="utf-8")
@@ -74,8 +80,16 @@ def _matches_release_path(path: str) -> bool:
     return path in RELEASE_GUARD_PATHS
 
 
+def _matches_ios_firebase_path(path: str) -> bool:
+    return any(fragment in path for fragment in IOS_FIREBASE_GUARD_PATH_FRAGMENTS)
+
+
 def relevant_paths(paths: list[str]) -> list[str]:
-    return [path for path in _normalize_paths(paths) if _matches_release_path(path) or _matches_voice_path(path)]
+    return [
+        path
+        for path in _normalize_paths(paths)
+        if _matches_release_path(path) or _matches_voice_path(path) or _matches_ios_firebase_path(path)
+    ]
 
 
 def _assert_contains(source: str, needle: str, *, errors: list[str], label: str) -> None:
@@ -91,8 +105,8 @@ def _assert_not_contains(source: str, needle: str, *, errors: list[str], label: 
 def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, ".github/workflows/android-production-retry.yml")
     label = ".github/workflows/android-production-retry.yml"
-    _assert_contains(source, "actions/checkout@v4", errors=errors, label=label)
-    _assert_contains(source, "actions/setup-python@v5", errors=errors, label=label)
+    _assert_contains(source, "actions/checkout@v6.0.2", errors=errors, label=label)
+    _assert_contains(source, "actions/setup-python@v6.2.0", errors=errors, label=label)
     _assert_contains(
         source,
         "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME",
@@ -119,6 +133,9 @@ def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
 def check_native_release_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, ".github/workflows/native-release.yml")
     label = ".github/workflows/native-release.yml"
+    _assert_contains(source, "require-production-signoff:", errors=errors, label=label)
+    _assert_contains(source, "environment: production-signoff", errors=errors, label=label)
+    _assert_contains(source, "Await fresh CEO production release approval", errors=errors, label=label)
     _assert_contains(source, "Verify public Google Play listing (production only)", errors=errors, label=label)
     _assert_contains(source, "python scripts/verify_play_public_listing.py", errors=errors, label=label)
     _assert_contains(source, "--expected-version", errors=errors, label=label)
@@ -183,13 +200,64 @@ def check_voice_contract(repo_root: Path, errors: list[str]) -> None:
     _assert_contains(android_voice_manager, "runtimeVoiceCueForElapsedMark", errors=errors, label="AIVoiceCalloutManager.kt")
 
 
-def run_checks(repo_root: Path, *, include_voice: bool) -> list[str]:
+def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
+    app_source = _read(repo_root, "native-ios/RandomTimer/Sources/App/RandomTimerApp.swift")
+    pbxproj = _read(repo_root, "native-ios/RandomTimer.xcodeproj/project.pbxproj")
+    observability = _read(repo_root, "docs/OBSERVABILITY.md")
+
+    _assert_contains(
+        app_source,
+        'Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil',
+        errors=errors,
+        label="RandomTimerApp.swift",
+    )
+    _assert_contains(
+        app_source,
+        "Skipping Firebase initialization because GoogleService-Info.plist is not bundled.",
+        errors=errors,
+        label="RandomTimerApp.swift",
+    )
+    _assert_contains(
+        app_source,
+        "Missing bundled GoogleService-Info.plist in release build.",
+        errors=errors,
+        label="RandomTimerApp.swift",
+    )
+    _assert_contains(
+        pbxproj,
+        "Copy GoogleService-Info.plist if present",
+        errors=errors,
+        label="project.pbxproj",
+    )
+    _assert_contains(
+        pbxproj,
+        "Skipping Crashlytics run script because GoogleService-Info.plist is not bundled",
+        errors=errors,
+        label="project.pbxproj",
+    )
+    _assert_not_contains(
+        pbxproj,
+        "GoogleService-Info.plist in Resources",
+        errors=errors,
+        label="project.pbxproj",
+    )
+    _assert_contains(
+        observability,
+        "iOS debug/test builds can run without a local `GoogleService-Info.plist`",
+        errors=errors,
+        label="docs/OBSERVABILITY.md",
+    )
+
+
+def run_checks(repo_root: Path, *, include_voice: bool, include_ios_firebase: bool) -> list[str]:
     errors: list[str] = []
     check_android_retry_contract(repo_root, errors)
     check_native_release_contract(repo_root, errors)
     check_play_public_listing_contract(repo_root, errors)
     if include_voice:
         check_voice_contract(repo_root, errors)
+    if include_ios_firebase:
+        check_ios_firebase_contract(repo_root, errors)
     return errors
 
 
@@ -208,12 +276,13 @@ def main() -> int:
     candidate_paths = _normalize_paths(args.paths) if args.paths is not None else _git_staged_paths(repo_root)
     matched_paths = relevant_paths(candidate_paths)
     include_voice = args.mode == "ci" or any(_matches_voice_path(path) for path in matched_paths)
+    include_ios_firebase = args.mode == "ci" or any(_matches_ios_firebase_path(path) for path in matched_paths)
 
     if args.mode == "staged" and not matched_paths:
-        print("regression_guards: skip (no staged voice/store regression paths)")
+        print("regression_guards: skip (no staged voice/store/iOS Firebase regression paths)")
         return 0
 
-    errors = run_checks(repo_root, include_voice=include_voice)
+    errors = run_checks(repo_root, include_voice=include_voice, include_ios_firebase=include_ios_firebase)
     if errors:
         print("regression_guards: FAILED")
         for error in errors:
