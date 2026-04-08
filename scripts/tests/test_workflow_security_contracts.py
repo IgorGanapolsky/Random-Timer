@@ -29,10 +29,6 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
         ".github/workflows/device-tests.yml": "reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7",
         ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@v1.300.0",
         ".github/workflows/internal-distribution.yml#firebase": "wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6",
-        ".github/workflows/release.yml#expo": "expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e",
-        ".github/workflows/release.yml#sbom": "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610",
-        ".github/workflows/release.yml#gh-release": "softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe",
-        ".github/workflows/release.yml#slack": "8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703",
         ".github/workflows/security.yml#snyk": "snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04",
         ".github/workflows/security.yml#dependency-check": "dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c",
         ".github/workflows/security.yml#mobsf": "MobSF/mobsfscan@ec2927a8cfab6626a67f26b223be3aba52a34b70",
@@ -41,6 +37,8 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
         ".github/workflows/wiki-sync.yml": "Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a",
         ".github/workflows/pause-paid-campaigns.yml": "peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c",
     }
+
+    assert not (REPO_ROOT / ".github/workflows/release.yml").exists()
 
     workflow_cache: dict[str, str] = {}
     for keyed_path, pinned_ref in expected_pins.items():
