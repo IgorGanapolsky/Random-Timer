@@ -1,6 +1,8 @@
 package com.iganapolsky.randomtimer.ui
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -34,6 +36,36 @@ class TimerSetupSmokeTest {
 
         composeRule
             .onNodeWithContentDescription("Maximum time slider")
+            .assertExists()
+    }
+
+    @Test
+    fun soundArsenalLockOpensPaywallForFreeUsers() {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule
+                .onAllNodesWithText("Preview Sounds")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeRule
+            .onNodeWithText("Preview Sounds")
+            .performScrollTo()
+
+        composeRule
+            .onNodeWithContentDescription("Unlock Sound Arsenal", useUnmergedTree = true)
+            .assertExists()
+            .performClick()
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule
+                .onAllNodesWithText("Unlock Full Training Mode")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeRule
+            .onNodeWithText("Unlock Full Training Mode")
             .assertExists()
     }
 }
