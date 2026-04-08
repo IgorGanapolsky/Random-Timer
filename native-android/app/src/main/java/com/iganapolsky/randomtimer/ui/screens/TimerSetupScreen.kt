@@ -811,7 +811,7 @@ fun TimerSetupScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Sound Arsenal",
+                            text = if (isPro) "Sound Arsenal" else "Sound Arsenal \uD83D\uDD12",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
@@ -820,7 +820,10 @@ fun TimerSetupScreen(
                                     detectTapGestures(
                                         onTap = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isCompactHeight) {
+                                            if (!isPro) {
+                                                onFeatureGateHit("pro_sounds")
+                                                onUpgradeTap()
+                                            } else if (isCompactHeight) {
                                                 showArsenalSheet = true
                                             } else {
                                                 showArsenal = !showArsenal
