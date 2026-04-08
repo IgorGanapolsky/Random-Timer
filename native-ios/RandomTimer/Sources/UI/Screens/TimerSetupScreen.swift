@@ -460,7 +460,7 @@ struct TimerSetupScreen: View {
             .padding(.vertical, 8)
             .background(Color.backgroundDark)
         }
-        .background(Color.backgroundDark.ignoresSafeArea())
+        .background(Color.backgroundDark, ignoresSafeAreaEdges: .all)
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {

@@ -1,8 +1,10 @@
-For a **solid color**, both patterns are fine. We use **both** in production in [Random Tactical Timer](https://github.com/IgorGanapolsky/Random-Timer) (SwiftUI).
+For a **solid color**, two things matter: (1) layout (`ZStack` vs one root + background) and (2) **which `background` overload you use**.
 
-### `ZStack` — background layer first
+Another answer correctly flags that **`.background(Color.someColor.ignoresSafeArea())` is a bad pattern**: you are passing a **View** (`Color` after `.ignoresSafeArea()`) into the older **view** `background` path, which is **deprecated** in current SDKs. Prefer Apple’s **`ShapeStyle`** background or the **`ViewBuilder`** background instead (see [`background(_:ignoresSafeAreaEdges:)`](https://developer.apple.com/documentation/swiftui/view/background(_:ignoressafeareaedges:)) and [`background(alignment:content:)`](https://developer.apple.com/documentation/swiftui/view/background(alignment:content:))).
 
-We paint the screen with `Color.backgroundDark` under the main UI:
+### `ZStack` — background layer first (still fine)
+
+Putting `Color` in the stack is **not** the same as the deprecated `background` overload; we still do this in production:
 
 [`ActiveTimerScreen.swift` (lines 75–78)](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Screens/ActiveTimerScreen.swift#L75-L78)
 
@@ -13,25 +15,36 @@ ZStack {
 }
 ```
 
-Same idea appears in previews/components that need the same canvas, e.g. [`CircularTimerView.swift`](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Components/CircularTimerView.swift#L270-L272) and [`GlassCard.swift`](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Components/GlassCard.swift#L26-L28).
+Same idea in [`CircularTimerView.swift`](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Components/CircularTimerView.swift#L270-L272) and [`GlassCard.swift`](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Components/GlassCard.swift#L26-L28).
 
-### `.background(…).ignoresSafeArea()` on the root stack
+### Full-screen **color** on one root — use `ShapeStyle` `background`, not `Color`+`ignoresSafeArea()` inside `background(...)`
 
-When the root is already a single vertical structure (here with `safeAreaInset` for the bottom bar), we attach the full-screen color on that container:
+When the root is already a single structure (here with `safeAreaInset` for the bottom bar), use **`Color` as a `ShapeStyle`** and let the modifier handle safe area:
 
-[`TimerSetupScreen.swift` (line 458)](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift#L458)
+[`TimerSetupScreen.swift`](https://github.com/IgorGanapolsky/Random-Timer/blob/develop/native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift) (search for `background(Color.backgroundDark` — we use **`ignoresSafeAreaEdges`** there, not `.ignoresSafeArea()` on the color):
 
 ```swift
 // … ScrollView + content …
 .safeAreaInset(edge: .bottom) { /* primary button */ }
-.background(Color.backgroundDark.ignoresSafeArea())
+.background(Color.backgroundDark, ignoresSafeAreaEdges: .all)
 ```
 
-So for **color only**: pick whichever matches your hierarchy—`ZStack` when you think in layers; `.frame(maxWidth: .infinity, maxHeight: .infinity)` + `.background(Color…ignoresSafeArea())` when you want the background on one expanded root (we use the latter on setup, the former on the active timer screen).
+(`ignoresSafeAreaEdges` defaults to `.all` for this overload; you can omit it if you want the default.)
+
+**Alternative** for arbitrary background **views** (images, stacks): `background(alignment:content:)`:
+
+```swift
+.background {
+    Color.blue
+        .ignoresSafeArea() // OK here: background uses the ViewBuilder API
+}
+```
+
+For **filled shapes** with a style, [`background(_:in:fillStyle:)`](https://developer.apple.com/documentation/swiftui/view/background(_:in:fillstyle:)) is also the modern tool.
 
 ### Full-screen **image** (`scaledToFill`)
 
-We don’t ship a full-screen `scaledToFill` image in that form, so I won’t point at our repo for that. In general, `scaledToFill` needs a **definite size**—pin the image with a full-screen proposal (e.g. `.background { Image(…).resizable().scaledToFill().ignoresSafeArea() }` on an expanded container) rather than a loosely sized bottom `ZStack` layer; see [this related question](https://stackoverflow.com/q/79341392/20386264).
+We don’t ship that exact pattern in the app, so no repo link. Same layout rule as before: give `scaledToFill` a **definite** full-screen proposal (e.g. `background { … }` on an expanded container), not a loosely sized bottom `ZStack` layer — see [this related question](https://stackoverflow.com/q/79341392/20386264).
 
 ---
 
