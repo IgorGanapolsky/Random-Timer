@@ -115,6 +115,17 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "1:712918404489:android:5fb1dfde1d712f53e7a558" in source
 
 
+def test_internal_distribution_runs_automatically_on_main_push_for_internal_signoff_builds():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "push:" in source
+    assert "branches: [main]" in source
+    assert "github.event_name == 'workflow_dispatch' || github.event_name == 'push'" in source
+    assert 'Automatic internal distribution is only allowed on pushes to main.' in source
+    assert 'TARGET="all"' in source
+    assert 'REASON="auto_push_main"' in source
+
+
 def test_ios_internal_retry_dispatch_targets_ios_only():
     source = IOS_INTERNAL_RETRY_WORKFLOW.read_text(encoding="utf-8")
 
