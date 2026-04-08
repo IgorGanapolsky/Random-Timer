@@ -44,11 +44,10 @@ struct TimerSetupScreen: View {
                             Spacer()
 
                             if !proManager.isPro {
-                                Text(hasCompletedFirstTimer ? "PRO: 1H \u{1F512}" : "PRO: 1H")
+                                Text("PRO: 1H \u{1F512}")
                                     .font(.caption2)
                                     .foregroundColor(.accentPrimary)
                                     .onTapGesture {
-                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .rangeGate)
                                     }
                             } else {
