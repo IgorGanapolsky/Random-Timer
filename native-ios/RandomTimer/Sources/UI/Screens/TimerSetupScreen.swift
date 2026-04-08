@@ -357,6 +357,7 @@ struct TimerSetupScreen: View {
                             .foregroundColor(.accentPrimary)
                             .cornerRadius(4)
                         }
+                        .accessibilityLabel("Unlock Sound Arsenal")
                     }
 
                     Spacer()

@@ -109,6 +109,9 @@ gradle.properties
 *.bak
 *.disabled
 
+# Legacy root screenshot folder (canonical: native-*/fastlane)
+/screenshots/
+
 # Release and screenshot artifacts
 native-ios/RandomTimer.ipa
 native-ios/RandomTimer.app.dSYM.zip

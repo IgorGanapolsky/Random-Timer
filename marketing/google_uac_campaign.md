@@ -172,7 +172,7 @@ These keyword themes are derived from `marketing/keywords/strategy.json` and the
 3. `Keep sharp with random intervals. Used by athletes, coaches & gamers.`
 4. `Train reaction, not rhythm. Fires at random within your time range. Free.`
 
-**Images**: Upload all 6 screenshots from the `screenshots/` directory (portrait orientation, 1080x1920)
+**Images**: Upload all 6 screenshots from **Fastlane paths** in the table above (portrait orientation, 1080×1920 recommended).
 
 **Video**: Skip -- Google UAC will auto-generate from store listing assets
 

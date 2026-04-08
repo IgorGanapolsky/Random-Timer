@@ -104,6 +104,7 @@ Details: iOS `native-ios/` (`xcodebuild`), Android `native-android/` (`./gradlew
 
 | Doc | Purpose |
 |-----|---------|
+| [`docs/REPO_ROOT_LAYOUT.md`](docs/REPO_ROOT_LAYOUT.md) | What belongs at repo root (vs noise) |
 | [`docs/REPO_PROFILE.md`](docs/REPO_PROFILE.md) | **GitHub About** text, topics, links — keep in sync with this README |
 | [`docs/pr-review-bots.md`](docs/pr-review-bots.md) | PR review / bot matrix |
 | [`docs/north-star-baseline.md`](docs/north-star-baseline.md) | Dated WQTU snapshot (verify live metrics in PostHog) |
