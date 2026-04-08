@@ -1,174 +1,116 @@
 # Random Tactical Timer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform: iOS](https://img.shields.io/badge/iOS-18%2B-blue?logo=apple)](native-ios/)
-[![Platform: Android](https://img.shields.io/badge/Android-8%2B-green?logo=android)](native-android/)
 [![CI](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml)
-[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](native-ios/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](native-android/)
+[![iOS](https://img.shields.io/badge/iOS-SwiftUI-blue?logo=apple)](native-ios/)
+[![Android](https://img.shields.io/badge/Android-Compose-3DDC84?logo=android)](native-android/)
 
-**Train Reaction Under Stress.** A native **iOS + Android** timer built for combat sports, tactical drills, and stress inoculation. Unlike predictable round timers, this app triggers at random intervals so your nervous system can't anticipate the buzzer.
+**Train reaction, not rhythm.** Native **iOS + Android** app: the buzzer fires at a **random** moment inside your range so you cannot anticipate it.
 
-**Built for fighters, operators, and serious athletes.**
+*Store-facing line:* **TRAIN FOR CHAOS. NOT RHYTHM.** — same headline as [App Store description](native-ios/fastlane/metadata/en-US/description.txt) and [Play Store full description](native-android/fastlane/metadata/android/en-US/full_description.txt) (en-US).
 
-No ads. Privacy-first. Free core timer with an optional Pro subscription for advanced training features.
-
----
-
-## PR Automation Stack
-
-This repository uses multiple PR review and analysis agents. The table below reflects the **live March 27, 2026 state** of the repo, not aspirational tooling.
-
-| Bot / service | Status | What it does | Repo evidence |
-| --- | --- | --- | --- |
-| **Seer by Sentry** | **Active** | Posts PR review comments focused on safety, error handling, and risk. | [`.github/seer.app.yml`](.github/seer.app.yml), historical `seer-by-sentry` review records on merged PRs, and recent `Seer Code Review` check runs from the `sentry` app on PR heads such as `#914` |
-| **Claude Review** | **Active** | Runs PR review and `@claude` assist flows through GitHub Actions. | [`.github/workflows/claude-review.yml`](.github/workflows/claude-review.yml) |
-| **GitHub Copilot code review** | **Enabled on `develop` and `main`** | Automatically reviews pull requests, including new pushes and drafts on protected branches. | Protected branch rulesets now include `copilot_code_review` with `review_on_push=true` and `review_draft_pull_requests=true` |
-| **SonarQube Cloud** | **Active** | Decorates PRs and enforces a quality gate on analyzed code. | Recent `sonarqubecloud[bot]` PR comments and the live `SonarCloud Code Analysis` check |
-| **Cursor BugBot / `@cursor` agent** | **Active** | BugBot reviews PRs; `@cursor ...` can trigger cloud-agent fixes on PRs and issues. | [`BUGBOT.md`](BUGBOT.md), official Cursor docs, and the live `cursor` response comment on verification PR `#916` |
-
-Current note: SonarQube Cloud is green on the long-lived branch currently analyzed by SonarCloud. Cursor is now live and was verified on March 27, 2026 by a direct `@cursor` trigger that produced a `cursor` author comment on PR `#916`.
-
-## North Star (Defined February 23, 2026)
-
-### Primary Metric
-
-**Weekly Qualified Training Users (WQTU)** = distinct users with **>=3** `timer_completed` events in trailing 7 days.
-
-This is the core metric because it captures repeated stress/reaction training behavior, not vanity traffic.
-
-### Baseline (UTC)
-
-- Snapshot date: `2026-02-24`
-- `WQTU`: `0`
-- `timer_completed` (7d): `3` events by `2` users
-- `open_to_completed_rate` (30d): `24.24%` (`32/132`)
-- Paid-attributed users (30d): `0`
-- Downloads (30d): iOS `9`, Android `0`, combined `9`
-- Apple Ads live API: `1` campaign (`ENABLED`/`RUNNING`) with `0` taps and `$0.00` spend in trailing 30 days
-
-### Targets
-
-- Checkpoint target (2026-03-31): `WQTU >= 8`
-- Quarter target (2026-06-30): `WQTU >= 25`
-
-### Are We On Track?
-
-**Not yet.** As of February 24, 2026, paid-attributed acquisition is zero and the single live Apple Ads campaign has produced zero taps/spend so far, so paid media is not moving WQTU.
-
-### Benchmark Context (latest available by Feb 2026)
-
-- Apple Ads benchmark summary (2024 performance): TTR `9.07%`, CR `66.70%`, CPT `$1.84`, CPA `$2.76` (MobileAction 2025 report).
-- AppTweak U.S. search-results CPI benchmark: median CPI `\$4.06` overall, with lower-cost categories including Utilities (`\$2.90`) and higher-cost categories like Games (`\$12.28`).
-- Business of Apps retention baseline: iOS D1 `23.9%` and D30 `3.7%`; Android D1 `21.1%` and D30 `2.1%`.
-- Adjust retention benchmark baseline: global D1 `26%`, D30 `7%`; North America D1 `23%`, D30 `5%`.
-- Sensor Tower (State of Mobile 2026): downloads up `0.8%` YoY to nearly `150B`; IAP revenue up `10.6%` YoY to `\$167B`.
-
-### Practical Growth Rule
-
-Use paid spend only when attribution is measurable and activation quality holds. Winning this product requires:
-
-1. High-intent acquisition (combat/reaction positioning).
-2. Strong activation (`open -> completed`).
-3. Repeat weekly usage (`WQTU`) above all other topline metrics.
-
-### Research Sources
-
-- MobileAction Apple Ads 2025 Benchmark Executive Summary: https://www.mobileaction.co/report/apple-search-ads-2025-benchmark-report/executive-summary/
-- AppTweak Apple Ads Benchmarks 2025: https://www.apptweak.com/en/aso-blog/apple-ads-benchmarks
-- Business of Apps Retention Benchmarks: https://www.businessofapps.com/insights/app-retention-benchmarks/
-- Adjust User Retention Benchmarks: https://www.adjust.com/resources/guides/user-retention/
-- Sensor Tower State of Mobile 2026: https://sensortower.com/blog/state-of-mobile-2026
+| Store | One-liner (en-US) |
+|--------|-------------------|
+| **App Store** subtitle | [Dry Fire, Boxing, BJJ, HIIT](native-ios/fastlane/metadata/en-US/subtitle.txt) |
+| **Play** short description | [Random timer with male & female AI coach voice for combat sports and HIIT.](native-android/fastlane/metadata/android/en-US/short_description.txt) |
 
 ---
 
-## Combat-Ready Visuals
+## Screenshots = store assets
 
-### iOS (SwiftUI + Live Activities)
+Images below are **not** a second set of mocks — they are the **same files** shipped in Fastlane metadata (en-US).
+
+**iPhone** (`native-ios/fastlane/screenshots/en-US/`)
+
 <p align="center">
-  <img src="screenshots/ios-setup.png" width="200" alt="iOS setup screen showing timer range, alarm settings, and start button" />
-  <img src="screenshots/ios-active.png" width="200" alt="iOS active timer screen during a running random interval" />
-  <img src="screenshots/ios-alarm.png" width="200" alt="iOS alarm state with tactical alert controls" />
-  <img src="screenshots/ios-running.png" width="200" alt="iOS running state with countdown and loop mode indicators" />
+  <img src="native-ios/fastlane/screenshots/en-US/1_setup.png" width="190" alt="Setup: timer range and start" />
+  <img src="native-ios/fastlane/screenshots/en-US/2_active.png" width="190" alt="Active random interval" />
+  <img src="native-ios/fastlane/screenshots/en-US/3_alarm.png" width="190" alt="Alarm / cue" />
+  <img src="native-ios/fastlane/screenshots/en-US/4_running.png" width="190" alt="Running state" />
 </p>
-<p align="center"><em>iOS flow: setup → run → alarm handling.</em></p>
 
-### Android (Jetpack Compose + Material 3)
+**Android phone** (`native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/`)
+
 <p align="center">
-  <img src="screenshots/android-setup.png" width="200" alt="Android setup screen with timer range sliders and alarm controls" />
-  <img src="screenshots/android-active.png" width="200" alt="Android active timer screen while interval is running" />
-  <img src="screenshots/android-settings.png" width="200" alt="Android settings and tactical expansion options" />
-  <img src="screenshots/android-loop.png" width="200" alt="Android loop mode and repeated drill workflow" />
+  <img src="native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_setup.png" width="190" alt="Setup" />
+  <img src="native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_active.png" width="190" alt="Active timer" />
+  <img src="native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_voice.png" width="190" alt="Voice callouts (Pro)" />
+  <img src="native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/4_loop.png" width="190" alt="Loop mode" />
 </p>
-<p align="center"><em>Android flow: setup → active round → settings/loop.</em></p>
+
+*iPad / additional iOS sizes: same folder (`5_ipad_*` … `7_ipad_*`).*
 
 ---
 
-## Features
+## Diagrams
 
-- **Random Trigger Logic** — Set a range (e.g. 15s–90s); the alarm fires unpredictably.
-- **Hidden Mode** — Conceals the countdown to force genuine reaction, not anticipation.
-- **Loop Mode** — Continuous chaos rounds for high-intensity conditioning.
-- **Tactical Alerts** — High-intensity audio + haptic feedback optimized for noisy environments.
-- **Lock Screen Mastery** — iOS Live Activities and Android Foreground Services keep the timer active while your phone is locked.
-- **Premium Dark UI** — High-contrast, glassmorphic design for maximum visibility in the gym.
+### Training loop
 
-## Technical Architecture
+```mermaid
+flowchart LR
+  A[Set min/max range] --> B[Start]
+  B --> C[Drill / train]
+  C --> D[Random cue]
+  D --> E{Loop?}
+  E -->|Yes| C
+  E -->|No| F[Stop / dismiss]
+```
 
-### iOS
-- **Swift 6 + SwiftUI**
-- **Live Activities** for the Dynamic Island and Lock Screen
-- **AVAudioPlayer** for low-latency tactical alerts
-- **PostHog iOS SDK** for product analytics instrumentation
-- **StoreKit** for one-time Pro unlock + in-app review prompts
+### Repository layout
 
-### Android
-- **Kotlin 2.1 + Jetpack Compose**
-- **Clean Architecture** with Hilt Dependency Injection
-- **Foreground Service** for bulletproof background reliability
-- **Material Design 3 Expressive** with spring-based motion
-- **PostHog Android SDK** for analytics instrumentation
-- **Google Play Billing** for one-time Pro unlocks
-- **In-App Review API** for review prompts
-- **Firebase Crashlytics + Firebase Analytics** for crash/health telemetry
+```mermaid
+flowchart TB
+  subgraph apps [Native apps]
+    iOS[iOS — SwiftUI / Live Activities / StoreKit]
+    AND[Android — Compose / FGS / Play Billing]
+  end
+  subgraph meta [Store & screenshots]
+    FM[iOS Fastlane metadata + screenshots]
+    AM[Android Fastlane metadata + images]
+  end
+  subgraph auto [Automation]
+    PY[scripts/ — Python tooling]
+    GA[.github/workflows — CI & release]
+  end
+  iOS --> FM
+  AND --> AM
+  apps --> GA
+  PY --> GA
+```
 
-### Automation & Tooling
-- **Python automation layer** in [`scripts/`](scripts/) drives release ops, analytics snapshots, growth reporting, and store metadata workflows.
-- **GitHub Actions pipelines** in [`.github/workflows/`](.github/workflows/) run CI, release automation, metadata sync, and guardrail checks.
-- **Fastlane metadata** lives under [`native-ios/fastlane`](native-ios/fastlane) and [`native-android/fastlane`](native-android/fastlane).
+---
 
-## Build & Test
+## Tech summary
 
-The [`Makefile`](Makefile) is the canonical task entrypoint.
+| Layer | Stack |
+|--------|--------|
+| **iOS** | Swift 6, SwiftUI, Live Activities, AVFoundation alerts, StoreKit, PostHog |
+| **Android** | Kotlin, Jetpack Compose, Hilt, foreground service, Play Billing, PostHog, Firebase crash/analytics |
+| **Repo** | Python automation in [`scripts/`](scripts/), workflows in [`.github/workflows/`](.github/workflows/), Fastlane under each `native-*` tree |
 
-### Quick Verification
+## Build & verify
+
+Entry point: **[`Makefile`](Makefile)**.
+
 ```bash
 make verify
 ```
 
-### iOS
-```bash
-cd native-ios
-xcodebuild -scheme RandomTimer -showdestinations
-xcodebuild test -scheme RandomTimer -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.1'
-```
-Note: simulator names vary by Xcode version. If `iPhone 17` is unavailable on your machine, use any available iPhone simulator from `-showdestinations` (for example `iPhone 16 Pro` on older Xcode).
+Details: iOS `native-ios/` (`xcodebuild`), Android `native-android/` (`./gradlew …`). See Makefile targets for simulators, Maestro, and platform-specific checks.
 
-### Android
-```bash
-cd native-android
-./gradlew testDebugUnitTest assembleDebug lint
-```
+---
 
-### More Useful Day-to-Day Commands
-```bash
-make run-ios-sim
-make run-android-emulator
-make verify-ios
-make verify-android
-make maestro-ios
-make maestro-android
-```
+## Docs index
+
+| Doc | Purpose |
+|-----|---------|
+| [`docs/REPO_PROFILE.md`](docs/REPO_PROFILE.md) | **GitHub About** text, topics, links — keep in sync with this README |
+| [`docs/pr-review-bots.md`](docs/pr-review-bots.md) | PR review / bot matrix |
+| [`docs/north-star-baseline.md`](docs/north-star-baseline.md) | Dated WQTU snapshot (verify live metrics in PostHog) |
+| [`CLAUDE.md`](CLAUDE.md) | Operator rules, budgets, release flow |
+| [`AGENTS.md`](AGENTS.md) | Agent / AI instructions |
+| [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | Privacy (linked from store metadata) |
 
 ## License
+
 [MIT](LICENSE) — Igor Ganapolsky

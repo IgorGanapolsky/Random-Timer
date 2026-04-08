@@ -9,6 +9,8 @@ Stack Overflow is for **specific technical questions with verifiable answers**. 
 3. **No unsupervised posting.** Do not wire CI, agents, or scripts to **submit** answers, comments, or votes automatically. **Humans** must post the final text. (Read-only tooling is fine—see below.)
 4. **Relevance bar.** Mention Random Tactical Timer only when the thread is clearly about something the app demonstrates (e.g. SwiftUI timer patterns, StoreKit quirks, foreground service audio on Android)—and even then, prefer a **minimal** store link in a footnote after a full technical answer.
 5. **One account, real identity.** Sockpuppets and coordinated voting violate site rules.
+6. **Answer drafts live in the repo.** Any Stack Overflow answer produced with tooling (or for CEO copy/paste) must be saved as a Markdown file under `marketing/referral_content/stackoverflow_answers/` using `{question-id}-{short-slug}.md` (see that folder’s `README.md`). Chat-only dumps are not the handoff format.
+7. **Cite our code.** Each draft must link to **real** usage in this repository on `develop` (`https://github.com/IgorGanapolsky/Random-Timer/blob/develop/...`) for every pattern we claim we use. If we do not implement something (e.g. a hypothetical API), state that and keep that portion generic—no fake file links. Include **affiliation disclosure** when linking our repo (see snippet below).
 
 ## Disclosure snippet (paste under your answer when you mention the app)
 
@@ -56,7 +58,7 @@ These reduce lag **finding** questions; they do **not** replace writing a correc
 | **RSS / Atom** | Official tag feeds; refresh in a reader or script | No |
 | **`scripts/stackoverflow_feed_triage.py`** | CLI: prints newest questions for given tags (markdown or JSON) | No |
 | **Stack Exchange API** | Read questions; optional app key for higher quotas; still **no** write without human gate | Only if *you* call write endpoints after review |
-| **MCP / IDE agents** | Fetch feed or page, **draft** an answer in your editor for you to edit and paste | You paste; bot does not submit |
+| **MCP / IDE agents** | Fetch feed or page, **draft** into `marketing/referral_content/stackoverflow_answers/*.md` | You paste from the file; bot does not submit |
 | **Browser automation** | Same as MCP: open thread, assist drafting—**do not** auto-submit bulk answers | High risk if unattended |
 
 **Why not “answer in real time” with full automation?** LLM answers without expert review are often wrong; bulk posting triggers spam detection and damages your account and the site. Use automation to **notify and draft**; **you** verify, fix, and click Post.

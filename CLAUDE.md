@@ -139,6 +139,11 @@ Use `/pr-management` skill for the full process. At minimum:
 All GitHub API operations use `requests` + PAT when `gh` CLI is unavailable.
 See `.claude/memory/` for historical notes, but do not treat any external memory gateway as live unless you have verified it in the current environment.
 
+### PR hygiene: local gates vs “authority”
+- A blocked `git push` from this environment is often a **local automation gate** (for example PR review-thread checks). That is not fixed by pasting credentials in chat. Use `gh auth login` / keyring, satisfy the gate with real evidence, or merge via GitHub when appropriate.
+- **Never** paste GitHub PATs into prompts, issues, or repo docs. If one appears anywhere, **revoke and rotate** it in GitHub settings immediately.
+- **`device-tests.yml`** iOS jobs routinely run **15–25+ minutes**. `Error (COMMAND_FAILED): Daemon request timed out` is frequently **runner/infra**; try `gh run rerun <run-id> --failed` before assuming a product regression.
+
 ## PM Filesystem Convention
 
 PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `cat`, `grep` — no custom scripts needed. All `/pm:*` commands read the filesystem directly.

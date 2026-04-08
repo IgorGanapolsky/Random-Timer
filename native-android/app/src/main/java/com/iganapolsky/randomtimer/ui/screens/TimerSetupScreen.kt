@@ -818,7 +818,7 @@ fun TimerSetupScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
                                 modifier =
-                                    Modifier.pointerInput(Unit) {
+                                    Modifier.pointerInput(isPro, isCompactHeight) {
                                         detectTapGestures(
                                             onTap = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
