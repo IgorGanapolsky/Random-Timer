@@ -28,9 +28,9 @@ High-signal areas for this project:
 |------|----------------|
 | iOS UI | `swift`, `swiftui`, `ios` |
 | Apple billing | `storekit`, `in-app-purchase` |
-| Android UI | `android`, `jetpack-compose`, `kotlin` |
-| Android billing | `google-play`, `billing` |
-| Background work | `android-foreground-service`, `avfoundation` (when relevant) |
+| Android UI | `android`, `android-jetpack-compose`, `kotlin` |
+| Android billing | `google-play`, `billing`, `android-billing` |
+| Background work | `foreground-service`, `avfoundation` (when relevant) |
 
 ## What “good” looks like
 
@@ -66,3 +66,33 @@ These reduce lag **finding** questions; they do **not** replace writing a correc
 ```bash
 uv run python scripts/stackoverflow_feed_triage.py --tags swiftui,storekit --limit 10
 ```
+
+## Deal: your hourly “RSS” + copy/paste digest
+
+**You** write and paste answers on Stack Overflow (policy-safe). The repo gives you **two** read-only streams:
+
+### A) Real Atom feeds (subscribe in any RSS reader)
+
+Stack Overflow hosts the feeds; they update when **new questions** appear (often within minutes).
+
+- **In repo:** `marketing/referral_content/stackoverflow_subscribe_atom_feeds.md` — copy each **Feed URL** into Feedly, Inoreader, Outlook, etc.
+- **Regenerate locally** after editing tag groups:
+
+```bash
+uv run python scripts/stackoverflow_feed_triage.py \
+  --write-subscribe-markdown marketing/referral_content/stackoverflow_subscribe_atom_feeds.md \
+  --tag-groups-file marketing/data/stackoverflow_digest_tag_groups.txt
+```
+
+Tag groups live in **`marketing/data/stackoverflow_digest_tag_groups.txt`** (one line per feed).
+
+### B) Hourly snapshot ZIP (question links in one file)
+
+Workflow **`stackoverflow-hourly-digest.yml`** runs **every hour** (~:12 UTC) on the default branch once merged.
+
+**Actions** → **Stack Overflow hourly triage digest** → open a run → download artifact **`stackoverflow-hourly-digest`**. It contains:
+
+- **`digest.md`** — latest questions per tag group (for copy/paste into the browser).
+- **`SUBSCRIBE_ATOM_FEEDS.md`** — same feed URLs as (A).
+
+Nothing is posted to Stack Overflow from CI.

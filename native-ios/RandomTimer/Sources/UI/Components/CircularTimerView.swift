@@ -109,21 +109,12 @@ struct CircularTimerView: View {
                         let trackDotY = center.y + arcRadius * sin(startAngleRad)
                         let trackDotPoint = CGPoint(x: trackDotX, y: trackDotY)
 
-                        // Outer glow
-                        let outerDot = Path(ellipseIn: CGRect(
-                            x: trackDotPoint.x - strokePx * 1.5,
-                            y: trackDotPoint.y - strokePx * 1.5,
-                            width: strokePx * 3,
-                            height: strokePx * 3
-                        ))
-                        context.fill(outerDot, with: .color(status.color.opacity(0.3)))
-
-                        // Inner dot
+                        // Start-position dot (no outer glow — keeps it to two dots total)
                         let innerDot = Path(ellipseIn: CGRect(
-                            x: trackDotPoint.x - strokePx * 0.8,
-                            y: trackDotPoint.y - strokePx * 0.8,
-                            width: strokePx * 1.6,
-                            height: strokePx * 1.6
+                            x: trackDotPoint.x - strokePx,
+                            y: trackDotPoint.y - strokePx,
+                            width: strokePx * 2,
+                            height: strokePx * 2
                         ))
                         context.fill(innerDot, with: .color(status.color.opacity(0.6)))
                     }

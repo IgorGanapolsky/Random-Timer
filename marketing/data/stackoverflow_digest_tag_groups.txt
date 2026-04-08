@@ -1,0 +1,8 @@
+# One tag group per line (comma-separated tags are ANDed in the SO feed URL).
+# Use feed slug names that return HTTP 200 (see scripts/stackoverflow_feed_triage.py).
+swiftui
+storekit
+android-jetpack-compose
+kotlin,android
+android-billing
+foreground-service
