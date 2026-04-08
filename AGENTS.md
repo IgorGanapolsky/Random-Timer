@@ -26,6 +26,8 @@ Store and executive JSON expose **`review_count_metric_id`** where applicable so
 
 Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
 
+**Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
+
 ## Agent-Model Matching Standard
 
 To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
