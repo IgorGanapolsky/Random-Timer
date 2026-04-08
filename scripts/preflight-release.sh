@@ -69,6 +69,18 @@ check_file_nonempty() {
   return 0
 }
 
+check_file_meaningful() {
+  local path="$1" label="$2"
+  if ! check_file_nonempty "$path" "$label"; then
+    return 1
+  fi
+  if grep -Eiq 'TODO|TBD|REPLACE_THIS_PLACEHOLDER|<fill' "$path"; then
+    err "$label still contains placeholder text: $path"
+    return 1
+  fi
+  return 0
+}
+
 check_dir_has_files() {
   local dir="$1" pattern="$2" label="$3" min="${4:-1}"
   local count
@@ -133,6 +145,13 @@ if [[ -n "$ANDROID_VERSION_NAME" && -n "$IOS_VERSION_NAME" ]]; then
   fi
 fi
 
+RELEASE_NOTES_VERSION="${ANDROID_VERSION_NAME:-$IOS_VERSION_NAME}"
+if [[ -n "$RELEASE_NOTES_VERSION" ]]; then
+  RELEASE_NOTES_FILE="$PROJECT_ROOT/release-notes/${RELEASE_NOTES_VERSION}.md"
+else
+  RELEASE_NOTES_FILE=""
+fi
+
 # ══════════════════════════════════════════════════════════════════════════════
 # LAYER 1 — Metadata & File Checks
 # ══════════════════════════════════════════════════════════════════════════════
@@ -146,6 +165,16 @@ if check_file_nonempty "$PRIVACY_FILE" "PRIVACY_POLICY.md"; then
   info "PRIVACY_POLICY.md present ($(wc -l < "$PRIVACY_FILE" | tr -d ' ') lines)"
 else
   err "PRIVACY_POLICY.md must exist at project root"
+fi
+
+header "Versioned Release Notes"
+
+if [[ -n "$RELEASE_NOTES_FILE" ]]; then
+  if check_file_meaningful "$RELEASE_NOTES_FILE" "Versioned release notes"; then
+    info "Release notes manifest present: $(basename "$RELEASE_NOTES_FILE")"
+  fi
+else
+  warn "Could not resolve semantic version — skipping versioned release notes check"
 fi
 
 # ── Android Metadata ─────────────────────────────────────────────────────────
@@ -164,10 +193,10 @@ if [[ "$PLATFORM" == "android" || "$PLATFORM" == "both" ]]; then
   if [[ -n "$ANDROID_VERSION_CODE" ]]; then
     CHANGELOG="$ANDROID_META/changelogs/${ANDROID_VERSION_CODE}.txt"
     if [[ -f "$CHANGELOG" ]]; then
-      check_file_nonempty "$CHANGELOG" "Android changelog (versionCode $ANDROID_VERSION_CODE)"
+      check_file_meaningful "$CHANGELOG" "Android changelog (versionCode $ANDROID_VERSION_CODE)"
       info "Changelog $ANDROID_VERSION_CODE.txt present"
     elif [[ -f "$ANDROID_META/changelogs/default.txt" ]]; then
-      check_file_nonempty "$ANDROID_META/changelogs/default.txt" "Android fallback changelog (default.txt)"
+      check_file_meaningful "$ANDROID_META/changelogs/default.txt" "Android fallback changelog (default.txt)"
       info "Fallback changelog default.txt present"
     else
       err "Android changelog missing (expected ${ANDROID_VERSION_CODE}.txt or default.txt in $ANDROID_META/changelogs/)"
@@ -221,9 +250,10 @@ if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "both" ]]; then
   IOS_META="$PROJECT_ROOT/native-ios/fastlane/metadata/en-US"
 
   # Required text files
-  for f in name.txt subtitle.txt description.txt keywords.txt release_notes.txt; do
+  for f in name.txt subtitle.txt description.txt keywords.txt; do
     check_file_nonempty "$IOS_META/$f" "iOS $f"
   done
+  check_file_meaningful "$IOS_META/release_notes.txt" "iOS release_notes.txt"
 
   # Privacy URL (required by App Store)
   if check_file_nonempty "$IOS_META/privacy_url.txt" "iOS privacy_url.txt"; then

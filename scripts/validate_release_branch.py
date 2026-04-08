@@ -15,8 +15,10 @@ import sys
 from pathlib import Path
 
 try:
+    from scripts.release_notes import ReleaseNotesError, read_and_validate_release_notes
     from scripts.source_versions import VersionParseError, read_source_versions
 except ModuleNotFoundError:
+    from release_notes import ReleaseNotesError, read_and_validate_release_notes
     from source_versions import VersionParseError, read_source_versions
 
 
@@ -50,11 +52,17 @@ def validate_release_branch(repo_root: Path, head_ref: str) -> dict:
             f"Release branch mismatch: branch expects {expected_version}, app versions are {android_version}"
         )
 
+    try:
+        release_notes_path, _ = read_and_validate_release_notes(repo_root=repo_root, version=expected_version)
+    except ReleaseNotesError as exc:
+        raise ValidationError(str(exc)) from exc
+
     return {
         "head_ref": head_ref,
         "expected_version": expected_version,
         "android_version": android_version,
         "ios_version": ios_version,
+        "release_notes_path": str(release_notes_path.relative_to(repo_root)),
     }
 
 
@@ -80,6 +88,7 @@ def main() -> int:
     print(f"  version:  {result['expected_version']}")
     print(f"  android:  {result['android_version']}")
     print(f"  ios:      {result['ios_version']}")
+    print(f"  notes:    {result['release_notes_path']}")
     return 0
 
 

@@ -220,6 +220,7 @@ def test_native_release_workflow_creates_annotated_release_from_exact_sha():
 
     tag_block = source.split("tag-release:", 1)[1].split("sync-main:", 1)[0]
     assert "scripts/source_versions.py --repo-root . --format json" in tag_block
+    assert "scripts/release_notes.py" in tag_block
     assert 'git tag -a "${{ steps.version.outputs.tag }}" "${GITHUB_SHA}"' in tag_block
     assert '--verify-tag \\' in tag_block
     assert '--target "${GITHUB_SHA}" \\' in tag_block

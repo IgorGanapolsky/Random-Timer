@@ -42,6 +42,25 @@ Version bumps happen on `develop` first, then release branches are cut from `dev
 - **`versionCode`**: Auto-incremented by bump script. Integer, monotonically increasing for Play Store.
 - **`CURRENT_PROJECT_VERSION`**: Auto-incremented by fastlane `beta` lane during TestFlight upload. Does NOT need to match Android's versionCode.
 
+## Release Notes Strategy
+
+This repo uses a versioned release-note manifest:
+
+- `release-notes/X.Y.Z.md`
+
+Why this strategy:
+
+- Random Timer is a single consumer app, not a multi-package library monorepo.
+- `.changeset/` package fragments are overkill here.
+- A single versioned note file gives us one canonical customer-facing summary for GitHub Releases while Android and iOS keep their required store-specific metadata files.
+
+Enforcement:
+
+- `scripts/bump-version.sh` creates `release-notes/X.Y.Z.md`
+- `scripts/validate_release_branch.py` blocks `release/vX.Y.Z` and `hotfix/vX.Y.Z` promotion without a filled `release-notes/X.Y.Z.md`
+- `scripts/preflight-release.sh` rejects placeholder text in the versioned release note, Android changelog, and iOS `release_notes.txt`
+- `native-release.yml` uses `release-notes/X.Y.Z.md` as the canonical GitHub Release body
+
 ## Step-by-Step Release Process
 
 ### 1. Bump Version on `develop`
