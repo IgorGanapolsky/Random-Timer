@@ -503,14 +503,26 @@ fun TimerSetupScreen(
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
+                                    verticalAlignment = Alignment.Top,
                                 ) {
-                                    Text(
-                                        text = "\uD83D\uDCE2 Voice Callouts",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
-                                    )
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Text(
+                                            text = "\uD83D\uDCE2 Voice Callouts",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        )
+                                        Text(
+                                            text = "Time checks and command cues that keep you sharp under pressure",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TimerColors.TextMuted,
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
 
                                     if (isPro) {
                                         Switch(
@@ -523,88 +535,92 @@ fun TimerSetupScreen(
                                                 ),
                                         )
                                     } else {
-                                        Surface(
-                                            onClick = {
-                                                onFeatureGateHit("voice_callouts")
-                                                onUpgradeTap()
-                                            },
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
+                                            Surface(
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onCommandCuePreview(config.voiceGender)
+                                                },
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                             ) {
                                                 Text(
-                                                    text = "PRO ",
+                                                    text = "PREVIEW",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                                 )
-                                                Text(
-                                                    text = "\uD83D\uDD12",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
+                                            }
+                                            Surface(
+                                                onClick = {
+                                                    onFeatureGateHit("voice_callouts")
+                                                    onUpgradeTap()
+                                                },
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Text(
+                                                        text = "PRO ",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                    Text(
+                                                        text = "\uD83D\uDD12",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
 
-                                // Male/Female chips + Preview — always visible, right below the title
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    VoiceGender.entries.forEach { gender ->
-                                        FilterChip(
-                                            selected = config.voiceGender == gender,
-                                            onClick = {
-                                                updateConfig(voiceGender = gender)
-                                                onVoiceGenderSelected(gender)
-                                            },
-                                            label = {
-                                                Text(
-                                                    if (gender == VoiceGender.MALE) {
-                                                        "Male"
-                                                    } else {
-                                                        "Female"
-                                                    },
-                                                )
-                                            },
-                                            colors =
-                                                FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                    selectedLabelColor = TimerColors.AccentPrimary,
-                                                ),
-                                            border =
-                                                FilterChipDefaults.filterChipBorder(
-                                                    selectedBorderColor = TimerColors.AccentPrimary,
-                                                    enabled = true,
-                                                    selected = config.voiceGender == gender,
-                                                ),
-                                        )
-                                    }
-
-                                    if (!isPro) {
-                                        Surface(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onCommandCuePreview(config.voiceGender)
-                                            },
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                        ) {
-                                            Text(
-                                                text = "PREVIEW",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                if (config.voiceEnabled || !isPro) {
+                                    Row(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        VoiceGender.entries.forEach { gender ->
+                                            FilterChip(
+                                                selected = config.voiceGender == gender,
+                                                onClick = {
+                                                    updateConfig(voiceGender = gender)
+                                                    onVoiceGenderSelected(gender)
+                                                },
+                                                label = {
+                                                    Text(
+                                                        text =
+                                                            if (gender == VoiceGender.MALE) {
+                                                                "Male"
+                                                            } else {
+                                                                "Female"
+                                                            },
+                                                    )
+                                                },
+                                                colors =
+                                                    FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                        selectedLabelColor = TimerColors.AccentPrimary,
+                                                    ),
+                                                border =
+                                                    FilterChipDefaults.filterChipBorder(
+                                                        selectedBorderColor = TimerColors.AccentPrimary,
+                                                        enabled = true,
+                                                        selected = config.voiceGender == gender,
+                                                    ),
                                             )
                                         }
                                     }

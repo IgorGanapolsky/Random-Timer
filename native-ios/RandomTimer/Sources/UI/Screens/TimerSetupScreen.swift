@@ -35,11 +35,19 @@ struct TimerSetupScreen: View {
                 // 1. Timer Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
-                        HStack {
-                            Label("Timer Range", systemImage: "timer")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.textPrimary)
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label("Timer Range", systemImage: "timer")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.textPrimary)
+
+                                Text(
+                                    "Each timer picks a random duration in your range \u{2014} stay ready for anything."
+                                )
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
 
                             Spacer()
 
@@ -88,10 +96,6 @@ struct TimerSetupScreen: View {
                             }
                         }
 
-                        Text("Each timer picks a random duration in your range \u{2014} stay ready for anything.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
                         Spacer().frame(height: 16)
 
                         TimeRangeSliders(
@@ -131,7 +135,7 @@ struct TimerSetupScreen: View {
                         Spacer().frame(height: 20)
 
                         // Voice Callouts (Pro Feature)
-                        HStack {
+                        HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label("Voice Callouts", systemImage: "waveform")
                                     .font(.subheadline)
