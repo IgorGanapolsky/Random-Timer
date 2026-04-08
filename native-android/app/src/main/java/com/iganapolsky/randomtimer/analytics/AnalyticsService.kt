@@ -63,6 +63,8 @@ class AnalyticsService
                 mapOf(
                     "platform" to "android",
                     "app_version" to BuildConfig.VERSION_NAME,
+                    // Numeric build keeps PostHog `$app_build` type consistent (avoids string/number drift).
+                    "\$app_build" to BuildConfig.VERSION_CODE,
                     AnalyticsProperties.ENVIRONMENT to environment(),
                     AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
                     AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",

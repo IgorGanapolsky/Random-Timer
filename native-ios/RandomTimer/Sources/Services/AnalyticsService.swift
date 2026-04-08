@@ -65,6 +65,14 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
+
+    /// Numeric build for PostHog (avoids string/number `$app_build` type drift across events).
+    private var appBuildNumber: Int {
+        let raw = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+        if let n = raw as? Int { return n }
+        if let s = raw as? String, let n = Int(s) { return n }
+        return 0
+    }
     private let host = "https://us.i.posthog.com"
 
 #if DEBUG
@@ -77,6 +85,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         [
             "platform": "ios",
             "app_version": appVersion,
+            "$app_build": appBuildNumber,
             AnalyticsProperties.environment: environment,
             AnalyticsProperties.buildAudience: buildAudience,
             AnalyticsProperties.buildType: buildType,

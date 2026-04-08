@@ -12,6 +12,16 @@ def test_posthog_section_skipped_without_credentials() -> None:
     assert out["status"] == "skipped"
 
 
+def test_posthog_metric_field_ids_include_paywall_platform_splits() -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    mf = ems.POSTHOG_EXECUTIVE_METRIC_FIELD_IDS
+    assert mf.get("events_paywall_purchase_success_ios")
+    assert mf.get("events_paywall_purchase_success_android")
+    assert mf.get("distinct_persons_paywall_purchase_success_ios")
+    assert mf.get("distinct_persons_paywall_purchase_success_android")
+
+
 def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import executive_metrics_snapshot as ems
 
@@ -44,6 +54,8 @@ def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.M
     assert mf.get("distinct_persons_application_installed") == (
         "posthog_hogql_distinct_persons_event_application_installed"
     )
+    assert out.get("events_paywall_purchase_success_ios") == 0
+    assert out.get("distinct_persons_paywall_purchase_success_android") == 0
 
 
 def test_pragmatic_live_excludes_non_store_distribution_channels() -> None:

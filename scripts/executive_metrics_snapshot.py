@@ -89,6 +89,18 @@ POSTHOG_EXECUTIVE_METRIC_FIELD_IDS: Dict[str, str] = {
         "posthog_hogql_distinct_persons_event_paywall_purchase_success"
     ),
     "events_paywall_purchase_success": "posthog_hogql_count_events_paywall_purchase_success",
+    "distinct_persons_paywall_purchase_success_ios": (
+        "posthog_hogql_distinct_persons_event_paywall_purchase_success_ios"
+    ),
+    "distinct_persons_paywall_purchase_success_android": (
+        "posthog_hogql_distinct_persons_event_paywall_purchase_success_android"
+    ),
+    "events_paywall_purchase_success_ios": (
+        "posthog_hogql_count_events_paywall_purchase_success_ios"
+    ),
+    "events_paywall_purchase_success_android": (
+        "posthog_hogql_count_events_paywall_purchase_success_android"
+    ),
     "in_app_review_prompt_events": "posthog_hogql_count_events_review_prompt_requested",
     "in_app_review_prompt_distinct_persons": (
         "posthog_hogql_distinct_persons_event_review_prompt_requested"
@@ -202,6 +214,8 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         out["timer_abandon_rate_event_level_pct"] = round(
             (started - completed) / started * 100, 2
         )
+    pf_ios = "AND coalesce(toString(properties.platform), '') = 'ios'"
+    pf_android = "AND coalesce(toString(properties.platform), '') = 'android'"
     out["distinct_persons_paywall_purchase_success"] = scalar(
         f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f}"
@@ -209,6 +223,22 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
     out["events_paywall_purchase_success"] = scalar(
         f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["distinct_persons_paywall_purchase_success_ios"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f} {pf_ios}"
+    )
+    out["distinct_persons_paywall_purchase_success_android"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
+    )
+    out["events_paywall_purchase_success_ios"] = scalar(
+        f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f} {pf_ios}"
+    )
+    out["events_paywall_purchase_success_android"] = scalar(
+        f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
     )
     q_reviews = posthog_query(
         f"SELECT count(), count(DISTINCT person_id) FROM events WHERE event = 'review_prompt_requested' "
@@ -298,7 +328,11 @@ def run(
                 "store_apis.android / store_apis.ios when present."
             ),
             "reviews_in_app": "PostHog review_prompt_requested / write_review_tapped (not published star count).",
-            "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
+            "paid_posthog": (
+                "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store "
+                "revenue). Compare posthog.events_paywall_purchase_success_ios vs _android "
+                "(properties.platform). Ledger: App Store Connect + Google Play billing."
+            ),
             "posthog_executive": (
                 "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except "
                 "wqtu_7d_distinct_persons (fixed 7d). Filters exclude non–store-production "
