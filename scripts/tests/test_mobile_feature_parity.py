@@ -108,9 +108,12 @@ def test_voice_callouts_present_on_both_platforms():
 
     assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
     assert "Voice Callouts" in ios_setup or "AI Voice Callouts" in ios_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in android_setup
     assert "Time checks and command cues that keep you sharp under pressure" in ios_setup
     assert "VoiceGender.entries.forEach" in android_setup
     assert 'text = "PREVIEW"' in android_setup
+    assert 'if (config.voiceEnabled || !isPro)' in android_setup
+    assert android_setup.index('text = "PREVIEW"') < android_setup.index("VoiceGender.entries.forEach")
     assert 'if (gender == VoiceGender.MALE)' in android_setup
 
     assert "voiceEnabled" in android_timer_config
