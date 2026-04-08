@@ -4,8 +4,9 @@
 Outputs marketing/data/executive_metrics.json. Intended to run locally (.env) or in CI
 (GitHub Actions secrets). No secrets are printed.
 
-Audience (PostHog): PRAGMATIC_LIVE — non-debug, real device, not is_internal=true.
-See docs/OBSERVABILITY.md for strict LIVE_EVENTS_PREDICATE vs legacy events.
+Audience (PostHog): PRAGMATIC_LIVE — non-debug, real device, not internal, store-production
+distribution_channel only (plus legacy untagged events). Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS.
+See docs/OBSERVABILITY.md and marketing/data/README.md.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -24,11 +26,44 @@ sys.path.insert(0, str(SCRIPTS))
 
 from repo_dotenv import load_repo_dotenv
 
-PRAGMATIC_LIVE = """(
+# distribution_channel set by iOS/Android SDKs; legacy events omit it (treated as legacy).
+_DISTRIBUTION_EXCLUDE = (
+    "'testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test'"
+)
+
+PRAGMATIC_LIVE = f"""(
   lower(coalesce(properties.build_type, 'release')) != 'debug'
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
   AND coalesce(toString(properties.is_internal), 'false') != 'true'
+  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ({_DISTRIBUTION_EXCLUDE})
 )"""
+
+
+_REDACT_PERSON_ID_NOT_IN = re.compile(r" AND person_id NOT IN \([^)]*\)")
+
+
+def _redact_audience_sql_for_json(sql: str) -> str:
+    """Do not persist excluded PostHog person UUIDs into committed JSON artifacts."""
+    return _REDACT_PERSON_ID_NOT_IN.sub(
+        " AND person_id NOT IN (<redacted: POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS>)",
+        sql,
+    )
+
+
+def _posthog_person_id_exclusion_sql() -> str:
+    """Optional comma-separated PostHog person UUIDs to drop from executive counts (e.g. CEO test devices)."""
+    raw = os.environ.get("POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS", "").strip()
+    if not raw:
+        return ""
+    safe_ids: list[str] = []
+    for part in raw.split(","):
+        pid = part.strip()
+        if not pid or not re.fullmatch(r"[0-9a-fA-F-]{10,}", pid):
+            continue
+        safe_ids.append(f"'{pid.replace(chr(39), '')}'")
+    if not safe_ids:
+        return ""
+    return " AND person_id NOT IN (" + ", ".join(safe_ids) + ")"
 
 POSTHOG_EXECUTIVE_METRIC_BUNDLE_ID = "posthog_executive_pragmatic_live_hogql_v1"
 
@@ -80,13 +115,22 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
 
     errors: List[str] = []
     win = f"{days} day"
-    f = PRAGMATIC_LIVE
+    person_excl = _posthog_person_id_exclusion_sql()
+    f = PRAGMATIC_LIVE + person_excl
+    audience_sql_json = _redact_audience_sql_for_json(f.strip()) if person_excl else f.strip()
     out: Dict[str, Any] = {
         "status": "ok" if api_key and project_id else "skipped",
         "host": "https://us.posthog.com",
         "project_id": project_id or None,
         "audience": "pragmatic_live",
-        "audience_sql": PRAGMATIC_LIVE.strip(),
+        "audience_sql": audience_sql_json,
+        "audience_note": (
+            "Excludes debug/sim/emulator, is_internal, non–App Store/TestFlight/Firebase-style "
+            "distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. "
+            "Legacy events without distribution_channel use coalesce 'legacy' (still included). "
+            "Not a guarantee of human/non-team users—set person exclusions for known IDs."
+        ),
+        "exclude_person_ids_configured": bool(person_excl),
         "window_days": days,
         "errors": errors,
     }
@@ -257,7 +301,11 @@ def run(
             "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
             "posthog_executive": (
                 "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except "
-                "wqtu_7d_distinct_persons (fixed 7d). See posthog.metric_field_ids."
+                "wqtu_7d_distinct_persons (fixed 7d). Filters exclude non–store-production "
+                "distribution_channel (testflight, non_play_install, dev, emulator, etc.), "
+                "is_internal, debug/sim events; legacy events without distribution_channel stay "
+                "included as 'legacy'. Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS env. "
+                "See posthog.metric_field_ids and posthog.audience_note."
             ),
             "crashes": (
                 "Crashlytics BigQuery streaming export; posthog_exception_events is separate. "

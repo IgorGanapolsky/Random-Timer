@@ -30,7 +30,12 @@ class AnalyticsService
                 return
             }
 
-            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
+            val distributionChannel = resolveDistributionChannel(application)
+            val isInternalUser =
+                isEmulator() ||
+                    BuildConfig.DEBUG ||
+                    isUiTestSession(application) ||
+                    distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL
 
             val config =
                 PostHogAndroidConfig(
@@ -62,6 +67,7 @@ class AnalyticsService
                     AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
                     AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
                     AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to distributionChannel,
                     "is_internal" to isInternalUser,
                 )
             initialized = true
@@ -208,6 +214,18 @@ class AnalyticsService
                 analyticsContextProperties + properties
             }
 
+        private fun resolveDistributionChannel(application: Application): String {
+            if (BuildConfig.DEBUG) return AndroidInstallChannel.DEV
+            if (isEmulator()) return AndroidInstallChannel.EMULATOR
+            if (isUiTestSession(application)) return AndroidInstallChannel.UI_TEST
+            val installer =
+                AndroidInstallChannel.installingPackageName(
+                    application.packageManager,
+                    application.packageName,
+                )
+            return AndroidInstallChannel.fromInstallerPackageName(installer)
+        }
+
         private fun buildAudience(): String {
             if (BuildConfig.DEBUG) return "dev"
             return if (isEmulator()) "dev" else "live"
@@ -315,6 +333,9 @@ object AnalyticsEvents {
 }
 
 object AnalyticsProperties {
+    /** Mirrors iOS; consumed by executive_metrics_snapshot PRAGMATIC filter. */
+    const val DISTRIBUTION_CHANNEL = "distribution_channel"
+
     const val ENTRY_POINT = "entry_point"
     const val RESULT = "result"
     const val SUCCESS = "success"

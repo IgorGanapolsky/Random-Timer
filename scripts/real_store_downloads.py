@@ -21,6 +21,7 @@ import datetime as dt
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,28 @@ IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 IOS_APP_ID = "6758355312"
 
 sys.path.append(str(Path(__file__).parent.resolve()))
+
+
+def _asc_get_with_retries(
+    requests_mod: Any,
+    url: str,
+    headers: dict[str, str],
+    params: dict[str, Any] | None = None,
+    *,
+    attempts: int = 3,
+    timeout: float = 60.0,
+) -> Any:
+    """App Store Connect can spike with connect timeouts; retry with backoff."""
+    last_exc: Exception | None = None
+    for i in range(attempts):
+        try:
+            return requests_mod.get(url, headers=headers, params=params, timeout=timeout)
+        except requests_mod.RequestException as exc:
+            last_exc = exc
+            if i < attempts - 1:
+                time.sleep(2.0 * (i + 1))
+    assert last_exc is not None
+    raise last_exc
 
 # Google Play Reply-to-Reviews API: list only includes reviews with user *comments*
 # (star-only ratings are omitted), and only those created or modified in the last 7 days.
@@ -161,10 +184,10 @@ def _get_ios_data(days: int) -> dict[str, Any]:
 
     # Get app info
     try:
-        resp = requests.get(
+        resp = _asc_get_with_retries(
+            requests,
             f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}",
             headers=headers,
-            timeout=30,
         )
         if resp.status_code == 200:
             app_data = resp.json().get("data", {}).get("attributes", {})
@@ -178,11 +201,11 @@ def _get_ios_data(days: int) -> dict[str, Any]:
 
     # Get current version state
     try:
-        resp = requests.get(
+        resp = _asc_get_with_retries(
+            requests,
             f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/appStoreVersions",
             headers=headers,
             params={"filter[platform]": "IOS", "limit": 5},
-            timeout=30,
         )
         if resp.status_code == 200:
             versions = resp.json().get("data", [])
@@ -201,11 +224,11 @@ def _get_ios_data(days: int) -> dict[str, Any]:
 
     # Get customer reviews (real users only)
     try:
-        resp = requests.get(
+        resp = _asc_get_with_retries(
+            requests,
             f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/customerReviews",
             headers=headers,
             params={"limit": 50, "sort": "-createdDate"},
-            timeout=30,
         )
         if resp.status_code == 200:
             reviews = resp.json().get("data", [])

@@ -20,20 +20,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 try:
-    from scripts.store_downloads_snapshot import query_rows, query_scalar
+    from scripts.store_downloads_snapshot import LIVE_EVENTS_PREDICATE, query_rows, query_scalar
 except ModuleNotFoundError:
-    from store_downloads_snapshot import query_rows, query_scalar
-
-LIVE_EVENTS_PREDICATE = """
-(
-  (
-    lower(coalesce(properties.environment, '')) IN ('production', 'live')
-    OR lower(coalesce(properties.build_audience, '')) = 'live'
-  )
-  AND lower(coalesce(properties.build_type, 'release')) != 'debug'
-  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
-)
-"""
+    from store_downloads_snapshot import LIVE_EVENTS_PREDICATE, query_rows, query_scalar
 
 
 def _load_paid_campaigns(path: Path) -> Dict[str, Any]:
