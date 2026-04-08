@@ -16,11 +16,9 @@ Use the **marketing URL** from store metadata:
 
 - `native-ios/fastlane/metadata/en-US/marketing_url.txt` (source of truth)
 
-## Topics (GitHub limit: 20)
+## Suggested topics
 
-The repo is usually **at the 20-topic cap**. Swap topics with `gh api` / Settings rather than blindly `--add-topic`. Current set is visible via:
-
-`gh api repos/IgorGanapolsky/Random-Timer/topics -H "Accept: application/vnd.github+json"`
+`swift` `swiftui` `kotlin` `jetpack-compose` `timer` `hiit` `martial-arts` `mobile` `ios` `android` `storekit` `play-billing`
 
 ## Store copy source of truth
 
