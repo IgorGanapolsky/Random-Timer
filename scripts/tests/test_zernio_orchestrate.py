@@ -35,6 +35,13 @@ def test_parse_publish_accounts_rejects_empty() -> None:
     assert err is not None
 
 
+def test_parse_publish_accounts_rejects_replace_me_placeholder() -> None:
+    raw = json.dumps([{"platform": "youtube", "accountId": "REPLACE_ME"}])
+    parsed, err = zo._parse_publish_accounts(raw)
+    assert parsed is None
+    assert err and "placeholder" in err.lower()
+
+
 def test_recent_zernio_publish_for_slug(tmp_path: Path) -> None:
     log = tmp_path / "zernio_orchestration.jsonl"
     log.write_text(

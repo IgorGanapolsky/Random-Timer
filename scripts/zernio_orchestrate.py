@@ -124,6 +124,8 @@ def _parse_publish_accounts(raw: str) -> Tuple[Optional[List[Dict[str, str]]], O
         aid = str(item.get("accountId") or item.get("account_id") or "").strip()
         if not pid or not aid:
             return None, "each entry needs platform and accountId"
+        if "replace_me" in aid.lower() or aid.strip() in ("", "...", "xxx", "TODO"):
+            return None, "replace placeholder accountId values in ZERNIO_PUBLISH_ACCOUNTS"
         out.append({"platform": pid, "accountId": aid})
     return out, None
 
