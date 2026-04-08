@@ -66,3 +66,9 @@ These reduce lag **finding** questions; they do **not** replace writing a correc
 ```bash
 uv run python scripts/stackoverflow_feed_triage.py --tags swiftui,storekit --limit 10
 ```
+
+### Scheduled digest (every hour, read-only)
+
+GitHub Actions workflow **`stackoverflow-hourly-digest.yml`** runs **hourly** (UTC). It reads tag groups from `marketing/data/stackoverflow_digest_tag_groups.txt`, fetches each feed, and uploads **`stackoverflow-hourly-digest`** (markdown) as a workflow **artifact** (default retention **14 days**). **Nothing is committed** and nothing is posted to Stack Overflow.
+
+**Download:** Repository → **Actions** → **Stack Overflow hourly triage digest** → open a run → **Artifacts**.

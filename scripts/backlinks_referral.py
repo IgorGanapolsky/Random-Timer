@@ -53,9 +53,9 @@ STACK_OVERFLOW_WATCHLIST: List[Dict[str, str]] = [
     {"tag": "storekit", "note": "IAP / subscriptions / non-consumables"},
     {"tag": "ios", "note": "Broad iOS; filter by timer/audio when possible"},
     {"tag": "kotlin+android", "note": "Android app patterns"},
-    {"tag": "jetpack-compose", "note": "Compose UI parity with SwiftUI"},
+    {"tag": "android-jetpack-compose", "note": "Compose UI (feed slug; /tagged/jetpack-compose on site)"},
     {"tag": "android-billing", "note": "Play Billing / purchases"},
-    {"tag": "android-foreground-service", "note": "Timer + notifications"},
+    {"tag": "foreground-service", "note": "Timer + notifications (feed-friendly slug)"},
 ]
 
 BLOG_OUTREACH_TEMPLATES = [
@@ -196,6 +196,8 @@ def write_stackoverflow_watchlist(repo_root: Path) -> None:
         "# Stack Overflow watchlist",
         "",
         "Open **Newest** or **No answers** on each link. Answer helpfully; see `docs/STACK_OVERFLOW_PLAYBOOK.md`.",
+        "",
+        "**CLI (read-only):** `uv run python scripts/stackoverflow_feed_triage.py --tags swiftui,storekit --limit 15` (see playbook for automation limits).",
         "",
     ]
     for row in STACK_OVERFLOW_WATCHLIST:

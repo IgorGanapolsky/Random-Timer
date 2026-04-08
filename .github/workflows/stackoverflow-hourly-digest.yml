@@ -1,0 +1,58 @@
+name: Stack Overflow hourly triage digest
+
+# Read-only: fetches public Atom tag feeds, uploads markdown artifact. Does not post to Stack Overflow.
+on:
+  schedule:
+    - cron: '12 * * * *' # Every hour at :12 UTC (stagger from other jobs)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stackoverflow-hourly-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build digest from tag groups
+        run: |
+          set -euo pipefail
+          DIGEST="stackoverflow_digest.md"
+          : > digest_errors.log
+          {
+            echo "# Stack Overflow hourly digest"
+            echo ""
+            echo "_Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ") (UTC) · playbook: \`docs/STACK_OVERFLOW_PLAYBOOK.md\`_"
+            echo ""
+          } > "$DIGEST"
+          grep -v '^[[:space:]]*#' marketing/data/stackoverflow_digest_tag_groups.txt | grep -v '^[[:space:]]*$' | while IFS= read -r raw; do
+            line="${raw%%#*}"
+            line="$(echo "$line" | xargs)"
+            [ -z "$line" ] && continue
+            echo "" >> "$DIGEST"
+            echo "## Tags: \`$line\`" >> "$DIGEST"
+            echo "" >> "$DIGEST"
+            if ! python3 scripts/stackoverflow_feed_triage.py --tags "$line" --limit 10 >> "$DIGEST" 2>>digest_errors.log; then
+              echo "_Fetch failed for tags \`$line\` (see job log)._ " >> "$DIGEST"
+            fi
+          done
+          if [ -s digest_errors.log ]; then
+            echo "" >> "$DIGEST"
+            echo "## Fetch stderr" >> "$DIGEST"
+            echo '```' >> "$DIGEST"
+            head -c 4000 digest_errors.log >> "$DIGEST" || true
+            echo '```' >> "$DIGEST"
+          fi
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: stackoverflow-hourly-digest
+          path: stackoverflow_digest.md
+          retention-days: 14
