@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
@@ -810,35 +811,55 @@ fun TimerSetupScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = if (isPro) "Sound Arsenal" else "Sound Arsenal \uD83D\uDD12",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
-                            modifier =
-                                Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (!isPro) {
-                                                onFeatureGateHit("pro_sounds")
-                                                onUpgradeTap()
-                                            } else if (isCompactHeight) {
-                                                showArsenalSheet = true
-                                            } else {
-                                                showArsenal = !showArsenal
-                                            }
-                                        },
-                                        onPress = {
-                                            val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
-                                            if (released == null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Sound Arsenal",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                modifier =
+                                    Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onSecretUnlock()
-                                            }
-                                        },
+                                                if (isCompactHeight) {
+                                                    showArsenalSheet = true
+                                                } else {
+                                                    showArsenal = !showArsenal
+                                                }
+                                            },
+                                            onPress = {
+                                                val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
+                                                if (released == null) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onSecretUnlock()
+                                                }
+                                            },
+                                        )
+                                    },
+                            )
+
+                            if (!isPro) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onFeatureGateHit("pro_sounds")
+                                        onUpgradeTap()
+                                    },
+                                    modifier =
+                                        Modifier
+                                            .size(28.dp)
+                                            .semantics { contentDescription = "Unlock Sound Arsenal" },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Lock,
+                                        contentDescription = null,
+                                        tint = TimerColors.TextMuted,
+                                        modifier = Modifier.size(14.dp),
                                     )
-                                },
-                        )
+                                }
+                            }
+                        }
 
                         val actionLabel =
                             when {
