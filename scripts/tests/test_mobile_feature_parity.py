@@ -168,13 +168,17 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_pro_manager = _read(ANDROID_PRO_MANAGER)
     ios_setup = _read(IOS_SETUP)
     ios_paywall = _read(IOS_PAYWALL)
+    sound_arsenal_section = android_setup.split("// 3. Sound Arsenal", 1)[1].split("val actionLabel", 1)[0]
 
     assert "TACTICAL EXPANSION" not in android_setup
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
     assert 'contentDescription = "Unlock Sound Arsenal"' in android_setup
-    assert "Icons.Filled.Lock" in android_setup
+    assert 'text = "PRO "' in sound_arsenal_section
+    assert 'text = "\\uD83D\\uDD12"' in sound_arsenal_section
+    assert "Surface(" in sound_arsenal_section
+    assert "IconButton(" not in sound_arsenal_section
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     for expected in (
         "Train up to 60-minute sessions",
