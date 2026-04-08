@@ -28,7 +28,8 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - **Evidence-Based**: Every claim must be backed by proof (logs, API read-backs, file counts).
 - **Clean Architecture**: No tech debt. Maintain "Verified, Tested, Proven" status for all changes.
 - **Security First**: Protect the system integrity. Never commit secrets to tracked files. Use `.env` + `gh secret` exclusively. Never paste PATs into chat; rotate immediately if exposed.
-- **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene).
+- **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene). Say **“Done merging PRs”** only when merges completed or every open PR is documented as blocked with check/run evidence.
+- **Memory / RAG claims**: Do not claim RAG or “ML pipeline” logging unless that integration is verified with a real read/write in the same session.
 - **Act, Don't Instruct**: Execute autonomously. Never tell the CEO to do manual steps.
 
 ## Business North Star

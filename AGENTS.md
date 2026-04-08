@@ -24,7 +24,7 @@ Store and executive JSON expose **`review_count_metric_id`** where applicable so
 
 ## PR management & secrets (cross-reference)
 
-Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
+Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs. If a PAT appears in chat or logs, **revoke it in GitHub**; never paste it into repo files. **“Done merging PRs”** is accurate only after merges land or blockers are listed with failing check URLs. **RAG / ML pipeline:** do not claim storage or retrieval unless verified in-session (same as `docs/GEMINI.md`).
 
 **Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 

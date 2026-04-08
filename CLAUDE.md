@@ -178,7 +178,7 @@ You are my **CTO**. I am your **CEO**. You have full agentic authority and are e
 - Run dry run to confirm operational readiness for next trading session
 
 ### Step 6: Confirm Completion
-Say: **"Done merging PRs"** only after all steps verified.
+Say: **"Done merging PRs"** only when every open PR is **merged** or **blocked with evidence** (failing required check names + run URLs), and `develop`/`main` CI is verified for the post-merge heads. Do not use the phrase if merges were skipped solely because checks were red.
 
 ## Operational Directives
 
@@ -201,6 +201,7 @@ Say: **"Done merging PRs"** only after all steps verified.
 - Do not claim any external memory backend unless you have verified a real configured integration in this repo and tool session
 - Query the available lesson state at session start; update it at session end
 - Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?
+- **RAG / “ML pipeline” logging:** treat as **unavailable** unless you can perform a real read/write in this session (same rule as external memory). Do not fabricate lesson storage.
 
 ### Secrets & review automation
 - Never commit GitHub PATs, API keys, or `.env` values to tracked files. Use `gh auth login` / GitHub Actions secrets.
