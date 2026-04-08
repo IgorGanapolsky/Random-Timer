@@ -14,6 +14,8 @@ NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
 DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
+WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
+WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -285,6 +287,24 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
     assert "agent-device" in source
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
+
+
+def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():
+    source = WEEKLY_SHARED_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Close stale automated report issues" in source
+    assert '--search "\\"${ISSUE_TITLE}\\" in:title"' in source
+    assert 'jq -r --arg issue_title "$ISSUE_TITLE"' in source
+    assert "select(.title == $issue_title)" in source
+    assert "Closing previous automated report issue before publishing refreshed weekly output." in source
+
+
+def test_wqtu_health_workflow_closes_prior_alert_issue_before_creating_next_one():
+    source = WQTU_HEALTH_WORKFLOW.read_text(encoding="utf-8")
+
+    assert '"⚠️ WQTU Alert:" in:title' in source
+    assert 'select(.title | startswith("⚠️ WQTU Alert:"))' in source
+    assert "Closing previous weekly WQTU alert before publishing refreshed weekly output." in source
 
 
 def test_dead_play_precondition_stub_is_removed():
