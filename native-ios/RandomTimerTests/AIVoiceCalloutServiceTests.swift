@@ -134,6 +134,21 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.previewCountdownCue(gender: .female)
     }
 
+    func testGenderedVoiceFilenameUsesFemaleBundleSubdirectory() {
+        XCTAssertEqual(
+            genderedVoiceFilename("cmd_move_with_a_purpose", gender: .female),
+            "female/cmd_move_with_a_purpose"
+        )
+        XCTAssertEqual(
+            genderedVoiceFilename("female/cmd_move_with_a_purpose", gender: .female),
+            "female/cmd_move_with_a_purpose"
+        )
+        XCTAssertEqual(
+            genderedVoiceFilename("cmd_move_with_a_purpose", gender: .male),
+            "cmd_move_with_a_purpose"
+        )
+    }
+
     func testResetSessionAllowsElapsedMilestoneToReplay() {
         let sut = makeVoiceCalloutService()
         sut.triggerCallout(elapsedSeconds: 30)
