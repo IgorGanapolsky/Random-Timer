@@ -343,9 +343,13 @@ struct TimerSetupScreen: View {
                         .foregroundColor(proManager.isPro ? .textPrimary : .textMuted)
 
                     if !proManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundColor(.textMuted)
+                        Button {
+                            presentPaywall(entryPoint: .soundGate)
+                        } label: {
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                                .foregroundColor(.accentPrimary)
+                        }
                     }
 
                     Spacer()
