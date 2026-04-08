@@ -75,7 +75,6 @@
 		PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */; };
 		FCBFIR001122334455667788AA /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FPDFIR00112233445566778801 /* FirebaseCrashlytics */; };
 		CRSVC00112233445566778802 /* CrashReportingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CRSVC00112233445566778801 /* CrashReportingService.swift */; };
-		GSIPL00112233445566778802 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = GSIPL00112233445566778801 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -415,13 +414,14 @@
 		071F286DC49E27F1773FA883 /* RandomTimer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1FC5C4B604AB7C83642F1A28 /* Build configuration list for PBXNativeTarget "RandomTimer" */;
-			buildPhases = (
-				4B3649502FCACD78DF51B7D7 /* Sources */,
-				PH00112233445566778899CC /* Frameworks */,
-				C860582E5E34407E753D7F99 /* Resources */,
-				C1D86135661BEED30B3D6574 /* Embed Foundation Extensions */,
-				CRSHEL00112233445566778801 /* Run Crashlytics */,
-			);
+				buildPhases = (
+					4B3649502FCACD78DF51B7D7 /* Sources */,
+					PH00112233445566778899CC /* Frameworks */,
+					C860582E5E34407E753D7F99 /* Resources */,
+					GSICOPY001122334455667788 /* Copy GoogleService-Info.plist if present */,
+					C1D86135661BEED30B3D6574 /* Embed Foundation Extensions */,
+					CRSHEL00112233445566778801 /* Run Crashlytics */,
+				);
 			buildRules = (
 			);
 			dependencies = (
@@ -525,16 +525,15 @@
 		C860582E5E34407E753D7F99 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (
-				A1C100112233445566778899 /* Audio in Resources */,
-				56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */,
-				4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */,
-				AABB001122334455DEADBEE0 /* Assets.xcassets in Resources */,
-				PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */,
-				GSIPL00112233445566778802 /* GoogleService-Info.plist in Resources */,
-				3FFD4482489894E382E7B6E8 /* klaxon.mp3 in Resources */,
-				4FF9285AE33C37D3F7655511 /* whistle.mp3 in Resources */,
-				5B6F3408CC4B851C6428EAAA /* buzzer.mp3 in Resources */,
+				files = (
+					A1C100112233445566778899 /* Audio in Resources */,
+					56DF942937CE323893E2E4C6 /* alarm.mp3 in Resources */,
+					4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */,
+					AABB001122334455DEADBEE0 /* Assets.xcassets in Resources */,
+					PRIV001122334455AABB0002 /* PrivacyInfo.xcprivacy in Resources */,
+					3FFD4482489894E382E7B6E8 /* klaxon.mp3 in Resources */,
+					4FF9285AE33C37D3F7655511 /* whistle.mp3 in Resources */,
+					5B6F3408CC4B851C6428EAAA /* buzzer.mp3 in Resources */,
 				997459C4BEB58C7A5CB1C72F /* gong.mp3 in Resources */,
 				2B75985921EFA190A6114447 /* airhorn.mp3 in Resources */,
 				1DB82123D1FB23AC92C566D7 /* drum_roll.mp3 in Resources */,
@@ -546,6 +545,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		GSICOPY001122334455667788 /* Copy GoogleService-Info.plist if present */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/RandomTimer/GoogleService-Info.plist",
+			);
+			name = "Copy GoogleService-Info.plist if present";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SOURCE_PLIST=\"${PROJECT_DIR}/RandomTimer/GoogleService-Info.plist\"\nDEST_PLIST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nif [ -f \"$SOURCE_PLIST\" ]; then\n  cp \"$SOURCE_PLIST\" \"$DEST_PLIST\"\n  echo \"Bundled GoogleService-Info.plist\"\nelse\n  rm -f \"$DEST_PLIST\"\n  echo \"GoogleService-Info.plist not present; continuing without bundled Firebase config\"\nfi\n";
+		};
 		CRSHEL00112233445566778801 /* Run Crashlytics */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -568,7 +587,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -f \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\" ]; then\n  \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nfi\n";
+			shellScript = "if [ ! -f \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\" ]; then\n  echo \"Skipping Crashlytics run script because GoogleService-Info.plist is not bundled\"\n  exit 0\nfi\nif [ -f \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\" ]; then\n  \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
