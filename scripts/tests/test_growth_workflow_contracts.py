@@ -8,6 +8,7 @@ IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
+ANDROID_PRODUCTION_RETRY_WORKFLOW = ROOT / ".github/workflows/android-production-retry.yml"
 NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.yml"
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
@@ -33,9 +34,6 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
 
     assert "preflight-release" in source or "Preflight release" in source
     assert "ios-testflight-internal" in source or "android-internal" in source
-    assert "environment: testflight-signoff" in source
-    assert "environment: internal-play" in source
-    assert "environment: firebase-signoff" in source
     assert "check_ios_version_lineage.py" in source
     assert "Install App Store Connect Python dependencies" in source
     assert source.index("Install App Store Connect Python dependencies") < source.index(
@@ -43,6 +41,13 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert "ios-testflight-signoff:" in source
+    assert "environment: testflight-signoff" in source
+    assert "environment: internal-play" in source
+    assert "android-firebase-signoff:" in source
+    assert "environment: firebase-signoff" in source
+    assert "internal-signoff/testflight" in source
+    assert "internal-signoff/firebase" in source
 
 
 def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native_release():
@@ -86,6 +91,7 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
     assert "target:" in source
+    assert "default: all" in source
     assert "android_firebase" in source
     assert "android-firebase-internal" in source or "Android Firebase" in source
     assert "FIREBASE_SERVICE_ACCOUNT_JSON" in source
@@ -137,6 +143,8 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     assert 'PLAY_FALLBACK_TRACK: ""' in source
+    assert "require-internal-signoff:" in source
+    assert "internal_signoff_gate.py" in source
     assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
     assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
     assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
@@ -149,11 +157,12 @@ def test_native_release_workflow_keeps_ios_review_submission_opt_in():
     assert "default: 'false'" in submit_review_block
 
 
-def test_native_release_workflow_defaults_release_branch_android_firebase_mirror_on():
+def test_native_release_workflow_marks_android_firebase_mirror_input_deprecated():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     mirror_block = source.split("android_internal_mirror:", 1)[1].split("submit_review:", 1)[0]
-    assert "default: 'firebase'" in mirror_block
+    assert "Deprecated. Internal Firebase signoff must happen before production release." in mirror_block
+    assert "default: 'skip'" in mirror_block
     assert "'firebase'" in mirror_block
     assert "'skip'" in mirror_block
 
@@ -168,28 +177,69 @@ def test_native_release_workflow_requires_explicit_confirm_for_ios_only_release_
     assert "run: python3 scripts/release_intent_gate.py" in source
 
 
-def test_native_release_workflow_dispatches_android_firebase_mirror_from_release_refs():
+def test_native_release_workflow_blocks_production_without_internal_signoff_proof():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "android-firebase-mirror:" in source
-    mirror_job = source.split("android-firebase-mirror:", 1)[1].split("ios-submit-review:", 1)[0]
-    assert "needs: [verify-releases]" in mirror_job
-    assert "inputs.android_internal_mirror == 'firebase'" in mirror_job
-    assert "startsWith(github.ref_name, 'release/')" in mirror_job
-    assert "startsWith(github.ref_name, 'hotfix/')" in mirror_job
-    assert "gh workflow run internal-distribution.yml" in mirror_job
-    assert "-f ref=\"${GITHUB_REF_NAME}\"" in mirror_job
-    assert "-f target=android_firebase" in mirror_job
+    assert "require-internal-signoff:" in source
+    assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
+    assert 'python scripts/internal_signoff_gate.py \\' in source
+    assert "needs: [release-intent-gate, require-internal-signoff]" in source
+    assert "android-firebase-mirror:" not in source
 
 
 def test_native_release_workflow_verifies_public_play_listing_for_production():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "environment: testflight-signoff" in source
     assert "Verify public Google Play listing (production only)" in source
     assert "python scripts/verify_play_public_listing.py" in source
     assert "--expected-version" in source
     assert "steps.versions.outputs.android_version" in source
+
+
+def test_native_release_workflow_creates_annotated_release_from_exact_sha():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    tag_block = source.split("tag-release:", 1)[1].split("sync-main:", 1)[0]
+    assert "scripts/source_versions.py --repo-root . --format json" in tag_block
+    assert 'git tag -a "${{ steps.version.outputs.tag }}" "${GITHUB_SHA}"' in tag_block
+    assert '--verify-tag \\' in tag_block
+    assert '--target "${GITHUB_SHA}" \\' in tag_block
+    assert "### Release metadata" in tag_block
+
+def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_title():
+    source = ANDROID_PRODUCTION_RETRY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "actions/checkout@v4" in source
+    assert "actions/setup-python@v5" in source
+    assert "python -m pip install --upgrade pip requests==2.32.5" in source
+    assert "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME" in source
+    assert "from scripts.verify_play_public_listing import build_store_url, verify_public_listing" in source
+    assert 'build_store_url("com.iganapolsky.randomtimer", "US")' in source
+    assert "play_public_current" in source
+    assert "play_public_" in source
+    assert "ISSUE_TITLE: Android production publish blocked by Play FAILED_PRECONDITION" not in source
+
+
+def test_ci_workflow_has_dedicated_regression_guards_job():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "regression-guards:" in source
+    guard_job = source.split("regression-guards:", 1)[1].split("\n  android:\n", 1)[0]
+    assert "python scripts/regression_guards.py --mode ci" in guard_job
+    assert "scripts/tests/test_regression_guards.py" in guard_job
+    assert "scripts/tests/test_mobile_feature_parity.py" in guard_job
+    assert "scripts/tests/test_voice_regression_contracts.py" in guard_job
+    assert "TimerRepositoryImplTest" in guard_job
+    assert "AIVoiceCalloutManagerSelectionTest" in guard_job
+
+
+def test_ci_ios_bootstep_has_a_hard_timeout():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    boot_block = source.split("- name: Pre-boot simulator", 1)[1].split("- name: Build for testing", 1)[0]
+    assert '["xcrun", "simctl", "bootstatus", sim_id, "-b"]' in boot_block
+    assert "timeout=180" in boot_block
+    assert "Simulator boot timed out" in boot_block
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

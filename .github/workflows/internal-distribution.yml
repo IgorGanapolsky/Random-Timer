@@ -9,10 +9,10 @@ on:
         type: string
       target:
         description: >
-          Distribution target. Default all_safe = iOS TestFlight + Play internal only (no Firebase APK).
-          Use android_firebase or all to upload to Firebase App Distribution.
+          Distribution target. Default all = iOS TestFlight + Play internal + Firebase APK for CEO signoff.
+          Use all_safe to skip Firebase when explicit debugging does not require it.
         required: false
-        default: all_safe
+        default: all
         type: choice
         options:
           - all_safe
@@ -22,7 +22,7 @@ on:
           - android_firebase
 
 concurrency:
-  group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all_safe' }}
+  group: internal-distribution-${{ github.event_name }}-${{ inputs.ref || github.ref_name }}-${{ inputs.target || 'all' }}
   cancel-in-progress: true
 
 jobs:
@@ -37,12 +37,34 @@ jobs:
       reason: ${{ steps.decide.outputs.reason }}
       target: ${{ steps.decide.outputs.target }}
     steps:
+      - name: Resolve requested ref to commit SHA
+        id: resolve
+        env:
+          TARGET_REF: ${{ inputs.ref || github.ref_name }}
+          REPO_URL: https://github.com/${{ github.repository }}.git
+        run: |
+          set -euo pipefail
+
+          if [[ "$TARGET_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "sha=$TARGET_REF" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          SHA="$(git ls-remote "$REPO_URL" "refs/heads/$TARGET_REF" "refs/tags/$TARGET_REF" "$TARGET_REF" | awk 'NR==1 {print $1}')"
+          if [ -z "$SHA" ]; then
+            echo "❌ Could not resolve ref: $TARGET_REF"
+            exit 1
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
       - name: Decide whether to run
         id: decide
         env:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_REF: ${{ inputs.ref }}
           INPUT_TARGET: ${{ inputs.target }}
+          RESOLVED_SHA: ${{ steps.resolve.outputs.sha }}
         run: |
           set -euo pipefail
 
@@ -50,7 +72,7 @@ jobs:
           REF=""
           SHA=""
           REASON="not_eligible"
-          TARGET="${INPUT_TARGET:-all_safe}"
+          TARGET="${INPUT_TARGET:-all}"
 
           if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
             echo "Only workflow_dispatch is supported for budget-safe internal distribution."
@@ -69,7 +91,7 @@ jobs:
           # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
           # causing unbound variable crash with set -u.
 
-          TARGET="${INPUT_TARGET:-all_safe}"
+          TARGET="${INPUT_TARGET:-all}"
           case "$TARGET" in
             all_safe)
               ;;
@@ -100,9 +122,7 @@ jobs:
           SHOULD_RUN="true"
           REASON="manual_dispatch_budget_ack"
 
-          if [[ "$REF" =~ ^[0-9a-f]{40}$ ]]; then
-            SHA="$REF"
-          fi
+          SHA="${RESOLVED_SHA:-}"
 
           {
             echo "should_run=$SHOULD_RUN"
@@ -118,7 +138,6 @@ jobs:
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
-    environment: testflight-signoff
     steps:
       - uses: actions/checkout@v6
         with:
@@ -265,6 +284,29 @@ jobs:
           name: ios-ipa-internal
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
+
+  ios-testflight-signoff:
+    name: iOS TestFlight Signoff
+    needs: [gate, ios-testflight-internal]
+    if: needs.ios-testflight-internal.result == 'success'
+    runs-on: ubuntu-latest
+    environment: testflight-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record TestFlight CEO signoff on distributed SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/testflight' \
+            -f description="CEO approved TestFlight internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
   android-play-internal:
     name: Android Google Play (Internal)
@@ -424,7 +466,6 @@ jobs:
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
     runs-on: ubuntu-latest
-    environment: firebase-signoff
     steps:
       - name: Note Play Protect mitigation
         run: |
@@ -525,3 +566,26 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore
+
+  android-firebase-signoff:
+    name: Android Firebase Signoff
+    needs: [gate, android-firebase-internal]
+    if: needs.android-firebase-internal.result == 'success'
+    runs-on: ubuntu-latest
+    environment: firebase-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record Firebase CEO signoff on distributed SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/firebase' \
+            -f description="CEO approved Firebase internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

@@ -139,6 +139,62 @@ jobs:
         if: steps.gate.outputs.run_live_smoke != 'true'
         run: echo "Live ElevenLabs smoke was skipped because ELEVENLABS_API_KEY is not exposed in this workflow context."
 
+  regression-guards:
+    name: Regression Guards
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install regression test dependencies
+        run: python -m pip install --upgrade pip pytest==8.4.2 requests==2.32.5
+
+      - name: Run fast file-contract guards
+        run: python scripts/regression_guards.py --mode ci
+
+      - name: Run regression contract tests
+        run: |
+          python -m pytest -q \
+            scripts/tests/test_growth_workflow_contracts.py \
+            scripts/tests/test_regression_guards.py \
+            scripts/tests/test_verify_play_public_listing.py \
+            scripts/tests/test_mobile_feature_parity.py \
+            scripts/tests/test_voice_regression_contracts.py
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant Android execute permission
+        run: chmod +x native-android/gradlew
+
+      - name: Create dummy google-services.json for regression guards
+        run: |
+          cat > native-android/app/google-services.json << 'GSEOF'
+          {
+            "project_info": { "project_number": "000000000000", "project_id": "random-timer-ci", "storage_bucket": "random-timer-ci.appspot.com" },
+            "client": [{ "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": { "package_name": "com.iganapolsky.randomtimer" } }, "api_key": [{ "current_key": "CI_PLACEHOLDER" }] }],
+            "configuration_version": "1"
+          }
+          GSEOF
+
+      - name: Run Android regression unit tests
+        working-directory: native-android
+        run: |
+          ./gradlew testDebugUnitTest --no-daemon \
+            --tests 'com.iganapolsky.randomtimer.data.repository.TimerRepositoryImplTest' \
+            --tests 'com.iganapolsky.randomtimer.service.AIVoiceCalloutManagerSelectionTest'
+
   android:
     name: Autonomous Android Tests
     runs-on: ubuntu-latest
@@ -280,8 +336,26 @@ jobs:
 
       - name: Pre-boot simulator
         run: |
-          xcrun simctl boot '${{ steps.sim.outputs.sim_id }}' || true
-          xcrun simctl bootstatus '${{ steps.sim.outputs.sim_id }}' -b
+          SIM_ID='${{ steps.sim.outputs.sim_id }}'
+          export SIM_ID
+          xcrun simctl boot "${SIM_ID}" || true
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          sim_id = os.environ["SIM_ID"]
+          try:
+              subprocess.run(
+                  ["xcrun", "simctl", "bootstatus", sim_id, "-b"],
+                  check=True,
+                  timeout=180,
+              )
+          except subprocess.TimeoutExpired:
+              print(f"Simulator boot timed out for {sim_id}", file=sys.stderr)
+              subprocess.run(["xcrun", "simctl", "list", "devices", sim_id], check=False)
+              sys.exit(1)
+          PY
           sleep 5
 
       - name: Build for testing
