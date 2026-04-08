@@ -233,6 +233,15 @@ def test_ci_workflow_has_dedicated_regression_guards_job():
     assert "AIVoiceCalloutManagerSelectionTest" in guard_job
 
 
+def test_ci_ios_bootstep_has_a_hard_timeout():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    boot_block = source.split("- name: Pre-boot simulator", 1)[1].split("- name: Build for testing", 1)[0]
+    assert '["xcrun", "simctl", "bootstatus", sim_id, "-b"]' in boot_block
+    assert "timeout=180" in boot_block
+    assert "Simulator boot timed out" in boot_block
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
