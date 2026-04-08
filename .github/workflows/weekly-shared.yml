@@ -183,7 +183,7 @@ jobs:
             --search "\"${ISSUE_TITLE}\" in:title" \
             --limit 100 \
             --json number,title \
-            --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' \
+            | jq -r --arg issue_title "$ISSUE_TITLE" '.[] | select(.title == $issue_title) | .number' \
             | while read -r issue_number; do
                 if [ -n "$issue_number" ]; then
                   gh issue close "$issue_number" \

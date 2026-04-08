@@ -294,7 +294,8 @@ def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_o
 
     assert "Close stale automated report issues" in source
     assert '--search "\\"${ISSUE_TITLE}\\" in:title"' in source
-    assert "select(.title == env.ISSUE_TITLE)" in source
+    assert 'jq -r --arg issue_title "$ISSUE_TITLE"' in source
+    assert "select(.title == $issue_title)" in source
     assert "Closing previous automated report issue before publishing refreshed weekly output." in source
 
 
