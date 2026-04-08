@@ -1,6 +1,8 @@
 name: Internal Distribution
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       ref:
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   gate:
     name: Gate Internal Distribution
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.decide.outputs.should_run }}
@@ -40,7 +42,7 @@ jobs:
       - name: Resolve requested ref to commit SHA
         id: resolve
         env:
-          TARGET_REF: ${{ inputs.ref || github.ref_name }}
+          TARGET_REF: ${{ github.event_name == 'push' && github.sha || inputs.ref || github.ref_name }}
           REPO_URL: https://github.com/${{ github.repository }}.git
         run: |
           set -euo pipefail
@@ -65,6 +67,8 @@ jobs:
           INPUT_REF: ${{ inputs.ref }}
           INPUT_TARGET: ${{ inputs.target }}
           RESOLVED_SHA: ${{ steps.resolve.outputs.sha }}
+          GITHUB_SHA_VALUE: ${{ github.sha }}
+          GITHUB_REF_NAME_VALUE: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
@@ -74,8 +78,62 @@ jobs:
           REASON="not_eligible"
           TARGET="${INPUT_TARGET:-all}"
 
-          if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
-            echo "Only workflow_dispatch is supported for budget-safe internal distribution."
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            if [[ "$GITHUB_REF_NAME_VALUE" != "main" ]]; then
+              echo "Automatic internal distribution is only allowed on pushes to main."
+              {
+                echo "should_run=false"
+                echo "ref="
+                echo "sha="
+                echo "reason=event_not_allowed"
+                echo "run_ios=false"
+                echo "run_android_play=false"
+                echo "run_android_firebase=false"
+              } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            REF="${GITHUB_SHA_VALUE}"
+            SHA="${GITHUB_SHA_VALUE}"
+            TARGET="all"
+            SHOULD_RUN="true"
+            REASON="auto_push_main"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
+            # causing unbound variable crash with set -u.
+            TARGET="${INPUT_TARGET:-all}"
+            case "$TARGET" in
+              all_safe)
+                ;;
+              all)
+                ;;
+              ios)
+                ;;
+              android_play)
+                ;;
+              android_firebase)
+                ;;
+              *)
+                echo "❌ Unsupported target: $TARGET"
+                {
+                  echo "should_run=false"
+                  echo "ref="
+                  echo "sha="
+                  echo "reason=invalid_target"
+                  echo "run_ios=false"
+                  echo "run_android_play=false"
+                  echo "run_android_firebase=false"
+                } >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+
+            REF="${INPUT_REF:-${GITHUB_REF_NAME_VALUE}}"
+            SHOULD_RUN="true"
+            REASON="manual_dispatch"
+            SHA="${RESOLVED_SHA:-}"
+          else
+            echo "Unsupported event: $EVENT_NAME"
             {
               echo "should_run=false"
               echo "ref="
@@ -87,42 +145,6 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
-          # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
-          # causing unbound variable crash with set -u.
-
-          TARGET="${INPUT_TARGET:-all}"
-          case "$TARGET" in
-            all_safe)
-              ;;
-            all)
-              ;;
-            ios)
-              ;;
-            android_play)
-              ;;
-            android_firebase)
-              ;;
-            *)
-              echo "❌ Unsupported target: $TARGET"
-              {
-                echo "should_run=false"
-                echo "ref="
-                echo "sha="
-                echo "reason=invalid_target"
-                echo "run_ios=false"
-                echo "run_android_play=false"
-                echo "run_android_firebase=false"
-              } >> "$GITHUB_OUTPUT"
-              exit 0
-              ;;
-          esac
-
-          REF="${INPUT_REF:-${GITHUB_REF_NAME}}"
-          SHOULD_RUN="true"
-          REASON="manual_dispatch_budget_ack"
-
-          SHA="${RESOLVED_SHA:-}"
 
           {
             echo "should_run=$SHOULD_RUN"
