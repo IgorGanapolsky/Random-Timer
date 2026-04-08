@@ -15,6 +15,7 @@ import json
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import quote_plus
 
@@ -65,17 +66,90 @@ def fetch_entries(tags: List[str], *, limit: int = 15, sort: str = "newest", tim
     return parse_atom_entries(raw, limit)
 
 
+def _parse_tag_group_lines(text: str) -> List[str]:
+    """Return display lines (comma in line = AND tags in SO feed)."""
+    out: List[str] = []
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        out.append(line)
+    return out
+
+
+def write_subscribe_markdown(tag_groups_file: Path, out_path: Path, sort: str = "newest") -> None:
+    """Markdown list of Atom feed URLs for Feedly / Inoreader / etc. (same groups as hourly digest)."""
+    text = tag_groups_file.read_text(encoding="utf-8")
+    groups = _parse_tag_group_lines(text)
+    lines = [
+        "# Stack Overflow — subscribe in your RSS reader",
+        "",
+        "Paste each **Feed URL** into Feedly, Inoreader, Outlook, NetNewsWire, etc. "
+        "Stack Overflow updates these Atom feeds when new questions appear (no GitHub required).",
+        "",
+        "_Tag groups mirror `marketing/data/stackoverflow_digest_tag_groups.txt` (same as the hourly Actions digest)._",
+        "",
+    ]
+    for display in groups:
+        tags = [t.strip() for t in display.split(",") if t.strip()]
+        if not tags:
+            continue
+        url = feed_url_for_tags(tags, sort=sort)
+        lines.append(f"## `{display}`")
+        lines.append("")
+        lines.append(f"- **Feed URL:** `{url}`")
+        lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(
+        "## Hourly snapshot (copy/paste question links)\n\n"
+        "GitHub Actions also builds a markdown digest every hour: "
+        "repo **Actions** → **Stack Overflow hourly triage digest** → artifact **stackoverflow-hourly-digest**."
+    )
+    lines.append("")
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Fetch SO tag feed for human triage (read-only)")
     parser.add_argument(
+        "--write-subscribe-markdown",
+        metavar="OUT.md",
+        help="Write RSS/Atom subscription list from --tag-groups-file (no fetch)",
+    )
+    parser.add_argument(
+        "--tag-groups-file",
+        type=Path,
+        default=Path("marketing/data/stackoverflow_digest_tag_groups.txt"),
+        help="Used with --write-subscribe-markdown",
+    )
+    parser.add_argument(
         "--tags",
-        required=True,
-        help="Comma-separated tags, e.g. swiftui,storekit or jetpack-compose",
+        default="",
+        help="Comma-separated tags, e.g. swiftui,storekit (required unless --write-subscribe-markdown)",
     )
     parser.add_argument("--limit", type=int, default=15, help="Max questions to print")
     parser.add_argument("--sort", default="newest", help="Feed sort (e.g. newest, active, votes)")
     parser.add_argument("--json", action="store_true", help="Print JSON lines instead of markdown")
     args = parser.parse_args()
+
+    if args.write_subscribe_markdown:
+        out = Path(args.write_subscribe_markdown)
+        tg = args.tag_groups_file if args.tag_groups_file.is_absolute() else Path.cwd() / args.tag_groups_file
+        try:
+            write_subscribe_markdown(tg.resolve(), out, sort=args.sort)
+        except FileNotFoundError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(str(out.resolve()))
+        return 0
+
+    if not args.tags.strip():
+        parser.error("provide --tags or --write-subscribe-markdown")
+
     tags = [t.strip() for t in args.tags.split(",") if t.strip()]
     try:
         rows = fetch_entries(tags, limit=args.limit, sort=args.sort)
