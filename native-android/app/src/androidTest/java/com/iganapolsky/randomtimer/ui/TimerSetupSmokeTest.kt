@@ -1,8 +1,10 @@
 package com.iganapolsky.randomtimer.ui
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -41,16 +43,9 @@ class TimerSetupSmokeTest {
 
     @Test
     fun soundArsenalLockOpensPaywallForFreeUsers() {
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule
-                .onAllNodesWithText("Preview Sounds")
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-
         composeRule
-            .onNodeWithText("Preview Sounds")
-            .performScrollTo()
+            .onNode(hasScrollAction())
+            .performScrollToNode(hasContentDescription("Unlock Sound Arsenal"))
 
         composeRule
             .onNodeWithContentDescription("Unlock Sound Arsenal", useUnmergedTree = true)

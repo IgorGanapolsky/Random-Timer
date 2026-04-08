@@ -120,12 +120,13 @@ def test_android_free_preview_keeps_voice_selector_visible() -> None:
     setup = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt")
 
     assert 'text = "PREVIEW"' in setup
-    assert "Male/Female chips + Preview" in setup
+    assert "Time checks and command cues that keep you sharp under pressure" in setup
     assert "VoiceGender.entries.forEach" in setup
     assert "VoiceGender.MALE" in setup
-    assert "if (!isPro) {" in setup
+    assert "if (config.voiceEnabled || !isPro)" in setup
     assert "onCommandCuePreview(config.voiceGender)" in setup
     assert "if (config.voiceEnabled) {" not in setup
+    assert setup.index('text = "PREVIEW"') < setup.index("VoiceGender.entries.forEach")
 
 
 def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
