@@ -171,6 +171,26 @@ jobs:
           path: ${{ inputs.wiki_path }}
           token: ${{ github.token }}
 
+      - name: Close stale automated report issues
+        if: inputs.issue_title != '' && inputs.issue_content_path != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: ${{ inputs.issue_title }}
+        run: |
+          set -euo pipefail
+          gh issue list \
+            --state open \
+            --search "\"${ISSUE_TITLE}\" in:title" \
+            --limit 100 \
+            --json number,title \
+            --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' \
+            | while read -r issue_number; do
+                if [ -n "$issue_number" ]; then
+                  gh issue close "$issue_number" \
+                    --comment "Closing previous automated report issue before publishing refreshed weekly output."
+                fi
+              done
+
       - name: Create issue from report
         if: inputs.issue_title != '' && inputs.issue_content_path != ''
         uses: peter-evans/create-issue-from-file@433e51abf769039ee20ba1293a088ca19d573b7f # v4
