@@ -2,7 +2,7 @@ name: Internal Distribution
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       ref:
@@ -79,8 +79,8 @@ jobs:
           TARGET="${INPUT_TARGET:-all}"
 
           if [[ "$EVENT_NAME" == "push" ]]; then
-            if [[ "$GITHUB_REF_NAME_VALUE" != "main" ]]; then
-              echo "Automatic internal distribution is only allowed on pushes to main."
+            if [[ "$GITHUB_REF_NAME_VALUE" != "main" && "$GITHUB_REF_NAME_VALUE" != "develop" ]]; then
+              echo "Automatic internal distribution is only allowed on pushes to develop or main."
               {
                 echo "should_run=false"
                 echo "ref="
@@ -97,7 +97,11 @@ jobs:
             SHA="${GITHUB_SHA_VALUE}"
             TARGET="all"
             SHOULD_RUN="true"
-            REASON="auto_push_main"
+            if [[ "$GITHUB_REF_NAME_VALUE" == "develop" ]]; then
+              REASON="auto_push_develop"
+            else
+              REASON="auto_push_main"
+            fi
           elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             # Budget ack check removed — REQUIRED_BUDGET_ACK was never defined,
             # causing unbound variable crash with set -u.
