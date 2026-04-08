@@ -12,10 +12,11 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
         XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
         XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
-        XCTAssertEqual(
-            PaywallSheet.pricingFooter,
-            "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
-        )
+        let expectedPricingFooter =
+            "Pro Upgrade — one-time purchase on the App Store. "
+            + "Price is shown on Apple's confirmation sheet; "
+            + "includes future Pro features we ship for this app on this Apple ID."
+        XCTAssertEqual(PaywallSheet.pricingFooter, expectedPricingFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
@@ -28,11 +29,9 @@ final class TimerConfigProClampingTests: XCTestCase {
         )
     }
 
-    @MainActor
-    func testPaywallPriceLabelNormalizesToYearlyPricing() {
-        let sut = PaywallSheet(entryPoint: .unknown)
-        XCTAssertEqual(sut.normalizedPriceLabel("$29.99"), "$29.99/year")
-        XCTAssertEqual(sut.normalizedPriceLabel("$29.99/yr"), "$29.99/yr")
+    func testPaywallUsesApprovedAppStoreConnectProductId() {
+        XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
+        XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")
     }
 
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {

@@ -20,7 +20,10 @@ struct PaywallSheet: View {
     static let headline = "Unlock Full Training Mode"
     static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
     static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
-    static let pricingFooter = "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+    static let pricingFooter =
+        "Pro Upgrade — one-time purchase on the App Store. "
+        + "Price is shown on Apple's confirmation sheet; "
+        + "includes future Pro features we ship for this app on this Apple ID."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
         "Train up to 60-minute sessions",
@@ -30,7 +33,6 @@ struct PaywallSheet: View {
         "New Pro voice callouts and sound packs every 30 days",
     ]
 
-    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
@@ -100,10 +102,10 @@ struct PaywallSheet: View {
 
                 VStack(spacing: 12) {
                     PrimaryButton(
-                        title: "Start Pro \u{2022} \(normalizedPriceLabel(proManager.formattedPrice(for: ProManager.eliteProductID)))"
+                        title: "Unlock Pro \u{2022} \(proManager.formattedPrice(for: ProManager.paywallProductID))"
                     ) {
                         Task {
-                            await purchase(productID: ProManager.eliteProductID)
+                            await purchase(productID: ProManager.paywallProductID)
                         }
                     }
                 }
@@ -133,12 +135,18 @@ struct PaywallSheet: View {
                 .foregroundColor(.textSecondary)
 
                 // Required by App Store Guideline 3.1.2(c)
+                // swiftlint:disable force_unwrapping
                 HStack(spacing: 16) {
-                    Link("Privacy Policy",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!)
-                    Link("Terms of Use (EULA)",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!)
+                    Link(
+                        "Privacy Policy",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
+                    )
+                    Link(
+                        "Terms of Use (EULA)",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
+                    )
                 }
+                // swiftlint:enable force_unwrapping
                 .font(.caption2)
                 .foregroundColor(.textSecondary)
             }
@@ -257,14 +265,6 @@ struct PaywallSheet: View {
         dismiss()
     }
 
-    func normalizedPriceLabel(_ price: String) -> String {
-        let trimmed = price.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lowered = trimmed.lowercased()
-        if lowered.contains("/yr") || lowered.contains("/year") {
-            return trimmed
-        }
-        return "\(trimmed)/year"
-    }
 }
 
 private struct ProFeatureRow: View {
