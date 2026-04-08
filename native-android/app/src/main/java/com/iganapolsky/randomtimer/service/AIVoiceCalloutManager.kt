@@ -171,6 +171,15 @@ internal fun voiceResIdOrFallback(
     return context.resources.getIdentifier(fallback, "raw", context.packageName)
 }
 
+internal fun genderedVoiceFilename(
+    filename: String,
+    gender: VoiceGender,
+): String =
+    when (gender) {
+        VoiceGender.MALE -> filename
+        VoiceGender.FEMALE -> if (filename.startsWith("female_")) filename else "female_$filename"
+    }
+
 internal fun runtimeVoiceCueForElapsedSecond(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
@@ -303,10 +312,14 @@ class AIVoiceCalloutManager
 
         fun speak(text: String) {
             val catalog = packStore.voiceCatalog()
-            val mappedResId = voiceResIdForText(context, text, catalog)
-            val resId = mappedResId ?: voiceResIdOrFallback(context, text, catalog)
-            val filename = mappedResId?.let { catalog.filenameByText[text] } ?: catalog.fallbackCommandCue.filename
-            if (mappedResId == null) {
+            val mappedFilename = catalog.filenameByText[text]
+            val baseFilename = mappedFilename ?: catalog.fallbackCommandCue.filename
+            val filename = genderedVoiceFilename(baseFilename, currentGender)
+            val directResId = context.resources.getIdentifier(filename, "raw", context.packageName)
+            val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
+            val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
+            val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, text, catalog)
+            if (mappedFilename == null) {
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
 

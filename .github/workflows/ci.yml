@@ -163,6 +163,7 @@ jobs:
         run: |
           python -m pytest -q \
             scripts/tests/test_growth_workflow_contracts.py \
+            scripts/tests/test_audio_asset_regressions.py \
             scripts/tests/test_regression_guards.py \
             scripts/tests/test_verify_play_public_listing.py \
             scripts/tests/test_mobile_feature_parity.py \

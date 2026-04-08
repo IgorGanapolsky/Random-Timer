@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.service
 
 import com.google.common.truth.Truth.assertThat
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import org.junit.Test
 import java.nio.file.Paths
 import java.util.Locale
@@ -86,6 +87,13 @@ class AIVoiceCalloutManagerSelectionTest {
         val missing = required.filterNot { rawDir.resolve(it).toFile().exists() }
 
         assertThat(missing).isEmpty()
+    }
+
+    @Test
+    fun genderedVoiceFilenameUsesFemalePrefix() {
+        assertThat(genderedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
+        assertThat(genderedVoiceFilename("female_cmd_move_with_a_purpose", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
+        assertThat(genderedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
     }
 
     @Test
