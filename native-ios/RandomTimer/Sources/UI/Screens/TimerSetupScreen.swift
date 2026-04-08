@@ -167,14 +167,11 @@ struct TimerSetupScreen: View {
                                     }
 
                                     Button {
-                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            if hasCompletedFirstTimer {
-                                                Image(systemName: "lock.fill")
-                                            }
+                                            Image(systemName: "lock.fill")
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -316,14 +313,11 @@ struct TimerSetupScreen: View {
                                     .labelsHidden()
                                 } else {
                                     Button {
-                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
-                                            if hasCompletedFirstTimer {
-                                                Image(systemName: "lock.fill")
-                                            }
+                                            Image(systemName: "lock.fill")
                                         }
                                         .font(.caption2.weight(.bold))
                                         .padding(.horizontal, 8)
@@ -423,7 +417,6 @@ struct TimerSetupScreen: View {
                                         .foregroundColor(.textMuted)
 
                                     Button("Unlock Pro") {
-                                        guard hasCompletedFirstTimer else { return }
                                         presentPaywall(entryPoint: .soundGate)
                                     }
                                     .font(.caption2.weight(.semibold))
