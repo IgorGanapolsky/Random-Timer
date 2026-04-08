@@ -14,7 +14,8 @@
 #   3. Sets Android versionName to <new_version>
 #   4. Sets iOS MARKETING_VERSION to <new_version> (all build configs)
 #   5. Creates Android changelog placeholder for new versionCode
-#   6. Prints summary of all changes
+#   6. Creates versioned release notes placeholder
+#   7. Prints summary of all changes
 
 set -euo pipefail
 
@@ -70,6 +71,7 @@ fi
 GRADLE_FILE="$PROJECT_ROOT/native-android/app/build.gradle.kts"
 PBXPROJ="$PROJECT_ROOT/native-ios/RandomTimer.xcodeproj/project.pbxproj"
 ANDROID_CHANGELOGS="$PROJECT_ROOT/native-android/fastlane/metadata/android/en-US/changelogs"
+VERSIONED_RELEASE_NOTES_DIR="$PROJECT_ROOT/release-notes"
 
 # ── Read current versions ────────────────────────────────────────────────────
 
@@ -181,6 +183,29 @@ else
   echo -e "${CYAN}▸${RESET} Changelog ${NEW_VERSION_CODE}.txt already exists, skipping"
 fi
 
+# ── Versioned release notes placeholder ──────────────────────────────────────
+
+mkdir -p "$VERSIONED_RELEASE_NOTES_DIR"
+VERSIONED_RELEASE_NOTES_FILE="$VERSIONED_RELEASE_NOTES_DIR/${NEW_VERSION}.md"
+if [[ ! -f "$VERSIONED_RELEASE_NOTES_FILE" ]]; then
+  cat > "$VERSIONED_RELEASE_NOTES_FILE" <<EOF
+# Release ${NEW_VERSION}
+
+## Summary
+TODO: replace with a customer-facing summary for ${NEW_VERSION}.
+
+## Customer-visible changes
+- TODO: add the first notable change.
+- TODO: add the second notable change.
+
+## Release operations
+- TODO: note any release-hardening or operational improvements worth tracking.
+EOF
+  echo -e "${GREEN}✓${RESET} Created release notes placeholder: release-notes/${NEW_VERSION}.md"
+else
+  echo -e "${CYAN}▸${RESET} release-notes/${NEW_VERSION}.md already exists, skipping"
+fi
+
 # ── Summary ──────────────────────────────────────────────────────────────────
 
 echo ""
@@ -190,9 +215,11 @@ echo "Files modified:"
 echo "  - native-android/app/build.gradle.kts"
 echo "  - native-ios/RandomTimer.xcodeproj/project.pbxproj"
 echo "  - native-android/fastlane/metadata/android/en-US/changelogs/${NEW_VERSION_CODE}.txt"
+echo "  - release-notes/${NEW_VERSION}.md"
 echo ""
 echo "Next steps:"
 echo "  1. Update changelogs/${NEW_VERSION_CODE}.txt with actual release notes"
 echo "  2. Update native-ios/fastlane/metadata/en-US/release_notes.txt"
-echo "  3. git add -A && git commit -m \"chore: bump version to ${NEW_VERSION}\""
-echo "  4. Cut release/v${NEW_VERSION} from develop, PR release/v${NEW_VERSION} → main, then trigger native-release workflow"
+echo "  3. Update release-notes/${NEW_VERSION}.md with the canonical GitHub/customer release notes"
+echo "  4. git add -A && git commit -m \"chore: bump version to ${NEW_VERSION}\""
+echo "  5. Cut release/v${NEW_VERSION} from develop, PR release/v${NEW_VERSION} → main, then trigger native-release workflow"

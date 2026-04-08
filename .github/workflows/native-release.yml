@@ -855,28 +855,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Read Android changelog if it exists
-          CHANGELOG_FILE="native-android/fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt"
-          NOTES=""
-          if [ -f "$CHANGELOG_FILE" ]; then
-            NOTES=$(cat "$CHANGELOG_FILE")
-          fi
-
-          # Read iOS release notes if available
-          IOS_NOTES_FILE="native-ios/fastlane/metadata/en-US/release_notes.txt"
-          if [ -f "$IOS_NOTES_FILE" ]; then
-            IOS_NOTES=$(cat "$IOS_NOTES_FILE")
-            if [ -n "$IOS_NOTES" ]; then
-              NOTES="${NOTES}
-
-          ### iOS
-          ${IOS_NOTES}"
-            fi
-          fi
-
-          if [ -z "$NOTES" ]; then
-            NOTES="Release ${{ steps.version.outputs.tag }}"
-          fi
+          NOTES=$(python3 scripts/release_notes.py \
+            --repo-root . \
+            --version "${{ steps.version.outputs.version_name }}" \
+            --print-body)
 
           NOTES="${NOTES}
 

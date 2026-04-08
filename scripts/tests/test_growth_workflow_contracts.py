@@ -115,14 +115,15 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "1:712918404489:android:5fb1dfde1d712f53e7a558" in source
 
 
-def test_internal_distribution_runs_automatically_on_main_push_for_internal_signoff_builds():
+def test_internal_distribution_runs_automatically_on_develop_and_main_push_for_internal_signoff_builds():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
     assert "push:" in source
-    assert "branches: [main]" in source
+    assert "branches: [develop, main]" in source
     assert "github.event_name == 'workflow_dispatch' || github.event_name == 'push'" in source
-    assert 'Automatic internal distribution is only allowed on pushes to main.' in source
+    assert 'Automatic internal distribution is only allowed on pushes to develop or main.' in source
     assert 'TARGET="all"' in source
+    assert 'REASON="auto_push_develop"' in source
     assert 'REASON="auto_push_main"' in source
 
 
@@ -219,6 +220,7 @@ def test_native_release_workflow_creates_annotated_release_from_exact_sha():
 
     tag_block = source.split("tag-release:", 1)[1].split("sync-main:", 1)[0]
     assert "scripts/source_versions.py --repo-root . --format json" in tag_block
+    assert "scripts/release_notes.py" in tag_block
     assert 'git tag -a "${{ steps.version.outputs.tag }}" "${GITHUB_SHA}"' in tag_block
     assert '--verify-tag \\' in tag_block
     assert '--target "${GITHUB_SHA}" \\' in tag_block
