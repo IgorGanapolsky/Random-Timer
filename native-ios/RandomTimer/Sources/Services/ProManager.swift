@@ -48,10 +48,8 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
             products = try await Product.products(for: Self.productIDs)
                 .sorted(by: { $0.price < $1.price })
             if products.isEmpty {
-                Self.log.error(
-                    "ProManager: Product.products returned EMPTY for IDs: \(Self.productIDs). "
-                    + "Check App Store Connect product configuration."
-                )
+                let ids = Self.productIDs
+                Self.log.error("ProManager: products EMPTY for IDs: \(ids). Check ASC config.")
             }
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
