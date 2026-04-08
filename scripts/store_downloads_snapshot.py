@@ -27,6 +27,9 @@ LIVE_EVENTS_PREDICATE = """
   AND lower(coalesce(properties.build_type, 'release')) != 'debug'
   AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
   AND coalesce(toString(properties.is_internal), 'false') != 'true'
+  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN (
+    'testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test'
+  )
 )
 """
 

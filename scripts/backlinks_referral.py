@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Backlinks and referral traffic automation.
 
-Generates content for Reddit, Product Hunt, and fitness/coaching blogs.
-Tracks submissions and engagement. Creates ready-to-post content
-tailored to each platform's audience.
+Generates content for Reddit, Product Hunt, fitness/coaching blogs, and a
+Stack Overflow **watchlist** (human review only—no API posting).
 
 Designed to run weekly via GitHub Actions.
 """
@@ -47,6 +46,17 @@ No ads. No tracking. No subscriptions. Just set your range and go.""",
     "topics": ["Productivity", "Health & Fitness", "Developer Tools"],
     "maker_comment": "Hey PH! I built this because every timer app lets you predict exactly when it ends. That defeats the purpose for reaction training and surprise-based games. This one keeps you guessing.",
 }
+
+# Tagged search URLs for manual monitoring (do not automate answers).
+STACK_OVERFLOW_WATCHLIST: List[Dict[str, str]] = [
+    {"tag": "swift+swiftui", "note": "Timer UI, state, navigation"},
+    {"tag": "storekit", "note": "IAP / subscriptions / non-consumables"},
+    {"tag": "ios", "note": "Broad iOS; filter by timer/audio when possible"},
+    {"tag": "kotlin+android", "note": "Android app patterns"},
+    {"tag": "jetpack-compose", "note": "Compose UI parity with SwiftUI"},
+    {"tag": "android-billing", "note": "Play Billing / purchases"},
+    {"tag": "android-foreground-service", "note": "Timer + notifications"},
+]
 
 BLOG_OUTREACH_TEMPLATES = [
     {
@@ -180,6 +190,25 @@ def ensure_content_dir(repo_root: Path) -> None:
     content_dir.mkdir(parents=True, exist_ok=True)
 
 
+def write_stackoverflow_watchlist(repo_root: Path) -> None:
+    """Markdown list of tagged SO searches for CEO review (no automation)."""
+    lines = [
+        "# Stack Overflow watchlist",
+        "",
+        "Open **Newest** or **No answers** on each link. Answer helpfully; see `docs/STACK_OVERFLOW_PLAYBOOK.md`.",
+        "",
+    ]
+    for row in STACK_OVERFLOW_WATCHLIST:
+        tag = row["tag"]
+        url = f"https://stackoverflow.com/questions/tagged/{tag}?tab=Newest"
+        lines.append(f"- **[{tag}]({url})** — {row['note']}")
+    lines.append("")
+    lines.append("App links (when disclosure applies): use store URLs from your environment or `marketing` site.")
+    lines.append("")
+    out = repo_root / CONTENT_TEMPLATES_PATH / "stackoverflow_watchlist.md"
+    out.write_text("\n".join(lines), encoding="utf-8")
+
+
 def run_referral(repo_root: Path) -> Dict[str, Any]:
     """Main referral traffic pipeline."""
     ensure_content_dir(repo_root)
@@ -224,6 +253,8 @@ def run_referral(repo_root: Path) -> Dict[str, Any]:
         ph_content += f"- [{check}] {item['task']}\n"
     ph_path.write_text(ph_content, encoding="utf-8")
 
+    write_stackoverflow_watchlist(repo_root)
+
     save_referral_data(repo_root, data)
 
     return {
@@ -232,7 +263,7 @@ def run_referral(repo_root: Path) -> Dict[str, Any]:
         "reddit_subreddits": [p["subreddit"] for p in reddit_posts],
         "product_hunt_ready": data["product_hunt"]["status"],
         "blog_outreach_targets": len(data["blog_outreach"]),
-        "content_files_generated": len(reddit_posts) + 1,
+        "content_files_generated": len(reddit_posts) + 2,
     }
 
 
@@ -258,6 +289,10 @@ def build_report(result: Dict[str, Any]) -> str:
         "## Blog Outreach",
         f"- Outreach targets: **{result['blog_outreach_targets']}**",
         "",
+        "## Stack Overflow",
+        "- Watchlist: `marketing/referral_content/stackoverflow_watchlist.md`",
+        "- Playbook: `docs/STACK_OVERFLOW_PLAYBOOK.md` (human answers only; disclose affiliation)",
+        "",
         "## Generated Files",
         f"- Total content files: {result['content_files_generated']}",
         "- Location: `marketing/referral_content/`",
@@ -268,6 +303,7 @@ def build_report(result: Dict[str, Any]) -> str:
         "3. Complete Product Hunt pre-launch checklist",
         "4. Schedule PH launch for a Tuesday",
         "5. Send blog outreach emails",
+        "6. Stack Overflow: open watchlist links, answer technically, disclose if you mention the app",
     ])
     return "\n".join(lines) + "\n"
 

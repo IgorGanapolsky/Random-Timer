@@ -12,6 +12,16 @@ def test_posthog_section_skipped_without_credentials() -> None:
     assert out["status"] == "skipped"
 
 
+def test_posthog_metric_field_ids_include_paywall_platform_splits() -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    mf = ems.POSTHOG_EXECUTIVE_METRIC_FIELD_IDS
+    assert mf.get("events_paywall_purchase_success_ios")
+    assert mf.get("events_paywall_purchase_success_android")
+    assert mf.get("distinct_persons_paywall_purchase_success_ios")
+    assert mf.get("distinct_persons_paywall_purchase_success_android")
+
+
 def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import executive_metrics_snapshot as ems
 
@@ -44,6 +54,43 @@ def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.M
     assert mf.get("distinct_persons_application_installed") == (
         "posthog_hogql_distinct_persons_event_application_installed"
     )
+    assert out.get("events_paywall_purchase_success_ios") == 0
+    assert out.get("distinct_persons_paywall_purchase_success_android") == 0
+
+
+def test_pragmatic_live_excludes_non_store_distribution_channels() -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    assert "distribution_channel" in ems.PRAGMATIC_LIVE
+    assert "testflight" in ems.PRAGMATIC_LIVE
+    assert "non_play_install" in ems.PRAGMATIC_LIVE
+
+
+def test_redact_audience_sql_strips_person_uuid_list() -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    raw = (
+        "( x ) AND person_id NOT IN ('11111111-1111-1111-1111-111111111111', "
+        "'22222222-2222-2222-2222-222222222222')"
+    )
+    red = ems._redact_audience_sql_for_json(raw)
+    assert "11111111" not in red
+    assert "redacted" in red.lower()
+
+
+def test_posthog_person_id_exclusion_sql_respects_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    monkeypatch.delenv("POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS", raising=False)
+    assert ems._posthog_person_id_exclusion_sql() == ""
+    monkeypatch.setenv(
+        "POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS",
+        "11111111-1111-1111-1111-111111111111,not-a-uuid",
+    )
+    sql = ems._posthog_person_id_exclusion_sql()
+    assert "person_id NOT IN" in sql
+    assert "11111111-1111-1111-1111-111111111111" in sql
+    assert "not-a-uuid" not in sql
 
 
 def test_posthog_section_includes_wqtu_7d_from_queries(monkeypatch: pytest.MonkeyPatch) -> None:

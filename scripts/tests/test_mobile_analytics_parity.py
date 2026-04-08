@@ -75,6 +75,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         self.assertIn('const val RESULT = "result"', android_source)
         self.assertIn('static let result = "result"', ios_source)
 
+    def test_distribution_channel_property_matches_between_platforms(self):
+        android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
+        self.assertIn('const val DISTRIBUTION_CHANNEL = "distribution_channel"', android_source)
+        self.assertIn('static let distributionChannel = "distribution_channel"', ios_source)
+
     def test_lifecycle_autocapture_disabled_on_both_platforms(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
         ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")

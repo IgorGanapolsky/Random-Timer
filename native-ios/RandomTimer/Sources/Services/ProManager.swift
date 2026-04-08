@@ -2,11 +2,14 @@ import os
 import StoreKit
 
 @MainActor
-final class ProManager: ObservableObject {
+final class ProManager: ObservableObject { // swiftlint:disable:this no_observable_object
     static let shared = ProManager()
 
     static nonisolated let baseProductID = "com.iganapolsky.randomtimer.pro"
+    /// Legacy / future SKU — not guaranteed to exist in App Store Connect; keep for restore if ever shipped.
     static nonisolated let eliteProductID = "com.iganapolsky.randomtimer.elite"
+    /// In-app paywall must use an IAP that exists in App Store Connect (currently non-consumable Pro Upgrade).
+    static nonisolated let paywallProductID = baseProductID
     static nonisolated var productIDs: Set<String> { [baseProductID, eliteProductID] }
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
@@ -45,7 +48,8 @@ final class ProManager: ObservableObject {
             products = try await Product.products(for: Self.productIDs)
                 .sorted(by: { $0.price < $1.price })
             if products.isEmpty {
-                Self.log.error("ProManager: Product.products returned EMPTY for IDs: \(Self.productIDs). Check App Store Connect product configuration.")
+                let ids = Self.productIDs
+                Self.log.error("ProManager: products EMPTY for IDs: \(ids). Check ASC config.")
             }
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
@@ -53,7 +57,11 @@ final class ProManager: ObservableObject {
     }
 
     func formattedPrice(for productID: String) -> String {
-        products.first(where: { $0.id == productID })?.displayPrice ?? (products.isEmpty ? "Unavailable" : (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99"))
+        if let match = products.first(where: { $0.id == productID }) {
+            return match.displayPrice
+        }
+        guard !products.isEmpty else { return "Unavailable" }
+        return productID == Self.eliteProductID ? "$29.99/yr" : "$4.99"
     }
 
     // MARK: - Purchase
@@ -63,11 +71,11 @@ final class ProManager: ObservableObject {
         if products.isEmpty {
             await fetchProduct()
         }
-        
+
         guard let product = products.first(where: { $0.id == productID }) else {
             return .productUnavailable
         }
-        
+
         return await doPurchase(product)
     }
 
@@ -124,7 +132,7 @@ final class ProManager: ObservableObject {
                 await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
             }
         }
-        
+
         if isPro && !wasPro {
             return .restored
         } else if isPro {
@@ -214,7 +222,7 @@ final class ProManager: ObservableObject {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
     }
-    
+
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")

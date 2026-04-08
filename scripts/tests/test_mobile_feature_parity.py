@@ -82,9 +82,11 @@ def test_paywall_single_offer_parity():
     assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
     assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
     assert "Cancel anytime" in android_paywall
-    assert "Cancel anytime" in ios_paywall
     assert "Start Pro" in android_paywall
-    assert "Start Pro" in ios_paywall
+    # iOS: App Store Connect non-consumable Pro Upgrade (not subscription); Android may still show yearly copy.
+    assert "Unlock Pro" in ios_paywall
+    assert "Pro Upgrade" in ios_paywall
+    assert "one-time" in ios_paywall.lower()
 
 
 def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
@@ -295,5 +297,6 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
     assert 'Text(config.useExtendedRange ? "1H" : "5m")' in ios_setup
     assert "config.useExtendedRange ? proManager.maxSecondsLimit : 300" in ios_setup
     assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
-    assert 'Text("PRO: 1H \\u{1F512}")' in ios_setup
+    assert 'Text("PRO: 1H' in ios_setup
+    assert 'if !proManager.isPro' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup

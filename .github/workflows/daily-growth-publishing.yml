@@ -71,6 +71,15 @@ jobs:
             run-daily \
             --ab-pilot
 
+      - name: Zernio social fan-out (optional)
+        continue-on-error: true
+        env:
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_PUBLISH_ACCOUNTS: ${{ secrets.ZERNIO_PUBLISH_ACCOUNTS }}
+          ZERNIO_AUTO_PUBLISH: ${{ secrets.ZERNIO_AUTO_PUBLISH }}
+        run: python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
+
       - name: Commit generated assets
         run: |
           git config user.name "github-actions[bot]"

@@ -16,20 +16,16 @@ import argparse
 import datetime as dt
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
 QUERY_ERRORS: List[str] = []
-LIVE_EVENTS_PREDICATE = """
-(
-  (
-    lower(coalesce(properties.environment, '')) IN ('production', 'live')
-    OR lower(coalesce(properties.build_audience, '')) = 'live'
-  )
-  AND lower(coalesce(properties.build_type, 'release')) != 'debug'
-  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')
-)
-"""
+from store_downloads_snapshot import LIVE_EVENTS_PREDICATE
 
 
 def _requests_module():
