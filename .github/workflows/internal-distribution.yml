@@ -183,7 +183,7 @@ jobs:
           python-version: "3.11"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        uses: ruby/setup-ruby@v1.300.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -337,13 +337,13 @@ jobs:
         run: bash scripts/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        uses: ruby/setup-ruby@v1.300.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -508,7 +508,7 @@ jobs:
         run: bash scripts/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: "temurin"
           java-version: "17"

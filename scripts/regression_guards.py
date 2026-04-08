@@ -91,8 +91,8 @@ def _assert_not_contains(source: str, needle: str, *, errors: list[str], label: 
 def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, ".github/workflows/android-production-retry.yml")
     label = ".github/workflows/android-production-retry.yml"
-    _assert_contains(source, "actions/checkout@v4", errors=errors, label=label)
-    _assert_contains(source, "actions/setup-python@v5", errors=errors, label=label)
+    _assert_contains(source, "actions/checkout@v6.0.2", errors=errors, label=label)
+    _assert_contains(source, "actions/setup-python@v6.2.0", errors=errors, label=label)
     _assert_contains(
         source,
         "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME",
@@ -119,6 +119,9 @@ def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
 def check_native_release_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, ".github/workflows/native-release.yml")
     label = ".github/workflows/native-release.yml"
+    _assert_contains(source, "require-production-signoff:", errors=errors, label=label)
+    _assert_contains(source, "environment: production-signoff", errors=errors, label=label)
+    _assert_contains(source, "Await fresh CEO production release approval", errors=errors, label=label)
     _assert_contains(source, "Verify public Google Play listing (production only)", errors=errors, label=label)
     _assert_contains(source, "python scripts/verify_play_public_listing.py", errors=errors, label=label)
     _assert_contains(source, "--expected-version", errors=errors, label=label)
