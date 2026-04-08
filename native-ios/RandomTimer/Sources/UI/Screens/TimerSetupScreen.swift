@@ -391,6 +391,7 @@ struct TimerSetupScreen: View {
                                                 timerManager.previewSound()
                                             } else {
                                                 timerManager.previewSound(type: sound)
+                                                presentPaywall(entryPoint: .soundGate)
                                             }
                                         }
                                     )
@@ -405,6 +406,7 @@ struct TimerSetupScreen: View {
                                                     timerManager.previewSound()
                                                 } else {
                                                     timerManager.previewSound(type: sound2)
+                                                    presentPaywall(entryPoint: .soundGate)
                                                 }
                                             }
                                         )
