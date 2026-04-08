@@ -119,6 +119,8 @@ def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
         errors=errors,
         label=label,
     )
+    _assert_contains(source, "python3 <<'PY'\n          import os", errors=errors, label=label)
+    _assert_contains(source, '\n          PY\n', errors=errors, label=label)
     _assert_contains(source, 'build_store_url("com.iganapolsky.randomtimer", "US")', errors=errors, label=label)
     _assert_contains(source, "play_public_current", errors=errors, label=label)
     _assert_contains(source, "play_public_", errors=errors, label=label)
