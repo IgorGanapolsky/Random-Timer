@@ -302,10 +302,11 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Zernio growth orchestration")
-    p.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     sub = p.add_subparsers(dest="command", required=True)
-    sub.add_parser("health", help="Verify API key and list account counts (no secrets printed)")
+    p_health = sub.add_parser("health", help="Verify API key and list account counts (no secrets printed)")
+    p_health.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     p_sync = sub.add_parser("sync-latest", help="Fan-out latest growth post via Zernio (idempotent)")
+    p_sync.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     p_sync.add_argument("--output-root", type=Path, default=REPO_ROOT / "marketing")
     p_sync.add_argument("--dry-run", action="store_true", help="Never POST; log dry_run only")
     return p

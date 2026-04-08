@@ -29,6 +29,8 @@ uv run python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-r
 uv run python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
 ```
 
+`--repo-root` must follow the subcommand (`health` / `sync-latest`).
+
 ## GitHub Actions
 
 | Workflow | Role |
