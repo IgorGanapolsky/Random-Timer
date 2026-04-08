@@ -811,7 +811,10 @@ fun TimerSetupScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             Text(
                                 text = "Sound Arsenal",
                                 style = MaterialTheme.typography.labelSmall,
@@ -840,23 +843,31 @@ fun TimerSetupScreen(
                             )
 
                             if (!isPro) {
-                                IconButton(
+                                Surface(
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onFeatureGateHit("pro_sounds")
                                         onUpgradeTap()
                                     },
-                                    modifier =
-                                        Modifier
-                                            .size(28.dp)
-                                            .semantics { contentDescription = "Unlock Sound Arsenal" },
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Lock,
-                                        contentDescription = null,
-                                        tint = TimerColors.TextMuted,
-                                        modifier = Modifier.size(14.dp),
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = "PRO ",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                        Text(
+                                            text = "\uD83D\uDD12",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    }
                                 }
                             }
                         }
