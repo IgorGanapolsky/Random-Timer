@@ -13,6 +13,7 @@ NORTH_STAR_GUARDRAIL_WORKFLOW = ROOT / ".github/workflows/north-star-guardrail.y
 NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
+DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -273,6 +274,17 @@ def test_workflow_contract_exists_and_points_at_canonical_proof_commands():
     assert "maestro test .maestro/ios-smoke-test.yaml" in source
     assert "scripts/tests" in source
     assert "tests/python" not in source
+
+
+def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
+    source = DEVICE_TESTS_WORKFLOW.read_text(encoding="utf-8")
+    ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
+
+    assert "native-ios/**" in source
+    assert "iOS Simulator + Maestro + Agent Device" in source
+    assert "scripts/device-tests/ci-maestro-ios.sh" in source
+    assert "agent-device" in source
+    assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
 
 
 def test_dead_play_precondition_stub_is_removed():

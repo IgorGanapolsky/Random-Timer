@@ -1,0 +1,11 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression test: tapping the Sound Arsenal header lock must open the paywall on iOS
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "SOUND ARSENAL"
+    direction: DOWN
+- tapOn: "Unlock Sound Arsenal"
+- assertVisible: "Unlock Full Training Mode"
+- takeScreenshot: evidence/ios-sound-arsenal-paywall

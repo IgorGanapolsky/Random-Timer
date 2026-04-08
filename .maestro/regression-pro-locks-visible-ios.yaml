@@ -5,15 +5,16 @@ appId: com.igorganapolsky.randomtimer
 - launchApp:
     clearState: true
 # Timer Range - PRO: 1H lock must be visible
-- assertVisible: "PRO: 1H"
+- assertVisible:
+    text: ".*PRO: 1H.*"
 # Voice Callouts - PRO lock must be visible
 - scrollUntilVisible:
     element: "Voice Callouts"
     direction: DOWN
 - assertVisible: "PRO"
-# Round Selection - PRO lock must be visible
+# Sound Arsenal lock must be visible to free users
 - scrollUntilVisible:
-    element: "Round Selection"
+    element: "SOUND ARSENAL"
     direction: DOWN
-- assertVisible: "PRO"
+- assertVisible: "Unlock Sound Arsenal"
 - takeScreenshot: evidence/ios-pro-locks-visible

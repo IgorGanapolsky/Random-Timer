@@ -173,6 +173,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
+    assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     for expected in (
         "Train up to 60-minute sessions",
         "Get voice callouts during training",
