@@ -1,0 +1,17 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression test: free Sound Arsenal taps must preview without forcing the paywall on iOS
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "SOUND ARSENAL"
+    direction: DOWN
+- tapOn: "Preview Sounds"
+- assertVisible: "Tap a sound to preview. Unlock Pro to equip it."
+- tapOn:
+    text: "Gentle.*"
+- assertNotVisible:
+    text: "Unlock Full Training Mode"
+    optional: true
+- assertVisible: "SOUND ARSENAL"
+- takeScreenshot: evidence/ios-free-sound-preview

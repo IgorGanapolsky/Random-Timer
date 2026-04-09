@@ -43,7 +43,10 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
         "Guard iOS version lineage against ASC"
     )
     assert "Internal Testers" in source
+    assert "TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}" in source
     assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert "Ensure TestFlight internal distribution visibility" in source
+    assert "scripts/ensure_internal_distribution.py" in source
     assert "ios-testflight-signoff:" in source
     assert "environment: testflight-signoff" in source
     assert "environment: internal-play" in source
@@ -100,6 +103,8 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "FIREBASE_SERVICE_ACCOUNT_JSON" in source
     assert "FIREBASE_ANDROID_APP_ID" in source
     assert "android-apk-firebase-internal" in source or "app-release.apk" in source
+    assert "groups: ${{ env.FIREBASE_INTERNAL_GROUPS }}" in source
+    assert "Verify Firebase distribution read-back" in source
     firebase_section = source.split("- name: Distribute to Firebase", 1)[1].split(
         "- name: Upload Android APK artifact", 1
     )[0]
@@ -299,6 +304,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
     assert "agent-device" in source
+    assert "regression-free-sound-preview-ios.yaml" in ios_script
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
 
 
