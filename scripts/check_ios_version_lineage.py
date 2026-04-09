@@ -15,6 +15,12 @@ try:
     from scripts.asc.asc_client import ASCClient, AscClientError
     from scripts.source_versions import VersionParseError, read_source_versions
 except ModuleNotFoundError:
+    _scripts_dir = Path(__file__).resolve().parent
+    _asc_dir = _scripts_dir / "asc"
+    for _p in (_scripts_dir, _asc_dir):
+        _s = str(_p)
+        if _s not in sys.path:
+            sys.path.insert(0, _s)
     from asc_client import ASCClient, AscClientError
     from source_versions import VersionParseError, read_source_versions
 
