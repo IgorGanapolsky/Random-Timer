@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts import asc_remove_from_review
+from scripts.asc import asc_remove_from_review
 
 
 class _FakeClient:

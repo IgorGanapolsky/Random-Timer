@@ -7,7 +7,7 @@ from unittest import mock
 
 class AscWatchStatusTests(unittest.TestCase):
     def test_append_if_changed_first_write_and_noop_second(self):
-        from scripts.asc_watch_status import append_if_changed
+        from scripts.asc.asc_watch_status import append_if_changed
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "status.jsonl"
@@ -29,7 +29,7 @@ class AscWatchStatusTests(unittest.TestCase):
             self.assertEqual(json.loads(lines[0])["state"], "WAITING_FOR_REVIEW")
 
     def test_append_if_changed_writes_on_state_transition(self):
-        from scripts.asc_watch_status import append_if_changed
+        from scripts.asc.asc_watch_status import append_if_changed
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "status.jsonl"
@@ -52,7 +52,7 @@ class AscWatchStatusTests(unittest.TestCase):
             self.assertEqual(json.loads(lines[-1])["state"], "IN_REVIEW")
 
     def test_append_if_changed_writes_when_version_id_changes(self):
-        from scripts.asc_watch_status import append_if_changed
+        from scripts.asc.asc_watch_status import append_if_changed
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "status.jsonl"
@@ -74,7 +74,7 @@ class AscWatchStatusTests(unittest.TestCase):
             self.assertEqual(len(lines), 2)
 
     def test_read_last_jsonl_returns_none_for_invalid_last_line(self):
-        from scripts.asc_watch_status import _read_last_jsonl
+        from scripts.asc.asc_watch_status import _read_last_jsonl
 
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "status.jsonl"
@@ -82,7 +82,7 @@ class AscWatchStatusTests(unittest.TestCase):
             self.assertIsNone(_read_last_jsonl(p))
 
     def test_main_rejects_non_positive_max_polls(self):
-        from scripts import asc_watch_status
+        from scripts.asc import asc_watch_status
 
         fake_args = mock.Mock(
             max_polls=0,
@@ -92,7 +92,7 @@ class AscWatchStatusTests(unittest.TestCase):
             print_json=False,
             interval=1,
         )
-        with mock.patch("scripts.asc_watch_status.parse_args", return_value=fake_args):
+        with mock.patch("scripts.asc.asc_watch_status.parse_args", return_value=fake_args):
             with self.assertRaises(SystemExit):
                 asc_watch_status.main()
 

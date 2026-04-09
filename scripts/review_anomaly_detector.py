@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Detect anomalies in App Store review operations metrics.
 
-Input shape is the JSON emitted by scripts/asc_reviews_ops.py.
+Input shape is the JSON emitted by scripts/asc/asc_reviews_ops.py.
 The detector is deterministic and explainable:
   - robust baseline from median + MAD over history
   - explicit absolute floors for each metric

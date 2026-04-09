@@ -431,7 +431,12 @@ def _runtime_manifest(
     sound_dir = runtime_assets_dir / "packs" / pack["id"] / "sounds"
     assets: list[dict[str, Any]] = []
 
-    for kind, directory in (("voice", voice_dir), ("sound", sound_dir)):
+    # Only voice cues are delivered via the remote Pro pack. Sound Arsenal alarms
+    # must play from app-bundled MP3s (Android res/raw, iOS Resources/Sounds).
+    # Listing "sound" here previously caused Pro clients to download tiny placeholder
+    # clips from raw.githubusercontent.com and override the real bundled assets.
+    _ = sound_dir  # still staged for local pack layout / verification; not uploaded as remote assets
+    for kind, directory in (("voice", voice_dir),):
         for asset in sorted(directory.glob("*.mp3")):
             relative_path = asset.relative_to(runtime_assets_dir).as_posix()
             assets.append(

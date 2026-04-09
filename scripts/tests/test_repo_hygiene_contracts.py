@@ -48,7 +48,7 @@ def test_marketing_post_index_uses_repo_relative_paths() -> None:
 
 def test_runtime_temp_paths_are_environment_backed() -> None:
     expected_markers = {
-        "scripts/capture_ios_store_screenshots.sh": (
+        "scripts/shell/capture_ios_store_screenshots.sh": (
             "APPSTORE_SCREENSHOT_OUTPUT_DIR",
             "TMPDIR",
         ),
@@ -77,7 +77,7 @@ def test_runtime_temp_paths_are_environment_backed() -> None:
 
 
 def test_hygiene_check_matches_current_repo_policy() -> None:
-    contents = (ROOT / "scripts" / "hygiene-check.sh").read_text(encoding="utf-8")
+    contents = (ROOT / "scripts" / "shell" / "hygiene-check.sh").read_text(encoding="utf-8")
     assert '"GEMINI.md"' in contents
     assert '"BUGBOT.md"' in contents
     assert "Possible secret or temp-path leak" not in contents

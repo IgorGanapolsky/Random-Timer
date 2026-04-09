@@ -143,7 +143,7 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
 
     assert "check_ios_version_lineage.py" in source
     assert 'fastlane metadata version:"$IOS_VERSION" skip_app_version_update:true' in source
-    assert 'python scripts/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
+    assert 'python scripts/asc/asc_submit_for_review.py "${SUBMIT_ARGS[@]}"' in source
     assert "fastlane submit_review" not in source
 
 
@@ -154,7 +154,7 @@ def test_ios_metadata_sync_falls_back_to_live_storefront_when_metadata_only_vers
         "- name: Strict screenshot replacement + metadata upload", 1
     )[0]
     assert 'if [[ "$IOS_METADATA_ONLY" == "true" ]]' in resolve_section
-    assert "from scripts.asc_resolve_version import _is_editable_state" in resolve_section
+    assert "from scripts.asc.asc_resolve_version import _is_editable_state" in resolve_section
     assert "selected version state '$SELECTED_STATE' is not editable" in resolve_section
     assert 'SELECTED_VERSION="LIVE"' in resolve_section
 

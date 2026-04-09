@@ -115,7 +115,6 @@ native-ios/RandomTimer.app.dSYM.zip
 apple_*.png
 artifacts_*.png
 apple_status.json
-.aider*
 
 # RLHF local feedback data
 .rlhf/feedback.jsonl

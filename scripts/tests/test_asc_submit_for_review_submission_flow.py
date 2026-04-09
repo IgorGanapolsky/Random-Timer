@@ -5,7 +5,7 @@ from scripts.tests.router_client import RouterClient
 
 class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
     def test_submit_for_review_resolves_rejected_item_and_resubmits_existing_submission(self):
-        from scripts.asc_submit_for_review import submit_for_review
+        from scripts.asc.asc_submit_for_review import submit_for_review
 
         item_id = "item-1"
         submission_id = "sub-1"
@@ -83,7 +83,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
         )
 
     def test_submit_for_review_creates_submission_and_item_when_missing(self):
-        from scripts.asc_submit_for_review import submit_for_review
+        from scripts.asc.asc_submit_for_review import submit_for_review
 
         submission_id = "sub-new"
         version_id = "ver-1"
@@ -149,7 +149,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
         )
 
     def test_submit_for_review_reuses_empty_ready_for_review_submission_when_limit_shell_exists(self):
-        from scripts.asc_submit_for_review import submit_for_review
+        from scripts.asc.asc_submit_for_review import submit_for_review
 
         submission_id = "sub-empty"
         version_id = "ver-1"
@@ -200,7 +200,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
         )
 
     def test_submit_for_review_with_attach_subscriptions_skips_existing_waiting_submission_when_none_pending(self):
-        from scripts.asc_submit_for_review import submit_for_review
+        from scripts.asc.asc_submit_for_review import submit_for_review
 
         submission_id = "sub-1"
         version_id = "ver-1"
@@ -244,7 +244,7 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
         )
 
     def test_submit_for_review_fails_when_subscription_requires_manual_review_attachment(self):
-        from scripts.asc_submit_for_review import submit_for_review
+        from scripts.asc.asc_submit_for_review import submit_for_review
 
         client = RouterClient(
             {

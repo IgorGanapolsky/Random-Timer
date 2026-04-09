@@ -1,1 +1,1 @@
-random,countdown,reaction,drill,boxing,mma,bjj,muay thai,sparring,combat,military,hiit,crossfit,wod
+random timer,countdown,reaction,boxing,mma,bjj,muay thai,sparring,combat,military,hiit,crossfit,wod

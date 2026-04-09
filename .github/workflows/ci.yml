@@ -177,6 +177,7 @@ jobs:
             scripts/tests/test_growth_workflow_contracts.py \
             scripts/tests/test_audio_asset_regressions.py \
             scripts/tests/test_regression_guards.py \
+            scripts/tests/test_runtime_latest_manifest.py \
             scripts/tests/test_verify_play_public_listing.py \
             scripts/tests/test_mobile_feature_parity.py \
             scripts/tests/test_voice_regression_contracts.py

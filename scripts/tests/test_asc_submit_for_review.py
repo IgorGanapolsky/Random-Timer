@@ -15,7 +15,7 @@ class _FakeClient:
 
 class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
     def test_verify_app_info_uses_conservative_query_params(self):
-        from scripts.asc_submit_for_review import verify_app_info
+        from scripts.asc.asc_submit_for_review import verify_app_info
 
         client = _FakeClient(
             {
@@ -61,7 +61,7 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
         self.assertEqual(params.get("include"), "appInfoLocalizations,primaryCategory")
 
     def test_verify_app_info_requires_support_and_privacy_urls(self):
-        import scripts.asc_submit_for_review as asc
+        import scripts.asc.asc_submit_for_review as asc
         verify_app_info = asc.verify_app_info
 
         client = _FakeClient(
@@ -105,7 +105,7 @@ class AscSubmitForReviewVerifyAppInfoTests(unittest.TestCase):
         import os
         import io as _io
         import contextlib as _contextlib
-        from scripts.asc_submit_for_review import verify_app_info
+        from scripts.asc.asc_submit_for_review import verify_app_info
 
         class _RouterClient:
             def __init__(self):

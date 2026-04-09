@@ -7,8 +7,8 @@ user_invocable: true
 # MolmoWeb Browser Verify
 
 Use this when you need browser-level proof for public Random-Timer surfaces such as:
-- `index.html`
-- `download/index.html`
+- `marketing/product-pages/index.html` (product landing mirror)
+- `marketing/site/download/index.html` (deployed `/download` in Pages artifact)
 - GitHub Pages flows
 - marketing landing pages
 - Google Play Console screens already reachable in the browser

@@ -122,7 +122,7 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
         ]
 
     def _run_verify(self, iphone_states, ipad_states, *, require_build=True, include_build=True):
-        from scripts import asc_verify_ready
+        from scripts.asc import asc_verify_ready
 
         fake = _FakeAscClient(
             app_screenshots_by_set={
@@ -131,7 +131,7 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
             },
             include_build=include_build,
         )
-        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+        with mock.patch("scripts.asc.asc_verify_ready.AscClient", return_value=fake):
             return asc_verify_ready.verify_ready(
                 bundle_id="com.igorganapolsky.randomtimer",
                 version="1.1.1",
@@ -173,7 +173,7 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
         self.assertTrue(build_check["evidence"]["skipped"])
 
     def test_verify_ready_fails_when_description_has_no_terms_link(self):
-        from scripts import asc_verify_ready
+        from scripts.asc import asc_verify_ready
 
         fake = _FakeAscClient(
             app_screenshots_by_set={
@@ -192,7 +192,7 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
 
         fake.get = patched_get
 
-        with mock.patch("scripts.asc_verify_ready.AscClient", return_value=fake):
+        with mock.patch("scripts.asc.asc_verify_ready.AscClient", return_value=fake):
             passed, report = asc_verify_ready.verify_ready(
                 bundle_id="com.igorganapolsky.randomtimer",
                 version="1.1.1",

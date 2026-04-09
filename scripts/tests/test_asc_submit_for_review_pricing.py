@@ -7,7 +7,7 @@ from scripts.tests.router_client import RouterClient
 
 class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
     def test_verify_pricing_accepts_app_price_schedules(self):
-        from scripts.asc_submit_for_review import verify_pricing
+        from scripts.asc.asc_submit_for_review import verify_pricing
 
         client = RouterClient(
             {
@@ -24,7 +24,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         )
 
     def test_verify_pricing_falls_back_to_singular_schedule_endpoint(self):
-        from scripts.asc_submit_for_review import verify_pricing
+        from scripts.asc.asc_submit_for_review import verify_pricing
 
         client = RouterClient(
             {
@@ -40,7 +40,7 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
         )
 
     def test_verify_pricing_creates_free_schedule_when_missing(self):
-        from scripts.asc_submit_for_review import verify_pricing
+        from scripts.asc.asc_submit_for_review import verify_pricing
 
         client = RouterClient(
             {

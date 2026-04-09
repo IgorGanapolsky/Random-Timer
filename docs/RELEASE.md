@@ -56,9 +56,9 @@ Why this strategy:
 
 Enforcement:
 
-- `scripts/bump-version.sh` creates `release-notes/X.Y.Z.md`
+- `scripts/shell/bump-version.sh` creates `release-notes/X.Y.Z.md`
 - `scripts/validate_release_branch.py` blocks `release/vX.Y.Z` and `hotfix/vX.Y.Z` promotion without a filled `release-notes/X.Y.Z.md`
-- `scripts/preflight-release.sh` rejects placeholder text in the versioned release note, Android changelog, and iOS `release_notes.txt`
+- `scripts/shell/preflight-release.sh` rejects placeholder text in the versioned release note, Android changelog, and iOS `release_notes.txt`
 - `native-release.yml` uses `release-notes/X.Y.Z.md` as the canonical GitHub Release body
 
 ## Step-by-Step Release Process
@@ -67,7 +67,7 @@ Enforcement:
 
 ```bash
 # From develop branch:
-./scripts/bump-version.sh 1.2.0
+./scripts/shell/bump-version.sh 1.2.0
 
 # What this does:
 # - Increments Android versionCode (e.g., 5 → 6)
@@ -78,7 +78,7 @@ Enforcement:
 
 Preview changes first:
 ```bash
-./scripts/bump-version.sh 1.2.0 --dry-run
+./scripts/shell/bump-version.sh 1.2.0 --dry-run
 ```
 
 ### 2. Update Release Notes
@@ -123,10 +123,10 @@ Create a PR from `release/v1.2.0` → `main`. The `enforce-release-branch-to-mai
 
 ```bash
 # Metadata-only check (fast)
-./scripts/preflight-release.sh --platform both --layer 1
+./scripts/shell/preflight-release.sh --platform both --layer 1
 
 # Full check including builds
-./scripts/preflight-release.sh --platform both --layer 2
+./scripts/shell/preflight-release.sh --platform both --layer 2
 ```
 
 This validates:
@@ -308,9 +308,9 @@ gh release list
 
 | Action | Command |
 |--------|---------|
-| Bump version | `./scripts/bump-version.sh 1.2.0` |
-| Dry-run bump | `./scripts/bump-version.sh 1.2.0 --dry-run` |
-| Preflight check | `./scripts/preflight-release.sh --platform both --layer 1` |
+| Bump version | `./scripts/shell/bump-version.sh 1.2.0` |
+| Dry-run bump | `./scripts/shell/bump-version.sh 1.2.0 --dry-run` |
+| Preflight check | `./scripts/shell/preflight-release.sh --platform both --layer 1` |
 | Release both | `gh workflow run native-release.yml -f platform=both -f android_track=production` |
 | Release Android alpha | `gh workflow run native-release.yml -f platform=android -f android_track=alpha` |
 | Release iOS + submit | `gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=true -f submit_review=true` |

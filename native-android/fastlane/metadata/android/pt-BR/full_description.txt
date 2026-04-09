@@ -1,3 +1,5 @@
+Timer aleatório imprevisível para boxe, MMA, BJJ, HIIT, CrossFit e treino tático.
+
 Random Tactical Timer dispara um alarme em um momento imprevisível dentro do intervalo de tempo escolhido. Defina uma duração mínima e máxima, pressione iniciar e treine. Você nunca sabe quando vai disparar — mantendo você afiado, reativo e pronto para combate.
 
 Feito para lutadores, treinadores e atletas táticos que precisam treinar reação sob pressão real — não padrões previsíveis de contagem regressiva.

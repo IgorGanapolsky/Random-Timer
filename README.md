@@ -111,6 +111,15 @@ Details: iOS `native-ios/` (`xcodebuild`), Android `native-android/` (`./gradlew
 | [`AGENTS.md`](AGENTS.md) | Agent / AI instructions |
 | [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | Privacy (linked from store metadata) |
 
+## Repository layout (2026)
+
+| Path | Role |
+|------|------|
+| [`marketing/site/`](marketing/site/) | **GitHub Pages** deploy root (`daily-growth-publishing` workflow) |
+| [`marketing/product-pages/`](marketing/product-pages/) | Product landing HTML + AMP + `llms.txt` (kept out of repo root) |
+| [`config/`](config/) | Tooling config (e.g. Sonar properties) |
+| [`scripts/shell/`](scripts/shell/) | Bash entrypoints; Python automation stays in [`scripts/`](scripts/) (see [`scripts/README.md`](scripts/README.md)) |
+
 ## License
 
 [MIT](LICENSE) — Igor Ganapolsky

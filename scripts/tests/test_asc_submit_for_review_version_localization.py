@@ -43,7 +43,7 @@ _WHATS_NEW_STATE_ERROR = RuntimeError(
 
 class AscSubmitForReviewVersionLocalizationAutofillTests(unittest.TestCase):
     def test_get_version_localization_autofills_whats_new_from_fastlane(self):
-        import scripts.asc_submit_for_review as asc
+        import scripts.asc.asc_submit_for_review as asc
 
         client = _FakeClient()
 
@@ -66,7 +66,7 @@ class AscSubmitForReviewVersionLocalizationAutofillTests(unittest.TestCase):
         self.assertEqual((loc.get("attributes") or {}).get("whatsNew"), "Hello")
 
     def test_get_version_localization_ignores_whats_new_state_error(self):
-        import scripts.asc_submit_for_review as asc
+        import scripts.asc.asc_submit_for_review as asc
 
         client = _FakeClient(patch_error=_WHATS_NEW_STATE_ERROR, refreshed_whats_new="")
 

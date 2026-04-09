@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,8 @@ RELEASE_GUARD_PATHS = {
     "scripts/tests/test_growth_workflow_contracts.py",
     "scripts/tests/test_regression_guards.py",
     "scripts/tests/test_verify_play_public_listing.py",
+    "content/pro_audio/runtime/latest.json",
+    "scripts/tests/test_runtime_latest_manifest.py",
 }
 
 VOICE_GUARD_PATH_FRAGMENTS = (
@@ -142,6 +145,32 @@ def check_native_release_contract(repo_root: Path, errors: list[str]) -> None:
     _assert_contains(source, "steps.versions.outputs.android_version", errors=errors, label=label)
 
 
+def check_pro_audio_runtime_manifest(repo_root: Path, errors: list[str]) -> None:
+    """ProAudioPackStore prefers remote URLs over bundled MP3s; remote sound placeholders broke Sound Arsenal."""
+    path = repo_root / "content" / "pro_audio" / "runtime" / "latest.json"
+    label = "content/pro_audio/runtime/latest.json"
+    if not path.is_file():
+        errors.append(f"{label}: missing file")
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        errors.append(f"{label}: invalid JSON ({exc})")
+        return
+    assets = data.get("assets")
+    if not isinstance(assets, list):
+        errors.append(f"{label}: expected top-level 'assets' array")
+        return
+    kinds = [a.get("kind") for a in assets if isinstance(a, dict)]
+    if "sound" in kinds:
+        errors.append(
+            f"{label}: remote assets must not include kind 'sound' "
+            "(bundled MP3s are authoritative; remote placeholders override them)",
+        )
+    if "voice" not in kinds:
+        errors.append(f"{label}: expected at least one asset with kind 'voice'")
+
+
 def check_play_public_listing_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, "scripts/verify_play_public_listing.py")
     label = "scripts/verify_play_public_listing.py"
@@ -251,6 +280,7 @@ def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
 
 def run_checks(repo_root: Path, *, include_voice: bool, include_ios_firebase: bool) -> list[str]:
     errors: list[str] = []
+    check_pro_audio_runtime_manifest(repo_root, errors)
     check_android_retry_contract(repo_root, errors)
     check_native_release_contract(repo_root, errors)
     check_play_public_listing_contract(repo_root, errors)

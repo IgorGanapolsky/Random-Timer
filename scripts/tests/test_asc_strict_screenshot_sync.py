@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 from unittest.mock import patch
 
-from scripts import asc_strict_screenshot_sync as strict_sync
+from scripts.asc import asc_strict_screenshot_sync as strict_sync
 
 
 def _report(state: str, *, iphone_ok: bool, ipad_ok: bool) -> dict:

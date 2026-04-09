@@ -96,7 +96,7 @@ def check_readiness(args: argparse.Namespace, repo_root: Path) -> int:
     if not args.skip_preflight:
         preflight_cmd = [
             "bash",
-            str(repo_root / "scripts" / "preflight-release.sh"),
+            str(repo_root / "scripts" / "shell" / "preflight-release.sh"),
             "--platform",
             args.platform,
             "--layer",

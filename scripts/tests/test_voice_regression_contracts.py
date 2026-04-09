@@ -56,9 +56,9 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["male"]["modelId"] == "eleven_multilingual_v2"
     assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
     assert contract["male"]["probeText"] == "Stay sharp."
-    assert contract["female"]["modelId"] == "eleven_multilingual_v2"
-    assert contract["female"]["primaryVoice"]["voiceName"] == "Domi"
-    assert contract["female"]["primaryVoice"]["voiceId"] == "AZnzlk1XvdvUeBnXmlld"
+    assert contract["female"]["modelId"] == "eleven_turbo_v2"
+    assert contract["female"]["primaryVoice"]["voiceName"] == "Sarah"
+    assert contract["female"]["primaryVoice"]["voiceId"] == "EXAVITQu4vr4xnSDxMaL"
     assert contract["female"]["primaryVoice"]["probeText"] == "Move with purpose."
     assert {voice["voiceName"] for voice in contract["female"]["fallbackVoices"]} == {"Anvi"}
     assert {voice["probeText"] for voice in contract["female"]["fallbackVoices"]} == {"Stay in the fight."}
@@ -198,7 +198,8 @@ def test_ci_runs_static_and_live_voice_regression_guards() -> None:
 def test_female_voice_pack_workflow_keeps_natural_baseline() -> None:
     workflow = _read(ROOT / ".github/workflows/generate-female-voice-pack.yml")
 
-    assert 'MODEL_ID = "eleven_multilingual_v2"' in workflow
+    assert 'MODEL_ID = "eleven_turbo_v2"' in workflow
+    assert 'SARAH_ID = "EXAVITQu4vr4xnSDxMaL"' in workflow
     assert '"stability": 0.65' in workflow
     assert '"similarity_boost": 0.85' in workflow
     assert '"style": 0.55' in workflow

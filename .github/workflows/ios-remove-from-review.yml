@@ -65,7 +65,7 @@ jobs:
           if [ "$WAIT_FOR_EDITABLE" = "true" ]; then
             EXTRA_ARGS+=(--wait)
           fi
-          python scripts/asc_remove_from_review.py \
+          python scripts/asc/asc_remove_from_review.py \
             --version "${{ inputs.version }}" \
             "${EXTRA_ARGS[@]}" \
             --json-out /tmp/asc_remove_from_review.json

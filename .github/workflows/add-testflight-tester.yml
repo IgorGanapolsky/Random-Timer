@@ -60,7 +60,7 @@ jobs:
           TESTER_LAST_NAME: ${{ inputs.last_name }}
           TESTER_GROUP: ${{ inputs.group }}
         run: |
-          python3 scripts/asc_add_tester.py \
+          python3 scripts/asc/asc_add_tester.py \
             --email "$TESTER_EMAIL" \
             --first-name "$TESTER_FIRST_NAME" \
             --last-name "$TESTER_LAST_NAME" \

@@ -1,7 +1,7 @@
 import unittest
 from typing import Optional
 
-from scripts.asc_resolve_version import (
+from scripts.asc.asc_resolve_version import (
     _bump_patch,
     _is_editable_state,
     _list_ios_versions,

@@ -1,15 +1,11 @@
 ---
 name: rlhf-feedback
-description: Autonomous RLHF feedback capture - Claude self-captures mistakes and successes
-triggers:
-  - thumbs down
-  - thumbs up
-  - mistake
-  - good job
-  - wrong
-  - correct
-  - that worked
-  - that failed
+description: "Autonomous RLHF feedback capture with self-organizing memory cells and salience decay. Auto-triggers on thumbs up/down, mistakes, successes, or 'that worked/failed'."
+user-invocable: false
+allowed-tools:
+  - Bash
+  - Read
+  - Write
 ---
 
 # RLHF Feedback Capture Skill

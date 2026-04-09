@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from scripts import asc_client as ac
+from scripts.asc import asc_client as ac
 
 
 def test_safe_json_response_handles_non_json():
