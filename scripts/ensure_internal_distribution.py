@@ -11,8 +11,10 @@ from typing import Any
 from urllib.parse import quote
 
 _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
+_ASC_DIR = str(Path(__file__).resolve().parent / "asc")
+for _p in (_SCRIPTS_DIR, _ASC_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from asc_client import ASCClient, AscClientError
 from pem_env import load_google_play_service_account_dict
