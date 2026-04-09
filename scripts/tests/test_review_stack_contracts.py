@@ -4,6 +4,7 @@ from pathlib import Path
 README = Path("README.md")
 PR_BOTS_DOC = Path("docs/pr-review-bots.md")
 BUGBOT = Path("BUGBOT.md")
+CURSOR_BUGBOT = Path(".cursor/BUGBOT.md")
 CI_WORKFLOW = Path(".github/workflows/ci.yml")
 CLAUDE_REVIEW_WORKFLOW = Path(".github/workflows/claude-review.yml")
 SEER_APP = Path(".github/seer.app.yml")
@@ -38,6 +39,7 @@ def test_review_stack_files_exist() -> None:
     assert SEER_APP.exists()
     assert COPILOT_INSTRUCTIONS.exists()
     assert BUGBOT.exists()
+    assert CURSOR_BUGBOT.exists()
     assert SONAR_CONFIG.exists()
 
 
