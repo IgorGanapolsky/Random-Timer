@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate natural Domi female voice callouts
+      - name: Generate young female coach voice callouts
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -25,14 +25,12 @@ jobs:
 
           API = "https://api.elevenlabs.io"
           KEY = os.environ["ELEVENLABS_API_KEY"]
-          DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
-          MODEL_ID = "eleven_multilingual_v2"
-          SETTINGS = {
-              "stability": 0.65,
-              "similarity_boost": 0.85,
-              "style": 0.55,
-              "use_speaker_boost": True,
-          }
+          contract = json.load(open("content/pro_audio/voice_personas.json"))
+          female = contract["female"]
+          VOICE_ID = female["primaryVoice"]["voiceId"]
+          MODEL_ID = female["modelId"]
+          SETTINGS = female.get("voiceSettings", {})
+          GENERATION_CONFIG = female.get("generationConfig", {})
 
           # Read the existing male voice catalog to get all cue texts
           catalog = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
@@ -41,11 +39,17 @@ jobs:
           ANDROID_RAW = "native-android/app/src/main/res/raw"
           os.makedirs(IOS_AUDIO, exist_ok=True)
 
-          def generate(text, filename):
-              payload = {"text": text, "model_id": MODEL_ID, "voice_settings": SETTINGS}
+          def generate(text, filename, cue_type):
+              payload = {
+                  "text": text,
+                  "model_id": MODEL_ID,
+                  "voice_settings": SETTINGS,
+              }
+              if GENERATION_CONFIG:
+                  payload["generation_config"] = GENERATION_CONFIG
               data = json.dumps(payload).encode()
               req = urllib.request.Request(
-                  f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
+                  f"{API}/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128",
                   data=data,
                   headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
               )
@@ -71,7 +75,7 @@ jobs:
           for cue in catalog.get("commandCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              generate(text, filename)
+              generate(text, filename, "command")
               time.sleep(0.5)  # Rate limiting
 
           # Generate elapsed cues
@@ -79,14 +83,14 @@ jobs:
           for cue in catalog.get("elapsedCues", []):
               text = cue["text"]
               filename = cue["filename"]
-              generate(text, filename)
+              generate(text, filename, "elapsed")
               time.sleep(0.5)
 
           # Generate preview
           print("\n=== Preview ===")
           preview = catalog.get("previewElapsed", {})
           if preview:
-              generate(preview["text"], preview["filename"])
+              generate(preview["text"], preview["filename"], "preview")
 
           print("\nDone!")
           PYEOF
@@ -95,16 +99,18 @@ jobs:
         run: |
           python3 << 'PYEOF'
           import json
+          contract = json.load(open("content/pro_audio/voice_personas.json"))
+          female = contract["female"]
           # Copy male catalog structure for female
           male = json.load(open("native-ios/RandomTimer/Resources/Audio/voice_callouts.json"))
           # Female catalog is identical structure, just in a different directory
-          female = dict(male)
-          female["voiceGender"] = "female"
-          female["voiceId"] = "AZnzlk1XvdvUeBnXmlld"
-          female["voiceName"] = "Domi"
-          female["modelId"] = "eleven_multilingual_v2"
+          female_catalog = dict(male)
+          female_catalog["voiceGender"] = "female"
+          female_catalog["voiceId"] = female["primaryVoice"]["voiceId"]
+          female_catalog["voiceName"] = female["primaryVoice"]["voiceName"]
+          female_catalog["modelId"] = female["modelId"]
           with open("native-ios/RandomTimer/Resources/Audio/female/voice_callouts.json", "w") as f:
-              json.dump(female, f, indent=2)
+              json.dump(female_catalog, f, indent=2)
           print("Female voice catalog created")
           PYEOF
 
@@ -137,8 +143,8 @@ jobs:
             echo "No files generated"
             exit 0
           fi
-          git commit -m "feat(audio): regenerate natural Domi female voice pack"
+          git commit -m "feat(audio): regenerate elite female coach voice pack"
           git push origin "$BRANCH"
           gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): regenerate natural Domi female voice pack" \
-            --body "All 31 command cues + 12 elapsed cues regenerated with Domi on eleven_multilingual_v2 using plain-text prompts and the natural baseline settings."
+            --title "feat(audio): regenerate elite female coach voice pack" \
+            --body "All 31 command cues + 12 elapsed cues regenerated with the contract-driven female coach persona using the repo voice contract settings."
