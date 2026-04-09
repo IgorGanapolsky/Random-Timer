@@ -1,0 +1,21 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression: tapping a locked Pro sound must PREVIEW it, not open paywall.
+# Bug: PR #1103 added presentPaywall on tap, hijacking the preview.
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "SOUND ARSENAL"
+    direction: DOWN
+# Expand Sound Arsenal
+- tapOn: "Preview Sounds"
+- scrollUntilVisible:
+    element: "Klaxon"
+    direction: DOWN
+# Tap a locked Pro sound
+- tapOn: "Klaxon"
+# Paywall should NOT appear — assert it's NOT visible
+- assertNotVisible: "Unlock Everything"
+- assertNotVisible: "Subscribe"
+- assertNotVisible: "Restore Purchases"
+- takeScreenshot: evidence/ios-pro-sound-preview-no-paywall

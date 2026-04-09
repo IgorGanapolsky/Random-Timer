@@ -1,0 +1,20 @@
+appId: com.iganapolsky.randomtimer
+---
+# Regression: tapping a locked Pro sound must PREVIEW it, not open paywall.
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "Sound Arsenal"
+    direction: DOWN
+# Expand Sound Arsenal
+- tapOn: "Preview Sounds"
+- scrollUntilVisible:
+    element: "Klaxon"
+    direction: DOWN
+# Tap a locked Pro sound
+- tapOn: "Klaxon"
+# Paywall should NOT appear
+- assertNotVisible: "Unlock Everything"
+- assertNotVisible: "Subscribe"
+- assertNotVisible: "Restore Purchases"
+- takeScreenshot: evidence/android-pro-sound-preview-no-paywall
