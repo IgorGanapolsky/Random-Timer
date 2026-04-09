@@ -2,6 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/ci.yml)
+[![Claude Review](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/claude-review.yml/badge.svg?branch=develop)](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/claude-review.yml)
+[![GitHub Copilot Review](https://img.shields.io/badge/GitHub%20Copilot-Review%20Enabled-181717)](docs/pr-review-bots.md)
+[![Sentry Seer](https://img.shields.io/badge/Sentry-Seer%20Review-362D59)](docs/pr-review-bots.md)
+[![Cursor BugBot](https://img.shields.io/badge/Cursor-BugBot%20Policy-000000)](BUGBOT.md)
+[![SonarQube Cloud](https://img.shields.io/badge/SonarQube%20Cloud-Quality%20Gate-4E9BCD)](docs/pr-review-bots.md)
 [![iOS](https://img.shields.io/badge/iOS-SwiftUI-blue?logo=apple)](native-ios/)
 [![Android](https://img.shields.io/badge/Android-Compose-3DDC84?logo=android)](native-android/)
 
