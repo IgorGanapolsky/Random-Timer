@@ -7,10 +7,12 @@ appId: com.igorganapolsky.randomtimer
     element: "SOUND ARSENAL"
     direction: DOWN
 # Timer setup forces showArsenal on appear, so the toggle reads "Hide Sound Arsenal" for free users.
-- tapOn: "Preview Sounds"
-  optional: true
-- tapOn: "View Sound Arsenal"
-  optional: true
+- tapOn:
+    text: "Preview Sounds"
+    optional: true
+- tapOn:
+    text: "View Sound Arsenal"
+    optional: true
 - assertVisible: "Tap a sound to preview. Unlock Pro to equip it."
 - tapOn:
     text: "Gentle.*"
