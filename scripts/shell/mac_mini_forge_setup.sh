@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setup script for Mac Mini Local AI Forge (Aider Backend)
+# Setup script for Mac Mini Local AI Forge (llama.cpp + local OpenAI-compatible endpoints)
 # Run this once on the Mac Mini to download and start the local LLM servers.
 
 set -euo pipefail
@@ -53,4 +53,4 @@ echo "🟢 Qwen3-Coder running on http://localhost:8001"
 echo "🟢 Architect running on http://localhost:8002"
 echo "Attach to view logs: tmux attach -t forge_servers"
 echo ""
-echo "You can now run 'export OPENAI_API_KEY=dummy && aider' in your repo."
+echo "Point any OpenAI-compatible client at http://localhost:8001 (or 8002) using OPENAI_API_BASE."
