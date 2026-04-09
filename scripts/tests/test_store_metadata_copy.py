@@ -18,7 +18,7 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "serious fighters and operators" not in full_description
     assert (
         short_description.strip()
-        == "Random timer with male & female AI coach voice for combat sports and HIIT."
+        == "Random timer for unpredictable MMA, boxing, BJJ & HIIT. AI voice callouts."
     )
 
 
