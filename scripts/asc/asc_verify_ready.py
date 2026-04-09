@@ -33,7 +33,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from scripts.asc_client import AscClient, AscClientError
+from scripts.asc.asc_client import AscClient, AscClientError
 
 DEFAULT_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 DEFAULT_LOCALE = "en-US"

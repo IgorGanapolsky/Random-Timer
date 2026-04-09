@@ -8,9 +8,9 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
-from scripts.asc_client import ASCClient, AscClientError
-from scripts.asc_resolve_version import _list_ios_versions
-from scripts.asc_submit_for_review import die, get_app
+from scripts.asc.asc_client import ASCClient, AscClientError
+from scripts.asc.asc_resolve_version import _list_ios_versions
+from scripts.asc.asc_submit_for_review import die, get_app
 
 
 def _normalize_versions(items: List[Dict[str, Any]]) -> List[Dict[str, str]]:

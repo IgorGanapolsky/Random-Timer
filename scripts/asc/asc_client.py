@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
+_SCRIPTS_ROOT = str(Path(__file__).resolve().parent.parent)
+if _SCRIPTS_ROOT not in sys.path:
+    sys.path.insert(0, _SCRIPTS_ROOT)
 
 from pem_env import normalize_inline_pem
 from repo_dotenv import load_repo_dotenv

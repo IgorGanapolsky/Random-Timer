@@ -9,10 +9,10 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from scripts.asc_client import ASCClient, AscClientError
-from scripts.asc_poll_version_state import find_app_store_version_id
-from scripts.asc_resolve_version import _is_editable_state
-from scripts.asc_submit_for_review import die, get_app, get_version_state, info
+from scripts.asc.asc_client import ASCClient, AscClientError
+from scripts.asc.asc_poll_version_state import find_app_store_version_id
+from scripts.asc.asc_resolve_version import _is_editable_state
+from scripts.asc.asc_submit_for_review import die, get_app, get_version_state, info
 
 
 def _submission_id(payload: dict[str, object]) -> str:

@@ -2,6 +2,10 @@
 
 Automation grew as **one-off tools** were added for releases, growth, App Store Connect, and Play. Python modules stay at the top level so `from scripts.foo import …` and `pythonpath = ["."]` (see `pyproject.toml`) keep working without a large package move.
 
+## `scripts/asc/`
+
+App Store Connect automation (`asc_*.py`, `asc_client.py`). Import as `from scripts.asc.asc_submit_for_review import …`; CLI: `python scripts/asc/asc_submit_for_review.py`.
+
 ## `scripts/shell/`
 
 Bash entry points (release, hygiene, iOS verify, MCP wrapper, maintenance). Prefer running these from the **repository root**; each script resolves `REPO_ROOT` / `PROJECT_ROOT` from its own path.

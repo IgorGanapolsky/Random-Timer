@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from scripts.asc_client import ASCClient, AscClientError
+    from scripts.asc.asc_client import ASCClient, AscClientError
     from scripts.source_versions import VersionParseError, read_source_versions
 except ModuleNotFoundError:
     from asc_client import ASCClient, AscClientError

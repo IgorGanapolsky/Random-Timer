@@ -6,7 +6,7 @@ from scripts.tests.router_client import RouterClient
 
 class AscSubmitForReviewVerifyReviewDetailTests(unittest.TestCase):
     def test_verify_review_detail_reads_relationship_off_version(self):
-        from scripts.asc_submit_for_review import verify_review_detail
+        from scripts.asc.asc_submit_for_review import verify_review_detail
 
         client = RouterClient(
             {
@@ -23,7 +23,7 @@ class AscSubmitForReviewVerifyReviewDetailTests(unittest.TestCase):
         self.assertEqual([c["path"] for c in client.calls], ["/appStoreVersions/ver1/appStoreReviewDetail"])
 
     def test_verify_review_detail_requires_contact_email(self):
-        from scripts.asc_submit_for_review import verify_review_detail
+        from scripts.asc.asc_submit_for_review import verify_review_detail
 
         client = RouterClient(
             {

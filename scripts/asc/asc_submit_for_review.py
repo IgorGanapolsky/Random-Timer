@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Optional
 
-from scripts.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
+from scripts.asc.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
 SUBSCRIPTION_REVIEW_DOC_URL = (

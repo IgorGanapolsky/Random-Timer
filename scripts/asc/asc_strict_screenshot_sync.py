@@ -24,10 +24,10 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Sequence, Tuple
 
-from scripts.asc_client import AscClientError
-from scripts.asc_reset_screenshots import reset_screenshots
-from scripts.asc_resolve_version import _is_editable_state
-from scripts.asc_verify_ready import DEFAULT_BUNDLE_ID, DEFAULT_LOCALE, verify_ready
+from scripts.asc.asc_client import AscClientError
+from scripts.asc.asc_reset_screenshots import reset_screenshots
+from scripts.asc.asc_resolve_version import _is_editable_state
+from scripts.asc.asc_verify_ready import DEFAULT_BUNDLE_ID, DEFAULT_LOCALE, verify_ready
 
 
 def _print_cmd(cmd: Sequence[str], cwd: Path) -> None:
@@ -269,7 +269,7 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(__file__).resolve().parent.parent.parent
 
     try:
         exit_code, payload = run_strict_screenshot_sync(

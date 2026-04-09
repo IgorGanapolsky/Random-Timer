@@ -14,9 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from scripts.asc_client import ASCClient, AscClientError
-from scripts.asc_poll_version_state import find_app_store_version_id
-from scripts.asc_submit_for_review import die, get_app
+from scripts.asc.asc_client import ASCClient, AscClientError
+from scripts.asc.asc_poll_version_state import find_app_store_version_id
+from scripts.asc.asc_submit_for_review import die, get_app
 
 
 def utc_iso_now() -> str:

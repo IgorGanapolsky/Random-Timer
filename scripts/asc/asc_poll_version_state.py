@@ -11,8 +11,8 @@ import argparse
 import json
 import sys
 
-from scripts.asc_client import ASCClient, AscClientError
-from scripts.asc_submit_for_review import die, first, get_app, get_version_state, info, wait_for_state
+from scripts.asc.asc_client import ASCClient, AscClientError
+from scripts.asc.asc_submit_for_review import die, first, get_app, get_version_state, info, wait_for_state
 
 
 def find_app_store_version_id(client: ASCClient, *, app_id: str, version: str) -> tuple[str, str]:

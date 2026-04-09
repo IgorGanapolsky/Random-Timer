@@ -10,8 +10,8 @@ import argparse
 import json
 from typing import Any, Dict, List
 
-from scripts.asc_client import APP_STORE_CONNECT_API, AscClient, AscClientError
-from scripts.asc_verify_ready import (
+from scripts.asc.asc_client import APP_STORE_CONNECT_API, AscClient, AscClientError
+from scripts.asc.asc_verify_ready import (
     _die,
     _get_app_id,
     _get_screenshot_sets,

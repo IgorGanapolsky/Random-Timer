@@ -17,8 +17,8 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from scripts.asc_client import ASCClient, AscClientError
-from scripts.asc_submit_for_review import die, get_app
+from scripts.asc.asc_client import ASCClient, AscClientError
+from scripts.asc.asc_submit_for_review import die, get_app
 
 
 # States that are not safe targets for listing edits.
