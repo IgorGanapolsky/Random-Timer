@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate natural Domi female voice callouts
+      - name: Generate Sarah female voice callouts (eleven_turbo_v2)
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -25,8 +25,8 @@ jobs:
 
           API = "https://api.elevenlabs.io"
           KEY = os.environ["ELEVENLABS_API_KEY"]
-          DOMI_ID = "AZnzlk1XvdvUeBnXmlld"
-          MODEL_ID = "eleven_multilingual_v2"
+          SARAH_ID = "EXAVITQu4vr4xnSDxMaL"
+          MODEL_ID = "eleven_turbo_v2"
           SETTINGS = {
               "stability": 0.65,
               "similarity_boost": 0.85,
@@ -45,7 +45,7 @@ jobs:
               payload = {"text": text, "model_id": MODEL_ID, "voice_settings": SETTINGS}
               data = json.dumps(payload).encode()
               req = urllib.request.Request(
-                  f"{API}/v1/text-to-speech/{DOMI_ID}?output_format=mp3_44100_128",
+                  f"{API}/v1/text-to-speech/{SARAH_ID}?output_format=mp3_44100_128",
                   data=data,
                   headers={"xi-api-key": KEY, "Content-Type": "application/json", "Accept": "audio/mpeg"},
               )
@@ -100,9 +100,9 @@ jobs:
           # Female catalog is identical structure, just in a different directory
           female = dict(male)
           female["voiceGender"] = "female"
-          female["voiceId"] = "AZnzlk1XvdvUeBnXmlld"
-          female["voiceName"] = "Domi"
-          female["modelId"] = "eleven_multilingual_v2"
+          female["voiceId"] = "EXAVITQu4vr4xnSDxMaL"
+          female["voiceName"] = "Sarah"
+          female["modelId"] = "eleven_turbo_v2"
           with open("native-ios/RandomTimer/Resources/Audio/female/voice_callouts.json", "w") as f:
               json.dump(female, f, indent=2)
           print("Female voice catalog created")
@@ -137,8 +137,8 @@ jobs:
             echo "No files generated"
             exit 0
           fi
-          git commit -m "feat(audio): regenerate natural Domi female voice pack"
+          git commit -m "feat(audio): regenerate Sarah female voice pack (eleven_turbo_v2)"
           git push origin "$BRANCH"
           gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): regenerate natural Domi female voice pack" \
-            --body "All 31 command cues + 12 elapsed cues regenerated with Domi on eleven_multilingual_v2 using plain-text prompts and the natural baseline settings."
+            --title "feat(audio): regenerate Sarah female voice pack" \
+            --body "Command + elapsed cues regenerated with Sarah (EXAVITQu4vr4xnSDxMaL) on eleven_turbo_v2 to match content/pro_audio/voice_personas.json."
