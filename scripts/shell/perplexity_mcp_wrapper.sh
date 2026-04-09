@@ -3,9 +3,10 @@
 # Claude Code MCP servers don't auto-source .env files
 set -a
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-if [ -f "$PROJECT_DIR/.env" ]; then
-  source "$PROJECT_DIR/.env"
+SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  source "$PROJECT_ROOT/.env"
 fi
 set +a
-exec python3 "$SCRIPT_DIR/perplexity_mcp_server.py"
+exec python3 "$SCRIPTS_ROOT/perplexity_mcp_server.py"

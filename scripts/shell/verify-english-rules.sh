@@ -2,7 +2,7 @@
 # Verify English-only configuration. Exit 0 if pass, 1 if fail.
 set -euo pipefail
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 IGOR="$(dirname "$REPO")"
 PASS=0
 FAIL=0

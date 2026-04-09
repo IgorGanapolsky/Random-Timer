@@ -201,7 +201,7 @@ jobs:
           done
 
       - name: Preflight release checks (iOS)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -360,7 +360,7 @@ jobs:
           done
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v5.2.0
@@ -531,7 +531,7 @@ jobs:
           fi
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
         uses: actions/setup-java@v5.2.0

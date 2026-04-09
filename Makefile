@@ -130,11 +130,11 @@ verify-android-instrumentation:
 
 verify-ios:
 	@echo "==> iOS: unit tests (simulator)"
-	@./scripts/ios_verify.sh
+	@./scripts/shell/ios_verify.sh
 
 verify-ios-ui:
 	@echo "==> iOS: UI tests (simulator)"
-	@./scripts/ios_verify.sh --ui
+	@./scripts/shell/ios_verify.sh --ui
 
 maestro-android:
 	@echo "==> Maestro: Android flows (requires emulator/device + maestro CLI)"
@@ -184,7 +184,7 @@ phoneclaw-visual:
 	@bash scripts/device-tests/phoneclaw/setup-device.sh
 
 memory-doctor:
-	@bash scripts/verify_memory_gateway.sh
+	@bash scripts/shell/verify_memory_gateway.sh
 
 memory-summary:
 	@echo "==> Memory Gateway: feedback summary"
@@ -206,7 +206,7 @@ memory-capture-up:
 
 # Forge & Maintenance
 forge-maintenance:
-	@bash scripts/maintenance_loop.sh
+	@bash scripts/shell/maintenance_loop.sh
 
 self-heal:
 	@python3 scripts/release_self_healer.py

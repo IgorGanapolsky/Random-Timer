@@ -60,7 +60,7 @@ jobs:
           done
 
       - name: Preflight release checks (iOS listing assets)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1.300.0

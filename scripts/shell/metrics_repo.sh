@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reproducible repo size metrics (tracked files only). Optional: tokei or cloc for language split.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 echo "=== Random Timer repo metrics (git index) ==="

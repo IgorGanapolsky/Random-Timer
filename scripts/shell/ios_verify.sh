@@ -4,15 +4,17 @@ set -euo pipefail
 # iOS verification helper.
 #
 # Usage:
-#   ./scripts/ios_verify.sh        # unit tests only (skips UI tests)
-#   ./scripts/ios_verify.sh --ui   # includes UI tests
+#   ./scripts/shell/ios_verify.sh        # unit tests only (skips UI tests)
+#   ./scripts/shell/ios_verify.sh --ui   # includes UI tests
 
 include_ui_tests=false
 if [[ "${1:-}" == "--ui" ]]; then
   include_ui_tests=true
 fi
 
-cd native-ios
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT/native-ios"
 
 echo "==> Selecting an available iPhone simulator..."
 SIM_ID="$(

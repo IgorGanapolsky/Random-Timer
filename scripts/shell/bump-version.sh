@@ -2,11 +2,11 @@
 # bump-version.sh — Bump version across Android + iOS in lockstep
 #
 # Usage:
-#   ./scripts/bump-version.sh <new_version> [--dry-run]
+#   ./scripts/shell/bump-version.sh <new_version> [--dry-run]
 #
 # Examples:
-#   ./scripts/bump-version.sh 1.2.0           # Bump both platforms to 1.2.0
-#   ./scripts/bump-version.sh 1.2.0 --dry-run # Preview changes without writing
+#   ./scripts/shell/bump-version.sh 1.2.0           # Bump both platforms to 1.2.0
+#   ./scripts/shell/bump-version.sh 1.2.0 --dry-run # Preview changes without writing
 #
 # What it does:
 #   1. Validates semantic version format (X.Y.Z)
@@ -20,7 +20,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

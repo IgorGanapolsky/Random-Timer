@@ -4,7 +4,7 @@
 # integrity are all present and correct before publishing.
 #
 # Usage:
-#   ./scripts/preflight-release.sh --platform android|ios|both [--layer 1|2]
+#   ./scripts/shell/preflight-release.sh --platform android|ios|both [--layer 1|2]
 #
 # Layers:
 #   1 (default) — Metadata & file checks only (fast, no build)
@@ -14,7 +14,7 @@ set -euo pipefail
 
 # ── Globals ──────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 PLATFORM="both"
 LAYER=1

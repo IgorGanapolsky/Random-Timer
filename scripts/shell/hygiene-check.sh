@@ -105,10 +105,10 @@ echo "7. Required files present"
 
 # ── 8. English-only rule verification ───────────────────────────────
 echo "8. English-only AI config"
-if [ -f "$REPO_ROOT/scripts/verify-english-rules.sh" ]; then
-  bash "$REPO_ROOT/scripts/verify-english-rules.sh" || error "verify-english-rules.sh failed"
+if [ -f "$REPO_ROOT/scripts/shell/verify-english-rules.sh" ]; then
+  bash "$REPO_ROOT/scripts/shell/verify-english-rules.sh" || error "verify-english-rules.sh failed"
 else
-  warn "scripts/verify-english-rules.sh missing"
+  warn "scripts/shell/verify-english-rules.sh missing"
 fi
 
 # ── Summary ─────────────────────────────────────────────────────────
