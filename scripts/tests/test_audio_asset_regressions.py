@@ -6,8 +6,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
+IOS_SOUND_DIR = ROOT / "native-ios/RandomTimer/Resources/Sounds"
+RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
+RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 ANDROID_SETUP = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
@@ -22,26 +24,38 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-BUNDLED_SOUNDS = {
-    "airhorn": "airhorn.mp3",
-    "alarm": "alarm.mp3",
-    "bell": "bell.mp3",
-    "buzzer": "buzzer.mp3",
-    "drum_roll": "drum_roll.mp3",
-    "gentle_chime": "gentle_chime.mp3",
-    "gong": "gong.mp3",
-    "klaxon": "klaxon.mp3",
-    "siren": "siren.mp3",
-    "whistle": "whistle.mp3",
+SOUND_ARSENAL_FILES = {
+    "airhorn": ("airhorn.mp3", "airhorn.mp3"),
+    "bell": ("bell.mp3", "bell.mp3"),
+    "buzzer": ("buzzer.mp3", "buzzer.mp3"),
+    "drum_roll": ("drum_roll.mp3", "drum_roll.mp3"),
+    "gong": ("gong.mp3", "gong.mp3"),
+    "klaxon": ("klaxon.mp3", "klaxon.mp3"),
+    "siren": ("siren.mp3", "siren.mp3"),
+    "whistle": ("whistle.mp3", "whistle.mp3"),
 }
 
+def test_sound_arsenal_files_exist_across_ios_android_and_runtime_pack() -> None:
+    for runtime_name, (ios_filename, android_filename) in SOUND_ARSENAL_FILES.items():
+        ios_path = IOS_SOUND_DIR / ios_filename
+        android_path = ANDROID_RAW_DIR / android_filename
+        runtime_path = RUNTIME_SOUND_DIR / f"{runtime_name}.mp3"
+        for path in (ios_path, android_path, runtime_path):
+            assert path.exists(), f"Missing Sound Arsenal asset: {path}"
+            assert path.stat().st_size > 5000, f"{path.name} too small ({path.stat().st_size}B)"
 
-def test_android_bundled_sound_arsenal_files_exist() -> None:
-    """All Sound Arsenal sounds must exist as bundled MP3s."""
-    for name, filename in BUNDLED_SOUNDS.items():
-        path = ANDROID_RAW_DIR / filename
-        assert path.exists(), f"Missing bundled sound: {filename}"
-        assert path.stat().st_size > 5000, f"{filename} too small ({path.stat().st_size}B) — likely corrupt"
+
+def test_sound_arsenal_checksums_match_across_ios_android_and_runtime_pack() -> None:
+    for runtime_name, (ios_filename, android_filename) in SOUND_ARSENAL_FILES.items():
+        ios_path = IOS_SOUND_DIR / ios_filename
+        android_path = ANDROID_RAW_DIR / android_filename
+        runtime_path = RUNTIME_SOUND_DIR / f"{runtime_name}.mp3"
+        ios_hash = _sha256(ios_path)
+        android_hash = _sha256(android_path)
+        runtime_hash = _sha256(runtime_path)
+
+        assert android_hash == ios_hash, f"Android drift for {android_filename}"
+        assert runtime_hash == ios_hash, f"Runtime pack drift for {runtime_name}.mp3"
 
 
 def test_gentle_iconography_uses_water_not_lightning() -> None:
