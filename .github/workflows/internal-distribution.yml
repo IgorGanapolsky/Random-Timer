@@ -287,7 +287,7 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
+          TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
           TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}
           TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: ${{ secrets.TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS || 'false' }}
         run: fastlane beta
@@ -302,6 +302,22 @@ jobs:
           set -euo pipefail
           VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
           python scripts/verify_release.py --platform ios --version "$VERSION" --ios-scope testflight --wait --timeout 900 --poll-interval 60
+
+      - name: Ensure TestFlight internal distribution visibility
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          TESTFLIGHT_INTERNAL_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
+          TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.FIREBASE_REQUIRED_TESTER_EMAIL || '' }}
+        run: |
+          set -euo pipefail
+          VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
+          python scripts/ensure_internal_distribution.py \
+            --platform ios \
+            --ios-version "$VERSION" \
+            --ios-groups "$TESTFLIGHT_INTERNAL_GROUPS" \
+            --ios-required-testers "$TESTFLIGHT_REQUIRED_TESTERS"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v7
@@ -367,6 +383,14 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Firebase verification Python dependencies
+        run: python -m pip install google-auth requests
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1.300.0
@@ -525,6 +549,12 @@ jobs:
             echo "⚠️ Neither FIREBASE_INTERNAL_GROUPS nor FIREBASE_INTERNAL_TESTERS set — defaulting groups to 'internal-testers'"
             echo "FIREBASE_INTERNAL_GROUPS=internal-testers" >> "$GITHUB_ENV"
           fi
+          if [ -n "${FIREBASE_INTERNAL_GROUPS:-}" ]; then
+            echo "FIREBASE_INTERNAL_GROUPS=${FIREBASE_INTERNAL_GROUPS}" >> "$GITHUB_ENV"
+          fi
+          if [ -n "${FIREBASE_INTERNAL_TESTERS:-}" ]; then
+            echo "FIREBASE_INTERNAL_TESTERS=${FIREBASE_INTERNAL_TESTERS}" >> "$GITHUB_ENV"
+          fi
           if ! [[ "$FIREBASE_ANDROID_APP_ID" =~ ^1:[0-9]+:android:[a-fA-F0-9]+$ ]]; then
             echo "❌ FIREBASE_ANDROID_APP_ID must match 1:PROJECT_NUMBER:android:APP_ID (e.g. 1:712918404489:android:5fb1dfde1d712f53e7a558)"
             exit 1
@@ -574,11 +604,31 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          testers: ${{ vars.FIREBASE_INTERNAL_TESTERS }}
+          testers: ${{ env.FIREBASE_INTERNAL_TESTERS }}
+          groups: ${{ env.FIREBASE_INTERNAL_GROUPS }}
           file: native-android/app/build/outputs/apk/release/app-release.apk
           releaseNotes: |
             Internal build from ${{ needs.gate.outputs.sha || github.sha }}
             Ref: ${{ needs.gate.outputs.ref }}
+
+      - name: Verify Firebase distribution read-back
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_INTERNAL_GROUPS: ${{ env.FIREBASE_INTERNAL_GROUPS }}
+          FIREBASE_INTERNAL_TESTERS: ${{ env.FIREBASE_INTERNAL_TESTERS }}
+          FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}
+        run: |
+          set -euo pipefail
+          VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')"
+          python scripts/ensure_internal_distribution.py \
+            --platform firebase \
+            --firebase-app-id "$FIREBASE_ANDROID_APP_ID" \
+            --firebase-build-version "${{ github.run_number }}" \
+            --firebase-display-version "$VERSION" \
+            --firebase-group-aliases "$FIREBASE_INTERNAL_GROUPS" \
+            --firebase-tester-emails "$FIREBASE_INTERNAL_TESTERS" \
+            --firebase-required-testers "${FIREBASE_REQUIRED_TESTER_EMAIL:-$FIREBASE_INTERNAL_TESTERS}"
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v7
