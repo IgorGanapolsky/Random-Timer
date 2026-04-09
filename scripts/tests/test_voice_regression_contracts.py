@@ -206,6 +206,8 @@ def test_ci_runs_static_and_live_voice_regression_guards() -> None:
     assert "Decide live smoke execution" in workflow
     assert 'steps.gate.outputs.run_live_smoke == \'true\'' in workflow
     assert "Record controlled skip" in workflow
+    assert 'grep -q "quota_exceeded"' in workflow
+    assert "no remaining credits" in workflow
     assert "content/pro_audio/voice_personas.json" in verify_script
     assert "/v1/text-to-speech/" in verify_script
     assert "verifiedProbes" in verify_script
