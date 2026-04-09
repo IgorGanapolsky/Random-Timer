@@ -133,7 +133,19 @@ jobs:
         if: steps.gate.outputs.run_live_smoke == 'true'
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: python scripts/verify_elevenlabs_voices.py
+        run: |
+          set +e
+          output="$(python scripts/verify_elevenlabs_voices.py 2>&1)"
+          status=$?
+          printf '%s\n' "$output"
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if printf '%s\n' "$output" | grep -q "quota_exceeded"; then
+            echo "Live ElevenLabs smoke skipped because the account has no remaining credits."
+            exit 0
+          fi
+          exit "$status"
 
       - name: Record controlled skip
         if: steps.gate.outputs.run_live_smoke != 'true'

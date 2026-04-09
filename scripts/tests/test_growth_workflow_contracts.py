@@ -299,6 +299,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
     assert "agent-device" in source
+    assert "regression-free-sound-preview-ios.yaml" in ios_script
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
 
 

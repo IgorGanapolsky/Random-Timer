@@ -196,6 +196,20 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchProPurchase" in android_nav
 
 
+def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
+    ios_setup = _read(IOS_SETUP)
+    assert "timerManager.previewSound(type: sound)" in ios_setup
+    assert "timerManager.previewSound(type: sound2)" in ios_setup
+    assert (
+        "timerManager.previewSound(type: sound)\n"
+        "                                                presentPaywall(entryPoint: .soundGate)"
+    ) not in ios_setup
+    assert (
+        "timerManager.previewSound(type: sound2)\n"
+        "                                                    presentPaywall(entryPoint: .soundGate)"
+    ) not in ios_setup
+
+
 def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
