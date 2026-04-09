@@ -50,6 +50,15 @@ def get_credentials():
             scopes=SCOPES,
         )
 
+    gac = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+    if gac:
+        expanded = os.path.expanduser(gac)
+        if not os.path.isfile(expanded):
+            raise RuntimeError(
+                "GOOGLE_APPLICATION_CREDENTIALS points to a missing file "
+                f"({expanded}). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path."
+            )
+
     creds, _ = google.auth.default(scopes=SCOPES)
     return creds
 

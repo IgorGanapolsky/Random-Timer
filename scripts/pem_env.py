@@ -83,8 +83,14 @@ def load_google_play_service_account_dict(key_material: str) -> Dict[str, Any]:
     expanded = os.path.expanduser(raw)
     if os.path.isfile(expanded):
         raw = Path(expanded).read_text(encoding="utf-8")
+    elif raw and not raw.lstrip().startswith("{"):
+        raise ValueError(
+            f"Google Play key path is not a file (check GOOGLE_PLAY_JSON_KEY_PATH): {expanded}"
+        )
     if raw.startswith("\ufeff"):
         raw = raw[1:]
+    if not raw.strip():
+        raise ValueError("Google Play key material is empty")
     info = json.loads(raw)
     if not isinstance(info, dict):
         raise ValueError("Google Play key must be a JSON object")

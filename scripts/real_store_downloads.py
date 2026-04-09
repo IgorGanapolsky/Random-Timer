@@ -29,7 +29,12 @@ ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
 IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 IOS_APP_ID = "6758355312"
 
-sys.path.append(str(Path(__file__).parent.resolve()))
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+_ASC_DIR = _SCRIPTS_DIR / "asc"
+for _p in (_SCRIPTS_DIR, _ASC_DIR):
+    _s = str(_p)
+    if _s not in sys.path:
+        sys.path.insert(0, _s)
 
 
 def _asc_get_with_retries(
