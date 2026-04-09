@@ -48,6 +48,11 @@ class PemEnvTests(unittest.TestCase):
         self.assertNotIn("\\n", fixed["private_key"])
         self.assertIn("\nLINE\n", fixed["private_key"])
 
+    def test_load_google_play_rejects_missing_path(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            load_google_play_service_account_dict("/nonexistent/path/google-play-ci-missing.json")
+        self.assertIn("not a file", str(ctx.exception).lower())
+
     def test_load_google_play_dict_from_minimal_json_string(self) -> None:
         inner = {
             "type": "service_account",
