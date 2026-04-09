@@ -62,7 +62,7 @@ class AudioRegressionTest(unittest.TestCase):
         persona = ROOT / "content/pro_audio/voice_personas.json"
         data = json.loads(persona.read_text())
         name = data["female"]["primaryVoice"]["voiceName"]
-        self.assertEqual(name, "Ivanna", f"Female voice must be Ivanna, not {name}")
+        self.assertEqual(name, "Sarah", f"Female voice must be Sarah, not {name}")
 
     def test_female_voice_uses_turbo_model(self):
         persona = ROOT / "content/pro_audio/voice_personas.json"
@@ -73,10 +73,28 @@ class AudioRegressionTest(unittest.TestCase):
     def test_gentle_icon_not_lightning_bolt_android(self):
         src = ANDROID_SETUP.read_text()
         self.assertNotIn("\u26A1 Gentle", src, "Android Gentle icon must not be lightning bolt")
+        self.assertNotIn(
+            "\\uD83D\\uDD25 Gentle",
+            src,
+            "Android Gentle must not reuse the fire-alarm emoji escape",
+        )
+        self.assertIn(
+            "\\uD83D\\uDCA7 Gentle",
+            src,
+            "Android Gentle must use water-drop emoji escape (semantic iconography)",
+        )
 
     def test_gentle_icon_not_lightning_bolt_ios(self):
         src = IOS_SETUP.read_text()
         self.assertNotIn('"bolt.fill"', src, "iOS Gentle icon must not be bolt.fill")
+        gentle_idx = src.find('label: "Gentle"')
+        self.assertGreaterEqual(gentle_idx, 0, "Gentle sound row must exist")
+        window = src[gentle_idx : gentle_idx + 220]
+        self.assertIn(
+            'systemImage: "drop.fill"',
+            window,
+            "iOS Gentle must use drop.fill (distinct from flame.fill / bolt)",
+        )
 
     def test_alarm_sound_not_ai_generated(self):
         alarm = ROOT / "native-android/app/src/main/res/raw/alarm.mp3"

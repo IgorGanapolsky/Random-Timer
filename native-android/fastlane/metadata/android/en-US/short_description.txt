@@ -1,1 +1,1 @@
-Random timer with male & female AI coach voice for combat sports and HIIT.
+Random timer for MMA, boxing, HIIT & CrossFit. Male + female AI coach voice callouts.

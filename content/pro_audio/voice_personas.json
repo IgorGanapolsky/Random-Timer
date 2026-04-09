@@ -42,8 +42,8 @@
     "persona": "Warrior Drill Instructor",
     "modelId": "eleven_turbo_v2",
     "primaryVoice": {
-      "voiceId": "gE0owC0H9C8SzfDyIUtB",
-      "voiceName": "Ivanna",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL",
+      "voiceName": "Sarah",
       "probeText": "Move with purpose."
     },
     "fallbackVoices": [

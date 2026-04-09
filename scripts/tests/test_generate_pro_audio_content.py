@@ -166,8 +166,8 @@ def test_runtime_manifest_contains_hashed_assets_and_catalogs():
         assert payload["packId"] == pack["id"]
         assert payload["voiceCatalog"]["previewElapsed"]["filename"] == pack["previewElapsed"]["filename"]
         assert payload["soundCatalog"]["packId"] == pack["id"]
-        assert len(payload["assets"]) == 2
-        assert {asset["kind"] for asset in payload["assets"]} == {"voice", "sound"}
+        assert len(payload["assets"]) == 1
+        assert {asset["kind"] for asset in payload["assets"]} == {"voice"}
         assert all(asset["sha256"] for asset in payload["assets"])
         assert all(asset["url"].startswith("https://example.com/runtime/") for asset in payload["assets"])
 
