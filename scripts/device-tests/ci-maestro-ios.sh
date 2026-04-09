@@ -48,6 +48,8 @@ maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/ios-smoke
   | tee "$MAESTRO_ARTIFACT_DIR/ios-smoke.log"
 maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml" \
   | tee "$MAESTRO_ARTIFACT_DIR/pro-locks.log"
+maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml" \
+  | tee "$MAESTRO_ARTIFACT_DIR/free-sound-preview.log"
 maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml" \
   | tee "$MAESTRO_ARTIFACT_DIR/sound-arsenal-paywall.log"
 
