@@ -1,0 +1,5 @@
+Real tactical sound update:
+- Clearer, louder bell and gong sounds in Sound Arsenal.
+- Updated Sound Arsenal release notes for all Pro training cues.
+- Voice preview and Pro lock visibility remain aligned across the upgrade flow.
+- Reliability and release-readiness improvements for the next store rollout.

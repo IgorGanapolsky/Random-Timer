@@ -14,6 +14,7 @@ NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
 DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
+IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 
@@ -44,7 +45,12 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}" in source
-    assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
+    assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
+    assert "TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}" in source
+    assert "secrets.FIREBASE_REQUIRED_TESTER_EMAIL" not in source.split("Ensure TestFlight internal distribution visibility", 1)[1].split(
+        "Upload IPA artifact", 1
+    )[0]
     assert "Ensure TestFlight internal distribution visibility" in source
     assert "scripts/ensure_internal_distribution.py" in source
     assert "ios-testflight-signoff:" in source
@@ -114,6 +120,8 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     android_firebase_job = source.split("android-firebase-internal:", 1)[1].split(
         "android-play-internal:", 1
     )[0]
+    assert "Setup Python" in android_firebase_job
+    assert "python -m pip install --upgrade google-auth==2.48.0 requests==2.32.5" in android_firebase_job
     assert "Write Google Play service account key" not in android_firebase_job
     assert "Verify Google Play API access" not in android_firebase_job
     assert "1:624873778337:android:4503588605a3273edc14e0" not in source
@@ -313,10 +321,67 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "retry_agent_device_capture" in ios_script
     assert "AGENT_DEVICE_SESSION" in ios_script
     assert "MAESTRO_DRIVER_STARTUP_TIMEOUT=300000" in ios_script
+    assert "run_with_timeout" in ios_script
+    assert "IOS_BUILD_TIMEOUT_SECONDS" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS" in ios_script
+    assert "AGENT_DEVICE_TIMEOUT_SECONDS" in ios_script
+    assert "AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" in ios_script
+    assert "SIMCTL_TIMEOUT_SECONDS" in ios_script
+    assert "last-stage.txt" in ios_script
+    assert "record_stage" in ios_script
     assert "run_maestro_flow" in ios_script
+    assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
+    assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-120" in ios_script
+    assert "xcrun simctl privacy \"$SIMULATOR_UDID\" grant notifications \"$BUNDLE_ID\"" in ios_script
+    assert "xcrun simctl terminate \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
+    assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
     assert "Reset app state before Agent Device validates the home screen" in ios_script
     assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
-    assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("retry_agent_device \"wait-home\"")
+    assert "home-pre-agent.png" in ios_script
+    assert "Simulator home screenshot was not captured." in ios_script
+    assert "retry_agent_device \"wait-home\"" not in ios_script
+    assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
+    assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("agent-device diagnostic screenshot")
+    assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" not in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" agent_device" not in ios_script
+    assert "Agent Device screenshot/snapshot can hang or focus its runner shell" in ios_script
+    assert "agent-device diagnostic screenshot" in ios_script
+    assert "agent-device diagnostic snapshot" in ios_script
+    assert "run_with_timeout \"$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS\" npx -y agent-device" in ios_script
+    assert "::warning::Agent Device snapshot did not include expected home anchors" in ios_script
+    assert "retry_agent_device \"screenshot\"" not in ios_script
+    assert "retry_agent_device_capture \"snapshot\"" not in ios_script
+
+
+def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anchors():
+    pro_locks = (ROOT / ".maestro/regression-pro-locks-visible-ios.yaml").read_text(encoding="utf-8")
+    free_preview = (ROOT / ".maestro/regression-free-sound-preview-ios.yaml").read_text(encoding="utf-8")
+    paywall = (ROOT / ".maestro/regression-sound-arsenal-paywall-ios.yaml").read_text(encoding="utf-8")
+    voice_focus = (ROOT / ".maestro/regression-voice-focus-ios.yaml").read_text(encoding="utf-8")
+    pro_preview = (ROOT / ".maestro/regression-pro-sound-preview-not-paywall-ios.yaml").read_text(encoding="utf-8")
+
+    assert "Unlock Voice Callouts" in pro_locks
+    assert "Unlock Sound Arsenal" in pro_locks
+    assert "timeout: 10000" in pro_locks
+    assert "timeout: 10000" in free_preview
+    assert "timeout: 10000" in paywall
+    assert "- stopApp" in pro_locks
+    assert "- stopApp" in free_preview
+    assert "- stopApp" in paywall
+    assert "timeout: 10000" in voice_focus
+    assert pro_preview.count("timeout: 10000") >= 2
+
+
+def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
+    source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
+
+    assert "- tapOn: 'Start Timer'" in source
+    assert "- stopApp" in source
+    assert ".*Timer running.*" not in source
+    assert "text: 'Pause'" not in source
+    assert "text: 'Stop'" not in source
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():

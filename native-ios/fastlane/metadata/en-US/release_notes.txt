@@ -1,5 +1,6 @@
-• Upgraded Sound Arsenal — gong, siren, bell, whistle regenerated at studio quality
-• Added voice callout and feature usage analytics
-• Fixed timer progress indicator for true unpredictability
-• Improved alarm response tracking
-• Bug fixes and performance improvements
+• Real Sound Arsenal — all 8 Pro sounds replaced with studio-quality recordings
+• G.I. Jane female voice callouts with emotional intensity
+• Boxing bell, stadium air horn, military drum roll — each sound is authentic
+• Male & Female voice selection with instant preview
+• Pro lock indicators on all premium features
+• Performance and reliability improvements

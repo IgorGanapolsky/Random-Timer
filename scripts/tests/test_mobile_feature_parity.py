@@ -115,6 +115,8 @@ def test_voice_callouts_present_on_both_platforms():
     assert 'if (config.voiceEnabled || !isPro)' in android_setup
     assert android_setup.index('text = "PREVIEW"') < android_setup.index("VoiceGender.entries.forEach")
     assert 'if (gender == VoiceGender.MALE)' in android_setup
+    assert '.accessibilityLabel("Preview Voice Callouts")' in ios_setup
+    assert '.accessibilityLabel("Unlock Voice Callouts")' in ios_setup
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models

@@ -6,6 +6,7 @@ appId: com.igorganapolsky.randomtimer
 - scrollUntilVisible:
     element: "SOUND ARSENAL"
     direction: DOWN
+    timeout: 10000
 # Timer setup forces showArsenal on appear, so the toggle reads "Hide Sound Arsenal" for free users.
 - tapOn:
     text: "Preview Sounds"
@@ -21,3 +22,4 @@ appId: com.igorganapolsky.randomtimer
     optional: true
 - assertVisible: "SOUND ARSENAL"
 - takeScreenshot: evidence/ios-free-sound-preview
+- stopApp

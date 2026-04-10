@@ -1,6 +1,7 @@
-• AI Drill Sergeant voice callouts with 31 unique tactical cues
-• Elapsed-time announcements on the minute
-• Redesigned Pro upgrade screen
-• Voice callouts play on media volume (not notification)
-• Fixed voice callout timing and variety
-• New tactical compass app icon
+• Real Sound Arsenal — all 8 Pro sounds replaced with studio-quality recordings
+• G.I. Jane female voice callouts with emotional intensity
+• Boxing bell, stadium air horn, military drum roll — each sound is authentic
+• Male & Female voice selection with instant preview
+• Pro lock indicators on all premium features
+• Timer range minimum 5 seconds (prevents instant fire)
+• Performance and reliability improvements

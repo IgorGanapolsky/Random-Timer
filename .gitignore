@@ -136,3 +136,4 @@ apple_status.json
 
 # Local evidence captures
 evidence/
+.playwright-mcp/

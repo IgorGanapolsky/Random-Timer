@@ -288,8 +288,8 @@ jobs:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
-          TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}
-          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: ${{ secrets.TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS || 'false' }}
+          TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"
+          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"
         run: fastlane beta
         working-directory: native-ios
 
@@ -309,7 +309,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY_PATH: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
           TESTFLIGHT_INTERNAL_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}
-          TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.FIREBASE_REQUIRED_TESTER_EMAIL || '' }}
+          TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}
         run: |
           set -euo pipefail
           VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
@@ -568,6 +568,14 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Firebase verification Python dependencies
+        run: python -m pip install --upgrade google-auth==2.48.0 requests==2.32.5
 
       - name: Create google-services.json
         working-directory: native-android
