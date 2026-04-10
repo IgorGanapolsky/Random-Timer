@@ -7,11 +7,13 @@ appId: com.igorganapolsky.randomtimer
 - scrollUntilVisible:
     element: "SOUND ARSENAL"
     direction: DOWN
+    timeout: 10000
 # Expand Sound Arsenal
 - tapOn: "Preview Sounds"
 - scrollUntilVisible:
     element: "Klaxon"
     direction: DOWN
+    timeout: 10000
 # Tap a locked Pro sound
 - tapOn: "Klaxon"
 # Paywall should NOT appear — assert it's NOT visible

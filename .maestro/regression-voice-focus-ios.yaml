@@ -5,6 +5,7 @@ appId: com.igorganapolsky.randomtimer
 - scrollUntilVisible:
     element: "Voice Callouts"
     direction: DOWN
+    timeout: 10000
 - assertVisible: "Voice Callouts"
 - assertVisible:
     text: ".*voice prompts.*"

@@ -171,6 +171,7 @@ struct TimerSetupScreen: View {
                                             .foregroundColor(.accentPrimary)
                                             .cornerRadius(4)
                                     }
+                                    .accessibilityLabel("Preview Voice Callouts")
 
                                     Button {
                                         presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
@@ -186,6 +187,7 @@ struct TimerSetupScreen: View {
                                         .foregroundColor(.accentPrimary)
                                         .cornerRadius(4)
                                     }
+                                    .accessibilityLabel("Unlock Voice Callouts")
                                 }
                             }
                         }

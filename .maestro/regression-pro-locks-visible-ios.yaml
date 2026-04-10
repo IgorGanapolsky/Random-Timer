@@ -11,10 +11,13 @@ appId: com.igorganapolsky.randomtimer
 - scrollUntilVisible:
     element: "Voice Callouts"
     direction: DOWN
-- assertVisible: "PRO"
+    timeout: 10000
+- assertVisible: "Preview Voice Callouts"
+- assertVisible: "Unlock Voice Callouts"
 # Sound Arsenal lock must be visible to free users
 - scrollUntilVisible:
-    element: "SOUND ARSENAL"
+    element: "Unlock Sound Arsenal"
     direction: DOWN
+    timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - takeScreenshot: evidence/ios-pro-locks-visible
