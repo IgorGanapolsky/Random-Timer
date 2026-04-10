@@ -315,14 +315,23 @@ class FirebaseInternalDistributor:
                 )
 
             group_summaries: list[str] = []
+            group_warnings: list[str] = []
             for alias in group_aliases:
                 group = self._get_group(alias)
                 tester_count = int(group.get("testerCount", 0))
                 release_count = int(group.get("releaseCount", 0))
                 if tester_count <= 0:
-                    return _error(f"Firebase group '{alias}' has no testers")
+                    message = f"Firebase group '{alias}' has no testers"
+                    if direct_tester_emails:
+                        group_warnings.append(message)
+                        continue
+                    return _error(message)
                 if release_count <= 0:
-                    return _error(f"Firebase group '{alias}' has no accessible releases")
+                    message = f"Firebase group '{alias}' has no accessible releases"
+                    if direct_tester_emails:
+                        group_warnings.append(message)
+                        continue
+                    return _error(message)
                 group_summaries.append(f"{alias}(testers={tester_count}, releases={release_count})")
 
             direct_summary = (
@@ -342,6 +351,7 @@ class FirebaseInternalDistributor:
                     f"Firebase release {release.get('displayVersion', '?')} ({release.get('buildVersion', '?')}) "
                     f"is distributed. Firebase distribute API accepted the release; {direct_summary}. "
                     f"Groups verified: {', '.join(group_summaries) if group_summaries else 'none'}"
+                    f"{'; group warnings: ' + '; '.join(group_warnings) if group_warnings else ''}"
                     f"{propagation_summary}."
                 ),
             }
