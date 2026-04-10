@@ -307,8 +307,11 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
     assert "agent-device" in source
+    assert "native-ios/build/device-tests-ios" not in source
     assert "regression-free-sound-preview-ios.yaml" in ios_script
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
+    assert "retry_agent_device_capture" in ios_script
+    assert "AGENT_DEVICE_SESSION" in ios_script
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():

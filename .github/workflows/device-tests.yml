@@ -176,6 +176,4 @@ jobs:
           path: |
             native-ios/build/maestro
             native-ios/build/agent-device
-            native-ios/build/device-tests-ios
-            ~/.maestro/tests
           if-no-files-found: warn
