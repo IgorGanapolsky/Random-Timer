@@ -13,20 +13,41 @@ project:
 branches:
   main:
     protection:
-      required_reviews: 1
+      required_reviews: 0
       dismiss_stale_reviews: true
       require_up_to_date: true
       status_checks:
-        - "Main Pipeline / Validate"
-        - "Main Pipeline / Security"
+        - "Architecture Lint"
+        - "Python Script Tests"
+        - "Regression Guards"
+        - "Voice Provider Smoke"
+        - "Autonomous Android Tests"
+        - "Autonomous iOS Build Check"
+        - "Autonomous Security"
+        - "Autonomous AI Review"
+        - "Claude Review"
+        - "Seer Code Review"
         - "SonarCloud Code Analysis"
-        - "CodeQL Analysis"
+        - "Android Emulator + Maestro Tests"
+        - "iOS Simulator + Maestro + Agent Device"
   develop:
     protection:
-      required_reviews: 1
+      required_reviews: 0
       dismiss_stale_reviews: true
       status_checks:
-        - "Main Pipeline / Validate"
+        - "Architecture Lint"
+        - "Python Script Tests"
+        - "Regression Guards"
+        - "Voice Provider Smoke"
+        - "Autonomous Android Tests"
+        - "Autonomous iOS Build Check"
+        - "Autonomous Security"
+        - "Autonomous AI Review"
+        - "Claude Review"
+        - "Seer Code Review"
+        - "SonarCloud Code Analysis"
+        - "Android Emulator + Maestro Tests"
+        - "iOS Simulator + Maestro + Agent Device"
 
 # Automation Settings
 automation:

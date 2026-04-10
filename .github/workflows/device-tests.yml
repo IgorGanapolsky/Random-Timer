@@ -3,12 +3,6 @@ name: Device Tests
 on:
   pull_request:
     branches: [develop, main]
-    paths:
-      - 'native-android/**'
-      - 'native-ios/**'
-      - '.maestro/**'
-      - 'scripts/device-tests/**'
-      - '.github/workflows/device-tests.yml'
   workflow_dispatch:
 
 concurrency:
@@ -182,6 +176,4 @@ jobs:
           path: |
             native-ios/build/maestro
             native-ios/build/agent-device
-            native-ios/build/device-tests-ios
-            ~/.maestro/tests
           if-no-files-found: warn

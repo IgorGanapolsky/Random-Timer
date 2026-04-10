@@ -13,6 +13,53 @@ MAESTRO_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/maestro"
 AGENT_DEVICE_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/agent-device"
 
 mkdir -p "$MAESTRO_ARTIFACT_DIR" "$AGENT_DEVICE_ARTIFACT_DIR"
+export AGENT_DEVICE_SESSION="${AGENT_DEVICE_SESSION:-random-timer-ios-ci}"
+export AGENT_DEVICE_RUN_ID="${GITHUB_RUN_ID:-local}"
+export AGENT_DEVICE_SESSION_LOCK=strip
+
+copy_agent_device_logs() {
+  if [ -d "$HOME/.agent-device/logs" ]; then
+    rm -rf "$AGENT_DEVICE_ARTIFACT_DIR/logs"
+    cp -R "$HOME/.agent-device/logs" "$AGENT_DEVICE_ARTIFACT_DIR/logs"
+  fi
+}
+
+trap copy_agent_device_logs EXIT
+
+agent_device() {
+  npx -y agent-device "$@" --platform ios --udid "$SIMULATOR_UDID" --no-record
+}
+
+retry_agent_device() {
+  local label="$1"
+  shift
+  local attempt
+  for attempt in 1 2 3; do
+    echo "Agent Device ${label}: attempt ${attempt}/3"
+    if "$@"; then
+      return 0
+    fi
+    copy_agent_device_logs
+    sleep 5
+  done
+  return 1
+}
+
+retry_agent_device_capture() {
+  local label="$1"
+  local output="$2"
+  shift 2
+  local attempt
+  for attempt in 1 2 3; do
+    echo "Agent Device ${label}: attempt ${attempt}/3"
+    if "$@" > "$output"; then
+      return 0
+    fi
+    copy_agent_device_logs
+    sleep 5
+  done
+  return 1
+}
 
 if ! command -v maestro >/dev/null 2>&1; then
   curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -53,10 +100,11 @@ maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regressio
 maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml" \
   | tee "$MAESTRO_ARTIFACT_DIR/sound-arsenal-paywall.log"
 
-npx -y agent-device install "$BUNDLE_ID" "$APP_PATH" --platform ios --udid "$SIMULATOR_UDID"
-npx -y agent-device open "$BUNDLE_ID" --platform ios --udid "$SIMULATOR_UDID" --relaunch
-npx -y agent-device snapshot -i --platform ios --udid "$SIMULATOR_UDID" \
-  > "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
+retry_agent_device "install" agent_device install "$BUNDLE_ID" "$APP_PATH"
+retry_agent_device "open" agent_device open "$BUNDLE_ID" --relaunch
+retry_agent_device "wait-home" agent_device wait "Random Tactical Timer" 60000
+retry_agent_device_capture "snapshot" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt" \
+  agent_device snapshot -i -c --depth 8
 grep -q "Random Tactical Timer" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
-npx -y agent-device screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png" --platform ios --udid "$SIMULATOR_UDID"
-npx -y agent-device close "$BUNDLE_ID" --platform ios --udid "$SIMULATOR_UDID"
+retry_agent_device "screenshot" agent_device screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
+agent_device close "$BUNDLE_ID" || true

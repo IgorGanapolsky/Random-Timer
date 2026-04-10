@@ -299,13 +299,19 @@ def test_workflow_contract_exists_and_points_at_canonical_proof_commands():
 def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     source = DEVICE_TESTS_WORKFLOW.read_text(encoding="utf-8")
     ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
+    trigger_section = source.split("concurrency:", 1)[0]
 
-    assert "native-ios/**" in source
+    assert "pull_request:" in trigger_section
+    assert "branches: [develop, main]" in trigger_section
+    assert "paths:" not in trigger_section
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
     assert "agent-device" in source
+    assert "native-ios/build/device-tests-ios" not in source
     assert "regression-free-sound-preview-ios.yaml" in ios_script
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
+    assert "retry_agent_device_capture" in ios_script
+    assert "AGENT_DEVICE_SESSION" in ios_script
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():
