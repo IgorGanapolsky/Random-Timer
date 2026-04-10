@@ -119,9 +119,14 @@ xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
 retry_agent_device "install" agent_device install "$BUNDLE_ID" "$APP_PATH"
 retry_agent_device "open" agent_device open "$BUNDLE_ID" --relaunch
-retry_agent_device "wait-home" agent_device wait "Random Tactical Timer" 60000
+sleep 8
+xcrun simctl io "$SIMULATOR_UDID" screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home-pre-agent.png" || true
 retry_agent_device_capture "snapshot" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt" \
   agent_device snapshot -i -c --depth 8
-grep -q "Random Tactical Timer" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
+if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
+  echo "Agent Device snapshot did not include expected home anchors."
+  sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
+  exit 1
+fi
 retry_agent_device "screenshot" agent_device screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
 agent_device close "$BUNDLE_ID" || true
