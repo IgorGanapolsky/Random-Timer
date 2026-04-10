@@ -108,21 +108,42 @@ class _FakeRequests:
         raise AssertionError(url)
 
 
-def test_firebase_internal_distribution_distributes_and_verifies():
-    fake_requests = _FakeRequests()
+class _FakeRequestsWithoutProjectTesters(_FakeRequests):
+    def request(self, method, url, headers=None, params=None, json=None, timeout=None):
+        if url.endswith("/testers"):
+            return _FakeResponse({"testers": []})
+        return super().request(method, url, headers=headers, params=params, json=json, timeout=timeout)
+
+
+def _firebase_verifier(fake_requests):
     verifier = eid.FirebaseInternalDistributor(
         app_id="1:712918404489:android:abc",
         service_account_key="{}",
         requests_module=fake_requests,
     )
     verifier._get_token = lambda: "token"
-    result = verifier.ensure(
+    return verifier
+
+
+def _ensure_firebase(
+    fake_requests,
+    *,
+    group_aliases=None,
+    tester_emails=None,
+    required_testers=None,
+):
+    return _firebase_verifier(fake_requests).ensure(
         build_version="557",
         display_version="1.3.18",
-        group_aliases=["internal-testers"],
-        tester_emails=["iganapolsky@gmail.com"],
-        required_testers=["iganapolsky@gmail.com"],
+        group_aliases=group_aliases if group_aliases is not None else ["internal-testers"],
+        tester_emails=tester_emails if tester_emails is not None else ["iganapolsky@gmail.com"],
+        required_testers=required_testers if required_testers is not None else ["iganapolsky@gmail.com"],
     )
+
+
+def test_firebase_internal_distribution_distributes_and_verifies():
+    fake_requests = _FakeRequests()
+    result = _ensure_firebase(fake_requests)
 
     assert result["passed"] is True
     assert result["status"] == "VISIBLE"
@@ -131,26 +152,7 @@ def test_firebase_internal_distribution_distributes_and_verifies():
 
 
 def test_firebase_internal_distribution_allows_project_tester_list_propagation_delay():
-    class _MissingTesterRequests(_FakeRequests):
-        def request(self, method, url, headers=None, params=None, json=None, timeout=None):
-            if url.endswith("/testers"):
-                return _FakeResponse({"testers": []})
-            return super().request(method, url, headers=headers, params=params, json=json, timeout=timeout)
-
-    fake_requests = _MissingTesterRequests()
-    verifier = eid.FirebaseInternalDistributor(
-        app_id="1:712918404489:android:abc",
-        service_account_key="{}",
-        requests_module=fake_requests,
-    )
-    verifier._get_token = lambda: "token"
-    result = verifier.ensure(
-        build_version="557",
-        display_version="1.3.18",
-        group_aliases=["internal-testers"],
-        tester_emails=["iganapolsky@gmail.com"],
-        required_testers=["iganapolsky@gmail.com"],
-    )
+    result = _ensure_firebase(_FakeRequestsWithoutProjectTesters())
 
     assert result["passed"] is True
     assert result["status"] == "VISIBLE"
@@ -159,23 +161,8 @@ def test_firebase_internal_distribution_allows_project_tester_list_propagation_d
 
 
 def test_firebase_internal_distribution_fails_when_required_tester_not_distributed_or_visible():
-    class _MissingTesterRequests(_FakeRequests):
-        def request(self, method, url, headers=None, params=None, json=None, timeout=None):
-            if url.endswith("/testers"):
-                return _FakeResponse({"testers": []})
-            return super().request(method, url, headers=headers, params=params, json=json, timeout=timeout)
-
-    fake_requests = _MissingTesterRequests()
-    verifier = eid.FirebaseInternalDistributor(
-        app_id="1:712918404489:android:abc",
-        service_account_key="{}",
-        requests_module=fake_requests,
-    )
-    verifier._get_token = lambda: "token"
-    result = verifier.ensure(
-        build_version="557",
-        display_version="1.3.18",
-        group_aliases=["internal-testers"],
+    result = _ensure_firebase(
+        _FakeRequestsWithoutProjectTesters(),
         tester_emails=["other@example.com"],
         required_testers=["iganapolsky@gmail.com"],
     )
@@ -185,16 +172,8 @@ def test_firebase_internal_distribution_fails_when_required_tester_not_distribut
 
 
 def test_firebase_internal_distribution_fails_without_visibility_targets():
-    fake_requests = _FakeRequests()
-    verifier = eid.FirebaseInternalDistributor(
-        app_id="1:712918404489:android:abc",
-        service_account_key="{}",
-        requests_module=fake_requests,
-    )
-    verifier._get_token = lambda: "token"
-    result = verifier.ensure(
-        build_version="557",
-        display_version="1.3.18",
+    result = _ensure_firebase(
+        _FakeRequests(),
         group_aliases=[],
         tester_emails=[],
         required_testers=[],
