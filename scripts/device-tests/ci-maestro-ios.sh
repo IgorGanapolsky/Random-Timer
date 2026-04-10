@@ -15,6 +15,7 @@ LAST_STAGE_FILE="$AGENT_DEVICE_ARTIFACT_DIR/last-stage.txt"
 IOS_BUILD_TIMEOUT_SECONDS="${IOS_BUILD_TIMEOUT_SECONDS:-900}"
 MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-420}"
 AGENT_DEVICE_TIMEOUT_SECONDS="${AGENT_DEVICE_TIMEOUT_SECONDS:-120}"
+AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS="${AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS:-30}"
 SIMCTL_TIMEOUT_SECONDS="${SIMCTL_TIMEOUT_SECONDS:-120}"
 
 mkdir -p "$MAESTRO_ARTIFACT_DIR" "$AGENT_DEVICE_ARTIFACT_DIR"
@@ -172,17 +173,26 @@ if [ ! -s "$AGENT_DEVICE_ARTIFACT_DIR/home-pre-agent.png" ]; then
   echo "Simulator home screenshot was not captured."
   exit 1
 fi
-retry_agent_device "screenshot" "$AGENT_DEVICE_TIMEOUT_SECONDS" screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
 
-# Agent Device snapshot can focus its runner shell instead of the app on macOS runners.
-# Keep it as a diagnostic artifact, but let Maestro flow assertions and screenshots remain the blocking proof.
-if retry_agent_device_capture "snapshot" "$AGENT_DEVICE_TIMEOUT_SECONDS" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt" \
-  snapshot -i -c --depth 8; then
+# Agent Device screenshot/snapshot can hang or focus its runner shell on macOS runners.
+# Keep them as bounded diagnostic artifacts; Maestro assertions and simctl screenshots are the blocking app proof.
+record_stage "agent-device diagnostic screenshot"
+if ! run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
+  screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png" --platform ios --udid "$SIMULATOR_UDID" --no-record; then
+  echo "::warning::Agent Device screenshot failed; preserving simctl screenshot and logs."
+  copy_agent_device_logs
+fi
+
+record_stage "agent-device diagnostic snapshot"
+if run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
+  snapshot -i -c --depth 8 --platform ios --udid "$SIMULATOR_UDID" --no-record \
+  > "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
   if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
     echo "::warning::Agent Device snapshot did not include expected home anchors; preserving diagnostic snapshot."
     sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
   fi
 else
   echo "::warning::Agent Device snapshot failed; preserving logs and screenshot artifacts."
+  copy_agent_device_logs
 fi
 agent_device close "$BUNDLE_ID" || true
