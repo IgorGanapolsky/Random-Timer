@@ -285,6 +285,12 @@ class FirebaseInternalDistributor:
     ) -> dict[str, Any]:
         try:
             release = self._find_release(build_version=build_version, display_version=display_version)
+            if not tester_emails and not group_aliases:
+                return _error(
+                    "Firebase release found, but no tester emails or group aliases were provided for visibility verification"
+                )
+
+            direct_tester_emails = {email.strip().lower() for email in tester_emails if email.strip()}
             self._distribute_release(
                 release["name"],
                 tester_emails=tester_emails,
@@ -296,9 +302,17 @@ class FirebaseInternalDistributor:
                 for tester in self._list_testers()
                 if tester.get("email")
             }
-            missing_testers = [email for email in required_testers if email.lower() not in project_testers]
-            if missing_testers:
-                return _error("Required Firebase testers missing from project tester list: " + ", ".join(missing_testers))
+            missing_project_testers = [email for email in required_testers if email.lower() not in project_testers]
+            missing_undistributed_testers = [
+                email
+                for email in missing_project_testers
+                if email.lower() not in direct_tester_emails
+            ]
+            if missing_undistributed_testers:
+                return _error(
+                    "Required Firebase testers are missing from the project tester list "
+                    f"and were not included in direct distribution (count={len(missing_undistributed_testers)})"
+                )
 
             group_summaries: list[str] = []
             for alias in group_aliases:
@@ -311,13 +325,24 @@ class FirebaseInternalDistributor:
                     return _error(f"Firebase group '{alias}' has no accessible releases")
                 group_summaries.append(f"{alias}(testers={tester_count}, releases={release_count})")
 
+            direct_summary = (
+                f"direct tester distribution accepted for {len(direct_tester_emails)} tester(s)"
+                if direct_tester_emails
+                else "no direct tester emails requested"
+            )
+            propagation_summary = (
+                f"; project tester list pending for {len(missing_project_testers)} required tester(s)"
+                if missing_project_testers
+                else ""
+            )
             return {
                 "passed": True,
                 "status": "VISIBLE",
                 "details": (
                     f"Firebase release {release.get('displayVersion', '?')} ({release.get('buildVersion', '?')}) "
-                    f"is distributed. Required testers exist and groups verified: "
-                    f"{', '.join(group_summaries) if group_summaries else 'direct tester distribution'}."
+                    f"is distributed. Firebase distribute API accepted the release; {direct_summary}. "
+                    f"Groups verified: {', '.join(group_summaries) if group_summaries else 'none'}"
+                    f"{propagation_summary}."
                 ),
             }
         except Exception as exc:
