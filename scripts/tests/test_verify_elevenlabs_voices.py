@@ -54,6 +54,12 @@ def test_read_error_body_empty_on_read_failure() -> None:
     assert vev._read_error_body(err) == ""
 
 
+def test_extract_error_status_from_detail_object() -> None:
+    body = json.dumps({"detail": {"status": "payment_issue", "message": "billing"}})
+    assert vev._extract_error_status(body) == "payment_issue"
+    assert vev._is_controlled_provider_unavailable(body) is True
+
+
 @patch("scripts.verify_elevenlabs_voices.urllib.request.urlopen")
 def test_probe_synthesis_success(mock_urlopen: MagicMock) -> None:
     mock_cm = MagicMock()
@@ -85,6 +91,29 @@ def test_probe_synthesis_http_error(mock_urlopen: MagicMock) -> None:
     mock_urlopen.side_effect = err
 
     with pytest.raises(RuntimeError, match="HTTP 403"):
+        vev._probe_synthesis(
+            api_key="k",
+            voice_id=ALLOWED_ID,
+            model_id="m",
+            text="t",
+            label="x",
+        )
+
+
+@patch("scripts.verify_elevenlabs_voices.urllib.request.urlopen")
+def test_probe_synthesis_payment_issue_is_controlled_skip(mock_urlopen: MagicMock) -> None:
+    err = urllib.error.HTTPError(
+        "https://api.elevenlabs.io",
+        401,
+        "Unauthorized",
+        {},
+        io.BytesIO(
+            b'{"detail":{"status":"payment_issue","message":"Your subscription has a failed or incomplete payment."}}'
+        ),
+    )
+    mock_urlopen.side_effect = err
+
+    with pytest.raises(vev.ControlledProviderUnavailable, match="payment_issue"):
         vev._probe_synthesis(
             api_key="k",
             voice_id=ALLOWED_ID,
@@ -154,3 +183,38 @@ def test_main_success_json(mock_probe: MagicMock, tmp_path: Path, capsys: pytest
     out = json.loads(capsys.readouterr().out)
     assert out["provider"] == "elevenlabs"
     assert len(out["verifiedProbes"]) == 3
+
+
+@patch("scripts.verify_elevenlabs_voices._probe_synthesis")
+def test_main_provider_unavailable_returns_controlled_skip(
+    mock_probe: MagicMock,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    contract = {
+        "provider": "elevenlabs",
+        "male": {
+            "voiceId": ALLOWED_ID,
+            "modelId": "eleven_multilingual_v2",
+            "probeText": "a",
+        },
+        "female": {
+            "modelId": "eleven_multilingual_v2",
+            "primaryVoice": {
+                "voiceId": "AZnzlk1XvdvUeBnXmlld",
+                "probeText": "b",
+            },
+            "fallbackVoices": [],
+        },
+    }
+    cpath = tmp_path / "contract.json"
+    cpath.write_text(json.dumps(contract), encoding="utf-8")
+    mock_probe.side_effect = vev.ControlledProviderUnavailable("payment_issue with HTTP 401")
+
+    with patch.dict("os.environ", {"ELEVENLABS_API_KEY": "test-key"}):
+        with patch("sys.argv", ["verify_elevenlabs_voices.py", "--contract", str(cpath)]):
+            assert vev.main() == 78
+
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "controlled_skip"
+    assert "payment_issue" in out["reason"]

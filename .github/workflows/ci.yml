@@ -141,8 +141,12 @@ jobs:
           if [ "$status" -eq 0 ]; then
             exit 0
           fi
-          if printf '%s\n' "$output" | grep -q "quota_exceeded"; then
-            echo "Live ElevenLabs smoke skipped because the account has no remaining credits."
+          if [ "$status" -eq 78 ]; then
+            echo "::warning::Live ElevenLabs smoke recorded a controlled skip for provider account availability."
+            exit 0
+          fi
+          if printf '%s\n' "$output" | grep -Eq "quota_exceeded|payment_issue|insufficient_credits|no remaining credits|failed or incomplete payment"; then
+            echo "::warning::Live ElevenLabs smoke skipped because the provider account is unavailable for billing or credit reasons."
             exit 0
           fi
           exit "$status"
