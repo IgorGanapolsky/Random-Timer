@@ -66,7 +66,7 @@ def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native
     internal_source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
     release_source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    ruby_pin = "ruby/setup-ruby@v1.300.0"
+    ruby_pin = "ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0"
     assert ruby_pin in internal_source
     assert ruby_pin in release_source
 

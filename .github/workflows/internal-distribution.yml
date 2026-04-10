@@ -209,7 +209,7 @@ jobs:
           python-version: "3.11"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.300.0
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -379,7 +379,7 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: "temurin"
           java-version: "17"
@@ -393,7 +393,7 @@ jobs:
         run: python -m pip install google-auth requests
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.300.0
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -564,7 +564,7 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: "temurin"
           java-version: "17"
