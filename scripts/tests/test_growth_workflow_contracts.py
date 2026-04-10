@@ -111,11 +111,20 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     assert "android-apk-firebase-internal" in source or "app-release.apk" in source
     assert "groups: ${{ env.FIREBASE_INTERNAL_GROUPS }}" in source
     assert "Verify Firebase distribution read-back" in source
+    firebase_auth_section = source.split("- name: Fail fast on Firebase distribution auth inputs", 1)[1].split(
+        "- name: Preflight release checks (Android)", 1
+    )[0]
+    assert "FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}" in firebase_auth_section
+    assert "COMBINED_FIREBASE_TESTERS" in firebase_auth_section
+    assert 'os.environ.get("FIREBASE_REQUIRED_TESTER_EMAIL", "")' in firebase_auth_section
+    assert 'echo "FIREBASE_INTERNAL_TESTERS=${COMBINED_FIREBASE_TESTERS}" >> "$GITHUB_ENV"' in firebase_auth_section
     firebase_section = source.split("- name: Distribute to Firebase", 1)[1].split(
         "- name: Upload Android APK artifact", 1
     )[0]
     assert "continue-on-error: true" not in firebase_section
     assert "Warn on Firebase distribution failure" not in firebase_section
+    assert "FIREBASE_REQUIRED_TESTER_EMAIL" not in firebase_section
+    assert '--firebase-required-testers "$FIREBASE_INTERNAL_TESTERS"' in firebase_section
 
     android_firebase_job = source.split("android-firebase-internal:", 1)[1].split(
         "android-play-internal:", 1
