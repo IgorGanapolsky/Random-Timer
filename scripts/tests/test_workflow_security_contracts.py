@@ -27,7 +27,7 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
     expected_pins = {
         ".github/workflows/android17-canary.yml": "android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407",
         ".github/workflows/device-tests.yml": "reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7",
-        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@v1.300.0",
+        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0",
         ".github/workflows/internal-distribution.yml#firebase": "wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6",
         ".github/workflows/security.yml#snyk": "snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04",
         ".github/workflows/security.yml#dependency-check": "dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c",

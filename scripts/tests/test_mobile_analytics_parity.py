@@ -28,6 +28,22 @@ def _extract_string_constants(block: str, pattern: str) -> set[str]:
     return set(re.findall(pattern, block))
 
 
+def _count_android_timer_completed_track_calls(source: str) -> int:
+    lines = source.splitlines()
+    count = 0
+    for index, line in enumerate(lines[:-1]):
+        if "analyticsService.track(" not in line:
+            continue
+        next_index = index + 1
+        while next_index < len(lines) and not lines[next_index].strip():
+            next_index += 1
+        if next_index < len(lines) and lines[next_index].strip().startswith(
+            "AnalyticsEvents.TIMER_COMPLETED",
+        ):
+            count += 1
+    return count
+
+
 class MobileAnalyticsParityTests(unittest.TestCase):
     def test_event_names_match_between_ios_and_android(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
@@ -107,11 +123,8 @@ class MobileAnalyticsParityTests(unittest.TestCase):
 
         vm = ANDROID_TIMER_VM.read_text(encoding="utf-8")
         svc = ANDROID_TIMER_SERVICE.read_text(encoding="utf-8")
-        kt_pattern = re.compile(
-            r"analyticsService\.track\(\s*\n\s*AnalyticsEvents\.TIMER_COMPLETED",
-        )
-        self.assertEqual(len(kt_pattern.findall(vm)), 1)
-        self.assertEqual(len(kt_pattern.findall(svc)), 1)
+        self.assertEqual(_count_android_timer_completed_track_calls(vm), 1)
+        self.assertEqual(_count_android_timer_completed_track_calls(svc), 1)
 
 
 if __name__ == "__main__":
