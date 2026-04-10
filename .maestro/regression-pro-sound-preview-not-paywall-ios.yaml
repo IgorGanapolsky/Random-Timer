@@ -5,11 +5,20 @@ appId: com.igorganapolsky.randomtimer
 - launchApp:
     clearState: true
 - scrollUntilVisible:
-    element: "SOUND ARSENAL"
+    element: "Unlock Sound Arsenal"
     direction: DOWN
     timeout: 10000
 # Expand Sound Arsenal
-- tapOn: "Preview Sounds"
+- tapOn:
+    text: "Preview Sounds"
+    optional: true
+- tapOn:
+    text: "View Sound Arsenal"
+    optional: true
+- scrollUntilVisible:
+    element: "Tap a sound to preview. Unlock Pro to equip it."
+    direction: DOWN
+    timeout: 10000
 - scrollUntilVisible:
     element: "Klaxon"
     direction: DOWN

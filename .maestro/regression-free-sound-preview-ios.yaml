@@ -4,7 +4,7 @@ appId: com.igorganapolsky.randomtimer
 - launchApp:
     clearState: true
 - scrollUntilVisible:
-    element: "SOUND ARSENAL"
+    element: "Unlock Sound Arsenal"
     direction: DOWN
     timeout: 10000
 # Timer setup forces showArsenal on appear, so the toggle reads "Hide Sound Arsenal" for free users.
@@ -14,12 +14,15 @@ appId: com.igorganapolsky.randomtimer
 - tapOn:
     text: "View Sound Arsenal"
     optional: true
-- assertVisible: "Tap a sound to preview. Unlock Pro to equip it."
+- scrollUntilVisible:
+    element: "Tap a sound to preview. Unlock Pro to equip it."
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     text: "Gentle.*"
 - assertNotVisible:
     text: "Unlock Full Training Mode"
     optional: true
-- assertVisible: "SOUND ARSENAL"
+- assertVisible: "Tap a sound to preview. Unlock Pro to equip it."
 - takeScreenshot: evidence/ios-free-sound-preview
 - stopApp

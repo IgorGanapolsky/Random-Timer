@@ -376,6 +376,8 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
     assert "timeout: 10000" in pro_locks
     assert "timeout: 10000" in free_preview
     assert "timeout: 10000" in paywall
+    assert 'element: "Unlock Sound Arsenal"' in free_preview
+    assert 'element: "SOUND ARSENAL"' not in free_preview
     assert 'element: "Unlock Sound Arsenal"' in paywall
     assert 'element: "SOUND ARSENAL"' not in paywall
     assert "- stopApp" in pro_locks
@@ -383,6 +385,8 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
     assert "- stopApp" in paywall
     assert "timeout: 10000" in voice_focus
     assert pro_preview.count("timeout: 10000") >= 2
+    assert 'element: "Unlock Sound Arsenal"' in pro_preview
+    assert 'element: "SOUND ARSENAL"' not in pro_preview
 
 
 def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
