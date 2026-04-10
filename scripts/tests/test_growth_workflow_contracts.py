@@ -376,6 +376,8 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
     assert "timeout: 10000" in pro_locks
     assert "timeout: 10000" in free_preview
     assert "timeout: 10000" in paywall
+    assert 'element: "Unlock Sound Arsenal"' in paywall
+    assert 'element: "SOUND ARSENAL"' not in paywall
     assert "- stopApp" in pro_locks
     assert "- stopApp" in free_preview
     assert "- stopApp" in paywall
