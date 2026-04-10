@@ -45,7 +45,8 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     )
     assert "Internal Testers" in source
     assert "TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}" in source
-    assert "TESTFLIGHT_DISTRIBUTE_EXTERNAL: ${{ secrets.TESTFLIGHT_DISTRIBUTE_EXTERNAL || 'false' }}" in source
+    assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
+    assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
     assert "Ensure TestFlight internal distribution visibility" in source
     assert "scripts/ensure_internal_distribution.py" in source
     assert "ios-testflight-signoff:" in source
