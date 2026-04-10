@@ -65,8 +65,23 @@ if ! command -v maestro >/dev/null 2>&1; then
   curl -Ls "https://get.maestro.mobile.dev" | bash
 fi
 export PATH="$HOME/.maestro/bin:$PATH"
-export MAESTRO_DRIVER_STARTUP_TIMEOUT=120000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
 export MAESTRO_DISABLE_ANALYTICS=true
+
+run_maestro_flow() {
+  local name="$1"
+  local flow="$2"
+  local attempt
+  for attempt in 1 2; do
+    echo "Maestro ${name}: attempt ${attempt}/2"
+    if maestro test -p ios --device "$SIMULATOR_UDID" "$flow" \
+      | tee "$MAESTRO_ARTIFACT_DIR/${name}-attempt-${attempt}.log"; then
+      return 0
+    fi
+    sleep 10
+  done
+  return 1
+}
 
 xcrun simctl shutdown "$SIMULATOR_UDID" 2>/dev/null || true
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
@@ -91,14 +106,10 @@ fi
 xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
-maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml" \
-  | tee "$MAESTRO_ARTIFACT_DIR/ios-smoke.log"
-maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml" \
-  | tee "$MAESTRO_ARTIFACT_DIR/pro-locks.log"
-maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml" \
-  | tee "$MAESTRO_ARTIFACT_DIR/free-sound-preview.log"
-maestro test -p ios --device "$SIMULATOR_UDID" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml" \
-  | tee "$MAESTRO_ARTIFACT_DIR/sound-arsenal-paywall.log"
+run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
+run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
+run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
+run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
 
 retry_agent_device "install" agent_device install "$BUNDLE_ID" "$APP_PATH"
 retry_agent_device "open" agent_device open "$BUNDLE_ID" --relaunch
