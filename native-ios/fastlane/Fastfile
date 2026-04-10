@@ -24,14 +24,13 @@ platform :ios do
       api_key: api_key
     }
 
-    group_names = ENV.fetch("TESTFLIGHT_GROUPS", "").split(",").map(&:strip).reject(&:empty?)
-    options[:groups] = group_names unless group_names.empty?
-
     distribute_external = ENV.fetch("TESTFLIGHT_DISTRIBUTE_EXTERNAL", "false") == "true"
     return options unless distribute_external
 
+    group_names = ENV.fetch("TESTFLIGHT_GROUPS", "").split(",").map(&:strip).reject(&:empty?)
     UI.user_error!("TESTFLIGHT_GROUPS required when TESTFLIGHT_DISTRIBUTE_EXTERNAL=true") if group_names.empty?
 
+    options[:groups] = group_names
     options[:distribute_external] = true
     options[:notify_external_testers] = ENV.fetch("TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS", "false") == "true"
     options[:changelog] = ENV.fetch("TESTFLIGHT_CHANGELOG", "Internal build from #{ENV.fetch('GITHUB_SHA', 'local')[0..7]}")

@@ -14,6 +14,7 @@ NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
 DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
+IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 
@@ -114,6 +115,8 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     android_firebase_job = source.split("android-firebase-internal:", 1)[1].split(
         "android-play-internal:", 1
     )[0]
+    assert "Setup Python" in android_firebase_job
+    assert "python -m pip install --upgrade google-auth==2.48.0 requests==2.32.5" in android_firebase_job
     assert "Write Google Play service account key" not in android_firebase_job
     assert "Verify Google Play API access" not in android_firebase_job
     assert "1:624873778337:android:4503588605a3273edc14e0" not in source
@@ -313,13 +316,44 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "retry_agent_device_capture" in ios_script
     assert "AGENT_DEVICE_SESSION" in ios_script
     assert "MAESTRO_DRIVER_STARTUP_TIMEOUT=300000" in ios_script
+    assert "run_with_timeout" in ios_script
+    assert "IOS_BUILD_TIMEOUT_SECONDS" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS" in ios_script
+    assert "AGENT_DEVICE_TIMEOUT_SECONDS" in ios_script
+    assert "AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" in ios_script
+    assert "SIMCTL_TIMEOUT_SECONDS" in ios_script
+    assert "last-stage.txt" in ios_script
+    assert "record_stage" in ios_script
     assert "run_maestro_flow" in ios_script
+    assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
+    assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
+    assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
     assert "Reset app state before Agent Device validates the home screen" in ios_script
     assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "home-pre-agent.png" in ios_script
+    assert "Simulator home screenshot was not captured." in ios_script
     assert "retry_agent_device \"wait-home\"" not in ios_script
     assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
-    assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("retry_agent_device_capture \"snapshot\"")
+    assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("agent-device diagnostic screenshot")
+    assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" not in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" agent_device" not in ios_script
+    assert "Agent Device screenshot/snapshot can hang or focus its runner shell" in ios_script
+    assert "agent-device diagnostic screenshot" in ios_script
+    assert "agent-device diagnostic snapshot" in ios_script
+    assert "run_with_timeout \"$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS\" npx -y agent-device" in ios_script
+    assert "::warning::Agent Device snapshot did not include expected home anchors" in ios_script
+    assert "retry_agent_device \"screenshot\"" not in ios_script
+    assert "retry_agent_device_capture \"snapshot\"" not in ios_script
+
+
+def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
+    source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
+
+    assert "- tapOn: 'Start Timer'" in source
+    assert ".*Timer running.*" not in source
+    assert "text: 'Pause'" not in source
+    assert "text: 'Stop'" not in source
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():

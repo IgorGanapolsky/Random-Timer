@@ -11,11 +11,47 @@ DERIVED_DATA_PATH="$NATIVE_IOS_DIR/build/device-tests-ios"
 APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/RandomTimer.app"
 MAESTRO_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/maestro"
 AGENT_DEVICE_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/agent-device"
+LAST_STAGE_FILE="$AGENT_DEVICE_ARTIFACT_DIR/last-stage.txt"
+IOS_BUILD_TIMEOUT_SECONDS="${IOS_BUILD_TIMEOUT_SECONDS:-900}"
+MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-420}"
+AGENT_DEVICE_TIMEOUT_SECONDS="${AGENT_DEVICE_TIMEOUT_SECONDS:-120}"
+AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS="${AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS:-30}"
+SIMCTL_TIMEOUT_SECONDS="${SIMCTL_TIMEOUT_SECONDS:-120}"
 
 mkdir -p "$MAESTRO_ARTIFACT_DIR" "$AGENT_DEVICE_ARTIFACT_DIR"
 export AGENT_DEVICE_SESSION="${AGENT_DEVICE_SESSION:-random-timer-ios-ci}"
 export AGENT_DEVICE_RUN_ID="${GITHUB_RUN_ID:-local}"
 export AGENT_DEVICE_SESSION_LOCK=strip
+
+record_stage() {
+  printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*" | tee "$LAST_STAGE_FILE"
+}
+
+run_with_timeout() {
+  local seconds="$1"
+  shift
+  python3 - "$seconds" "$@" <<'PY'
+import os
+import signal
+import subprocess
+import sys
+
+seconds = int(sys.argv[1])
+cmd = sys.argv[2:]
+proc = subprocess.Popen(cmd, start_new_session=True)
+try:
+    sys.exit(proc.wait(timeout=seconds))
+except subprocess.TimeoutExpired:
+    print(f"::error::Command timed out after {seconds}s: {' '.join(cmd)}", file=sys.stderr)
+    os.killpg(proc.pid, signal.SIGTERM)
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        proc.wait()
+    sys.exit(124)
+PY
+}
 
 copy_agent_device_logs() {
   if [ -d "$HOME/.agent-device/logs" ]; then
@@ -32,11 +68,13 @@ agent_device() {
 
 retry_agent_device() {
   local label="$1"
-  shift
+  local seconds="$2"
+  shift 2
   local attempt
   for attempt in 1 2 3; do
+    record_stage "agent-device ${label} attempt ${attempt}"
     echo "Agent Device ${label}: attempt ${attempt}/3"
-    if "$@"; then
+    if run_with_timeout "$seconds" npx -y agent-device "$@" --platform ios --udid "$SIMULATOR_UDID" --no-record; then
       return 0
     fi
     copy_agent_device_logs
@@ -47,12 +85,14 @@ retry_agent_device() {
 
 retry_agent_device_capture() {
   local label="$1"
-  local output="$2"
-  shift 2
+  local seconds="$2"
+  local output="$3"
+  shift 3
   local attempt
   for attempt in 1 2 3; do
+    record_stage "agent-device ${label} attempt ${attempt}"
     echo "Agent Device ${label}: attempt ${attempt}/3"
-    if "$@" > "$output"; then
+    if run_with_timeout "$seconds" npx -y agent-device "$@" --platform ios --udid "$SIMULATOR_UDID" --no-record > "$output"; then
       return 0
     fi
     copy_agent_device_logs
@@ -72,10 +112,14 @@ run_maestro_flow() {
   local name="$1"
   local flow="$2"
   local attempt
+  local log_path
   for attempt in 1 2; do
+    log_path="$MAESTRO_ARTIFACT_DIR/${name}-attempt-${attempt}.log"
+    record_stage "maestro ${name} attempt ${attempt}"
     echo "Maestro ${name}: attempt ${attempt}/2"
-    if maestro test -p ios --device "$SIMULATOR_UDID" "$flow" \
-      | tee "$MAESTRO_ARTIFACT_DIR/${name}-attempt-${attempt}.log"; then
+    if run_with_timeout "$MAESTRO_FLOW_TIMEOUT_SECONDS" bash -o pipefail -c \
+      'maestro test -p ios --device "$1" "$2" | tee "$3"' \
+      _ "$SIMULATOR_UDID" "$flow" "$log_path"; then
       return 0
     fi
     sleep 10
@@ -85,11 +129,13 @@ run_maestro_flow() {
 
 xcrun simctl shutdown "$SIMULATOR_UDID" 2>/dev/null || true
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
-xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+record_stage "boot simulator"
+run_with_timeout "$SIMCTL_TIMEOUT_SECONDS" xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
 cd "$NATIVE_IOS_DIR"
 rm -rf "$DERIVED_DATA_PATH"
-xcodebuild build \
+record_stage "xcodebuild simulator app"
+run_with_timeout "$IOS_BUILD_TIMEOUT_SECONDS" xcodebuild build \
   -project RandomTimer.xcodeproj \
   -scheme RandomTimer \
   -destination "platform=iOS Simulator,id=${SIMULATOR_UDID}" \
@@ -103,8 +149,9 @@ if [ ! -d "$APP_PATH" ]; then
   exit 1
 fi
 
+record_stage "install simulator app"
 xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
-xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+run_with_timeout "$SIMCTL_TIMEOUT_SECONDS" xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
 run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
 run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
@@ -115,18 +162,37 @@ run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-soun
 # Reset app state before Agent Device validates the home screen.
 xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
-xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+record_stage "reinstall simulator app for agent-device"
+run_with_timeout "$SIMCTL_TIMEOUT_SECONDS" xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
-retry_agent_device "install" agent_device install "$BUNDLE_ID" "$APP_PATH"
-retry_agent_device "open" agent_device open "$BUNDLE_ID" --relaunch
+retry_agent_device "install" "$AGENT_DEVICE_TIMEOUT_SECONDS" install "$BUNDLE_ID" "$APP_PATH"
+retry_agent_device "open" "$AGENT_DEVICE_TIMEOUT_SECONDS" open "$BUNDLE_ID" --relaunch
 sleep 8
 xcrun simctl io "$SIMULATOR_UDID" screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home-pre-agent.png" || true
-retry_agent_device_capture "snapshot" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt" \
-  agent_device snapshot -i -c --depth 8
-if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
-  echo "Agent Device snapshot did not include expected home anchors."
-  sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
+if [ ! -s "$AGENT_DEVICE_ARTIFACT_DIR/home-pre-agent.png" ]; then
+  echo "Simulator home screenshot was not captured."
   exit 1
 fi
-retry_agent_device "screenshot" agent_device screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
+
+# Agent Device screenshot/snapshot can hang or focus its runner shell on macOS runners.
+# Keep them as bounded diagnostic artifacts; Maestro assertions and simctl screenshots are the blocking app proof.
+record_stage "agent-device diagnostic screenshot"
+if ! run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
+  screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png" --platform ios --udid "$SIMULATOR_UDID" --no-record; then
+  echo "::warning::Agent Device screenshot failed; preserving simctl screenshot and logs."
+  copy_agent_device_logs
+fi
+
+record_stage "agent-device diagnostic snapshot"
+if run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
+  snapshot -i -c --depth 8 --platform ios --udid "$SIMULATOR_UDID" --no-record \
+  > "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
+  if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
+    echo "::warning::Agent Device snapshot did not include expected home anchors; preserving diagnostic snapshot."
+    sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
+  fi
+else
+  echo "::warning::Agent Device snapshot failed; preserving logs and screenshot artifacts."
+  copy_agent_device_logs
+fi
 agent_device close "$BUNDLE_ID" || true
