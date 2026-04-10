@@ -244,7 +244,7 @@
           "soundType": "gong",
           "filename": "gong",
           "durationSeconds": 5.0,
-          "prompt": "Metallic strike with tactical gym feel, short sustain, no temple ambience."
+          "prompt": "Massive brass gong struck hard: loud sustained metallic boom, high energy through the full clip, training-floor impact, not whisper-quiet or distant, no temple reverb wash."
         },
         {
           "soundType": "airhorn",
@@ -268,7 +268,7 @@
           "soundType": "bell",
           "filename": "bell",
           "durationSeconds": 4.0,
-          "prompt": "Clear brass bell strike, concise decay, used as a training signal."
+          "prompt": "Boxing ring or fight-gym round bell: one bright brass ding with clear pitch and ringing decay, unmistakably a ringside bell, not a school fire alarm or electronic buzzer."
         }
       ]
     }
