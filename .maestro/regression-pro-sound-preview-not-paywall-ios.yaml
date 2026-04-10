@@ -16,10 +16,6 @@ appId: com.igorganapolsky.randomtimer
     text: "View Sound Arsenal"
     optional: true
 - scrollUntilVisible:
-    element: "Tap a sound to preview. Unlock Pro to equip it."
-    direction: DOWN
-    timeout: 10000
-- scrollUntilVisible:
     element: "Klaxon"
     direction: DOWN
     timeout: 10000

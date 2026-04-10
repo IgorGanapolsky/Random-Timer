@@ -15,14 +15,16 @@ appId: com.igorganapolsky.randomtimer
     text: "View Sound Arsenal"
     optional: true
 - scrollUntilVisible:
-    element: "Tap a sound to preview. Unlock Pro to equip it."
+    element: "Klaxon.*"
     direction: DOWN
     timeout: 10000
 - tapOn:
-    text: "Gentle.*"
+    text: "Klaxon.*"
 - assertNotVisible:
     text: "Unlock Full Training Mode"
     optional: true
-- assertVisible: "Tap a sound to preview. Unlock Pro to equip it."
+- assertNotVisible:
+    text: "Unlock Everything"
+    optional: true
 - takeScreenshot: evidence/ios-free-sound-preview
 - stopApp
