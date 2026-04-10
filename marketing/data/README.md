@@ -2,7 +2,7 @@
 
 ## `executive_metrics.json`
 
-**What it is:** A JSON bundle of PostHog scalars (product), Play / App Store Connect snippets (when APIs succeed), and Crashlytics BigQuery summary (when the export has data).
+**What it is:** A JSON bundle of PostHog scalars (product), Play / App Store Connect snippets (when APIs succeed), optional **ledger** iOS daily sales rollup (`ledger_revenue.ios_sales_reports_daily` when `APPSTORE_CONNECT_VENDOR_NUMBER` is set), paywall funnel proxies (`paywall_viewed`, conversion vs viewers, UTM paid pageviews), and Crashlytics BigQuery summary (when the export has data).
 
 **Do you need to do anything?**
 
@@ -33,5 +33,9 @@
 
 - **Play:** use `GOOGLE_PLAY_JSON_KEY` (raw JSON from the secret) or `GOOGLE_PLAY_JSON_KEY_PATH` (path to a file). If the path is wrong, the snapshot now fails with a clear “not a file” error instead of a JSON parse error.
 - **Crashlytics BigQuery:** prefer `CRASHLYTICS_SERVICE_ACCOUNT_JSON` (same pattern as CI). If you use `GOOGLE_APPLICATION_CREDENTIALS`, the file must exist or the snapshot reports an explicit missing-file error.
+
+**iOS sales ledger (optional)**
+
+- Set **`APPSTORE_CONNECT_VENDOR_NUMBER`** (same value as App Store Connect → Payments and Financial Reports → vendor number) alongside **`APPSTORE_KEY_ID`**, **`APPSTORE_ISSUER_ID`**, and **`APPSTORE_PRIVATE_KEY`** (or **`APP_STORE_CONNECT_KEY_B64`**). The snapshot then calls Sales Reports and sums TSV columns for the trailing window. Android Play earnings are still **not** automated here—use Play financial exports.
 
 See also `docs/OPERATIONAL_RELIABILITY.md` and `docs/OBSERVABILITY.md`.

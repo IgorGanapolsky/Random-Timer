@@ -109,6 +109,16 @@ POSTHOG_EXECUTIVE_METRIC_FIELD_IDS: Dict[str, str] = {
         "posthog_hogql_top_screens_by_distinct_persons_limit_12_order_desc"
     ),
     "posthog_exception_events": "posthog_hogql_count_events_dollar_exception",
+    "paywall_revenue_sum_event_properties": (
+        "posthog_hogql_sum_coalesce_revenue_price_paywall_purchase_success"
+    ),
+    "paywall_viewed_distinct_persons": "posthog_hogql_distinct_persons_paywall_viewed",
+    "paywall_purchaser_conversion_from_viewed_pct": (
+        "posthog_derived_distinct_purchasers_over_distinct_paywall_viewers_pct"
+    ),
+    "distinct_persons_pageview_utm_cpc_ppc_paid": (
+        "posthog_hogql_distinct_persons_pageview_utm_medium_cpc_ppc_paid"
+    ),
 }
 
 
@@ -159,6 +169,18 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
             return None
         try:
             return int(row[0] or 0)
+        except (TypeError, ValueError):
+            return None
+
+    def scalar_float(sql: str) -> Optional[float]:
+        data = posthog_query(sql, api_key, project_id, errors)
+        if not data or not data.get("results"):
+            return None
+        row = data["results"][0]
+        if not row:
+            return None
+        try:
+            return float(row[0] or 0.0)
         except (TypeError, ValueError):
             return None
 
@@ -240,6 +262,26 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
     )
+    out["paywall_revenue_sum_event_properties"] = scalar_float(
+        f"SELECT sum(toFloatOrZero(coalesce(toString(properties.revenue), toString(properties.price), '0'))) "
+        f"FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    viewed_d = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_viewed' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["paywall_viewed_distinct_persons"] = viewed_d
+    purchasers_d = out.get("distinct_persons_paywall_purchase_success")
+    if viewed_d and viewed_d > 0 and purchasers_d is not None:
+        out["paywall_purchaser_conversion_from_viewed_pct"] = round(
+            purchasers_d / viewed_d * 100, 2
+        )
+    out["distinct_persons_pageview_utm_cpc_ppc_paid"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = '$pageview' "
+        f"AND timestamp > now() - interval {win} AND {f} AND "
+        f"lower(coalesce(toString(properties.utm_medium), '')) IN ('cpc', 'ppc', 'paid')"
+    )
     q_reviews = posthog_query(
         f"SELECT count(), count(DISTINCT person_id) FROM events WHERE event = 'review_prompt_requested' "
         f"AND timestamp > now() - interval {win} AND {f}",
@@ -314,6 +356,21 @@ def run(
     except Exception as exc:
         crashlytics = {"status": "error", "reason": str(exc), "source": "crashlytics"}
 
+    try:
+        from store_sales_ledger import fetch_ios_sales_daily_summary
+
+        ios_ledger = fetch_ios_sales_daily_summary(days)
+    except Exception as exc:
+        ios_ledger = {"status": "error", "reason": str(exc), "metric_bundle_id": "asc_sales_daily_summary_tsv_v1"}
+
+    ledger_revenue: Dict[str, Any] = {
+        "ios_sales_reports_daily": ios_ledger,
+        "android_play_billing": {
+            "status": "skipped",
+            "reason": "Play Console earnings not wired in executive snapshot (use Play financial exports).",
+        },
+    }
+
     payload: Dict[str, Any] = {
         "generated_at": generated_at,
         "source": "executive_metrics_snapshot",
@@ -332,6 +389,20 @@ def run(
                 "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store "
                 "revenue). Compare posthog.events_paywall_purchase_success_ios vs _android "
                 "(properties.platform). Ledger: App Store Connect + Google Play billing."
+            ),
+            "paywall_revenue_event_properties": (
+                "Sum of coalesce(properties.revenue, properties.price) on paywall_purchase_success "
+                "within pragmatic_live + window_days. Semantics depend on client instrumentation "
+                "(currency, tax); not store ledger."
+            ),
+            "ledger_revenue_ios_sales_reports": (
+                "App Store Connect GET /v1/salesReports (SALES, DAILY, SUMMARY, 1_0) aggregated TSV "
+                "columns when APPSTORE_CONNECT_VENDOR_NUMBER is set. Filtered to Apple Identifier "
+                "6758355312 when the report includes that column."
+            ),
+            "marketing_utm_signal": (
+                "Distinct persons with $pageview and utm_medium in (cpc, ppc, paid) — coarse paid-traffic "
+                "proxy; not ad network attribution."
             ),
             "posthog_executive": (
                 "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except "
@@ -354,6 +425,7 @@ def run(
         },
         "posthog": posthog,
         "store_apis": {"android": android, "ios": ios},
+        "ledger_revenue": ledger_revenue,
         "crashlytics_bigquery": crashlytics,
     }
 
@@ -400,6 +472,15 @@ def main() -> int:
             f"wqtu_{ph.get('window_days')}d={ph.get('wqtu_distinct_persons')} "
             f"wqtu_7d={ph.get('wqtu_7d_distinct_persons')}"
         )
+        print(
+            f"    revenue(proxy): sum_event_props={ph.get('paywall_revenue_sum_event_properties')} "
+            f"paywall_viewers={ph.get('paywall_viewed_distinct_persons')} "
+            f"conversion_vs_viewed_pct={ph.get('paywall_purchaser_conversion_from_viewed_pct')} "
+            f"utm_paid_viewers={ph.get('distinct_persons_pageview_utm_cpc_ppc_paid')}"
+        )
+    lr = payload.get("ledger_revenue") or {}
+    ios_l = (lr.get("ios_sales_reports_daily") or {}).get("status")
+    print(f"  Ledger iOS sales API: {ios_l}")
     st = payload.get("store_apis") or {}
     print(f"  Android API: {(st.get('android') or {}).get('status')}")
     print(f"  iOS API: {(st.get('ios') or {}).get('status')}")

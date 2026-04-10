@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10T17:50:23+00:00",
+  "generated_at": "2026-04-10T20:20:59+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -7,6 +7,9 @@
     "reviews_store": "Play: reviews.list is comment-bearing reviews touched in the last 7 days only (per Google); star-only ratings omitted; can read 0 while the public listing shows reviews; pagination max 100/page. App Store: customerReviews first page only (limit 50, newest first), not lifetime total. Use review_count_metric_id under store_apis.android / store_apis.ios when present.",
     "reviews_in_app": "PostHog review_prompt_requested / write_review_tapped (not published star count).",
     "paid_posthog": "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store revenue). Compare posthog.events_paywall_purchase_success_ios vs _android (properties.platform). Ledger: App Store Connect + Google Play billing.",
+    "paywall_revenue_event_properties": "Sum of coalesce(properties.revenue, properties.price) on paywall_purchase_success within pragmatic_live + window_days. Semantics depend on client instrumentation (currency, tax); not store ledger.",
+    "ledger_revenue_ios_sales_reports": "App Store Connect GET /v1/salesReports (SALES, DAILY, SUMMARY, 1_0) aggregated TSV columns when APPSTORE_CONNECT_VENDOR_NUMBER is set. Filtered to Apple Identifier 6758355312 when the report includes that column.",
+    "marketing_utm_signal": "Distinct persons with $pageview and utm_medium in (cpc, ppc, paid) \u2014 coarse paid-traffic proxy; not ad network attribution.",
     "posthog_executive": "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except wqtu_7d_distinct_persons (fixed 7d). Filters exclude non\u2013store-production distribution_channel (testflight, non_play_install, dev, emulator, etc.), is_internal, debug/sim events; legacy events without distribution_channel stay included as 'legacy'. Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS env. See posthog.metric_field_ids and posthog.audience_note.",
     "crashes": "Crashlytics BigQuery streaming export; posthog_exception_events is separate. crashlytics_bigquery.fatal_events_in_window is COUNT(*) of fatal rows in the lookback hours. fatal_events sums crash_count only within parsed top_fatal_issues (up to 10 rows displayed from top 20 SQL groups) \u2014 see metric_field_ids.",
     "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
@@ -24,34 +27,38 @@
     "exclude_person_ids_configured": true,
     "window_days": 30,
     "errors": [],
-    "distinct_persons_application_installed": 464,
-    "distinct_persons_first_open": 439,
-    "timer_started_events": 1479,
+    "distinct_persons_application_installed": 469,
+    "distinct_persons_first_open": 444,
+    "timer_started_events": 1502,
     "timer_completed_events": 290,
-    "distinct_persons_timer_started": 383,
+    "distinct_persons_timer_started": 388,
     "distinct_persons_timer_completed": 47,
     "distinct_persons_timer_started_and_completed": 47,
     "wqtu_distinct_persons": 10,
     "wqtu_7d_distinct_persons": 8,
-    "timer_abandon_rate_event_level_pct": 80.39,
+    "timer_abandon_rate_event_level_pct": 80.69,
     "distinct_persons_paywall_purchase_success": 1,
     "events_paywall_purchase_success": 1,
     "distinct_persons_paywall_purchase_success_ios": 1,
     "distinct_persons_paywall_purchase_success_android": 0,
     "events_paywall_purchase_success_ios": 1,
     "events_paywall_purchase_success_android": 0,
+    "paywall_revenue_sum_event_properties": 0.0,
+    "paywall_viewed_distinct_persons": 345,
+    "paywall_purchaser_conversion_from_viewed_pct": 0.29,
+    "distinct_persons_pageview_utm_cpc_ppc_paid": 0,
     "in_app_review_prompt_events": 12,
     "in_app_review_prompt_distinct_persons": 12,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        462,
-        2810
+        466,
+        2842
       ],
       [
         "Active Timer",
-        378,
-        1896
+        383,
+        1928
       ]
     ],
     "posthog_exception_events": 0,
@@ -76,13 +83,26 @@
       "in_app_review_prompt_events": "posthog_hogql_count_events_review_prompt_requested",
       "in_app_review_prompt_distinct_persons": "posthog_hogql_distinct_persons_event_review_prompt_requested",
       "top_screens_by_distinct_persons": "posthog_hogql_top_screens_by_distinct_persons_limit_12_order_desc",
-      "posthog_exception_events": "posthog_hogql_count_events_dollar_exception"
+      "posthog_exception_events": "posthog_hogql_count_events_dollar_exception",
+      "paywall_revenue_sum_event_properties": "posthog_hogql_sum_coalesce_revenue_price_paywall_purchase_success",
+      "paywall_viewed_distinct_persons": "posthog_hogql_distinct_persons_paywall_viewed",
+      "paywall_purchaser_conversion_from_viewed_pct": "posthog_derived_distinct_purchasers_over_distinct_paywall_viewers_pct",
+      "distinct_persons_pageview_utm_cpc_ppc_paid": "posthog_hogql_distinct_persons_pageview_utm_medium_cpc_ppc_paid"
     }
   },
   "store_apis": {
     "android": {
-      "status": "error",
-      "reason": "credential error: Google Play key path is not a file (check GOOGLE_PLAY_JSON_KEY_PATH): <redacted>"
+      "status": "ok",
+      "review_count": 0,
+      "review_count_metric_id": "google_play_androidpublisher_reviews_list_7d_commented_paginated",
+      "production_release": {
+        "version_codes": [
+          "1775653001"
+        ],
+        "status": "completed",
+        "name": "v1775653001"
+      },
+      "note": "Play reviews.list: comment-bearing reviews created or modified in the last 7 days only; star-only ratings are excluded. Not equal to public Play review totals. No per-app download count in this API."
     },
     "ios": {
       "status": "ok",
@@ -123,9 +143,42 @@
       "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API."
     }
   },
+  "ledger_revenue": {
+    "ios_sales_reports_daily": {
+      "status": "skipped",
+      "reason": "APPSTORE_CONNECT_VENDOR_NUMBER not set",
+      "metric_bundle_id": "asc_sales_daily_summary_tsv_v1"
+    },
+    "android_play_billing": {
+      "status": "skipped",
+      "reason": "Play Console earnings not wired in executive snapshot (use Play financial exports)."
+    }
+  },
   "crashlytics_bigquery": {
-    "status": "error",
-    "reason": "GOOGLE_APPLICATION_CREDENTIALS points to a missing file (<redacted>). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path.",
-    "source": "crashlytics"
+    "status": "ok",
+    "source": "crashlytics_bigquery",
+    "metric_bundle_id": "crashlytics_bq_streaming_fatal_window_v1",
+    "metric_field_ids": {
+      "fatal_events": "crashlytics_bq_sum_crash_count_in_top_20_issue_groups_only_not_total_window",
+      "fatal_events_in_window": "crashlytics_bq_count_star_all_fatal_rows_in_lookback_window",
+      "top_fatal_issues": "crashlytics_bq_fatal_groups_limited_20_order_by_crash_count_desc",
+      "crash_free_pct": "crashlytics_bq_session_crash_free_rate_by_installation_uuid",
+      "total_users": "crashlytics_bq_distinct_installation_uuids_in_window",
+      "crash_free_users": "crashlytics_bq_installation_uuids_without_fatal_in_window",
+      "affected_users": "crashlytics_bq_total_users_minus_crash_free_users"
+    },
+    "project_id": "random-timer-dist-new",
+    "dataset": "firebase_crashlytics",
+    "package": "com.iganapolsky.randomtimer",
+    "hours": 168,
+    "table_id": null,
+    "fatal_events": 0,
+    "fatal_events_in_window": 0,
+    "affected_users": 0,
+    "total_users": 0,
+    "crash_free_users": 0,
+    "crash_free_pct": null,
+    "top_fatal_issues": [],
+    "reason": "BigQuery dataset exists but no tables yet"
   }
 }
