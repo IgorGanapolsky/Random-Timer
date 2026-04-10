@@ -14,6 +14,7 @@ NORTH_STAR_OPS_WORKFLOW = ROOT / ".github/workflows/north-star-ops.yml"
 WEEKLY_EXPERIMENT_WORKFLOW = ROOT / ".github/workflows/weekly-north-star-experiment.yml"
 WORKFLOW_CONTRACT = ROOT / "docs/workflow.md"
 DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
+IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 
@@ -344,6 +345,15 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "::warning::Agent Device snapshot did not include expected home anchors" in ios_script
     assert "retry_agent_device \"screenshot\"" not in ios_script
     assert "retry_agent_device_capture \"snapshot\"" not in ios_script
+
+
+def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
+    source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
+
+    assert "- tapOn: 'Start Timer'" in source
+    assert ".*Timer running.*" not in source
+    assert "text: 'Pause'" not in source
+    assert "text: 'Stop'" not in source
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():
