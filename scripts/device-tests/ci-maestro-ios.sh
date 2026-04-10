@@ -111,6 +111,12 @@ run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visibl
 run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
 run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
 
+# The paywall regression flow intentionally leaves the app on the paywall.
+# Reset app state before Agent Device validates the home screen.
+xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
+xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
+xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+
 retry_agent_device "install" agent_device install "$BUNDLE_ID" "$APP_PATH"
 retry_agent_device "open" agent_device open "$BUNDLE_ID" --relaunch
 retry_agent_device "wait-home" agent_device wait "Random Tactical Timer" 60000

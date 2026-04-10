@@ -316,6 +316,9 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "AGENT_DEVICE_SESSION" in ios_script
     assert "MAESTRO_DRIVER_STARTUP_TIMEOUT=300000" in ios_script
     assert "run_maestro_flow" in ios_script
+    assert "Reset app state before Agent Device validates the home screen" in ios_script
+    assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
+    assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("retry_agent_device \"wait-home\"")
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():
