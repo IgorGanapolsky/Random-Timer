@@ -3,12 +3,6 @@ name: Device Tests
 on:
   pull_request:
     branches: [develop, main]
-    paths:
-      - 'native-android/**'
-      - 'native-ios/**'
-      - '.maestro/**'
-      - 'scripts/device-tests/**'
-      - '.github/workflows/device-tests.yml'
   workflow_dispatch:
 
 concurrency:
