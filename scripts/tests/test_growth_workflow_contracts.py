@@ -325,6 +325,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "run_maestro_flow" in ios_script
     assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
     assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
+    assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
     assert "Reset app state before Agent Device validates the home screen" in ios_script
     assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "home-pre-agent.png" in ios_script
@@ -332,6 +333,8 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
     assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("retry_agent_device_capture \"snapshot\"")
     assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
+    assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" agent_device" not in ios_script
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():

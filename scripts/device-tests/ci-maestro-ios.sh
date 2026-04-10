@@ -73,7 +73,7 @@ retry_agent_device() {
   for attempt in 1 2 3; do
     record_stage "agent-device ${label} attempt ${attempt}"
     echo "Agent Device ${label}: attempt ${attempt}/3"
-    if run_with_timeout "$seconds" "$@"; then
+    if run_with_timeout "$seconds" npx -y agent-device "$@" --platform ios --udid "$SIMULATOR_UDID" --no-record; then
       return 0
     fi
     copy_agent_device_logs
@@ -91,7 +91,7 @@ retry_agent_device_capture() {
   for attempt in 1 2 3; do
     record_stage "agent-device ${label} attempt ${attempt}"
     echo "Agent Device ${label}: attempt ${attempt}/3"
-    if run_with_timeout "$seconds" "$@" > "$output"; then
+    if run_with_timeout "$seconds" npx -y agent-device "$@" --platform ios --udid "$SIMULATOR_UDID" --no-record > "$output"; then
       return 0
     fi
     copy_agent_device_logs
@@ -164,16 +164,16 @@ xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 record_stage "reinstall simulator app for agent-device"
 run_with_timeout "$SIMCTL_TIMEOUT_SECONDS" xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
-retry_agent_device "install" "$AGENT_DEVICE_TIMEOUT_SECONDS" agent_device install "$BUNDLE_ID" "$APP_PATH"
-retry_agent_device "open" "$AGENT_DEVICE_TIMEOUT_SECONDS" agent_device open "$BUNDLE_ID" --relaunch
+retry_agent_device "install" "$AGENT_DEVICE_TIMEOUT_SECONDS" install "$BUNDLE_ID" "$APP_PATH"
+retry_agent_device "open" "$AGENT_DEVICE_TIMEOUT_SECONDS" open "$BUNDLE_ID" --relaunch
 sleep 8
 xcrun simctl io "$SIMULATOR_UDID" screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home-pre-agent.png" || true
 retry_agent_device_capture "snapshot" "$AGENT_DEVICE_TIMEOUT_SECONDS" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt" \
-  agent_device snapshot -i -c --depth 8
+  snapshot -i -c --depth 8
 if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
   echo "Agent Device snapshot did not include expected home anchors."
   sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
   exit 1
 fi
-retry_agent_device "screenshot" "$AGENT_DEVICE_TIMEOUT_SECONDS" agent_device screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
+retry_agent_device "screenshot" "$AGENT_DEVICE_TIMEOUT_SECONDS" screenshot "$AGENT_DEVICE_ARTIFACT_DIR/home.png"
 agent_device close "$BUNDLE_ID" || true
