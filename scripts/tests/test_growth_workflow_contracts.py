@@ -329,12 +329,16 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "Reset app state before Agent Device validates the home screen" in ios_script
     assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "home-pre-agent.png" in ios_script
+    assert "Simulator home screenshot was not captured." in ios_script
     assert "retry_agent_device \"wait-home\"" not in ios_script
     assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
     assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("retry_agent_device_capture \"snapshot\"")
     assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" in ios_script
     assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
     assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" agent_device" not in ios_script
+    assert "Agent Device snapshot can focus its runner shell" in ios_script
+    assert "::warning::Agent Device snapshot did not include expected home anchors" in ios_script
+    assert ios_script.index("retry_agent_device \"screenshot\"") < ios_script.index("retry_agent_device_capture \"snapshot\"")
 
 
 def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_one():
