@@ -332,7 +332,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "run_maestro_flow" in ios_script
     assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
     assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
-    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-240" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-120" in ios_script
     assert "xcrun simctl privacy \"$SIMULATOR_UDID\" grant notifications \"$BUNDLE_ID\"" in ios_script
     assert "xcrun simctl terminate \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
@@ -367,6 +367,9 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
     assert "timeout: 10000" in pro_locks
     assert "timeout: 10000" in free_preview
     assert "timeout: 10000" in paywall
+    assert "- stopApp" in pro_locks
+    assert "- stopApp" in free_preview
+    assert "- stopApp" in paywall
     assert "timeout: 10000" in voice_focus
     assert pro_preview.count("timeout: 10000") >= 2
 

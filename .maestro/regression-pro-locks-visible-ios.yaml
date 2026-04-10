@@ -21,3 +21,4 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - takeScreenshot: evidence/ios-pro-locks-visible
+- stopApp

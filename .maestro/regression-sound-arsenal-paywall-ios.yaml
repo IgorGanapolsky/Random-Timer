@@ -10,3 +10,4 @@ appId: com.igorganapolsky.randomtimer
 - tapOn: "Unlock Sound Arsenal"
 - assertVisible: "Unlock Full Training Mode"
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
+- stopApp
