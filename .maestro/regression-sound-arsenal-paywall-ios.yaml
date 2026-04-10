@@ -6,6 +6,7 @@ appId: com.igorganapolsky.randomtimer
 - scrollUntilVisible:
     element: "SOUND ARSENAL"
     direction: DOWN
+    timeout: 10000
 - tapOn: "Unlock Sound Arsenal"
 - assertVisible: "Unlock Full Training Mode"
 - takeScreenshot: evidence/ios-sound-arsenal-paywall

@@ -47,6 +47,10 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert "TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || secrets.TESTFLIGHT_GROUPS || 'Internal Testers' }}" in source
     assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
     assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
+    assert "TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}" in source
+    assert "secrets.FIREBASE_REQUIRED_TESTER_EMAIL" not in source.split("Ensure TestFlight internal distribution visibility", 1)[1].split(
+        "Upload IPA artifact", 1
+    )[0]
     assert "Ensure TestFlight internal distribution visibility" in source
     assert "scripts/ensure_internal_distribution.py" in source
     assert "ios-testflight-signoff:" in source
@@ -346,6 +350,22 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "::warning::Agent Device snapshot did not include expected home anchors" in ios_script
     assert "retry_agent_device \"screenshot\"" not in ios_script
     assert "retry_agent_device_capture \"snapshot\"" not in ios_script
+
+
+def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anchors():
+    pro_locks = (ROOT / ".maestro/regression-pro-locks-visible-ios.yaml").read_text(encoding="utf-8")
+    free_preview = (ROOT / ".maestro/regression-free-sound-preview-ios.yaml").read_text(encoding="utf-8")
+    paywall = (ROOT / ".maestro/regression-sound-arsenal-paywall-ios.yaml").read_text(encoding="utf-8")
+    voice_focus = (ROOT / ".maestro/regression-voice-focus-ios.yaml").read_text(encoding="utf-8")
+    pro_preview = (ROOT / ".maestro/regression-pro-sound-preview-not-paywall-ios.yaml").read_text(encoding="utf-8")
+
+    assert "Unlock Voice Callouts" in pro_locks
+    assert "Unlock Sound Arsenal" in pro_locks
+    assert "timeout: 10000" in pro_locks
+    assert "timeout: 10000" in free_preview
+    assert "timeout: 10000" in paywall
+    assert "timeout: 10000" in voice_focus
+    assert pro_preview.count("timeout: 10000") >= 2
 
 
 def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
