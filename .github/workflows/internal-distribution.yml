@@ -569,6 +569,14 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Firebase verification Python dependencies
+        run: python -m pip install --upgrade google-auth==2.48.0 requests==2.32.5
+
       - name: Create google-services.json
         working-directory: native-android
         env:

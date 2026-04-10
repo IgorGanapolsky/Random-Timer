@@ -114,6 +114,8 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
     android_firebase_job = source.split("android-firebase-internal:", 1)[1].split(
         "android-play-internal:", 1
     )[0]
+    assert "Setup Python" in android_firebase_job
+    assert "python -m pip install --upgrade google-auth==2.48.0 requests==2.32.5" in android_firebase_job
     assert "Write Google Play service account key" not in android_firebase_job
     assert "Verify Google Play API access" not in android_firebase_job
     assert "1:624873778337:android:4503588605a3273edc14e0" not in source
