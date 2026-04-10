@@ -51,24 +51,24 @@ jobs:
           export EXPECTED_VERSION
 
           python3 <<'PY'
-import os
+          import os
 
-from scripts.verify_play_public_listing import build_store_url, verify_public_listing
+          from scripts.verify_play_public_listing import build_store_url, verify_public_listing
 
-expected_version = os.environ["EXPECTED_VERSION"].strip()
-result = verify_public_listing(
-    build_store_url("com.iganapolsky.randomtimer", "US"),
-    expected_version=expected_version,
-)
-should_retry = not result.passed
-reason = "play_public_current" if result.passed else f"play_public_{result.status.lower()}"
+          expected_version = os.environ["EXPECTED_VERSION"].strip()
+          result = verify_public_listing(
+              build_store_url("com.iganapolsky.randomtimer", "US"),
+              expected_version=expected_version,
+          )
+          should_retry = not result.passed
+          reason = "play_public_current" if result.passed else f"play_public_{result.status.lower()}"
 
-with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-    fh.write(f"should_retry={'true' if should_retry else 'false'}\n")
-    fh.write(f"reason={reason}\n")
-    fh.write(f"expected_version={expected_version}\n")
-    fh.write(f"public_status={result.status}\n")
-PY
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"should_retry={'true' if should_retry else 'false'}\n")
+              fh.write(f"reason={reason}\n")
+              fh.write(f"expected_version={expected_version}\n")
+              fh.write(f"public_status={result.status}\n")
+          PY
 
   dispatch-production-retry:
     needs: [gate]
