@@ -73,7 +73,7 @@ jobs:
                   "influence": 1.0,
               },
               "bell": {
-                  "prompt": "Loud school alarm bell ringing urgently, classic fire drill bell clanging rapidly and loudly, old-fashioned mechanical school bell ringing BRRRRRING at maximum volume, industrial alarm bell non-stop ringing, impossible to ignore",
+                  "prompt": "Professional boxing ring fight bell: one crisp brass strike with a clear high ping and long ringing decay, exactly like a gym round bell or ringside handbell, metallic resonance, single hit then natural fade, no school fire alarm, no electric buzzer, no voice",
                   "duration": 5.0,
                   "influence": 1.0,
               },
