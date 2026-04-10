@@ -13,7 +13,7 @@ MAESTRO_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/maestro"
 AGENT_DEVICE_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/agent-device"
 LAST_STAGE_FILE="$AGENT_DEVICE_ARTIFACT_DIR/last-stage.txt"
 IOS_BUILD_TIMEOUT_SECONDS="${IOS_BUILD_TIMEOUT_SECONDS:-900}"
-MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-420}"
+MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-240}"
 AGENT_DEVICE_TIMEOUT_SECONDS="${AGENT_DEVICE_TIMEOUT_SECONDS:-120}"
 AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS="${AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS:-30}"
 SIMCTL_TIMEOUT_SECONDS="${SIMCTL_TIMEOUT_SECONDS:-120}"
@@ -122,6 +122,7 @@ run_maestro_flow() {
       _ "$SIMULATOR_UDID" "$flow" "$log_path"; then
       return 0
     fi
+    xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
     sleep 10
   done
   return 1
@@ -152,6 +153,8 @@ fi
 record_stage "install simulator app"
 xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 run_with_timeout "$SIMCTL_TIMEOUT_SECONDS" xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+record_stage "pregrant notification permission"
+xcrun simctl privacy "$SIMULATOR_UDID" grant notifications "$BUNDLE_ID" 2>/dev/null || true
 
 run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
 run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"

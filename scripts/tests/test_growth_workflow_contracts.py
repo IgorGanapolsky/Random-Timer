@@ -332,6 +332,9 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "run_maestro_flow" in ios_script
     assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
     assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-240" in ios_script
+    assert "xcrun simctl privacy \"$SIMULATOR_UDID\" grant notifications \"$BUNDLE_ID\"" in ios_script
+    assert "xcrun simctl terminate \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
     assert "Reset app state before Agent Device validates the home screen" in ios_script
     assert "xcrun simctl uninstall \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
@@ -372,6 +375,7 @@ def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
     source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
 
     assert "- tapOn: 'Start Timer'" in source
+    assert "- stopApp" in source
     assert ".*Timer running.*" not in source
     assert "text: 'Pause'" not in source
     assert "text: 'Stop'" not in source
