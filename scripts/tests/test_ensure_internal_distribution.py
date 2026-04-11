@@ -115,6 +115,13 @@ class _FakeRequestsWithoutProjectTesters(_FakeRequests):
         return super().request(method, url, headers=headers, params=params, json=json, timeout=timeout)
 
 
+class _FakeRequestsWithEmptyGroup(_FakeRequests):
+    def request(self, method, url, headers=None, params=None, json=None, timeout=None):
+        if url.endswith("/groups/internal-testers"):
+            return _FakeResponse({"name": "projects/712918404489/groups/internal-testers", "testerCount": 0, "releaseCount": 4})
+        return super().request(method, url, headers=headers, params=params, json=json, timeout=timeout)
+
+
 def _firebase_verifier(fake_requests):
     verifier = eid.FirebaseInternalDistributor(
         app_id="1:712918404489:android:abc",
@@ -157,6 +164,15 @@ def test_firebase_internal_distribution_allows_project_tester_list_propagation_d
     assert result["passed"] is True
     assert result["status"] == "VISIBLE"
     assert "project tester list pending" in result["details"]
+    assert "direct tester distribution accepted for 1 tester" in result["details"]
+
+
+def test_firebase_internal_distribution_allows_empty_group_when_direct_tester_delivery_succeeded():
+    result = _ensure_firebase(_FakeRequestsWithEmptyGroup())
+
+    assert result["passed"] is True
+    assert result["status"] == "VISIBLE"
+    assert "group warnings: Firebase group 'internal-testers' has no testers" in result["details"]
     assert "direct tester distribution accepted for 1 tester" in result["details"]
 
 
