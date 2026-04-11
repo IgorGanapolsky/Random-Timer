@@ -16,6 +16,28 @@ def test_pause_paid_campaigns_uses_environment_backed_reason() -> None:
     assert '--reason "$INPUT_REASON"' in contents
 
 
+def test_workflow_inputs_are_not_interpolated_inside_run_blocks() -> None:
+    offenders: list[str] = []
+
+    for path in sorted((REPO_ROOT / ".github/workflows").glob("*.yml")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        active_run_indent: int | None = None
+        for line_number, line in enumerate(lines, start=1):
+            stripped = line.lstrip()
+            indent = len(line) - len(stripped)
+
+            if active_run_indent is not None:
+                if stripped and indent <= active_run_indent:
+                    active_run_indent = None
+                elif "${{ inputs." in line:
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}:{line_number}")
+
+            if stripped.startswith("run: |") or stripped.startswith("run: >"):
+                active_run_indent = indent
+
+    assert offenders == []
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]
