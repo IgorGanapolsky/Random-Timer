@@ -59,6 +59,7 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
+          IOS_VERSION: ${{ inputs.version }}
           WAIT_FOR_EDITABLE: ${{ inputs.wait }}
         run: |
           EXTRA_ARGS=()
@@ -66,7 +67,7 @@ jobs:
             EXTRA_ARGS+=(--wait)
           fi
           python scripts/asc/asc_remove_from_review.py \
-            --version "${{ inputs.version }}" \
+            --version "$IOS_VERSION" \
             "${EXTRA_ARGS[@]}" \
             --json-out /tmp/asc_remove_from_review.json
           cat /tmp/asc_remove_from_review.json

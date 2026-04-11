@@ -77,11 +77,12 @@ jobs:
       - name: Read commit status proofs for release SHA
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_PLATFORM: ${{ inputs.platform }}
         run: |
           set -euo pipefail
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
           python scripts/internal_signoff_gate.py \
-            --platform "${{ inputs.platform }}" \
+            --platform "$RELEASE_PLATFORM" \
             --statuses-json /tmp/internal-signoff-status.json
 
   require-production-signoff:
@@ -370,9 +371,11 @@ jobs:
       - name: Capture Play publish result outputs
         id: play_result
         if: always()
+        env:
+          ANDROID_TRACK_INPUT: ${{ inputs.android_track }}
         run: |
-          REQUESTED_TRACK="${{ inputs.android_track }}"
-          EFFECTIVE_TRACK="${{ inputs.android_track }}"
+          REQUESTED_TRACK="$ANDROID_TRACK_INPUT"
+          EFFECTIVE_TRACK="$ANDROID_TRACK_INPUT"
           FALLBACK_USED="false"
           PRECONDITION_BLOCKED="false"
           VERSION_CODE="${{ steps.build_meta.outputs.version_code }}"
@@ -386,7 +389,7 @@ jobs:
           fi
 
           if [ -z "$REQUESTED_TRACK" ] || [ "$REQUESTED_TRACK" = "null" ]; then
-            REQUESTED_TRACK="${{ inputs.android_track }}"
+            REQUESTED_TRACK="$ANDROID_TRACK_INPUT"
           fi
           if [ -z "$EFFECTIVE_TRACK" ] || [ "$EFFECTIVE_TRACK" = "null" ]; then
             EFFECTIVE_TRACK="$REQUESTED_TRACK"
@@ -476,15 +479,23 @@ jobs:
           PY
 
       - name: Debug workflow inputs (no secrets)
+        env:
+          INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_ANDROID_TRACK: ${{ inputs.android_track }}
+          INPUT_SUBMIT_REVIEW: ${{ inputs.submit_review }}
+          EVENT_INPUT_PLATFORM: ${{ github.event.inputs.platform }}
+          EVENT_INPUT_ANDROID_TRACK: ${{ github.event.inputs.android_track }}
+          EVENT_INPUT_SUBMIT_REVIEW: ${{ github.event.inputs.submit_review }}
+          EVENT_INPUTS_JSON: ${{ toJSON(github.event.inputs) }}
         run: |
           echo "event_name=${{ github.event_name }}"
-          echo "inputs.platform=${{ inputs.platform }}"
-          echo "inputs.android_track=${{ inputs.android_track }}"
-          echo "inputs.submit_review=${{ inputs.submit_review }}"
-          echo "github.event.inputs.platform=${{ github.event.inputs.platform }}"
-          echo "github.event.inputs.android_track=${{ github.event.inputs.android_track }}"
-          echo "github.event.inputs.submit_review=${{ github.event.inputs.submit_review }}"
-          echo "github.event.inputs(json)=${{ toJSON(github.event.inputs) }}"
+          echo "inputs.platform=$INPUT_PLATFORM"
+          echo "inputs.android_track=$INPUT_ANDROID_TRACK"
+          echo "inputs.submit_review=$INPUT_SUBMIT_REVIEW"
+          echo "github.event.inputs.platform=$EVENT_INPUT_PLATFORM"
+          echo "github.event.inputs.android_track=$EVENT_INPUT_ANDROID_TRACK"
+          echo "github.event.inputs.submit_review=$EVENT_INPUT_SUBMIT_REVIEW"
+          echo "github.event.inputs(json)=$EVENT_INPUTS_JSON"
 
       - name: Determine platform flag
         id: platform
@@ -499,6 +510,8 @@ jobs:
 
       - name: Determine Android track (no secrets)
         id: android_track
+        env:
+          ANDROID_TRACK_INPUT: ${{ inputs.android_track }}
         run: |
           TRACK="${{ needs.android-release.outputs.effective_track }}"
           if [ -n "$TRACK" ] && [ "$TRACK" != "null" ]; then
@@ -507,7 +520,7 @@ jobs:
             TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
           fi
           if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
-            TRACK="${{ inputs.android_track }}"
+            TRACK="$ANDROID_TRACK_INPUT"
           fi
           if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
             TRACK="production"

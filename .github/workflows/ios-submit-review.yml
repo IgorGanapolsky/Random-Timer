@@ -224,6 +224,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           LOCALE: ${{ inputs.locale }}
           IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
+          ATTACH_SUBSCRIPTIONS: ${{ inputs.attach_subscriptions }}
         run: |
           if ! echo "$LOCALE" | grep -Eq '^[A-Za-z]{2}(-[A-Za-z]{2})?$'; then
             echo "❌ Invalid locale input (expected e.g. en-US): $LOCALE"
@@ -234,7 +235,7 @@ jobs:
             exit 1
           fi
           EXTRA_FLAGS=""
-          if [[ "${{ inputs.attach_subscriptions }}" == "true" ]]; then
+          if [[ "$ATTACH_SUBSCRIPTIONS" == "true" ]]; then
             EXTRA_FLAGS="--skip-build-check"
           fi
           python scripts/asc/asc_verify_ready.py \
