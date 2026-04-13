@@ -51,6 +51,10 @@ class ProManager
             const val ELITE_PRODUCT_ID = "elite_tactical"
             const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID
 
+            /** Monthly subscription: $3.99/month. Must be created in Google Play Console as a
+             *  subscription product with billing period P1M under the same base plan as ELITE. */
+            const val MONTHLY_PRODUCT_ID = "elite_tactical_monthly"
+
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
             ): Boolean = true
@@ -83,6 +87,8 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
+        /** Set to true when the pending purchase was initiated with a free-trial offer. */
+        private var pendingPurchaseIsFreeTrial: Boolean = false
 
         init {
             connectAndRestore()
@@ -151,7 +157,8 @@ class ProManager
 
             val hasElite =
                 subsResult.purchasesList.any { purchase ->
-                    purchase.products.contains(ELITE_PRODUCT_ID) &&
+                    (purchase.products.contains(ELITE_PRODUCT_ID) ||
+                        purchase.products.contains(MONTHLY_PRODUCT_ID)) &&
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
 
@@ -219,12 +226,14 @@ class ProManager
             cachedProductDetails[productID] = productDetails
 
             val selectedOffer =
-                if (productID == ELITE_PRODUCT_ID) {
-                    selectPreferredSubscriptionOffer(productDetails.toSubscriptionOffers())
-                } else {
-                    null
+                when (productID) {
+                    ELITE_PRODUCT_ID ->
+                        selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1Y")
+                    MONTHLY_PRODUCT_ID ->
+                        selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1M")
+                    else -> null
                 }
-            if (productID == ELITE_PRODUCT_ID && selectedOffer == null) {
+            if ((productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) && selectedOffer == null) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -235,6 +244,8 @@ class ProManager
                 pendingPurchaseEntryPoint = null
                 return false
             }
+
+            pendingPurchaseIsFreeTrial = selectedOffer?.hasFreeTrial ?: false
 
             val productDetailsParamsList =
                 listOf(
@@ -260,6 +271,7 @@ class ProManager
                     "product_id" to productID,
                     AnalyticsProperties.SOURCE to MonetizationSources.PAYWALL,
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    "has_free_trial" to pendingPurchaseIsFreeTrial,
                 ),
             )
             val result = billingClient.launchBillingFlow(activity, flowParams)
@@ -272,6 +284,7 @@ class ProManager
                     debugMessage = result.debugMessage,
                 )
                 pendingPurchaseEntryPoint = null
+                pendingPurchaseIsFreeTrial = false
                 return false
             }
             return true
@@ -280,11 +293,12 @@ class ProManager
         private suspend fun fetchAllProductDetails() {
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
+            fetchProductDetails(MONTHLY_PRODUCT_ID)
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
             val productType =
-                if (productID == ELITE_PRODUCT_ID) {
+                if (productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) {
                     BillingClient.ProductType.SUBS
                 } else {
                     BillingClient.ProductType.INAPP
@@ -318,17 +332,32 @@ class ProManager
             return details
         }
 
+        /**
+         * Returns true when the cached elite subscription product has a free-trial offer available.
+         * Used by the paywall UI to decide which CTA text to display.
+         */
+        fun hasFreeTrialOffer(): Boolean {
+            val details = cachedProductDetails[ELITE_PRODUCT_ID] ?: return false
+            return details.toSubscriptionOffers().any { it.hasFreeTrial }
+        }
+
         suspend fun getFormattedPrice(productID: String): String {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
-            return if (productID == ELITE_PRODUCT_ID) {
-                selectPreferredSubscriptionOffer(details?.toSubscriptionOffers().orEmpty())
-                    ?.displayPrice ?: "$29.99"
-            } else {
-                details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
+            return when (productID) {
+                ELITE_PRODUCT_ID ->
+                    selectSubscriptionOfferByPeriod(details?.toSubscriptionOffers().orEmpty(), "P1Y")
+                        ?.displayPrice ?: "$29.99"
+                MONTHLY_PRODUCT_ID ->
+                    selectSubscriptionOfferByPeriod(details?.toSubscriptionOffers().orEmpty(), "P1M")
+                        ?.displayPrice ?: "$3.99"
+                else ->
+                    details?.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
             }
         }
 
         suspend fun getFormattedProPrice(): String = getFormattedPrice(PRO_PRODUCT_ID)
+
+        suspend fun getFormattedMonthlyPrice(): String = getFormattedPrice(MONTHLY_PRODUCT_ID)
 
         /**
          * Returns the numeric price in the user's local currency from the cached ProductDetails.
@@ -337,24 +366,41 @@ class ProManager
          */
         private fun priceAmountFromCache(productID: String): Double {
             val details = cachedProductDetails[productID]
-            return if (productID == ELITE_PRODUCT_ID) {
-                // Subscription: find the preferred offer token, then pull priceAmountMicros from
-                // the raw Google billing PricingPhaseList (the last/base phase, not any trial).
-                val preferredToken = selectPreferredSubscriptionOffer(
-                    details?.toSubscriptionOffers().orEmpty()
-                )?.offerToken
-                val micros = details?.subscriptionOfferDetails
-                    ?.firstOrNull { it.offerToken == preferredToken }
-                    ?.pricingPhases
-                    ?.pricingPhaseList
-                    ?.lastOrNull()
-                    ?.priceAmountMicros
-                    ?: 2_999_000L // fallback: $29.99
-                micros / 1_000_000.0
-            } else {
-                // One-time purchase
-                val micros = details?.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 499_000L // fallback: $4.99
-                micros / 1_000_000.0
+            return when (productID) {
+                ELITE_PRODUCT_ID -> {
+                    // Annual subscription: find P1Y offer token, pull priceAmountMicros from
+                    // the raw Google billing PricingPhaseList (last/base phase, not any trial).
+                    val preferredToken = selectSubscriptionOfferByPeriod(
+                        details?.toSubscriptionOffers().orEmpty(), "P1Y"
+                    )?.offerToken
+                    val micros = details?.subscriptionOfferDetails
+                        ?.firstOrNull { it.offerToken == preferredToken }
+                        ?.pricingPhases
+                        ?.pricingPhaseList
+                        ?.lastOrNull()
+                        ?.priceAmountMicros
+                        ?: 29_990_000L // fallback: $29.99
+                    micros / 1_000_000.0
+                }
+                MONTHLY_PRODUCT_ID -> {
+                    // Monthly subscription: find P1M offer token.
+                    val preferredToken = selectSubscriptionOfferByPeriod(
+                        details?.toSubscriptionOffers().orEmpty(), "P1M"
+                    )?.offerToken
+                    val micros = details?.subscriptionOfferDetails
+                        ?.firstOrNull { it.offerToken == preferredToken }
+                        ?.pricingPhases
+                        ?.pricingPhaseList
+                        ?.lastOrNull()
+                        ?.priceAmountMicros
+                        ?: 3_990_000L // fallback: $3.99
+                    micros / 1_000_000.0
+                }
+                else -> {
+                    // One-time purchase
+                    val micros = details?.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 499_000L // fallback: $4.99
+                    micros / 1_000_000.0
+                }
             }
         }
 
@@ -414,6 +460,16 @@ class ProManager
                         AnalyticsProperties.REVENUE to revenueAmount,
                     ),
                 )
+                // Track free trial start separately so it surfaces in PostHog trial funnel.
+                if (pendingPurchaseIsFreeTrial) {
+                    analyticsService.track(
+                        AnalyticsEvents.FREE_TRIAL_STARTED,
+                        mapOf(
+                            AnalyticsProperties.PRODUCT_ID to purchasedProductId,
+                            AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
+                        ),
+                    )
+                }
             }
             trackPurchaseResult(
                 success = hasPurchased,
@@ -423,10 +479,13 @@ class ProManager
                 debugMessage = result.debugMessage,
             )
             pendingPurchaseEntryPoint = null
+            pendingPurchaseIsFreeTrial = false
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
-            if (purchase.products.contains(ELITE_PRODUCT_ID)) {
+            if (purchase.products.contains(ELITE_PRODUCT_ID) ||
+                purchase.products.contains(MONTHLY_PRODUCT_ID)
+            ) {
                 _entitlementLevel.value = EntitlementLevel.ELITE
             } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
                 if (_entitlementLevel.value == EntitlementLevel.NONE) {
@@ -554,6 +613,8 @@ class ProManager
 internal data class SubscriptionPricingPhase(
     val formattedPrice: String,
     val billingPeriod: String,
+    /** True when priceAmountMicros == 0, indicating a free trial phase. */
+    val isFree: Boolean = false,
 )
 
 internal data class SubscriptionOffer(
@@ -562,10 +623,24 @@ internal data class SubscriptionOffer(
 ) {
     val displayPrice: String?
         get() = pricingPhases.lastOrNull()?.formattedPrice ?: pricingPhases.firstOrNull()?.formattedPrice
+
+    /** True when the offer contains at least one zero-price (free trial) phase. */
+    val hasFreeTrial: Boolean
+        get() = pricingPhases.any { it.isFree }
 }
 
+/** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M").
+ *  Falls back to the first available offer if no exact match is found. */
+internal fun selectSubscriptionOfferByPeriod(offers: List<SubscriptionOffer>, period: String): SubscriptionOffer? =
+    offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == period } } ?: offers.firstOrNull()
+
+/**
+ * Select the best offer to present to the user.
+ * Priority: free-trial offer > annual offer > first available offer.
+ */
 internal fun selectPreferredSubscriptionOffer(offers: List<SubscriptionOffer>): SubscriptionOffer? =
-    offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == "P1Y" } } ?: offers.firstOrNull()
+    offers.firstOrNull { it.hasFreeTrial }
+        ?: selectSubscriptionOfferByPeriod(offers, "P1Y")
 
 private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers(): List<SubscriptionOffer> =
     subscriptionOfferDetails
@@ -577,6 +652,7 @@ private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers():
                         SubscriptionPricingPhase(
                             formattedPrice = phase.formattedPrice,
                             billingPeriod = phase.billingPeriod,
+                            isFree = phase.priceAmountMicros == 0L,
                         )
                     },
             )
