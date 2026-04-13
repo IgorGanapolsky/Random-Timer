@@ -163,13 +163,13 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
-    fun `recordCompletion called after alarm to complete transition — review eligibility tracked`() {
+    fun `recordCompletion not called after alarm to complete transition — service owns review eligibility`() {
         viewModel.onTimerStateObservedForAnalytics(
             previousStatus = TimerStatus.ALARM,
             state = timerState(TimerStatus.COMPLETE),
         )
 
-        verify(exactly = 1) { viewModel.storeReviewManager.recordCompletion() }
+        verify(exactly = 0) { viewModel.storeReviewManager.recordCompletion() }
     }
 
     @Test
