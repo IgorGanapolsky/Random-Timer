@@ -236,6 +236,16 @@ def test_sound_arsenal_catalog_matches_across_platforms():
     assert len(ios_catalog["sounds"]) == 10
 
 
+def test_bundled_sound_catalog_pack_id_matches_runtime_manifest():
+    runtime_manifest = _load_runtime_manifest()
+    ios_catalog = _load_ios_sound_catalog()
+    android_catalog = _load_android_sound_catalog()
+
+    assert ios_catalog["packId"] == runtime_manifest["packId"]
+    assert android_catalog["packId"] == runtime_manifest["packId"]
+    assert runtime_manifest["soundCatalog"]["packId"] == runtime_manifest["packId"]
+
+
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():
     catalog = _load_ios_voice_catalog()
 
