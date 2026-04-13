@@ -1,0 +1,140 @@
+name: Daily Conversion Dashboard
+
+on:
+  schedule:
+    # Every day at 08:00 UTC (CEO morning brief)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Lookback window in days (default: 7)'
+        required: false
+        default: '7'
+
+permissions:
+  contents: write   # needed to commit the JSON back to the repo
+
+jobs:
+  dashboard:
+    name: Generate & Commit Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use a PAT so the commit triggers downstream CI;
+          # fall back to the default GITHUB_TOKEN if the secret is absent.
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          ref: develop
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run daily conversion dashboard
+        id: run_dashboard
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          CI: 'true'
+        run: |
+          DAYS="${{ github.event.inputs.days || '7' }}"
+          echo "Running dashboard for last ${DAYS} days…"
+          python scripts/daily_conversion_dashboard.py \
+            --days "$DAYS" \
+            --output marketing/data/daily_dashboard.json \
+            --no-dotenv \
+            --json-only | tee /tmp/dashboard_output.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Print CEO summary to Actions log
+        run: |
+          echo "========================================================"
+          echo "  CEO MORNING BRIEF — $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "========================================================"
+          python3 - <<'PYEOF'
+          import json, sys
+
+          try:
+              data = json.load(open("/tmp/dashboard_output.json"))
+          except Exception as e:
+              print(f"Could not parse dashboard JSON: {e}")
+              sys.exit(0)
+
+          status = data.get("status", "unknown")
+          print(f"  Status    : {status}")
+          print(f"  Generated : {data.get('generated_at')}")
+          print()
+
+          # Funnel
+          funnel = data.get("funnel_7d", {})
+          steps  = funnel.get("steps", [])
+          print("  FUNNEL (7d):")
+          for s in steps:
+              sp = s.get("step_conversion_pct")
+              sp_str = f"{sp:.1f}%" if sp is not None else "n/a"
+              users  = s.get("distinct_users") or 0
+              print(f"    {s['label']:<28}  users={users:>6,}  step={sp_str:>7}")
+          print()
+
+          drop = funnel.get("biggest_drop")
+          if drop:
+              print(f"  #1 PRIORITY FIX: {drop['label']} "
+                    f"({drop.get('step_conversion_pct')}% step conv)")
+          print()
+
+          # Revenue
+          rev = data.get("revenue", {})
+          avg = rev.get("avg_daily_revenue", 0)
+          tgt = rev.get("target_daily_revenue", 100)
+          pct = rev.get("pct_to_daily_target", 0)
+          print(f"  REVENUE:  7d sum=${rev.get('revenue_sum_7d', 0):,.2f}  "
+                f"avg/day=${avg:,.2f}  target=${tgt:,.0f}/day  ({pct:.1f}% to goal)")
+          print()
+
+          # WQTU
+          wqtu = data.get("wqtu", {})
+          print(f"  WQTU (North Star):  {wqtu.get('wqtu')}")
+          print()
+
+          # Trend
+          trend = data.get("daily_trend", {})
+          print(f"  TREND DIRECTION:    {trend.get('direction', 'unknown').upper()}")
+
+          errs = data.get("query_errors", [])
+          if errs:
+              print(f"\n  WARNINGS ({len(errs)}):")
+              for e in errs[:5]:
+                  print(f"    - {e}")
+
+          print()
+          print("========================================================")
+          PYEOF
+
+      - name: Commit dashboard JSON to develop
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add marketing/data/daily_dashboard.json
+          # Only commit if file changed
+          if git diff --cached --quiet; then
+            echo "No changes to commit — dashboard data unchanged."
+          else
+            DATE=$(date -u '+%Y-%m-%d')
+            git commit -m "chore(dashboard): daily conversion snapshot ${DATE} [skip ci]"
+            git push origin develop
+            echo "Dashboard committed and pushed."
+          fi
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-dashboard-${{ github.run_id }}
+          path: marketing/data/daily_dashboard.json
+          retention-days: 90
