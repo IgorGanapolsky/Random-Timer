@@ -564,14 +564,30 @@ jobs:
           python scripts/verify_release.py $ARGS
 
       - name: Verify public Google Play listing (production only)
+        id: play_public_listing
         if: needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
+        continue-on-error: true
         run: |
+          set -o pipefail
           python scripts/verify_play_public_listing.py \
             --package com.iganapolsky.randomtimer \
             --country US \
             --expected-version "${{ steps.versions.outputs.android_version }}" \
             --timeout 900 \
-            --poll-interval 60
+            --poll-interval 60 | tee /tmp/play-public-listing.txt
+
+      - name: Warn when Play storefront propagation lags production
+        if: always() && steps.play_public_listing.outcome == 'failure'
+        run: |
+          echo "::warning::Google Play production already verified via Android Publisher API, but the public storefront has not yet shown version ${{ steps.versions.outputs.android_version }}. This does not block iOS submit/tag/sync-main; inspect the play-public-listing-report artifact for the exact mismatch."
+
+      - name: Upload Play storefront verification report
+        if: always() && needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: play-public-listing-report
+          path: /tmp/play-public-listing.txt
+          if-no-files-found: ignore
 
       - name: Cleanup secrets
         if: always()
