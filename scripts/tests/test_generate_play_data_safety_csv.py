@@ -8,6 +8,9 @@ from pathlib import Path
 from scripts import generate_play_data_safety_csv as gen
 
 
+ROOT = Path(__file__).resolve().parents[2]
+
+
 def _row(question: str, response: str = "", requirement: str = "MULTIPLE_CHOICE") -> dict[str, str]:
     return {
         "Question ID (machine readable)": question,
@@ -46,8 +49,24 @@ def _template() -> str:
     return buffer.getvalue()
 
 
+def _source_fixture(repo_root: Path) -> Path:
+    source = json.loads((ROOT / "marketing/compliance/play_data_safety_source.json").read_text(encoding="utf-8"))
+    evidence_paths = set(source["policy_basis"])
+    for data_type in source["data_types"]:
+        evidence_paths.update(data_type["evidence"])
+    for evidence_path in evidence_paths:
+        target = repo_root / evidence_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("test evidence\n", encoding="utf-8")
+
+    source_path = repo_root / "marketing/compliance/play_data_safety_source.json"
+    source_path.parent.mkdir(parents=True, exist_ok=True)
+    source_path.write_text(json.dumps(source), encoding="utf-8")
+    return source_path
+
+
 def test_generator_patches_official_template_shape(tmp_path: Path) -> None:
-    source = Path("marketing/compliance/play_data_safety_source.json").resolve()
+    source = _source_fixture(tmp_path)
     template = tmp_path / "template.csv"
     output = tmp_path / "play_data_safety.csv"
     evidence = tmp_path / "evidence.json"
@@ -59,7 +78,7 @@ def test_generator_patches_official_template_shape(tmp_path: Path) -> None:
         evidence_path=evidence,
         template_path=template,
         template_url="",
-        repo_root=Path.cwd(),
+        repo_root=tmp_path,
     )
 
     rows = list(csv.DictReader(io.StringIO(output.read_text(encoding="utf-8"))))
@@ -94,9 +113,29 @@ def test_generator_rejects_missing_evidence(tmp_path: Path) -> None:
             evidence_path=tmp_path / "evidence.json",
             template_path=tmp_path / "template.csv",
             template_url="",
-            repo_root=Path.cwd(),
+            repo_root=tmp_path,
         )
     except SystemExit as exc:
         assert "missing evidence" in str(exc).lower()
     else:
         raise AssertionError("Expected missing evidence to fail")
+
+
+def test_generator_rejects_output_path_outside_repo(tmp_path: Path) -> None:
+    source = _source_fixture(tmp_path)
+    template = tmp_path / "template.csv"
+    template.write_text(_template(), encoding="utf-8")
+
+    try:
+        gen.generate(
+            source_path=source,
+            output_path=tmp_path.parent / "outside.csv",
+            evidence_path=tmp_path / "evidence.json",
+            template_path=template,
+            template_url="",
+            repo_root=tmp_path,
+        )
+    except SystemExit as exc:
+        assert "inside repo root" in str(exc)
+    else:
+        raise AssertionError("Expected outside output path to fail")

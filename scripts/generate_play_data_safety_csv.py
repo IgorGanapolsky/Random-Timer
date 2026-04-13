@@ -63,6 +63,13 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _resolve_within_repo(path: Path, repo_root: Path, label: str) -> Path:
+    candidate = (repo_root / path if not path.is_absolute() else path).resolve()
+    if not candidate.is_relative_to(repo_root):
+        raise SystemExit(f"{label} must resolve inside repo root: {path}")
+    return candidate
+
+
 def _load_template(path: Path | None, url: str) -> str:
     if path:
         return path.read_text(encoding="utf-8")
@@ -228,6 +235,12 @@ def generate(
     template_url: str,
     repo_root: Path,
 ) -> dict[str, Any]:
+    repo_root = repo_root.resolve()
+    source_path = _resolve_within_repo(source_path, repo_root, "source_path")
+    output_path = _resolve_within_repo(output_path, repo_root, "output_path")
+    evidence_path = _resolve_within_repo(evidence_path, repo_root, "evidence_path")
+    template_path = _resolve_within_repo(template_path, repo_root, "template_path") if template_path else None
+
     source = _load_json(source_path)
     missing_evidence = _validate_evidence(source, repo_root)
     if missing_evidence:
@@ -266,10 +279,10 @@ def main() -> int:
 
     repo_root = args.repo_root.resolve()
     result = generate(
-        source_path=args.source.resolve(),
-        output_path=args.output.resolve(),
-        evidence_path=args.evidence_output.resolve(),
-        template_path=args.template_path.resolve() if args.template_path else None,
+        source_path=args.source,
+        output_path=args.output,
+        evidence_path=args.evidence_output,
+        template_path=args.template_path,
         template_url=args.template_url,
         repo_root=repo_root,
     )

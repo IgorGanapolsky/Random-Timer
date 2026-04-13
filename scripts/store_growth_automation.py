@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -26,10 +27,18 @@ PLAY_SHORT_DESCRIPTION_MAX = 80
 PLAY_FULL_DESCRIPTION_MAX = 4000
 APPLE_PROMOTIONAL_TEXT_MAX = 170
 APPLE_KEYWORDS_MAX = 100
+SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _resolve_within_repo(path: Path, repo_root: Path, label: str) -> Path:
+    candidate = (repo_root / path if not path.is_absolute() else path).resolve()
+    if not candidate.is_relative_to(repo_root):
+        raise SystemExit(f"{label} must resolve inside repo root: {path}")
+    return candidate
 
 
 def _slug_url(slug: str) -> str:
@@ -63,6 +72,8 @@ def validate_personas(payload: dict[str, Any]) -> list[str]:
         if not slug:
             errors.append("persona missing slug")
             continue
+        if not SLUG_RE.fullmatch(slug):
+            errors.append(f"{slug} must be a lowercase URL-safe slug")
         if slug in seen:
             errors.append(f"duplicate persona slug: {slug}")
         seen.add(slug)
@@ -172,9 +183,11 @@ def build_plan(payload: dict[str, Any], generated_at: str) -> dict[str, Any]:
     }
 
 
-def _write_json(path: Path, payload: Any) -> None:
+def _write_json(repo_root: Path, relative_path: Path, payload: Any) -> Path:
+    path = _resolve_within_repo(relative_path, repo_root, str(relative_path))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
 
 
 def _render_audience_page(persona: dict[str, Any]) -> str:
@@ -228,15 +241,22 @@ def _render_audience_page(persona: dict[str, Any]) -> str:
 """
 
 
-def write_audience_pages(personas: list[dict[str, Any]], site_dir: Path) -> list[Path]:
-    site_dir.mkdir(parents=True, exist_ok=True)
+def _write_site_page(repo_root: Path, relative_path: Path, html_text: str) -> Path:
+    path = _resolve_within_repo(relative_path, repo_root, str(relative_path))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(html_text, encoding="utf-8")
+    return path
+
+
+def write_audience_pages(personas: list[dict[str, Any]], repo_root: Path) -> list[Path]:
     written: list[Path] = []
     cards: list[str] = []
     for persona in personas:
-        page_dir = site_dir / persona["slug"]
-        page_dir.mkdir(parents=True, exist_ok=True)
-        page_path = page_dir / "index.html"
-        page_path.write_text(_render_audience_page(persona), encoding="utf-8")
+        page_path = _write_site_page(
+            repo_root,
+            Path("marketing/site/audiences") / persona["slug"] / "index.html",
+            _render_audience_page(persona),
+        )
         written.append(page_path)
         cards.append(
             "<article class=\"post-card\">"
@@ -266,8 +286,7 @@ def write_audience_pages(personas: list[dict[str, Any]], site_dir: Path) -> list
 </body>
 </html>
 """
-    index_path = site_dir / "index.html"
-    index_path.write_text(index, encoding="utf-8")
+    index_path = _write_site_page(repo_root, Path("marketing/site/audiences/index.html"), index)
     written.append(index_path)
     return written
 
@@ -275,9 +294,8 @@ def write_audience_pages(personas: list[dict[str, Any]], site_dir: Path) -> list
 def build(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = args.repo_root.resolve()
     personas_path = args.personas.resolve()
-    generated_dir = (repo_root / "marketing" / "store_growth" / "generated").resolve()
-    site_dir = (repo_root / "marketing" / "site" / "audiences").resolve()
-    attribution_path = (repo_root / "marketing" / "data" / "store_growth_attribution.json").resolve()
+    generated_dir = _resolve_within_repo(Path("marketing/store_growth/generated"), repo_root, "generated_dir")
+    attribution_path = _resolve_within_repo(Path("marketing/data/store_growth_attribution.json"), repo_root, "attribution_path")
 
     payload = _load_json(personas_path)
     errors = validate_personas(payload)
@@ -286,13 +304,12 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     plan = build_plan(payload, generated_at)
-    generated_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(generated_dir / "store_growth_plan.json", plan)
-    _write_json(generated_dir / "google_custom_store_listings.json", plan["google_custom_store_listings"])
-    _write_json(generated_dir / "apple_custom_product_pages.json", plan["apple_custom_product_pages"])
-    _write_json(generated_dir / "persona_content_calendar.json", plan["content_calendar"])
-    _write_json(attribution_path, plan["attribution"])
-    written_pages = write_audience_pages(payload["personas"], site_dir)
+    _write_json(repo_root, Path("marketing/store_growth/generated/store_growth_plan.json"), plan)
+    _write_json(repo_root, Path("marketing/store_growth/generated/google_custom_store_listings.json"), plan["google_custom_store_listings"])
+    _write_json(repo_root, Path("marketing/store_growth/generated/apple_custom_product_pages.json"), plan["apple_custom_product_pages"])
+    _write_json(repo_root, Path("marketing/store_growth/generated/persona_content_calendar.json"), plan["content_calendar"])
+    _write_json(repo_root, Path("marketing/data/store_growth_attribution.json"), plan["attribution"])
+    written_pages = write_audience_pages(payload["personas"], repo_root)
 
     return {
         "status": "ok",

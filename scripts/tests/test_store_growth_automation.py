@@ -17,6 +17,13 @@ def test_personas_fit_store_limits() -> None:
     assert len(payload["personas"]) == 4
 
 
+def test_persona_slug_rejects_path_traversal() -> None:
+    payload = json.loads(PERSONAS.read_text(encoding="utf-8"))
+    payload["personas"][0]["slug"] = "../outside"
+
+    assert "../outside must be a lowercase URL-safe slug" in sga.validate_personas(payload)
+
+
 def test_build_writes_persona_artifacts(tmp_path: Path) -> None:
     args = sga.build_parser().parse_args(
         [
