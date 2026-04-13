@@ -27,6 +27,8 @@ SUPPORTED_VOICE_ENDPOINTS = {
     "AZnzlk1XvdvUeBnXmlld": f"{API_BASE_URL}/v1/text-to-speech/AZnzlk1XvdvUeBnXmlld?output_format={OUTPUT_FORMAT}",
     "EXAVITQu4vr4xnSDxMaL": f"{API_BASE_URL}/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL?output_format={OUTPUT_FORMAT}",
     "sS5fXGlqomdGXa7mxBcy": f"{API_BASE_URL}/v1/text-to-speech/sS5fXGlqomdGXa7mxBcy?output_format={OUTPUT_FORMAT}",
+    "EXAVITQu4vr4xnSDxMaL": f"{API_BASE_URL}/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL?output_format={OUTPUT_FORMAT}",
+    "gE0owC0H9C8SzfDyIUtB": f"{API_BASE_URL}/v1/text-to-speech/gE0owC0H9C8SzfDyIUtB?output_format={OUTPUT_FORMAT}",
 }
 
 
