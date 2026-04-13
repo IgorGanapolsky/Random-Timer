@@ -198,17 +198,19 @@ def test_zernio_create_post_includes_media_items() -> None:
 def test_default_media_items_use_public_social_preview(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ZERNIO_MEDIA_IMAGE_URL", raising=False)
 
-    assert zo._default_media_items("https://example.com/marketing/site") == [
-        {"url": "https://example.com/marketing/site/assets/social-preview.png", "type": "image"}
-    ]
+    with patch.object(zo, "_media_image_url_is_reachable", return_value=True):
+        assert zo._default_media_items("https://example.com/marketing/site") == [
+            {"url": "https://example.com/marketing/site/assets/social-preview.png", "type": "image"}
+        ]
 
 
 def test_default_media_items_allow_override(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ZERNIO_MEDIA_IMAGE_URL", "https://cdn.example.com/custom.png")
 
-    assert zo._default_media_items("https://example.com/marketing/site") == [
-        {"url": "https://cdn.example.com/custom.png", "type": "image"}
-    ]
+    with patch.object(zo, "_media_image_url_is_reachable", return_value=True):
+        assert zo._default_media_items("https://example.com/marketing/site") == [
+            {"url": "https://cdn.example.com/custom.png", "type": "image"}
+        ]
 
 
 def test_zernio_create_post_scheduled() -> None:
@@ -281,6 +283,40 @@ def test_cmd_health_ok_counts_platforms(capsys: pytest.CaptureFixture[str]) -> N
     assert out["status"] == "ok"
     assert out["account_count"] == 3
     assert out["platforms"]["twitter"] == 2
+
+
+def test_media_image_url_is_reachable_accepts_image_content_type() -> None:
+    mock_r = MagicMock()
+    mock_r.status_code = 200
+    mock_r.headers = {"Content-Type": "image/png"}
+
+    with patch.object(zo.requests, "head", return_value=mock_r):
+        assert zo._media_image_url_is_reachable("https://example.com/p.png") is True
+
+
+def test_media_image_url_is_reachable_rejects_non_200() -> None:
+    mock_r = MagicMock()
+    mock_r.status_code = 404
+
+    with patch.object(zo.requests, "head", return_value=mock_r):
+        assert zo._media_image_url_is_reachable("https://example.com/missing.png") is False
+
+
+def test_default_media_items_empty_when_url_not_reachable(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("ZERNIO_MEDIA_IMAGE_URL", "https://example.com/bad.png")
+    with patch.object(zo, "_media_image_url_is_reachable", return_value=False):
+        assert zo._default_media_items("https://blog.example.com") == []
+    err = capsys.readouterr().err
+    assert "omit" in err.lower() or "reachable" in err.lower()
+
+
+def test_default_media_items_returns_item_when_reachable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ZERNIO_MEDIA_IMAGE_URL", "https://example.com/ok.png")
+    with patch.object(zo, "_media_image_url_is_reachable", return_value=True):
+        items = zo._default_media_items("https://blog.example.com")
+    assert items == [{"url": "https://example.com/ok.png", "type": "image"}]
 
 
 def test_build_parser_requires_subcommand() -> None:

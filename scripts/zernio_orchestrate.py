@@ -167,10 +167,27 @@ def _publish_accounts_from_env() -> Tuple[Optional[List[Dict[str, str]]], Option
     return None, "missing ZERNIO_PUBLISH_ACCOUNTS or per-platform ZERNIO_*_ACCOUNT_ID values"
 
 
+def _media_image_url_is_reachable(url: str, timeout: int = 10) -> bool:
+    try:
+        response = requests.head(url, allow_redirects=True, timeout=timeout)
+    except requests.RequestException:
+        return False
+    if response.status_code != 200:
+        return False
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    return content_type.startswith("image/")
+
+
 def _default_media_items(base_url: str) -> List[Dict[str, str]]:
     image_url = os.environ.get("ZERNIO_MEDIA_IMAGE_URL", "").strip()
     if not image_url:
         image_url = f"{base_url.rstrip('/')}/assets/social-preview.png"
+    if not _media_image_url_is_reachable(image_url):
+        print(
+            f"warning: Zernio media image URL not reachable or not image/*; omitting mediaItems ({image_url})",
+            file=sys.stderr,
+        )
+        return []
     return [{"url": image_url, "type": "image"}]
 
 
