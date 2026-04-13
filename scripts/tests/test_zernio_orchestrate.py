@@ -44,6 +44,30 @@ def test_parse_publish_accounts_rejects_replace_me_placeholder() -> None:
     assert err and "placeholder" in err.lower()
 
 
+def test_publish_accounts_from_per_platform_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ZERNIO_PUBLISH_ACCOUNTS", raising=False)
+    monkeypatch.setenv("ZERNIO_TWITTER_ACCOUNT_ID", "acc_twitter")
+    monkeypatch.setenv("ZERNIO_LINKEDIN_ACCOUNT_ID", "acc_linkedin")
+
+    parsed, err = zo._publish_accounts_from_env()
+
+    assert err is None
+    assert parsed == [
+        {"platform": "twitter", "accountId": "acc_twitter"},
+        {"platform": "linkedin", "accountId": "acc_linkedin"},
+    ]
+
+
+def test_publish_accounts_prefers_json_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ZERNIO_PUBLISH_ACCOUNTS", json.dumps([{"platform": "youtube", "accountId": "acc_y"}]))
+    monkeypatch.setenv("ZERNIO_TWITTER_ACCOUNT_ID", "acc_twitter")
+
+    parsed, err = zo._publish_accounts_from_env()
+
+    assert err is None
+    assert parsed == [{"platform": "youtube", "accountId": "acc_y"}]
+
+
 def test_recent_zernio_publish_for_slug(tmp_path: Path) -> None:
     log = tmp_path / "zernio_orchestration.jsonl"
     log.write_text(

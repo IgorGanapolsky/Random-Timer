@@ -1,0 +1,41 @@
+{
+  "evidence_path": "marketing/compliance/play_data_safety_evidence.json",
+  "false_response_count": 5,
+  "negative_claims": {
+    "collects_health_or_fitness": false,
+    "collects_location": false,
+    "contains_ads": false,
+    "sells_data": false,
+    "shares_data": false,
+    "uses_advertising_id": false
+  },
+  "output_path": "marketing/compliance/play_data_safety.csv",
+  "package_name": "com.iganapolsky.randomtimer",
+  "row_count": 763,
+  "security_practices": {
+    "committed_to_play_families_policy": false,
+    "data_deletion_request_url": "https://github.com/IgorGanapolsky/Random-Timer/issues/new",
+    "encrypts_data_in_transit": true,
+    "supports_data_deletion_request": true
+  },
+  "selected_data_type_count": 5,
+  "selected_data_type_ids": [
+    "app_activity_app_interactions",
+    "app_info_and_performance_crash_logs",
+    "app_info_and_performance_diagnostics",
+    "device_or_other_ids_device_or_other_ids",
+    "financial_info_purchase_history"
+  ],
+  "selected_response_ids": [
+    "PSL_CRASH_LOGS",
+    "PSL_DEVICE_ID",
+    "PSL_PERFORMANCE_DIAGNOSTICS",
+    "PSL_PURCHASE_HISTORY",
+    "PSL_USER_INTERACTION"
+  ],
+  "source_path": "marketing/compliance/play_data_safety_source.json",
+  "status": "generated",
+  "template_path": "",
+  "template_url": "https://storage.googleapis.com/support-kms-prod/b5v9It2EgwrgyY1gPFVB3jPUypc5lL3oNg2G",
+  "true_response_count": 28
+}

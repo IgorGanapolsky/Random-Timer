@@ -1,0 +1,46 @@
+[
+  {
+    "campaign_token": "fitness_conditioning",
+    "custom_product_page_name": "Fitness Conditioning",
+    "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+    "keywords": "timer,HIIT,conditioning,reaction,workout,interval,random",
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/fitness-conditioning/",
+    "language": "en-US",
+    "persona": "fitness-conditioning",
+    "promotional_text": "Run conditioning drills with random alerts so athletes react instead of counting down.",
+    "screenshot_story": "Show setup range, running drill, Pro audio cues, and coach-friendly quick repeat."
+  },
+  {
+    "campaign_token": "combat_sports",
+    "custom_product_page_name": "Combat Sports",
+    "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+    "keywords": "boxing,MMA,BJJ,combatives,reaction,rounds,timer",
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/combat-sports/",
+    "language": "en-US",
+    "persona": "combat-sports",
+    "promotional_text": "Train unpredictable reactions for boxing, MMA, BJJ, wrestling, and combatives rounds.",
+    "screenshot_story": "Show active drill, fast reset, Pro bell/gong sounds, and reaction-focused copy."
+  },
+  {
+    "campaign_token": "tactical_public_safety",
+    "custom_product_page_name": "Tactical Training",
+    "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+    "keywords": "tactical,law enforcement,military,reaction,training,timer",
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/tactical-public-safety/",
+    "language": "en-US",
+    "persona": "tactical-public-safety",
+    "promotional_text": "Random alerts for tactical fitness, movement, and reaction drills without agency affiliation claims.",
+    "screenshot_story": "Show minimal setup, active countdown-free drill, Pro command cues, and clear independence disclaimer."
+  },
+  {
+    "campaign_token": "developer_open_source",
+    "custom_product_page_name": "Developer Automation",
+    "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+    "keywords": "open source,automation,mobile,AI,release,timer",
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/developer-open-source/",
+    "language": "en-US",
+    "persona": "developer-open-source",
+    "promotional_text": "A focused random timer and public case study in automated mobile app growth.",
+    "screenshot_story": "Show app simplicity plus growth automation proof: privacy, releases, and metrics."
+  }
+]

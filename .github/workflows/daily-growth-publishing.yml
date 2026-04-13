@@ -49,6 +49,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install requests==2.32.5 requests-oauthlib==2.0.0 markdown==3.9
 
+      - name: Build persona store-growth plan
+        id: persona_topic
+        run: |
+          python scripts/store_growth_automation.py --repo-root . build --json-stdout
+          python scripts/store_growth_automation.py --repo-root . topic --github-output "$GITHUB_OUTPUT" --json-stdout
+
       - name: Generate + publish + collect + build site
         env:
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
@@ -81,7 +87,10 @@ jobs:
             --repo-root . \
             --output-root marketing \
             run-daily \
+            --topic "${{ steps.persona_topic.outputs.topic }}" \
             --ab-pilot
+
+          python scripts/store_growth_automation.py --repo-root . build --json-stdout
 
       - name: Zernio social fan-out (optional)
         continue-on-error: true
@@ -89,6 +98,15 @@ jobs:
           ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_PUBLISH_ACCOUNTS: ${{ secrets.ZERNIO_PUBLISH_ACCOUNTS }}
+          ZERNIO_TWITTER_ACCOUNT_ID: ${{ secrets.ZERNIO_TWITTER_ACCOUNT_ID }}
+          ZERNIO_X_ACCOUNT_ID: ${{ secrets.ZERNIO_X_ACCOUNT_ID }}
+          ZERNIO_LINKEDIN_ACCOUNT_ID: ${{ secrets.ZERNIO_LINKEDIN_ACCOUNT_ID }}
+          ZERNIO_FACEBOOK_ACCOUNT_ID: ${{ secrets.ZERNIO_FACEBOOK_ACCOUNT_ID }}
+          ZERNIO_INSTAGRAM_ACCOUNT_ID: ${{ secrets.ZERNIO_INSTAGRAM_ACCOUNT_ID }}
+          ZERNIO_THREADS_ACCOUNT_ID: ${{ secrets.ZERNIO_THREADS_ACCOUNT_ID }}
+          ZERNIO_TIKTOK_ACCOUNT_ID: ${{ secrets.ZERNIO_TIKTOK_ACCOUNT_ID }}
+          ZERNIO_YOUTUBE_ACCOUNT_ID: ${{ secrets.ZERNIO_YOUTUBE_ACCOUNT_ID }}
+          ZERNIO_MASTODON_ACCOUNT_ID: ${{ secrets.ZERNIO_MASTODON_ACCOUNT_ID }}
           ZERNIO_AUTO_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.zernio_auto_publish == '0' || github.event.inputs.zernio_auto_publish == '1') && github.event.inputs.zernio_auto_publish || secrets.ZERNIO_AUTO_PUBLISH }}
         run: python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
 
@@ -97,7 +115,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add marketing/posts marketing/diagrams marketing/data marketing/site marketing/keywords
+          git add marketing/posts marketing/diagrams marketing/data marketing/site marketing/keywords marketing/store_growth/generated
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
             exit 0
@@ -139,6 +157,9 @@ jobs:
             marketing/data/bot_traffic_summary.json
             marketing/data/bot_traffic_summary.md
             marketing/data/zernio_orchestration.jsonl
+            marketing/data/store_growth_attribution.json
             marketing/keywords/keyword_backlog.json
             marketing/keywords/keyword_backlog.csv
             marketing/keywords/keyword_backlog.md
+            marketing/store_growth/generated
+            marketing/site/audiences

@@ -1,8 +1,8 @@
-name: Generate Pro Audio Content
+name: Monthly Pro Audio Pack
 
 on:
   schedule:
-    - cron: "0 15 1 * *"
+    - cron: "0 6 1 * *"
   workflow_dispatch:
     inputs:
       pack_id:
@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   generate:
@@ -52,6 +53,12 @@ jobs:
           set -euo pipefail
 
           pack_id="${PACK_ID_INPUT:-}"
+          if [ -z "$pack_id" ]; then
+            python scripts/roll_monthly_pro_audio_pack.py \
+              --manifest content/pro_audio/monthly_pro_audio_packs.json \
+              --json-stdout
+          fi
+
           voice_id="${VOICE_ID_INPUT:-}"
           if [ -z "$voice_id" ]; then
             voice_id="$DEFAULT_VOICE_ID"
@@ -77,6 +84,9 @@ jobs:
           fi
 
           python scripts/generate_pro_audio_content.py "${args[@]}"
+          python scripts/pro_audio_freshness.py \
+            --manifest content/pro_audio/monthly_pro_audio_packs.json \
+            --grace-day-limit 0
 
       - name: Upload generated audio assets
         if: always()
@@ -90,7 +100,9 @@ jobs:
             native-android/app/src/main/assets
             native-android/app/src/main/res/raw
 
-      - name: Commit regenerated monthly audio bundle
+      - name: Create auto-merge PR for regenerated monthly audio bundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git diff --quiet -- \
             content/pro_audio/monthly_pro_audio_packs.json \
@@ -105,6 +117,13 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          AUDIO_MONTH="$(python - <<'PY'
+          import datetime as dt
+          print(dt.datetime.now(dt.timezone.utc).strftime("%Y-%m"))
+          PY
+          )"
+          BRANCH="auto/monthly-pro-audio-${AUDIO_MONTH}-${GITHUB_RUN_ID}"
+          git checkout -b "$BRANCH"
           git add \
             content/pro_audio/monthly_pro_audio_packs.json \
             content/pro_audio/runtime \
@@ -112,5 +131,12 @@ jobs:
             native-ios/RandomTimer/Resources/Sounds \
             native-android/app/src/main/assets \
             native-android/app/src/main/res/raw
-          git commit -m "chore: regenerate monthly pro audio content"
-          git push
+          git commit -m "feat(audio): monthly Pro audio pack ${AUDIO_MONTH}"
+          git push -u origin "$BRANCH"
+          PR_URL="$(gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "feat(audio): monthly Pro audio pack ${AUDIO_MONTH}" \
+            --body "Automated monthly Pro audio pack. The workflow rolled the manifest, generated ElevenLabs voice/sound assets, synced platform assets, and verified freshness with scripts/pro_audio_freshness.py." \
+            --label automation)"
+          gh pr merge --auto --squash "$PR_URL"

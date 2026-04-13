@@ -1,7 +1,8 @@
 name: Play Data Safety upload
 
 # Tier A: machine-authenticated Data Safety CSV via androidpublisher API.
-# CSV: commit marketing/compliance/play_data_safety.csv OR set secret PLAY_DATA_SAFETY_CSV (full file body).
+# CSV source order: secret PLAY_DATA_SAFETY_CSV, committed CSV, or generated
+# from marketing/compliance/play_data_safety_source.json plus Google's sample template.
 on:
   workflow_dispatch:
 
@@ -33,8 +34,23 @@ jobs:
             printf '%s\n' "$PLAY_DATA_SAFETY_CSV" > /tmp/play_data_safety.csv
           elif [ -f marketing/compliance/play_data_safety.csv ]; then
             cp marketing/compliance/play_data_safety.csv /tmp/play_data_safety.csv
+          elif [ -f marketing/compliance/play_data_safety_source.json ]; then
+            python3 scripts/generate_play_data_safety_csv.py \
+              --source marketing/compliance/play_data_safety_source.json \
+              --output /tmp/play_data_safety.csv \
+              --evidence-output /tmp/play_data_safety_evidence.json \
+              --json-stdout
           else
-            echo "::error::Provide secret PLAY_DATA_SAFETY_CSV or commit marketing/compliance/play_data_safety.csv"
+            echo "::error::Provide PLAY_DATA_SAFETY_CSV, commit marketing/compliance/play_data_safety.csv, or commit marketing/compliance/play_data_safety_source.json"
             exit 1
           fi
           python3 scripts/play_data_safety_upload.py --csv-path /tmp/play_data_safety.csv --json-stdout
+
+      - name: Upload Data Safety evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: play-data-safety-evidence
+          path: |
+            /tmp/play_data_safety.csv
+            /tmp/play_data_safety_evidence.json

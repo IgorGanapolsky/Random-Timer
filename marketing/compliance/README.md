@@ -1,12 +1,25 @@
-# Play compliance artifacts (optional)
+# Play compliance artifacts
 
-## `play_data_safety.csv`
+## Data Safety source of truth
 
-Export your **Data Safety** answers from Play Console as CSV (see [Google Help](https://support.google.com/googleplay/android-developer/answer/10787469)), or maintain a CSV that matches Google’s current template.
+`play_data_safety_source.json` is the repo-owned declaration source. It maps app evidence to Google Play Data Safety answers:
 
-- **Commit this file here** if you want the **Play Data Safety upload** workflow to use the repo copy.
-- **Or** omit the file and store the entire CSV body in the GitHub Actions secret **`PLAY_DATA_SAFETY_CSV`** instead (mind secret size limits).
+- analytics/app interactions
+- Crashlytics crash logs
+- diagnostics/performance
+- Firebase/PostHog device or app-instance identifiers
+- purchase history for Pro entitlement state
 
-Upload is performed by `scripts/play_data_safety_upload.py` (Tier A — no browser).
+`scripts/generate_play_data_safety_csv.py` patches Google's official sample/export CSV shape, writes `play_data_safety.csv`, and writes `play_data_safety_evidence.json`.
+
+## Upload order
+
+The **Play Data Safety upload** workflow uses this order:
+
+1. `PLAY_DATA_SAFETY_CSV` secret, if present.
+2. committed `marketing/compliance/play_data_safety.csv`, if present.
+3. generated CSV from `marketing/compliance/play_data_safety_source.json`.
+
+Upload is performed by `scripts/play_data_safety_upload.py` through the Android Publisher API.
 
 **Do not** commit service account JSON; use `GOOGLE_PLAY_JSON_KEY` in CI secrets only.

@@ -1,0 +1,80 @@
+name: Store Growth Automation
+
+on:
+  schedule:
+    - cron: "35 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: store-growth-automation
+  cancel-in-progress: false
+
+jobs:
+  build-store-growth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Build persona store-growth artifacts
+        run: |
+          set -euo pipefail
+          python scripts/store_growth_automation.py --repo-root . build --json-stdout
+          python scripts/generate_play_data_safety_csv.py \
+            --source marketing/compliance/play_data_safety_source.json \
+            --output marketing/compliance/play_data_safety.csv \
+            --evidence-output marketing/compliance/play_data_safety_evidence.json \
+            --json-stdout
+          python scripts/play_data_safety_upload.py \
+            --csv-path marketing/compliance/play_data_safety.csv \
+            --dry-run \
+            --json-stdout
+
+      - name: Commit generated store-growth artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            marketing/compliance/play_data_safety.csv \
+            marketing/compliance/play_data_safety_evidence.json \
+            marketing/data/store_growth_attribution.json \
+            marketing/site/audiences \
+            marketing/store_growth/generated
+          if git diff --cached --quiet; then
+            echo "No store-growth changes to commit."
+            exit 0
+          fi
+          BRANCH="auto/store-growth-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git commit -m "chore(growth): refresh store growth artifacts"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "chore(growth): refresh store growth artifacts" \
+            --body "Automated persona store-growth pages, generated Play Data Safety CSV, and attribution plan." \
+            --label automation
+
+      - name: Upload store-growth artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-growth-artifacts
+          path: |
+            marketing/compliance/play_data_safety.csv
+            marketing/compliance/play_data_safety_evidence.json
+            marketing/data/store_growth_attribution.json
+            marketing/site/audiences
+            marketing/store_growth/generated

@@ -42,6 +42,15 @@ jobs:
           ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_PUBLISH_ACCOUNTS: ${{ secrets.ZERNIO_PUBLISH_ACCOUNTS }}
+          ZERNIO_TWITTER_ACCOUNT_ID: ${{ secrets.ZERNIO_TWITTER_ACCOUNT_ID }}
+          ZERNIO_X_ACCOUNT_ID: ${{ secrets.ZERNIO_X_ACCOUNT_ID }}
+          ZERNIO_LINKEDIN_ACCOUNT_ID: ${{ secrets.ZERNIO_LINKEDIN_ACCOUNT_ID }}
+          ZERNIO_FACEBOOK_ACCOUNT_ID: ${{ secrets.ZERNIO_FACEBOOK_ACCOUNT_ID }}
+          ZERNIO_INSTAGRAM_ACCOUNT_ID: ${{ secrets.ZERNIO_INSTAGRAM_ACCOUNT_ID }}
+          ZERNIO_THREADS_ACCOUNT_ID: ${{ secrets.ZERNIO_THREADS_ACCOUNT_ID }}
+          ZERNIO_TIKTOK_ACCOUNT_ID: ${{ secrets.ZERNIO_TIKTOK_ACCOUNT_ID }}
+          ZERNIO_YOUTUBE_ACCOUNT_ID: ${{ secrets.ZERNIO_YOUTUBE_ACCOUNT_ID }}
+          ZERNIO_MASTODON_ACCOUNT_ID: ${{ secrets.ZERNIO_MASTODON_ACCOUNT_ID }}
           ZERNIO_AUTO_PUBLISH: ${{ secrets.ZERNIO_AUTO_PUBLISH }}
         run: python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
 

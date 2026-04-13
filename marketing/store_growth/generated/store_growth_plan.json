@@ -1,0 +1,369 @@
+{
+  "apple_custom_product_pages": [
+    {
+      "campaign_token": "fitness_conditioning",
+      "custom_product_page_name": "Fitness Conditioning",
+      "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+      "keywords": "timer,HIIT,conditioning,reaction,workout,interval,random",
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/fitness-conditioning/",
+      "language": "en-US",
+      "persona": "fitness-conditioning",
+      "promotional_text": "Run conditioning drills with random alerts so athletes react instead of counting down.",
+      "screenshot_story": "Show setup range, running drill, Pro audio cues, and coach-friendly quick repeat."
+    },
+    {
+      "campaign_token": "combat_sports",
+      "custom_product_page_name": "Combat Sports",
+      "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+      "keywords": "boxing,MMA,BJJ,combatives,reaction,rounds,timer",
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/combat-sports/",
+      "language": "en-US",
+      "persona": "combat-sports",
+      "promotional_text": "Train unpredictable reactions for boxing, MMA, BJJ, wrestling, and combatives rounds.",
+      "screenshot_story": "Show active drill, fast reset, Pro bell/gong sounds, and reaction-focused copy."
+    },
+    {
+      "campaign_token": "tactical_public_safety",
+      "custom_product_page_name": "Tactical Training",
+      "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+      "keywords": "tactical,law enforcement,military,reaction,training,timer",
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/tactical-public-safety/",
+      "language": "en-US",
+      "persona": "tactical-public-safety",
+      "promotional_text": "Random alerts for tactical fitness, movement, and reaction drills without agency affiliation claims.",
+      "screenshot_story": "Show minimal setup, active countdown-free drill, Pro command cues, and clear independence disclaimer."
+    },
+    {
+      "campaign_token": "developer_open_source",
+      "custom_product_page_name": "Developer Automation",
+      "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=apple_custom_product_page&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+      "keywords": "open source,automation,mobile,AI,release,timer",
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/developer-open-source/",
+      "language": "en-US",
+      "persona": "developer-open-source",
+      "promotional_text": "A focused random timer and public case study in automated mobile app growth.",
+      "screenshot_story": "Show app simplicity plus growth automation proof: privacy, releases, and metrics."
+    }
+  ],
+  "attribution": {
+    "generated_at": "2026-04-13T15:52:06+00:00",
+    "monthly_external_spend_cap_usd": 20,
+    "north_star": "Reach $100/day after tax by increasing WQTU and paid Pro conversion from qualified training users.",
+    "personas": [
+      {
+        "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+        "campaign": "persona_fitness_conditioning",
+        "content": "fitness-conditioning",
+        "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+        "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/fitness-conditioning/",
+        "slug": "fitness-conditioning"
+      },
+      {
+        "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+        "campaign": "persona_combat_sports",
+        "content": "combat-sports",
+        "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+        "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/combat-sports/",
+        "slug": "combat-sports"
+      },
+      {
+        "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+        "campaign": "persona_tactical_public_safety",
+        "content": "tactical-public-safety",
+        "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+        "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/tactical-public-safety/",
+        "slug": "tactical-public-safety"
+      },
+      {
+        "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+        "campaign": "persona_developer_open_source",
+        "content": "developer-open-source",
+        "ios_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=audience_page&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+        "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/developer-open-source/",
+        "slug": "developer-open-source"
+      }
+    ],
+    "tracking_rule": "Measure WQTU, paywall_viewed, paywall_purchase_success, and UTM source/page rows by persona campaign."
+  },
+  "budget_policy": {
+    "default_channel": "organic and existing CI automation",
+    "monthly_external_spend_cap_usd": 20,
+    "paid_campaign_rule": "Do not start or raise paid spend without explicit CEO approval."
+  },
+  "content_calendar": [
+    {
+      "communities": [
+        "fitness coaches",
+        "HIIT trainers",
+        "functional fitness groups"
+      ],
+      "persona": "fitness-conditioning",
+      "slot": 0,
+      "topic": "How to run random interval conditioning without over-coaching",
+      "utm_campaign": "persona_fitness_conditioning",
+      "utm_content": "fitness-conditioning",
+      "zernio_angles": [
+        "For coaches: stop letting athletes count the beep.",
+        "A simple random timer for conditioning blocks and reaction work."
+      ]
+    },
+    {
+      "communities": [
+        "fitness coaches",
+        "HIIT trainers",
+        "functional fitness groups"
+      ],
+      "persona": "fitness-conditioning",
+      "slot": 4,
+      "topic": "Why unpredictable timers make HIIT reaction work harder",
+      "utm_campaign": "persona_fitness_conditioning",
+      "utm_content": "fitness-conditioning",
+      "zernio_angles": [
+        "For coaches: stop letting athletes count the beep.",
+        "A simple random timer for conditioning blocks and reaction work."
+      ]
+    },
+    {
+      "communities": [
+        "fitness coaches",
+        "HIIT trainers",
+        "functional fitness groups"
+      ],
+      "persona": "fitness-conditioning",
+      "slot": 8,
+      "topic": "A coach's template for random alerts in small-group training",
+      "utm_campaign": "persona_fitness_conditioning",
+      "utm_content": "fitness-conditioning",
+      "zernio_angles": [
+        "For coaches: stop letting athletes count the beep.",
+        "A simple random timer for conditioning blocks and reaction work."
+      ]
+    },
+    {
+      "communities": [
+        "boxing coaches",
+        "MMA gyms",
+        "BJJ instructors",
+        "combatives trainers"
+      ],
+      "persona": "combat-sports",
+      "slot": 1,
+      "topic": "Five random timer drills for boxing and MMA reaction work",
+      "utm_campaign": "persona_combat_sports",
+      "utm_content": "combat-sports",
+      "zernio_angles": [
+        "A timer for fighters who should not know when the cue is coming.",
+        "Random alerts for sprawls, shots, resets, and pressure rounds."
+      ]
+    },
+    {
+      "communities": [
+        "boxing coaches",
+        "MMA gyms",
+        "BJJ instructors",
+        "combatives trainers"
+      ],
+      "persona": "combat-sports",
+      "slot": 5,
+      "topic": "How BJJ athletes can use random alerts for scramble conditioning",
+      "utm_campaign": "persona_combat_sports",
+      "utm_content": "combat-sports",
+      "zernio_angles": [
+        "A timer for fighters who should not know when the cue is coming.",
+        "Random alerts for sprawls, shots, resets, and pressure rounds."
+      ]
+    },
+    {
+      "communities": [
+        "boxing coaches",
+        "MMA gyms",
+        "BJJ instructors",
+        "combatives trainers"
+      ],
+      "persona": "combat-sports",
+      "slot": 9,
+      "topic": "Why combat-sports rounds need unpredictable cues",
+      "utm_campaign": "persona_combat_sports",
+      "utm_content": "combat-sports",
+      "zernio_angles": [
+        "A timer for fighters who should not know when the cue is coming.",
+        "Random alerts for sprawls, shots, resets, and pressure rounds."
+      ]
+    },
+    {
+      "communities": [
+        "law enforcement trainers",
+        "tactical fitness coaches",
+        "military fitness groups"
+      ],
+      "persona": "tactical-public-safety",
+      "slot": 2,
+      "topic": "How to use random alerts for tactical fitness without overcomplicating drills",
+      "utm_campaign": "persona_tactical_public_safety",
+      "utm_content": "tactical-public-safety",
+      "zernio_angles": [
+        "A random timer for tactical fitness and reaction drills.",
+        "Train response timing without counting down the cue."
+      ]
+    },
+    {
+      "communities": [
+        "law enforcement trainers",
+        "tactical fitness coaches",
+        "military fitness groups"
+      ],
+      "persona": "tactical-public-safety",
+      "slot": 6,
+      "topic": "Why stress-inoculation training benefits from unpredictable timing",
+      "utm_campaign": "persona_tactical_public_safety",
+      "utm_content": "tactical-public-safety",
+      "zernio_angles": [
+        "A random timer for tactical fitness and reaction drills.",
+        "Train response timing without counting down the cue."
+      ]
+    },
+    {
+      "communities": [
+        "law enforcement trainers",
+        "tactical fitness coaches",
+        "military fitness groups"
+      ],
+      "persona": "tactical-public-safety",
+      "slot": 10,
+      "topic": "A zero-budget outreach plan for tactical instructors",
+      "utm_campaign": "persona_tactical_public_safety",
+      "utm_content": "tactical-public-safety",
+      "zernio_angles": [
+        "A random timer for tactical fitness and reaction drills.",
+        "Train response timing without counting down the cue."
+      ]
+    },
+    {
+      "communities": [
+        "indie hackers",
+        "mobile developers",
+        "AI engineering teams"
+      ],
+      "persona": "developer-open-source",
+      "slot": 3,
+      "topic": "How we automate mobile store growth without increasing spend",
+      "utm_campaign": "persona_developer_open_source",
+      "utm_content": "developer-open-source",
+      "zernio_angles": [
+        "A live open-source case study in mobile growth automation.",
+        "What we automated before spending more than the $20/month cap."
+      ]
+    },
+    {
+      "communities": [
+        "indie hackers",
+        "mobile developers",
+        "AI engineering teams"
+      ],
+      "persona": "developer-open-source",
+      "slot": 7,
+      "topic": "What an indie app can automate before buying ads",
+      "utm_campaign": "persona_developer_open_source",
+      "utm_content": "developer-open-source",
+      "zernio_angles": [
+        "A live open-source case study in mobile growth automation.",
+        "What we automated before spending more than the $20/month cap."
+      ]
+    },
+    {
+      "communities": [
+        "indie hackers",
+        "mobile developers",
+        "AI engineering teams"
+      ],
+      "persona": "developer-open-source",
+      "slot": 11,
+      "topic": "A transparent case study in AI-assisted app publishing",
+      "utm_campaign": "persona_developer_open_source",
+      "utm_content": "developer-open-source",
+      "zernio_angles": [
+        "A live open-source case study in mobile growth automation.",
+        "What we automated before spending more than the $20/month cap."
+      ]
+    }
+  ],
+  "counts": {
+    "apple_custom_product_pages": 4,
+    "content_topics": 12,
+    "google_custom_store_listings": 4,
+    "personas": 4
+  },
+  "generated_at": "2026-04-13T15:52:06+00:00",
+  "google_custom_store_listings": [
+    {
+      "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+      "custom_listing_name": "Fitness Conditioning",
+      "full_description": "Random Tactical Timer helps athletes and coaches run unpredictable conditioning sessions. Set a time range, start the drill, and respond when the alert fires. Use it for HIIT, agility work, reaction sets, and classes where predictable timers make athletes anticipate the beep instead of reacting.",
+      "keywords": [
+        "random interval timer",
+        "HIIT reaction timer",
+        "conditioning timer",
+        "unpredictable workout timer"
+      ],
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/fitness-conditioning/",
+      "language": "en-US",
+      "persona": "fitness-conditioning",
+      "short_description": "Unpredictable interval timer for conditioning, HIIT, and coach-led drills.",
+      "targeting_note": "Use for search and listing-URL traffic from fitness content, coach outreach, and conditioning communities."
+    },
+    {
+      "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+      "custom_listing_name": "Combat Sports",
+      "full_description": "Random Tactical Timer is built for reaction work under pressure. Use unpredictable alerts during shadowboxing, sprawls, entries, grip-fighting, bag rounds, or partner drills. The timer keeps setup simple so you can train the reaction, not the app.",
+      "keywords": [
+        "boxing reaction timer",
+        "MMA interval timer",
+        "BJJ drill timer",
+        "combatives timer"
+      ],
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/combat-sports/",
+      "language": "en-US",
+      "persona": "combat-sports",
+      "short_description": "Random alerts for boxing, MMA, BJJ, wrestling, and combatives drills.",
+      "targeting_note": "Use for combat-sports search terms, gym outreach, and campaign URLs shared with coaches."
+    },
+    {
+      "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+      "custom_listing_name": "Tactical Training",
+      "full_description": "Random Tactical Timer supports reaction and movement drills where anticipation ruins the training effect. Set a random range, start the session, and respond to alerts during dry movement, fitness, range-adjacent prep, or instructor-led tactical conditioning. The app is independent and is not affiliated with any agency.",
+      "keywords": [
+        "tactical timer",
+        "law enforcement training timer",
+        "military fitness timer",
+        "stress inoculation drill timer"
+      ],
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/tactical-public-safety/",
+      "language": "en-US",
+      "persona": "tactical-public-safety",
+      "short_description": "Random tactical alerts for reaction, movement, and stress drills.",
+      "targeting_note": "Use for tactical training content and instructor outreach. Avoid claims of official agency affiliation."
+    },
+    {
+      "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+      "custom_listing_name": "Open Source Automation",
+      "full_description": "Random Tactical Timer is a practical timer app and a public example of AI-assisted mobile operations. Developers can study the release automation, analytics, metadata checks, growth publishing, and compliance workflows while users get a focused random timer for training.",
+      "keywords": [
+        "mobile release automation",
+        "app store automation",
+        "AI assisted mobile development",
+        "open source app growth"
+      ],
+      "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/developer-open-source/",
+      "language": "en-US",
+      "persona": "developer-open-source",
+      "short_description": "Open-source tactical timer with automated mobile release and growth systems.",
+      "targeting_note": "Use for developer content, GitHub Pages articles, AI search, and open-source traffic."
+    }
+  ],
+  "references": {
+    "apple_campaign_links": "https://developer.apple.com/help/app-store-connect-analytics/acquisition/campaign-links",
+    "apple_custom_product_pages": "https://developer.apple.com/app-store/custom-product-pages/",
+    "google_play_custom_store_listings": "https://support.google.com/googleplay/android-developer/answer/9867158"
+  },
+  "schema_version": 1
+}

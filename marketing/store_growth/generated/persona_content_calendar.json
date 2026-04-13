@@ -1,0 +1,197 @@
+[
+  {
+    "communities": [
+      "fitness coaches",
+      "HIIT trainers",
+      "functional fitness groups"
+    ],
+    "persona": "fitness-conditioning",
+    "slot": 0,
+    "topic": "How to run random interval conditioning without over-coaching",
+    "utm_campaign": "persona_fitness_conditioning",
+    "utm_content": "fitness-conditioning",
+    "zernio_angles": [
+      "For coaches: stop letting athletes count the beep.",
+      "A simple random timer for conditioning blocks and reaction work."
+    ]
+  },
+  {
+    "communities": [
+      "fitness coaches",
+      "HIIT trainers",
+      "functional fitness groups"
+    ],
+    "persona": "fitness-conditioning",
+    "slot": 4,
+    "topic": "Why unpredictable timers make HIIT reaction work harder",
+    "utm_campaign": "persona_fitness_conditioning",
+    "utm_content": "fitness-conditioning",
+    "zernio_angles": [
+      "For coaches: stop letting athletes count the beep.",
+      "A simple random timer for conditioning blocks and reaction work."
+    ]
+  },
+  {
+    "communities": [
+      "fitness coaches",
+      "HIIT trainers",
+      "functional fitness groups"
+    ],
+    "persona": "fitness-conditioning",
+    "slot": 8,
+    "topic": "A coach's template for random alerts in small-group training",
+    "utm_campaign": "persona_fitness_conditioning",
+    "utm_content": "fitness-conditioning",
+    "zernio_angles": [
+      "For coaches: stop letting athletes count the beep.",
+      "A simple random timer for conditioning blocks and reaction work."
+    ]
+  },
+  {
+    "communities": [
+      "boxing coaches",
+      "MMA gyms",
+      "BJJ instructors",
+      "combatives trainers"
+    ],
+    "persona": "combat-sports",
+    "slot": 1,
+    "topic": "Five random timer drills for boxing and MMA reaction work",
+    "utm_campaign": "persona_combat_sports",
+    "utm_content": "combat-sports",
+    "zernio_angles": [
+      "A timer for fighters who should not know when the cue is coming.",
+      "Random alerts for sprawls, shots, resets, and pressure rounds."
+    ]
+  },
+  {
+    "communities": [
+      "boxing coaches",
+      "MMA gyms",
+      "BJJ instructors",
+      "combatives trainers"
+    ],
+    "persona": "combat-sports",
+    "slot": 5,
+    "topic": "How BJJ athletes can use random alerts for scramble conditioning",
+    "utm_campaign": "persona_combat_sports",
+    "utm_content": "combat-sports",
+    "zernio_angles": [
+      "A timer for fighters who should not know when the cue is coming.",
+      "Random alerts for sprawls, shots, resets, and pressure rounds."
+    ]
+  },
+  {
+    "communities": [
+      "boxing coaches",
+      "MMA gyms",
+      "BJJ instructors",
+      "combatives trainers"
+    ],
+    "persona": "combat-sports",
+    "slot": 9,
+    "topic": "Why combat-sports rounds need unpredictable cues",
+    "utm_campaign": "persona_combat_sports",
+    "utm_content": "combat-sports",
+    "zernio_angles": [
+      "A timer for fighters who should not know when the cue is coming.",
+      "Random alerts for sprawls, shots, resets, and pressure rounds."
+    ]
+  },
+  {
+    "communities": [
+      "law enforcement trainers",
+      "tactical fitness coaches",
+      "military fitness groups"
+    ],
+    "persona": "tactical-public-safety",
+    "slot": 2,
+    "topic": "How to use random alerts for tactical fitness without overcomplicating drills",
+    "utm_campaign": "persona_tactical_public_safety",
+    "utm_content": "tactical-public-safety",
+    "zernio_angles": [
+      "A random timer for tactical fitness and reaction drills.",
+      "Train response timing without counting down the cue."
+    ]
+  },
+  {
+    "communities": [
+      "law enforcement trainers",
+      "tactical fitness coaches",
+      "military fitness groups"
+    ],
+    "persona": "tactical-public-safety",
+    "slot": 6,
+    "topic": "Why stress-inoculation training benefits from unpredictable timing",
+    "utm_campaign": "persona_tactical_public_safety",
+    "utm_content": "tactical-public-safety",
+    "zernio_angles": [
+      "A random timer for tactical fitness and reaction drills.",
+      "Train response timing without counting down the cue."
+    ]
+  },
+  {
+    "communities": [
+      "law enforcement trainers",
+      "tactical fitness coaches",
+      "military fitness groups"
+    ],
+    "persona": "tactical-public-safety",
+    "slot": 10,
+    "topic": "A zero-budget outreach plan for tactical instructors",
+    "utm_campaign": "persona_tactical_public_safety",
+    "utm_content": "tactical-public-safety",
+    "zernio_angles": [
+      "A random timer for tactical fitness and reaction drills.",
+      "Train response timing without counting down the cue."
+    ]
+  },
+  {
+    "communities": [
+      "indie hackers",
+      "mobile developers",
+      "AI engineering teams"
+    ],
+    "persona": "developer-open-source",
+    "slot": 3,
+    "topic": "How we automate mobile store growth without increasing spend",
+    "utm_campaign": "persona_developer_open_source",
+    "utm_content": "developer-open-source",
+    "zernio_angles": [
+      "A live open-source case study in mobile growth automation.",
+      "What we automated before spending more than the $20/month cap."
+    ]
+  },
+  {
+    "communities": [
+      "indie hackers",
+      "mobile developers",
+      "AI engineering teams"
+    ],
+    "persona": "developer-open-source",
+    "slot": 7,
+    "topic": "What an indie app can automate before buying ads",
+    "utm_campaign": "persona_developer_open_source",
+    "utm_content": "developer-open-source",
+    "zernio_angles": [
+      "A live open-source case study in mobile growth automation.",
+      "What we automated before spending more than the $20/month cap."
+    ]
+  },
+  {
+    "communities": [
+      "indie hackers",
+      "mobile developers",
+      "AI engineering teams"
+    ],
+    "persona": "developer-open-source",
+    "slot": 11,
+    "topic": "A transparent case study in AI-assisted app publishing",
+    "utm_campaign": "persona_developer_open_source",
+    "utm_content": "developer-open-source",
+    "zernio_angles": [
+      "A live open-source case study in mobile growth automation.",
+      "What we automated before spending more than the $20/month cap."
+    ]
+  }
+]

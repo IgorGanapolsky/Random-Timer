@@ -44,6 +44,12 @@ Turn ElevenLabs into a recurring Pro content engine instead of a one-off asset g
 
 ## Generation Workflow
 
+The authoritative monthly workflow is `.github/workflows/generate-ios-voice-callouts.yml`.
+It runs on the first day of each month, rolls the canonical manifest with
+`scripts/roll_monthly_pro_audio_pack.py`, renders assets with ElevenLabs, verifies
+freshness with `scripts/pro_audio_freshness.py --grace-day-limit 0`, opens a PR,
+and enables auto-merge. The legacy failure-masking monthly workflow was removed.
+
 Use `scripts/generate_pro_audio_content.py` to:
 
 - export generated platform catalogs from the canonical manifest

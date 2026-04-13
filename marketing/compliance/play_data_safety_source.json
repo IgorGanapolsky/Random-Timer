@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-04-13",
+  "package_name": "com.iganapolsky.randomtimer",
+  "policy_basis": [
+    "PRIVACY_POLICY.md",
+    "native-android/app/src/main/AndroidManifest.xml",
+    "native-ios/RandomTimer/PrivacyInfo.xcprivacy",
+    "native-android/app/build.gradle.kts",
+    "native-ios/RandomTimer/Info.plist"
+  ],
+  "security_practices": {
+    "encrypts_data_in_transit": true,
+    "supports_data_deletion_request": true,
+    "data_deletion_request_url": "https://github.com/IgorGanapolsky/Random-Timer/issues/new",
+    "committed_to_play_families_policy": false
+  },
+  "negative_claims": {
+    "uses_advertising_id": false,
+    "contains_ads": false,
+    "collects_location": false,
+    "collects_health_or_fitness": false,
+    "sells_data": false,
+    "shares_data": false
+  },
+  "data_types": [
+    {
+      "id": "app_activity_app_interactions",
+      "label": "App activity: App interactions",
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "required": true,
+      "purposes": [
+        "analytics",
+        "app_functionality"
+      ],
+      "rationale": "Anonymous timer usage events are collected by PostHog and Firebase Analytics to measure activation and product reliability.",
+      "evidence": [
+        "PRIVACY_POLICY.md",
+        "native-android/app/build.gradle.kts",
+        "native-ios/RandomTimer/Info.plist"
+      ]
+    },
+    {
+      "id": "app_info_and_performance_crash_logs",
+      "label": "App info and performance: Crash logs",
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "required": true,
+      "purposes": [
+        "analytics",
+        "app_functionality"
+      ],
+      "rationale": "Firebase Crashlytics collects crash reports for reliability triage.",
+      "evidence": [
+        "PRIVACY_POLICY.md",
+        "native-ios/RandomTimer/PrivacyInfo.xcprivacy",
+        "native-android/app/build.gradle.kts"
+      ]
+    },
+    {
+      "id": "app_info_and_performance_diagnostics",
+      "label": "App info and performance: Diagnostics",
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "required": true,
+      "purposes": [
+        "analytics",
+        "app_functionality"
+      ],
+      "rationale": "Firebase Performance, Crashlytics, and anonymous analytics diagnose app reliability and performance.",
+      "evidence": [
+        "PRIVACY_POLICY.md",
+        "native-ios/RandomTimer/PrivacyInfo.xcprivacy",
+        "native-android/app/build.gradle.kts"
+      ]
+    },
+    {
+      "id": "device_or_other_ids_device_or_other_ids",
+      "label": "Device or other IDs: Device or other IDs",
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "required": true,
+      "purposes": [
+        "analytics",
+        "app_functionality"
+      ],
+      "rationale": "Firebase and PostHog use app-instance or anonymous distinct identifiers. The Android advertising ID permission is explicitly removed.",
+      "evidence": [
+        "PRIVACY_POLICY.md",
+        "native-android/app/src/main/AndroidManifest.xml",
+        "native-android/app/build.gradle.kts",
+        "native-ios/RandomTimer/Info.plist"
+      ]
+    },
+    {
+      "id": "financial_info_purchase_history",
+      "label": "Financial info: Purchase history",
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "required": true,
+      "purposes": [
+        "app_functionality",
+        "analytics"
+      ],
+      "rationale": "The app records purchase success and entitlement state for Pro access. Payment card details are handled by Apple and Google, not by the app.",
+      "evidence": [
+        "PRIVACY_POLICY.md",
+        "native-android/app/build.gradle.kts"
+      ]
+    }
+  ]
+}

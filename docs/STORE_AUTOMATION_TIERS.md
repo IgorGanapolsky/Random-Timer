@@ -10,17 +10,24 @@ Run on GitHub Actions or locally with service accounts / PATs. No interactive br
 |------------|------------------|
 | **GitHub** PRs, checks, secrets, workflows | `gh` CLI; `.github/workflows/*` |
 | **PostHog / executive metrics** | `scripts/executive_metrics_snapshot.py`, `scripts/wqtu_dashboard.py`, workflows |
-| **Play: Data Safety (Safety labels)** | `scripts/play_data_safety_upload.py` → `applications.dataSafety` API; workflow **Play Data Safety upload** |
+| **Play: Data Safety (Safety labels)** | `scripts/generate_play_data_safety_csv.py` + `scripts/play_data_safety_upload.py` -> `applications.dataSafety` API; workflow **Play Data Safety upload** |
+| **Store growth personas** | `scripts/store_growth_automation.py` builds Play custom listing copy, Apple Custom Product Page copy, UTM links, and SEO audience pages |
 | **Play: listings / releases** | `scripts/sync_android_metadata.py`, `scripts/play_publish.py`, Fastlane under `native-android/fastlane/` |
 | **Play: reviews / tracks (API-covered)** | `scripts/real_store_downloads.py`, `scripts/verify_release.py` |
 | **App Store Connect (API-covered)** | `scripts/asc/*`, Fastlane iOS |
 
 **Data Safety CSV**
 
-1. Export or build the CSV per [Google Help — Data safety](https://support.google.com/googleplay/android-developer/answer/10787469).
-2. Either commit `marketing/compliance/play_data_safety.csv` or store the full file in GitHub secret **`PLAY_DATA_SAFETY_CSV`** (watch GitHub secret size limits).
+1. Maintain `marketing/compliance/play_data_safety_source.json` from code/privacy evidence.
+2. The workflow uses **`PLAY_DATA_SAFETY_CSV`**, committed `marketing/compliance/play_data_safety.csv`, or generated CSV from the source JSON.
 3. Ensure **`GOOGLE_PLAY_JSON_KEY`** is set in Actions (same as other Play jobs).
-4. Run workflow **Play Data Safety upload** (manual dispatch).
+4. Run workflow **Play Data Safety upload**. The workflow uploads sanitized CSV/evidence artifacts for read-back proof.
+
+**Persona store growth**
+
+- Google Play custom store listings are planned for fitness conditioning, combat sports, tactical/public-safety training, and developer/open-source traffic.
+- Apple Custom Product Pages use the same persona split with campaign tokens and audience-specific copy.
+- Daily growth publishing selects one persona topic per day, writes audience landing pages, and tracks UTM rows by persona campaign.
 
 ## Tier B — CEO machine or trusted profile (interactive once)
 

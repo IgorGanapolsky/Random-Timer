@@ -7,6 +7,7 @@ Environment (local `.env` or GitHub Actions secrets):
   ZERNIO_API_KEY or ZERNIO_TOKEN — API key (`sk_...`)
   ZERNIO_PUBLISH_ACCOUNTS — JSON array, e.g.
     [{"platform":"twitter","accountId":"acc_xxx"},{"platform":"linkedin","accountId":"acc_yyy"}]
+  Or per-platform account IDs, e.g. ZERNIO_TWITTER_ACCOUNT_ID, ZERNIO_LINKEDIN_ACCOUNT_ID.
   ZERNIO_AUTO_PUBLISH — if not "1", `sync-latest` only records a dry-run (default for safety)
   ZERNIO_TIMEZONE — IANA tz for scheduled posts (default UTC via scheduledFor without tz in API - use timezone field)
 
@@ -32,6 +33,16 @@ sys.path.insert(0, str(SCRIPTS))
 from repo_dotenv import load_repo_dotenv  # noqa: E402
 
 ZERNIO_BASE = "https://zernio.com/api/v1"
+ZERNIO_ACCOUNT_ENV_MAP: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("twitter", ("ZERNIO_TWITTER_ACCOUNT_ID", "ZERNIO_X_ACCOUNT_ID")),
+    ("linkedin", ("ZERNIO_LINKEDIN_ACCOUNT_ID",)),
+    ("facebook", ("ZERNIO_FACEBOOK_ACCOUNT_ID",)),
+    ("instagram", ("ZERNIO_INSTAGRAM_ACCOUNT_ID",)),
+    ("threads", ("ZERNIO_THREADS_ACCOUNT_ID",)),
+    ("tiktok", ("ZERNIO_TIKTOK_ACCOUNT_ID",)),
+    ("youtube", ("ZERNIO_YOUTUBE_ACCOUNT_ID",)),
+    ("mastodon", ("ZERNIO_MASTODON_ACCOUNT_ID",)),
+)
 
 
 def zernio_api_key() -> str:
@@ -128,6 +139,29 @@ def _parse_publish_accounts(raw: str) -> Tuple[Optional[List[Dict[str, str]]], O
             return None, "replace placeholder accountId values in ZERNIO_PUBLISH_ACCOUNTS"
         out.append({"platform": pid, "accountId": aid})
     return out, None
+
+
+def _publish_accounts_from_env() -> Tuple[Optional[List[Dict[str, str]]], Optional[str]]:
+    raw = os.environ.get("ZERNIO_PUBLISH_ACCOUNTS", "").strip()
+    if raw:
+        return _parse_publish_accounts(raw)
+
+    accounts: List[Dict[str, str]] = []
+    for platform, env_names in ZERNIO_ACCOUNT_ENV_MAP:
+        account_id = ""
+        for env_name in env_names:
+            account_id = os.environ.get(env_name, "").strip()
+            if account_id:
+                break
+        if not account_id:
+            continue
+        if "replace_me" in account_id.lower() or account_id in {"...", "xxx", "TODO"}:
+            return None, f"replace placeholder accountId value for {platform}"
+        accounts.append({"platform": platform, "accountId": account_id})
+
+    if accounts:
+        return accounts, None
+    return None, "missing ZERNIO_PUBLISH_ACCOUNTS or per-platform ZERNIO_*_ACCOUNT_ID values"
 
 
 def _recent_zernio_publish_for_slug(log_path: Path, slug: str, hours: int = 36) -> bool:
@@ -240,7 +274,7 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
     tracked_url = add_utm(canonical_url, "zernio", campaign, medium="social", content=post.slug)
     text = f"{compose_social_post_text(post.title)}\n\n{tracked_url}"
 
-    platforms, perr = _parse_publish_accounts(os.environ.get("ZERNIO_PUBLISH_ACCOUNTS", ""))
+    platforms, perr = _publish_accounts_from_env()
     if perr:
         _append_jsonl(
             log_path,

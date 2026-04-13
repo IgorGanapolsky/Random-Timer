@@ -1,0 +1,66 @@
+[
+  {
+    "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_fitness_conditioning&utm_content=fitness-conditioning",
+    "custom_listing_name": "Fitness Conditioning",
+    "full_description": "Random Tactical Timer helps athletes and coaches run unpredictable conditioning sessions. Set a time range, start the drill, and respond when the alert fires. Use it for HIIT, agility work, reaction sets, and classes where predictable timers make athletes anticipate the beep instead of reacting.",
+    "keywords": [
+      "random interval timer",
+      "HIIT reaction timer",
+      "conditioning timer",
+      "unpredictable workout timer"
+    ],
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/fitness-conditioning/",
+    "language": "en-US",
+    "persona": "fitness-conditioning",
+    "short_description": "Unpredictable interval timer for conditioning, HIIT, and coach-led drills.",
+    "targeting_note": "Use for search and listing-URL traffic from fitness content, coach outreach, and conditioning communities."
+  },
+  {
+    "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_combat_sports&utm_content=combat-sports",
+    "custom_listing_name": "Combat Sports",
+    "full_description": "Random Tactical Timer is built for reaction work under pressure. Use unpredictable alerts during shadowboxing, sprawls, entries, grip-fighting, bag rounds, or partner drills. The timer keeps setup simple so you can train the reaction, not the app.",
+    "keywords": [
+      "boxing reaction timer",
+      "MMA interval timer",
+      "BJJ drill timer",
+      "combatives timer"
+    ],
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/combat-sports/",
+    "language": "en-US",
+    "persona": "combat-sports",
+    "short_description": "Random alerts for boxing, MMA, BJJ, wrestling, and combatives drills.",
+    "targeting_note": "Use for combat-sports search terms, gym outreach, and campaign URLs shared with coaches."
+  },
+  {
+    "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_tactical_public_safety&utm_content=tactical-public-safety",
+    "custom_listing_name": "Tactical Training",
+    "full_description": "Random Tactical Timer supports reaction and movement drills where anticipation ruins the training effect. Set a random range, start the session, and respond to alerts during dry movement, fitness, range-adjacent prep, or instructor-led tactical conditioning. The app is independent and is not affiliated with any agency.",
+    "keywords": [
+      "tactical timer",
+      "law enforcement training timer",
+      "military fitness timer",
+      "stress inoculation drill timer"
+    ],
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/tactical-public-safety/",
+    "language": "en-US",
+    "persona": "tactical-public-safety",
+    "short_description": "Random tactical alerts for reaction, movement, and stress drills.",
+    "targeting_note": "Use for tactical training content and instructor outreach. Avoid claims of official agency affiliation."
+  },
+  {
+    "android_download_url": "https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=google_play_custom_listing&utm_medium=organic&utm_campaign=persona_developer_open_source&utm_content=developer-open-source",
+    "custom_listing_name": "Open Source Automation",
+    "full_description": "Random Tactical Timer is a practical timer app and a public example of AI-assisted mobile operations. Developers can study the release automation, analytics, metadata checks, growth publishing, and compliance workflows while users get a focused random timer for training.",
+    "keywords": [
+      "mobile release automation",
+      "app store automation",
+      "AI assisted mobile development",
+      "open source app growth"
+    ],
+    "landing_page": "https://igorganapolsky.github.io/Random-Timer/marketing/site/audiences/developer-open-source/",
+    "language": "en-US",
+    "persona": "developer-open-source",
+    "short_description": "Open-source tactical timer with automated mobile release and growth systems.",
+    "targeting_note": "Use for developer content, GitHub Pages articles, AI search, and open-source traffic."
+  }
+]

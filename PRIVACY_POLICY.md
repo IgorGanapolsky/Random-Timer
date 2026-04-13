@@ -1,6 +1,6 @@
 # Privacy Policy for Random Tactical Timer
 
-**Last updated: February 13, 2026**
+**Last updated: April 13, 2026**
 
 ## Overview
 
@@ -49,9 +49,20 @@ The App uses Firebase Crashlytics to collect anonymous crash reports. This helps
 
 All timer settings and preferences are stored locally on your device. Crash reports and analytics events (if enabled) are sent to their respective providers as described above.
 
+## Purchases
+
+In-app purchases are processed by Apple App Store or Google Play. The App may store or receive purchase status, product ID, entitlement state, and purchase success events so Pro access can work and be measured. The App does not receive or store payment card numbers.
+
+## Data Deletion Requests
+
+You can request deletion of analytics, diagnostics, or purchase-status data associated with your app usage by opening an issue at:
+https://github.com/IgorGanapolsky/Random-Timer/issues/new
+
+Because the App does not require an account, deletion requests may need device, receipt, or diagnostic context that lets us identify the relevant records without collecting additional unnecessary data.
+
 ## Children's Privacy
 
-The App does not knowingly collect data from children under 13. Since the App collects no personal data from any user, it is safe for all ages.
+The App does not target children and does not knowingly collect personal data from children under 13.
 
 ## Changes to This Policy
 
