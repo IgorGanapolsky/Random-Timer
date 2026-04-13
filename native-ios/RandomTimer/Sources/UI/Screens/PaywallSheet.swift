@@ -245,6 +245,10 @@ struct PaywallSheet: View {
         if let result {
             properties[AnalyticsProperties.result] = result.rawValue
         }
+        // Include numeric price so PostHog can compute actual revenue.
+        if let product = proManager.products.first(where: { $0.id == productID }) {
+            properties[AnalyticsProperties.revenue] = NSDecimalNumber(decimal: product.price).doubleValue
+        }
         return properties
     }
 

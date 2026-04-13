@@ -356,6 +356,7 @@ object AnalyticsProperties {
     const val ABANDON_REASON = "abandon_reason"
     const val SCREEN = "screen"
     const val REASON = "reason"
+    const val REVENUE = "revenue"
 }
 
 object AnalyticsScreens {
