@@ -487,6 +487,7 @@ enum AnalyticsProperties {
     static let durationSeconds = "duration_seconds"
     static let screen = "screen"
     static let reason = "reason"
+    static let revenue = "revenue"
 }
 
 enum AnalyticsValues {
