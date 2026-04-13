@@ -1,0 +1,84 @@
+# Scheduled: cut release/v* from develop (monthly Pro audio on develop + patch bump) and
+# dispatch Native App Release. Audio workflows run on the 1st; this runs on the 2nd to
+# allow PR merge. production-signoff environment on native-release.yml still requires
+# manual CEO approval before store uploads proceed.
+name: Monthly store release (cut + dispatch)
+
+on:
+  schedule:
+    # 2nd of each month 12:30 UTC — after Monthly Pro Audio Pack (1st 06:00) + Generate Pro Audio (1st 15:00)
+    - cron: "30 12 2 * *"
+  workflow_dispatch:
+    inputs:
+      skip_audio_merge:
+        description: "Do not try to merge feat/audio-pack-YYYY-MM into develop first"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Plan only (no bump, no push, no dispatch)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: monthly-store-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cut-monthly-release:
+    name: Cut release branch from develop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      version: ${{ steps.cut.outputs.version }}
+      pushed: ${{ steps.cut.outputs.pushed }}
+      skip_reason: ${{ steps.cut.outputs.skip_reason }}
+    steps:
+      - name: Checkout develop (full history for branch checks)
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+
+      - name: Cut release / bump / push
+        id: cut
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SKIP_AUDIO_MERGE: ${{ inputs.skip_audio_merge == true && '1' || '0' }}
+          DRY_RUN: ${{ inputs.dry_run == true && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          chmod +x scripts/shell/monthly-store-release-cut.sh
+          ./scripts/shell/monthly-store-release-cut.sh
+
+  dispatch-native-release:
+    name: Dispatch Native App Release
+    needs: [cut-monthly-release]
+    if: needs.cut-monthly-release.outputs.pushed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Trigger native-release on new release branch
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          REL_VERSION: ${{ needs.cut-monthly-release.outputs.version }}
+        run: |
+          set -euo pipefail
+          REF="release/v${REL_VERSION}"
+          gh workflow run "Native App Release" \
+            --repo "${{ github.repository }}" \
+            --ref "$REF" \
+            -f platform=both \
+            -f android_track=production \
+            -f submit_review=false \
+            -f confirm_ios_only_release=false
+          echo "Dispatched Native App Release for $REF (await production-signoff in that run)."
