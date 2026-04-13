@@ -5,7 +5,45 @@ import org.junit.Test
 
 class ProManagerSubscriptionOfferSelectionTest {
     @Test
-    fun `selectPreferredSubscriptionOffer prefers yearly billing phase`() {
+    fun `selectPreferredSubscriptionOffer prefers free-trial offer over annual`() {
+        val annual =
+            SubscriptionOffer(
+                offerToken = "yearly-token",
+                pricingPhases =
+                    listOf(
+                        SubscriptionPricingPhase(
+                            formattedPrice = "$29.99",
+                            billingPeriod = "P1Y",
+                            isFree = false,
+                        ),
+                    ),
+            )
+        val trialThenAnnual =
+            SubscriptionOffer(
+                offerToken = "trial-annual-token",
+                pricingPhases =
+                    listOf(
+                        SubscriptionPricingPhase(
+                            formattedPrice = "$0.00",
+                            billingPeriod = "P7D",
+                            isFree = true,
+                        ),
+                        SubscriptionPricingPhase(
+                            formattedPrice = "$29.99",
+                            billingPeriod = "P1Y",
+                            isFree = false,
+                        ),
+                    ),
+            )
+
+        val selected = selectPreferredSubscriptionOffer(listOf(annual, trialThenAnnual))
+
+        assertThat(selected?.offerToken).isEqualTo("trial-annual-token")
+        assertThat(selected?.hasFreeTrial).isTrue()
+    }
+
+    @Test
+    fun `selectPreferredSubscriptionOffer prefers yearly billing phase when no free trial`() {
         val monthly =
             SubscriptionOffer(
                 offerToken = "monthly-token",
@@ -36,7 +74,7 @@ class ProManagerSubscriptionOfferSelectionTest {
     }
 
     @Test
-    fun `selectPreferredSubscriptionOffer falls back to first offer when yearly is unavailable`() {
+    fun `selectPreferredSubscriptionOffer falls back to first offer when no trial and no annual`() {
         val monthly =
             SubscriptionOffer(
                 offerToken = "monthly-token",
@@ -48,25 +86,50 @@ class ProManagerSubscriptionOfferSelectionTest {
                         ),
                     ),
             )
-        val monthlyWithIntro =
+
+        val selected = selectPreferredSubscriptionOffer(listOf(monthly))
+
+        assertThat(selected?.offerToken).isEqualTo("monthly-token")
+    }
+
+    @Test
+    fun `SubscriptionOffer hasFreeTrial is true when any phase is free`() {
+        val offerWithTrial =
             SubscriptionOffer(
-                offerToken = "monthly-intro-token",
+                offerToken = "trial-token",
                 pricingPhases =
                     listOf(
                         SubscriptionPricingPhase(
-                            formattedPrice = "$0.99",
-                            billingPeriod = "P1W",
+                            formattedPrice = "$0.00",
+                            billingPeriod = "P7D",
+                            isFree = true,
                         ),
                         SubscriptionPricingPhase(
-                            formattedPrice = "$4.99",
-                            billingPeriod = "P1M",
+                            formattedPrice = "$29.99",
+                            billingPeriod = "P1Y",
+                            isFree = false,
                         ),
                     ),
             )
 
-        val selected = selectPreferredSubscriptionOffer(listOf(monthly, monthlyWithIntro))
+        assertThat(offerWithTrial.hasFreeTrial).isTrue()
+    }
 
-        assertThat(selected?.offerToken).isEqualTo("monthly-token")
-        assertThat(selected?.displayPrice).isEqualTo("$4.99")
+    @Test
+    fun `SubscriptionOffer hasFreeTrial is false when no phase is free`() {
+        val offerWithoutTrial =
+            SubscriptionOffer(
+                offerToken = "paid-token",
+                pricingPhases =
+                    listOf(
+                        SubscriptionPricingPhase(
+                            formattedPrice = "$29.99",
+                            billingPeriod = "P1Y",
+                            isFree = false,
+                        ),
+                    ),
+            )
+
+        assertThat(offerWithoutTrial.hasFreeTrial).isFalse()
     }
 }

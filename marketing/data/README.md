@@ -15,6 +15,7 @@
 
 - **App Store Connect errors** (timeouts, etc.): the script **retries** a few times with a longer timeout. If ASC is still down or blocked, iOS store fields may be empty in that run—**re-run later**; you do not need to edit the JSON by hand.
 - **Crashlytics shows “no tables yet”:** BigQuery tables are created when the Firebase → BigQuery export receives data. Until then, crash counts stay at zero in this file—**not** proof that the app has never crashed.
+- **Ledger (`ledger_revenue.ios`):** needs **`APPSTORE_VENDOR_NUMBER`** (8 digits on **App Store Connect → Business → Agreements**) in `.env` and GitHub secret **`APPSTORE_VENDOR_NUMBER`** for **Executive metrics snapshot**.
 
 **Tighter “external user only” PostHog counts**
 

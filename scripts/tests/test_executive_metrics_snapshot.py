@@ -93,6 +93,32 @@ def test_posthog_person_id_exclusion_sql_respects_env(monkeypatch: pytest.Monkey
     assert "not-a-uuid" not in sql
 
 
+def test_run_includes_ledger_revenue(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    from scripts import executive_metrics_snapshot as ems
+    import check_crashlytics as cc
+    import real_store_downloads as rsd
+    import store_ledger_revenue as slr
+
+    monkeypatch.setattr(rsd, "_get_android_data", lambda d: {"status": "skipped"})
+    monkeypatch.setattr(rsd, "_get_ios_data", lambda d: {"status": "skipped"})
+    monkeypatch.setattr(cc, "collect_crashlytics_snapshot", lambda hours: {"status": "skipped"})
+    monkeypatch.setattr(
+        slr,
+        "collect_store_ledger_revenue",
+        lambda days: {
+            "metric_bundle_id": "store_ledger_revenue_v1",
+            "window_days": days,
+            "ios": {"status": "skipped", "reason": "test"},
+            "android": {"status": "skipped"},
+        },
+    )
+
+    payload = ems.run(tmp_path, days=7, load_dotenv=False)
+    assert "ledger_revenue" in payload
+    assert payload["ledger_revenue"]["ios"]["status"] == "skipped"
+    assert "ledger_revenue" in payload["definitions"]
+
+
 def test_posthog_section_includes_wqtu_7d_from_queries(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import executive_metrics_snapshot as ems
 

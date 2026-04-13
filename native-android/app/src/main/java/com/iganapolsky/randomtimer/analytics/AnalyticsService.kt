@@ -320,6 +320,9 @@ object AnalyticsEvents {
     // Purchase failure
     const val PURCHASE_FAILED = "purchase_failed"
 
+    // Free trial
+    const val FREE_TRIAL_STARTED = "free_trial_started"
+
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"

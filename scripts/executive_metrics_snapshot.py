@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single executive snapshot: PostHog (product) + store APIs + Crashlytics (BigQuery).
+"""Single executive snapshot: PostHog (product) + store APIs + ASC ledger + Crashlytics (BigQuery).
 
 Outputs marketing/data/executive_metrics.json. Intended to run locally (.env) or in CI
 (GitHub Actions secrets). No secrets are printed.
@@ -314,6 +314,19 @@ def run(
     except Exception as exc:
         crashlytics = {"status": "error", "reason": str(exc), "source": "crashlytics"}
 
+    try:
+        from store_ledger_revenue import collect_store_ledger_revenue
+
+        ledger_revenue = collect_store_ledger_revenue(days)
+    except Exception as exc:
+        ledger_revenue = {
+            "metric_bundle_id": "store_ledger_revenue_v1",
+            "status": "error",
+            "reason": str(exc),
+            "ios": {"status": "error", "reason": str(exc)},
+            "android": {"status": "error", "reason": str(exc)},
+        }
+
     payload: Dict[str, Any] = {
         "generated_at": generated_at,
         "source": "executive_metrics_snapshot",
@@ -351,9 +364,15 @@ def run(
             "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
             "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
             "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
+            "ledger_revenue": (
+                "Apple: App Store Connect SALES SUMMARY DAILY (API v1), sum of Units × "
+                "Developer Proceeds (per unit) for rows scoped to this app. "
+                "See ledger_revenue.ios. Android: ledger_revenue.android."
+            ),
         },
         "posthog": posthog,
         "store_apis": {"android": android, "ios": ios},
+        "ledger_revenue": ledger_revenue,
         "crashlytics_bigquery": crashlytics,
     }
 
@@ -364,7 +383,9 @@ def run(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Executive metrics snapshot (PostHog + stores + Crashlytics)")
+    parser = argparse.ArgumentParser(
+        description="Executive metrics snapshot (PostHog + stores + ASC ledger + Crashlytics)"
+    )
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     parser.add_argument("--days", type=int, default=30, help="PostHog window days")
     parser.add_argument(
@@ -403,6 +424,13 @@ def main() -> int:
     st = payload.get("store_apis") or {}
     print(f"  Android API: {(st.get('android') or {}).get('status')}")
     print(f"  iOS API: {(st.get('ios') or {}).get('status')}")
+    lr = payload.get("ledger_revenue") or {}
+    ios_ledger = lr.get("ios") or {}
+    print(
+        f"  Ledger (ASC daily): {ios_ledger.get('status')} "
+        f"days_ok={ios_ledger.get('days_fetched_ok')} "
+        f"proceeds_by_currency={ios_ledger.get('proceeds_by_currency')}"
+    )
     cr = payload.get("crashlytics_bigquery") or {}
     print(
         f"  Crashlytics BQ: {cr.get('status')} "

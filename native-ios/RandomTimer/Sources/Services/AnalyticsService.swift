@@ -442,6 +442,7 @@ enum AnalyticsEvents {
     static let paywallPurchaseSuccess = "paywall_purchase_success"
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
+    static let freeTrialStarted = "free_trial_started"
 
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
