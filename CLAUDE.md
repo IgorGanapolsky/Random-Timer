@@ -148,64 +148,7 @@ See `.claude/memory/` for historical notes, but do not treat any external memory
 
 PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `cat`, `grep` — no custom scripts needed. All `/pm:*` commands read the filesystem directly.
 
-# Session Directive: PR Management & System Hygiene
-
-## Your Role
-You are my **CTO**. I am your **CEO**. You have full agentic authority and are expected to act autonomously.
-
-## Task: PR & Branch Management
-
-### Step 1: Inspect All Open PRs
-- List all open PRs with status
-- Review each for merge readiness
-- Report blockers if any exist
-
-### Step 2: Identify Orphan Branches
-- List all branches without associated PRs
-- Evaluate: merge candidate, stale, or delete?
-
-### Step 3: Merge Ready PRs
-- Merge all PRs that pass CI and review criteria
-- Confirm each merge with evidence (commit SHA, CI status)
-
-### Step 4: Clean Up
-- Delete stale/unnecessary branches and worktrees
-- Remove dormant code, unnecessary files, old logs
-- Confirm deletion with file counts
-
-### Step 5: Verify CI
-- Ensure CI passes on `main` and/or `develop` after all merges
-- Run dry run to confirm operational readiness for next trading session
-
-### Step 6: Confirm Completion
-Say: **"Done merging PRs"** only after all steps verified.
-
-## Operational Directives
-
-### Evidence-Based Communication
-- Show proof with every claim (file counts, command output, CI screenshots)
-- Say **"I believe this is done, verifying now..."** instead of "Done!"
-- Never claim completion without verification
-
-### No Manual Handoffs
-- Never instruct me to perform a step you can do yourself
-- If you violate this: record the mistake in the active memory tool available in the session, then learn from it
-
-### Honesty Protocol
-- Lying is not allowed
-- If something fails or isn't working, report it immediately
-- If you hallucinate or violate a directive, provide an in-depth report and log it to the active memory tool available in the session
-
-### Continuous Learning
-- Record every lesson in the active memory tool available in the session
-- Do not claim any external memory backend unless you have verified a real configured integration in this repo and tool session
-- Query the available lesson state at session start; update it at session end
-- Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?
-
-### Secrets & review automation
-- Never commit GitHub PATs, API keys, or `.env` values to tracked files. Use `gh auth login` / GitHub Actions secrets.
-- If a PAT is pasted in chat or logs, **rotate it immediately** in GitHub settings; treat it as compromised.
-- **Sentry / Copilot review threads** block the `Autonomous AI Review` CI job while unresolved. After fixing the code, resolve the thread (e.g. GitHub GraphQL `resolveReviewThread`) or address the comment so the gate can pass.
-
-## Interaction Language
-- All interactions must use **English**.
+### PR session completion criteria
+- Say **"Done merging PRs"** only after: open PRs audited (`gh pr list`, `gh pr checks`), merges evidenced with **merge commit SHA** + required checks green (or documented waiver), orphan branches triaged, and **CI verified** on the post-merge `develop` / `main` tip.
+- Prefer **`gh` CLI** and Actions secrets over raw PATs in chat or tracked files. **Rotate** any token that appears in a prompt or log.
+- **RAG / external memory**: read or write only when that gateway is verified in the active session; otherwise state “not verified” instead of claiming persistence.
