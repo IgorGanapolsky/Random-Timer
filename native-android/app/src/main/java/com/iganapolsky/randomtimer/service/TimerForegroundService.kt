@@ -417,7 +417,7 @@ class TimerForegroundService : Service() {
         alarmCountdownJob?.cancel()
         // Track completion before cleanup — user heard the alarm and acknowledged it
         _timerState.value?.let { state ->
-            if (state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE) {
+            if (AlarmCompletionPolicy.shouldRecordManualDismissCompletion(state.status)) {
                 analyticsService.track(
                     AnalyticsEvents.TIMER_COMPLETED,
                     mapOf(
