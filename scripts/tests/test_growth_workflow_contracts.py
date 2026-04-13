@@ -17,6 +17,7 @@ DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
 IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
+PLAY_DATA_SAFETY_UPLOAD_WORKFLOW = ROOT / ".github/workflows/play-data-safety-upload.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -31,6 +32,16 @@ def test_ci_workflow_covers_release_and_hotfix_branches():
     source = CI_WORKFLOW.read_text(encoding="utf-8")
 
     assert "branches: [develop, main, 'release/**', 'hotfix/**']" in source
+
+
+def test_play_data_safety_upload_generates_outputs_inside_workspace_artifacts():
+    source = PLAY_DATA_SAFETY_UPLOAD_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'safety_dir=".artifacts/play-data-safety"' in source
+    assert '--output "$csv_path"' in source
+    assert '--evidence-output "$evidence_path"' in source
+    assert "--output /tmp/play_data_safety.csv" not in source
+    assert "--evidence-output /tmp/play_data_safety_evidence.json" not in source
 
 
 def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evidence():

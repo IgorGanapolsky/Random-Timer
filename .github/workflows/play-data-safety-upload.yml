@@ -30,21 +30,26 @@ jobs:
           PLAY_DATA_SAFETY_CSV: ${{ secrets.PLAY_DATA_SAFETY_CSV }}
         run: |
           set -euo pipefail
+          safety_dir=".artifacts/play-data-safety"
+          csv_path="$safety_dir/play_data_safety.csv"
+          evidence_path="$safety_dir/play_data_safety_evidence.json"
+          mkdir -p "$safety_dir"
+
           if [ -n "${PLAY_DATA_SAFETY_CSV:-}" ]; then
-            printf '%s\n' "$PLAY_DATA_SAFETY_CSV" > /tmp/play_data_safety.csv
+            printf '%s\n' "$PLAY_DATA_SAFETY_CSV" > "$csv_path"
           elif [ -f marketing/compliance/play_data_safety.csv ]; then
-            cp marketing/compliance/play_data_safety.csv /tmp/play_data_safety.csv
+            cp marketing/compliance/play_data_safety.csv "$csv_path"
           elif [ -f marketing/compliance/play_data_safety_source.json ]; then
             python3 scripts/generate_play_data_safety_csv.py \
               --source marketing/compliance/play_data_safety_source.json \
-              --output /tmp/play_data_safety.csv \
-              --evidence-output /tmp/play_data_safety_evidence.json \
+              --output "$csv_path" \
+              --evidence-output "$evidence_path" \
               --json-stdout
           else
             echo "::error::Provide PLAY_DATA_SAFETY_CSV, commit marketing/compliance/play_data_safety.csv, or commit marketing/compliance/play_data_safety_source.json"
             exit 1
           fi
-          python3 scripts/play_data_safety_upload.py --csv-path /tmp/play_data_safety.csv --json-stdout
+          python3 scripts/play_data_safety_upload.py --csv-path "$csv_path" --json-stdout
 
       - name: Upload Data Safety evidence
         if: always()
@@ -52,5 +57,5 @@ jobs:
         with:
           name: play-data-safety-evidence
           path: |
-            /tmp/play_data_safety.csv
-            /tmp/play_data_safety_evidence.json
+            .artifacts/play-data-safety/play_data_safety.csv
+            .artifacts/play-data-safety/play_data_safety_evidence.json
