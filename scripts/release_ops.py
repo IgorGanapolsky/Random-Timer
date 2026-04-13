@@ -211,7 +211,7 @@ def review_ops(args: argparse.Namespace, repo_root: Path) -> int:
 
     cmd: List[str] = [
         sys.executable,
-        str(repo_root / "scripts" / "asc_reviews_ops.py"),
+        str(repo_root / "scripts" / "asc" / "asc_reviews_ops.py"),
         "--bundle-id",
         "com.igorganapolsky.randomtimer",
         "--limit",
@@ -240,7 +240,7 @@ def review_autopilot(args: argparse.Namespace, repo_root: Path) -> int:
 
     review_cmd: List[str] = [
         sys.executable,
-        str(repo_root / "scripts" / "asc_reviews_ops.py"),
+        str(repo_root / "scripts" / "asc" / "asc_reviews_ops.py"),
         "--bundle-id",
         "com.igorganapolsky.randomtimer",
         "--limit",
