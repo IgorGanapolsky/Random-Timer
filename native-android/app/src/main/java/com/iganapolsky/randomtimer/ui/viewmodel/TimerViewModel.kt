@@ -339,6 +339,8 @@ class TimerViewModel
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
                 markFirstTimerCompleted()
+                // Record completion for review eligibility — prompt fires after the 3rd timer_completed
+                storeReviewManager.recordCompletion()
             }
         }
 
