@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 
@@ -10,8 +11,19 @@ ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "content" / "pro_audio" / "monthly_pro_audio_packs.json"
 
 
+def _manifest_before_current_month_roll() -> dict:
+    manifest = copy.deepcopy(json.loads(MANIFEST.read_text(encoding="utf-8")))
+    active = next(pack for pack in manifest["packs"] if pack["id"] == manifest["activePackId"])
+    active["releaseMonth"] = "2026-03"
+    manifest["packs"] = [
+        pack for pack in manifest["packs"]
+        if pack["id"] != "2026-04_tactical_reaction_lanes"
+    ]
+    return manifest
+
+
 def test_roll_manifest_creates_current_month_pack() -> None:
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    manifest = _manifest_before_current_month_roll()
 
     updated, changed = roll.roll_manifest(manifest, "2026-04")
 
@@ -25,7 +37,7 @@ def test_roll_manifest_creates_current_month_pack() -> None:
 
 
 def test_roll_manifest_is_idempotent_after_pack_exists() -> None:
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    manifest = _manifest_before_current_month_roll()
     updated, changed = roll.roll_manifest(manifest, "2026-04")
     assert changed is True
 
