@@ -83,6 +83,8 @@ def _load_template(path: Path | None, url: str) -> str:
 
 def _read_rows(csv_text: str) -> list[dict[str, str]]:
     reader = csv.DictReader(io.StringIO(csv_text))
+    if reader.fieldnames is None:
+        raise SystemExit("Play Data Safety CSV template is empty or missing a header row")
     if reader.fieldnames != CSV_COLUMNS:
         raise SystemExit(
             "Unexpected Play Data Safety CSV columns: "

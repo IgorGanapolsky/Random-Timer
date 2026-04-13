@@ -136,6 +136,11 @@ def test_generator_reports_remote_template_fetch_errors(monkeypatch: pytest.Monk
         raise AssertionError("Expected remote template fetch failure to exit cleanly")
 
 
+def test_generator_rejects_empty_template_with_specific_error() -> None:
+    with pytest.raises(SystemExit, match="template is empty or missing a header row"):
+        gen._read_rows("")
+
+
 def test_generator_rejects_missing_evidence(tmp_path: Path) -> None:
     source = {
         "package_name": "com.example",
