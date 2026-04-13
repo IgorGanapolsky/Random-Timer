@@ -228,7 +228,7 @@ struct PaywallSheet: View {
 
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseSuccess,
-            properties: purchaseProperties(productID: productID, result: result)
+            properties: purchaseProperties(productID: productID, result: result, includeRevenue: true)
         )
         hasTrackedDismiss = true
         dismiss()
@@ -236,7 +236,8 @@ struct PaywallSheet: View {
 
     private func purchaseProperties(
         productID: String,
-        result: ProPurchaseResult? = nil
+        result: ProPurchaseResult? = nil,
+        includeRevenue: Bool = false
     ) -> [String: Any] {
         var properties: [String: Any] = [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
@@ -246,7 +247,8 @@ struct PaywallSheet: View {
             properties[AnalyticsProperties.result] = result.rawValue
         }
         // Include numeric price so PostHog can compute actual revenue.
-        if let product = proManager.products.first(where: { $0.id == productID }) {
+        if includeRevenue,
+           let product = proManager.products.first(where: { $0.id == productID }) {
             properties[AnalyticsProperties.revenue] = NSDecimalNumber(decimal: product.price).doubleValue
         }
         return properties
