@@ -2,8 +2,17 @@ name: Monthly Pro Audio Pack
 
 on:
   workflow_dispatch:
+    inputs:
+      month:
+        description: "Target month in YYYY-MM format (default: current UTC month)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run — search without downloading (true/false)"
+        required: false
+        default: "false"
   schedule:
-    # 1st of every month at 6 AM UTC
+    # 1st of every month at 06:00 UTC
     - cron: "0 6 1 * *"
 
 jobs:
@@ -13,81 +22,141 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    steps:
-      - uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Generate voice callouts
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -1
+
+      # ------------------------------------------------------------------
+      # Determine the target month
+      # ------------------------------------------------------------------
+      - name: Resolve target month
+        id: month
+        run: |
+          if [[ -n "${{ github.event.inputs.month }}" ]]; then
+            echo "value=${{ github.event.inputs.month }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ------------------------------------------------------------------
+      # Search + download + normalise CC0 sounds via Freesound
+      # ------------------------------------------------------------------
+      - name: Generate Freesound audio pack
         env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
         run: |
-          python scripts/generate_pro_audio_content.py \
-            --generate-voice-assets || true
+          DRY_RUN_FLAG=""
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          python scripts/generate_monthly_audio_pack.py \
+            --month "${{ steps.month.outputs.value }}" \
+            $DRY_RUN_FLAG
 
-      - name: Generate sound assets
-        env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+      # ------------------------------------------------------------------
+      # Verify what was produced
+      # ------------------------------------------------------------------
+      - name: Verify pack output
         run: |
-          python scripts/generate_pro_audio_content.py \
-            --generate-sound-assets || true
+          echo "=== content/pro_audio/runtime/packs/ ==="
+          ls content/pro_audio/runtime/packs/ 2>/dev/null || echo "(none)"
+          echo ""
+          echo "=== Runtime manifest (tail 40 lines) ==="
+          tail -40 content/pro_audio/runtime/latest.json 2>/dev/null || echo "(no manifest)"
+          echo ""
+          echo "=== New MP3 files ==="
+          find content/pro_audio/runtime/packs -name "*.mp3" 2>/dev/null | head -20 || true
 
-      - name: Sync to Android
-        run: |
-          # Sync voice callouts
-          for f in native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3; do
-            [ -f "$f" ] || continue
-            name=$(basename "$f")
-            dst="native-android/app/src/main/res/raw/$name"
-            cp "$f" "$dst" 2>/dev/null && echo "Synced $name" || true
-          done
-          # Sync alarm sounds
-          for sound in alarm gentle_chime klaxon whistle buzzer gong airhorn drum_roll siren bell; do
-            ios_name="${sound//_/-}"
-            src="native-ios/RandomTimer/Resources/Sounds/${ios_name}.mp3"
-            [ -f "$src" ] || src="native-ios/RandomTimer/Resources/Sounds/${sound}.mp3"
-            dst="native-android/app/src/main/res/raw/${sound}.mp3"
-            [ -f "$src" ] && cp "$src" "$dst" && echo "Synced sound $sound" || true
-          done
-
-      - name: Verify pack
-        run: |
-          echo "=== Voice Callouts ==="
-          ls native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} command cues"
-          ls native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} elapsed cues"
-          echo "=== Alarm Sounds ==="
-          ls native-ios/RandomTimer/Resources/Sounds/*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} alarm sounds"
-
+      # ------------------------------------------------------------------
+      # Upload artifact so QA can listen before merging
+      # ------------------------------------------------------------------
       - name: Upload audio pack artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: monthly-pro-audio-pack
+          name: "monthly-pro-audio-pack-${{ steps.month.outputs.value }}"
           path: |
-            native-ios/RandomTimer/Resources/Audio/
-            native-ios/RandomTimer/Resources/Sounds/
-            native-android/app/src/main/res/raw/
-            content/pro_audio/
+            content/pro_audio/runtime/packs/
+            content/pro_audio/runtime/latest.json
+            content/pro_audio/monthly_pro_audio_packs.json
+          retention-days: 30
 
+      # ------------------------------------------------------------------
+      # Commit + PR
+      # ------------------------------------------------------------------
       - name: Create PR with new pack
+        if: github.event.inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "github-actions[bot]"
+          MONTH="${{ steps.month.outputs.value }}"
+          BRANCH="feat/audio-pack-${MONTH}-freesound"
+
+          git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          MONTH=$(date +%Y-%m)
-          BRANCH="feat/audio-pack-${MONTH}"
+
           git checkout -b "$BRANCH"
-          git add native-ios/RandomTimer/Resources/ native-android/app/src/main/res/raw/ content/pro_audio/
+
+          git add \
+            content/pro_audio/runtime/packs/ \
+            content/pro_audio/runtime/latest.json \
+            content/pro_audio/monthly_pro_audio_packs.json
+
           if git diff --cached --quiet; then
-            echo "No changes to audio files"
+            echo "No new audio files committed — pack may already be up to date."
             exit 0
           fi
-          git commit -m "feat(audio): monthly Pro audio pack for ${MONTH}"
+
+          SOUND_COUNT=$(find content/pro_audio/runtime/packs -name "*.mp3" 2>/dev/null | wc -l || echo "?")
+
+          git commit -m "feat(audio): monthly Pro sound-arsenal pack for ${MONTH}
+
+          - Source: Freesound.org (CC0 licensed)
+          - Normalised to -14 LUFS via ffmpeg loudnorm
+          - ${SOUND_COUNT} MP3(s) in content/pro_audio/runtime/packs/
+          - Runtime manifest updated"
+
           git push origin "$BRANCH"
-          gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): monthly Pro audio pack — ${MONTH}" \
-            --body "Auto-generated monthly Pro audio pack via ElevenLabs. Includes voice callouts and alarm sounds for both platforms."
+
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "feat(audio): Pro sound-arsenal pack — ${MONTH}" \
+            --body "$(cat <<'PREOF'
+## Monthly Pro Audio Pack
+
+Auto-generated by the **Monthly Pro Audio Pack** workflow.
+
+### What changed
+- Downloaded 2-3 fresh CC0 sound effects from [Freesound.org](https://freesound.org)
+- Normalised to **-14 LUFS** using ffmpeg \`loudnorm\`
+- Stored under \`content/pro_audio/runtime/packs/\`
+- Runtime manifest (\`content/pro_audio/runtime/latest.json\`) updated
+- Pack index (\`content/pro_audio/monthly_pro_audio_packs.json\`) updated
+
+### License
+All sounds are **Creative Commons 0 (CC0)** — no attribution required, safe for commercial use.
+
+### QA checklist
+- [ ] Listen to each MP3 in the artifact zip
+- [ ] Confirm loudness feels consistent with existing sounds
+- [ ] Verify manifest JSON is valid (no lint errors)
+
+---
+Generated by \`.github/workflows/monthly-audio-pack.yml\`
+PREOF
+)"
