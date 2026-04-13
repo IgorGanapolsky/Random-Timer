@@ -266,15 +266,16 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
-        // Track abandonment when timer is running (not alarm/complete) and app goes to background
+        // When a running timer is backgrounded, the countdown continues and the alarm will still
+        // fire via the scheduled notification. This is NOT abandonment — fire timer_backgrounded
+        // (informational only) so we can measure background rate without inflating abandon rate.
+        // timer_abandoned is only fired on explicit user cancellation (cancelTimer / dismissAlarm).
         if let state = timerState,
-           state.status != .alarm && state.status != .complete {
-            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+           state.status == .running || state.status == .warning || state.status == .danger {
+            AnalyticsService.shared.track(AnalyticsEvents.timerBackgrounded, properties: [
                 "target_duration": state.targetDuration,
                 "remaining_duration": state.remainingDuration,
                 "status": state.status.rawValue,
-                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonAppBackgrounded,
-                AnalyticsProperties.abandonSource: "app_lifecycle",
             ])
         }
 
