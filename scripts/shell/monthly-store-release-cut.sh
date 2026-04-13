@@ -18,9 +18,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 write_kv() {
+  local kv="$1"
   if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-    echo "$1" >> "$GITHUB_OUTPUT"
+    echo "$kv" >> "$GITHUB_OUTPUT"
   fi
+  return 0
 }
 
 SKIP_AUDIO_MERGE="${SKIP_AUDIO_MERGE:-0}"
@@ -49,7 +51,7 @@ if [[ "${SKIP_AUDIO_MERGE}" != "1" && -n "${GITHUB_REPOSITORY:-}" ]]; then
   fi
 fi
 
-NEW_VERSION=$(python3 "$REPO_ROOT/scripts/monthly_release_utils.py" --repo-root "$REPO_ROOT" --print-next-patch)
+NEW_VERSION=$(python3 "$REPO_ROOT/scripts/monthly_release_utils.py" --repo-root "$REPO_ROOT")
 write_kv "version=${NEW_VERSION}"
 
 if git ls-remote --heads origin "refs/heads/release/v${NEW_VERSION}" | grep -q .; then
@@ -92,7 +94,7 @@ fi
 
 git add -A
 if git diff --cached --quiet; then
-  echo "::error::No staged changes after bump (unexpected)"
+  echo "::error::No staged changes after bump (unexpected)" >&2
   exit 1
 fi
 

@@ -42,11 +42,6 @@ def next_patch_from_repo(repo_root: Path) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compute next patch version from repo sources")
     parser.add_argument("--repo-root", type=Path, default=Path("."))
-    parser.add_argument(
-        "--print-next-patch",
-        action="store_true",
-        help="Print next X.Y.(Z+1) only (no newline extras)",
-    )
     args = parser.parse_args()
     root = args.repo_root.resolve()
     try:
@@ -54,10 +49,7 @@ def main() -> int:
     except Exception as exc:
         print(f"monthly_release_utils: {exc}", file=sys.stderr)
         return 1
-    if args.print_next_patch:
-        print(nxt)
-    else:
-        print(nxt)
+    print(nxt)
     return 0
 
 
