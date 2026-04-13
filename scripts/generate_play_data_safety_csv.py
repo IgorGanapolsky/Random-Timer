@@ -262,7 +262,7 @@ def generate(
             "row_count": len(patched_rows),
         }
     )
-    evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")  # NOSONAR - validated by _resolve_within_repo.
     return evidence
 
 
