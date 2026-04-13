@@ -54,9 +54,9 @@ jobs:
 
           pack_id="${PACK_ID_INPUT:-}"
           if [ -z "$pack_id" ]; then
-            python scripts/roll_monthly_pro_audio_pack.py \
+            pack_id="$(python scripts/roll_monthly_pro_audio_pack.py \
               --manifest content/pro_audio/monthly_pro_audio_packs.json \
-              --json-stdout
+              --json-stdout | python -c 'import json, sys; print(json.load(sys.stdin)["activePackId"])')"
           fi
 
           voice_id="${VOICE_ID_INPUT:-}"

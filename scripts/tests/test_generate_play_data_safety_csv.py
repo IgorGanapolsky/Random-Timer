@@ -5,6 +5,8 @@ import io
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts import generate_play_data_safety_csv as gen
 
 
@@ -115,6 +117,23 @@ def test_generator_accepts_local_template_with_bom(tmp_path: Path) -> None:
     assert result["status"] == "generated"
     assert result["selected_data_type_count"] == 5
     assert output.read_text(encoding="utf-8").startswith(gen.CSV_COLUMNS[0])
+
+
+def test_generator_reports_remote_template_fetch_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail_urlopen(*_args: object, **_kwargs: object) -> object:
+        raise gen.urllib.error.URLError("timed out")
+
+    monkeypatch.setattr(gen.urllib.request, "urlopen", fail_urlopen)
+
+    try:
+        gen._load_template(None, "https://example.invalid/play-data-safety.csv")
+    except SystemExit as exc:
+        message = str(exc)
+        assert "Failed to fetch Play Data Safety CSV template" in message
+        assert "example.invalid" in message
+        assert "timed out" in message
+    else:
+        raise AssertionError("Expected remote template fetch failure to exit cleanly")
 
 
 def test_generator_rejects_missing_evidence(tmp_path: Path) -> None:

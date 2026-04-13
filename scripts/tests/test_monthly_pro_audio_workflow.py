@@ -14,6 +14,8 @@ def test_monthly_audio_workflow_is_authoritative_and_fail_fast() -> None:
     assert LEGACY_WORKFLOW.exists() is False
     assert "0 6 1 * *" in source
     assert "roll_monthly_pro_audio_pack.py" in source
+    assert 'pack_id="$(python scripts/roll_monthly_pro_audio_pack.py' in source
+    assert 'json.load(sys.stdin)["activePackId"]' in source
     assert "pro_audio_freshness.py" in source
     assert "gh pr merge --auto --squash" in source
     assert "|| true" not in source
