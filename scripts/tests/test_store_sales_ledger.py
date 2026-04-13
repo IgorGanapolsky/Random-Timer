@@ -24,6 +24,15 @@ def test_parse_sales_tsv_tab_separated_sums() -> None:
     assert len(rows) == 2
 
 
+def test_find_col_prefers_exact_match_and_rejects_ambiguous_substrings() -> None:
+    from scripts.store_sales_ledger import _find_col
+
+    assert _find_col(["gross proceeds", "developer proceeds"], "developer proceeds", "proceeds") == 1
+    assert _find_col(["developer proceeds usd"], "developer proceeds") == 0
+    assert _find_col(["gross proceeds"], "proceeds") is None
+    assert _find_col(["net units"], "units") is None
+
+
 def test_fetch_ios_sales_skipped_without_vendor(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import store_sales_ledger as ssl
 

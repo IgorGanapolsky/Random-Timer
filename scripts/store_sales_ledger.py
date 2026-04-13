@@ -57,12 +57,13 @@ def _decode_sales_report_body(raw: bytes) -> str:
 
 
 def _find_col(header: list[str], *candidates: str) -> int | None:
-    cand = {_norm_header(c) for c in candidates}
+    cand = [_norm_header(c) for c in candidates]
     for i, h in enumerate(header):
         if h in cand:
             return i
+    for i, h in enumerate(header):
         for c in cand:
-            if c in h or h in c:
+            if c and h.startswith(f"{c} "):
                 return i
     return None
 
