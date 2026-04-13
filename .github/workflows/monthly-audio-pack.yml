@@ -1,10 +1,32 @@
+# Single monthly pipeline: 1st of month (15:00 UTC) + manual dispatch.
+# Opens a PR to develop (no direct push). Store delivery still requires native-release.yml after merge.
 name: Monthly Pro Audio Pack
 
 on:
   workflow_dispatch:
+    inputs:
+      pack_id:
+        description: Optional explicit monthly pack ID.
+        required: false
+        default: ""
+        type: string
+      voice_id:
+        description: Optional exact ElevenLabs voice ID.
+        required: false
+        default: DGzg6RaUqxGRTHSBjfgF
+        type: string
+      model_id:
+        description: ElevenLabs model ID used for synthesis.
+        required: false
+        default: eleven_multilingual_v2
+        type: string
+      generate_sound_assets:
+        description: Regenerate monthly Pro alarm sounds.
+        required: false
+        default: true
+        type: boolean
   schedule:
-    # 1st of every month at 6 AM UTC
-    - cron: "0 6 1 * *"
+    - cron: "0 15 1 * *" # 1st of every month, 15:00 UTC (one run; replaces duplicate 06:00 job)
 
 jobs:
   generate-pack:
@@ -13,81 +35,103 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Require ElevenLabs API key
+        run: |
+          if [ -z "${ELEVENLABS_API_KEY:-}" ]; then
+            echo "::error::Secret ELEVENLABS_API_KEY is not set — cannot synthesize audio."
+            exit 1
+          fi
 
-      - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+      - uses: actions/checkout@v6
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-      - name: Generate voice callouts
+      - name: Resolve generator inputs
+        id: gen
         env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          python scripts/generate_pro_audio_content.py \
-            --generate-voice-assets || true
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "pack_id=${{ github.event.inputs.pack_id || '' }}" >> "$GITHUB_OUTPUT"
+            echo "voice_id=${{ github.event.inputs.voice_id || 'DGzg6RaUqxGRTHSBjfgF' }}" >> "$GITHUB_OUTPUT"
+            echo "model_id=${{ github.event.inputs.model_id || 'eleven_multilingual_v2' }}" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event.inputs.generate_sound_assets }}" = "false" ]; then
+              echo "generate_sound=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "generate_sound=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "pack_id=" >> "$GITHUB_OUTPUT"
+            echo "voice_id=DGzg6RaUqxGRTHSBjfgF" >> "$GITHUB_OUTPUT"
+            echo "model_id=eleven_multilingual_v2" >> "$GITHUB_OUTPUT"
+            echo "generate_sound=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Generate sound assets
-        env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: |
-          python scripts/generate_pro_audio_content.py \
-            --generate-sound-assets || true
-
-      - name: Sync to Android
-        run: |
-          # Sync voice callouts
-          for f in native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3; do
-            [ -f "$f" ] || continue
-            name=$(basename "$f")
-            dst="native-android/app/src/main/res/raw/$name"
-            cp "$f" "$dst" 2>/dev/null && echo "Synced $name" || true
-          done
-          # Sync alarm sounds
-          for sound in alarm gentle_chime klaxon whistle buzzer gong airhorn drum_roll siren bell; do
-            ios_name="${sound//_/-}"
-            src="native-ios/RandomTimer/Resources/Sounds/${ios_name}.mp3"
-            [ -f "$src" ] || src="native-ios/RandomTimer/Resources/Sounds/${sound}.mp3"
-            dst="native-android/app/src/main/res/raw/${sound}.mp3"
-            [ -f "$src" ] && cp "$src" "$dst" && echo "Synced sound $sound" || true
-          done
-
-      - name: Verify pack
-        run: |
-          echo "=== Voice Callouts ==="
-          ls native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} command cues"
-          ls native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} elapsed cues"
-          echo "=== Alarm Sounds ==="
-          ls native-ios/RandomTimer/Resources/Sounds/*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} alarm sounds"
+      - uses: ./.github/actions/run-pro-audio-generation
+        with:
+          pack_id: ${{ steps.gen.outputs.pack_id }}
+          voice_id: ${{ steps.gen.outputs.voice_id }}
+          model_id: ${{ steps.gen.outputs.model_id }}
+          generate_sound_assets: ${{ steps.gen.outputs.generate_sound }}
 
       - name: Upload audio pack artifact
-        uses: actions/upload-artifact@v7
         if: always()
+        uses: actions/upload-artifact@v7
         with:
           name: monthly-pro-audio-pack
           path: |
+            content/pro_audio/runtime
+            content/pro_audio/
             native-ios/RandomTimer/Resources/Audio/
             native-ios/RandomTimer/Resources/Sounds/
+            native-android/app/src/main/assets/
             native-android/app/src/main/res/raw/
-            content/pro_audio/
 
-      - name: Create PR with new pack
+      - name: Open PR to develop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          MONTH=$(date +%Y-%m)
+          MONTH=$(date -u +%Y-%m)
           BRANCH="feat/audio-pack-${MONTH}"
-          git checkout -b "$BRANCH"
-          git add native-ios/RandomTimer/Resources/ native-android/app/src/main/res/raw/ content/pro_audio/
-          if git diff --cached --quiet; then
-            echo "No changes to audio files"
+          if git diff --quiet -- \
+            content/pro_audio/monthly_pro_audio_packs.json \
+            content/pro_audio/runtime \
+            native-ios/RandomTimer/Resources/Audio \
+            native-ios/RandomTimer/Resources/Sounds \
+            native-android/app/src/main/assets \
+            native-android/app/src/main/res/raw; then
+            echo "No audio changes — working tree matches develop (idempotent regeneration)."
             exit 0
           fi
+          git checkout -b "$BRANCH"
+          git add \
+            content/pro_audio/monthly_pro_audio_packs.json \
+            content/pro_audio/runtime \
+            native-ios/RandomTimer/Resources/Audio \
+            native-ios/RandomTimer/Resources/Sounds \
+            native-android/app/src/main/assets \
+            native-android/app/src/main/res/raw
           git commit -m "feat(audio): monthly Pro audio pack for ${MONTH}"
-          git push origin "$BRANCH"
-          gh pr create --base develop --head "$BRANCH" \
-            --title "feat(audio): monthly Pro audio pack — ${MONTH}" \
-            --body "Auto-generated monthly Pro audio pack via ElevenLabs. Includes voice callouts and alarm sounds for both platforms."
+          git push -u origin "$BRANCH"
+          existing=$(gh pr list --base develop --head "$BRANCH" --json number --jq 'length')
+          if [ "$existing" -eq 0 ]; then
+            gh pr create --base develop --head "$BRANCH" \
+              --title "feat(audio): monthly Pro audio pack — ${MONTH}" \
+              --body "Automated monthly Pro regeneration (ElevenLabs). Merge, then run \`native-release.yml\` so store builds include new assets.
+
+**Ops**
+- Confirm \`activePackId\` / \`releaseMonth\` in \`content/pro_audio/monthly_pro_audio_packs.json\` match the calendar month (see \`pro-audio-freshness.yml\`)."
+          else
+            echo "PR already open for ${BRANCH}."
+          fi

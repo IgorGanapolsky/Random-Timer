@@ -1,0 +1,68 @@
+name: Run Pro Audio Generation
+description: ElevenLabs synthesis with Android sync; fails if generation or verification fails.
+
+inputs:
+  pack_id:
+    description: Optional monthly pack id (--pack-id).
+    required: false
+    default: ""
+  voice_id:
+    required: false
+    default: DGzg6RaUqxGRTHSBjfgF
+  model_id:
+    required: false
+    default: eleven_multilingual_v2
+  generate_sound_assets:
+    description: "true to regenerate alarm/sound arsenal mp3s"
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Generate monthly Pro audio assets from ElevenLabs
+      shell: bash
+      run: |
+        set -euo pipefail
+        voice_id="${{ inputs.voice_id }}"
+        model_id="${{ inputs.model_id }}"
+        pack_id="${{ inputs.pack_id }}"
+        gen_sound="${{ inputs.generate_sound_assets }}"
+
+        args=(
+          --manifest content/pro_audio/monthly_pro_audio_packs.json
+          --voice-id "$voice_id"
+          --model-id "$model_id"
+          --generate-voice-assets
+          --sync-android-assets
+        )
+        if [ -n "$pack_id" ]; then
+          args+=(--pack-id "$pack_id")
+        fi
+        if [ "$gen_sound" = "true" ] || [ "$gen_sound" = "True" ]; then
+          args+=(--generate-sound-assets)
+        fi
+        python scripts/generate_pro_audio_content.py "${args[@]}"
+
+    - name: Verify generated assets
+      shell: bash
+      run: |
+        set -euo pipefail
+        cmd=$(find native-ios/RandomTimer/Resources/Audio -maxdepth 1 -name 'cmd_*.mp3' 2>/dev/null | wc -l | tr -d ' ')
+        elapsed=$(find native-ios/RandomTimer/Resources/Audio -maxdepth 1 -name 'elapsed_*.mp3' 2>/dev/null | wc -l | tr -d ' ')
+        alarms=$(find native-ios/RandomTimer/Resources/Sounds -maxdepth 1 -name '*.mp3' 2>/dev/null | wc -l | tr -d ' ')
+        echo "cmd_*.mp3 count: $cmd"
+        echo "elapsed_*.mp3 count: $elapsed"
+        echo "alarm mp3 count: $alarms"
+        if [ "${cmd:-0}" -lt 1 ]; then
+          echo "::error::Expected at least one cmd_*.mp3 voice cue"
+          exit 1
+        fi
+        if [ "${elapsed:-0}" -lt 1 ]; then
+          echo "::error::Expected at least one elapsed_*.mp3 voice cue"
+          exit 1
+        fi
+        if [ "${alarms:-0}" -lt 1 ]; then
+          echo "::error::Expected at least one alarm sound under Resources/Sounds"
+          exit 1
+        fi
