@@ -92,8 +92,8 @@ def test_fetch_ios_sales_parses_direct_gzip_report_body(
     assert out["status"] == "ok"
     assert out["days_with_nonzero_rows"] == 1
     assert out["sum_units"] == 2
-    assert out["sum_developer_proceeds_or_partner_share"] == 1.5
-    assert out["sum_customer_price"] == 3.0
+    assert out["sum_developer_proceeds_or_partner_share"] == pytest.approx(1.5)
+    assert out["sum_customer_price"] == pytest.approx(3.0)
     assert auth_calls == ["jwt"]
 
 

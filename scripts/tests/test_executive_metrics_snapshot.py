@@ -62,9 +62,9 @@ def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.M
     )
     assert out.get("events_paywall_purchase_success_ios") == 0
     assert out.get("distinct_persons_paywall_purchase_success_android") == 0
-    assert out.get("paywall_revenue_sum_event_properties") == 19.99
+    assert out.get("paywall_revenue_sum_event_properties") == pytest.approx(19.99)
     assert out.get("paywall_viewed_distinct_persons") == 5
-    assert out.get("paywall_purchaser_conversion_from_viewed_pct") == 0.0
+    assert out.get("paywall_purchaser_conversion_from_viewed_pct") == pytest.approx(0.0)
     assert out.get("distinct_persons_pageview_utm_cpc_ppc_paid") == 2
     mf2 = out.get("metric_field_ids") or {}
     assert mf2.get("paywall_revenue_sum_event_properties")
