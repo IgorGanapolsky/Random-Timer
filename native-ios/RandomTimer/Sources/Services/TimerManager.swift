@@ -271,7 +271,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         // (informational only) so we can measure background rate without inflating abandon rate.
         // timer_abandoned is only fired on explicit user cancellation (cancelTimer / dismissAlarm).
         if let state = timerState,
-           state.status == .running || state.status == .warning || state.status == .danger {
+           [.running, .warning, .danger, .paused].contains(state.status) {
             AnalyticsService.shared.track(AnalyticsEvents.timerBackgrounded, properties: [
                 "target_duration": state.targetDuration,
                 "remaining_duration": state.remainingDuration,
