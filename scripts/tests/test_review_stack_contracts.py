@@ -55,7 +55,7 @@ def test_ci_config_documents_tighter_review_requirements() -> None:
     content = CI_CONFIG.read_text(encoding="utf-8")
 
     assert "Claude Review" in content
-    assert "Seer Code Review" in content
+    assert "Seer Code Review" not in content
     assert "SonarCloud Code Analysis" in content
     assert "Android Emulator + Maestro Tests" in content
     assert "iOS Simulator + Maestro + Agent Device" in content
