@@ -175,6 +175,42 @@ def test_zernio_create_post_publish_now() -> None:
     assert body["content"] == "hello"
 
 
+def test_zernio_create_post_includes_media_items() -> None:
+    mock_r = MagicMock()
+    mock_r.status_code = 201
+    mock_r.json.return_value = {"id": "post_1"}
+    media = [{"url": "https://example.com/social-preview.png", "type": "image"}]
+
+    with patch.object(zo.requests, "post", return_value=mock_r) as mpost:
+        payload, err = zo.zernio_create_post(
+            "key",
+            "hello",
+            [{"platform": "instagram", "accountId": "acc"}],
+            media_items=media,
+            publish_now=True,
+        )
+
+    assert err is None
+    assert payload == {"id": "post_1"}
+    assert mpost.call_args.kwargs["json"]["mediaItems"] == media
+
+
+def test_default_media_items_use_public_social_preview(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ZERNIO_MEDIA_IMAGE_URL", raising=False)
+
+    assert zo._default_media_items("https://example.com/marketing/site") == [
+        {"url": "https://example.com/marketing/site/assets/social-preview.png", "type": "image"}
+    ]
+
+
+def test_default_media_items_allow_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ZERNIO_MEDIA_IMAGE_URL", "https://cdn.example.com/custom.png")
+
+    assert zo._default_media_items("https://example.com/marketing/site") == [
+        {"url": "https://cdn.example.com/custom.png", "type": "image"}
+    ]
+
+
 def test_zernio_create_post_scheduled() -> None:
     mock_r = MagicMock()
     mock_r.status_code = 200

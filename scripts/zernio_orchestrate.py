@@ -86,6 +86,7 @@ def zernio_create_post(
     content: str,
     platforms: List[Dict[str, str]],
     *,
+    media_items: Optional[List[Dict[str, str]]] = None,
     publish_now: bool = True,
     scheduled_for: Optional[str] = None,
     timezone: str = "UTC",
@@ -95,6 +96,8 @@ def zernio_create_post(
         "content": content,
         "platforms": platforms,
     }
+    if media_items:
+        body["mediaItems"] = media_items
     if publish_now:
         body["publishNow"] = True
     elif scheduled_for:
@@ -162,6 +165,13 @@ def _publish_accounts_from_env() -> Tuple[Optional[List[Dict[str, str]]], Option
     if accounts:
         return accounts, None
     return None, "missing ZERNIO_PUBLISH_ACCOUNTS or per-platform ZERNIO_*_ACCOUNT_ID values"
+
+
+def _default_media_items(base_url: str) -> List[Dict[str, str]]:
+    image_url = os.environ.get("ZERNIO_MEDIA_IMAGE_URL", "").strip()
+    if not image_url:
+        image_url = f"{base_url.rstrip('/')}/assets/social-preview.png"
+    return [{"url": image_url, "type": "image"}]
 
 
 def _recent_zernio_publish_for_slug(log_path: Path, slug: str, hours: int = 36) -> bool:
@@ -273,6 +283,7 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
     campaign = campaign_from_slug(post.slug)
     tracked_url = add_utm(canonical_url, "zernio", campaign, medium="social", content=post.slug)
     text = f"{compose_social_post_text(post.title)}\n\n{tracked_url}"
+    media_items = _default_media_items(base_url)
 
     platforms, perr = _publish_accounts_from_env()
     if perr:
@@ -302,6 +313,7 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
                 "status": "dry_run",
                 "preview_chars": len(text),
                 "platform_count": len(platforms or []),
+                "media_item_count": len(media_items),
             },
         )
         print(
@@ -311,6 +323,7 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
                     "slug": post.slug,
                     "ZERNIO_AUTO_PUBLISH": "set to 1 to live-publish",
                     "platform_count": len(platforms or []),
+                    "media_item_count": len(media_items),
                 },
                 indent=2,
             )
@@ -321,6 +334,7 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
         key,
         text,
         platforms,
+        media_items=media_items,
         publish_now=True,
     )
     row = {
