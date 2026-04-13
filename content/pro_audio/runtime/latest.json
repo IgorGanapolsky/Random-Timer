@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "packId": "2026-04_runtime_voice_remote",
+  "packId": "2026-03_marine_foundations",
   "releaseMonth": "2026-04",
   "entitlement": "pro",
   "generatedAt": "2026-04-08T22:19:28Z",
@@ -192,7 +192,7 @@
     ]
   },
   "soundCatalog": {
-    "packId": "2026-04_runtime_voice_remote",
+    "packId": "2026-03_marine_foundations",
     "releaseMonth": "2026-04",
     "entitlement": "pro",
     "sounds": [

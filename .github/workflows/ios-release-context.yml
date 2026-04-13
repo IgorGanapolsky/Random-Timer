@@ -44,7 +44,8 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           ASC_REVIEWS_SLACK_WEBHOOK: ${{ secrets.ASC_REVIEWS_SLACK_WEBHOOK }}
           INPUT_VERSION: ${{ inputs.version }}
-          STRICT_REMOTE: ${{ inputs.strict_remote }}
+          # Scheduled runs only need a snapshot signal; ASC often returns partial_failure while listings are healthy.
+          STRICT_REMOTE: ${{ github.event_name != 'schedule' && inputs.strict_remote || false }}
           FAIL_ON_SLA: ${{ inputs.fail_on_sla }}
         run: |
           set -euo pipefail
