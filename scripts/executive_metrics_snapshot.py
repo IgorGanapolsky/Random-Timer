@@ -24,7 +24,7 @@ SCRIPTS = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPTS.parent
 sys.path.insert(0, str(SCRIPTS))
 
-from repo_dotenv import load_repo_dotenv
+from repo_dotenv import load_repo_dotenv  # noqa: E402
 
 # distribution_channel set by iOS/Android SDKs; legacy events omit it (treated as legacy).
 _DISTRIBUTION_EXCLUDE = (
@@ -397,7 +397,7 @@ def run(
             ),
             "ledger_revenue_ios_sales_reports": (
                 "App Store Connect GET /v1/salesReports (SALES, DAILY, SUMMARY, 1_0) aggregated TSV "
-                "columns when APPSTORE_CONNECT_VENDOR_NUMBER is set. Filtered to Apple Identifier "
+                "columns when APPSTORE_VENDOR_NUMBER is set. Filtered to Apple Identifier "
                 "6758355312 when the report includes that column."
             ),
             "marketing_utm_signal": (

@@ -2,7 +2,8 @@
 """Optional store ledger snippets for executive_metrics (not PostHog proxies).
 
 - iOS: App Store Connect Sales Reports API (daily SALES SUMMARY), when
-  APPSTORE_CONNECT_VENDOR_NUMBER is set alongside standard ASC auth env vars.
+  APPSTORE_VENDOR_NUMBER is set alongside standard ASC auth env vars.
+  APPSTORE_CONNECT_VENDOR_NUMBER is accepted as a legacy alias for local runs.
   Aggregates numeric columns across downloaded TSV reports for the lookback window.
 
 Does not print secrets. See docs/OPERATIONAL_RELIABILITY.md for proxy vs ledger rules.
@@ -29,6 +30,8 @@ for _p in (_SCRIPTS, _SCRIPTS / "asc"):
 IOS_APP_ID = "6758355312"
 
 ASC_SALES_METRIC_BUNDLE_ID = "asc_sales_daily_summary_tsv_v1"
+ASC_VENDOR_ENV = "APPSTORE_VENDOR_NUMBER"
+ASC_LEGACY_VENDOR_ENV = "APPSTORE_CONNECT_VENDOR_NUMBER"
 
 
 def _norm_header(h: str) -> str:
@@ -68,6 +71,16 @@ def _find_col(header: list[str], *candidates: str) -> int | None:
     return None
 
 
+def _vendor_number_from_env() -> tuple[str, str | None]:
+    vendor = (os.environ.get(ASC_VENDOR_ENV) or "").strip()
+    if vendor:
+        return vendor, ASC_VENDOR_ENV
+    legacy_vendor = (os.environ.get(ASC_LEGACY_VENDOR_ENV) or "").strip()
+    if legacy_vendor:
+        return legacy_vendor, ASC_LEGACY_VENDOR_ENV
+    return "", None
+
+
 def _float_cell(val: str) -> float:
     try:
         return float((val or "").replace(",", "").strip() or 0.0)
@@ -84,11 +97,11 @@ def _int_cell(val: str) -> int:
 
 def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
     """Sum units and money columns from ASC daily SALES SUMMARY reports."""
-    vendor = (os.environ.get("APPSTORE_CONNECT_VENDOR_NUMBER") or "").strip()
+    vendor, vendor_env = _vendor_number_from_env()
     if not vendor:
         return {
             "status": "skipped",
-            "reason": "APPSTORE_CONNECT_VENDOR_NUMBER not set",
+            "reason": f"{ASC_VENDOR_ENV} not set",
             "metric_bundle_id": ASC_SALES_METRIC_BUNDLE_ID,
         }
 
@@ -212,6 +225,7 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
         "status": status,
         "metric_bundle_id": ASC_SALES_METRIC_BUNDLE_ID,
         "vendor_configured": True,
+        "vendor_env": vendor_env,
         "window_days_requested": days,
         "days_with_nonzero_rows": days_with_data,
         "sum_units": sum_units,

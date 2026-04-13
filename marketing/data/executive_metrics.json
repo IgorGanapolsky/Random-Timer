@@ -8,7 +8,7 @@
     "reviews_in_app": "PostHog review_prompt_requested / write_review_tapped (not published star count).",
     "paid_posthog": "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store revenue). Compare posthog.events_paywall_purchase_success_ios vs _android (properties.platform). Ledger: App Store Connect + Google Play billing.",
     "paywall_revenue_event_properties": "Sum of coalesce(properties.revenue, properties.price) on paywall_purchase_success within pragmatic_live + window_days. Semantics depend on client instrumentation (currency, tax); not store ledger.",
-    "ledger_revenue_ios_sales_reports": "App Store Connect GET /v1/salesReports (SALES, DAILY, SUMMARY, 1_0) aggregated TSV columns when APPSTORE_CONNECT_VENDOR_NUMBER is set. Filtered to Apple Identifier 6758355312 when the report includes that column.",
+    "ledger_revenue_ios_sales_reports": "App Store Connect GET /v1/salesReports (SALES, DAILY, SUMMARY, 1_0) aggregated TSV columns when APPSTORE_VENDOR_NUMBER is set. Filtered to Apple Identifier 6758355312 when the report includes that column.",
     "marketing_utm_signal": "Distinct persons with $pageview and utm_medium in (cpc, ppc, paid) \u2014 coarse paid-traffic proxy; not ad network attribution.",
     "posthog_executive": "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except wqtu_7d_distinct_persons (fixed 7d). Filters exclude non\u2013store-production distribution_channel (testflight, non_play_install, dev, emulator, etc.), is_internal, debug/sim events; legacy events without distribution_channel stay included as 'legacy'. Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS env. See posthog.metric_field_ids and posthog.audience_note.",
     "crashes": "Crashlytics BigQuery streaming export; posthog_exception_events is separate. crashlytics_bigquery.fatal_events_in_window is COUNT(*) of fatal rows in the lookback hours. fatal_events sums crash_count only within parsed top_fatal_issues (up to 10 rows displayed from top 20 SQL groups) \u2014 see metric_field_ids.",
@@ -146,7 +146,7 @@
   "ledger_revenue": {
     "ios_sales_reports_daily": {
       "status": "skipped",
-      "reason": "APPSTORE_CONNECT_VENDOR_NUMBER not set",
+      "reason": "APPSTORE_VENDOR_NUMBER not set",
       "metric_bundle_id": "asc_sales_daily_summary_tsv_v1"
     },
     "android_play_billing": {

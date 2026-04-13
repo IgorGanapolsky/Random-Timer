@@ -36,6 +36,7 @@ def test_find_col_prefers_exact_match_and_rejects_ambiguous_substrings() -> None
 def test_fetch_ios_sales_skipped_without_vendor(monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts import store_sales_ledger as ssl
 
+    monkeypatch.delenv("APPSTORE_VENDOR_NUMBER", raising=False)
     monkeypatch.delenv("APPSTORE_CONNECT_VENDOR_NUMBER", raising=False)
     out = ssl.fetch_ios_sales_daily_summary(7)
     assert out["status"] == "skipped"
@@ -47,7 +48,7 @@ def test_fetch_ios_sales_skipped_when_vendor_only_no_asc(
 ) -> None:
     from scripts import store_sales_ledger as ssl
 
-    monkeypatch.setenv("APPSTORE_CONNECT_VENDOR_NUMBER", "12345678")
+    monkeypatch.setenv("APPSTORE_VENDOR_NUMBER", "12345678")
     for k in (
         "APPSTORE_KEY_ID",
         "APPSTORE_ISSUER_ID",
@@ -85,7 +86,7 @@ def test_fetch_ios_sales_parses_direct_gzip_report_body(
         )
         return _FakeResponse(200, gzip.compress(body.encode("utf-8")))
 
-    monkeypatch.setenv("APPSTORE_CONNECT_VENDOR_NUMBER", "12345678")
+    monkeypatch.setenv("APPSTORE_VENDOR_NUMBER", "12345678")
     monkeypatch.setitem(
         sys.modules,
         "asc_client",
@@ -106,6 +107,20 @@ def test_fetch_ios_sales_parses_direct_gzip_report_body(
     assert auth_calls == ["jwt"]
 
 
+def test_fetch_ios_sales_accepts_legacy_connect_vendor_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts import store_sales_ledger as ssl
+
+    monkeypatch.delenv("APPSTORE_VENDOR_NUMBER", raising=False)
+    monkeypatch.setenv("APPSTORE_CONNECT_VENDOR_NUMBER", "12345678")
+
+    vendor, env_name = ssl._vendor_number_from_env()
+
+    assert vendor == "12345678"
+    assert env_name == "APPSTORE_CONNECT_VENDOR_NUMBER"
+
+
 def test_fetch_ios_sales_all_failures_return_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -116,7 +131,7 @@ def test_fetch_ios_sales_all_failures_return_error(
         def from_env(cls) -> types.SimpleNamespace:
             return types.SimpleNamespace(jwt=lambda: "token")
 
-    monkeypatch.setenv("APPSTORE_CONNECT_VENDOR_NUMBER", "12345678")
+    monkeypatch.setenv("APPSTORE_VENDOR_NUMBER", "12345678")
     monkeypatch.setitem(
         sys.modules,
         "asc_client",
@@ -162,7 +177,7 @@ def test_fetch_ios_sales_some_failures_return_partial(
             return _FakeResponse(200, gzip.compress(body.encode("utf-8")))
         return _FakeResponse(503, b"unavailable")
 
-    monkeypatch.setenv("APPSTORE_CONNECT_VENDOR_NUMBER", "12345678")
+    monkeypatch.setenv("APPSTORE_VENDOR_NUMBER", "12345678")
     monkeypatch.setitem(
         sys.modules,
         "asc_client",
