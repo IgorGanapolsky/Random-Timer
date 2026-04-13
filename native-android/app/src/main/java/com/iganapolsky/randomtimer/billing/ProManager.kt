@@ -330,6 +330,34 @@ class ProManager
 
         suspend fun getFormattedProPrice(): String = getFormattedPrice(PRO_PRODUCT_ID)
 
+        /**
+         * Returns the numeric price in the user's local currency from the cached ProductDetails.
+         * Used to populate the "revenue" property on analytics events.
+         * Falls back to known defaults if cache is empty (e.g. billing callback arrives before fetch).
+         */
+        private fun priceAmountFromCache(productID: String): Double {
+            val details = cachedProductDetails[productID]
+            return if (productID == ELITE_PRODUCT_ID) {
+                // Subscription: find the preferred offer token, then pull priceAmountMicros from
+                // the raw Google billing PricingPhaseList (the last/base phase, not any trial).
+                val preferredToken = selectPreferredSubscriptionOffer(
+                    details?.toSubscriptionOffers().orEmpty()
+                )?.offerToken
+                val micros = details?.subscriptionOfferDetails
+                    ?.firstOrNull { it.offerToken == preferredToken }
+                    ?.pricingPhases
+                    ?.pricingPhaseList
+                    ?.lastOrNull()
+                    ?.priceAmountMicros
+                    ?: 2_999_000L // fallback: $29.99
+                micros / 1_000_000.0
+            } else {
+                // One-time purchase
+                val micros = details?.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 499_000L // fallback: $4.99
+                micros / 1_000_000.0
+            }
+        }
+
         suspend fun launchProPurchase(
             activity: Activity,
             entryPoint: String,
@@ -373,6 +401,8 @@ class ProManager
                 )
             }
             if (hasPurchased) {
+                val purchasedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: ""
+                val revenueAmount = priceAmountFromCache(purchasedProductId)
                 analyticsService.track(
                     AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
                     mapOf(
@@ -380,6 +410,8 @@ class ProManager
                             (if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL),
                         AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
                         AnalyticsProperties.ENTITLEMENT_LEVEL to _entitlementLevel.value.name.lowercase(),
+                        AnalyticsProperties.PRODUCT_ID to purchasedProductId,
+                        AnalyticsProperties.REVENUE to revenueAmount,
                     ),
                 )
             }
