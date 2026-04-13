@@ -24,9 +24,15 @@ final class StoreReviewManager {
     }
 
     private func requestReview() {
+        // Guard: only prompt when app is in the foreground with an active scene.
+        // Avoids wasting one of the OS-enforced annual review request quota when
+        // called from a background or notification path.
+        guard let scene = try? currentWindowScene else { return }
+
         AnalyticsService.shared.track(AnalyticsEvents.reviewPromptRequested)
-        try? AppStore.requestReview(in: currentWindowScene)
-        AnalyticsService.shared.track(AnalyticsEvents.writeReviewTapped)
+        // AppStore.requestReview shows the native prompt; the OS may suppress it.
+        // We do NOT track writeReviewTapped here — the user has not tapped anything yet.
+        AppStore.requestReview(in: scene)
 
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastReviewTimestampKey)
         UserDefaults.standard.set(appVersion, forKey: lastReviewVersionKey)
