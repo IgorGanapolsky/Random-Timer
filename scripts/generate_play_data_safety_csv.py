@@ -72,7 +72,7 @@ def _resolve_within_repo(path: Path, repo_root: Path, label: str) -> Path:
 
 def _load_template(path: Path | None, url: str) -> str:
     if path:
-        return path.read_text(encoding="utf-8")
+        return path.read_text(encoding="utf-8-sig")
     with urllib.request.urlopen(url, timeout=60) as response:
         return response.read().decode("utf-8-sig")
 

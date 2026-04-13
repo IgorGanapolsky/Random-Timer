@@ -96,6 +96,27 @@ def test_generator_patches_official_template_shape(tmp_path: Path) -> None:
     assert json.loads(evidence.read_text(encoding="utf-8"))["negative_claims"]["uses_advertising_id"] is False
 
 
+def test_generator_accepts_local_template_with_bom(tmp_path: Path) -> None:
+    source = _source_fixture(tmp_path)
+    template = tmp_path / "template.csv"
+    output = tmp_path / "play_data_safety.csv"
+    evidence = tmp_path / "evidence.json"
+    template.write_text("\ufeff" + _template(), encoding="utf-8")
+
+    result = gen.generate(
+        source_path=source,
+        output_path=output,
+        evidence_path=evidence,
+        template_path=template,
+        template_url="",
+        repo_root=tmp_path,
+    )
+
+    assert result["status"] == "generated"
+    assert result["selected_data_type_count"] == 5
+    assert output.read_text(encoding="utf-8").startswith(gen.CSV_COLUMNS[0])
+
+
 def test_generator_rejects_missing_evidence(tmp_path: Path) -> None:
     source = {
         "package_name": "com.example",
