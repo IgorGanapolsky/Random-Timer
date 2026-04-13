@@ -48,6 +48,14 @@ def _parse_sales_tsv_rows(text: str) -> tuple[list[str], list[list[str]]]:
     return header, data
 
 
+def _decode_sales_report_body(raw: bytes) -> str:
+    """ASC salesReports returns gzip bytes on success, but keep TSV fallback tolerant."""
+    try:
+        return gzip.decompress(raw).decode("utf-8-sig")
+    except OSError:
+        return raw.decode("utf-8-sig", errors="replace")
+
+
 def _find_col(header: list[str], *candidates: str) -> int | None:
     cand = {_norm_header(c) for c in candidates}
     for i, h in enumerate(header):
@@ -110,11 +118,6 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
             "metric_bundle_id": ASC_SALES_METRIC_BUNDLE_ID,
         }
 
-    headers = {
-        "Authorization": f"Bearer {auth.jwt()}",
-        "Content-Type": "application/json",
-    }
-
     today = dt.date.today()
     sum_proceeds = 0.0
     sum_customer = 0.0
@@ -135,6 +138,10 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
             "filter[reportDate]": report_date,
         }
         try:
+            headers = {
+                "Authorization": f"Bearer {auth.jwt()}",
+                "Accept": "application/a-gzip",
+            }
             list_resp = requests.get(
                 f"{APP_STORE_CONNECT_API}/salesReports",
                 headers=headers,
@@ -152,37 +159,7 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
             continue
 
         try:
-            body = list_resp.json()
-        except Exception as exc:
-            http_errors.append(f"{report_date}: json {exc}")
-            continue
-
-        data = body.get("data") or []
-        if not data:
-            continue
-
-        attrs = (data[0] or {}).get("attributes") or {}
-        url = (attrs.get("url") or "").strip()
-        if not url:
-            continue
-
-        try:
-            blob_resp = requests.get(url, timeout=120)
-        except Exception as exc:
-            http_errors.append(f"{report_date}: download {exc}")
-            continue
-
-        if blob_resp.status_code >= 300:
-            http_errors.append(f"{report_date}: download HTTP {blob_resp.status_code}")
-            continue
-
-        raw = blob_resp.content
-        try:
-            text = gzip.decompress(raw).decode("utf-8-sig")
-        except OSError:
-            text = raw.decode("utf-8-sig", errors="replace")
-
-        try:
+            text = _decode_sales_report_body(list_resp.content)
             hdr, rows = _parse_sales_tsv_rows(text)
             if not hdr:
                 parse_errors.append(f"{report_date}: empty header")
@@ -226,8 +203,12 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
         "Territory/tax timing per Apple reporting; not bank settlement."
     )
 
+    status = "ok"
+    if http_errors or parse_errors:
+        status = "partial" if days_with_data else "error"
+
     out: dict[str, Any] = {
-        "status": "ok",
+        "status": status,
         "metric_bundle_id": ASC_SALES_METRIC_BUNDLE_ID,
         "vendor_configured": True,
         "window_days_requested": days,
@@ -245,4 +226,8 @@ def fetch_ios_sales_daily_summary(days: int) -> dict[str, Any]:
         out["parse_errors_sample"] = parse_errors[:15]
     if days_with_data == 0 and not http_errors and not parse_errors:
         out["note"] += " No report rows in window (or no sales yet)."
+    elif status == "partial":
+        out["note"] += " Ledger collection partially succeeded; error samples are attached."
+    elif status == "error":
+        out["note"] += " Ledger collection failed for every non-empty requested report; error samples are attached."
     return out
