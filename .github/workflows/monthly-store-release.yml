@@ -50,8 +50,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          SKIP_AUDIO_MERGE: ${{ inputs.skip_audio_merge == true && '1' || '0' }}
-          DRY_RUN: ${{ inputs.dry_run == true && '1' || '0' }}
+          SKIP_AUDIO_MERGE: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_audio_merge && '1' || '0' }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
