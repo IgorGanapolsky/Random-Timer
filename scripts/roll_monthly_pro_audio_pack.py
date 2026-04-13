@@ -181,7 +181,7 @@ def build_pack(month: str, previous_pack: dict[str, Any]) -> dict[str, Any]:
     theme = _theme_for_month(month)
     command_cues = _command_cues(theme)
     fallback = command_cues[0]["filename"]
-    sound_arsenal = deepcopy(previous_pack["soundArsenal"])
+    sound_arsenal = deepcopy(previous_pack.get("soundArsenal", []))
     for sound in sound_arsenal:
         prompt = str(sound.get("prompt") or "").rstrip(".")
         sound["prompt"] = f"{prompt}; {theme['sound_prompt_suffix']}"
@@ -204,11 +204,12 @@ def roll_manifest(manifest: dict[str, Any], month: str) -> tuple[dict[str, Any],
     active_pack = next((pack for pack in manifest["packs"] if pack["id"] == manifest["activePackId"]), None)
     if active_pack is None:
         raise SystemExit(f"Active pack {manifest['activePackId']!r} is missing")
-    if active_pack.get("releaseMonth") == month:
-        return manifest, False
 
     target_theme = _theme_for_month(month)
     target_pack_id = _pack_id(month, target_theme)
+    if active_pack.get("releaseMonth") == month and manifest["activePackId"] == target_pack_id:
+        return manifest, False
+
     existing = next((pack for pack in manifest["packs"] if pack["id"] == target_pack_id), None)
     if existing is None:
         manifest["packs"].append(build_pack(month, active_pack))

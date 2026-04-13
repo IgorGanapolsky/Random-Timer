@@ -45,3 +45,24 @@ def test_roll_manifest_is_idempotent_after_pack_exists() -> None:
 
     assert changed_again is False
     assert again["activePackId"] == "2026-04_tactical_reaction_lanes"
+
+
+def test_roll_manifest_corrects_current_month_with_wrong_active_pack_id() -> None:
+    manifest = _manifest_before_current_month_roll()
+    active = next(pack for pack in manifest["packs"] if pack["id"] == manifest["activePackId"])
+    active["releaseMonth"] = "2026-04"
+
+    updated, changed = roll.roll_manifest(manifest, "2026-04")
+
+    assert changed is True
+    assert updated["activePackId"] == "2026-04_tactical_reaction_lanes"
+
+
+def test_build_pack_tolerates_missing_previous_sound_arsenal() -> None:
+    manifest = _manifest_before_current_month_roll()
+    previous = next(pack for pack in manifest["packs"] if pack["id"] == manifest["activePackId"])
+    previous.pop("soundArsenal")
+
+    pack = roll.build_pack("2026-04", previous)
+
+    assert pack["soundArsenal"] == []
