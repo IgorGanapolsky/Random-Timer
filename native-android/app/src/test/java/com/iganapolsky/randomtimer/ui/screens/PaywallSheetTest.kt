@@ -11,23 +11,19 @@ class PaywallSheetTest {
 
     @Test
     fun `paywall copy focuses on training outcomes`() {
-        assertEquals("Unlock Full Training Mode", PAYWALL_HEADLINE)
+        assertEquals("Stop Training With the Brakes On", PAYWALL_HEADLINE)
         assertEquals(
-            "Longer sessions, voice coaching, more sounds, and repeatable rounds.",
+            "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library that updates every month.",
             PAYWALL_SUBHEADLINE,
         )
-        assertEquals(
-            "Built for dry fire, sparring, drills, and reaction training.",
-            PAYWALL_AUDIENCE_LINE,
-        )
-        assertEquals("Cancel anytime. Auto-renews yearly.", PAYWALL_PRICING_FOOTER)
+        assertEquals("Cancel anytime. Subscription auto-renews until cancelled.", PAYWALL_PRICING_FOOTER)
         assertEquals(
             listOf(
-                "Train up to 60-minute sessions",
-                "Get voice callouts during training",
-                "Use loop mode with round limits",
-                "Unlock the full sound library",
-                "New Pro voice callouts and sound packs every 30 days",
+                "Full-length sessions — up to 60 minutes, no cutoffs",
+                "Live voice callouts keep you sharp under pressure",
+                "Loop drills with round limits — just like competition",
+                "Full sound arsenal — real bells, horns, and sirens",
+                "Fresh callout packs every 30 days — Pro gets them first",
             ),
             PAYWALL_FEATURE_ROWS,
         )
@@ -37,5 +33,22 @@ class PaywallSheetTest {
     fun `price label normalizes to yearly pricing`() {
         assertEquals("$29.99/year", normalizedPriceLabel("$29.99"))
         assertEquals("$29.99/yr", normalizedPriceLabel("$29.99/yr"))
+    }
+
+    @Test
+    fun `stripPriceSuffix removes trailing slash unit`() {
+        assertEquals("$3.99", stripPriceSuffix("$3.99/mo"))
+        assertEquals("$3.99", stripPriceSuffix("$3.99/month"))
+        assertEquals("$29.99", stripPriceSuffix("$29.99/yr"))
+        assertEquals("$29.99", stripPriceSuffix("$29.99/year"))
+        assertEquals("$29.99", stripPriceSuffix("$29.99"))
+    }
+
+    @Test
+    fun `subscription plan selection enum has monthly and annual variants`() {
+        val monthly = SubscriptionPlanSelection.MONTHLY
+        val annual = SubscriptionPlanSelection.ANNUAL
+        assertEquals(SubscriptionPlanSelection.MONTHLY, monthly)
+        assertEquals(SubscriptionPlanSelection.ANNUAL, annual)
     }
 }
