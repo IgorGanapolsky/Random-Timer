@@ -9,6 +9,7 @@ struct TimerSetupScreen: View {
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
     @State private var showFirstTimerGate = false
+    @State private var firstTimerGateDismissToken = 0
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -474,16 +475,17 @@ struct TimerSetupScreen: View {
                     .cornerRadius(10)
                     .padding(.bottom, 120)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            withAnimation(.easeOut(duration: 0.3)) {
-                                showFirstTimerGate = false
-                            }
-                        }
-                    }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showFirstTimerGate)
+        .task(id: firstTimerGateDismissToken) {
+            guard showFirstTimerGate else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.3)) {
+                showFirstTimerGate = false
+            }
+        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
                 .environmentObject(proManager)
@@ -580,6 +582,7 @@ struct TimerSetupScreen: View {
             )
             withAnimation(.easeInOut(duration: 0.3)) {
                 showFirstTimerGate = true
+                firstTimerGateDismissToken += 1
             }
             return
         }
