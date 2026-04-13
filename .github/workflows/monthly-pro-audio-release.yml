@@ -1,0 +1,303 @@
+name: Monthly Pro Audio App Release
+
+on:
+  schedule:
+    # 1st of every month at 18:00 UTC, after the legacy morning audio checks.
+    - cron: "0 18 1 * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Optional explicit release version. Defaults to next patch version."
+        required: false
+        default: ""
+        type: string
+      publish_mode:
+        description: "How far the scheduled release should go."
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - internal_only
+      submit_review:
+        description: "Submit iOS to App Review after upload/read-back verification."
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wait_for_internal_signoff:
+        description: "Wait for internal TestFlight/Firebase signoff statuses before dispatching production release."
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  actions: write
+  checks: read
+  contents: write
+  statuses: read
+
+concurrency:
+  group: monthly-pro-audio-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Generate, branch, and dispatch monthly Pro audio release
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      RELEASE_VERSION_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.version || '' }}
+      PUBLISH_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_mode || 'production' }}
+      SUBMIT_REVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.submit_review || 'true' }}
+      WAIT_FOR_INTERNAL_SIGNOFF: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_for_internal_signoff || 'true' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Roll active Pro audio pack to current UTC month
+        run: |
+          set -euo pipefail
+          MONTH="$(date -u +%Y-%m)"
+          python scripts/roll_monthly_pro_audio_pack.py \
+            --month "$MONTH" \
+            --json-out "$RUNNER_TEMP/pro-audio-roll.json"
+
+      - name: Generate monthly voice callouts and sound arsenal
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          DEFAULT_VOICE_ID: DGzg6RaUqxGRTHSBjfgF
+        run: |
+          set -euo pipefail
+          python scripts/generate_pro_audio_content.py \
+            --manifest content/pro_audio/monthly_pro_audio_packs.json \
+            --voice-id "$DEFAULT_VOICE_ID" \
+            --generate-voice-assets \
+            --generate-sound-assets \
+            --sync-android-assets
+
+      - name: Verify active Pro audio freshness
+        run: python scripts/pro_audio_freshness.py --grace-day-limit 0
+
+      - name: Resolve release version
+        id: version
+        run: |
+          set -euo pipefail
+          args=(next-version --repo-root .)
+          if [ -n "${RELEASE_VERSION_INPUT:-}" ]; then
+            args+=(--version "$RELEASE_VERSION_INPUT")
+          fi
+          VERSION="$(python scripts/monthly_pro_audio_release.py "${args[@]}")"
+          BRANCH="release/v${VERSION}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "release_version=$VERSION"
+          echo "release_branch=$BRANCH"
+
+      - name: Bump app versions and write release notes
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          bash scripts/shell/bump-version.sh "$VERSION"
+          python scripts/monthly_pro_audio_release.py write-notes \
+            --repo-root . \
+            --version "$VERSION" \
+            --json-out "$RUNNER_TEMP/monthly-release.json"
+          python scripts/release_notes.py --repo-root . --version "$VERSION"
+          python scripts/validate_release_branch.py --repo-root . --head-ref "release/v${VERSION}"
+
+      - name: Create release branch
+        id: branch
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="${{ steps.version.outputs.branch }}"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Release branch already exists: $BRANCH"
+            exit 1
+          fi
+
+          git checkout -b "$BRANCH"
+          git add \
+            content/pro_audio/monthly_pro_audio_packs.json \
+            content/pro_audio/runtime \
+            native-ios/RandomTimer/Resources/Audio \
+            native-ios/RandomTimer/Resources/Sounds \
+            native-android/app/src/main/assets \
+            native-android/app/src/main/res/raw \
+            native-android/app/build.gradle.kts \
+            native-android/fastlane/metadata/android/en-US/changelogs \
+            native-ios/RandomTimer.xcodeproj/project.pbxproj \
+            native-ios/fastlane/metadata/en-US/release_notes.txt \
+            release-notes
+
+          if git diff --cached --quiet; then
+            echo "No monthly release changes were produced."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(release): monthly Pro audio v${VERSION}"
+          git push origin "$BRANCH"
+
+          SHA="$(git rev-parse HEAD)"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$SHA"
+
+      - name: Upload monthly release evidence
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: monthly-pro-audio-release-evidence
+          path: |
+            ${{ runner.temp }}/pro-audio-roll.json
+            ${{ runner.temp }}/monthly-release.json
+          if-no-files-found: warn
+
+      - name: Wait for release branch checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.branch.outputs.sha }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 72); do
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_SHA}/check-runs?per_page=100" > "$RUNNER_TEMP/check-runs.json"
+            set +e
+            python - "$RUNNER_TEMP/check-runs.json" <<'PY'
+          import json
+          import sys
+
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          runs = data.get("check_runs", [])
+          if not runs:
+              print("waiting: no check runs reported yet")
+              raise SystemExit(2)
+          failed = []
+          blocking = []
+          for run in runs:
+              status = run.get("status")
+              conclusion = run.get("conclusion")
+              if status == "completed" and conclusion in {"failure", "cancelled", "timed_out", "action_required"}:
+                  failed.append(f"{run.get('name')} conclusion={conclusion}")
+              elif status != "completed" or conclusion not in {"success", "neutral", "skipped"}:
+                  blocking.append(f"{run.get('name')} status={status} conclusion={conclusion}")
+          if failed:
+              print("failed release branch checks:")
+              for item in failed:
+                  print(f"- {item}")
+              raise SystemExit(1)
+          if blocking:
+              print("waiting/blocking checks:")
+              for item in blocking:
+                  print(f"- {item}")
+              raise SystemExit(2)
+          print(f"release branch checks passed: {len(runs)} check runs")
+          PY
+            rc=$?
+            set -e
+            if [ "$rc" -eq 1 ]; then
+              exit 1
+            fi
+            if [ "$rc" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 72 ]; then
+              echo "Timed out waiting for release branch checks."
+              exit 1
+            fi
+            sleep 300
+          done
+
+      - name: Dispatch internal distribution
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+          RELEASE_BRANCH: ${{ steps.version.outputs.branch }}
+        run: |
+          set -euo pipefail
+          gh workflow run internal-distribution.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$RELEASE_BRANCH" \
+            -f ref="$RELEASE_BRANCH" \
+            -f target=all
+          echo "Dispatched internal distribution for $RELEASE_BRANCH"
+
+      - name: Wait for internal signoff statuses
+        if: env.WAIT_FOR_INTERNAL_SIGNOFF == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.branch.outputs.sha }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 72); do
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_SHA}/status" > "$RUNNER_TEMP/internal-signoff-status.json"
+            set +e
+            python - "$RUNNER_TEMP/internal-signoff-status.json" <<'PY'
+          import json
+          import sys
+
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          latest = {}
+          for status in data.get("statuses", []):
+              context = status.get("context")
+              if context and context not in latest:
+                  latest[context] = status.get("state")
+          required = ("internal-signoff/testflight", "internal-signoff/firebase")
+          failed = [context for context in required if latest.get(context) in {"failure", "error"}]
+          if failed:
+              print("failed internal signoff statuses:")
+              for context in required:
+                  print(f"- {context}: {latest.get(context, 'missing')}")
+              raise SystemExit(1)
+          missing = [context for context in required if latest.get(context) != "success"]
+          if missing:
+              print("waiting for internal signoff statuses:")
+              for context in required:
+                  print(f"- {context}: {latest.get(context, 'missing')}")
+              raise SystemExit(2)
+          print("internal signoff statuses verified: " + ", ".join(required))
+          PY
+            rc=$?
+            set -e
+            if [ "$rc" -eq 1 ]; then
+              exit 1
+            fi
+            if [ "$rc" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 72 ]; then
+              echo "Timed out waiting for internal signoff statuses."
+              exit 1
+            fi
+            sleep 300
+          done
+
+      - name: Dispatch production store release
+        if: env.PUBLISH_MODE == 'production'
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
+          RELEASE_BRANCH: ${{ steps.version.outputs.branch }}
+        run: |
+          set -euo pipefail
+          gh workflow run native-release.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$RELEASE_BRANCH" \
+            -f platform=both \
+            -f android_track=production \
+            -f submit_review="$SUBMIT_REVIEW"
+          echo "Dispatched native-release.yml for $RELEASE_BRANCH with submit_review=$SUBMIT_REVIEW"

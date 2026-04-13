@@ -17,6 +17,9 @@ DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
 IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
+MONTHLY_PRO_AUDIO_RELEASE_WORKFLOW = ROOT / ".github/workflows/monthly-pro-audio-release.yml"
+GENERATE_IOS_VOICE_WORKFLOW = ROOT / ".github/workflows/generate-ios-voice-callouts.yml"
+MONTHLY_AUDIO_PACK_WORKFLOW = ROOT / ".github/workflows/monthly-audio-pack.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -147,6 +150,32 @@ def test_internal_distribution_runs_automatically_on_develop_and_main_push_for_i
     assert 'TARGET="all"' in source
     assert 'REASON="auto_push_develop"' in source
     assert 'REASON="auto_push_main"' in source
+
+
+def test_monthly_pro_audio_release_workflow_schedules_store_release_orchestrator():
+    source = MONTHLY_PRO_AUDIO_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'cron: "0 18 1 * *"' in source
+    assert "scripts/roll_monthly_pro_audio_pack.py" in source
+    assert "scripts/generate_pro_audio_content.py" in source
+    assert "--generate-voice-assets" in source
+    assert "--generate-sound-assets" in source
+    assert "--sync-android-assets" in source
+    assert "scripts/pro_audio_freshness.py --grace-day-limit 0" in source
+    assert "scripts/shell/bump-version.sh" in source
+    assert 'BRANCH="release/v${VERSION}"' in source
+    assert "gh workflow run internal-distribution.yml" in source
+    assert "gh workflow run native-release.yml" in source
+    assert "-f platform=both" in source
+    assert "-f android_track=production" in source
+    assert '-f submit_review="$SUBMIT_REVIEW"' in source
+
+
+def test_legacy_audio_generation_workflows_are_manual_only():
+    for path in (GENERATE_IOS_VOICE_WORKFLOW, MONTHLY_AUDIO_PACK_WORKFLOW):
+        trigger_block = path.read_text(encoding="utf-8").split("jobs:", 1)[0]
+        assert "workflow_dispatch:" in trigger_block
+        assert "schedule:" not in trigger_block
 
 
 def test_ios_internal_retry_dispatch_targets_ios_only():

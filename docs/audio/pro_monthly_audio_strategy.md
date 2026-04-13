@@ -44,7 +44,20 @@ Turn ElevenLabs into a recurring Pro content engine instead of a one-off asset g
 
 ## Generation Workflow
 
-Use `scripts/generate_pro_audio_content.py` to:
+The authoritative scheduled path is `.github/workflows/monthly-pro-audio-release.yml`.
+It runs on the 1st of each month, rolls the active pack to the current UTC month,
+renders voice callouts and sound-arsenal assets, creates a `release/vX.Y.Z`
+branch, waits for release branch checks, dispatches internal distribution, and
+then dispatches `native-release.yml` for both stores when production mode is
+enabled.
+
+Legacy audio-only workflows remain manual utilities:
+
+- `.github/workflows/generate-ios-voice-callouts.yml`
+- `.github/workflows/monthly-audio-pack.yml`
+
+Use `scripts/roll_monthly_pro_audio_pack.py` to create or activate the current
+month's script/prompt pack. Use `scripts/generate_pro_audio_content.py` to:
 
 - export generated platform catalogs from the canonical manifest
 - export the hosted runtime manifest with hashed asset metadata

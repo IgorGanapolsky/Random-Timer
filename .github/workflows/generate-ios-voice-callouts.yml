@@ -1,8 +1,6 @@
 name: Generate Pro Audio Content
 
 on:
-  schedule:
-    - cron: "0 15 1 * *"
   workflow_dispatch:
     inputs:
       pack_id:

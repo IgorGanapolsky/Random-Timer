@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 
@@ -14,10 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 RELEASE_GUARD_PATHS = {
     ".github/workflows/android-production-retry.yml",
+    ".github/workflows/monthly-pro-audio-release.yml",
     ".github/workflows/native-release.yml",
     "scripts/pre-commit",
     "scripts/regression_guards.py",
     "scripts/source_versions.py",
+    "scripts/monthly_pro_audio_release.py",
+    "scripts/roll_monthly_pro_audio_pack.py",
     "scripts/verify_play_public_listing.py",
     "scripts/tests/test_growth_workflow_contracts.py",
     "scripts/tests/test_regression_guards.py",
