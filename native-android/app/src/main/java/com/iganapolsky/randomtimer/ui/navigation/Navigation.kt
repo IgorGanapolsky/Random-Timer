@@ -22,7 +22,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
@@ -55,10 +54,29 @@ fun RandomTimerNavHost(
             ?.destination
             ?.route
     val activity = LocalContext.current as? Activity
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
     var proPrice by remember { mutableStateOf("$29.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
+
+    // Gate: show toast instead of paywall if user hasn't finished their first timer
+    fun guardedUpgradeTap() {
+        if (!viewModel.hasCompletedFirstTimer) {
+            android.widget.Toast
+                .makeText(
+                    context,
+                    "Complete your first drill to unlock Pro features",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+        } else {
+            scope.launch {
+                proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+                paywallEntryPoint = "setup_upgrade_cta"
+                showPaywall = true
+            }
+        }
+    }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -122,14 +140,14 @@ fun RandomTimerNavHost(
                 isPro = isPro,
                 isElite = isElite,
                 onUpgradeTap = {
-                    scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
-                        paywallEntryPoint = "setup_upgrade_cta"
-                        showPaywall = true
-                    }
+                    guardedUpgradeTap()
                 },
                 onFeatureGateHit = { feature ->
-                    viewModel.trackFeatureGateHit(feature)
+                    if (!viewModel.hasCompletedFirstTimer) {
+                        viewModel.trackPaywallGateFirstTimer(feature)
+                    } else {
+                        viewModel.trackFeatureGateHit(feature)
+                    }
                 },
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)
