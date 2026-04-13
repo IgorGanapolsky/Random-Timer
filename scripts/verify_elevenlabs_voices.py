@@ -25,6 +25,7 @@ CONTROLLED_PROVIDER_MARKERS = (
 SUPPORTED_VOICE_ENDPOINTS = {
     "DGzg6RaUqxGRTHSBjfgF": f"{API_BASE_URL}/v1/text-to-speech/DGzg6RaUqxGRTHSBjfgF?output_format={OUTPUT_FORMAT}",
     "AZnzlk1XvdvUeBnXmlld": f"{API_BASE_URL}/v1/text-to-speech/AZnzlk1XvdvUeBnXmlld?output_format={OUTPUT_FORMAT}",
+    "EXAVITQu4vr4xnSDxMaL": f"{API_BASE_URL}/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL?output_format={OUTPUT_FORMAT}",
     "sS5fXGlqomdGXa7mxBcy": f"{API_BASE_URL}/v1/text-to-speech/sS5fXGlqomdGXa7mxBcy?output_format={OUTPUT_FORMAT}",
 }
 

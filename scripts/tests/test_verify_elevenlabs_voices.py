@@ -13,11 +13,13 @@ import pytest
 
 from scripts import verify_elevenlabs_voices as vev
 
-ALLOWED_ID = "DGzg6RaUqxGRTHSBjfgF"
+MALE_ALLOWED_ID = "DGzg6RaUqxGRTHSBjfgF"
+FEMALE_ALLOWED_ID = "EXAVITQu4vr4xnSDxMaL"
 
 
-def test_supported_voice_id_accepts_allowlisted() -> None:
-    assert vev._supported_voice_id(f"  {ALLOWED_ID}  ") == ALLOWED_ID
+@pytest.mark.parametrize("voice_id", [MALE_ALLOWED_ID, FEMALE_ALLOWED_ID, "sS5fXGlqomdGXa7mxBcy"])
+def test_supported_voice_id_accepts_allowlisted(voice_id: str) -> None:
+    assert vev._supported_voice_id(f"  {voice_id}  ") == voice_id
 
 
 def test_supported_voice_id_rejects_unknown() -> None:
@@ -26,8 +28,8 @@ def test_supported_voice_id_rejects_unknown() -> None:
 
 
 def test_text_to_speech_url() -> None:
-    url = vev._text_to_speech_url(ALLOWED_ID)
-    assert ALLOWED_ID in url
+    url = vev._text_to_speech_url(MALE_ALLOWED_ID)
+    assert MALE_ALLOWED_ID in url
     assert vev.API_BASE_URL in url
     assert vev.OUTPUT_FORMAT in url
 
@@ -69,14 +71,14 @@ def test_probe_synthesis_success(mock_urlopen: MagicMock) -> None:
 
     out = vev._probe_synthesis(
         api_key="k",
-        voice_id=ALLOWED_ID,
+        voice_id=MALE_ALLOWED_ID,
         model_id="eleven_multilingual_v2",
         text="hi",
         label="t1",
     )
     assert out["label"] == "t1"
     assert out["audioBytes"] == 64
-    assert out["voiceId"] == ALLOWED_ID
+    assert out["voiceId"] == MALE_ALLOWED_ID
 
 
 @patch("scripts.verify_elevenlabs_voices.urllib.request.urlopen")
@@ -93,7 +95,7 @@ def test_probe_synthesis_http_error(mock_urlopen: MagicMock) -> None:
     with pytest.raises(RuntimeError, match="HTTP 403"):
         vev._probe_synthesis(
             api_key="k",
-            voice_id=ALLOWED_ID,
+            voice_id=MALE_ALLOWED_ID,
             model_id="m",
             text="t",
             label="x",
@@ -116,7 +118,7 @@ def test_probe_synthesis_payment_issue_is_controlled_skip(mock_urlopen: MagicMoc
     with pytest.raises(vev.ControlledProviderUnavailable, match="payment_issue"):
         vev._probe_synthesis(
             api_key="k",
-            voice_id=ALLOWED_ID,
+            voice_id=MALE_ALLOWED_ID,
             model_id="m",
             text="t",
             label="x",
@@ -133,7 +135,7 @@ def test_probe_synthesis_empty_audio(mock_urlopen: MagicMock) -> None:
     with pytest.raises(RuntimeError, match="empty audio"):
         vev._probe_synthesis(
             api_key="k",
-            voice_id=ALLOWED_ID,
+            voice_id=MALE_ALLOWED_ID,
             model_id="m",
             text="t",
             label="x",
@@ -153,14 +155,14 @@ def test_main_success_json(mock_probe: MagicMock, tmp_path: Path, capsys: pytest
     contract = {
         "provider": "elevenlabs",
         "male": {
-            "voiceId": ALLOWED_ID,
+            "voiceId": MALE_ALLOWED_ID,
             "modelId": "eleven_multilingual_v2",
             "probeText": "a",
         },
         "female": {
             "modelId": "eleven_multilingual_v2",
             "primaryVoice": {
-                "voiceId": "AZnzlk1XvdvUeBnXmlld",
+                "voiceId": FEMALE_ALLOWED_ID,
                 "probeText": "b",
             },
             "fallbackVoices": [
@@ -194,14 +196,14 @@ def test_main_provider_unavailable_returns_controlled_skip(
     contract = {
         "provider": "elevenlabs",
         "male": {
-            "voiceId": ALLOWED_ID,
+            "voiceId": MALE_ALLOWED_ID,
             "modelId": "eleven_multilingual_v2",
             "probeText": "a",
         },
         "female": {
             "modelId": "eleven_multilingual_v2",
             "primaryVoice": {
-                "voiceId": "AZnzlk1XvdvUeBnXmlld",
+                "voiceId": FEMALE_ALLOWED_ID,
                 "probeText": "b",
             },
             "fallbackVoices": [],
