@@ -4,6 +4,10 @@ appId: com.igorganapolsky.randomtimer
 - launchApp:
     clearState: true
 - scrollUntilVisible:
+    element: "Voice Callouts"
+    direction: DOWN
+    timeout: 10000
+- scrollUntilVisible:
     element: "Unlock Sound Arsenal"
     direction: DOWN
     timeout: 10000

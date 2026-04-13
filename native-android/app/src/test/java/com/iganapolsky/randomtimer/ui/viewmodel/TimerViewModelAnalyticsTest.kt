@@ -163,6 +163,26 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
+    fun `recordCompletion not called after alarm to complete transition — service owns review eligibility`() {
+        viewModel.onTimerStateObservedForAnalytics(
+            previousStatus = TimerStatus.ALARM,
+            state = timerState(TimerStatus.COMPLETE),
+        )
+
+        verify(exactly = 0) { viewModel.storeReviewManager.recordCompletion() }
+    }
+
+    @Test
+    fun `recordCompletion NOT called when transitioning into alarm — too early for review`() {
+        viewModel.onTimerStateObservedForAnalytics(
+            previousStatus = TimerStatus.RUNNING,
+            state = timerState(TimerStatus.ALARM),
+        )
+
+        verify(exactly = 0) { viewModel.storeReviewManager.recordCompletion() }
+    }
+
+    @Test
     fun `cancelTimer does not track stop or abandoned directly`() {
         viewModel.cancelTimer()
         testDispatcher.scheduler.advanceUntilIdle()
