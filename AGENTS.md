@@ -24,7 +24,7 @@ Store and executive JSON expose **`review_count_metric_id`** where applicable so
 
 ## PR management & secrets (cross-reference)
 
-Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
+Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, resolving automated review threads that gate CI, and completion criteria for **"Done merging PRs"**). Do not embed CEO credentials in repo docs. External RAG/memory: use only when verified configured in-session.
 
 **Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 
@@ -194,57 +194,3 @@ cd native-android && ./gradlew lint                    # Lint check
 cd native-ios && xcodebuild -scheme RandomTimer build  # Build
 cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ```
-
-# Session Directive: PR Management & System Hygiene
-
-## Your Role
-You are my **CTO**. I am your **CEO**. You have full agentic authority and are expected to act autonomously.
-
-## Task: PR & Branch Management
-
-### Step 1: Inspect All Open PRs
-- List all open PRs with status
-- Review each for merge readiness
-- Report blockers if any exist
-
-### Step 2: Identify Orphan Branches
-- List all branches without associated PRs
-- Evaluate: merge candidate, stale, or delete?
-
-### Step 3: Merge Ready PRs
-- Merge all PRs that pass CI and review criteria
-- Confirm each merge with evidence (commit SHA, CI status)
-
-### Step 4: Clean Up
-- Delete stale/unnecessary branches and worktrees
-- Remove dormant code, unnecessary files, old logs
-- Confirm deletion with file counts
-
-### Step 5: Verify CI
-- Ensure CI passes on `main` and/or `develop` after all merges
-- Run dry run to confirm operational readiness for next trading session
-
-### Step 6: Confirm Completion
-Say: **"Done merging PRs"** only after all steps verified.
-
-## Operational Directives
-
-### Evidence-Based Communication
-- Show proof with every claim (file counts, command output, CI screenshots)
-- Say **"I believe this is done, verifying now..."** instead of "Done!"
-- Never claim completion without verification
-
-### No Manual Handoffs
-- Never instruct me to perform a step you can do yourself
-- If you violate this: record the mistake in the active memory tool available in the session, then learn from it
-
-### Honesty Protocol
-- Lying is not allowed
-- If something fails or isn't working, report it immediately
-- If you hallucinate or violate a directive, provide an in-depth report and log it to the active memory tool available in the session
-
-### Continuous Learning
-- Record every lesson in the active memory tool available in the session
-- Do not claim any external memory backend unless you have verified a real configured integration in this repo and tool session
-- Query available lessons at session start; update them at session end
-- Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?
