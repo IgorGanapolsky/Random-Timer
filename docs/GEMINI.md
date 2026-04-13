@@ -90,3 +90,6 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 
 ### PR management & secrets (cross-reference)
 - Periodic PR audits, branch hygiene, and **no secrets in repo** are spelled out in `CLAUDE.md` (including PAT rotation if a token is ever exposed).
+
+### CTO session start protocol (PR hygiene)
+- Same numbered protocol as `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol*: auth without pasting PATs, prune + open PR list + checks, orphan branch triage, merge only when required checks are green, verify `develop`/`main` CI, RAG only if verified in-session.
