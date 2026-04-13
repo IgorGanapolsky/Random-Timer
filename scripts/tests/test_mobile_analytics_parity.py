@@ -57,7 +57,10 @@ class MobileAnalyticsParityTests(unittest.TestCase):
             _extract_block(ios_source, "enum AnalyticsEvents"),
             r'static let \w+\s*=\s*"([^"]+)"',
         )
-        self.assertEqual(android_events, ios_events)
+        # timer_backgrounded is iOS-only: iOS fires it when app backgrounds during
+        # a running timer (informational). Android's foreground service doesn't need it.
+        ios_only_events = {"timer_backgrounded"}
+        self.assertEqual(android_events, ios_events - ios_only_events)
 
     def test_screen_names_match_between_ios_and_android(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
