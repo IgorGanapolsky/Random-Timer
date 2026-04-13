@@ -228,13 +228,17 @@ def test_native_release_workflow_blocks_production_without_internal_signoff_proo
     assert "android-firebase-mirror:" not in source
 
 
-def test_native_release_workflow_verifies_public_play_listing_for_production():
+def test_native_release_workflow_treats_public_play_listing_as_non_blocking_release_evidence():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     assert "Verify public Google Play listing (production only)" in source
+    assert "id: play_public_listing" in source
+    assert "continue-on-error: true" in source
     assert "python scripts/verify_play_public_listing.py" in source
     assert "--expected-version" in source
     assert "steps.versions.outputs.android_version" in source
+    assert "Warn when Play storefront propagation lags production" in source
+    assert "play-public-listing-report" in source
 
 
 def test_native_release_workflow_creates_annotated_release_from_exact_sha():
