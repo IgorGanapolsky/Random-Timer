@@ -570,7 +570,9 @@ jobs:
             aarch64|arm64) ASSET="gitleaks_8.30.0_linux_arm64.tar.gz" ;;
             *) echo "Unsupported arch: $ARCH" && exit 1 ;;
           esac
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" -o /tmp/gitleaks.tar.gz
+          curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 20 --max-time 120 \
+            -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" \
+            -o /tmp/gitleaks.tar.gz
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           install -m 0755 /tmp/gitleaks "$HOME/.local/bin/gitleaks"
           "$HOME/.local/bin/gitleaks" version
