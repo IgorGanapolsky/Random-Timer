@@ -25,7 +25,7 @@ appId: com.igorganapolsky.randomtimer
 - tapOn:
     text: "Klaxon.*"
 - assertNotVisible:
-    text: "Unlock Full Training Mode"
+    text: "Stop Training With the Brakes On"
     optional: true
 - assertNotVisible:
     text: "Unlock Everything"

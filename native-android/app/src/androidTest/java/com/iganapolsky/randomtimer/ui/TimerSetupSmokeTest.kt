@@ -54,13 +54,13 @@ class TimerSetupSmokeTest {
 
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule
-                .onAllNodesWithText("Unlock Full Training Mode")
+                .onAllNodesWithText("Stop Training With the Brakes On")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
 
         composeRule
-            .onNodeWithText("Unlock Full Training Mode")
+            .onNodeWithText("Stop Training With the Brakes On")
             .assertExists()
     }
 }

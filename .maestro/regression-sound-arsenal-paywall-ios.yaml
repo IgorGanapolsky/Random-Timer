@@ -9,6 +9,6 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
-- assertVisible: "Unlock Full Training Mode"
+- assertVisible: "Stop Training With the Brakes On"
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp
