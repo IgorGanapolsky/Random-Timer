@@ -161,8 +161,8 @@ run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visibl
 run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
 run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
 
-# The paywall regression flow intentionally leaves the app on the paywall.
-# Reset app state before Agent Device validates the home screen.
+# Reset app state before Agent Device validates the home screen. Regression
+# flows may leave transient setup overlays or sheets visible.
 xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 record_stage "reinstall simulator app for agent-device"
