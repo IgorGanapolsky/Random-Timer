@@ -8,8 +8,7 @@
 #   PROJECT_PAT         — GitHub PAT with repo + workflow scopes
 #
 # Optional Secrets:
-#   FREESOUND_API_TOKEN — Freesound OAuth token (CC0 sound effects)
-#                         If absent, only ElevenLabs sounds are generated.
+#   FREESOUND_API_TOKEN — Freesound OAuth token (bonus CC0 sound effects)
 #
 # Store publishing secrets (Android + iOS) are documented in native-release.yml.
 
@@ -58,7 +57,6 @@ jobs:
         env:
           PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
         run: |
           set -euo pipefail
           missing=()
@@ -68,10 +66,7 @@ jobs:
             printf '::error::Missing required secret(s): %s\n' "${missing[*]}"
             exit 1
           fi
-          # FREESOUND_API_TOKEN is optional — warn but don't fail
-          if [ -z "${FREESOUND_API_TOKEN}" ]; then
-            echo "::warning::FREESOUND_API_TOKEN not set — CC0 sound fetch will be skipped. Only ElevenLabs content will be generated."
-          fi
+          echo "All required secrets present. ElevenLabs is the primary audio engine."
 
       - name: Checkout develop
         uses: actions/checkout@v4
@@ -91,38 +86,33 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate audio content
+      - name: Generate voice callouts + sound arsenal via ElevenLabs
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SKIP_VOICE: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_voice == true && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          echo "=== Generating Pro audio content via ElevenLabs ==="
+          args=(
+            --manifest content/pro_audio/monthly_pro_audio_packs.json
+            --voice-id "${ELEVENLABS_VOICE_ID:-DGzg6RaUqxGRTHSBjfgF}"
+            --generate-sound-assets
+            --sync-android-assets
+          )
+          if [ "${SKIP_VOICE}" != "true" ]; then
+            args+=(--generate-voice-assets)
+          fi
+          python scripts/generate_pro_audio_content.py "${args[@]}"
+
+      - name: Fetch bonus CC0 sounds from Freesound (optional)
+        if: ${{ secrets.FREESOUND_API_TOKEN != '' }}
         env:
           FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          SKIP_VOICE: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_voice == true && 'true' || 'false' }}
-          DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true && 'true' || 'false' }}
         run: |
           set -euo pipefail
-          args=()
-
-          if [ "${SKIP_VOICE}" = "true" ]; then
-            args+=("--skip-voice")
-          fi
-          if [ "${DRY_RUN_INPUT}" = "true" ]; then
-            args+=("--dry-run")
-          fi
-
-          # If FREESOUND_API_TOKEN is set, use the full pack generator
-          if [ -n "${FREESOUND_API_TOKEN}" ]; then
-            echo "=== Generating CC0 sounds (Freesound) + voice callouts (ElevenLabs) ==="
-            python scripts/generate_monthly_audio_pack.py "${args[@]}"
-          else
-            echo "=== FREESOUND_API_TOKEN not set — generating ElevenLabs content only ==="
-            el_args=(
-              --manifest content/pro_audio/monthly_pro_audio_packs.json
-              --voice-id "${ELEVENLABS_VOICE_ID:-DGzg6RaUqxGRTHSBjfgF}"
-              --generate-voice-assets
-              --generate-sound-assets
-              --sync-android-assets
-            )
-            python scripts/generate_pro_audio_content.py "${el_args[@]}"
-          fi
+          echo "=== Fetching bonus CC0 sounds from Freesound ==="
+          python scripts/generate_monthly_audio_pack.py --skip-voice || echo "::warning::Freesound fetch failed — continuing with ElevenLabs content only"
 
       - name: Sync generated audio to Android
         run: |
