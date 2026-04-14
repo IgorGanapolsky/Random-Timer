@@ -71,6 +71,7 @@ jobs:
   generate-content:
     name: "Step 1 — Generate monthly audio content"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: write
     outputs:
@@ -80,12 +81,29 @@ jobs:
       changes_committed: ${{ steps.commit.outputs.changes_committed }}
 
     steps:
+      - name: Validate required automation token
+        env:
+          PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
+          FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in PROJECT_PAT FREESOUND_API_TOKEN; do
+            if [ -z "${!key}" ]; then
+              missing+=("$key")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf '::error::Missing required monthly release secret(s): %s\n' "${missing[*]}"
+            exit 1
+          fi
+
       - name: Checkout develop (full history)
         uses: actions/checkout@v6
         with:
           ref: develop
           fetch-depth: 0
-          token: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          token: ${{ secrets.PROJECT_PAT }}
 
       - name: Compute month label
         id: meta
@@ -104,19 +122,21 @@ jobs:
         env:
           FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SKIP_VOICE: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_voice && 'true' || 'false' }}
+          DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
         run: |
           set -euo pipefail
 
-          # Build the argument list conditionally
-          ARGS=""
-          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.skip_voice }}" == "true" ]]; then
-            ARGS="--skip-voice"
+          # Build the argument list conditionally.
+          args=()
+          if [[ "${SKIP_VOICE}" == "true" ]]; then
+            args+=("--skip-voice")
           fi
-          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" == "true" ]]; then
-            ARGS="$ARGS --dry-run"
+          if [[ "${DRY_RUN_INPUT}" == "true" ]]; then
+            args+=("--dry-run")
           fi
 
-          python scripts/generate_monthly_audio_pack.py $ARGS
+          python scripts/generate_monthly_audio_pack.py "${args[@]}"
 
       # ── Step 1b: Sync audio to Android raw resources ──────────
       - name: Sync generated audio to Android
@@ -128,7 +148,8 @@ jobs:
             [ -f "$f" ] || continue
             name=$(basename "$f")
             dst="native-android/app/src/main/res/raw/${name}"
-            cp "$f" "$dst" && echo "Synced ${name}" || true
+            cp "$f" "$dst"
+            echo "Synced ${name}"
           done
           # Sync alarm / timer sounds
           for f in native-ios/RandomTimer/Resources/Sounds/*.mp3; do
@@ -138,19 +159,22 @@ jobs:
             # [a-z0-9_].  Normalise hyphens to underscores.
             android_name="${name//-/_}"
             dst="native-android/app/src/main/res/raw/${android_name}"
-            cp "$f" "$dst" && echo "Synced sound ${android_name}" || true
+            cp "$f" "$dst"
+            echo "Synced sound ${android_name}"
           done
 
       # ── Step 1c: Bump patch version ───────────────────────────
       - name: Bump patch version
         id: bump
+        env:
+          DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
         run: |
           set -euo pipefail
           MONTH_LABEL="${{ steps.meta.outputs.month_label }}"
           CHANGELOG_MSG="Monthly Pro content update — ${MONTH_LABEL}"
 
           DRY_RUN_FLAG=""
-          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" == "true" ]]; then
+          if [[ "${DRY_RUN_INPUT}" == "true" ]]; then
             DRY_RUN_FLAG="--dry-run"
           fi
 
@@ -168,7 +192,7 @@ jobs:
       - name: Commit and push changes to develop
         id: commit
         env:
-          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
         run: |
           set -euo pipefail
@@ -179,17 +203,22 @@ jobs:
           CONTENT_BRANCH="feat/monthly-content-${MONTH_TAG}"
           echo "content_branch=${CONTENT_BRANCH}" >> "$GITHUB_OUTPUT"
 
-          # Check for any new or modified audio/version files
-          git add \
-            native-ios/RandomTimer/Resources/Audio/ \
-            native-ios/RandomTimer/Resources/Sounds/ \
-            native-android/app/src/main/res/raw/ \
-            native-android/app/src/main/assets/ \
-            native-android/app/build.gradle.kts \
-            "native-ios/RandomTimer.xcodeproj/project.pbxproj" \
-            native-android/fastlane/metadata/ \
-            native-ios/fastlane/metadata/ \
-            --ignore-errors 2>/dev/null || true
+          # Check for any new or modified audio/version files.
+          paths=(
+            "native-ios/RandomTimer/Resources/Audio/"
+            "native-ios/RandomTimer/Resources/Sounds/"
+            "native-android/app/src/main/res/raw/"
+            "native-android/app/src/main/assets/"
+            "native-android/app/build.gradle.kts"
+            "native-ios/RandomTimer.xcodeproj/project.pbxproj"
+            "native-android/fastlane/metadata/"
+            "native-ios/fastlane/metadata/"
+          )
+          for path in "${paths[@]}"; do
+            if [ -e "$path" ]; then
+              git add "$path"
+            fi
+          done
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -209,23 +238,32 @@ jobs:
           git commit -m "feat(audio): monthly Pro content update for ${MONTH_LABEL} — v${NEW_VERSION}"
           git push origin "${CONTENT_BRANCH}"
 
-          # Open a PR from content branch → develop for audit trail
-          gh pr create \
-            --base develop \
-            --head "${CONTENT_BRANCH}" \
-            --title "feat(audio): Monthly Pro content — ${MONTH_LABEL} (v${NEW_VERSION})" \
-            --body "Auto-generated monthly Pro content update.
+          # Open a PR from content branch to develop for audit trail.
+          body_file="$(mktemp)"
+          cat > "$body_file" <<EOF
+          Auto-generated monthly Pro content update.
 
-## Contents
-- New CC0 sound effects from Freesound
-- ElevenLabs voice callouts (if credits available)
-- Patch version bump to ${NEW_VERSION}
-- Changelog updated: Monthly Pro content update — ${MONTH_LABEL}
+          ## Contents
+          - New CC0 sound effects from Freesound
+          - ElevenLabs voice callouts, if credits are available
+          - Patch version bump to ${NEW_VERSION}
+          - Changelog updated: Monthly Pro content update - ${MONTH_LABEL}
 
-## Review
-This PR is created automatically by the Monthly Pro Content Release pipeline.
-The pipeline merges this branch to develop, cuts release/v*, and dispatches Native App Release when content lands." \
-            --repo "$GITHUB_REPOSITORY" || true
+          ## Review
+          This PR is created automatically by the Monthly Pro Content Release pipeline.
+          The pipeline merges this branch to develop, cuts release/v*, and dispatches Native App Release when content lands.
+          EOF
+
+          if gh pr view "${CONTENT_BRANCH}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "PR already exists for ${CONTENT_BRANCH}."
+          else
+            gh pr create \
+              --base develop \
+              --head "${CONTENT_BRANCH}" \
+              --title "feat(audio): Monthly Pro content - ${MONTH_LABEL} (v${NEW_VERSION})" \
+              --body-file "$body_file" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
 
           echo "changes_committed=true" >> "$GITHUB_OUTPUT"
 
@@ -249,8 +287,10 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
     needs: [generate-content]
     if: needs.generate-content.outputs.changes_committed == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
+      actions: write
     outputs:
       internal_run_id: ${{ steps.dispatch.outputs.internal_run_id }}
 
@@ -258,7 +298,7 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
       - name: Dispatch internal-distribution workflow
         id: dispatch
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           CONTENT_BRANCH: ${{ needs.generate-content.outputs.content_branch }}
         run: |
           set -euo pipefail
@@ -310,6 +350,7 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
     needs: [generate-content]
     if: needs.generate-content.outputs.changes_committed == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
       pull-requests: write
@@ -323,11 +364,11 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
         with:
           ref: develop
           fetch-depth: 0
-          token: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          token: ${{ secrets.PROJECT_PAT }}
 
       - name: Merge content branch into develop
         env:
-          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT }}
           CONTENT_BRANCH: ${{ needs.generate-content.outputs.content_branch }}
         run: |
           set -euo pipefail
@@ -343,7 +384,7 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
       - name: Cut release branch from develop
         id: cut
         env:
-          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT }}
           NEW_VERSION: ${{ needs.generate-content.outputs.new_version }}
         run: |
           set -euo pipefail
@@ -366,6 +407,9 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
     needs: [merge-and-cut-release]
     if: needs.merge-and-cut-release.outputs.release_branch != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout release branch
         uses: actions/checkout@v6
@@ -373,7 +417,7 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
           ref: ${{ needs.merge-and-cut-release.outputs.release_branch }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -409,13 +453,15 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
     needs: [generate-content, merge-and-cut-release, regression-gate]
     if: needs.merge-and-cut-release.outputs.release_branch != '' && needs.regression-gate.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
+      actions: write
 
     steps:
       - name: Dispatch Native App Release (platform=both)
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_PAT != '' && secrets.PROJECT_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           RELEASE_BRANCH: ${{ needs.merge-and-cut-release.outputs.release_branch }}
           RELEASE_VERSION: ${{ needs.merge-and-cut-release.outputs.release_version }}
         run: |
