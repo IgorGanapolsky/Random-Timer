@@ -346,6 +346,14 @@ def run(
     except Exception as exc:
         crashlytics = {"status": "error", "reason": str(exc), "source": "crashlytics"}
 
+    # Apple Server Notifications V2 refund data from Cloudflare KV.
+    try:
+        from check_refunds import run as check_refunds_run
+
+        asn_refunds = check_refunds_run(days=days)
+    except Exception as exc:
+        asn_refunds = {"status": "error", "reason": str(exc), "source": "check_refunds"}
+
     payload: Dict[str, Any] = {
         "generated_at": generated_at,
         "source": "executive_metrics_snapshot",
@@ -386,8 +394,10 @@ def run(
             "refund_requests": (
                 "Android refund_requests_30d comes from Google Play voided purchases API "
                 "(purchases.voidedpurchases.list) over the snapshot window. iOS refund "
-                "signal is refund units from negative Units rows in App Store Connect "
-                "SALES/SUMMARY daily reports."
+                "signal has two sources: (1) negative Units in App Store Connect "
+                "SALES/SUMMARY daily reports, and (2) real-time Apple Server Notifications "
+                "V2 events stored in Cloudflare KV via server/apple-webhook worker "
+                "(asn_v2_* fields in the refunds section)."
             ),
             "uninstall_proxy": (
                 "Proxy only: distinct Application Installed (os) minus distinct Application "
@@ -419,9 +429,28 @@ def run(
             ),
             "ios_sales_report_days_with_data": (ios or {}).get("sales_report_days_with_data"),
             "ios_status": (ios or {}).get("status"),
+            # Apple Server Notifications V2 — real-time refund data via Cloudflare KV webhook.
+            "asn_v2_status": (asn_refunds or {}).get("status"),
+            "asn_v2_ios_refund_count_production": (asn_refunds or {}).get(
+                "refund_count_production"
+            ),
+            "asn_v2_ios_refund_count_total": (asn_refunds or {}).get("refund_count_total"),
+            "asn_v2_ios_refund_by_product": (asn_refunds or {}).get("refund_by_product"),
+            "asn_v2_ios_refund_by_reason": (asn_refunds or {}).get("refund_by_reason"),
+            "asn_v2_subscription_lifecycle_count": (asn_refunds or {}).get(
+                "subscription_lifecycle_count"
+            ),
+            "asn_v2_subscription_lifecycle_by_type": (asn_refunds or {}).get(
+                "subscription_lifecycle_by_type"
+            ),
+            "asn_v2_metric_id": (asn_refunds or {}).get("metric_id"),
             "note": (
-                "Android uses Google Play voided purchases API. iOS uses negative Units in "
-                "App Store Connect SALES/SUMMARY daily reports (requires APPSTORE_VENDOR_NUMBER)."
+                "Android uses Google Play voided purchases API. iOS uses two signals: "
+                "(1) negative Units in App Store Connect SALES/SUMMARY daily reports "
+                "(requires APPSTORE_VENDOR_NUMBER), and "
+                "(2) real-time Apple Server Notifications V2 via Cloudflare KV webhook "
+                "(server/apple-webhook — requires CLOUDFLARE_API_TOKEN + "
+                "CLOUDFLARE_KV_NAMESPACE_ID)."
             ),
         },
         "uninstalls": {
@@ -513,6 +542,13 @@ def main() -> int:
         f"  Crashlytics BQ: {cr.get('status')} "
         f"fatal_in_window={cr.get('fatal_events_in_window')} "
         f"fatal_top_groups_sum={cr.get('fatal_events')}"
+    )
+    rf = payload.get("refunds") or {}
+    print(
+        f"  Refunds (ASN V2/KV): status={rf.get('asn_v2_status')}  "
+        f"production={rf.get('asn_v2_ios_refund_count_production')}  "
+        f"total={rf.get('asn_v2_ios_refund_count_total')}  "
+        f"lifecycle_events={rf.get('asn_v2_subscription_lifecycle_count')}"
     )
     print("=" * 60)
     if args.json_stdout:

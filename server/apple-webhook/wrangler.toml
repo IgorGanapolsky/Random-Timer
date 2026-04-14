@@ -1,0 +1,19 @@
+name = "apple-webhook"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Set APPLE_ROOT_CA in production via: npx wrangler secret put APPLE_ROOT_CA
+
+[[kv_namespaces]]
+binding = "REFUND_EVENTS"
+# After running `npx wrangler kv:namespace create REFUND_EVENTS`, paste the resulting id here:
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# For local dev, use a preview namespace id (optional):
+# preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+
+[triggers]
+# Apple sends notifications to POST /apple/notifications
+# Configure this URL in App Store Connect:
+#   App Store Connect → Apps → <Your App> → App Information → App Store Server Notifications
