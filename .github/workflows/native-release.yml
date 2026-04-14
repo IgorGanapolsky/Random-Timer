@@ -951,41 +951,52 @@ jobs:
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
 
-  sync-main:
+  # sync-main: DISABLED — back-merge PRs always conflicted because develop had moved ahead.
+  # The release tag (created by tag-release) is the canonical source of truth for what shipped.
+  # develop is kept ahead of main via bump-develop-version below.
+  # If you need main to reflect a release, merge the release tag manually or use a hotfix branch.
+
+  bump-develop-version:
     needs: [tag-release]
     if: always() && needs.tag-release.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          ref: develop
           fetch-depth: 0
+          token: ${{ secrets.ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Create PR to merge release into main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+
+      - name: Bump patch version on develop
+        id: bump
         run: |
           TAG="${{ needs.tag-release.outputs.tag || '' }}"
-          BRANCH="${GITHUB_REF_NAME}"
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "release: merge $BRANCH into main" \
-            --body "Auto-generated PR to sync main with release $TAG" \
-            || echo "PR already exists or branch is up to date"
-        continue-on-error: true
+          python3 scripts/bump_patch_version.py \
+            --changelog-message "Bump version after $TAG release"
+          NEW_VERSION=$(python3 scripts/source_versions.py --repo-root . --format json \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped develop to v${NEW_VERSION}"
 
-      - name: Create PR to merge release back into develop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push version bump to develop
         run: |
-          BRANCH="${GITHUB_REF_NAME}"
-          gh pr create \
-            --base develop \
-            --head "$BRANCH" \
-            --title "chore: merge $BRANCH back into develop" \
-            --body "Auto-generated PR to sync develop after release" \
-            || echo "PR already exists or branch is up to date"
-        continue-on-error: true
+          git add native-android/app/build.gradle.kts \
+                  native-ios/RandomTimer.xcodeproj/project.pbxproj \
+                  native-android/fastlane/metadata/android/en-US/changelogs/ \
+                  native-ios/fastlane/metadata/en-US/release_notes.txt
+          git diff --cached --quiet && echo "Nothing to commit" && exit 0
+          git commit -m "chore: bump develop to v${{ steps.bump.outputs.new_version }} after ${{ needs.tag-release.outputs.tag }} release [skip ci]"
+          git push origin develop
+          echo "✅ develop is now at v${{ steps.bump.outputs.new_version }}"
