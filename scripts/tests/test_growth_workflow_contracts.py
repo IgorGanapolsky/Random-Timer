@@ -181,8 +181,9 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
     assert 'PLAY_FALLBACK_TRACK: ""' in source
-    assert "require-internal-signoff:" in source
+    assert "internal-proof-or-waive:" in source
     assert "require-production-signoff:" in source
+    assert "production-signoff-waive:" in source
     assert "environment: production-signoff" in source
     assert "internal_signoff_gate.py" in source
     assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
@@ -217,15 +218,19 @@ def test_native_release_workflow_requires_explicit_confirm_for_ios_only_release_
     assert "run: python3 scripts/release_intent_gate.py" in source
 
 
-def test_native_release_workflow_blocks_production_without_internal_signoff_proof():
+def test_native_release_workflow_blocks_production_without_internal_signoff_proof_by_default():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "require-internal-signoff:" in source
+    assert "internal-proof-or-waive:" in source
+    assert "skip_internal_signoff:" in source
+    assert "skip_production_signoff:" in source
     assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
-    assert 'python scripts/internal_signoff_gate.py \\' in source
+    assert "python3 scripts/internal_signoff_gate.py" in source
     assert "require-production-signoff:" in source
+    assert "production-signoff-waive:" in source
     assert "Await fresh CEO production release approval" in source
-    assert "needs: [release-intent-gate, require-internal-signoff, require-production-signoff]" in source
+    assert "internal-proof-or-waive" in source.split("ios-testflight:", 1)[1].split("android-release:", 1)[0]
+    assert "require-production-signoff" in source.split("ios-testflight:", 1)[1].split("android-release:", 1)[0]
     assert "android-firebase-mirror:" not in source
 
 
