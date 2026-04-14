@@ -43,16 +43,21 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
 
     assert "PROJECT_PAT != ''" not in contents
     assert "github.token" not in contents
-    assert "Validate required automation token" in contents
-    assert "Missing required monthly release secret(s):" in contents
+    assert "Validate required secrets" in contents
+    assert "Missing required secret(s):" in contents
     assert "FREESOUND_API_TOKEN" in contents
-    assert contents.count("timeout-minutes:") >= 5
+    assert "if: ${{ secrets." not in contents
+    assert "FREESOUND_API_TOKEN not configured; skipping optional Freesound fetch." in contents
+    assert contents.count("timeout-minutes:") >= 4
     assert "actions: write" in contents
-    assert "--body-file \"$body_file\"" in contents
-    assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+    assert "--body \"Auto-generated monthly Pro content update." in contents
+    assert "git push origin develop" not in contents
+    assert 'gh pr comment "${CONTENT_PR_NUMBER}"' in contents
+    assert "/trunk merge" in contents
     assert "-f submit_review=true" in contents
     assert "-f submit_review=false" not in contents
-    assert "Public store availability must still be proven by store read-back" in contents
+    assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+    assert "Public store availability must still be proven by public-store-version-readback.yml" in contents
 
 
 def test_public_store_version_readback_requires_public_evidence() -> None:
@@ -73,6 +78,15 @@ def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
     assert "schedule:" not in contents
     assert "|| true" not in contents
     assert "monthly-pro-content-release.yml" in contents
+
+
+def test_manual_ios_voice_callout_regen_uses_unique_branch_per_run() -> None:
+    contents = _read(".github/workflows/generate-ios-voice-callouts.yml")
+
+    assert "schedule:" not in contents
+    assert "GITHUB_RUN_ID" in contents
+    assert "GITHUB_RUN_ATTEMPT" in contents
+    assert "feat/pro-audio-regen-$(date -u +%Y%m%d)" not in contents
 
 
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
