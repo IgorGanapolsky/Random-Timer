@@ -17,6 +17,7 @@ DEVICE_TESTS_WORKFLOW = ROOT / ".github/workflows/device-tests.yml"
 IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
+ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -419,6 +420,25 @@ def test_weekly_shared_workflow_closes_prior_report_issue_before_creating_next_o
     assert 'jq -r --arg issue_title "$ISSUE_TITLE"' in source
     assert "select(.title == $issue_title)" in source
     assert "Closing previous automated report issue before publishing refreshed weekly output." in source
+
+
+def test_analytics_workflow_uploads_reports_as_artifacts_not_open_issues():
+    source = ANALYTICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "issue_title: Weekly CI/CD Performance Report" not in source
+    assert "issue_title: Weekly Security Metrics Report" not in source
+    assert "issue_title: Weekly Deployment Metrics Report" not in source
+    assert "artifact_name: weekly-cicd-performance-report" in source
+    assert "artifact_name: weekly-security-metrics-report" in source
+    assert "artifact_name: weekly-deployment-metrics-report" in source
+
+
+def test_analytics_deployment_report_reads_deployment_statuses():
+    source = ANALYTICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "/deployments/{deployment['id']}/statuses?per_page=1" in source
+    assert 'latest_state = statuses[0]["state"] if statuses else "unknown"' in source
+    assert '.state == "success"' not in source
 
 
 def test_wqtu_health_workflow_closes_prior_alert_issue_before_creating_next_one():
