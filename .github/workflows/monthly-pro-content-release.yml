@@ -58,6 +58,7 @@ jobs:
         env:
           PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
         run: |
           set -euo pipefail
           missing=()
@@ -68,7 +69,7 @@ jobs:
             exit 1
           fi
           # FREESOUND_API_TOKEN is optional — warn but don't fail
-          if [ -z "${{ secrets.FREESOUND_API_TOKEN }}" ]; then
+          if [ -z "${FREESOUND_API_TOKEN}" ]; then
             echo "::warning::FREESOUND_API_TOKEN not set — CC0 sound fetch will be skipped. Only ElevenLabs content will be generated."
           fi
 
