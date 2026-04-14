@@ -1,7 +1,8 @@
 # Monthly Pro Content Release Pipeline
 #
 # Runs on the 1st of each month at 08:00 UTC (+ manual dispatch).
-# Delivers fresh voice callouts and CC0 sound effects to both stores.
+# Generates verified Pro audio updates via ElevenLabs, then dispatches store release automation.
+# Public store availability must still be proven by store read-back; App Review timing is not guaranteed.
 #
 # Required Secrets:
 #   ELEVENLABS_API_KEY  — ElevenLabs API key (voice callouts + sound generation)
@@ -356,7 +357,6 @@ jobs:
         run: |
           set -euo pipefail
           echo "Running regression suite on release branch..."
-          # Run whichever test files exist
           test_files=()
           for f in \
             scripts/tests/test_pro_lock_parity.py \
@@ -375,10 +375,10 @@ jobs:
           python -m pytest "${test_files[@]}" -v --tb=short
 
   # ============================================================
-  # Job 4 — Publish to both stores
+  # Job 4 — Submit store release
   # ============================================================
   publish-production:
-    name: "Publish to App Store + Play Store"
+    name: "Submit App Store + publish Play Store"
     needs: [generate-content, merge-and-cut-release, regression-gate]
     if: needs.merge-and-cut-release.outputs.release_branch != '' && needs.regression-gate.result == 'success'
     runs-on: ubuntu-latest
@@ -413,14 +413,14 @@ jobs:
           RELEASE_BRANCH: ${{ needs.merge-and-cut-release.outputs.release_branch }}
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<SUMMARY
-          ## Monthly Pro Content Release Complete
+          ## Monthly Pro Content Release — Dispatch Complete
 
-          | Field           | Value                                  |
-          |-----------------|----------------------------------------|
-          | Version         | ${RELEASE_VERSION}                     |
-          | Month           | ${MONTH_LABEL//-/ }                    |
-          | Release branch  | ${RELEASE_BRANCH}                      |
-          | Platforms       | iOS (App Store) + Android (Play Store) |
+          | Field           | Value                                              |
+          |-----------------|----------------------------------------------------|
+          | Version         | ${RELEASE_VERSION}                                 |
+          | Month           | ${MONTH_LABEL//-/ }                                |
+          | Release branch  | ${RELEASE_BRANCH}                                  |
+          | Platforms       | iOS App Review submission + Android Play production |
 
-          Native App Release dispatched. Monitor its run for store upload confirmation.
+          Native App Release dispatched. Use that run for final store-upload and read-back evidence.
           SUMMARY

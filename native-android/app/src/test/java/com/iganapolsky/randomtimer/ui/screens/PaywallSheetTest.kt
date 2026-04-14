@@ -14,7 +14,7 @@ class PaywallSheetTest {
     fun `paywall copy focuses on training outcomes`() {
         assertEquals("Stop Training With the Brakes On", PAYWALL_HEADLINE)
         assertEquals(
-            "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library that updates every month.",
+            "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills.",
             PAYWALL_SUBHEADLINE,
         )
         assertEquals("Cancel anytime. Subscription auto-renews until cancelled.", PAYWALL_PRICING_FOOTER)
@@ -24,7 +24,7 @@ class PaywallSheetTest {
                 "Live voice callouts keep you sharp under pressure",
                 "Loop drills with round limits — just like competition",
                 "Full sound arsenal — real bells, horns, and sirens",
-                "Fresh callout packs every 30 days — Pro gets them first",
+                "Verified audio drops when new packs are ready",
             ),
             PAYWALL_FEATURE_ROWS,
         )

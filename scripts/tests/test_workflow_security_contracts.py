@@ -55,6 +55,9 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "-f submit_review=true" in contents
     assert "-f submit_review=false" not in contents
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+    assert "-f submit_review=true" in contents
+    assert "-f submit_review=false" not in contents
+    assert "Public store availability must still be proven by store read-back" in contents
 
 
 def test_public_store_version_readback_requires_public_evidence() -> None:
