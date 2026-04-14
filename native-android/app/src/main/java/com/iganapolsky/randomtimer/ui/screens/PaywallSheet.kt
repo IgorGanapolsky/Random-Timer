@@ -63,7 +63,7 @@ internal enum class SubscriptionPlanSelection {
 fun PaywallSheet(
     proPrice: String,
     monthlyPrice: String = "$3.99",
-    hasFreeTrial: Boolean = false,
+    freeTrialByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -184,11 +184,11 @@ fun PaywallSheet(
             val (purchaseProductId, ctaLabel) = when (selectedPlan) {
                 SubscriptionPlanSelection.MONTHLY ->
                     "elite_tactical_monthly" to
-                        if (hasFreeTrial) "Start 7-Day Free Trial"
+                        if (freeTrialByProductId["elite_tactical_monthly"] == true) "Start 7-Day Free Trial"
                         else "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
                 SubscriptionPlanSelection.ANNUAL ->
                     "elite_tactical" to
-                        if (hasFreeTrial) "Start 7-Day Free Trial"
+                        if (freeTrialByProductId["elite_tactical"] == true) "Start 7-Day Free Trial"
                         else "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
             }
 

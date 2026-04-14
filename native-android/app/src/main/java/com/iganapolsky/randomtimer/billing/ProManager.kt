@@ -87,8 +87,8 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
-        /** Set to true when the pending purchase was initiated with a free-trial offer. */
-        private var pendingPurchaseIsFreeTrial: Boolean = false
+        private var pendingPurchaseFreeTrialProductId: String? = null
+        private var pendingPurchaseFreeTrialOfferToken: String? = null
 
         init {
             connectAndRestore()
@@ -198,6 +198,7 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
+            clearPendingTrialOffer()
             if (!billingClient.isReady) {
                 connectAndRestore()
                 trackPurchaseResult(
@@ -245,7 +246,9 @@ class ProManager
                 return false
             }
 
-            pendingPurchaseIsFreeTrial = selectedOffer?.hasFreeTrial ?: false
+            val selectedFreeTrialOfferToken = selectedOffer?.offerToken?.takeIf { selectedOffer.hasFreeTrial }
+            pendingPurchaseFreeTrialProductId = productID.takeIf { selectedFreeTrialOfferToken != null }
+            pendingPurchaseFreeTrialOfferToken = selectedFreeTrialOfferToken
 
             val productDetailsParamsList =
                 listOf(
@@ -271,7 +274,7 @@ class ProManager
                     "product_id" to productID,
                     AnalyticsProperties.SOURCE to MonetizationSources.PAYWALL,
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
-                    "has_free_trial" to pendingPurchaseIsFreeTrial,
+                    "has_free_trial" to (selectedFreeTrialOfferToken != null),
                 ),
             )
             val result = billingClient.launchBillingFlow(activity, flowParams)
@@ -284,7 +287,7 @@ class ProManager
                     debugMessage = result.debugMessage,
                 )
                 pendingPurchaseEntryPoint = null
-                pendingPurchaseIsFreeTrial = false
+                clearPendingTrialOffer()
                 return false
             }
             return true
@@ -333,13 +336,21 @@ class ProManager
         }
 
         /**
-         * Returns true when the cached elite subscription product has a free-trial offer available.
-         * Used by the paywall UI to decide which CTA text to display.
+         * Fetches product details before checking trial availability so launch-time cache races
+         * do not hide valid free-trial CTAs.
          */
-        fun hasFreeTrialOffer(): Boolean {
-            val details = cachedProductDetails[ELITE_PRODUCT_ID] ?: return false
-            return details.toSubscriptionOffers().any { it.hasFreeTrial }
+        suspend fun hasFreeTrialOffer(productID: String): Boolean {
+            val details = cachedProductDetails[productID] ?: fetchProductDetails(productID) ?: return false
+            val billingPeriod =
+                when (productID) {
+                    ELITE_PRODUCT_ID -> "P1Y"
+                    MONTHLY_PRODUCT_ID -> "P1M"
+                    else -> return false
+                }
+            return selectSubscriptionOfferByPeriod(details.toSubscriptionOffers(), billingPeriod)?.hasFreeTrial == true
         }
+
+        suspend fun hasFreeTrialOffer(): Boolean = hasFreeTrialOffer(ELITE_PRODUCT_ID)
 
         suspend fun getFormattedPrice(productID: String): String {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID)
@@ -460,13 +471,18 @@ class ProManager
                         AnalyticsProperties.REVENUE to revenueAmount,
                     ),
                 )
-                // Track free trial start separately so it surfaces in PostHog trial funnel.
-                if (pendingPurchaseIsFreeTrial) {
+                // Track the selected trial offer only for the product that actually purchased.
+                val trialOfferWasSelected =
+                    purchasedProductId == pendingPurchaseFreeTrialProductId &&
+                        pendingPurchaseFreeTrialOfferToken != null
+                if (trialOfferWasSelected) {
                     analyticsService.track(
                         AnalyticsEvents.FREE_TRIAL_STARTED,
                         mapOf(
                             AnalyticsProperties.PRODUCT_ID to purchasedProductId,
                             AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
+                            AnalyticsEvents.TRIAL_VERIFICATION_SOURCE to "google_play_selected_offer",
+                            AnalyticsEvents.TRIAL_VERIFIED to false,
                         ),
                     )
                 }
@@ -479,7 +495,12 @@ class ProManager
                 debugMessage = result.debugMessage,
             )
             pendingPurchaseEntryPoint = null
-            pendingPurchaseIsFreeTrial = false
+            clearPendingTrialOffer()
+        }
+
+        private fun clearPendingTrialOffer() {
+            pendingPurchaseFreeTrialProductId = null
+            pendingPurchaseFreeTrialOfferToken = null
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {

@@ -101,8 +101,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     }
 
     private func doPurchase(_ product: Product) async -> ProPurchaseResult {
-        // Capture trial eligibility before purchase so we can track it on success.
-        let hasTrial = product.subscription?.introductoryOffer != nil
+        let isEligibleForTrial = await product.subscription?.isEligibleForIntroOffer ?? false
         do {
             let result = try await product.purchase()
             switch result {
@@ -110,11 +109,14 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                 let transaction = try Self.checkVerified(verification)
                 updateEntitlement(for: transaction.productID)
                 await transaction.finish()
-                // Track free trial start event when the user accepted a trial offer.
-                if hasTrial {
+                if isEligibleForTrial && transaction.productID == product.id {
                     AnalyticsService.shared.track(
                         AnalyticsEvents.freeTrialStarted,
-                        properties: [AnalyticsProperties.productId: product.id]
+                        properties: [
+                            AnalyticsProperties.productId: product.id,
+                            AnalyticsEvents.trialVerificationSource: "storekit_intro_offer_eligibility",
+                            AnalyticsEvents.trialVerified: true
+                        ]
                     )
                 }
                 return .success
