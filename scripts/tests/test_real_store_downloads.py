@@ -11,14 +11,18 @@ SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from real_store_downloads import (  # noqa: E402
+    ANDROID_REFUND_COUNT_METRIC_ID,
     ANDROID_REVIEW_COUNT_METRIC_ID,
     IOS_REVIEW_COUNT_METRIC_ID,
+    _fetch_all_android_voided_purchases,
     _fetch_all_play_reviews_list,
+    _summarize_voided_purchases,
 )
 
 
 def test_review_metric_ids_are_stable_tokens() -> None:
     assert "google_play" in ANDROID_REVIEW_COUNT_METRIC_ID
+    assert "voidedpurchases" in ANDROID_REFUND_COUNT_METRIC_ID
     assert "app_store_connect" in IOS_REVIEW_COUNT_METRIC_ID
 
 
@@ -47,4 +51,45 @@ def test_fetch_all_play_reviews_list_paginates_until_no_token() -> None:
         "packageName": "com.example.app",
         "maxResults": 100,
         "token": "t1",
+    }
+
+
+def test_fetch_all_android_voided_purchases_paginates_until_no_token() -> None:
+    service = MagicMock()
+    list_resource = service.purchases.return_value.voidedpurchases.return_value.list
+    list_resource.return_value.execute.side_effect = [
+        {
+            "voidedPurchases": [{"orderId": "a"}],
+            "tokenPagination": {"nextPageToken": "t1"},
+        },
+        {
+            "voidedPurchases": [{"orderId": "b"}],
+            "tokenPagination": {},
+        },
+    ]
+
+    out = _fetch_all_android_voided_purchases(service, "com.example.app", 30)
+    assert len(out) == 2
+    assert list_resource.call_count == 2
+    first_kw = list_resource.call_args_list[0].kwargs
+    assert first_kw["packageName"] == "com.example.app"
+    assert first_kw["maxResults"] == 1000
+    second_kw = list_resource.call_args_list[1].kwargs
+    assert second_kw["token"] == "t1"
+
+
+def test_summarize_voided_purchases_groups_reason_codes() -> None:
+    summary = _summarize_voided_purchases(
+        [
+            {"voidedReason": 0},
+            {"voidedReason": 0},
+            {"voidedReason": 1},
+            {},
+        ]
+    )
+    assert summary["refund_requests_30d"] == 4
+    assert summary["voided_purchase_reason_counts"] == {
+        "0": 2,
+        "1": 1,
+        "unknown": 1,
     }
