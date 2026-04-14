@@ -14,9 +14,6 @@ on:
       - '**.md'
       - 'docs/**'
 
-permissions:
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -25,6 +22,8 @@ jobs:
   changes:
     name: Path-Aware CI Gate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 5
     outputs:
       android: ${{ steps.classify.outputs.android }}
@@ -54,6 +53,8 @@ jobs:
   lint:
     name: Architecture Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
@@ -113,6 +114,8 @@ jobs:
   python:
     name: Legacy Python Compile Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
@@ -141,6 +144,8 @@ jobs:
   voice-provider-smoke:
     name: Voice Provider Smoke
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -193,6 +198,8 @@ jobs:
   regression-guards:
     name: Regression Guards
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 25
     defaults:
       run:
@@ -254,6 +261,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 25
     defaults:
       run:
@@ -307,6 +316,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ios == 'true'
     runs-on: macos-15
+    permissions:
+      contents: read
     timeout-minutes: 25
     defaults:
       run:
@@ -443,6 +454,8 @@ jobs:
   playwright-local:
     name: Playwright Local Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     defaults:
       run:
@@ -475,6 +488,8 @@ jobs:
   python-scripts:
     name: Python Script Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -533,6 +548,8 @@ jobs:
     name: North Star Guardrail
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6

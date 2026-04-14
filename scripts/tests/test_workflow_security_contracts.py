@@ -56,8 +56,10 @@ def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     ci = _read(".github/workflows/ci.yml")
     device_tests = _read(".github/workflows/device-tests.yml")
 
-    assert "permissions:\n  contents: read" in ci
-    assert "permissions:\n  contents: read" in device_tests
+    assert "\npermissions:\n" not in ci.split("concurrency:", 1)[0]
+    assert "\npermissions:\n" not in device_tests.split("concurrency:", 1)[0]
+    assert ci.count("permissions:\n      contents: read") >= 9
+    assert device_tests.count("permissions:\n      contents: read") >= 3
     assert "Path-Aware CI Gate" in ci
     assert "Path-Aware Device Gate" in device_tests
     assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in ci
