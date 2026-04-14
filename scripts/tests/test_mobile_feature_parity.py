@@ -193,7 +193,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
         "Live voice callouts keep you sharp under pressure",
         "Loop drills with round limits — just like competition",
         "Full sound arsenal — real bells, horns, and sirens",
-        "Fresh callout packs every 30 days — Pro gets them first",
+        "Verified audio drops when new packs are ready",
     ):
         assert expected in android_paywall
         assert expected in ios_paywall

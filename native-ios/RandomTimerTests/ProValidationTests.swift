@@ -13,7 +13,7 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(
             PaywallSheet.subheadline,
             "Go unlimited — sessions up to 60 minutes, live voice callouts, "
-                + "and a full sound library that updates every month."
+                + "and a full sound library built for pressure drills."
         )
         let expectedFooter =
             "Cancel anytime. Subscription auto-renews until cancelled. "
@@ -26,7 +26,7 @@ final class TimerConfigProClampingTests: XCTestCase {
                 "Live voice callouts keep you sharp under pressure",
                 "Loop drills with round limits — just like competition",
                 "Full sound arsenal — real bells, horns, and sirens",
-                "Fresh callout packs every 30 days — Pro gets them first",
+                "Verified audio drops when new packs are ready",
             ]
         )
     }
