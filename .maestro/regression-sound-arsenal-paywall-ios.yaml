@@ -1,6 +1,7 @@
 appId: com.igorganapolsky.randomtimer
 ---
-# Regression test: tapping the Sound Arsenal header lock must open the paywall on iOS
+# Regression test: before first timer completion, Sound Arsenal must gate
+# the paywall behind a completed drill instead of opening purchase UI.
 - launchApp:
     clearState: true
 - scrollUntilVisible:
@@ -9,6 +10,9 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
-- assertVisible: "Unlock Full Training Mode"
+- assertVisible: "Complete your first drill to unlock Pro features"
+- assertNotVisible:
+    text: "Unlock Full Training Mode"
+    optional: true
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp

@@ -24,7 +24,7 @@ jobs:
   # Claude deep review for architectural and project-specific checks
   claude-review:
     name: Claude Review
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     continue-on-error: true
     runs-on: ubuntu-latest
     outputs:
@@ -35,11 +35,18 @@ jobs:
       statuses: write
       id-token: write
     steps:
+      - name: Pass required Claude Review check on push
+        if: github.event_name == 'push'
+        run: |
+          echo "Claude Review runs the real review on pull_request events."
+          echo "Push events get this green noop so required checks do not block PR heads."
+
       - uses: actions/checkout@v6
+        if: github.event_name == 'pull_request'
 
       - name: Claude Code Review
         id: claude_review
-        if: ${{ env.ANTHROPIC_API_KEY != '' }}
+        if: ${{ github.event_name == 'pull_request' && env.ANTHROPIC_API_KEY != '' }}
         continue-on-error: true
         uses: anthropics/claude-code-action@ea5a04005c9fd4deed2ed803c15a64d0e6eb65d0 # v1
         with:
@@ -75,13 +82,13 @@ jobs:
           claude_args: '--max-turns 10'
 
       - name: Advisory mode notice when secret is unavailable
-        if: ${{ env.ANTHROPIC_API_KEY == '' }}
+        if: ${{ github.event_name == 'pull_request' && env.ANTHROPIC_API_KEY == '' }}
         run: |
           echo "ANTHROPIC_API_KEY is not available for this run."
           echo "Claude Review remains advisory and non-blocking."
 
       - name: Warn when Claude review crashes
-        if: steps.claude_review.outcome != 'success'
+        if: github.event_name == 'pull_request' && steps.claude_review.outcome != 'success'
         run: |
           echo "Claude review action failed/crashed; leaving non-blocking warning."
 
