@@ -787,7 +787,7 @@ fun TimerSetupScreen(
                                     } else {
                                         Surface(
                                             onClick = {
-                                                onUpgradeTap("pro_sounds")
+                                                onUpgradeTap("repeat_loop")
                                             },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),

@@ -162,6 +162,17 @@ def test_android_persists_voice_gender_selection_like_ios():
     assert 'VoiceGender.valueOf(it)' in android_repository
 
 
+def test_android_repeat_loop_uses_distinct_paywall_gate_identifier():
+    android_setup = _read(ANDROID_SETUP)
+    repeat_loop_block = android_setup.split("text = repeatLoopDetailTitle(isPro = isPro)", 1)[1].split(
+        'text = "Sound Arsenal"',
+        1,
+    )[0]
+
+    assert 'onUpgradeTap("repeat_loop")' in repeat_loop_block
+    assert 'onUpgradeTap("pro_sounds")' not in repeat_loop_block
+
+
 def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_setup = _read(ANDROID_SETUP)
     android_paywall = _read(ANDROID_PAYWALL)
