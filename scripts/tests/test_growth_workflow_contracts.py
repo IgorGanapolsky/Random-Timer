@@ -100,6 +100,21 @@ def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_
     assert "--request-retries 3" in compute_section
 
 
+def test_internal_distribution_skips_impossible_auto_ios_uploads_without_signoff():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    ios_job = source.split("ios-testflight-internal:", 1)[1].split("ios-testflight-signoff:", 1)[0]
+    signoff_job = source.split("ios-testflight-signoff:", 1)[1].split("android-play-internal:", 1)[0]
+
+    assert "uploaded: ${{ steps.ios_lineage.outputs.uploadable }}" in ios_job
+    assert "DISTRIBUTION_REASON: ${{ needs.gate.outputs.reason }}" in ios_job
+    assert "blocked by closed App Store version" in ios_job
+    assert "Skipping automatic iOS TestFlight upload" in ios_job
+    assert "Record skipped iOS TestFlight upload" in ios_job
+    assert "if: steps.ios_lineage.outputs.uploadable == 'true'" in ios_job
+    assert "needs.ios-testflight-internal.outputs.uploaded == 'true'" in signoff_job
+
+
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
