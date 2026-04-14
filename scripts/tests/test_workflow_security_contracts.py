@@ -57,6 +57,26 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
 
 
+def test_public_store_version_readback_requires_public_evidence() -> None:
+    contents = _read(".github/workflows/public-store-version-readback.yml")
+
+    assert "workflow_run:" in contents
+    assert 'workflows: ["Native App Release"]' in contents
+    assert 'cron: "0 */6 1-7 * *"' in contents
+    assert "scripts/verify_public_store_versions.py" in contents
+    assert "--json-out public-store-version-readback.json" in contents
+    assert "Upload public store read-back evidence" in contents
+    assert "workflow_run.head_sha" not in contents
+
+
+def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
+    contents = _read(".github/workflows/monthly-audio-pack.yml")
+
+    assert "schedule:" not in contents
+    assert "|| true" not in contents
+    assert "monthly-pro-content-release.yml" in contents
+
+
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
     contents = _read(".github/workflows/autonomous-release-automerge.yml")
 
