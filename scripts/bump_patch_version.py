@@ -77,10 +77,11 @@ def read_android_version_code(gradle_text: str) -> int:
     for line in gradle_text.splitlines():
         if "versionCode" not in line or "=" not in line:
             continue
-        rhs = line.split("=", 1)[1]
-        match = re.search(r"(?:\?:\s*)?(\d+)\s*$", rhs.strip())
-        if match:
-            return int(match.group(1))
+        rhs = line.split("=", 1)[1].split("//", 1)[0].strip()
+        if "?:" in rhs:
+            rhs = rhs.rsplit("?:", 1)[1].strip()
+        if rhs.isdigit():
+            return int(rhs)
     raise ValueError("Could not parse versionCode from build.gradle.kts")
 
 
