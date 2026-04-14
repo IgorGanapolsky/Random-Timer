@@ -137,3 +137,9 @@ apple_status.json
 # Local evidence captures
 evidence/
 .playwright-mcp/
+
+# ThumbGate local feedback data
+.thumbgate/feedback-log.jsonl
+.thumbgate/memory-log.jsonl
+.cursor/mcp.json
+.mcp.json
