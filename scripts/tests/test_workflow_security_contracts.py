@@ -16,6 +16,71 @@ def test_pause_paid_campaigns_uses_environment_backed_reason() -> None:
     assert '--reason "$INPUT_REASON"' in contents
 
 
+def test_workflow_inputs_are_not_interpolated_inside_run_blocks() -> None:
+    offenders: list[str] = []
+
+    for path in sorted((REPO_ROOT / ".github/workflows").glob("*.yml")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        active_run_indent: int | None = None
+        for line_number, line in enumerate(lines, start=1):
+            stripped = line.lstrip()
+            indent = len(line) - len(stripped)
+
+            if active_run_indent is not None:
+                if stripped and indent <= active_run_indent:
+                    active_run_indent = None
+                elif "${{ inputs." in line:
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}:{line_number}")
+
+            if stripped.startswith("run: |") or stripped.startswith("run: >"):
+                active_run_indent = indent
+
+    assert offenders == []
+
+
+def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
+    contents = _read(".github/workflows/monthly-pro-content-release.yml")
+
+    assert "PROJECT_PAT != ''" not in contents
+    assert "github.token" not in contents
+    assert "Validate required automation token" in contents
+    assert "Missing required monthly release secret(s):" in contents
+    assert "FREESOUND_API_TOKEN" in contents
+    assert contents.count("timeout-minutes:") >= 5
+    assert "actions: write" in contents
+    assert "--body-file \"$body_file\"" in contents
+    assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+
+
+def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
+    contents = _read(".github/workflows/autonomous-release-automerge.yml")
+
+    assert 'GH_TOKEN="${PROJECT_PAT:-$DEFAULT_TOKEN}"' not in contents
+    assert "timeout-minutes: 5" in contents
+    assert contents.index('enable_automerge "GITHUB_TOKEN" "$DEFAULT_TOKEN"') < contents.index(
+        'enable_automerge "PROJECT_PAT fallback" "${PROJECT_PAT:-}"'
+    )
+
+
+def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
+    ci = _read(".github/workflows/ci.yml")
+    device_tests = _read(".github/workflows/device-tests.yml")
+
+    assert "\npermissions:\n" not in ci.split("concurrency:", 1)[0]
+    assert "\npermissions:\n" not in device_tests.split("concurrency:", 1)[0]
+    assert ci.count("permissions:\n      contents: read") >= 9
+    assert device_tests.count("permissions:\n      contents: read") >= 3
+    assert "Path-Aware CI Gate" in ci
+    assert "Path-Aware Device Gate" in device_tests
+    assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in ci
+    assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in device_tests
+    assert "if: needs.changes.outputs.android == 'true'" in ci
+    assert "if: needs.changes.outputs.ios == 'true'" in ci
+    assert "if: needs.changes.outputs.android_device == 'true'" in device_tests
+    assert "if: needs.changes.outputs.ios_device == 'true'" in device_tests
+    assert ci.count("timeout-minutes:") >= 9
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]
@@ -27,12 +92,8 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
     expected_pins = {
         ".github/workflows/android17-canary.yml": "android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407",
         ".github/workflows/device-tests.yml": "reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7",
-        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd",
+        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0",
         ".github/workflows/internal-distribution.yml#firebase": "wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6",
-        ".github/workflows/release.yml#expo": "expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e",
-        ".github/workflows/release.yml#sbom": "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610",
-        ".github/workflows/release.yml#gh-release": "softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe",
-        ".github/workflows/release.yml#slack": "8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703",
         ".github/workflows/security.yml#snyk": "snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04",
         ".github/workflows/security.yml#dependency-check": "dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c",
         ".github/workflows/security.yml#mobsf": "MobSF/mobsfscan@ec2927a8cfab6626a67f26b223be3aba52a34b70",
@@ -41,6 +102,8 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
         ".github/workflows/wiki-sync.yml": "Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a",
         ".github/workflows/pause-paid-campaigns.yml": "peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c",
     }
+
+    assert not (REPO_ROOT / ".github/workflows/release.yml").exists()
 
     workflow_cache: dict[str, str] = {}
     for keyed_path, pinned_ref in expected_pins.items():

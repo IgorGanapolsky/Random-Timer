@@ -19,16 +19,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Path-Aware CI Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      android: ${{ steps.classify.outputs.android }}
+      ios: ${{ steps.classify.outputs.ios }}
+      android_device: ${{ steps.classify.outputs.android_device }}
+      ios_device: ${{ steps.classify.outputs.ios_device }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed components
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+            python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
+          else
+            python3 scripts/ci_changed_components.py --all --github-output
+          fi
+
   lint:
     name: Architecture Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
 
       - name: Architecture ban checks (Kotlin)
         run: |
           ERRORS=0
-          for f in $(find native-android -name '*.kt' -not -path '*/build/*'); do
+          while IFS= read -r -d '' f; do
             if grep -n 'AndroidViewModel' "$f" | grep -v '// allow-android-viewmodel' > /dev/null 2>&1; then
               echo "❌ $f: Uses AndroidViewModel"
               ERRORS=$((ERRORS + 1))
@@ -41,7 +75,7 @@ jobs:
               echo "❌ $f: Uses Handler(Looper) instead of coroutines"
               ERRORS=$((ERRORS + 1))
             fi
-          done
+          done < <(find native-android -name '*.kt' -not -path '*/build/*' -print0)
           if [ "$ERRORS" -gt 0 ]; then
             echo "Found $ERRORS architecture violation(s)"
             exit 1
@@ -54,22 +88,22 @@ jobs:
           SCREENS_DIR="native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens"
 
           # Ban hardcoded progress values in CircularTimer calls
-          for f in $(find "$SCREENS_DIR" -name '*.kt'); do
+          while IFS= read -r -d '' f; do
             if grep -Pn 'progress\s*=\s*(if\s*\(|0f|1f)' "$f" | grep -v '// allow-hardcoded-progress' > /dev/null 2>&1; then
               echo "❌ $f: Hardcoded progress value — use state.progress instead"
               ERRORS=$((ERRORS + 1))
             fi
-          done
+          done < <(find "$SCREENS_DIR" -name '*.kt' -print0)
 
           # Ban ignoring state fields when passing to UI components
-          for f in $(find "$SCREENS_DIR" -name '*.kt'); do
+          while IFS= read -r -d '' f; do
             if grep -Pn 'CircularTimer\(' "$f" > /dev/null 2>&1; then
               # Verify state.progress is used (not a ternary or literal)
               if ! grep -P 'progress\s*=\s*state\.progress' "$f" > /dev/null 2>&1; then
                 echo "⚠️  $f: CircularTimer may not be using state.progress — verify manually"
               fi
             fi
-          done
+          done < <(find "$SCREENS_DIR" -name '*.kt' -print0)
 
           if [ "$ERRORS" -gt 0 ]; then
             echo "Found $ERRORS UI state binding violation(s)"
@@ -80,6 +114,9 @@ jobs:
   python:
     name: Legacy Python Compile Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
 
@@ -107,6 +144,9 @@ jobs:
   voice-provider-smoke:
     name: Voice Provider Smoke
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
@@ -133,22 +173,104 @@ jobs:
         if: steps.gate.outputs.run_live_smoke == 'true'
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: python scripts/verify_elevenlabs_voices.py
+        run: |
+          set +e
+          output="$(python scripts/verify_elevenlabs_voices.py 2>&1)"
+          status=$?
+          printf '%s\n' "$output"
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if [ "$status" -eq 78 ]; then
+            echo "::warning::Live ElevenLabs smoke recorded a controlled skip for provider account availability."
+            exit 0
+          fi
+          if printf '%s\n' "$output" | grep -Eq "quota_exceeded|payment_issue|insufficient_credits|no remaining credits|failed or incomplete payment"; then
+            echo "::warning::Live ElevenLabs smoke skipped because the provider account is unavailable for billing or credit reasons."
+            exit 0
+          fi
+          exit "$status"
 
       - name: Record controlled skip
         if: steps.gate.outputs.run_live_smoke != 'true'
         run: echo "Live ElevenLabs smoke was skipped because ELEVENLABS_API_KEY is not exposed in this workflow context."
 
+  regression-guards:
+    name: Regression Guards
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install regression test dependencies
+        run: python -m pip install --upgrade pip pytest==8.4.2 requests==2.32.5
+
+      - name: Run fast file-contract guards
+        run: python scripts/regression_guards.py --mode ci
+
+      - name: Run regression contract tests
+        run: |
+          python -m pytest -q \
+            scripts/tests/test_growth_workflow_contracts.py \
+            scripts/tests/test_audio_asset_regressions.py \
+            scripts/tests/test_regression_guards.py \
+            scripts/tests/test_runtime_latest_manifest.py \
+            scripts/tests/test_verify_play_public_listing.py \
+            scripts/tests/test_mobile_feature_parity.py \
+            scripts/tests/test_voice_regression_contracts.py
+
+      - name: Setup Java
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant Android execute permission
+        run: chmod +x native-android/gradlew
+
+      - name: Create dummy google-services.json for regression guards
+        run: |
+          cat > native-android/app/google-services.json << 'GSEOF'
+          {
+            "project_info": { "project_number": "000000000000", "project_id": "random-timer-ci", "storage_bucket": "random-timer-ci.appspot.com" },
+            "client": [{ "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": { "package_name": "com.iganapolsky.randomtimer" } }, "api_key": [{ "current_key": "CI_PLACEHOLDER" }] }],
+            "configuration_version": "1"
+          }
+          GSEOF
+
+      - name: Run Android regression unit tests
+        working-directory: native-android
+        run: |
+          ./gradlew testDebugUnitTest --no-daemon \
+            --tests 'com.iganapolsky.randomtimer.data.repository.TimerRepositoryImplTest' \
+            --tests 'com.iganapolsky.randomtimer.service.AIVoiceCalloutManagerSelectionTest'
+
   android:
     name: Autonomous Android Tests
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: native-android
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -191,7 +313,12 @@ jobs:
 
   ios:
     name: Autonomous iOS Build Check
+    needs: changes
+    if: needs.changes.outputs.ios == 'true'
     runs-on: macos-15
+    permissions:
+      contents: read
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: native-ios
@@ -247,11 +374,11 @@ jobs:
               XCODE_PATH="${candidate}"
               break
             fi
-          done < <(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V -r)
+          done < <(find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null | sort -V -r)
 
           if [ -z "${XCODE_PATH}" ]; then
             echo "No Xcode installation with iOS Simulator SDK found."
-            ls -d /Applications/Xcode*.app 2>/dev/null || true
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null || true
             exit 1
           fi
 
@@ -279,36 +406,42 @@ jobs:
           echo "Using xcodebuild destination simulator ID: ${SIM_ID}"
 
       - name: Pre-boot simulator
+        env:
+          SIM_ID: ${{ steps.sim.outputs.sim_id }}
         run: |
-          xcrun simctl boot '${{ steps.sim.outputs.sim_id }}' || true
-          xcrun simctl bootstatus '${{ steps.sim.outputs.sim_id }}' -b
+          xcrun simctl boot "$SIM_ID" || true
+          xcrun simctl bootstatus "$SIM_ID" -b
           sleep 5
 
       - name: Build for testing
+        env:
+          SIM_ID: ${{ steps.sim.outputs.sim_id }}
         run: |
           xcodebuild build-for-testing \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
-            -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -destination "platform=iOS Simulator,id=$SIM_ID" \
             -skip-testing:RandomTimerUITests \
             -quiet \
             CODE_SIGNING_ALLOWED=NO \
-            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
+            "OTHER_SWIFT_FLAGS=\$(inherited) -D RT_SKIP_FIREBASE_FOR_CI"
 
       - name: Run unit tests
         timeout-minutes: 10
+        env:
+          SIM_ID: ${{ steps.sim.outputs.sim_id }}
         run: |
           rm -rf build/TestResults.xcresult
           xcodebuild test \
             -project RandomTimer.xcodeproj \
             -scheme RandomTimer \
-            -destination 'platform=iOS Simulator,id=${{ steps.sim.outputs.sim_id }}' \
+            -destination "platform=iOS Simulator,id=$SIM_ID" \
             -skip-testing:RandomTimerUITests \
             -enableCodeCoverage YES \
             -resultBundlePath build/TestResults.xcresult \
             -quiet \
             CODE_SIGNING_ALLOWED=NO \
-            'OTHER_SWIFT_FLAGS=$(inherited) -D RT_SKIP_FIREBASE_FOR_CI'
+            "OTHER_SWIFT_FLAGS=\$(inherited) -D RT_SKIP_FIREBASE_FOR_CI"
 
       - name: Upload iOS xcresult
         if: always()
@@ -321,6 +454,9 @@ jobs:
   playwright-local:
     name: Playwright Local Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: tests/playwright
@@ -352,6 +488,9 @@ jobs:
   python-scripts:
     name: Python Script Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
 
@@ -409,6 +548,9 @@ jobs:
     name: North Star Guardrail
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
@@ -463,6 +605,7 @@ jobs:
   security:
     name: Autonomous Security
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: read
@@ -496,7 +639,9 @@ jobs:
             aarch64|arm64) ASSET="gitleaks_8.30.0_linux_arm64.tar.gz" ;;
             *) echo "Unsupported arch: $ARCH" && exit 1 ;;
           esac
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" -o /tmp/gitleaks.tar.gz
+          curl --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 20 --max-time 120 \
+            -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/${ASSET}" \
+            -o /tmp/gitleaks.tar.gz
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           install -m 0755 /tmp/gitleaks "$HOME/.local/bin/gitleaks"
           "$HOME/.local/bin/gitleaks" version

@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
-from scripts import asc_list_versions
+from scripts.asc import asc_list_versions
 
 
 class _FakeClient:
@@ -53,9 +53,9 @@ class AscListVersionsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             out_path = Path(td) / "asc_versions.json"
             stdout = io.StringIO()
-            with mock.patch("scripts.asc_list_versions.ASCClient.from_env", return_value=_FakeClient()), mock.patch(
-                "scripts.asc_list_versions.get_app", return_value={"id": "app123"}
-            ), mock.patch("scripts.asc_list_versions._list_ios_versions", return_value=fake_versions), mock.patch(
+            with mock.patch("scripts.asc.asc_list_versions.ASCClient.from_env", return_value=_FakeClient()), mock.patch(
+                "scripts.asc.asc_list_versions.get_app", return_value={"id": "app123"}
+            ), mock.patch("scripts.asc.asc_list_versions._list_ios_versions", return_value=fake_versions), mock.patch(
                 "sys.argv",
                 ["asc_list_versions.py", "--json-out", str(out_path)],
             ), redirect_stdout(stdout):

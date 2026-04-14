@@ -9,10 +9,10 @@ This repo now resolves an **editable target App Store version** before metadata 
 
 ## Resolver script
 
-Use `scripts/asc_resolve_version.py`:
+Use `scripts/asc/asc_resolve_version.py`:
 
 ```bash
-python scripts/asc_resolve_version.py \
+python scripts/asc/asc_resolve_version.py \
   --preferred-version 1.1.1 \
   --create-if-needed \
   --auto-next-patch \
@@ -51,7 +51,7 @@ Behavior:
 
 ## Readiness verifier mode
 
-`scripts/asc_verify_ready.py` now supports:
+`scripts/asc/asc_verify_ready.py` now supports:
 
 ```bash
 --skip-build-check

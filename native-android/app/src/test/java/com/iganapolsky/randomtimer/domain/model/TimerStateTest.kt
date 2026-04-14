@@ -9,6 +9,19 @@ import kotlin.time.Duration.Companion.seconds
 class TimerStateTest {
     private val defaultConfig = TimerConfig.DEFAULT
 
+    /** Fixed wide max for progress ratio tests (denominator is config.maxSeconds). */
+    private val progressWideMaxConfig =
+        TimerConfig(
+            minSeconds = 0,
+            maxSeconds = 120,
+            alarmDuration = 10,
+            hiddenMode = false,
+            repeatEnabled = false,
+            soundType = SoundType.INTENSE,
+            volume = 0.5f,
+            vibrationEnabled = false,
+        )
+
     @Test
     fun `progress is 0 at start`() {
         val state =
@@ -28,7 +41,7 @@ class TimerStateTest {
         // progress = elapsed/max = 60/120 = 0.5
         val state =
             TimerState(
-                config = defaultConfig, // maxSeconds = 120
+                config = progressWideMaxConfig,
                 targetDuration = 2.minutes,
                 remainingDuration = 1.minutes,
                 status = TimerStatus.RUNNING,
@@ -58,7 +71,7 @@ class TimerStateTest {
         // progress = 15/120 = 0.125
         val state =
             TimerState(
-                config = defaultConfig,
+                config = progressWideMaxConfig,
                 targetDuration = 30.seconds,
                 remainingDuration = 15.seconds,
                 status = TimerStatus.RUNNING,

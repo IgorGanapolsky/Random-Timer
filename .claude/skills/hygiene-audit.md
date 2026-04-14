@@ -11,7 +11,7 @@ Run the hygiene check script and report results. This is the same audit enforced
 
 1. Run the hygiene check script:
 ```bash
-bash scripts/hygiene-check.sh
+bash scripts/shell/hygiene-check.sh
 ```
 
 2. If any errors are found, fix them:
@@ -34,4 +34,4 @@ bash scripts/hygiene-check.sh
 
 ## Adding New Checks
 
-Edit `scripts/hygiene-check.sh` to add new checks. Use `error()` for blocking issues and `warn()` for non-blocking advisories.
+Edit `scripts/shell/hygiene-check.sh` to add new checks. Use `error()` for blocking issues and `warn()` for non-blocking advisories.

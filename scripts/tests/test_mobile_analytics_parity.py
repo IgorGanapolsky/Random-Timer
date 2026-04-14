@@ -28,6 +28,22 @@ def _extract_string_constants(block: str, pattern: str) -> set[str]:
     return set(re.findall(pattern, block))
 
 
+def _count_android_timer_completed_track_calls(source: str) -> int:
+    lines = source.splitlines()
+    count = 0
+    for index, line in enumerate(lines[:-1]):
+        if "analyticsService.track(" not in line:
+            continue
+        next_index = index + 1
+        while next_index < len(lines) and not lines[next_index].strip():
+            next_index += 1
+        if next_index < len(lines) and lines[next_index].strip().startswith(
+            "AnalyticsEvents.TIMER_COMPLETED",
+        ):
+            count += 1
+    return count
+
+
 class MobileAnalyticsParityTests(unittest.TestCase):
     def test_event_names_match_between_ios_and_android(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
@@ -41,7 +57,10 @@ class MobileAnalyticsParityTests(unittest.TestCase):
             _extract_block(ios_source, "enum AnalyticsEvents"),
             r'static let \w+\s*=\s*"([^"]+)"',
         )
-        self.assertEqual(android_events, ios_events)
+        # timer_backgrounded is iOS-only: iOS fires it when app backgrounds during
+        # a running timer (informational). Android's foreground service doesn't need it.
+        ios_only_events = {"timer_backgrounded"}
+        self.assertEqual(android_events, ios_events - ios_only_events)
 
     def test_screen_names_match_between_ios_and_android(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
@@ -75,6 +94,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         self.assertIn('const val RESULT = "result"', android_source)
         self.assertIn('static let result = "result"', ios_source)
 
+    def test_distribution_channel_property_matches_between_platforms(self):
+        android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
+        self.assertIn('const val DISTRIBUTION_CHANNEL = "distribution_channel"', android_source)
+        self.assertIn('static let distributionChannel = "distribution_channel"', ios_source)
+
     def test_lifecycle_autocapture_disabled_on_both_platforms(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
         ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
@@ -101,11 +126,8 @@ class MobileAnalyticsParityTests(unittest.TestCase):
 
         vm = ANDROID_TIMER_VM.read_text(encoding="utf-8")
         svc = ANDROID_TIMER_SERVICE.read_text(encoding="utf-8")
-        kt_pattern = re.compile(
-            r"analyticsService\.track\(\s*\n\s*AnalyticsEvents\.TIMER_COMPLETED",
-        )
-        self.assertEqual(len(kt_pattern.findall(vm)), 1)
-        self.assertEqual(len(kt_pattern.findall(svc)), 1)
+        self.assertEqual(_count_android_timer_completed_track_calls(vm), 1)
+        self.assertEqual(_count_android_timer_completed_track_calls(svc), 1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,54 @@
+name: Zernio growth orchestration
+
+# 24/7: scheduled health checks. Full `sync-latest` runs on manual dispatch (stateful dedupe uses
+# marketing/data/zernio_orchestration.jsonl on disk — see daily-growth-publishing for post-commit sync).
+on:
+  schedule:
+    - cron: '25 */6 * * *' # Every 6 hours at :25 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zernio-growth-orchestration
+  cancel-in-progress: false
+
+jobs:
+  health-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install requests==2.32.5
+
+      - name: Zernio health
+        env:
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
+        run: python scripts/zernio_orchestrate.py health --repo-root .
+
+      - name: Zernio sync latest (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_PUBLISH_ACCOUNTS: ${{ secrets.ZERNIO_PUBLISH_ACCOUNTS }}
+          ZERNIO_AUTO_PUBLISH: ${{ secrets.ZERNIO_AUTO_PUBLISH }}
+        run: python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
+
+      - name: Upload orchestration log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: zernio-orchestration-jsonl
+          path: marketing/data/zernio_orchestration.jsonl
+          if-no-files-found: ignore

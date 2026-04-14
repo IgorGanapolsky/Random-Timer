@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "packId": "2026-03_marine_foundations",
-  "releaseMonth": "2026-03",
+  "releaseMonth": "2026-04",
   "entitlement": "pro",
-  "generatedAt": "2026-03-20T14:59:53.664521Z",
+  "generatedAt": "2026-04-08T22:19:28Z",
   "voiceCatalog": {
     "previewElapsed": {
       "filename": "preview_elapsed",
@@ -193,7 +193,7 @@
   },
   "soundCatalog": {
     "packId": "2026-03_marine_foundations",
-    "releaseMonth": "2026-03",
+    "releaseMonth": "2026-04",
     "entitlement": "pro",
     "sounds": [
       {
@@ -576,86 +576,6 @@
       "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/voice/preview_elapsed.mp3",
       "sha256": "56a889bdf577df38d3bb612e0f950c8f7cfb54ea57d4a5c048ba4f54b847362e",
       "bytes": 63573
-    },
-    {
-      "kind": "sound",
-      "filename": "airhorn",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/airhorn.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/airhorn.mp3",
-      "sha256": "f4c6ff1715742e4f2883ebeb166748d3fd9664ca646944d6eed8a83ddadc9adc",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "alarm",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/alarm.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/alarm.mp3",
-      "sha256": "e1271b5905be5dd2a72c818a4ef088ccb75801944fe0a700e8fa29ff641916ba",
-      "bytes": 271444
-    },
-    {
-      "kind": "sound",
-      "filename": "bell",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/bell.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/bell.mp3",
-      "sha256": "e5240c37fb00f4af89a991fa7fb74df3c859fceadc854d994bed8f8bd669dc2c",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "buzzer",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/buzzer.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/buzzer.mp3",
-      "sha256": "932d9dc917ef1d89651b5e3fb4c700d94238c8734ac485a8d38dec341269b29a",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "drum_roll",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/drum_roll.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/drum_roll.mp3",
-      "sha256": "c8bc6d8d258eff687fd9b05782d48288ee97bb0037acc36bb4f1263ffc6e066b",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "gentle-chime",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/gentle-chime.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/gentle-chime.mp3",
-      "sha256": "7564a69c25432c46477cc741aca96090ed44ca11c3a24759c7a70a3199c4f94e",
-      "bytes": 303856
-    },
-    {
-      "kind": "sound",
-      "filename": "gong",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/gong.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/gong.mp3",
-      "sha256": "a9d00f3f504371c4df3f27f668e7ed490f4aae76c1e0f6277f2125bc0f03f451",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "klaxon",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/klaxon.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/klaxon.mp3",
-      "sha256": "b67a9d8d2d7c31a501d760a9b14c9e31db4792f0603f3578cba71265e30e3fb6",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "siren",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/siren.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/siren.mp3",
-      "sha256": "3352db0609eb09df5f87b890dbaf1bf8b0b6470a3be15ffba9655d486b70f862",
-      "bytes": 20497
-    },
-    {
-      "kind": "sound",
-      "filename": "whistle",
-      "relativePath": "packs/2026-03_marine_foundations/sounds/whistle.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds/whistle.mp3",
-      "sha256": "2c58a7db9f5c892b17c4350eb436f4ef66870f33bdca3ca65da0e97a2d8f9537",
-      "bytes": 20497
     }
   ]
 }

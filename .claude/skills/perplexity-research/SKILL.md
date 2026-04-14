@@ -1,13 +1,9 @@
 ---
 name: perplexity-research
-description: Real-time web research via Perplexity Sonar API integrated with Claude/Amp workflows. Use when user needs live web data, current documentation, market research, or competitor analysis.
-triggers:
-  - "research"
-  - "search the web for"
-  - "what's the latest on"
-  - "perplexity"
-  - "sonar"
-  - "live search"
+description: "Real-time web research via Perplexity Sonar API. Use when user needs live web data, current documentation, market research, competitor analysis, or asks 'what's the latest on'."
+allowed-tools:
+  - Bash
+  - Read
 ---
 
 # Perplexity Research Skill
@@ -60,3 +56,4 @@ This skill augments existing workflows:
 - Perplexity Computer (cloud worker) is NOT controllable via this API — it's a separate Perplexity product requiring their web UI
 - Comet browser is a Perplexity-internal component, not externally launchable
 - API rate limits apply per your Perplexity subscription tier
+- HTTP **401** from `api.perplexity.ai` may mean **`insufficient_quota`** (plan/billing), not a missing key — check [Perplexity API settings](https://www.perplexity.ai/settings/api). Scripts must load `.env` via `repo_dotenv` (or export `PERPLEXITY_API_KEY`) because bare `os.environ` in CI/agents often has no key.

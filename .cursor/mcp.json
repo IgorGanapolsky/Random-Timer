@@ -3,7 +3,7 @@
     "perplexity-agent": {
       "command": "bash",
       "args": [
-        "scripts/perplexity_mcp_wrapper.sh"
+        "scripts/shell/perplexity_mcp_wrapper.sh"
       ]
     },
     "rlhf": {

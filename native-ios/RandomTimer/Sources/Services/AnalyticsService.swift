@@ -7,6 +7,38 @@ import PostHog
 import AdServices
 #endif
 
+/// PostHog `distribution_channel` values (keep aligned with Android + `executive_metrics_snapshot.py`).
+enum DistributionChannelResolver {
+    static let dev = "dev"
+    static let simulator = "simulator"
+    static let uiTest = "ui_test"
+    static let testflight = "testflight"
+    static let appStore = "app_store"
+
+    /// Reads `embedded.mobileprovision` when present (release device builds).
+    static func embeddedMobileProvisionText(bundle: Bundle = .main) -> String? {
+        guard let url = bundle.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let data = try? Data(contentsOf: url),
+              let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1)
+        else { return nil }
+        return text
+    }
+
+    static func iosChannel(
+        isDebugBuild: Bool,
+        isSimulator: Bool,
+        hasUiTestStateArg: Bool,
+        mobileProvisionText: String?,
+    ) -> String {
+        if isDebugBuild { return dev }
+        if isSimulator { return simulator }
+        if hasUiTestStateArg { return uiTest }
+        guard let text = mobileProvisionText else { return appStore }
+        if text.contains("beta-reports-active") { return testflight }
+        return appStore
+    }
+}
+
 // Large service: funnel + attribution + lifecycle. Split in a dedicated refactor if it grows further.
 // swiftlint:disable file_length
 
@@ -33,6 +65,14 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
+
+    /// Numeric build for PostHog (avoids string/number `$app_build` type drift across events).
+    private var appBuildNumber: Int {
+        let raw = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+        if let n = raw as? Int { return n }
+        if let s = raw as? String, let n = Int(s) { return n }
+        return 0
+    }
     private let host = "https://us.i.posthog.com"
 
 #if DEBUG
@@ -45,22 +85,40 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         [
             "platform": "ios",
             "app_version": appVersion,
+            "$app_build": appBuildNumber,
             AnalyticsProperties.environment: environment,
             AnalyticsProperties.buildAudience: buildAudience,
             AnalyticsProperties.buildType: buildType,
             AnalyticsProperties.runtimeTarget: runtimeTarget,
+            AnalyticsProperties.distributionChannel: distributionChannelValue,
             "is_internal": isInternalUser,
         ]
     }
 
+    private var distributionChannelValue: String {
+        #if DEBUG
+        return DistributionChannelResolver.dev
+        #elseif targetEnvironment(simulator)
+        return DistributionChannelResolver.simulator
+        #else
+        return DistributionChannelResolver.iosChannel(
+            isDebugBuild: false,
+            isSimulator: false,
+            hasUiTestStateArg: ProcessInfo.processInfo.arguments.contains("-ui-test-state"),
+            mobileProvisionText: DistributionChannelResolver.embeddedMobileProvisionText(),
+        )
+        #endif
+    }
+
     private var isInternalUser: Bool {
-        // Exclude: debug builds, simulators, Maestro/UI test sessions
+        // Exclude: debug, simulator, UI tests, TestFlight (not App Store production).
         #if DEBUG
         return true
         #elseif targetEnvironment(simulator)
         return true
         #else
-        return ProcessInfo.processInfo.arguments.contains("-ui-test-state")
+        if ProcessInfo.processInfo.arguments.contains("-ui-test-state") { return true }
+        return distributionChannelValue != DistributionChannelResolver.appStore
         #endif
     }
 
@@ -373,6 +431,7 @@ enum AnalyticsEvents {
     static let alarmTriggered = "alarm_triggered"
     static let alarmDismissed = "alarm_dismissed"
     static let timerAbandoned = "timer_abandoned"
+    static let timerBackgrounded = "timer_backgrounded"
     static let timerCountdownFinished = "timer_countdown_finished"
     static let settingsChanged = "settings_changed"
     static let reviewPromptRequested = "review_prompt_requested"
@@ -387,6 +446,7 @@ enum AnalyticsEvents {
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
     static let featureGateHit = "feature_gate_hit"
+    static let paywallGateFirstTimer = "paywall_gate_first_timer"
 
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
@@ -397,6 +457,7 @@ enum AnalyticsEvents {
 
     // Purchase
     static let purchaseFailed = "purchase_failed"
+    static let freeTrialStarted = "free_trial_started"
 
     // Screen engagement
     static let screenDwellTime = "screen_dwell_time"
@@ -408,6 +469,7 @@ enum AnalyticsEvents {
 }
 
 enum AnalyticsProperties {
+    static let distributionChannel = "distribution_channel"
     static let entryPoint = "entry_point"
     static let result = "result"
     static let abandonReason = "abandon_reason"
@@ -415,6 +477,8 @@ enum AnalyticsProperties {
     static let dismissMethod = "dismiss_method"
     static let productId = "product_id"
     static let entitlementLevel = "entitlement_level"
+    static let trialVerificationSource = "trial_verification_source"
+    static let trialVerified = "trial_verified"
     static let gender = "gender"
     static let feature = "feature"
     static let alarmResponseTime = "alarm_response_time"
@@ -427,6 +491,7 @@ enum AnalyticsProperties {
     static let durationSeconds = "duration_seconds"
     static let screen = "screen"
     static let reason = "reason"
+    static let revenue = "revenue"
 }
 
 enum AnalyticsValues {

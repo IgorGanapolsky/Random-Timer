@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.11"
 
@@ -86,6 +86,19 @@ jobs:
           WQTU="${{ steps.wqtu.outputs.wqtu }}"
           READY="${{ steps.gate.outputs.ready }}"
           ERRORS="${{ steps.gate.outputs.error_count }}"
+
+          gh issue list \
+            --state open \
+            --search '"⚠️ WQTU Alert:" in:title' \
+            --limit 100 \
+            --json number,title \
+            --jq '.[] | select(.title | startswith("⚠️ WQTU Alert:")) | .number' \
+            | while read -r issue_number; do
+                if [ -n "$issue_number" ]; then
+                  gh issue close "$issue_number" \
+                    --comment "Closing previous weekly WQTU alert before publishing refreshed weekly output."
+                fi
+              done
 
           gh issue create \
             --title "⚠️ WQTU Alert: ${WQTU} qualified users this week" \

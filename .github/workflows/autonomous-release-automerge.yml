@@ -22,6 +22,7 @@ jobs:
        github.event.pull_request.draft == false) ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Resolve PR number
         id: pr
@@ -44,5 +45,31 @@ jobs:
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
         run: |
           set -euo pipefail
-          export GH_TOKEN="${PROJECT_PAT:-$DEFAULT_TOKEN}"
-          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --auto --delete-branch
+
+          enable_automerge() {
+            local label="$1"
+            local token="$2"
+
+            if [[ -z "$token" ]]; then
+              echo "Skipping ${label}: token is not configured."
+              return 1
+            fi
+
+            echo "Attempting auto-merge with ${label}."
+            GH_TOKEN="$token" gh pr merge "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --squash \
+              --auto \
+              --delete-branch
+          }
+
+          if enable_automerge "GITHUB_TOKEN" "$DEFAULT_TOKEN"; then
+            exit 0
+          fi
+
+          if enable_automerge "PROJECT_PAT fallback" "${PROJECT_PAT:-}"; then
+            exit 0
+          fi
+
+          echo "Unable to enable release auto-merge with available tokens." >&2
+          exit 1

@@ -57,14 +57,14 @@
 
 ### Image Assets (from existing screenshots)
 
-| Asset | Source Path | Dimensions |
+| Asset | Source Path (same as store / README) | Dimensions |
 |---|---|---|
-| Android Active | `screenshots/android-active.png` | 1080x1920 recommended |
-| Android Loop | `screenshots/android-loop.png` | 1080x1920 recommended |
-| Android Settings | `screenshots/android-settings.png` | 1080x1920 recommended |
-| iOS Active | `screenshots/ios-active.png` | 1080x1920 recommended |
-| iOS Running | `screenshots/ios-running.png` | 1080x1920 recommended |
-| iOS Setup | `screenshots/ios-setup.png` | 1080x1920 recommended |
+| Android Active | `native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_active.png` | 1080x1920 recommended |
+| Android Loop | `native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/4_loop.png` | 1080x1920 recommended |
+| Android Settings | `native-android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_settings.png` | 1080x1920 recommended |
+| iOS Active | `native-ios/fastlane/screenshots/en-US/2_active.png` | 1080x1920 recommended |
+| iOS Running | `native-ios/fastlane/screenshots/en-US/4_running.png` | 1080x1920 recommended |
+| iOS Setup | `native-ios/fastlane/screenshots/en-US/1_setup.png` | 1080x1920 recommended |
 
 **Note:** Google UAC auto-generates video ads from image assets and Play Store listing. No separate video creative required at launch. Upload all 6 screenshots as portrait image assets.
 

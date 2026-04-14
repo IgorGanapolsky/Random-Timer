@@ -94,8 +94,8 @@ data class TimerConfig(
 
         val DEFAULT =
             TimerConfig(
-                minSeconds = 30,
-                maxSeconds = 120,
+                minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS,
+                maxSeconds = 30,
                 alarmDuration = 10,
                 hiddenMode = false,
                 repeatEnabled = false,
@@ -110,11 +110,11 @@ data class TimerConfig(
 
         val ALARM_DURATION_OPTIONS = listOf(5, 10, 15, 30, 60)
 
-        /** Min seconds for first-session activation preset (mirrors iOS SharedModels). */
-        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = 20
+        /** Min seconds for first-session activation preset (mirrors iOS TimerModels). */
+        const val ACTIVATION_FIRST_RUN_MIN_SECONDS = TimeRangeAdjuster.DEFAULT_MIN_SECONDS
 
-        /** Max seconds for first-session activation preset (mirrors iOS SharedModels). */
-        const val ACTIVATION_FIRST_RUN_MAX_SECONDS = 60
+        /** Max seconds for first-session activation preset (mirrors iOS TimerModels). */
+        const val ACTIVATION_FIRST_RUN_MAX_SECONDS = 30
     }
 }
 
@@ -198,8 +198,9 @@ fun toggleExtendedRange(
     }
 
 /**
- * Tighter 20–60s range for users who have not completed their first timer while still on
- * canonical free-tier defaults (30–120, not extended). Returns null if no change applies.
+ * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s for users who have
+ * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
+ * when no migration applies.
  */
 fun activationPresetForFirstCompletionIfEligible(
     hasCompletedFirstTimer: Boolean,
@@ -207,9 +208,7 @@ fun activationPresetForFirstCompletionIfEligible(
 ): TimerConfig? {
     if (hasCompletedFirstTimer) return null
     if (current.useExtendedRange) return null
-    if (current.minSeconds != TimerConfig.DEFAULT.minSeconds ||
-        current.maxSeconds != TimerConfig.DEFAULT.maxSeconds
-    ) {
+    if (current.minSeconds != 30 || current.maxSeconds != 120) {
         return null
     }
     return current.copy(

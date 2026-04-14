@@ -10,11 +10,17 @@ class TimerConfigTest {
     fun `default config has valid range`() {
         val config = TimerConfig.DEFAULT
 
-        assertThat(config.minSeconds).isEqualTo(30)
-        assertThat(config.maxSeconds).isEqualTo(120)
+        assertThat(config.minSeconds).isEqualTo(5)
+        assertThat(config.maxSeconds).isEqualTo(30)
         assertThat(config.volume).isEqualTo(0.5f)
         assertThat(config.vibrationEnabled).isFalse()
         assertThat(config.voiceEnabled).isFalse()
+    }
+
+    @Test
+    fun `minimum seconds must be at least 5 to prevent instant fire`() {
+        assertThat(TimerConfig.DEFAULT.minSeconds).isAtLeast(5)
+        assertThat(TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS).isAtLeast(5)
     }
 
     @Test
@@ -176,8 +182,8 @@ class TimerConfigTest {
             )
         val profiles =
             RangeToggleProfiles(
-                freeMinSeconds = 30,
-                freeMaxSeconds = 120,
+                freeMinSeconds = 5,
+                freeMaxSeconds = 30,
                 extendedMinSeconds = 900,
                 extendedMaxSeconds = 1800,
             )
@@ -185,31 +191,63 @@ class TimerConfigTest {
         val result = toggleExtendedRange(current, profiles)
 
         assertThat(result.config.useExtendedRange).isFalse()
-        assertThat(result.config.minSeconds).isEqualTo(30)
-        assertThat(result.config.maxSeconds).isEqualTo(120)
+        assertThat(result.config.minSeconds).isEqualTo(5)
+        assertThat(result.config.maxSeconds).isEqualTo(30)
         assertThat(result.profiles.extendedMinSeconds).isEqualTo(900)
         assertThat(result.profiles.extendedMaxSeconds).isEqualTo(1800)
     }
 
     @Test
-    fun `activation preset tightens canonical default range when first timer not done`() {
+    fun `activation preset migrates legacy 30-120 to 5-30 when first timer not done`() {
+        val legacy =
+            TimerConfig(
+                minSeconds = 30,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
+        val next =
+            activationPresetForFirstCompletionIfEligible(
+                hasCompletedFirstTimer = false,
+                current = legacy,
+            )
+        assertThat(next).isNotNull()
+        assertThat(next!!.minSeconds).isEqualTo(5)
+        assertThat(next.maxSeconds).isEqualTo(30)
+        assertThat(next.soundType).isEqualTo(legacy.soundType)
+    }
+
+    @Test
+    fun `activation preset skipped when already on new default range`() {
         val next =
             activationPresetForFirstCompletionIfEligible(
                 hasCompletedFirstTimer = false,
                 current = TimerConfig.DEFAULT,
             )
-        assertThat(next).isNotNull()
-        assertThat(next!!.minSeconds).isEqualTo(TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS)
-        assertThat(next.maxSeconds).isEqualTo(TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS)
-        assertThat(next.soundType).isEqualTo(TimerConfig.DEFAULT.soundType)
+        assertThat(next).isNull()
     }
 
     @Test
     fun `activation preset skipped after first timer completed`() {
+        val legacy =
+            TimerConfig(
+                minSeconds = 30,
+                maxSeconds = 120,
+                alarmDuration = 10,
+                hiddenMode = false,
+                repeatEnabled = false,
+                soundType = SoundType.INTENSE,
+                volume = 0.5f,
+                vibrationEnabled = false,
+            )
         val next =
             activationPresetForFirstCompletionIfEligible(
                 hasCompletedFirstTimer = true,
-                current = TimerConfig.DEFAULT,
+                current = legacy,
             )
         assertThat(next).isNull()
     }

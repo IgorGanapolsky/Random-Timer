@@ -9,30 +9,31 @@ final class TimerConfigProClampingTests: XCTestCase {
 
     @MainActor
     func testPaywallCopyFocusesOnTrainingOutcomes() {
-        XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
-        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
-        XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
+        XCTAssertEqual(PaywallSheet.headline, "Stop Training With the Brakes On")
         XCTAssertEqual(
-            PaywallSheet.pricingFooter,
-            "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+            PaywallSheet.subheadline,
+            "Go unlimited — sessions up to 60 minutes, live voice callouts, "
+                + "and a full sound library that updates every month."
         )
+        let expectedFooter =
+            "Cancel anytime. Subscription auto-renews until cancelled. "
+            + "Price shown on Apple's confirmation sheet."
+        XCTAssertEqual(PaywallSheet.subscriptionFooter, expectedFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
-                "Train up to 60-minute sessions",
-                "Get voice callouts during training",
-                "Use loop mode with round limits",
-                "Unlock the full sound library",
-                "New Pro voice callouts and sound packs every 30 days",
+                "Full-length sessions — up to 60 minutes, no cutoffs",
+                "Live voice callouts keep you sharp under pressure",
+                "Loop drills with round limits — just like competition",
+                "Full sound arsenal — real bells, horns, and sirens",
+                "Fresh callout packs every 30 days — Pro gets them first",
             ]
         )
     }
 
-    @MainActor
-    func testPaywallPriceLabelNormalizesToYearlyPricing() {
-        let sut = PaywallSheet(entryPoint: .unknown)
-        XCTAssertEqual(sut.normalizedPriceLabel("$29.99"), "$29.99/year")
-        XCTAssertEqual(sut.normalizedPriceLabel("$29.99/yr"), "$29.99/yr")
+    func testPaywallUsesApprovedAppStoreConnectProductId() {
+        XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
+        XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")
     }
 
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {

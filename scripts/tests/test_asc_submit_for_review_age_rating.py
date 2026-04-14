@@ -5,7 +5,7 @@ from scripts.tests.router_client import RouterClient
 
 class AscSubmitForReviewVerifyAgeRatingTests(unittest.TestCase):
     def test_verify_age_rating_reads_age_rating_declaration_from_state_matched_app_info(self):
-        from scripts.asc_submit_for_review import verify_age_rating
+        from scripts.asc.asc_submit_for_review import verify_age_rating
 
         client = RouterClient(
             {
@@ -26,7 +26,7 @@ class AscSubmitForReviewVerifyAgeRatingTests(unittest.TestCase):
         verify_age_rating(client, "app1", "ver1")
 
     def test_verify_age_rating_dies_when_missing(self):
-        from scripts.asc_submit_for_review import verify_age_rating
+        from scripts.asc.asc_submit_for_review import verify_age_rating
 
         client = RouterClient(
             {

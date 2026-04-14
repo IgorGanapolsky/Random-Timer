@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -27,7 +28,19 @@ def build_store_url(package: str, country: str) -> str:
     return f"https://play.google.com/store/apps/details?id={package}&hl=en_{normalized}&gl={normalized}"
 
 
-def verify_public_listing(url: str) -> PublicListingResult:
+def extract_displayed_version(page_html: str) -> str | None:
+    patterns = (
+        r'"141":\[\[\["([^"]+)"\]\]',
+        r'\[\[\["([0-9]+\.[0-9]+\.[0-9]+)"\]\],\[\[\[[0-9]+\]\],\[\[\[[0-9]+,"[0-9.]+"\]\]\]\]',
+    )
+    for pattern in patterns:
+        match = re.search(pattern, page_html, re.S)
+        if match:
+            return match.group(1)
+    return None
+
+
+def verify_public_listing(url: str, expected_version: str = "") -> PublicListingResult:
     try:
         response = requests.get(
             url,
@@ -41,23 +54,47 @@ def verify_public_listing(url: str) -> PublicListingResult:
     status = response.status_code
     date_header = response.headers.get("date", "unknown")
     if status == 200:
-        return PublicListingResult(True, "PUBLIC", f"HTTP 200 on {date_header}")
+        observed_version = extract_displayed_version(response.text)
+        details = [f"HTTP 200 on {date_header}"]
+        if observed_version:
+            details.append(f"public_version={observed_version}")
+        if expected_version:
+            details.append(f"expected_version={expected_version}")
+            if not observed_version:
+                return PublicListingResult(
+                    False,
+                    "VERSION_UNPARSEABLE",
+                    " ".join(details + ["but could not extract public version from Play HTML"]),
+                )
+            if observed_version != expected_version:
+                return PublicListingResult(
+                    False,
+                    "VERSION_MISMATCH",
+                    " ".join(details),
+                )
+        return PublicListingResult(True, "PUBLIC", " ".join(details))
     return PublicListingResult(False, f"HTTP_{status}", f"HTTP {status} on {date_header}")
 
 
-def poll_until_visible(url: str, timeout: int, poll_interval: int) -> PublicListingResult:
+def poll_until_visible(
+    url: str,
+    timeout: int,
+    poll_interval: int,
+    expected_version: str = "",
+) -> PublicListingResult:
     deadline = time.time() + timeout
 
     while True:
-        result = verify_public_listing(url)
+        result = verify_public_listing(url, expected_version=expected_version)
         if result.passed:
             return result
 
         remaining = deadline - time.time()
         if remaining <= 0:
+            terminal_status = result.status if result.status not in {"HTTP_404", "HTTP_403", "HTTP_500"} else "TIMEOUT"
             return PublicListingResult(
                 False,
-                "TIMEOUT",
+                terminal_status,
                 f"{result.details} (timed out after {timeout}s)",
             )
 
@@ -76,13 +113,23 @@ def parse_args() -> argparse.Namespace:
         "--url",
         help="Explicit store URL. If omitted, generated from --package and --country.",
     )
+    parser.add_argument(
+        "--expected-version",
+        default="",
+        help="Require the public Play page to show this app version before passing.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     url = args.url or build_store_url(args.package, args.country)
-    result = poll_until_visible(url, timeout=args.timeout, poll_interval=args.poll_interval)
+    result = poll_until_visible(
+        url,
+        timeout=args.timeout,
+        poll_interval=args.poll_interval,
+        expected_version=args.expected_version,
+    )
 
     print()
     print("══ Play Public Listing Verification ═════════════════")

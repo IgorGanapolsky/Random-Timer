@@ -121,6 +121,18 @@ internal func voiceFilenameOrFallback(for text: String, bundle: Bundle = .main) 
     return catalog.filenameByText[text] ?? catalog.fallbackCommandCue.filename
 }
 
+internal func genderedVoiceFilename(_ filename: String, gender: VoiceGender) -> String {
+    switch gender {
+    case .male:
+        return filename
+    case .female:
+        if filename.hasPrefix("female/") {
+            return filename
+        }
+        return "female/\(filename)"
+    }
+}
+
 internal func nextCommandCue(
     from cues: [VoiceCueCatalog.Cue],
     lastFilename: String?,
@@ -235,7 +247,8 @@ final class AIVoiceCalloutService {
 
         let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
-        let filename = mappedFilename ?? catalog.fallbackCommandCue.filename
+        let baseFilename = mappedFilename ?? catalog.fallbackCommandCue.filename
+        let filename = genderedVoiceFilename(baseFilename, gender: currentGender)
 
         if mappedFilename == nil {
             Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")

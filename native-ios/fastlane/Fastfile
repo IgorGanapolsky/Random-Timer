@@ -272,7 +272,7 @@ platform :ios do
       skip_metadata: false,
       overwrite_screenshots: true,
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
-      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
+      # We do our own hard preflight checks before submission (see scripts/asc/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
       # When the target version already exists in ASC, avoid asking deliver to create it again.
@@ -336,7 +336,7 @@ platform :ios do
       automatic_release: false,
       skip_binary_upload: true,
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
-      # We do our own hard preflight checks before submission (see scripts/asc_submit_for_review.py).
+      # We do our own hard preflight checks before submission (see scripts/asc/asc_submit_for_review.py).
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false,
       # Prefer uploading screenshots/metadata in the separate `metadata` lane,

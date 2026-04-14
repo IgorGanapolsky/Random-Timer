@@ -17,7 +17,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
-          python3 -c "import scripts.asc_add_tester as asc; t=asc.build_token(); \
+          python3 -c "import scripts.asc.asc_add_tester as asc; t=asc.build_token(); \
           print('\n--- TEAM MEMBERS ---'); \
           users=asc.api(t, 'GET', '/users'); \
           [print(f\"Member: {u['attributes']['username']} | Roles: {u['attributes']['roles']}\") for u in users.get('data', [])]; \

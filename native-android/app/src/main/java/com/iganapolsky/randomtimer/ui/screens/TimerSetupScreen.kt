@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
@@ -146,8 +147,7 @@ fun TimerSetupScreen(
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
-    onUpgradeTap: () -> Unit = {},
-    onFeatureGateHit: (String) -> Unit = {},
+    onUpgradeTap: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -232,8 +232,6 @@ fun TimerSetupScreen(
         )
     }
 
-    var bannerDismissed by remember { mutableStateOf(false) }
-
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isCompactHeight = TimerSetupLayoutPolicy.isCompactHeightViewport(maxHeight.value.toInt())
         val spacing = if (isCompactHeight) SetupSpacing.compact else SetupSpacing.regular
@@ -291,38 +289,6 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                if (!hasCompletedFirstTimer && !bannerDismissed) {
-                    item {
-                        Card(
-                            colors =
-                                CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                ),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                                Text(
-                                    text = "Tap Start for a random 20s\u20131min drill. Customize later.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.padding(end = 32.dp),
-                                )
-                                IconButton(
-                                    onClick = { bannerDismissed = true },
-                                    modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Dismiss",
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // Training Stats
                 if (hasCompletedFirstTimer) {
                     item {
@@ -369,8 +335,7 @@ fun TimerSetupScreen(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
                                                 onClick = {
-                                                    onFeatureGateHit("extended_range")
-                                                    onUpgradeTap()
+                                                    onUpgradeTap("extended_range")
                                                 },
                                                 onLongClick = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -527,51 +492,35 @@ fun TimerSetupScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             // AI Voice Callouts (Elite Feature)
-                            Row(
+                            Column(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "\uD83D\uDCE2 Voice Callouts",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
-                                    )
-                                    Text(
-                                        text = "Time checks and command cues that keep you sharp under pressure",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TimerColors.TextMuted,
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (isPro) {
-                                        // Pro users only see the voice toggle
-                                    } else {
-                                        // Preview Button only for free users (to sell the feature)
-                                        Surface(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onCommandCuePreview(config.voiceGender)
-                                            },
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
-                                            modifier = Modifier.padding(end = 8.dp),
-                                        ) {
-                                            Text(
-                                                text = "PREVIEW",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            )
-                                        }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Top,
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Text(
+                                            text = "\uD83D\uDCE2 Voice Callouts",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                        )
+                                        Text(
+                                            text = "Time checks and command cues that keep you sharp under pressure",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TimerColors.TextMuted,
+                                        )
                                     }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
 
                                     if (isPro) {
                                         Switch(
@@ -584,71 +533,94 @@ fun TimerSetupScreen(
                                                 ),
                                         )
                                     } else {
-                                        Surface(
-                                            onClick = {
-                                                onFeatureGateHit("voice_callouts")
-                                                onUpgradeTap()
-                                            },
-                                            shape = RoundedCornerShape(4.dp),
-                                            color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
+                                            Surface(
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onCommandCuePreview(config.voiceGender)
+                                                },
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                             ) {
                                                 Text(
-                                                    text = "PRO ",
+                                                    text = "PREVIEW",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
                                                     color = TimerColors.AccentPrimary,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                                 )
-                                                Text(
-                                                    text = "\uD83D\uDD12",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = TimerColors.AccentPrimary,
-                                                )
+                                            }
+                                            Surface(
+                                                onClick = {
+                                                    onUpgradeTap("voice_callouts")
+                                                },
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Text(
+                                                        text = "PRO ",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                    Text(
+                                                        text = "\uD83D\uDD12",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = TimerColors.AccentPrimary,
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            // Voice Gender selector stays visible so free users can preview both voices.
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                VoiceGender.entries.forEach { gender ->
-                                    FilterChip(
-                                        selected = config.voiceGender == gender,
-                                        onClick = {
-                                            updateConfig(voiceGender = gender)
-                                            onVoiceGenderSelected(gender)
-                                        },
-                                        label = {
-                                            Text(
-                                                if (gender == VoiceGender.MALE) {
-                                                    "Male"
-                                                } else {
-                                                    "Female"
-                                                },
-                                            )
-                                        },
-                                        colors =
-                                            FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
-                                                selectedLabelColor = TimerColors.AccentPrimary,
-                                            ),
-                                        border =
-                                            FilterChipDefaults.filterChipBorder(
-                                                selectedBorderColor = TimerColors.AccentPrimary,
-                                                enabled = true,
+                                if (config.voiceEnabled || !isPro) {
+                                    Row(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        VoiceGender.entries.forEach { gender ->
+                                            FilterChip(
                                                 selected = config.voiceGender == gender,
-                                            ),
-                                    )
+                                                onClick = {
+                                                    updateConfig(voiceGender = gender)
+                                                    onVoiceGenderSelected(gender)
+                                                },
+                                                label = {
+                                                    Text(
+                                                        text =
+                                                            if (gender == VoiceGender.MALE) {
+                                                                "Male"
+                                                            } else {
+                                                                "Female"
+                                                            },
+                                                    )
+                                                },
+                                                colors =
+                                                    FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                        selectedLabelColor = TimerColors.AccentPrimary,
+                                                    ),
+                                                border =
+                                                    FilterChipDefaults.filterChipBorder(
+                                                        selectedBorderColor = TimerColors.AccentPrimary,
+                                                        enabled = true,
+                                                        selected = config.voiceGender == gender,
+                                                    ),
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
@@ -670,7 +642,7 @@ fun TimerSetupScreen(
                                     modifier = Modifier.weight(1f),
                                 )
                                 SoundTypeButton(
-                                    label = "\u26A1 Gentle",
+                                    label = "\uD83D\uDCA7 Gentle",
                                     selected = config.soundType == SoundType.GENTLE,
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -814,8 +786,7 @@ fun TimerSetupScreen(
                                     } else {
                                         Surface(
                                             onClick = {
-                                                onFeatureGateHit("pro_sounds")
-                                                onUpgradeTap()
+                                                onUpgradeTap("repeat_loop")
                                             },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -852,32 +823,54 @@ fun TimerSetupScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = "Sound Arsenal",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
-                            modifier =
-                                Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (isCompactHeight) {
-                                                showArsenalSheet = true
-                                            } else {
-                                                showArsenal = !showArsenal
-                                            }
-                                        },
-                                        onPress = {
-                                            val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
-                                            if (released == null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Sound Arsenal",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                                modifier =
+                                    Modifier.pointerInput(isPro, isCompactHeight) {
+                                        detectTapGestures(
+                                            onTap = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onSecretUnlock()
-                                            }
-                                        },
+                                                if (isCompactHeight) {
+                                                    showArsenalSheet = true
+                                                } else {
+                                                    showArsenal = !showArsenal
+                                                }
+                                            },
+                                            onPress = {
+                                                val released = withTimeoutOrNull(8000L) { tryAwaitRelease() }
+                                                if (released == null) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onSecretUnlock()
+                                                }
+                                            },
+                                        )
+                                    },
+                            )
+
+                            if (!isPro) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onUpgradeTap("pro_sounds")
+                                    },
+                                    modifier =
+                                        Modifier
+                                            .size(28.dp)
+                                            .semantics { contentDescription = "Unlock Sound Arsenal" },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Lock,
+                                        contentDescription = null,
+                                        tint = TimerColors.TextMuted,
+                                        modifier = Modifier.size(14.dp),
                                     )
-                                },
-                        )
+                                }
+                            }
+                        }
 
                         val actionLabel =
                             when {
@@ -925,7 +918,6 @@ fun TimerSetupScreen(
                                 },
                                 onPreviewSound = onSoundPreview,
                                 onUpgradeTap = onUpgradeTap,
-                                onFeatureGateHit = onFeatureGateHit,
                             )
                         }
                     }
@@ -950,7 +942,6 @@ fun TimerSetupScreen(
                         },
                         onPreviewSound = onSoundPreview,
                         onUpgradeTap = onUpgradeTap,
-                        onFeatureGateHit = onFeatureGateHit,
                     )
                 }
             }
@@ -978,8 +969,7 @@ private fun SoundArsenalCard(
     headerToContent: Dp,
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
-    onUpgradeTap: () -> Unit,
-    onFeatureGateHit: (String) -> Unit = {},
+    onUpgradeTap: (String) -> Unit,
 ) {
     GlassCard(
         modifier =
@@ -1048,8 +1038,7 @@ private fun SoundArsenalCard(
                         fontWeight = FontWeight.SemiBold,
                         modifier =
                             Modifier.clickable(onClick = {
-                                onFeatureGateHit("pro_sounds")
-                                onUpgradeTap()
+                                onUpgradeTap("pro_sounds")
                             }),
                     )
                 }
@@ -1072,6 +1061,7 @@ private fun TimeRangeSliders(
     val haptic = LocalHapticFeedback.current
     val coarseNudgeStep = 5
     val fineNudgeStep = 1
+    val minFloorSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
     val minSliderMaxInt = minSliderMax.toInt()
@@ -1120,7 +1110,7 @@ private fun TimeRangeSliders(
             ) {
                 NudgeButton(
                     label = "\u2212",
-                    enabled = enabled && minValue >= coarseNudgeStep,
+                    enabled = enabled && minValue >= (minFloorSeconds + coarseNudgeStep),
                     onClick = { onMinChange(minValue - coarseNudgeStep) },
                     width = nudgeSize,
                     height = nudgeSize,
@@ -1128,11 +1118,11 @@ private fun TimeRangeSliders(
                 Slider(
                     value = minValue.toFloat(),
                     onValueChange = { raw ->
-                        val snapped = snapToStep(raw, coarseNudgeStep, 0, maxSliderRangeInt - minGapSeconds)
+                        val snapped = snapToStep(raw, coarseNudgeStep, minFloorSeconds, maxSliderRangeInt - minGapSeconds)
                         onMinChange(snapped)
                     },
                     enabled = enabled,
-                    valueRange = 0f..(maxSliderRangeInt - minGapSeconds).toFloat(),
+                    valueRange = minFloorSeconds.toFloat()..(maxSliderRangeInt - minGapSeconds).toFloat(),
                     modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
                     colors =
                         SliderDefaults.colors(

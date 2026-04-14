@@ -32,6 +32,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.pickRandomDurationMillisInclusive
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.receiver.ScreenOffReceiver
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -416,7 +417,7 @@ class TimerForegroundService : Service() {
         alarmCountdownJob?.cancel()
         // Track completion before cleanup — user heard the alarm and acknowledged it
         _timerState.value?.let { state ->
-            if (state.status == TimerStatus.ALARM || state.status == TimerStatus.COMPLETE) {
+            if (AlarmCompletionPolicy.shouldRecordManualDismissCompletion(state.status)) {
                 analyticsService.track(
                     AnalyticsEvents.TIMER_COMPLETED,
                     mapOf(
@@ -563,7 +564,7 @@ class TimerForegroundService : Service() {
         // Generate new random duration
         val minMs = currentConfig.minSeconds * 1000L
         val maxMs = currentConfig.maxSeconds * 1000L
-        val randomMs = kotlin.random.Random.nextLong(minMs, maxMs + 1)
+        val randomMs = pickRandomDurationMillisInclusive(minMs, maxMs, kotlin.random.Random.Default)
 
         val newState =
             TimerState(

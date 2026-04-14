@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from scripts import asc_reviews_ops as aro
+from scripts.asc import asc_reviews_ops as aro
 
 
 def test_parse_review_extracts_expected_fields():

@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from scripts import asc_reset_screenshots
+from scripts.asc import asc_reset_screenshots
 
 
 class _FakeClient:
@@ -83,12 +83,12 @@ class AscResetScreenshotsTests(unittest.TestCase):
         ]
 
         with (
-            mock.patch("scripts.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
-            mock.patch("scripts.asc_reset_screenshots._get_app_id", return_value="app1"),
-            mock.patch("scripts.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
-            mock.patch("scripts.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
-            mock.patch("scripts.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
-            mock.patch("scripts.asc_reset_screenshots._api_delete") as delete_mock,
+            mock.patch("scripts.asc.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
+            mock.patch("scripts.asc.asc_reset_screenshots._get_app_id", return_value="app1"),
+            mock.patch("scripts.asc.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
+            mock.patch("scripts.asc.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
+            mock.patch("scripts.asc.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
+            mock.patch("scripts.asc.asc_reset_screenshots._api_delete") as delete_mock,
         ):
             summary = asc_reset_screenshots.reset_screenshots(
                 version="1.2.3",
@@ -116,12 +116,12 @@ class AscResetScreenshotsTests(unittest.TestCase):
         ]
 
         with (
-            mock.patch("scripts.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
-            mock.patch("scripts.asc_reset_screenshots._get_app_id", return_value="app1"),
-            mock.patch("scripts.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
-            mock.patch("scripts.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
-            mock.patch("scripts.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
-            mock.patch("scripts.asc_reset_screenshots._api_delete", return_value=True) as delete_mock,
+            mock.patch("scripts.asc.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
+            mock.patch("scripts.asc.asc_reset_screenshots._get_app_id", return_value="app1"),
+            mock.patch("scripts.asc.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
+            mock.patch("scripts.asc.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
+            mock.patch("scripts.asc.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
+            mock.patch("scripts.asc.asc_reset_screenshots._api_delete", return_value=True) as delete_mock,
         ):
             summary = asc_reset_screenshots.reset_screenshots(
                 version="1.2.3",
@@ -177,12 +177,12 @@ class AscResetScreenshotsTests(unittest.TestCase):
         fake_assets = [{"screenshot_id": "shot_locked"}, {"screenshot_id": "shot_ok"}]
 
         with (
-            mock.patch("scripts.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
-            mock.patch("scripts.asc_reset_screenshots._get_app_id", return_value="app1"),
-            mock.patch("scripts.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
-            mock.patch("scripts.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
-            mock.patch("scripts.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
-            mock.patch("scripts.asc_reset_screenshots._api_delete", side_effect=[False, True]) as delete_mock,
+            mock.patch("scripts.asc.asc_reset_screenshots.AscClient.from_env", return_value=fake_client),
+            mock.patch("scripts.asc.asc_reset_screenshots._get_app_id", return_value="app1"),
+            mock.patch("scripts.asc.asc_reset_screenshots._list_app_store_versions", return_value=({}, fake_version)),
+            mock.patch("scripts.asc.asc_reset_screenshots._pick_localization", return_value={"id": "loc1"}),
+            mock.patch("scripts.asc.asc_reset_screenshots.list_screenshot_assets", return_value=fake_assets),
+            mock.patch("scripts.asc.asc_reset_screenshots._api_delete", side_effect=[False, True]) as delete_mock,
         ):
             summary = asc_reset_screenshots.reset_screenshots(
                 version="1.2.3",

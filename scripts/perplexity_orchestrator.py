@@ -123,6 +123,15 @@ def run_self_test() -> bool:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        from repo_dotenv import load_repo_dotenv
+
+        load_repo_dotenv(repo_root)
+    except ImportError:
+        pass
+
     parser = argparse.ArgumentParser(description="Perplexity Sonar + Claude/Amp orchestrator")
     parser.add_argument("--query", "-q", type=str, help="Research query to send")
     parser.add_argument("--model", "-m", type=str, default="sonar", choices=SONAR_MODELS.keys())

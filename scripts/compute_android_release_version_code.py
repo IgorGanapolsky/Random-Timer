@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -107,12 +108,17 @@ def _fetch_existing_track_codes(
                 pass
 
 
-def compute_next_version_code(base_version_code: int, existing_track_codes: dict[str, list[int]]) -> int:
+def compute_next_version_code(
+    base_version_code: int,
+    existing_track_codes: dict[str, list[int]],
+    monotonic_floor: int | None = None,
+) -> int:
     highest_existing = max(
         (code for codes in existing_track_codes.values() for code in codes),
         default=0,
     )
-    return max(base_version_code, highest_existing) + 1
+    floor = monotonic_floor if monotonic_floor is not None else int(time.time())
+    return max(base_version_code, highest_existing, floor) + 1
 
 
 def _parse_args() -> argparse.Namespace:
@@ -150,7 +156,12 @@ def main() -> int:
             tracks,
             request_retries=args.request_retries,
         )
-        next_version_code = compute_next_version_code(base_version_code, existing_track_codes)
+        monotonic_floor = int(time.time())
+        next_version_code = compute_next_version_code(
+            base_version_code,
+            existing_track_codes,
+            monotonic_floor=monotonic_floor,
+        )
     except Exception as error:
         print(f"❌ Failed to compute Android release versionCode: {error}", file=sys.stderr)
         return 1
@@ -162,6 +173,7 @@ def main() -> int:
             "base_version_code": base_version_code,
             "tracks": tracks,
             "existing_track_codes": existing_track_codes,
+            "monotonic_floor": monotonic_floor,
             "next_version_code": next_version_code,
         }
         output_path = Path(args.json_output)

@@ -19,32 +19,56 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read
     outputs:
       should_retry: ${{ steps.gate.outputs.should_retry }}
       reason: ${{ steps.gate.outputs.reason }}
+      expected_version: ${{ steps.gate.outputs.expected_version }}
+      public_status: ${{ steps.gate.outputs.public_status }}
     steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install Play listing probe dependencies
+        run: python -m pip install --upgrade pip requests==2.32.5
+
       - name: Check if retry is required
         id: gate
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
-          ISSUE_TITLE: Android production publish blocked by Play FAILED_PRECONDITION
           FORCE_RETRY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_retry || 'false' }}
         run: |
           if [ "$FORCE_RETRY" = "true" ]; then
             echo "should_retry=true" >> "$GITHUB_OUTPUT"
             echo "reason=manual_force_retry" >> "$GITHUB_OUTPUT"
+            echo "expected_version=" >> "$GITHUB_OUTPUT"
+            echo "public_status=SKIPPED_MANUAL_FORCE" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          ISSUE_NUMBER="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$ISSUE_TITLE\" in:title" --json number,title --jq '.[] | select(.title == env.ISSUE_TITLE) | .number' | head -1)"
-          if [ -n "$ISSUE_NUMBER" ]; then
-            echo "should_retry=true" >> "$GITHUB_OUTPUT"
-            echo "reason=open_blocker_issue_$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_retry=false" >> "$GITHUB_OUTPUT"
-            echo "reason=no_open_blocker_issue" >> "$GITHUB_OUTPUT"
-          fi
+          EXPECTED_VERSION="$(python3 scripts/source_versions.py --format value --key ANDROID_VERSION_NAME)"
+          export EXPECTED_VERSION
+
+          python3 <<'PY'
+          import os
+
+          from scripts.verify_play_public_listing import build_store_url, verify_public_listing
+
+          expected_version = os.environ["EXPECTED_VERSION"].strip()
+          result = verify_public_listing(
+              build_store_url("com.iganapolsky.randomtimer", "US"),
+              expected_version=expected_version,
+          )
+          should_retry = not result.passed
+          reason = "play_public_current" if result.passed else f"play_public_{result.status.lower()}"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"should_retry={'true' if should_retry else 'false'}\n")
+              fh.write(f"reason={reason}\n")
+              fh.write(f"expected_version={expected_version}\n")
+              fh.write(f"public_status={result.status}\n")
+          PY
 
   dispatch-production-retry:
     needs: [gate]
@@ -72,4 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Skip retry
-        run: echo "Skipping production retry. reason=${{ needs.gate.outputs.reason }}"
+        run: |
+          echo "Skipping production retry. reason=${{ needs.gate.outputs.reason }}"
+          echo "Expected Android version: ${{ needs.gate.outputs.expected_version }}"
+          echo "Public listing status: ${{ needs.gate.outputs.public_status }}"

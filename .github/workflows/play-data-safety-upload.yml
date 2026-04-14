@@ -1,0 +1,40 @@
+name: Play Data Safety upload
+
+# Tier A: machine-authenticated Data Safety CSV via androidpublisher API.
+# CSV: commit marketing/compliance/play_data_safety.csv OR set secret PLAY_DATA_SAFETY_CSV (full file body).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install google-api-python-client google-auth google-auth-httplib2
+
+      - name: Resolve CSV and upload
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          PLAY_DATA_SAFETY_CSV: ${{ secrets.PLAY_DATA_SAFETY_CSV }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PLAY_DATA_SAFETY_CSV:-}" ]; then
+            printf '%s\n' "$PLAY_DATA_SAFETY_CSV" > /tmp/play_data_safety.csv
+          elif [ -f marketing/compliance/play_data_safety.csv ]; then
+            cp marketing/compliance/play_data_safety.csv /tmp/play_data_safety.csv
+          else
+            echo "::error::Provide secret PLAY_DATA_SAFETY_CSV or commit marketing/compliance/play_data_safety.csv"
+            exit 1
+          fi
+          python3 scripts/play_data_safety_upload.py --csv-path /tmp/play_data_safety.csv --json-stdout

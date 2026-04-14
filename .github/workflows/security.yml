@@ -6,9 +6,12 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - "package.json"
-      - "package-lock.json"
-      - "yarn.lock"
+      - "native-android/package.json"
+      - "native-android/package-lock.json"
+      - "tests/playwright/package.json"
+      - "tests/playwright/package-lock.json"
+      - "pyproject.toml"
+      - "uv.lock"
       - "**/*.js"
       - "**/*.ts"
       - "**/*.tsx"

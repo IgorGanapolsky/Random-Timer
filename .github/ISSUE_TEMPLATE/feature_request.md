@@ -2,7 +2,7 @@
 name: Feature Request
 about: Suggest a feature for Random Tactical Timer
 title: "[Feature] "
-labels: enhancement
+labels: type: enhancement, triage
 assignees: ''
 ---
 

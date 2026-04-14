@@ -1,0 +1,34 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression test: free Sound Arsenal taps must preview without forcing the paywall on iOS
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element: "Voice Callouts"
+    direction: DOWN
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Unlock Sound Arsenal"
+    direction: DOWN
+    timeout: 10000
+# Timer setup forces showArsenal on appear, so the toggle reads "Hide Sound Arsenal" for free users.
+- tapOn:
+    text: "Preview Sounds"
+    optional: true
+- tapOn:
+    text: "View Sound Arsenal"
+    optional: true
+- scrollUntilVisible:
+    element: "Klaxon.*"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    text: "Klaxon.*"
+- assertNotVisible:
+    text: "Unlock Full Training Mode"
+    optional: true
+- assertNotVisible:
+    text: "Unlock Everything"
+    optional: true
+- takeScreenshot: evidence/ios-free-sound-preview
+- stopApp

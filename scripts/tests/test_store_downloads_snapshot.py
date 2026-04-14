@@ -117,6 +117,47 @@ class StoreDownloadsSnapshotTests(unittest.TestCase):
             self.assertEqual(payload["data_quality"]["last_good_generated_at"], "2026-03-15T10:00:00+00:00")
             self.assertEqual(len(payload["snapshots"]), 1)
 
+    @mock.patch("scripts.store_downloads_snapshot.time.sleep", autospec=True)
+    def test_posthog_query_retries_on_transient_http_then_succeeds(self, _sleep):
+        from scripts import store_downloads_snapshot as sds
+
+        errors: list[str] = []
+        bad = mock.Mock()
+        bad.status_code = 504
+        good = mock.Mock()
+        good.status_code = 200
+        good.json.return_value = {"results": [[7]]}
+
+        fake_requests = mock.Mock()
+        fake_requests.RequestException = Exception
+        fake_requests.post.side_effect = [bad, good]
+
+        with mock.patch.object(sds, "_requests_module", return_value=fake_requests):
+            out = sds.posthog_query("SELECT 1", "k", "123", errors)
+
+        self.assertEqual(out, {"results": [[7]]})
+        self.assertEqual(errors, [])
+        self.assertEqual(fake_requests.post.call_count, 2)
+
+    @mock.patch("scripts.store_downloads_snapshot.time.sleep", autospec=True)
+    def test_posthog_query_appends_error_after_exhausting_retries(self, _sleep):
+        from scripts import store_downloads_snapshot as sds
+
+        errors: list[str] = []
+        bad = mock.Mock()
+        bad.status_code = 504
+
+        fake_requests = mock.Mock()
+        fake_requests.RequestException = Exception
+        fake_requests.post.return_value = bad
+
+        with mock.patch.object(sds, "_requests_module", return_value=fake_requests):
+            out = sds.posthog_query("SELECT 1", "k", "123", errors, max_retries=2)
+
+        self.assertIsNone(out)
+        self.assertEqual(errors, ["http_504"])
+        self.assertEqual(fake_requests.post.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

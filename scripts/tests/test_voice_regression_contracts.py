@@ -56,9 +56,9 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["male"]["modelId"] == "eleven_multilingual_v2"
     assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
     assert contract["male"]["probeText"] == "Stay sharp."
-    assert contract["female"]["modelId"] == "eleven_multilingual_v2"
-    assert contract["female"]["primaryVoice"]["voiceName"] == "Domi"
-    assert contract["female"]["primaryVoice"]["voiceId"] == "AZnzlk1XvdvUeBnXmlld"
+    assert contract["female"]["modelId"] == "eleven_turbo_v2"
+    assert contract["female"]["primaryVoice"]["voiceName"] == "Sarah"
+    assert contract["female"]["primaryVoice"]["voiceId"] == "EXAVITQu4vr4xnSDxMaL"
     assert contract["female"]["primaryVoice"]["probeText"] == "Move with purpose."
     assert {voice["voiceName"] for voice in contract["female"]["fallbackVoices"]} == {"Anvi"}
     assert {voice["probeText"] for voice in contract["female"]["fallbackVoices"]} == {"Stay in the fight."}
@@ -120,10 +120,13 @@ def test_android_free_preview_keeps_voice_selector_visible() -> None:
     setup = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt")
 
     assert 'text = "PREVIEW"' in setup
-    assert "Voice Gender selector stays visible so free users can preview both voices." in setup
+    assert "Time checks and command cues that keep you sharp under pressure" in setup
     assert "VoiceGender.entries.forEach" in setup
     assert "VoiceGender.MALE" in setup
+    assert "if (config.voiceEnabled || !isPro)" in setup
+    assert "onCommandCuePreview(config.voiceGender)" in setup
     assert "if (config.voiceEnabled) {" not in setup
+    assert setup.index('text = "PREVIEW"') < setup.index("VoiceGender.entries.forEach")
 
 
 def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
@@ -185,6 +188,11 @@ def test_ci_runs_static_and_live_voice_regression_guards() -> None:
     assert "Decide live smoke execution" in workflow
     assert 'steps.gate.outputs.run_live_smoke == \'true\'' in workflow
     assert "Record controlled skip" in workflow
+    assert 'grep -Eq "quota_exceeded|payment_issue' in workflow
+    assert "status\" -eq 78" in workflow
+    assert "payment_issue" in workflow
+    assert "no remaining credits" in workflow
+    assert "controlled_skip" in verify_script
     assert "content/pro_audio/voice_personas.json" in verify_script
     assert "/v1/text-to-speech/" in verify_script
     assert "verifiedProbes" in verify_script
@@ -193,7 +201,8 @@ def test_ci_runs_static_and_live_voice_regression_guards() -> None:
 def test_female_voice_pack_workflow_keeps_natural_baseline() -> None:
     workflow = _read(ROOT / ".github/workflows/generate-female-voice-pack.yml")
 
-    assert 'MODEL_ID = "eleven_multilingual_v2"' in workflow
+    assert 'MODEL_ID = "eleven_turbo_v2"' in workflow
+    assert 'SARAH_ID = "EXAVITQu4vr4xnSDxMaL"' in workflow
     assert '"stability": 0.65' in workflow
     assert '"similarity_boost": 0.85' in workflow
     assert '"style": 0.55' in workflow

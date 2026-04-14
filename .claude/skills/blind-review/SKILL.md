@@ -1,11 +1,14 @@
 ---
 name: blind-review
-description: Blind peer review for code - multiple agents critique independently, then synthesize privately to avoid groupthink
-triggers:
-  - /blind-review
-  - blind review
-  - peer review
-  - multi-agent review
+description: "Blind peer review - multiple agents critique code independently, then synthesize privately to avoid groupthink. Use for PRs, architecture decisions, or any code needing unbiased review."
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Grep
 ---
 
 # Blind Peer Review Skill

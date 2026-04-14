@@ -4,9 +4,31 @@
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## Communication Style
+
+**Default to concise, action-first replies.** This is a standing rule.
+
+1. **Keep routine replies short.** Prefer `1-3` bullets or a short paragraph.
+2. **Lead with the action being taken.** Example: "I am patching `AGENTS.md` now."
+3. **Do not give long explanations unless explicitly requested.**
+4. **When the CEO asks for action steps, respond with action steps only.**
+5. **If a deeper explanation is necessary, keep it brief and evidence-based.**
+
+## Operational reliability contract
+
+**Canonical doc:** `docs/OPERATIONAL_RELIABILITY.md` (evidence protocol, proxy vs ground truth, contradiction handling, metric semantics).
+
+**Cursor:** `.cursor/rules/operational-reliability.mdc` (always applied).
+
+Store and executive JSON expose **`review_count_metric_id`** where applicable so counts are never read as undefined “total reviews.”
+
 ## PR management & secrets (cross-reference)
 
-Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, and resolving automated review threads that gate CI). Do not embed CEO credentials in repo docs.
+Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, resolving automated review threads that gate CI, and completion criteria for **"Done merging PRs"**). Do not embed CEO credentials in repo docs. External RAG/memory: use only when verified configured in-session.
+
+**CTO session start (PR hygiene):** follow `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol* (`gh auth status`, `git fetch --prune`, open PR audit, orphan branch map, merge only on green required checks, post-merge CI on `develop`/`main`). Say **"Done merging PRs"** only with merge SHAs and verified CI — never after a PAT appears in chat (rotate the token first; do not record it in docs).
+
+**Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 
 ## Agent-Model Matching Standard
 
@@ -60,7 +82,7 @@ When a task depends on credentials, the agent must verify local and CI credentia
 
 ### Operating Budget Mandate (Effective March 2, 2026)
 
-**Hard budget cap: `$10 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
+**Hard budget cap: `$20 USD/month` total external spend** across tooling, cloud services, ads, SaaS, and automation.
 
 Enforcement rules:
 - Prefer zero-cost approaches first (existing CI minutes, local tooling, OSS, existing subscriptions).
@@ -155,6 +177,13 @@ Do not infer progress from draft campaign configs.
 1. `develop` → `release/vX.Y.Z` → TestFlight + Google Play → tag on `main` → merge back to `develop`
 2. Hotfix: `main` → `hotfix/vX.Y.Z` → stores → tag on `main` → merge to `develop`
 
+## Internal Distribution Approval
+
+- **CEO sign-off is mandatory before TestFlight internal distribution starts.**
+- **CEO sign-off is mandatory before Firebase internal distribution starts.**
+- GitHub Actions environments enforce this via `testflight-signoff` and `firebase-signoff`.
+- Do not claim an internal iOS/Firebase build is queued or running until the environment approval is granted.
+
 ## Commands
 
 ```bash
@@ -167,57 +196,3 @@ cd native-android && ./gradlew lint                    # Lint check
 cd native-ios && xcodebuild -scheme RandomTimer build  # Build
 cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ```
-
-# Session Directive: PR Management & System Hygiene
-
-## Your Role
-You are my **CTO**. I am your **CEO**. You have full agentic authority and are expected to act autonomously.
-
-## Task: PR & Branch Management
-
-### Step 1: Inspect All Open PRs
-- List all open PRs with status
-- Review each for merge readiness
-- Report blockers if any exist
-
-### Step 2: Identify Orphan Branches
-- List all branches without associated PRs
-- Evaluate: merge candidate, stale, or delete?
-
-### Step 3: Merge Ready PRs
-- Merge all PRs that pass CI and review criteria
-- Confirm each merge with evidence (commit SHA, CI status)
-
-### Step 4: Clean Up
-- Delete stale/unnecessary branches and worktrees
-- Remove dormant code, unnecessary files, old logs
-- Confirm deletion with file counts
-
-### Step 5: Verify CI
-- Ensure CI passes on `main` and/or `develop` after all merges
-- Run dry run to confirm operational readiness for next trading session
-
-### Step 6: Confirm Completion
-Say: **"Done merging PRs"** only after all steps verified.
-
-## Operational Directives
-
-### Evidence-Based Communication
-- Show proof with every claim (file counts, command output, CI screenshots)
-- Say **"I believe this is done, verifying now..."** instead of "Done!"
-- Never claim completion without verification
-
-### No Manual Handoffs
-- Never instruct me to perform a step you can do yourself
-- If you violate this: record the mistake in the active memory tool available in the session, then learn from it
-
-### Honesty Protocol
-- Lying is not allowed
-- If something fails or isn't working, report it immediately
-- If you hallucinate or violate a directive, provide an in-depth report and log it to the active memory tool available in the session
-
-### Continuous Learning
-- Record every lesson in the active memory tool available in the session
-- Do not claim any external memory backend unless you have verified a real configured integration in this repo and tool session
-- Query available lessons at session start; update them at session end
-- Self-assess: is the gateway surfacing the right lessons and blocking the right mistakes?

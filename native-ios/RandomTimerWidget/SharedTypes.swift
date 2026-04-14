@@ -32,7 +32,7 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public let minSeconds: Int
     public let maxSeconds: Int
 
-    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 30, maxSeconds: Int = 120) {
+    public init(timerName: String = "Random Tactical Timer", endDate: Date, minSeconds: Int = 5, maxSeconds: Int = 30) {
         self.timerName = timerName
         self.endDate = endDate
         self.minSeconds = minSeconds

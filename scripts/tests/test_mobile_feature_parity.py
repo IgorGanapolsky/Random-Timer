@@ -31,15 +31,18 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_default_timer_range_is_30_to_120_on_both_platforms():
-    """Canonical quick-start range in TimerConfig.default / Swift defaults (free-tier cap remains 300s)."""
+def test_default_timer_range_is_5_to_30_on_both_platforms():
+    """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
+    android_range_adjuster = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/domain/model/TimeRangeAdjuster.kt")
     ios_source = _read(IOS_TIMER_MODELS)
 
-    assert re.search(r"minSeconds\s*=\s*30", android_source)
-    assert re.search(r"maxSeconds\s*=\s*120", android_source)
-    assert re.search(r"minSeconds:\s*Int\s*=\s*30", ios_source)
-    assert re.search(r"maxSeconds:\s*Int\s*=\s*120", ios_source)
+    assert "const val DEFAULT_MIN_SECONDS = 5" in android_range_adjuster
+    assert "minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS" in android_source
+    assert re.search(r"maxSeconds\s*=\s*30", android_source)
+    assert "public static let minimumFloorSeconds = 5" in ios_source
+    assert re.search(r"minSeconds:\s*Int\s*=\s*minimumFloorSeconds", ios_source)
+    assert re.search(r"maxSeconds:\s*Int\s*=\s*30", ios_source)
 
 
 def test_time_range_limits_and_gap_match_between_platforms():
@@ -56,32 +59,30 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Unlock Full Training Mode" in android_source and "holdForHiddenUnlock" in android_source
+    assert "Stop Training With the Brakes On" in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
-    assert "Unlock Full Training Mode" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "Stop Training With the Brakes On" in ios_paywall and "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
 
 def test_paywall_single_offer_parity():
-    """Enforce one visible premium offer on both platforms (monetization-roadmap)."""
+    """Enforce outcome-focused paywall copy and plan parity on both platforms."""
     android_paywall = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Elite Tactical" not in android_paywall, (
-        "Android paywall must not show Elite Tactical; single-offer only per monetization roadmap"
-    )
-    assert "Unlock Full Training Mode" in android_paywall
-    assert "Unlock Full Training Mode" in ios_paywall
-    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in android_paywall
-    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in ios_paywall
-    assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
-    assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
+    assert "Elite Tactical" not in android_paywall
+    assert "Stop Training With the Brakes On" in android_paywall
+    assert "Stop Training With the Brakes On" in ios_paywall
+    assert "Go unlimited" in android_paywall
+    assert "Go unlimited" in ios_paywall
     assert "Cancel anytime" in android_paywall
-    assert "Cancel anytime" in ios_paywall
-    assert "Start Pro" in android_paywall
-    assert "Start Pro" in ios_paywall
+    assert "Start Monthly" in android_paywall
+    assert "Start Annual" in android_paywall
+    assert "Start Monthly" in ios_paywall
+    assert "Start Annual" in ios_paywall
+    assert "Unlock Lifetime" in ios_paywall
 
 
 def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
@@ -100,11 +101,18 @@ def test_voice_callouts_present_on_both_platforms():
     ios_setup = _read(IOS_SETUP)
     android_timer_config = _read(ANDROID_TIMER_CONFIG)
     ios_timer_models = _read(IOS_TIMER_MODELS)
-    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
-    for source in (android_setup, ios_setup):
-        assert "Voice Callouts" in source or "AI Voice Callouts" in source
-        assert expected_supporting_copy in source
+    assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
+    assert "Voice Callouts" in ios_setup or "AI Voice Callouts" in ios_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in android_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in ios_setup
+    assert "VoiceGender.entries.forEach" in android_setup
+    assert 'text = "PREVIEW"' in android_setup
+    assert 'if (config.voiceEnabled || !isPro)' in android_setup
+    assert android_setup.index('text = "PREVIEW"') < android_setup.index("VoiceGender.entries.forEach")
+    assert 'if (gender == VoiceGender.MALE)' in android_setup
+    assert '.accessibilityLabel("Preview Voice Callouts")' in ios_setup
+    assert '.accessibilityLabel("Unlock Voice Callouts")' in ios_setup
 
     assert "voiceEnabled" in android_timer_config
     assert "voiceEnabled" in ios_timer_models
@@ -154,6 +162,17 @@ def test_android_persists_voice_gender_selection_like_ios():
     assert 'VoiceGender.valueOf(it)' in android_repository
 
 
+def test_android_repeat_loop_uses_distinct_paywall_gate_identifier():
+    android_setup = _read(ANDROID_SETUP)
+    repeat_loop_block = android_setup.split("text = repeatLoopDetailTitle(isPro = isPro)", 1)[1].split(
+        'text = "Sound Arsenal"',
+        1,
+    )[0]
+
+    assert 'onUpgradeTap("repeat_loop")' in repeat_loop_block
+    assert 'onUpgradeTap("pro_sounds")' not in repeat_loop_block
+
+
 def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_setup = _read(ANDROID_SETUP)
     android_paywall = _read(ANDROID_PAYWALL)
@@ -166,12 +185,15 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "TACTICAL EXPANSION" not in ios_setup
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
+    assert 'contentDescription = "Unlock Sound Arsenal"' in android_setup
+    assert "Icons.Filled.Lock" in android_setup
+    assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     for expected in (
-        "Train up to 60-minute sessions",
-        "Get voice callouts during training",
-        "Use loop mode with round limits",
-        "Unlock the full sound library",
-        "New Pro voice callouts and sound packs every 30 days",
+        "Full-length sessions — up to 60 minutes, no cutoffs",
+        "Live voice callouts keep you sharp under pressure",
+        "Loop drills with round limits — just like competition",
+        "Full sound arsenal — real bells, horns, and sirens",
+        "Fresh callout packs every 30 days — Pro gets them first",
     ):
         assert expected in android_paywall
         assert expected in ios_paywall
@@ -180,7 +202,21 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
-    assert "launchProPurchase" in android_nav
+    assert "launchPurchase(it, productID, paywallEntryPoint)" in android_nav
+
+
+def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
+    ios_setup = _read(IOS_SETUP)
+    assert "timerManager.previewSound(type: sound)" in ios_setup
+    assert "timerManager.previewSound(type: sound2)" in ios_setup
+    assert (
+        "timerManager.previewSound(type: sound)\n"
+        "                                                presentPaywall(entryPoint: .soundGate)"
+    ) not in ios_setup
+    assert (
+        "timerManager.previewSound(type: sound2)\n"
+        "                                                    presentPaywall(entryPoint: .soundGate)"
+    ) not in ios_setup
 
 
 def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
@@ -290,5 +326,6 @@ def test_setup_screen_pro_range_toggle_and_voice_gating_are_present_on_both_plat
     assert 'Text(config.useExtendedRange ? "1H" : "5m")' in ios_setup
     assert "config.useExtendedRange ? proManager.maxSecondsLimit : 300" in ios_setup
     assert "timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))" in ios_setup
-    assert 'Text(hasCompletedFirstTimer ? "PRO: 1H' in ios_setup
+    assert 'Text("PRO: 1H' in ios_setup
+    assert 'if !proManager.isPro' in ios_setup
     assert 'Text("PREVIEW")' in ios_setup

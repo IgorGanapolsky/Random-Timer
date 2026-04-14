@@ -60,10 +60,10 @@ jobs:
           done
 
       - name: Preflight release checks (iOS listing assets)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
         with:
           ruby-version: "3.2"
           bundler-cache: true
@@ -133,7 +133,7 @@ jobs:
             exit 0
           fi
 
-          python scripts/asc_resolve_version.py \
+          python scripts/asc/asc_resolve_version.py \
             --preferred-version "$VERSION_RESOLVED" \
             --create-if-needed \
             --auto-next-patch \
@@ -152,7 +152,7 @@ jobs:
           fi
           # In metadata-only mode, review-locked versions are not editable. Push to the
           # current live storefront instead of pretending the pending review version can change.
-          if [[ "$IOS_METADATA_ONLY" == "true" ]] && ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
+          if [[ "$IOS_METADATA_ONLY" == "true" ]] && ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
             echo "⚠️ metadata_only=true and selected version state '$SELECTED_STATE' is not editable — using live version storefront"
             SELECTED_VERSION="LIVE"
           fi
@@ -192,7 +192,7 @@ jobs:
             RETRY_FLAG="--no-retry-on-editable"
           fi
 
-          python scripts/asc_strict_screenshot_sync.py \
+          python scripts/asc/asc_strict_screenshot_sync.py \
             --version "$SELECTED_VERSION" \
             --locale "$LOCALE" \
             $BUILD_FLAG \

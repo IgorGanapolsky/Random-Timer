@@ -30,7 +30,12 @@ class AnalyticsService
                 return
             }
 
-            val isInternalUser = isEmulator() || BuildConfig.DEBUG || isUiTestSession(application)
+            val distributionChannel = resolveDistributionChannel(application)
+            val isInternalUser =
+                isEmulator() ||
+                    BuildConfig.DEBUG ||
+                    isUiTestSession(application) ||
+                    distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL
 
             val config =
                 PostHogAndroidConfig(
@@ -58,10 +63,13 @@ class AnalyticsService
                 mapOf(
                     "platform" to "android",
                     "app_version" to BuildConfig.VERSION_NAME,
+                    // Numeric build keeps PostHog `$app_build` type consistent (avoids string/number drift).
+                    "\$app_build" to BuildConfig.VERSION_CODE,
                     AnalyticsProperties.ENVIRONMENT to environment(),
                     AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
                     AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
                     AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to distributionChannel,
                     "is_internal" to isInternalUser,
                 )
             initialized = true
@@ -208,6 +216,18 @@ class AnalyticsService
                 analyticsContextProperties + properties
             }
 
+        private fun resolveDistributionChannel(application: Application): String {
+            if (BuildConfig.DEBUG) return AndroidInstallChannel.DEV
+            if (isEmulator()) return AndroidInstallChannel.EMULATOR
+            if (isUiTestSession(application)) return AndroidInstallChannel.UI_TEST
+            val installer =
+                AndroidInstallChannel.installingPackageName(
+                    application.packageManager,
+                    application.packageName,
+                )
+            return AndroidInstallChannel.fromInstallerPackageName(installer)
+        }
+
         private fun buildAudience(): String {
             if (BuildConfig.DEBUG) return "dev"
             return if (isEmulator()) "dev" else "live"
@@ -300,9 +320,13 @@ object AnalyticsEvents {
     // Purchase failure
     const val PURCHASE_FAILED = "purchase_failed"
 
+    // Free trial
+    const val FREE_TRIAL_STARTED = "free_trial_started"
+
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
@@ -315,6 +339,9 @@ object AnalyticsEvents {
 }
 
 object AnalyticsProperties {
+    /** Mirrors iOS; consumed by executive_metrics_snapshot PRAGMATIC filter. */
+    const val DISTRIBUTION_CHANNEL = "distribution_channel"
+
     const val ENTRY_POINT = "entry_point"
     const val RESULT = "result"
     const val SUCCESS = "success"
@@ -323,6 +350,8 @@ object AnalyticsProperties {
     const val SOURCE = "source"
     const val PRODUCT_ID = "product_id"
     const val ENTITLEMENT_LEVEL = "entitlement_level"
+    const val TRIAL_VERIFICATION_SOURCE = "trial_verification_source"
+    const val TRIAL_VERIFIED = "trial_verified"
     const val ENVIRONMENT = "environment"
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"
@@ -333,6 +362,7 @@ object AnalyticsProperties {
     const val ABANDON_REASON = "abandon_reason"
     const val SCREEN = "screen"
     const val REASON = "reason"
+    const val REVENUE = "revenue"
 }
 
 object AnalyticsScreens {

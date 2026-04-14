@@ -1,0 +1,24 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression test: ALL Pro features must show lock icons to free users on iOS
+# Bug: PR #1073 hid Pro locks before first timer completion, blocking revenue
+- launchApp:
+    clearState: true
+# Timer Range - PRO: 1H lock must be visible
+- assertVisible:
+    text: ".*PRO: 1H.*"
+# Voice Callouts - PRO lock must be visible
+- scrollUntilVisible:
+    element: "Voice Callouts"
+    direction: DOWN
+    timeout: 10000
+- assertVisible: "Preview Voice Callouts"
+- assertVisible: "Unlock Voice Callouts"
+# Sound Arsenal lock must be visible to free users
+- scrollUntilVisible:
+    element: "Unlock Sound Arsenal"
+    direction: DOWN
+    timeout: 10000
+- assertVisible: "Unlock Sound Arsenal"
+- takeScreenshot: evidence/ios-pro-locks-visible
+- stopApp

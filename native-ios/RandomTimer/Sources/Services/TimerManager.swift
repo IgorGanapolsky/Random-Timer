@@ -84,7 +84,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
     private static let activationRangeNudgeAppliedKey = "activation_first_run_range_nudge_applied"
 
-    /// Applies 20–60s range once for users on canonical 30–120 defaults who have not finished a timer yet.
+    /// Migrates legacy 30–120s to 5–30s once for users who have not finished a first timer.
     func applyActivationPresetForFirstCompletionIfNeeded() {
         if UserDefaults.standard.bool(forKey: Self.activationRangeNudgeAppliedKey) { return }
         let done = UserDefaults.standard.bool(forKey: "hasCompletedFirstTimer")
@@ -266,15 +266,16 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
-        // Track abandonment when timer is running (not alarm/complete) and app goes to background
+        // When a running timer is backgrounded, the countdown continues and the alarm will still
+        // fire via the scheduled notification. This is NOT abandonment — fire timer_backgrounded
+        // (informational only) so we can measure background rate without inflating abandon rate.
+        // timer_abandoned is only fired on explicit user cancellation (cancelTimer / dismissAlarm).
         if let state = timerState,
-           state.status != .alarm && state.status != .complete {
-            AnalyticsService.shared.track(AnalyticsEvents.timerAbandoned, properties: [
+           [.running, .warning, .danger, .paused].contains(state.status) {
+            AnalyticsService.shared.track(AnalyticsEvents.timerBackgrounded, properties: [
                 "target_duration": state.targetDuration,
                 "remaining_duration": state.remainingDuration,
                 "status": state.status.rawValue,
-                AnalyticsProperties.abandonReason: AnalyticsValues.abandonReasonAppBackgrounded,
-                AnalyticsProperties.abandonSource: "app_lifecycle",
             ])
         }
 
@@ -557,7 +558,9 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
     private func generateRandomDuration(min: TimeInterval, max: TimeInterval) -> TimeInterval {
         guard min < max else { return min }
-        return TimeInterval.random(in: min...max)
+        let lowerCandidate = max >= 1.0 ? Swift.max(min, 1.0) : min
+        let lower = Swift.min(lowerCandidate, max)
+        return TimeInterval.random(in: lower...max)
     }
 
     private func loadSavedConfig() async {

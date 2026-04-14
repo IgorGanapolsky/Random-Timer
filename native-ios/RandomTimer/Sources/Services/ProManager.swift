@@ -2,12 +2,22 @@ import os
 import StoreKit
 
 @MainActor
-final class ProManager: ObservableObject {
+final class ProManager: ObservableObject { // swiftlint:disable:this no_observable_object
     static let shared = ProManager()
 
     static nonisolated let baseProductID = "com.iganapolsky.randomtimer.pro"
+    /// Legacy / future SKU — not guaranteed to exist in App Store Connect; keep for restore if ever shipped.
     static nonisolated let eliteProductID = "com.iganapolsky.randomtimer.elite"
-    static nonisolated var productIDs: Set<String> { [baseProductID, eliteProductID] }
+    /// Monthly subscription — $3.99/month. Must be created in App Store Connect as an auto-renewable
+    /// subscription before the paywall can complete a live purchase.
+    static nonisolated let monthlyProductID = "com.iganapolsky.randomtimer.pro.monthly"
+    /// Annual subscription — $29.99/year. Maps to the existing elite SKU billing period.
+    static nonisolated let annualProductID = "com.iganapolsky.randomtimer.pro.annual"
+    /// In-app paywall default product — one-time non-consumable Pro Upgrade.
+    static nonisolated let paywallProductID = baseProductID
+    static nonisolated var productIDs: Set<String> {
+        [baseProductID, eliteProductID, monthlyProductID, annualProductID]
+    }
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
     @Published private(set) var products: [Product] = []
@@ -45,7 +55,8 @@ final class ProManager: ObservableObject {
             products = try await Product.products(for: Self.productIDs)
                 .sorted(by: { $0.price < $1.price })
             if products.isEmpty {
-                Self.log.error("ProManager: Product.products returned EMPTY for IDs: \(Self.productIDs). Check App Store Connect product configuration.")
+                let ids = Self.productIDs
+                Self.log.error("ProManager: products EMPTY for IDs: \(ids). Check ASC config.")
             }
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
@@ -53,7 +64,16 @@ final class ProManager: ObservableObject {
     }
 
     func formattedPrice(for productID: String) -> String {
-        products.first(where: { $0.id == productID })?.displayPrice ?? (products.isEmpty ? "Unavailable" : (productID == Self.eliteProductID ? "$29.99/yr" : "$4.99"))
+        if let match = products.first(where: { $0.id == productID }) {
+            return match.displayPrice
+        }
+        // Fallback prices when store hasn't been configured yet
+        switch productID {
+        case Self.monthlyProductID: return "$3.99"
+        case Self.annualProductID: return "$29.99"
+        case Self.eliteProductID: return "$29.99"
+        default: return "$4.99"
+        }
     }
 
     // MARK: - Purchase
@@ -63,15 +83,17 @@ final class ProManager: ObservableObject {
         if products.isEmpty {
             await fetchProduct()
         }
-        
+
         guard let product = products.first(where: { $0.id == productID }) else {
             return .productUnavailable
         }
-        
+
         return await doPurchase(product)
     }
 
     private func doPurchase(_ product: Product) async -> ProPurchaseResult {
+        // Capture StoreKit's user-specific trial eligibility before purchase.
+        let isEligibleForTrial = await product.subscription?.isEligibleForIntroOffer ?? false
         do {
             let result = try await product.purchase()
             switch result {
@@ -79,6 +101,17 @@ final class ProManager: ObservableObject {
                 let transaction = try Self.checkVerified(verification)
                 updateEntitlement(for: transaction.productID)
                 await transaction.finish()
+                // Track only user-eligible trial purchases; configured intro offers are not enough.
+                if isEligibleForTrial && transaction.productID == product.id {
+                    AnalyticsService.shared.track(
+                        AnalyticsEvents.freeTrialStarted,
+                        properties: [
+                            AnalyticsProperties.productId: product.id,
+                            AnalyticsProperties.trialVerificationSource: "storekit_intro_offer_eligibility",
+                            AnalyticsProperties.trialVerified: true,
+                        ]
+                    )
+                }
                 return .success
             case .userCancelled:
                 return .userCancelled
@@ -124,7 +157,7 @@ final class ProManager: ObservableObject {
                 await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
             }
         }
-        
+
         if isPro && !wasPro {
             return .restored
         } else if isPro {
@@ -170,6 +203,8 @@ final class ProManager: ObservableObject {
     private func levelFor(productID: String) -> EntitlementLevel {
         switch productID {
         case Self.eliteProductID: return .elite
+        case Self.monthlyProductID: return .elite
+        case Self.annualProductID: return .elite
         case Self.baseProductID: return .base
         default: return .none
         }
@@ -214,7 +249,7 @@ final class ProManager: ObservableObject {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
     }
-    
+
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")

@@ -1,14 +1,17 @@
 {
-  "generated_at": "2026-04-06T12:51:00+00:00",
+  "generated_at": "2026-04-10T17:50:23+00:00",
   "source": "executive_metrics_snapshot",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
     "install_proxy_posthog": "Distinct persons with event Application Installed (not store units).",
-    "reviews_store": "From Play/App Store APIs in store section (sample/pagination limits apply).",
+    "reviews_store": "Play: reviews.list is comment-bearing reviews touched in the last 7 days only (per Google); star-only ratings omitted; can read 0 while the public listing shows reviews; pagination max 100/page. App Store: customerReviews first page only (limit 50, newest first), not lifetime total. Use review_count_metric_id under store_apis.android / store_apis.ios when present.",
     "reviews_in_app": "PostHog review_prompt_requested / write_review_tapped (not published star count).",
-    "paid_posthog": "paywall_purchase_success and paywall_purchase_result in PostHog; use Store/RevenueCat for ledger truth.",
-    "crashes": "Crashlytics via BigQuery export; PostHog $exception also listed if captured.",
+    "paid_posthog": "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store revenue). Compare posthog.events_paywall_purchase_success_ios vs _android (properties.platform). Ledger: App Store Connect + Google Play billing.",
+    "posthog_executive": "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except wqtu_7d_distinct_persons (fixed 7d). Filters exclude non\u2013store-production distribution_channel (testflight, non_play_install, dev, emulator, etc.), is_internal, debug/sim events; legacy events without distribution_channel stay included as 'legacy'. Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS env. See posthog.metric_field_ids and posthog.audience_note.",
+    "crashes": "Crashlytics BigQuery streaming export; posthog_exception_events is separate. crashlytics_bigquery.fatal_events_in_window is COUNT(*) of fatal rows in the lookback hours. fatal_events sums crash_count only within parsed top_fatal_issues (up to 10 rows displayed from top 20 SQL groups) \u2014 see metric_field_ids.",
     "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
-    "wqtu": "Distinct persons with >=3 timer_completed events in the same window (North Star proxy for that window).",
+    "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
+    "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
     "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window."
   },
   "posthog": {
@@ -16,48 +19,70 @@
     "host": "https://us.posthog.com",
     "project_id": "299775",
     "audience": "pragmatic_live",
-    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n)",
-    "window_days": 7,
+    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ('testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test')\n) AND person_id NOT IN (<redacted: POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS>)",
+    "audience_note": "Excludes debug/sim/emulator, is_internal, non\u2013App Store/TestFlight/Firebase-style distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. Legacy events without distribution_channel use coalesce 'legacy' (still included). Not a guarantee of human/non-team users\u2014set person exclusions for known IDs.",
+    "exclude_person_ids_configured": true,
+    "window_days": 30,
     "errors": [],
-    "distinct_persons_application_installed": 82,
-    "distinct_persons_first_open": 78,
-    "timer_started_events": 385,
-    "timer_completed_events": 143,
-    "distinct_persons_timer_started": 78,
-    "distinct_persons_timer_completed": 8,
-    "distinct_persons_timer_started_and_completed": 8,
-    "wqtu_distinct_persons": 1,
-    "timer_abandon_rate_event_level_pct": 62.86,
+    "distinct_persons_application_installed": 464,
+    "distinct_persons_first_open": 439,
+    "timer_started_events": 1479,
+    "timer_completed_events": 290,
+    "distinct_persons_timer_started": 383,
+    "distinct_persons_timer_completed": 47,
+    "distinct_persons_timer_started_and_completed": 47,
+    "wqtu_distinct_persons": 10,
+    "wqtu_7d_distinct_persons": 8,
+    "timer_abandon_rate_event_level_pct": 80.39,
     "distinct_persons_paywall_purchase_success": 1,
     "events_paywall_purchase_success": 1,
-    "in_app_review_prompt_events": 1,
-    "in_app_review_prompt_distinct_persons": 1,
+    "distinct_persons_paywall_purchase_success_ios": 1,
+    "distinct_persons_paywall_purchase_success_android": 0,
+    "events_paywall_purchase_success_ios": 1,
+    "events_paywall_purchase_success_android": 0,
+    "in_app_review_prompt_events": 12,
+    "in_app_review_prompt_distinct_persons": 12,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        84,
-        596
+        462,
+        2810
       ],
       [
         "Active Timer",
-        78,
-        480
+        378,
+        1896
       ]
     ],
-    "posthog_exception_events": 0
+    "posthog_exception_events": 0,
+    "metric_bundle_id": "posthog_executive_pragmatic_live_hogql_v1",
+    "metric_field_ids": {
+      "distinct_persons_application_installed": "posthog_hogql_distinct_persons_event_application_installed",
+      "distinct_persons_first_open": "posthog_hogql_distinct_persons_event_first_open",
+      "timer_started_events": "posthog_hogql_count_events_timer_started",
+      "timer_completed_events": "posthog_hogql_count_events_timer_completed",
+      "distinct_persons_timer_started": "posthog_hogql_distinct_persons_event_timer_started",
+      "distinct_persons_timer_completed": "posthog_hogql_distinct_persons_event_timer_completed",
+      "distinct_persons_timer_started_and_completed": "posthog_hogql_distinct_persons_completed_also_started_same_window",
+      "wqtu_distinct_persons": "posthog_hogql_wqtu_timer_completed_ge3_trailing_window_days",
+      "wqtu_7d_distinct_persons": "posthog_hogql_wqtu_timer_completed_ge3_trailing_7d_fixed",
+      "timer_abandon_rate_event_level_pct": "posthog_derived_event_level_started_minus_completed_over_started_pct",
+      "distinct_persons_paywall_purchase_success": "posthog_hogql_distinct_persons_event_paywall_purchase_success",
+      "events_paywall_purchase_success": "posthog_hogql_count_events_paywall_purchase_success",
+      "distinct_persons_paywall_purchase_success_ios": "posthog_hogql_distinct_persons_event_paywall_purchase_success_ios",
+      "distinct_persons_paywall_purchase_success_android": "posthog_hogql_distinct_persons_event_paywall_purchase_success_android",
+      "events_paywall_purchase_success_ios": "posthog_hogql_count_events_paywall_purchase_success_ios",
+      "events_paywall_purchase_success_android": "posthog_hogql_count_events_paywall_purchase_success_android",
+      "in_app_review_prompt_events": "posthog_hogql_count_events_review_prompt_requested",
+      "in_app_review_prompt_distinct_persons": "posthog_hogql_distinct_persons_event_review_prompt_requested",
+      "top_screens_by_distinct_persons": "posthog_hogql_top_screens_by_distinct_persons_limit_12_order_desc",
+      "posthog_exception_events": "posthog_hogql_count_events_dollar_exception"
+    }
   },
   "store_apis": {
     "android": {
-      "status": "ok",
-      "review_count": 0,
-      "production_release": {
-        "version_codes": [
-          "1774900016"
-        ],
-        "status": "completed",
-        "name": "v1774900016"
-      },
-      "note": "Google Play API does not expose download counts directly. Review count is from real users only."
+      "status": "error",
+      "reason": "credential error: Google Play key path is not a file (check GOOGLE_PLAY_JSON_KEY_PATH): <redacted>"
     },
     "ios": {
       "status": "ok",
@@ -65,6 +90,11 @@
       "bundle_id": "com.igorganapolsky.randomtimer",
       "sku": "randomtimer2026",
       "versions": [
+        {
+          "version": "1.3.17",
+          "state": "READY_FOR_SALE",
+          "created": "2026-04-06T09:08:34-07:00"
+        },
         {
           "version": "1.3.16",
           "state": "READY_FOR_SALE",
@@ -87,24 +117,15 @@
         }
       ],
       "review_count": 0,
+      "review_count_metric_id": "app_store_connect_customer_reviews_sort_created_desc_limit_50",
+      "review_count_request_limit": 50,
       "reviews": [],
-      "note": "App Store Connect Sales reports require async report generation. Review count and version state are live from the API."
+      "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API."
     }
   },
   "crashlytics_bigquery": {
-    "status": "ok",
-    "source": "crashlytics_bigquery",
-    "project_id": "random-timer-dist-new",
-    "dataset": "firebase_crashlytics",
-    "package": "com.iganapolsky.randomtimer",
-    "hours": 168,
-    "table_id": null,
-    "fatal_events": 0,
-    "affected_users": 0,
-    "total_users": 0,
-    "crash_free_users": 0,
-    "crash_free_pct": null,
-    "top_fatal_issues": [],
-    "reason": "BigQuery dataset exists but no tables yet"
+    "status": "error",
+    "reason": "GOOGLE_APPLICATION_CREDENTIALS points to a missing file (<redacted>). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path.",
+    "source": "crashlytics"
   }
 }

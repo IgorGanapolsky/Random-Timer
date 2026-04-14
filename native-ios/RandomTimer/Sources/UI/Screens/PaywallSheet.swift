@@ -15,27 +15,76 @@ enum PaywallEntryPoint: String {
     }
 }
 
+/// Which plan option is highlighted on the paywall.
+enum PaywallPlanSelection {
+    case monthly
+    case annual
+    case lifetime
+}
+
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
-    static let headline = "Unlock Full Training Mode"
-    static let subheadline = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
-    static let audienceLine = "Built for dry fire, sparring, drills, and reaction training."
-    static let pricingFooter = "Pro Tactical — 1 Year — Auto-renews at $29.99/year. Cancel anytime."
+    static let headline = "Stop Training With the Brakes On"
+    static let subheadline =
+        "Go unlimited — sessions up to 60 minutes, live voice callouts, "
+        + "and a full sound library that updates every month."
+    static let subscriptionFooter =
+        "Cancel anytime. Subscription auto-renews until cancelled. "
+        + "Price shown on Apple's confirmation sheet."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
-        "Train up to 60-minute sessions",
-        "Get voice callouts during training",
-        "Use loop mode with round limits",
-        "Unlock the full sound library",
-        "New Pro voice callouts and sound packs every 30 days",
+        "Full-length sessions — up to 60 minutes, no cutoffs",
+        "Live voice callouts keep you sharp under pressure",
+        "Loop drills with round limits — just like competition",
+        "Full sound arsenal — real bells, horns, and sirens",
+        "Fresh callout packs every 30 days — Pro gets them first",
     ]
 
-    // swiftlint:disable:next no_environment_object
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
     @State private var purchaseError: String?
+    /// Default to monthly — lowest barrier to entry.
+    @State private var selectedPlan: PaywallPlanSelection = .monthly
+    @State private var introOfferEligibleProductIDs: Set<String> = []
     let entryPoint: PaywallEntryPoint
+
+    // MARK: - Derived helpers
+
+    private var monthlyPrice: String {
+        proManager.formattedPrice(for: ProManager.monthlyProductID)
+    }
+
+    private var annualPrice: String {
+        proManager.formattedPrice(for: ProManager.annualProductID)
+    }
+
+    private var lifetimePrice: String {
+        proManager.formattedPrice(for: ProManager.paywallProductID)
+    }
+
+    private var selectedProductID: String {
+        switch selectedPlan {
+        case .monthly: return ProManager.monthlyProductID
+        case .annual: return ProManager.annualProductID
+        case .lifetime: return ProManager.paywallProductID
+        }
+    }
+
+    private var productsEligibilityKey: String {
+        proManager.products.map(\.id).sorted().joined(separator: "|")
+    }
+
+    private var ctaLabel: String {
+        if introOfferEligibleProductIDs.contains(selectedProductID) {
+            return "Start 7-Day Free Trial"
+        }
+        switch selectedPlan {
+        case .monthly: return "Start Monthly \u{2022} \(monthlyPrice)/mo"
+        case .annual: return "Start Annual \u{2022} \(annualPrice)/yr"
+        case .lifetime: return "Unlock Lifetime \u{2022} \(lifetimePrice)"
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -69,8 +118,7 @@ struct PaywallSheet: View {
 
                     VStack(spacing: 4) {
                         Text(Self.subheadline)
-                        Text(Self.audienceLine)
-                        Text(Self.pricingFooter)
+                        Text(Self.subscriptionFooter)
                     }
                     .font(.caption)
                     .foregroundColor(.textSecondary)
@@ -98,12 +146,46 @@ struct PaywallSheet: View {
                 }
                 .padding(.horizontal)
 
-                VStack(spacing: 12) {
-                    PrimaryButton(
-                        title: "Start Pro \u{2022} \(normalizedPriceLabel(proManager.formattedPrice(for: ProManager.eliteProductID)))"
+                // Plan selector
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("CHOOSE A PLAN")
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    PlanOptionRow(
+                        title: "Monthly",
+                        priceLabel: "\(monthlyPrice)/month",
+                        badge: nil,
+                        isSelected: selectedPlan == .monthly
                     ) {
+                        selectedPlan = .monthly
+                    }
+
+                    PlanOptionRow(
+                        title: "Annual",
+                        priceLabel: "\(annualPrice)/year",
+                        badge: "Best Value",
+                        isSelected: selectedPlan == .annual
+                    ) {
+                        selectedPlan = .annual
+                    }
+
+                    PlanOptionRow(
+                        title: "Lifetime",
+                        priceLabel: lifetimePrice,
+                        badge: "One-time",
+                        isSelected: selectedPlan == .lifetime
+                    ) {
+                        selectedPlan = .lifetime
+                    }
+                }
+
+                VStack(spacing: 12) {
+                    PrimaryButton(title: ctaLabel) {
                         Task {
-                            await purchase(productID: ProManager.eliteProductID)
+                            await purchase(productID: selectedProductID)
                         }
                     }
                 }
@@ -133,12 +215,18 @@ struct PaywallSheet: View {
                 .foregroundColor(.textSecondary)
 
                 // Required by App Store Guideline 3.1.2(c)
+                // swiftlint:disable force_unwrapping
                 HStack(spacing: 16) {
-                    Link("Privacy Policy",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!)
-                    Link("Terms of Use (EULA)",
-                         destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!)
+                    Link(
+                        "Privacy Policy",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
+                    )
+                    Link(
+                        "Terms of Use (EULA)",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
+                    )
                 }
+                // swiftlint:enable force_unwrapping
                 .font(.caption2)
                 .foregroundColor(.textSecondary)
             }
@@ -155,6 +243,10 @@ struct PaywallSheet: View {
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
             await proManager.fetchProduct()
+            await refreshIntroOfferEligibility()
+        }
+        .task(id: productsEligibilityKey) {
+            await refreshIntroOfferEligibility()
         }
         .onDisappear {
             trackDismiss(method: "system")
@@ -220,15 +312,30 @@ struct PaywallSheet: View {
 
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseSuccess,
-            properties: purchaseProperties(productID: productID, result: result)
+            properties: purchaseProperties(productID: productID, result: result, includeRevenue: true)
         )
         hasTrackedDismiss = true
         dismiss()
     }
 
+    @MainActor
+    private func refreshIntroOfferEligibility() async {
+        var eligibleProductIDs: Set<String> = []
+        for productID in [ProManager.monthlyProductID, ProManager.annualProductID] {
+            guard let product = proManager.products.first(where: { $0.id == productID }),
+                  let subscription = product.subscription
+            else { continue }
+            if await subscription.isEligibleForIntroOffer {
+                eligibleProductIDs.insert(productID)
+            }
+        }
+        introOfferEligibleProductIDs = eligibleProductIDs
+    }
+
     private func purchaseProperties(
         productID: String,
-        result: ProPurchaseResult? = nil
+        result: ProPurchaseResult? = nil,
+        includeRevenue: Bool = false
     ) -> [String: Any] {
         var properties: [String: Any] = [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
@@ -236,6 +343,11 @@ struct PaywallSheet: View {
         ]
         if let result {
             properties[AnalyticsProperties.result] = result.rawValue
+        }
+        // Include numeric price so PostHog can compute actual revenue.
+        if includeRevenue,
+           let product = proManager.products.first(where: { $0.id == productID }) {
+            properties[AnalyticsProperties.revenue] = NSDecimalNumber(decimal: product.price).doubleValue
         }
         return properties
     }
@@ -257,13 +369,48 @@ struct PaywallSheet: View {
         dismiss()
     }
 
-    func normalizedPriceLabel(_ price: String) -> String {
-        let trimmed = price.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lowered = trimmed.lowercased()
-        if lowered.contains("/yr") || lowered.contains("/year") {
-            return trimmed
+}
+
+private struct PlanOptionRow: View {
+    let title: String
+    let priceLabel: String
+    let badge: String?
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(.textPrimary)
+                    Text(priceLabel)
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+                }
+                Spacer()
+                if let badge {
+                    Text(badge)
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                        .padding(.trailing, 4)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.accentPrimary.opacity(0.08) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.accentPrimary : Color.textSecondary.opacity(0.3),
+                            lineWidth: isSelected ? 2 : 1)
+            )
+            .padding(.horizontal)
         }
-        return "\(trimmed)/year"
+        .buttonStyle(.plain)
     }
 }
 

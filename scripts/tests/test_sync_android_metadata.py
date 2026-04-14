@@ -27,7 +27,7 @@ class _FakeEdits:
         return _FakeRequest()
 
 
-def test_commit_edit_retries_without_changes_not_sent_for_review_flag() -> None:
+def test_commit_edit_propagates_api_errors() -> None:
     edits = _FakeEdits(
         Exception(
             'HttpError 400: "Changes are sent for review automatically. The query parameter '
@@ -35,19 +35,9 @@ def test_commit_edit_retries_without_changes_not_sent_for_review_flag() -> None:
         )
     )
 
-    sync_android_metadata.commit_edit(edits, edit_id="123")
-
-    assert edits.calls == [
-        {
-            "packageName": sync_android_metadata.PACKAGE_NAME,
-            "editId": "123",
-            "changesNotSentForReview": True,
-        },
-        {
-            "packageName": sync_android_metadata.PACKAGE_NAME,
-            "editId": "123",
-        },
-    ]
+    import pytest
+    with pytest.raises(Exception, match="changesNotSentForReview"):
+        sync_android_metadata.commit_edit(edits, edit_id="123")
 
 
 def test_commit_edit_uses_changes_not_sent_for_review_when_supported() -> None:
@@ -59,7 +49,6 @@ def test_commit_edit_uses_changes_not_sent_for_review_when_supported() -> None:
         {
             "packageName": sync_android_metadata.PACKAGE_NAME,
             "editId": "123",
-            "changesNotSentForReview": True,
         }
     ]
 

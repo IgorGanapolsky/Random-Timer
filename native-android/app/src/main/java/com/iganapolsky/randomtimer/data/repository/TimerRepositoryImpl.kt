@@ -16,6 +16,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
+import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -46,11 +47,16 @@ class TimerRepositoryImpl
                 }
             val allowedSounds = proManager.availableSounds(level)
             val clampedMax = maxSeconds.coerceAtMost(maxAllowed)
-            val clampedMin = minSeconds.coerceAtMost(clampedMax)
+            val sanitizedRange =
+                sanitizedStoredRange(
+                    minSeconds = minSeconds,
+                    maxSeconds = clampedMax,
+                    maxSecondsLimit = maxAllowed,
+                )
             val clampedSound = if (soundType in allowedSounds) soundType else SoundType.INTENSE
             return copy(
-                minSeconds = clampedMin,
-                maxSeconds = clampedMax,
+                minSeconds = sanitizedRange.first,
+                maxSeconds = sanitizedRange.second,
                 soundType = clampedSound,
                 useExtendedRange = if (isPro) useExtendedRange else false,
             )
@@ -58,8 +64,8 @@ class TimerRepositoryImpl
 
         private fun Preferences.toTimerConfig(): TimerConfig =
             TimerConfig(
-                minSeconds = this[KEY_MIN_SECONDS] ?: 30,
-                maxSeconds = this[KEY_MAX_SECONDS] ?: 120,
+                minSeconds = this[KEY_MIN_SECONDS] ?: TimerConfig.DEFAULT.minSeconds,
+                maxSeconds = this[KEY_MAX_SECONDS] ?: 30,
                 alarmDuration = this[KEY_ALARM_DURATION] ?: 10,
                 hiddenMode = this[KEY_HIDDEN_MODE] ?: false,
                 repeatEnabled = this[KEY_REPEAT_ENABLED] ?: false,

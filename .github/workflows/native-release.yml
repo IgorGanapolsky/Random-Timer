@@ -22,13 +22,13 @@ on:
         required: false
         default: 'production'
       android_internal_mirror:
-        description: 'Release/hotfix branches: mirror the released ref to Android Firebase internal'
+        description: 'Deprecated. Internal Firebase signoff must happen before production release.'
         type: choice
         options:
           - 'firebase'
           - 'skip'
         required: false
-        default: 'firebase'
+        default: 'skip'
       submit_review:
         description: 'iOS only: submit the App Store version for App Review after verification'
         # `type: boolean` can be unreliable when dispatched via `gh workflow run -f submit_review=true`
@@ -48,6 +48,22 @@ on:
           - 'true'
         required: false
         default: 'false'
+      skip_internal_signoff:
+        description: 'Waive internal-signoff/* commit statuses (scheduled monthly release only; release SHA differs from internal build SHA)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
+      skip_production_signoff:
+        description: 'Waive production-signoff environment (scheduled monthly release only)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
 
 concurrency:
   group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
@@ -57,7 +73,7 @@ jobs:
   release-intent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Enforce release-branch intent (avoid accidental Android skip)
         env:
@@ -66,13 +82,65 @@ jobs:
           RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}
         run: python3 scripts/release_intent_gate.py
 
-  ios-testflight:
+  internal-proof-or-waive:
     needs: [release-intent-gate]
-    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Require internal signoff statuses (unless waived)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SKIP_INTERNAL: ${{ inputs.skip_internal_signoff }}
+          RELEASE_PLATFORM: ${{ inputs.platform }}
+        run: |
+          set -euo pipefail
+          if [[ "${SKIP_INTERNAL}" == "true" ]]; then
+            echo "::warning::internal signoff waived (skip_internal_signoff=true) — use only for scheduled monthly automation"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
+          python3 scripts/internal_signoff_gate.py \
+            --platform "$RELEASE_PLATFORM" \
+            --statuses-json /tmp/internal-signoff-status.json
+
+  require-production-signoff:
+    needs: [release-intent-gate, internal-proof-or-waive]
+    if: ${{ inputs.skip_production_signoff != 'true' }}
+    runs-on: ubuntu-latest
+    environment: production-signoff
+    steps:
+      - name: Await fresh CEO production release approval
+        run: |
+          echo "Fresh production signoff approved for ${GITHUB_SHA}"
+
+  production-signoff-waive:
+    needs: [release-intent-gate, internal-proof-or-waive]
+    if: ${{ inputs.skip_production_signoff == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Waive production-signoff (automated monthly path)
+        run: |
+          echo "::notice::production-signoff waived (skip_production_signoff=true) — scheduled monthly automation only"
+
+  ios-testflight:
+    needs:
+      - release-intent-gate
+      - internal-proof-or-waive
+      - require-production-signoff
+      - production-signoff-waive
+    if: >-
+      (inputs.platform == 'ios' || inputs.platform == 'both') &&
+      always() && !cancelled() &&
+      needs.release-intent-gate.result == 'success' &&
+      needs.internal-proof-or-waive.result == 'success' &&
+      (needs.require-production-signoff.result == 'success' || needs.production-signoff-waive.result == 'success')
     runs-on: macos-26
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Write GoogleService-Info.plist from secret (Firebase)
         env:
@@ -106,15 +174,15 @@ jobs:
           done
 
       - name: Preflight release checks (iOS)
-        run: bash scripts/preflight-release.sh --platform ios --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.11'
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
         with:
           ruby-version: '3.2'
           bundler-cache: true
@@ -191,15 +259,24 @@ jobs:
         working-directory: native-ios
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: ios-ipa
           path: native-ios/RandomTimer.ipa
 
   android-release:
-    needs: [release-intent-gate]
-    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    needs:
+      - release-intent-gate
+      - internal-proof-or-waive
+      - require-production-signoff
+      - production-signoff-waive
+    if: >-
+      (inputs.platform == 'android' || inputs.platform == 'both') &&
+      always() && !cancelled() &&
+      needs.release-intent-gate.result == 'success' &&
+      needs.internal-proof-or-waive.result == 'success' &&
+      (needs.require-production-signoff.result == 'success' || needs.production-signoff-waive.result == 'success')
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -211,7 +288,7 @@ jobs:
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
       version_code: ${{ steps.play_result.outputs.version_code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Fail fast on required Android release secrets
         env:
@@ -230,21 +307,21 @@ jobs:
           done
 
       - name: Preflight release checks (Android)
-        run: bash scripts/preflight-release.sh --platform android --layer 1
+        run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.11'
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Create google-services.json
         env:
@@ -343,9 +420,11 @@ jobs:
       - name: Capture Play publish result outputs
         id: play_result
         if: always()
+        env:
+          ANDROID_TRACK_INPUT: ${{ inputs.android_track }}
         run: |
-          REQUESTED_TRACK="${{ inputs.android_track }}"
-          EFFECTIVE_TRACK="${{ inputs.android_track }}"
+          REQUESTED_TRACK="$ANDROID_TRACK_INPUT"
+          EFFECTIVE_TRACK="$ANDROID_TRACK_INPUT"
           FALLBACK_USED="false"
           PRECONDITION_BLOCKED="false"
           VERSION_CODE="${{ steps.build_meta.outputs.version_code }}"
@@ -359,7 +438,7 @@ jobs:
           fi
 
           if [ -z "$REQUESTED_TRACK" ] || [ "$REQUESTED_TRACK" = "null" ]; then
-            REQUESTED_TRACK="${{ inputs.android_track }}"
+            REQUESTED_TRACK="$ANDROID_TRACK_INPUT"
           fi
           if [ -z "$EFFECTIVE_TRACK" ] || [ "$EFFECTIVE_TRACK" = "null" ]; then
             EFFECTIVE_TRACK="$REQUESTED_TRACK"
@@ -373,7 +452,7 @@ jobs:
           echo "play_result requested=$REQUESTED_TRACK effective=$EFFECTIVE_TRACK fallback_used=$FALLBACK_USED precondition_blocked=$PRECONDITION_BLOCKED version_code=$VERSION_CODE"
 
       - name: Upload Play upload result (if any)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: play-upload-result
@@ -381,7 +460,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload Play upload error (if any)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: play-upload-error
@@ -389,7 +468,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: android-aab
@@ -411,10 +490,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.11'
 
@@ -434,6 +513,8 @@ jobs:
           if not m:
               m = re.search(r"versionCode\s*=\s*(\d+)", gradle)
           code = m.group(1) if m else ""
+          m_version = re.search(r'versionName\s*=\s*"([0-9.]+)"', gradle)
+          android = m_version.group(1) if m_version else ""
 
           pbx = Path("native-ios/RandomTimer.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
           m2 = re.search(r"MARKETING_VERSION = ([0-9.]+);", pbx)
@@ -442,19 +523,28 @@ jobs:
           out = os.environ["GITHUB_OUTPUT"]
           with open(out, "a", encoding="utf-8") as fh:
               fh.write(f"version_code={code}\n")
+              fh.write(f"android_version={android}\n")
               fh.write(f"ios_version={ios}\n")
           PY
 
       - name: Debug workflow inputs (no secrets)
+        env:
+          INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_ANDROID_TRACK: ${{ inputs.android_track }}
+          INPUT_SUBMIT_REVIEW: ${{ inputs.submit_review }}
+          EVENT_INPUT_PLATFORM: ${{ github.event.inputs.platform }}
+          EVENT_INPUT_ANDROID_TRACK: ${{ github.event.inputs.android_track }}
+          EVENT_INPUT_SUBMIT_REVIEW: ${{ github.event.inputs.submit_review }}
+          EVENT_INPUTS_JSON: ${{ toJSON(github.event.inputs) }}
         run: |
           echo "event_name=${{ github.event_name }}"
-          echo "inputs.platform=${{ inputs.platform }}"
-          echo "inputs.android_track=${{ inputs.android_track }}"
-          echo "inputs.submit_review=${{ inputs.submit_review }}"
-          echo "github.event.inputs.platform=${{ github.event.inputs.platform }}"
-          echo "github.event.inputs.android_track=${{ github.event.inputs.android_track }}"
-          echo "github.event.inputs.submit_review=${{ github.event.inputs.submit_review }}"
-          echo "github.event.inputs(json)=${{ toJSON(github.event.inputs) }}"
+          echo "inputs.platform=$INPUT_PLATFORM"
+          echo "inputs.android_track=$INPUT_ANDROID_TRACK"
+          echo "inputs.submit_review=$INPUT_SUBMIT_REVIEW"
+          echo "github.event.inputs.platform=$EVENT_INPUT_PLATFORM"
+          echo "github.event.inputs.android_track=$EVENT_INPUT_ANDROID_TRACK"
+          echo "github.event.inputs.submit_review=$EVENT_INPUT_SUBMIT_REVIEW"
+          echo "github.event.inputs(json)=$EVENT_INPUTS_JSON"
 
       - name: Determine platform flag
         id: platform
@@ -469,6 +559,8 @@ jobs:
 
       - name: Determine Android track (no secrets)
         id: android_track
+        env:
+          ANDROID_TRACK_INPUT: ${{ inputs.android_track }}
         run: |
           TRACK="${{ needs.android-release.outputs.effective_track }}"
           if [ -n "$TRACK" ] && [ "$TRACK" != "null" ]; then
@@ -477,7 +569,7 @@ jobs:
             TRACK=$(jq -r '.inputs.android_track // ""' "$GITHUB_EVENT_PATH")
           fi
           if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
-            TRACK="${{ inputs.android_track }}"
+            TRACK="$ANDROID_TRACK_INPUT"
           fi
           if [ -z "$TRACK" ] || [ "$TRACK" = "null" ]; then
             TRACK="production"
@@ -521,42 +613,35 @@ jobs:
           python scripts/verify_release.py $ARGS
 
       - name: Verify public Google Play listing (production only)
+        id: play_public_listing
         if: needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
+        continue-on-error: true
         run: |
+          set -o pipefail
           python scripts/verify_play_public_listing.py \
             --package com.iganapolsky.randomtimer \
             --country US \
+            --expected-version "${{ steps.versions.outputs.android_version }}" \
             --timeout 900 \
-            --poll-interval 60
+            --poll-interval 60 | tee /tmp/play-public-listing.txt
+
+      - name: Warn when Play storefront propagation lags production
+        if: always() && steps.play_public_listing.outcome == 'failure'
+        run: |
+          echo "::warning::Google Play production already verified via Android Publisher API, but the public storefront has not yet shown version ${{ steps.versions.outputs.android_version }}. This does not block iOS submit/tag/sync-main; inspect the play-public-listing-report artifact for the exact mismatch."
+
+      - name: Upload Play storefront verification report
+        if: always() && needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: play-public-listing-report
+          path: /tmp/play-public-listing.txt
+          if-no-files-found: ignore
 
       - name: Cleanup secrets
         if: always()
         run: |
           rm -f /tmp/play-service-account.json /tmp/appstore_key.p8
-
-  android-firebase-mirror:
-    needs: [verify-releases]
-    if: >-
-      always() &&
-      needs.verify-releases.result == 'success' &&
-      inputs.android_internal_mirror == 'firebase' &&
-      (startsWith(github.ref_name, 'release/') || startsWith(github.ref_name, 'hotfix/'))
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Dispatch Internal Distribution (Android Firebase mirror)
-        env:
-          GH_TOKEN: ${{ secrets.ADMIN_TOKEN != '' && secrets.ADMIN_TOKEN || github.token }}
-        run: |
-          set -euo pipefail
-          gh workflow run internal-distribution.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref develop \
-            -f ref="${GITHUB_REF_NAME}" \
-            -f target=android_firebase
-          echo "✅ Dispatched internal-distribution.yml for Android Firebase mirror on ${GITHUB_REF_NAME}"
 
   ios-submit-review:
     needs: [verify-releases]
@@ -566,7 +651,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Gate submit-for-review (no secrets)
         id: gate
@@ -591,7 +676,7 @@ jobs:
 
       - name: Setup Python
         if: steps.gate.outputs.enabled == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.11'
 
@@ -619,7 +704,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           PREFERRED_VERSION: ${{ steps.versions.outputs.ios_version }}
         run: |
-          python scripts/asc_resolve_version.py \
+          python scripts/asc/asc_resolve_version.py \
             --preferred-version "$PREFERRED_VERSION" \
             --create-if-needed \
             --json-out /tmp/asc_version.json
@@ -646,14 +731,14 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
-          STATE_JSON="$(python scripts/asc_poll_version_state.py --version "${{ steps.asc_version.outputs.selected_version }}" --json 2>/dev/null)" || true
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "${{ steps.asc_version.outputs.selected_version }}" --json 2>/dev/null)" || true
           STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; print(json.loads(sys.stdin.read()).get("state","UNKNOWN"))' 2>/dev/null)" || STATE="UNKNOWN"
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
           echo "ASC version state before metadata upload: $STATE"
 
       - name: Setup Ruby
         if: steps.gate.outputs.enabled == 'true'
-        uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
         with:
           ruby-version: '3.2'
           bundler-cache: true
@@ -673,22 +758,22 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
 
-      - name: Check current App Store version state
+      - name: Check current App Store version state (pre-metadata)
         if: steps.gate.outputs.enabled == 'true'
-        id: asc_state
+        id: asc_state_meta
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
-          STATE_JSON="$(python scripts/asc_poll_version_state.py --version "$IOS_VERSION" --json 2>/dev/null)" || true
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$IOS_VERSION" --json 2>/dev/null)" || true
           STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; print(json.loads(sys.stdin.read()).get("state","UNKNOWN"))' 2>/dev/null)" || STATE="UNKNOWN"
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
-          echo "ASC version state: $STATE"
+          echo "ASC version state (pre-metadata): $STATE"
 
       - name: Upload App Store metadata/screenshots
-        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state.outputs.state != 'IN_REVIEW' }}
+        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state_meta.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'IN_REVIEW' }}
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -716,8 +801,8 @@ jobs:
           fi
           python - <<'PY'
           import os
-          from scripts.asc_client import ASCClient
-          from scripts.asc_submit_for_review import attach_build, select_valid_build_id
+          from scripts.asc.asc_client import ASCClient
+          from scripts.asc.asc_submit_for_review import attach_build, select_valid_build_id
 
           client = ASCClient.from_env(timeout=30)
           app_id = os.environ["APP_ID"]
@@ -735,7 +820,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
         run: |
-          python scripts/asc_verify_ready.py \
+          python scripts/asc/asc_verify_ready.py \
             --version "${{ steps.asc_version.outputs.selected_version }}" \
             --json /tmp/asc_ready.json
 
@@ -750,7 +835,7 @@ jobs:
             --enforce
 
       - name: Upload readiness report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
         with:
           name: asc-ready-report
@@ -767,7 +852,7 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           IOS_VERSION: ${{ steps.asc_version.outputs.selected_version }}
         run: |
-          python scripts/asc_submit_for_review.py \
+          python scripts/asc/asc_submit_for_review.py \
             --version "$IOS_VERSION" \
             --locale en-US \
             --wait
@@ -787,7 +872,7 @@ jobs:
             --require-appstore-submission
 
       - name: Upload version resolution report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
         with:
           name: asc-version-resolution
@@ -807,24 +892,16 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: Extract version from source
         id: version
         run: |
-          VERSION_NAME=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' native-android/app/build.gradle.kts | head -1)
-          VERSION_CODE=$(python3 <<'PY'
-          import re
-          from pathlib import Path
-          text = Path("native-android/app/build.gradle.kts").read_text(encoding="utf-8")
-          m = re.search(r"versionCode\s*=\s*ciVersionCode\s*\?:\s*(\d+)", text)
-          if not m:
-              m = re.search(r"versionCode\s*=\s*(\d+)", text)
-          print(m.group(1) if m else "")
-          PY
-          )
+          VERSION_JSON=$(python3 scripts/source_versions.py --repo-root . --format json)
+          VERSION_NAME=$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
+          VERSION_CODE=$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_code"])')
           TAG="v${VERSION_NAME}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
@@ -846,7 +923,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.tag }}" \
+          git tag -a "${{ steps.version.outputs.tag }}" "${GITHUB_SHA}" \
             -m "Release ${{ steps.version.outputs.tag }} (Android code=${{ steps.version.outputs.version_code }})"
           git push origin "${{ steps.version.outputs.tag }}"
           echo "✅ Created and pushed tag ${{ steps.version.outputs.tag }}"
@@ -856,30 +933,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Read Android changelog if it exists
-          CHANGELOG_FILE="native-android/fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt"
-          NOTES=""
-          if [ -f "$CHANGELOG_FILE" ]; then
-            NOTES=$(cat "$CHANGELOG_FILE")
-          fi
+          NOTES=$(python3 scripts/release_notes.py \
+            --repo-root . \
+            --version "${{ steps.version.outputs.version_name }}" \
+            --print-body)
 
-          # Read iOS release notes if available
-          IOS_NOTES_FILE="native-ios/fastlane/metadata/en-US/release_notes.txt"
-          if [ -f "$IOS_NOTES_FILE" ]; then
-            IOS_NOTES=$(cat "$IOS_NOTES_FILE")
-            if [ -n "$IOS_NOTES" ]; then
-              NOTES="${NOTES}
+          NOTES="${NOTES}
 
-          ### iOS
-          ${IOS_NOTES}"
-            fi
-          fi
-
-          if [ -z "$NOTES" ]; then
-            NOTES="Release ${{ steps.version.outputs.tag }}"
-          fi
+          ### Release metadata
+          - Commit: ${GITHUB_SHA}
+          - Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           gh release create "${{ steps.version.outputs.tag }}" \
+            --verify-tag \
+            --target "${GITHUB_SHA}" \
             --title "${{ steps.version.outputs.tag }}" \
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
@@ -892,7 +959,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 

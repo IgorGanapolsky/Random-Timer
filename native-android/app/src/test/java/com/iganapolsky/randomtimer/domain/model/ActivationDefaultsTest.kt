@@ -6,13 +6,13 @@ import kotlin.time.Duration.Companion.seconds
 
 class ActivationDefaultsTest {
     @Test
-    fun `default min is 30 seconds for quick start`() {
-        assertThat(TimerConfig.DEFAULT.minSeconds).isEqualTo(30)
+    fun `default min is 5 seconds to prevent instant fire`() {
+        assertThat(TimerConfig.DEFAULT.minSeconds).isEqualTo(5)
     }
 
     @Test
-    fun `default max is 120 seconds for quick start`() {
-        assertThat(TimerConfig.DEFAULT.maxSeconds).isEqualTo(120)
+    fun `default max is 30 seconds for activation-first quick start`() {
+        assertThat(TimerConfig.DEFAULT.maxSeconds).isEqualTo(30)
     }
 
     @Test
@@ -23,45 +23,18 @@ class ActivationDefaultsTest {
     }
 
     @Test
-    fun `default min duration is 30 seconds`() {
-        assertThat(TimerConfig.DEFAULT.minDuration).isEqualTo(30.seconds)
+    fun `default min duration is 5 seconds`() {
+        assertThat(TimerConfig.DEFAULT.minDuration).isEqualTo(5.seconds)
     }
 
     @Test
-    fun `default max duration is 120 seconds`() {
-        assertThat(TimerConfig.DEFAULT.maxDuration).isEqualTo(120.seconds)
+    fun `default max duration is 30 seconds`() {
+        assertThat(TimerConfig.DEFAULT.maxDuration).isEqualTo(30.seconds)
     }
 
     @Test
-    fun `explicit zero min still allowed`() {
-        val config =
-            TimerConfig(
-                minSeconds = 0,
-                maxSeconds = 60,
-                alarmDuration = 10,
-                hiddenMode = false,
-                repeatEnabled = false,
-                soundType = SoundType.INTENSE,
-                volume = 0.5f,
-                vibrationEnabled = false,
-            )
-        assertThat(config.minSeconds).isEqualTo(0)
-    }
-
-    @Test
-    fun `explicit 300 max still allowed`() {
-        val config =
-            TimerConfig(
-                minSeconds = 0,
-                maxSeconds = 300,
-                alarmDuration = 10,
-                hiddenMode = false,
-                repeatEnabled = false,
-                soundType = SoundType.INTENSE,
-                volume = 0.5f,
-                vibrationEnabled = false,
-            )
-        assertThat(config.maxSeconds).isEqualTo(300)
+    fun `activation preset min is at least 5 seconds`() {
+        assertThat(TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS).isAtLeast(5)
     }
 
     @Test

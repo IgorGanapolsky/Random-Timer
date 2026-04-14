@@ -28,7 +28,8 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - **Evidence-Based**: Every claim must be backed by proof (logs, API read-backs, file counts).
 - **Clean Architecture**: No tech debt. Maintain "Verified, Tested, Proven" status for all changes.
 - **Security First**: Protect the system integrity. Never commit secrets to tracked files. Use `.env` + `gh secret` exclusively. Never paste PATs into chat; rotate immediately if exposed.
-- **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene).
+- **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene). Say **"Done merging PRs"** only with merge SHAs + post-merge CI evidence.
+- **RAG / external memory**: treat as authoritative only when the gateway is verified in the active session; otherwise report “not verified.”
 - **Act, Don't Instruct**: Execute autonomously. Never tell the CEO to do manual steps.
 
 ## Business North Star
@@ -39,7 +40,7 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 
 ## Operating Budget Mandate
 
-- **Hard cap: `$10 USD/month` total external spend** across ads, tooling, SaaS, cloud, and automation.
+- **Hard cap: `$20 USD/month` total external spend** across ads, tooling, SaaS, cloud, and automation.
 - Default to zero-cost execution paths first.
 - Do not start or scale paid services/campaigns if doing so can exceed the cap.
 - If a required action cannot be completed within the cap, pause and request explicit CEO approval with exact cost impact.
@@ -89,3 +90,6 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 
 ### PR management & secrets (cross-reference)
 - Periodic PR audits, branch hygiene, and **no secrets in repo** are spelled out in `CLAUDE.md` (including PAT rotation if a token is ever exposed).
+
+### CTO session start protocol (PR hygiene)
+- Same numbered protocol as `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol*: auth without pasting PATs, prune + open PR list + checks, orphan branch triage, merge only when required checks are green, verify `develop`/`main` CI, RAG only if verified in-session.

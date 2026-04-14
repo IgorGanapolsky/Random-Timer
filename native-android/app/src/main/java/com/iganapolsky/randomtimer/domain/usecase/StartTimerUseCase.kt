@@ -3,6 +3,7 @@ package com.iganapolsky.randomtimer.domain.usecase
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.pickRandomDurationMillisInclusive
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import javax.inject.Inject
 import kotlin.random.Random
@@ -47,7 +48,7 @@ class StartTimerUseCase
 
             val minMillis = min.inWholeMilliseconds
             val maxMillis = max.inWholeMilliseconds
-            val randomMillis = random.nextLong(minMillis, maxMillis + 1)
+            val randomMillis = pickRandomDurationMillisInclusive(minMillis, maxMillis, random)
 
             return randomMillis.milliseconds
         }

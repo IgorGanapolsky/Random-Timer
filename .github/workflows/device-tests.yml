@@ -3,11 +3,6 @@ name: Device Tests
 on:
   pull_request:
     branches: [develop, main]
-    paths:
-      - 'native-android/**'
-      - '.maestro/**'
-      - 'scripts/device-tests/**'
-      - '.github/workflows/device-tests.yml'
   workflow_dispatch:
 
 concurrency:
@@ -15,15 +10,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Path-Aware Device Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      android_device: ${{ steps.classify.outputs.android_device }}
+      ios_device: ${{ steps.classify.outputs.ios_device }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed components
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+            python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
+          else
+            python3 scripts/ci_changed_components.py --all --github-output
+          fi
+
   android-device-tests:
     name: Android Emulator + Maestro Tests
+    needs: changes
+    if: needs.changes.outputs.android_device == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -53,7 +81,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: AVD cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.4
         id: avd-cache
         with:
           path: |
@@ -80,3 +108,109 @@ jobs:
           path: |
             native-android/app/build/reports/androidTests/connected
             native-android/app/build/outputs/androidTest-results/connected
+
+  ios-device-tests:
+    name: iOS Simulator + Maestro + Agent Device
+    needs: changes
+    if: needs.changes.outputs.ios_device == 'true'
+    runs-on: macos-15
+    permissions:
+      contents: read
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create dummy GoogleService-Info.plist for CI
+        working-directory: native-ios
+        run: |
+          mkdir -p RandomTimer
+          {
+            printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+            printf '%s\n' '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            printf '%s\n' '<plist version="1.0">'
+            printf '%s\n' '<dict>'
+            printf '%s\n' '  <key>CLIENT_ID</key>'
+            printf '%s\n' '  <string>000000000000-ci-placeholder.apps.googleusercontent.com</string>'
+            printf '%s\n' '  <key>REVERSED_CLIENT_ID</key>'
+            printf '%s\n' '  <string>com.googleusercontent.apps.000000000000-ci-placeholder</string>'
+            printf '%s\n' '  <key>API_KEY</key>'
+            printf '%s\n' '  <string>AIzaSyCiPlaceholderOnlyNotReal0000000</string>'
+            printf '%s\n' '  <key>GCM_SENDER_ID</key>'
+            printf '%s\n' '  <string>000000000000</string>'
+            printf '%s\n' '  <key>PLIST_VERSION</key>'
+            printf '%s\n' '  <string>1</string>'
+            printf '%s\n' '  <key>BUNDLE_ID</key>'
+            printf '%s\n' '  <string>com.igorganapolsky.randomtimer</string>'
+            printf '%s\n' '  <key>PROJECT_ID</key>'
+            printf '%s\n' '  <string>random-timer-ci-placeholder</string>'
+            printf '%s\n' '  <key>STORAGE_BUCKET</key>'
+            printf '%s\n' '  <string>random-timer-ci-placeholder.appspot.com</string>'
+            printf '%s\n' '  <key>IS_ADS_ENABLED</key>'
+            printf '%s\n' '  <false/>'
+            printf '%s\n' '  <key>IS_ANALYTICS_ENABLED</key>'
+            printf '%s\n' '  <false/>'
+            printf '%s\n' '  <key>IS_APPINVITE_ENABLED</key>'
+            printf '%s\n' '  <true/>'
+            printf '%s\n' '  <key>IS_GCM_ENABLED</key>'
+            printf '%s\n' '  <true/>'
+            printf '%s\n' '  <key>IS_SIGNIN_ENABLED</key>'
+            printf '%s\n' '  <true/>'
+            printf '%s\n' '  <key>GOOGLE_APP_ID</key>'
+            printf '%s\n' '  <string>1:000000000000:ios:0000000000000000000000</string>'
+            printf '%s\n' '</dict>'
+            printf '%s\n' '</plist>'
+          } > RandomTimer/GoogleService-Info.plist
+
+      - name: Select Xcode
+        working-directory: native-ios
+        run: |
+          XCODE_PATH=""
+          while IFS= read -r candidate; do
+            if DEVELOPER_DIR="${candidate}/Contents/Developer" xcodebuild -showsdks 2>/dev/null | grep -q 'iphonesimulator' \
+              && DEVELOPER_DIR="${candidate}/Contents/Developer" xcrun simctl list devices available 2>/dev/null | grep -q 'iPhone'; then
+              XCODE_PATH="${candidate}"
+              break
+            fi
+          done < <(find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null | sort -V -r)
+
+          if [ -z "${XCODE_PATH}" ]; then
+            echo "No Xcode installation with iOS Simulator SDK found."
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null || true
+            exit 1
+          fi
+
+          sudo xcode-select -s "${XCODE_PATH}/Contents/Developer"
+          xcodebuild -version
+
+      - name: Resolve simulator destination
+        id: sim
+        working-directory: native-ios
+        run: |
+          SIM_ID=$(xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations 2>/dev/null | \
+            grep 'platform:iOS Simulator' | \
+            grep -i 'iPhone' | \
+            grep -v 'Any iOS Simulator Device' | \
+            sed -nE 's/.*id:([0-9A-Fa-f-]{36}).*/\1/p' | \
+            head -n 1)
+          if [ -z "${SIM_ID}" ]; then
+            echo "No valid iOS Simulator destination found for RandomTimer."
+            xcodebuild -project RandomTimer.xcodeproj -scheme RandomTimer -showdestinations
+            exit 1
+          fi
+          echo "sim_id=${SIM_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Run iOS UI smoke tests on simulator
+        env:
+          SIMULATOR_UDID: ${{ steps.sim.outputs.sim_id }}
+        run: bash scripts/device-tests/ci-maestro-ios.sh
+
+      - name: Upload iOS device test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-device-test-artifacts
+          path: |
+            native-ios/build/maestro
+            native-ios/build/agent-device
+          if-no-files-found: warn

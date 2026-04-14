@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Circular progress timer view with glow effects and shimmer animation.
+/// Circular progress timer view with glow effects.
 /// Uses TimelineView for frame-accurate Canvas redraw with animation timing
 /// matched to Android's Compose Animatable durations.
 struct CircularTimerView: View {
@@ -14,7 +14,6 @@ struct CircularTimerView: View {
     @ScaledMetric(relativeTo: .title) private var rangeTextSize: CGFloat = 32
 
     // Animation timing matched to Android CircularTimerAnimationConfig:
-    // Android shimmer: tween(3000ms, LinearEasing, Restart) = 3.0s per orbit
     // Android circle pulse: tween(1500ms, Reverse) = 1.5s one-way, 3.0s full cycle, 0.3→0.7
     // Android text breathing: tween(2000ms, Reverse) = 2.0s one-way, 4.0s full cycle, 1.0→0.85
 
@@ -31,11 +30,7 @@ struct CircularTimerView: View {
         status == .paused
     }
 
-    private var isActivelyRunning: Bool {
-        Self.shouldBreatheText(for: status)
-    }
-
-    /// Whether all animations (shimmer, pulse) should freeze
+    /// Whether all timer motion should freeze
     private var shouldPauseAnimations: Bool {
         isComplete || isPaused
     }
@@ -46,13 +41,7 @@ struct CircularTimerView: View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: shouldPauseAnimations)) { timeline in
             let elapsed = shouldPauseAnimations ? 0.0 : timeline.date.timeIntervalSince(animationStartDate)
 
-            // Ball orbit: 5.0s per full rotation on iOS.
-            // Android uses tween(3000ms) but ProMotion displays + SwiftUI TimelineView
-            // make identical durations appear perceptually faster. Tuned to match visually.
-            let shimmerFraction = elapsed.truncatingRemainder(dividingBy: 5.0) / 5.0
-
             // Circle pulse: 5.0s full cycle on iOS (vs Android 3.0s).
-            // Same perceptual tuning as shimmer orbit above.
             let pulseCycle = elapsed.truncatingRemainder(dividingBy: 5.0) / 5.0
             let pulseT = Self.computePulseT(pulseCycle)
             let trackAlpha = isComplete ? 0.15 : (isPaused ? 0.45 : 0.3 + 0.4 * pulseT)
@@ -63,8 +52,6 @@ struct CircularTimerView: View {
                     let radius = diameter / 2
                     let strokePx = strokeWidth
                     let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                    // Inset arc so the shimmer ball's outer glow (2.5*strokePx)
-                    // stays within the Canvas bounds and doesn't get clipped.
                     let glowInset = strokePx * 2.5
                     let arcRadius = radius - glowInset
 
@@ -84,33 +71,7 @@ struct CircularTimerView: View {
                         style: StrokeStyle(lineWidth: strokePx, lineCap: .round)
                     )
 
-                    // 2. Shimmer highlight — orbiting bright spot
-                    if !shouldPauseAnimations {
-                        let shimmerAngleRad = shimmerFraction * 2.0 * .pi - .pi / 2
-                        let shimmerX = center.x + arcRadius * cos(shimmerAngleRad)
-                        let shimmerY = center.y + arcRadius * sin(shimmerAngleRad)
-                        let shimmerPoint = CGPoint(x: shimmerX, y: shimmerY)
-
-                        // Outer glow (large, soft)
-                        let outerGlow = Path(ellipseIn: CGRect(
-                            x: shimmerPoint.x - strokePx * 2.5,
-                            y: shimmerPoint.y - strokePx * 2.5,
-                            width: strokePx * 5,
-                            height: strokePx * 5
-                        ))
-                        context.fill(outerGlow, with: .color(.white.opacity(0.15)))
-
-                        // Inner bright spot
-                        let innerGlow = Path(ellipseIn: CGRect(
-                            x: shimmerPoint.x - strokePx,
-                            y: shimmerPoint.y - strokePx,
-                            width: strokePx * 2,
-                            height: strokePx * 2
-                        ))
-                        context.fill(innerGlow, with: .color(.white.opacity(0.5)))
-                    }
-
-                    // 3. Progress arc
+                    // 2. Progress arc
                     if progress > 0 {
                         let sweepAngle = Angle.degrees(360 * progress)
                         let arcPath = Path { p in
@@ -141,28 +102,19 @@ struct CircularTimerView: View {
                         context.fill(tipGlow, with: .color(status.color.opacity(0.6)))
                     }
 
-                    // 4. Tracking dot at start of progress arc (matches Android)
+                    // 3. Tracking dot at start of progress arc (matches Android)
                     if progress > 0 && progress < 1 {
                         let startAngleRad = -Double.pi / 2
                         let trackDotX = center.x + arcRadius * cos(startAngleRad)
                         let trackDotY = center.y + arcRadius * sin(startAngleRad)
                         let trackDotPoint = CGPoint(x: trackDotX, y: trackDotY)
 
-                        // Outer glow
-                        let outerDot = Path(ellipseIn: CGRect(
-                            x: trackDotPoint.x - strokePx * 1.5,
-                            y: trackDotPoint.y - strokePx * 1.5,
-                            width: strokePx * 3,
-                            height: strokePx * 3
-                        ))
-                        context.fill(outerDot, with: .color(status.color.opacity(0.3)))
-
-                        // Inner dot
+                        // Start-position dot (no outer glow — keeps it to two dots total)
                         let innerDot = Path(ellipseIn: CGRect(
-                            x: trackDotPoint.x - strokePx * 0.8,
-                            y: trackDotPoint.y - strokePx * 0.8,
-                            width: strokePx * 1.6,
-                            height: strokePx * 1.6
+                            x: trackDotPoint.x - strokePx,
+                            y: trackDotPoint.y - strokePx,
+                            width: strokePx * 2,
+                            height: strokePx * 2
                         ))
                         context.fill(innerDot, with: .color(status.color.opacity(0.6)))
                     }

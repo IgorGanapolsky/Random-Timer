@@ -12,14 +12,37 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from scripts.asc_client import ASCClient, AscClientError
+    from scripts.asc.asc_client import ASCClient, AscClientError
     from scripts.source_versions import VersionParseError, read_source_versions
 except ModuleNotFoundError:
+    _scripts_dir = Path(__file__).resolve().parent
+    _asc_dir = _scripts_dir / "asc"
+    for _p in (_scripts_dir, _asc_dir):
+        _s = str(_p)
+        if _s not in sys.path:
+            sys.path.insert(0, _s)
     from asc_client import ASCClient, AscClientError
     from source_versions import VersionParseError, read_source_versions
 
 
 SEMVER_RE = re.compile(r"^\s*(\d+)\.(\d+)\.(\d+)\s*$")
+APP_STORE_CLOSED_STATES = {
+    "ACCEPTED",
+    "APPROVED",
+    "IN_REVIEW",
+    "PENDING_APPLE_RELEASE",
+    "PENDING_DEVELOPER_RELEASE",
+    "PENDING_DEVELOPER_RELEASE_REJECTED",
+    "PENDING_RELEASE",
+    "PREORDER_READY_FOR_SALE",
+    "PROCESSING_FOR_DISTRIBUTION",
+    "READY_FOR_DISTRIBUTION",
+    "READY_FOR_SALE",
+    "REMOVED_FROM_SALE",
+    "REPLACED_WITH_NEW_VERSION",
+    "WAITING_FOR_EXPORT_COMPLIANCE",
+    "WAITING_FOR_REVIEW",
+}
 
 
 class LineageError(RuntimeError):
@@ -32,6 +55,9 @@ class LineageReport:
     local_version: str
     local_build: int
     highest_remote_version: Optional[str]
+    highest_remote_app_store_version: Optional[str]
+    highest_remote_app_store_state: Optional[str]
+    highest_closed_app_store_version: Optional[str]
     highest_remote_build_for_highest_version: Optional[int]
     highest_remote_build_for_local_version: Optional[int]
     passed: bool
@@ -76,6 +102,20 @@ def _highest_build(build_numbers: list[int]) -> Optional[int]:
     return max(build_numbers) if build_numbers else None
 
 
+def _highest_version_by_state(version_states: dict[str, str]) -> tuple[Optional[str], Optional[str]]:
+    ranked: list[tuple[tuple[int, int, int], str, str]] = []
+    for version, state in version_states.items():
+        parsed = _semver_or_none(version)
+        if parsed is None:
+            continue
+        ranked.append((parsed, version.strip(), str(state or "").strip().upper()))
+    if not ranked:
+        return None, None
+    ranked.sort(key=lambda item: item[0], reverse=True)
+    _, version, state = ranked[0]
+    return version, state
+
+
 def _get_app_id(client: ASCClient, bundle_id: str) -> str:
     data = client.get("/apps", params={"filter[bundleId]": bundle_id})
     apps = data.get("data", [])
@@ -101,6 +141,25 @@ def _list_remote_pre_release_versions(client: ASCClient, app_id: str) -> list[st
         version = str(attrs.get("version") or "").strip()
         if version:
             versions.append(version)
+    return versions
+
+
+def _list_remote_app_store_versions(client: ASCClient, app_id: str) -> dict[str, str]:
+    items = client.get_all(
+        f"/apps/{app_id}/appStoreVersions",
+        params={
+            "filter[platform]": "IOS",
+            "limit": 200,
+            "fields[appStoreVersions]": "versionString,appStoreState",
+        },
+    )
+    versions: dict[str, str] = {}
+    for item in items:
+        attrs = item.get("attributes") or {}
+        version = str(attrs.get("versionString") or "").strip()
+        if not version:
+            continue
+        versions[version] = str(attrs.get("appStoreState") or "UNKNOWN").strip().upper()
     return versions
 
 
@@ -147,9 +206,23 @@ def evaluate_lineage(
     local_version: str,
     local_build: int,
     remote_versions: list[str],
+    remote_app_store_versions: dict[str, str],
     remote_builds_by_version: dict[str, list[int]],
 ) -> LineageReport:
-    highest_remote_version = _highest_semver(remote_versions)
+    highest_remote_pre_release_version = _highest_semver(remote_versions)
+    highest_remote_app_store_version, highest_remote_app_store_state = _highest_version_by_state(
+        remote_app_store_versions
+    )
+    highest_closed_app_store_version, _ = _highest_version_by_state(
+        {
+            version: state
+            for version, state in remote_app_store_versions.items()
+            if state in APP_STORE_CLOSED_STATES
+        }
+    )
+    highest_remote_version = _highest_semver(
+        remote_versions + list(remote_app_store_versions.keys())
+    )
     highest_remote_build_for_local_version = _highest_build(remote_builds_by_version.get(local_version, []))
     highest_remote_build_for_highest_version = (
         _highest_build(remote_builds_by_version.get(highest_remote_version, []))
@@ -163,10 +236,13 @@ def evaluate_lineage(
             local_version=local_version,
             local_build=local_build,
             highest_remote_version=None,
+            highest_remote_app_store_version=highest_remote_app_store_version,
+            highest_remote_app_store_state=highest_remote_app_store_state,
+            highest_closed_app_store_version=highest_closed_app_store_version,
             highest_remote_build_for_highest_version=None,
             highest_remote_build_for_local_version=highest_remote_build_for_local_version,
             passed=True,
-            reason="no_remote_ios_pre_release_versions_found",
+            reason="no_remote_ios_versions_found",
         )
 
     if _parse_semver(local_version) < _parse_semver(highest_remote_version):
@@ -175,12 +251,36 @@ def evaluate_lineage(
             local_version=local_version,
             local_build=local_build,
             highest_remote_version=highest_remote_version,
+            highest_remote_app_store_version=highest_remote_app_store_version,
+            highest_remote_app_store_state=highest_remote_app_store_state,
+            highest_closed_app_store_version=highest_closed_app_store_version,
             highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
             highest_remote_build_for_local_version=highest_remote_build_for_local_version,
             passed=False,
             reason=(
                 f"Local iOS marketing version {local_version} regresses behind "
-                f"App Store Connect pre-release version {highest_remote_version}"
+                f"App Store Connect version {highest_remote_version}"
+            ),
+        )
+
+    if (
+        highest_closed_app_store_version is not None
+        and _parse_semver(local_version) <= _parse_semver(highest_closed_app_store_version)
+    ):
+        return LineageReport(
+            bundle_id=bundle_id,
+            local_version=local_version,
+            local_build=local_build,
+            highest_remote_version=highest_remote_version,
+            highest_remote_app_store_version=highest_remote_app_store_version,
+            highest_remote_app_store_state=highest_remote_app_store_state,
+            highest_closed_app_store_version=highest_closed_app_store_version,
+            highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
+            highest_remote_build_for_local_version=highest_remote_build_for_local_version,
+            passed=False,
+            reason=(
+                f"Local iOS marketing version {local_version} is blocked by closed App Store "
+                f"version {highest_closed_app_store_version}; bump the marketing version first"
             ),
         )
 
@@ -197,6 +297,9 @@ def evaluate_lineage(
         local_version=local_version,
         local_build=local_build,
         highest_remote_version=highest_remote_version,
+        highest_remote_app_store_version=highest_remote_app_store_version,
+        highest_remote_app_store_state=highest_remote_app_store_state,
+        highest_closed_app_store_version=highest_closed_app_store_version,
         highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
         highest_remote_build_for_local_version=highest_remote_build_for_local_version,
         passed=True,
@@ -228,6 +331,7 @@ def main() -> int:
         client = ASCClient.from_env(timeout=30)
         app_id = _get_app_id(client, args.bundle_id)
         remote_versions = _list_remote_pre_release_versions(client, app_id)
+        remote_app_store_versions = _list_remote_app_store_versions(client, app_id)
         remote_builds_by_version = _list_remote_builds_by_marketing_version(client, app_id)
     except (AscClientError, LineageError) as exc:
         print(f"❌ {exc}", file=sys.stderr)
@@ -238,11 +342,23 @@ def main() -> int:
         local_version=str(versions["ios"]["version_name"]),
         local_build=int(versions["ios"]["build_number"]),
         remote_versions=remote_versions,
+        remote_app_store_versions=remote_app_store_versions,
         remote_builds_by_version=remote_builds_by_version,
     )
 
     print(f"Local iOS source version: {report.local_version} ({report.local_build})")
     print(f"ASC highest pre-release version: {report.highest_remote_version or 'none'}")
+    if report.highest_remote_app_store_version is not None:
+        print(
+            "ASC highest App Store version: "
+            f"{report.highest_remote_app_store_version} "
+            f"(state={report.highest_remote_app_store_state or 'UNKNOWN'})"
+        )
+    if report.highest_closed_app_store_version is not None:
+        print(
+            "ASC highest closed App Store version: "
+            f"{report.highest_closed_app_store_version}"
+        )
     if report.highest_remote_build_for_highest_version is not None:
         print(
             "ASC highest build for highest version: "

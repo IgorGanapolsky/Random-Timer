@@ -95,6 +95,8 @@ public enum VoiceGender: String, Codable, Sendable, CaseIterable {
 
 /// Configuration for a random timer with all settings.
 public struct TimerConfig: Codable, Sendable, Equatable {
+    public static let minimumFloorSeconds = 5
+
     /// Minimum time in seconds
     public let minSeconds: Int
     /// Maximum time in seconds
@@ -135,8 +137,14 @@ public struct TimerConfig: Codable, Sendable, Equatable {
         volume: Float,
         repeatRounds: Int
     ) -> SanitizedValues {
-        let clampedMax = Swift.min(Swift.max(maxSeconds, 0), maxSecondsPro)
-        let clampedMin = Swift.min(Swift.min(Swift.max(minSeconds, 0), maxSecondsPro), clampedMax)
+        let clampedMax = Swift.min(
+            Swift.max(maxSeconds, minimumFloorSeconds + TimeRangeAdjuster.defaultMinGapSeconds),
+            maxSecondsPro
+        )
+        let clampedMin = Swift.min(
+            Swift.min(Swift.max(minSeconds, minimumFloorSeconds), maxSecondsPro),
+            clampedMax
+        )
         let clampedAlarm = Swift.max(1, alarmDuration)
         let clampedVolume = Swift.min(Swift.max(volume, 0), 1)
         let clampedRounds = Swift.max(0, repeatRounds)
@@ -151,8 +159,8 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     }
 
     public init(
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120,
+        minSeconds: Int = minimumFloorSeconds,
+        maxSeconds: Int = 30,
         alarmDuration: Int = 10,
         hiddenMode: Bool = false,
         repeatEnabled: Bool = false, // Default to LOOP OFF
@@ -202,20 +210,15 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
-    /// Min seconds for first-session activation preset (mirrors Android `TimerConfig`).
-    public static let activationFirstRunMinSeconds = 20
-
-    /// Max seconds for first-session activation preset (mirrors Android `TimerConfig`).
-    public static let activationFirstRunMaxSeconds = 60
-
-    /// Tighter 20–60s range when the user has not completed a first timer and is still on canonical free defaults.
+    /// Migrates legacy canonical defaults (30–120s) to activation-first 5–30s when the user
+    /// has not completed a first timer. Returns nil when no migration applies.
     public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
         guard !hasCompletedFirstTimer else { return nil }
         guard !useExtendedRange else { return nil }
         guard minSeconds == 30, maxSeconds == 120 else { return nil }
         return TimerConfig(
-            minSeconds: Self.activationFirstRunMinSeconds,
-            maxSeconds: Self.activationFirstRunMaxSeconds,
+            minSeconds: Self.minimumFloorSeconds,
+            maxSeconds: 30,
             alarmDuration: alarmDuration,
             hiddenMode: hiddenMode,
             repeatEnabled: repeatEnabled,
@@ -283,11 +286,11 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
         let rawMin = container.decodeFirstInt(
             forKeys: [.minSeconds, .minDuration, .min_seconds, .min_time],
-            defaultValue: 30
+            defaultValue: Self.minimumFloorSeconds
         )
         let rawMax = container.decodeFirstInt(
             forKeys: [.maxSeconds, .maxDuration, .max_seconds, .max_time],
-            defaultValue: 120
+            defaultValue: 30
         )
         let rawAlarm = container.decodeFirstInt(
             forKeys: [.alarmDuration, .alarm_duration],
@@ -387,7 +390,7 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 /// - Min/max must keep at least `minGapSeconds` between them.
 /// - Dragging one thumb should "push/pull" the other thumb as needed, rather than blocking.
 enum TimeRangeAdjuster {
-    static let defaultMinSecondsLimit = 0
+    static let defaultMinSecondsLimit = TimerConfig.minimumFloorSeconds
     static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree
     static let defaultMinGapSeconds = 5
 
@@ -469,7 +472,10 @@ internal func sanitizedStoredRange(
     maxSecondsLimit: Int
 ) -> (min: Int, max: Int) {
     let clampedMax = Swift.max(TimeRangeAdjuster.defaultMinGapSeconds, Swift.min(maxSeconds, maxSecondsLimit))
-    let clampedMin = Swift.max(0, Swift.min(minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds))
+    let clampedMin = Swift.max(
+        TimeRangeAdjuster.defaultMinSecondsLimit,
+        Swift.min(minSeconds, clampedMax - TimeRangeAdjuster.defaultMinGapSeconds)
+    )
     return TimeRangeAdjuster.adjustForMaxChange(
         currentMinSeconds: clampedMin,
         currentMaxSeconds: clampedMax,
@@ -755,8 +761,8 @@ public struct TimerActivityAttributes: ActivityAttributes {
     public init(
         timerName: String = "Random Tactical Timer",
         endDate: Date,
-        minSeconds: Int = 30,
-        maxSeconds: Int = 120
+        minSeconds: Int = TimerConfig.minimumFloorSeconds,
+        maxSeconds: Int = 30
     ) {
         self.timerName = timerName
         self.endDate = endDate

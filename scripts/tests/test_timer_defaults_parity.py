@@ -75,12 +75,13 @@ def test_timer_defaults_match_across_mobile_platforms():
     android_repository = ANDROID_REPOSITORY.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
-    assert "minSeconds = 30" in android_config
-    assert "maxSeconds = 120" in android_config
+    assert "minSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS" in android_config
+    assert "maxSeconds = 30" in android_config
     assert "private fun Preferences.toTimerConfig()" in android_repository
-    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 120") == 1
+    assert android_repository.count("maxSeconds = this[KEY_MAX_SECONDS] ?: 30") == 1
     assert android_repository.count("preferences.toTimerConfig()") == 2
-    assert re.search(r"minSeconds: Int = 30,\n\s*maxSeconds: Int = 120,", ios_models)
+    assert "public static let minimumFloorSeconds = 5" in ios_models
+    assert re.search(r"minSeconds: Int = minimumFloorSeconds,\n\s*maxSeconds: Int = 30,", ios_models)
     assert "maxSecondsFree = 300" in ios_models
 
 
@@ -95,10 +96,10 @@ def test_timer_limits_and_gap_rules_match_across_mobile_platforms():
     assert "public static let maxSecondsFree = 300" in ios_models
     assert "public static let maxSecondsPro = 3600" in ios_models
 
-    assert "const val DEFAULT_MIN_SECONDS = 0" in android_range_adjuster
+    assert "const val DEFAULT_MIN_SECONDS = 5" in android_range_adjuster
     assert "const val DEFAULT_MAX_SECONDS = 3600" in android_range_adjuster
     assert "const val DEFAULT_MIN_GAP_SECONDS = 5" in android_range_adjuster
-    assert "static let defaultMinSecondsLimit = 0" in ios_models
+    assert "static let defaultMinSecondsLimit = TimerConfig.minimumFloorSeconds" in ios_models
     assert "static let defaultMaxSecondsLimit = TimerConfig.maxSecondsFree" in ios_models
     assert "static let defaultMinGapSeconds = 5" in ios_models
 
@@ -157,9 +158,9 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     android_navigation = ANDROID_NAVIGATION.read_text(encoding="utf-8")
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
-    assert "Unlock Full Training Mode" in android_paywall
+    assert "Stop Training With the Brakes On" in android_paywall
     assert "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
-    assert "Unlock Full Training Mode" in ios_paywall
+    assert "Stop Training With the Brakes On" in ios_paywall
     assert "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
@@ -170,12 +171,13 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
 def test_voice_preview_actions_and_copy_match_across_mobile_platforms():
     android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
-    expected_supporting_copy = "Time checks and command cues that keep you sharp under pressure"
 
     assert "Voice Callouts" in android_setup or "AI Voice Callouts" in android_setup
     assert "Voice Callouts" in ios_setup
-    assert expected_supporting_copy in android_setup
-    assert expected_supporting_copy in ios_setup
+    assert "Time checks and command cues that keep you sharp under pressure" in ios_setup
+    assert "VoiceGender.entries.forEach" in android_setup
+    assert "horizontalArrangement = Arrangement.spacedBy(8.dp)" in android_setup
+    assert "onCommandCuePreview(config.voiceGender)" in android_setup
 
 
 def test_sound_arsenal_is_expanded_by_default_for_free_users():
@@ -232,6 +234,16 @@ def test_sound_arsenal_catalog_matches_across_platforms():
     assert ios_catalog == android_catalog
     assert ios_catalog["entitlement"] == "pro"
     assert len(ios_catalog["sounds"]) == 10
+
+
+def test_bundled_sound_catalog_pack_id_matches_runtime_manifest():
+    runtime_manifest = _load_runtime_manifest()
+    ios_catalog = _load_ios_sound_catalog()
+    android_catalog = _load_android_sound_catalog()
+
+    assert ios_catalog["packId"] == runtime_manifest["packId"]
+    assert android_catalog["packId"] == runtime_manifest["packId"]
+    assert runtime_manifest["soundCatalog"]["packId"] == runtime_manifest["packId"]
 
 
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():

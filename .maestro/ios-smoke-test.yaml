@@ -1,6 +1,6 @@
 appId: com.igorganapolsky.randomtimer
 ---
-# iOS Smoke test: Verify app launches and timer flow works
+# iOS Smoke test: verify launch and the primary start action.
 - launchApp
 
 # Verify main screen elements are visible
@@ -12,20 +12,6 @@ appId: com.igorganapolsky.randomtimer
 # Start the timer
 - tapOn: 'Start Timer'
 
-# Verify timer screen is shown
-- assertVisible:
-    text: '.*Timer running.*'
-    optional: true
-- assertVisible:
-    text: '.*Range.*'
-    optional: true
-
-# Verify Pause button is visible (timer is running)
-- assertVisible:
-    text: 'Pause'
-    optional: true
-
-# Go back - stop timer
-- tapOn:
-    text: 'Stop'
-    optional: true
+# End the smoke flow with the app stopped. This avoids a Maestro iOS teardown
+# hang while the animated timer screen is active.
+- stopApp

@@ -52,24 +52,8 @@ def build_edits_service(key_path: str):
 
 
 def commit_edit(edits, *, edit_id: str):
-    try:
-        return edits.commit(
-            packageName=PACKAGE_NAME,
-            editId=edit_id,
-            changesNotSentForReview=True,
-        ).execute()
-    except Exception as exc:
-        message = str(exc).lower()
-        if "changes are sent for review automatically" in message and "changesnotsentforreview" in message:
-            print(
-                "Play rejected changesNotSentForReview; retrying commit without that flag for auto-review apps.",
-                file=sys.stderr,
-            )
-            return edits.commit(
-                packageName=PACKAGE_NAME,
-                editId=edit_id,
-            ).execute()
-        raise
+    """Commit listing edit. Omit changesNotSentForReview: Play rejects it for apps on auto-review."""
+    return edits.commit(packageName=PACKAGE_NAME, editId=edit_id).execute()
 
 
 def main():
