@@ -242,6 +242,7 @@ struct PaywallSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
+            trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
             AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
@@ -380,6 +381,17 @@ struct PaywallSheet: View {
             AnalyticsProperties.productId: productID,
             "plan": plan,
         ])
+    }
+
+    private func planName(for plan: PaywallPlanSelection) -> String {
+        switch plan {
+        case .monthly:
+            return "monthly"
+        case .annual:
+            return "annual"
+        case .lifetime:
+            return "lifetime"
+        }
     }
 
     private func triggerDebugUnlock() {
