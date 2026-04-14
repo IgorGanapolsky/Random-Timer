@@ -110,7 +110,7 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BRANCH="feat/pro-audio-regen-$(date -u +%Y%m%d)"
+          BRANCH="feat/pro-audio-regen-$(date -u +%Y%m%d-%H%M%S)-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "$BRANCH"
           git add \
             content/pro_audio/monthly_pro_audio_packs.json \
