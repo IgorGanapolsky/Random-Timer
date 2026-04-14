@@ -52,6 +52,23 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
 
 
+def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
+    ci = _read(".github/workflows/ci.yml")
+    device_tests = _read(".github/workflows/device-tests.yml")
+
+    assert "permissions:\n  contents: read" in ci
+    assert "permissions:\n  contents: read" in device_tests
+    assert "Path-Aware CI Gate" in ci
+    assert "Path-Aware Device Gate" in device_tests
+    assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in ci
+    assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in device_tests
+    assert "if: needs.changes.outputs.android == 'true'" in ci
+    assert "if: needs.changes.outputs.ios == 'true'" in ci
+    assert "if: needs.changes.outputs.android_device == 'true'" in device_tests
+    assert "if: needs.changes.outputs.ios_device == 'true'" in device_tests
+    assert ci.count("timeout-minutes:") >= 9
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]

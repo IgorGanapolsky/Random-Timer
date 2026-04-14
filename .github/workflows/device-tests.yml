@@ -5,13 +5,45 @@ on:
     branches: [develop, main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: device-tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Path-Aware Device Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      android_device: ${{ steps.classify.outputs.android_device }}
+      ios_device: ${{ steps.classify.outputs.ios_device }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed components
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+            python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
+          else
+            python3 scripts/ci_changed_components.py --all --github-output
+          fi
+
   android-device-tests:
     name: Android Emulator + Maestro Tests
+    needs: changes
+    if: needs.changes.outputs.android_device == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -78,6 +110,8 @@ jobs:
 
   ios-device-tests:
     name: iOS Simulator + Maestro + Agent Device
+    needs: changes
+    if: needs.changes.outputs.ios_device == 'true'
     runs-on: macos-15
     timeout-minutes: 35
 
@@ -135,11 +169,11 @@ jobs:
               XCODE_PATH="${candidate}"
               break
             fi
-          done < <(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V -r)
+          done < <(find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null | sort -V -r)
 
           if [ -z "${XCODE_PATH}" ]; then
             echo "No Xcode installation with iOS Simulator SDK found."
-            ls -d /Applications/Xcode*.app 2>/dev/null || true
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print 2>/dev/null || true
             exit 1
           fi
 
