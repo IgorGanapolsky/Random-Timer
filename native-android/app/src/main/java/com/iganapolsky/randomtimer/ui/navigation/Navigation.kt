@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
@@ -53,30 +54,14 @@ fun RandomTimerNavHost(
             .value
             ?.destination
             ?.route
-    val activity = LocalContext.current as? Activity
     val context = LocalContext.current
+    val activity = context as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
     var proPrice by remember { mutableStateOf("$29.99") }
+    var monthlyPrice by remember { mutableStateOf("$3.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
-
-    // Gate: show toast instead of paywall if user hasn't finished their first timer
-    fun guardedUpgradeTap() {
-        if (!viewModel.hasCompletedFirstTimer) {
-            android.widget.Toast
-                .makeText(
-                    context,
-                    "Complete your first drill to unlock Pro features",
-                    android.widget.Toast.LENGTH_LONG,
-                ).show()
-        } else {
-            scope.launch {
-                proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
-                paywallEntryPoint = "setup_upgrade_cta"
-                showPaywall = true
-            }
-        }
-    }
+    var paywallFreeTrialByProductId by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -139,15 +124,34 @@ fun RandomTimerNavHost(
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
                 isElite = isElite,
-                onUpgradeTap = {
-                    guardedUpgradeTap()
-                },
-                onFeatureGateHit = { feature ->
+                onUpgradeTap = { feature ->
                     if (!viewModel.hasCompletedFirstTimer) {
                         viewModel.trackPaywallGateFirstTimer(feature)
+                        android.widget.Toast
+                            .makeText(
+                                context,
+                                "Complete your first drill to unlock Pro features.",
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
                     } else {
                         viewModel.trackFeatureGateHit(feature)
+                        scope.launch {
+                            proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+                            monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
+                            paywallEntryPoint = "setup_upgrade_cta"
+                            paywallFreeTrialByProductId =
+                                mapOf(
+                                    ProManager.MONTHLY_PRODUCT_ID to
+                                        viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
+                                    ProManager.ELITE_PRODUCT_ID to
+                                        viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
+                                )
+                            showPaywall = true
+                        }
                     }
+                },
+                onFeatureGateHit = { feature ->
+                    viewModel.trackFeatureGateHit(feature)
                 },
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)
@@ -216,11 +220,13 @@ fun RandomTimerNavHost(
     if (showPaywall) {
         PaywallSheet(
             proPrice = proPrice,
+            monthlyPrice = monthlyPrice,
+            freeTrialByProductId = paywallFreeTrialByProductId,
             onPurchase = { productID ->
                 scope.launch {
                     val launched =
                         activity?.let {
-                            viewModel.proManager.launchProPurchase(it, paywallEntryPoint)
+                            viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint)
                         } ?: false
                     if (!launched) {
                         // Purchase failed to launch — keep paywall open

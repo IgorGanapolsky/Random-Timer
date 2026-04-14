@@ -8,9 +8,16 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     static nonisolated let baseProductID = "com.iganapolsky.randomtimer.pro"
     /// Legacy / future SKU — not guaranteed to exist in App Store Connect; keep for restore if ever shipped.
     static nonisolated let eliteProductID = "com.iganapolsky.randomtimer.elite"
-    /// In-app paywall must use an IAP that exists in App Store Connect (currently non-consumable Pro Upgrade).
+    /// Monthly subscription — $3.99/month. Must be created in App Store Connect as an auto-renewable
+    /// subscription before the paywall can complete a live purchase.
+    static nonisolated let monthlyProductID = "com.iganapolsky.randomtimer.pro.monthly"
+    /// Annual subscription — $29.99/year. Maps to the existing elite SKU billing period.
+    static nonisolated let annualProductID = "com.iganapolsky.randomtimer.pro.annual"
+    /// In-app paywall default product — one-time non-consumable Pro Upgrade.
     static nonisolated let paywallProductID = baseProductID
-    static nonisolated var productIDs: Set<String> { [baseProductID, eliteProductID] }
+    static nonisolated var productIDs: Set<String> {
+        [baseProductID, eliteProductID, monthlyProductID, annualProductID]
+    }
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
     @Published private(set) var products: [Product] = []
@@ -18,6 +25,15 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
 
     var isPro: Bool { entitlementLevel.isPro }
     var isElite: Bool { entitlementLevel == .elite }
+
+    /// True when the paywall product has a free introductory offer available for the current user.
+    /// Uses StoreKit 2 `subscription?.introductoryOffer` — eligibility is managed automatically by App Store Connect.
+    var hasFreeTrialOffer: Bool {
+        guard let product = products.first(where: { $0.id == Self.paywallProductID }),
+              let subscription = product.subscription
+        else { return false }
+        return subscription.introductoryOffer != nil
+    }
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
@@ -60,8 +76,13 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
         if let match = products.first(where: { $0.id == productID }) {
             return match.displayPrice
         }
-        guard !products.isEmpty else { return "Unavailable" }
-        return productID == Self.eliteProductID ? "$29.99/yr" : "$4.99"
+        // Fallback prices when store hasn't been configured yet
+        switch productID {
+        case Self.monthlyProductID: return "$3.99"
+        case Self.annualProductID: return "$29.99"
+        case Self.eliteProductID: return "$29.99"
+        default: return "$4.99"
+        }
     }
 
     // MARK: - Purchase
@@ -80,6 +101,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     }
 
     private func doPurchase(_ product: Product) async -> ProPurchaseResult {
+        let isEligibleForTrial = await product.subscription?.isEligibleForIntroOffer ?? false
         do {
             let result = try await product.purchase()
             switch result {
@@ -87,6 +109,16 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                 let transaction = try Self.checkVerified(verification)
                 updateEntitlement(for: transaction.productID)
                 await transaction.finish()
+                if isEligibleForTrial && transaction.productID == product.id {
+                    AnalyticsService.shared.track(
+                        AnalyticsEvents.freeTrialStarted,
+                        properties: [
+                            AnalyticsProperties.productId: product.id,
+                            AnalyticsEvents.trialVerificationSource: "storekit_intro_offer_eligibility",
+                            AnalyticsEvents.trialVerified: true
+                        ]
+                    )
+                }
                 return .success
             case .userCancelled:
                 return .userCancelled
@@ -178,7 +210,9 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     private func levelFor(productID: String) -> EntitlementLevel {
         switch productID {
         case Self.eliteProductID: return .elite
-        case Self.baseProductID: return .base
+        case Self.monthlyProductID: return .elite
+        case Self.annualProductID: return .elite
+        case Self.baseProductID: return .elite
         default: return .none
         }
     }

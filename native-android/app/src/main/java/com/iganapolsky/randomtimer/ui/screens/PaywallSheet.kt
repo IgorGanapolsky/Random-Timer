@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -11,20 +12,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
@@ -32,29 +40,39 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
-internal const val PAYWALL_HEADLINE = "Unlock Full Training Mode"
-internal const val PAYWALL_SUBHEADLINE = "Longer sessions, voice coaching, more sounds, and repeatable rounds."
-internal const val PAYWALL_AUDIENCE_LINE = "Built for dry fire, sparring, drills, and reaction training."
-internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Auto-renews yearly."
+internal const val PAYWALL_HEADLINE = "Stop Training With the Brakes On"
+internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library that updates every month."
+internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
-        "Train up to 60-minute sessions",
-        "Get voice callouts during training",
-        "Use loop mode with round limits",
-        "Unlock the full sound library",
-        "New Pro voice callouts and sound packs every 30 days",
+        "Full-length sessions — up to 60 minutes, no cutoffs",
+        "Live voice callouts keep you sharp under pressure",
+        "Loop drills with round limits — just like competition",
+        "Full sound arsenal — real bells, horns, and sirens",
+        "Fresh callout packs every 30 days — Pro gets them first",
     )
+
+/** Identifies which subscription plan the user has selected on the paywall. */
+internal enum class SubscriptionPlanSelection {
+    MONTHLY,
+    ANNUAL,
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
     proPrice: String,
+    monthlyPrice: String = "$3.99",
+    freeTrialByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
+    // Default to monthly — lower barrier to entry
+    var selectedPlan by remember { mutableStateOf(SubscriptionPlanSelection.MONTHLY) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -108,12 +126,6 @@ fun PaywallSheet(
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = PAYWALL_AUDIENCE_LINE,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
                 text = PAYWALL_PRICING_FOOTER,
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
@@ -138,9 +150,58 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Plan selector — monthly (default) and annual
+            Text(
+                text = "CHOOSE A PLAN",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = TimerColors.AccentPrimary,
+                modifier = Modifier.align(Alignment.Start),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlanOptionCard(
+                title = "Monthly",
+                priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
+                badge = null,
+                isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
+                onClick = { selectedPlan = SubscriptionPlanSelection.MONTHLY },
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlanOptionCard(
+                title = "Annual",
+                priceLabel = "${stripPriceSuffix(proPrice)}/year",
+                badge = "Best Value",
+                isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
+                onClick = { selectedPlan = SubscriptionPlanSelection.ANNUAL },
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            val (purchaseProductId, ctaLabel) =
+                when (selectedPlan) {
+                    SubscriptionPlanSelection.MONTHLY ->
+                        "elite_tactical_monthly" to
+                            if (freeTrialByProductId["elite_tactical_monthly"] == true) {
+                                "Start 7-Day Free Trial"
+                            } else {
+                                "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
+                            }
+                    SubscriptionPlanSelection.ANNUAL ->
+                        "elite_tactical" to
+                            if (freeTrialByProductId["elite_tactical"] == true) {
+                                "Start 7-Day Free Trial"
+                            } else {
+                                "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
+                            }
+                }
+
             PrimaryButton(
-                text = "Start Pro \u2022 ${normalizedPriceLabel(proPrice)}",
-                onClick = { onPurchase("elite_tactical") },
+                text = ctaLabel,
+                onClick = { onPurchase(purchaseProductId) },
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -169,7 +230,7 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Required by App Store guidelines for subscription disclosures
+            // Required by Play Store guidelines for subscription disclosures
             val uriHandler = LocalUriHandler.current
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -179,17 +240,19 @@ fun PaywallSheet(
                     text = "Privacy Policy",
                     style = MaterialTheme.typography.labelSmall,
                     color = TimerColors.TextSecondary,
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
-                    },
+                    modifier =
+                        Modifier.clickable {
+                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+                        },
                 )
                 Text(
                     text = "Terms of Use",
                     style = MaterialTheme.typography.labelSmall,
                     color = TimerColors.TextSecondary,
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
-                    },
+                    modifier =
+                        Modifier.clickable {
+                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
+                        },
                 )
             }
 
@@ -197,6 +260,63 @@ fun PaywallSheet(
         }
     }
 }
+
+@Composable
+private fun PlanOptionCard(
+    title: String,
+    priceLabel: String,
+    badge: String?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val borderColor = if (isSelected) TimerColors.AccentPrimary else TimerColors.TextSecondary.copy(alpha = 0.3f)
+    val bgColor = if (isSelected) TimerColors.AccentPrimary.copy(alpha = 0.08f) else TimerColors.BackgroundDark
+
+    Card(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(width = if (isSelected) 2.dp else 1.dp, color = borderColor),
+        colors = CardDefaults.cardColors(containerColor = bgColor),
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TimerColors.TextPrimary,
+                )
+                Text(
+                    text = priceLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                )
+            }
+            if (badge != null) {
+                Text(
+                    text = badge,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+    }
+}
+
+/** Strips any existing /yr, /year, /mo, /month suffix so callers can append their own unit. */
+internal fun stripPriceSuffix(price: String): String = price.trim().substringBefore("/")
 
 internal fun normalizedPriceLabel(price: String): String {
     val trimmed = price.trim()

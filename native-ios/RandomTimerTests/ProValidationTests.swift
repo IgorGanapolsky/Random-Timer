@@ -9,22 +9,24 @@ final class TimerConfigProClampingTests: XCTestCase {
 
     @MainActor
     func testPaywallCopyFocusesOnTrainingOutcomes() {
-        XCTAssertEqual(PaywallSheet.headline, "Unlock Full Training Mode")
-        XCTAssertEqual(PaywallSheet.subheadline, "Longer sessions, voice coaching, more sounds, and repeatable rounds.")
-        XCTAssertEqual(PaywallSheet.audienceLine, "Built for dry fire, sparring, drills, and reaction training.")
-        let expectedPricingFooter =
-            "Pro Upgrade — one-time purchase on the App Store. "
-            + "Price is shown on Apple's confirmation sheet; "
-            + "includes future Pro features we ship for this app on this Apple ID."
-        XCTAssertEqual(PaywallSheet.pricingFooter, expectedPricingFooter)
+        XCTAssertEqual(PaywallSheet.headline, "Stop Training With the Brakes On")
+        XCTAssertEqual(
+            PaywallSheet.subheadline,
+            "Go unlimited — sessions up to 60 minutes, live voice callouts, "
+                + "and a full sound library that updates every month."
+        )
+        let expectedFooter =
+            "Cancel anytime. Subscription auto-renews until cancelled. "
+            + "Price shown on Apple's confirmation sheet."
+        XCTAssertEqual(PaywallSheet.subscriptionFooter, expectedFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
-                "Train up to 60-minute sessions",
-                "Get voice callouts during training",
-                "Use loop mode with round limits",
-                "Unlock the full sound library",
-                "New Pro voice callouts and sound packs every 30 days",
+                "Full-length sessions — up to 60 minutes, no cutoffs",
+                "Live voice callouts keep you sharp under pressure",
+                "Loop drills with round limits — just like competition",
+                "Full sound arsenal — real bells, horns, and sirens",
+                "Fresh callout packs every 30 days — Pro gets them first",
             ]
         )
     }

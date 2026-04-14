@@ -55,7 +55,7 @@ class TimerSetupSmokeTest {
 
         assertTrue(
             composeRule
-                .onAllNodesWithText("Unlock Full Training Mode")
+                .onAllNodesWithText("Stop Training With the Brakes On")
                 .fetchSemanticsNodes()
                 .isEmpty(),
         )

@@ -59,34 +59,30 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Unlock Full Training Mode" in android_source and "holdForHiddenUnlock" in android_source
+    assert "Stop Training With the Brakes On" in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
-    assert "Unlock Full Training Mode" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "Stop Training With the Brakes On" in ios_paywall and "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
 
 
 def test_paywall_single_offer_parity():
-    """Enforce one visible premium offer on both platforms (monetization-roadmap)."""
+    """Enforce outcome-focused paywall copy and plan parity on both platforms."""
     android_paywall = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Elite Tactical" not in android_paywall, (
-        "Android paywall must not show Elite Tactical; single-offer only per monetization roadmap"
-    )
-    assert "Unlock Full Training Mode" in android_paywall
-    assert "Unlock Full Training Mode" in ios_paywall
-    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in android_paywall
-    assert "Longer sessions, voice coaching, more sounds, and repeatable rounds." in ios_paywall
-    assert "Built for dry fire, sparring, drills, and reaction training." in android_paywall
-    assert "Built for dry fire, sparring, drills, and reaction training." in ios_paywall
+    assert "Elite Tactical" not in android_paywall
+    assert "Stop Training With the Brakes On" in android_paywall
+    assert "Stop Training With the Brakes On" in ios_paywall
+    assert "Go unlimited" in android_paywall
+    assert "Go unlimited" in ios_paywall
     assert "Cancel anytime" in android_paywall
-    assert "Start Pro" in android_paywall
-    # iOS: App Store Connect non-consumable Pro Upgrade (not subscription); Android may still show yearly copy.
-    assert "Unlock Pro" in ios_paywall
-    assert "Pro Upgrade" in ios_paywall
-    assert "one-time" in ios_paywall.lower()
+    assert "Start Monthly" in android_paywall
+    assert "Start Annual" in android_paywall
+    assert "Start Monthly" in ios_paywall
+    assert "Start Annual" in ios_paywall
+    assert "Unlock Lifetime" in ios_paywall
 
 
 def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
@@ -166,6 +162,17 @@ def test_android_persists_voice_gender_selection_like_ios():
     assert 'VoiceGender.valueOf(it)' in android_repository
 
 
+def test_android_repeat_loop_uses_distinct_paywall_gate_identifier():
+    android_setup = _read(ANDROID_SETUP)
+    repeat_loop_block = android_setup.split("text = repeatLoopDetailTitle(isPro = isPro)", 1)[1].split(
+        'text = "Sound Arsenal"',
+        1,
+    )[0]
+
+    assert 'onUpgradeTap("repeat_loop")' in repeat_loop_block
+    assert 'onUpgradeTap("pro_sounds")' not in repeat_loop_block
+
+
 def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     android_setup = _read(ANDROID_SETUP)
     android_paywall = _read(ANDROID_PAYWALL)
@@ -182,11 +189,11 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "Icons.Filled.Lock" in android_setup
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     for expected in (
-        "Train up to 60-minute sessions",
-        "Get voice callouts during training",
-        "Use loop mode with round limits",
-        "Unlock the full sound library",
-        "New Pro voice callouts and sound packs every 30 days",
+        "Full-length sessions — up to 60 minutes, no cutoffs",
+        "Live voice callouts keep you sharp under pressure",
+        "Loop drills with round limits — just like competition",
+        "Full sound arsenal — real bells, horns, and sirens",
+        "Fresh callout packs every 30 days — Pro gets them first",
     ):
         assert expected in android_paywall
         assert expected in ios_paywall
@@ -195,7 +202,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "suspend fun getFormattedProPrice()" in android_pro_manager or "getFormattedPrice" in android_pro_manager
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
-    assert "launchProPurchase" in android_nav
+    assert "launchPurchase(it, productID, paywallEntryPoint)" in android_nav
 
 
 def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():

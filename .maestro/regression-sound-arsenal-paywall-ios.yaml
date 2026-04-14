@@ -12,7 +12,7 @@ appId: com.igorganapolsky.randomtimer
 - tapOn: "Unlock Sound Arsenal"
 - assertVisible: "Complete your first drill to unlock Pro features"
 - assertNotVisible:
-    text: "Unlock Full Training Mode"
+    text: "Stop Training With the Brakes On"
     optional: true
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp
