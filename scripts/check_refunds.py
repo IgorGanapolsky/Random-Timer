@@ -152,7 +152,8 @@ def fetch_all_lifecycle_events(
             token, account_id, namespace_id, prefix="subscription_lifecycle:", cursor=cursor
         )
         if not resp.get("success"):
-            break
+            errors = resp.get("errors", [])
+            raise RuntimeError(f"KV list_keys failed: {errors}")
         keys = [k["name"] for k in resp.get("result", [])]
         for key in keys:
             value = get_kv_value(token, account_id, namespace_id, key)

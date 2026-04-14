@@ -101,6 +101,12 @@ function readTlv(data: Uint8Array, pos: number): TlvInfo {
   return { tag, valueStart: pos + 1 + advance, valueLen: len, end: pos + 1 + advance + len };
 }
 
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 interface SigInfo {
   isEcdsa: boolean;
   hashAlg: string;
@@ -125,9 +131,7 @@ function extractTbsAndSig(
   const sigAlgSeq = readTlv(der, pos);
   const oidElem = readTlv(der, sigAlgSeq.valueStart);
   const oidBytes = der.slice(oidElem.valueStart, oidElem.valueStart + oidElem.valueLen);
-  const oidHex = Array.from(oidBytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const oidHex = bytesToHex(oidBytes);
   pos = sigAlgSeq.end;
 
   // Map OID to algorithm parameters
@@ -188,6 +192,41 @@ function extractSpki(der: Uint8Array): Uint8Array {
   throw new Error("SubjectPublicKeyInfo not found in certificate");
 }
 
+function extractEcdsaCurveFromSpki(spki: Uint8Array): { namedCurve: string; keyBytes: number } {
+  const spkiSeq = readTlv(spki, 0);
+  const algSeq = readTlv(spki, spkiSeq.valueStart);
+  if (algSeq.tag !== 0x30) {
+    throw new Error("SPKI AlgorithmIdentifier not found");
+  }
+
+  const algorithm = readTlv(spki, algSeq.valueStart);
+  if (algorithm.tag !== 0x06) {
+    throw new Error("SPKI algorithm OID not found");
+  }
+
+  const algorithmOid = bytesToHex(
+    spki.slice(algorithm.valueStart, algorithm.valueStart + algorithm.valueLen)
+  );
+  if (algorithmOid !== "2a8648ce3d0201") {
+    throw new Error(`Unsupported ECDSA public key algorithm OID: ${algorithmOid}`);
+  }
+
+  const curve = readTlv(spki, algorithm.end);
+  if (curve.tag !== 0x06) {
+    throw new Error("SPKI named curve OID not found");
+  }
+
+  const curveOid = bytesToHex(spki.slice(curve.valueStart, curve.valueStart + curve.valueLen));
+  const curveMap: Record<string, { namedCurve: string; keyBytes: number }> = {
+    "2a8648ce3d030107": { namedCurve: "P-256", keyBytes: 32 },
+    "2b81040022": { namedCurve: "P-384", keyBytes: 48 },
+    "2b81040023": { namedCurve: "P-521", keyBytes: 66 },
+  };
+  const curveInfo = curveMap[curveOid];
+  if (!curveInfo) throw new Error(`Unsupported ECDSA named curve OID: ${curveOid}`);
+  return curveInfo;
+}
+
 /**
  * Convert an ECDSA signature from DER (SEQUENCE { INTEGER r, INTEGER s }) to the
  * raw concatenated format (r || s) expected by Web Crypto ECDSA verify.
@@ -229,12 +268,7 @@ async function verifyCertSignedBy(
   let signature: ArrayBuffer;
 
   if (sigInfo.isEcdsa) {
-    const namedCurve =
-      sigInfo.hashAlg === "SHA-256" ? "P-256" :
-      sigInfo.hashAlg === "SHA-384" ? "P-384" : "P-521";
-    const keyBytes =
-      sigInfo.hashAlg === "SHA-256" ? 32 :
-      sigInfo.hashAlg === "SHA-384" ? 48 : 66;
+    const { namedCurve, keyBytes } = extractEcdsaCurveFromSpki(spki);
     key = await crypto.subtle.importKey(
       "spki", spki,
       { name: "ECDSA", namedCurve },
