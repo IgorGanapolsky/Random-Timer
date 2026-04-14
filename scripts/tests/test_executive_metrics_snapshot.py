@@ -164,7 +164,13 @@ def test_run_includes_refunds_and_uninstall_proxy_fields(
             "refund_count_metric_id": "android_refund_metric_id",
             "voided_purchase_reason_counts": {"0": 2, "1": 1},
         },
-        _get_ios_data=lambda days: {"status": "ok"},
+        _get_ios_data=lambda days: {
+            "status": "ok",
+            "ios_refund_units_30d": 2,
+            "refund_count_metric_id": "ios_refund_metric_id",
+            "sales_report_vendor_number_present": True,
+            "sales_report_days_with_data": 18,
+        },
     )
     monkeypatch.setitem(sys.modules, "check_crashlytics", fake_crashlytics)
     monkeypatch.setitem(sys.modules, "real_store_downloads", fake_real_store)
@@ -173,5 +179,8 @@ def test_run_includes_refunds_and_uninstall_proxy_fields(
 
     assert payload["refunds"]["android_refund_requests_30d"] == 3
     assert payload["refunds"]["android_reason_counts"] == {"0": 2, "1": 1}
+    assert payload["refunds"]["ios_refund_units_30d"] == 2
+    assert payload["refunds"]["ios_refund_count_metric_id"] == "ios_refund_metric_id"
+    assert payload["refunds"]["ios_sales_report_days_with_data"] == 18
     assert payload["uninstalls"]["ios_uninstall_proxy_30d"] == 2
     assert payload["uninstalls"]["android_uninstall_proxy_30d"] == 5

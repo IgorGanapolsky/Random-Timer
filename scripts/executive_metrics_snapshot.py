@@ -386,7 +386,8 @@ def run(
             "refund_requests": (
                 "Android refund_requests_30d comes from Google Play voided purchases API "
                 "(purchases.voidedpurchases.list) over the snapshot window. iOS refund "
-                "requests are not yet wired in this snapshot."
+                "signal is refund units from negative Units rows in App Store Connect "
+                "SALES/SUMMARY daily reports."
             ),
             "uninstall_proxy": (
                 "Proxy only: distinct Application Installed (os) minus distinct Application "
@@ -407,11 +408,20 @@ def run(
             "android_refund_count_metric_id": (android or {}).get("refund_count_metric_id"),
             "android_reason_counts": (android or {}).get("voided_purchase_reason_counts"),
             "android_status": (android or {}).get("status"),
-            "ios_refund_requests_30d": None,
-            "ios_status": "not_implemented",
+            "ios_refund_units_30d": (
+                (ios or {}).get("ios_refund_units_30d")
+                if (ios or {}).get("status") == "ok"
+                else None
+            ),
+            "ios_refund_count_metric_id": (ios or {}).get("refund_count_metric_id"),
+            "ios_sales_report_vendor_number_present": (
+                (ios or {}).get("sales_report_vendor_number_present")
+            ),
+            "ios_sales_report_days_with_data": (ios or {}).get("sales_report_days_with_data"),
+            "ios_status": (ios or {}).get("status"),
             "note": (
-                "Android uses Google Play voided purchases API. iOS refunds are not yet "
-                "ingested into executive_metrics_snapshot."
+                "Android uses Google Play voided purchases API. iOS uses negative Units in "
+                "App Store Connect SALES/SUMMARY daily reports (requires APPSTORE_VENDOR_NUMBER)."
             ),
         },
         "uninstalls": {
