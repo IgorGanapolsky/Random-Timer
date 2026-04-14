@@ -13,28 +13,24 @@ jobs:
           "/repos/$REPO/actions/runs" \
           --paginate \
           --jq '.workflow_runs[] | select(.created_at >= (now - 604800 | strftime("%Y-%m-%dT%H:%M:%SZ"))) | {workflow_name: .name, conclusion: .conclusion, duration: (.updated_at | fromdate - (.created_at | fromdate))}' \
-          > workflow_stats.json
+          > workflow_stats.jsonl
 
         echo "### CI/CD Performance Report (Last 7 Days)" > report.md
         echo "" >> report.md
         echo "#### Build Success Rate" >> report.md
-        jq -r '[.conclusion] | group_by(.) | map({conclusion: .[0], count: length}) | map("\(.conclusion): \(.count)") | .[]' workflow_stats.json >> report.md
+        jq -sr 'if length == 0 then "No workflow runs found in the last 7 days." else group_by(.conclusion // "in_progress") | map({conclusion: (.[0].conclusion // "in_progress"), count: length}) | map("\(.conclusion): \(.count)") | .[] end' workflow_stats.jsonl >> report.md
         echo "" >> report.md
 
         echo "#### Average Build Duration" >> report.md
-        jq -r 'group_by(.workflow_name) | map({name: .[0].workflow_name, avg_duration: (map(.duration) | add / length)}) | .[] | "\(.name): \(.avg_duration | floor)s"' workflow_stats.json >> report.md
+        jq -sr 'if length == 0 then "No workflow duration data found in the last 7 days." else group_by(.workflow_name) | map({name: .[0].workflow_name, avg_duration: (map(.duration) | add / length)}) | .[] | "\(.name): \(.avg_duration | floor)s" end' workflow_stats.jsonl >> report.md
         echo "" >> report.md
 
         echo "#### Cache Performance" >> report.md
         gh api -H "Accept: application/vnd.github+json" \
           "/repos/$REPO/actions/caches" \
-          --jq '.actions_caches | map({size_in_mb: (.size_in_bytes/1048576 | floor), last_accessed_at}) | "Total caches: \(length)\nTotal size: \(map(.size_in_mb) | add)MB"' >> report.md
-      issue_title: Weekly CI/CD Performance Report
-      issue_content_path: ./report.md
-      issue_labels: |
-        metrics
-        automation
-        ci-cd
+          --jq '.actions_caches | map({size_in_mb: (.size_in_bytes/1048576 | floor), last_accessed_at}) | "Total caches: \(length)\nTotal size: \(map(.size_in_mb) | add // 0)MB"' >> report.md
+      artifact_name: weekly-cicd-performance-report
+      artifact_path: ./report.md
 
   analyze-security:
     uses: ./.github/workflows/weekly-shared.yml
@@ -59,33 +55,71 @@ jobs:
         gh api -H "Accept: application/vnd.github+json" \
           "/repos/$REPO/secret-scanning/alerts" \
           --jq 'group_by(.state) | map({state: .[0].state, count: length}) | .[] | "\(.state): \(.count)"' >> security_report.md
-      issue_title: Weekly Security Metrics Report
-      issue_content_path: ./security_report.md
-      issue_labels: |
-        security
-        metrics
-        automation
+      artifact_name: weekly-security-metrics-report
+      artifact_path: ./security_report.md
 
   analyze-deployments:
     uses: ./.github/workflows/weekly-shared.yml
     with:
       run_command: |
-        echo "### Deployment Metrics Report (Last 7 Days)" > deployment_report.md
-        echo "" >> deployment_report.md
+        python3 <<'PY'
+        from __future__ import annotations
 
-        echo "#### Deployment Statistics" >> deployment_report.md
-        gh api -H "Accept: application/vnd.github+json" \
-          "/repos/$REPO/deployments" \
-          --jq '[.[] | select(.created_at >= (now - 604800 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | group_by(.environment) | map({env: .[0].environment, count: length, success: map(select(.state == "success")) | length}) | .[] | "\(.env):\n  Total: \(.count)\n  Success Rate: \((.success/.count * 100 | floor))%"' >> deployment_report.md
-        echo "" >> deployment_report.md
+        from collections import defaultdict
+        from datetime import UTC, datetime, timedelta
+        import json
+        import os
+        import subprocess
 
-        echo "#### Recent Deployments" >> deployment_report.md
-        gh api -H "Accept: application/vnd.github+json" \
-          "/repos/$REPO/deployments" \
-          --jq 'limit(5; reverse) | .[] | "- \(.environment) (\(.created_at)): \(.state)"' >> deployment_report.md
-      issue_title: Weekly Deployment Metrics Report
-      issue_content_path: ./deployment_report.md
-      issue_labels: |
-        deployments
-        metrics
-        automation
+        repo = os.environ["REPO"]
+        cutoff = datetime.now(UTC) - timedelta(days=7)
+
+        def gh_json(path: str) -> object:
+            output = subprocess.check_output(
+                ["gh", "api", "-H", "Accept: application/vnd.github+json", path],
+                text=True,
+            )
+            return json.loads(output)
+
+        deployments = gh_json(f"/repos/{repo}/deployments?per_page=100")
+        recent = []
+        for deployment in deployments:
+            created = datetime.fromisoformat(deployment["created_at"].replace("Z", "+00:00"))
+            if created < cutoff:
+                continue
+            statuses = gh_json(f"/repos/{repo}/deployments/{deployment['id']}/statuses?per_page=1")
+            latest_state = statuses[0]["state"] if statuses else "unknown"
+            recent.append(
+                {
+                    "environment": deployment.get("environment") or "unknown",
+                    "created_at": deployment["created_at"],
+                    "state": latest_state,
+                }
+            )
+
+        stats: dict[str, dict[str, int]] = defaultdict(lambda: {"total": 0, "success": 0})
+        for deployment in recent:
+            env = deployment["environment"]
+            stats[env]["total"] += 1
+            if deployment["state"] == "success":
+                stats[env]["success"] += 1
+
+        with open("deployment_report.md", "w", encoding="utf-8") as report:
+            report.write("### Deployment Metrics Report (Last 7 Days)\n\n")
+            report.write("#### Deployment Statistics\n")
+            if not stats:
+                report.write("No deployments found in the last 7 days.\n")
+            for env, values in sorted(stats.items()):
+                success_rate = int(values["success"] / values["total"] * 100) if values["total"] else 0
+                report.write(f"{env}:\n  Total: {values['total']}\n  Success Rate: {success_rate}%\n")
+
+            report.write("\n#### Recent Deployments\n")
+            if not recent:
+                report.write("No recent deployments.\n")
+            for deployment in sorted(recent, key=lambda item: item["created_at"], reverse=True)[:30]:
+                report.write(
+                    f"- {deployment['environment']} ({deployment['created_at']}): {deployment['state']}\n"
+                )
+        PY
+      artifact_name: weekly-deployment-metrics-report
+      artifact_path: ./deployment_report.md
