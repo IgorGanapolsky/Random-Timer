@@ -1,6 +1,6 @@
-• Real Sound Arsenal — all 8 Pro sounds replaced with studio-quality recordings
-• G.I. Jane female voice callouts with emotional intensity
-• Boxing bell, stadium air horn, military drum roll — each sound is authentic
-• Male & Female voice selection with instant preview
-• Pro lock indicators on all premium features
-• Performance and reliability improvements
+• Monthly Pro subscription support
+• Clearer Pro paywall focused on training outcomes
+• Paywall timing moved after the first completed timer session
+• April Pro audio and Sound Arsenal freshness
+• Cleaner review timing and analytics reliability
+• Release pipeline hardening for safer store updates
