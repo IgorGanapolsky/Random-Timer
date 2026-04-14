@@ -72,17 +72,16 @@ def _freesound_get(url: str, token: str, params: dict[str, str] | None = None) -
         raise RuntimeError(f"Freesound API {exc.code}: {body[:300]}") from exc
 
 
-def _freesound_download(sound_id: int, dest: Path, token: str) -> bool:
-    """Download a Freesound sound to dest. Returns True on success."""
+def _freesound_download(sound_id: int, token: str) -> bytes | None:
+    """Download Freesound audio bytes. Returns None on failure."""
     url = f"https://freesound.org/apiv2/sounds/{sound_id}/download/"
     req = urllib.request.Request(url, headers={"Authorization": f"Token {token}"})
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
-            dest.write_bytes(resp.read())
-        return True
+            return resp.read()
     except Exception as exc:
         print(f"  ⚠️  Download failed for sound {sound_id}: {exc}", file=sys.stderr)
-        return False
+        return None
 
 
 def _search_freesound(query: str, max_duration: float, token: str) -> list[dict[str, Any]]:
@@ -135,10 +134,12 @@ def _download_sound_pair(
         return True
 
     sound_id = sound["id"]
-    if not _freesound_download(sound_id, ios_dest, token):
+    audio_bytes = _freesound_download(sound_id, token)
+    if audio_bytes is None:
         return False
 
-    android_dest.write_bytes(ios_dest.read_bytes())
+    ios_dest.write_bytes(audio_bytes)
+    android_dest.write_bytes(audio_bytes)
     print(f"  ✅ Wrote {ios_dest.name} via download endpoint")
     return True
 
