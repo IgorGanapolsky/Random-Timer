@@ -26,15 +26,6 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     var isPro: Bool { entitlementLevel.isPro }
     var isElite: Bool { entitlementLevel == .elite }
 
-    /// True when the paywall product has a free introductory offer available for the current user.
-    /// Uses StoreKit 2 `subscription?.introductoryOffer` — eligibility is managed automatically by App Store Connect.
-    var hasFreeTrialOffer: Bool {
-        guard let product = products.first(where: { $0.id == Self.paywallProductID }),
-              let subscription = product.subscription
-        else { return false }
-        return subscription.introductoryOffer != nil
-    }
-
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
     private var transactionListener: Task<Void, Never>?

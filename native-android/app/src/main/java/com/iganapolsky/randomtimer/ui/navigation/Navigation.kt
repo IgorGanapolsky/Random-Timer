@@ -150,9 +150,6 @@ fun RandomTimerNavHost(
                         }
                     }
                 },
-                onFeatureGateHit = { feature ->
-                    viewModel.trackFeatureGateHit(feature)
-                },
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)
                 },
