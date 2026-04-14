@@ -66,6 +66,7 @@ fun PaywallSheet(
     monthlyPrice: String = "$3.99",
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
+    onPlanSelected: (plan: String, productId: String) -> Unit = { _, _ -> },
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
@@ -167,7 +168,10 @@ fun PaywallSheet(
                 priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
                 badge = null,
                 isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
-                onClick = { selectedPlan = SubscriptionPlanSelection.MONTHLY },
+                onClick = {
+                    selectedPlan = SubscriptionPlanSelection.MONTHLY
+                    onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+                },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,7 +181,10 @@ fun PaywallSheet(
                 priceLabel = "${stripPriceSuffix(proPrice)}/year",
                 badge = "Best Value",
                 isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
-                onClick = { selectedPlan = SubscriptionPlanSelection.ANNUAL },
+                onClick = {
+                    selectedPlan = SubscriptionPlanSelection.ANNUAL
+                    onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
+                },
             )
 
             Spacer(modifier = Modifier.height(24.dp))

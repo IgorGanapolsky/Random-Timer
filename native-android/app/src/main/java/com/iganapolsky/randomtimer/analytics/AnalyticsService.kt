@@ -289,6 +289,9 @@ class AnalyticsService
 
 // Event names for consistency
 object AnalyticsEvents {
+    const val PAYWALL_VIEW = "paywall_view"
+    const val PAYWALL_OFFER_SELECT = "paywall_offer_select"
+    const val PAYWALL_PURCHASE_FAIL_REASON = "paywall_purchase_fail_reason"
     const val APPLICATION_INSTALLED = "Application Installed"
     const val APPLICATION_OPENED = "Application Opened"
     const val TIMER_STARTED = "timer_started"
