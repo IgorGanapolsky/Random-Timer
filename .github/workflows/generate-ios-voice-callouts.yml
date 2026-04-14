@@ -1,8 +1,8 @@
 name: Generate Pro Audio Content
 
+# DEPRECATED: Use monthly-pro-content-release.yml instead.
+# Kept as manual-only for ad-hoc voice callout testing.
 on:
-  schedule:
-    - cron: "0 15 1 * *"
   workflow_dispatch:
     inputs:
       pack_id:
@@ -28,15 +28,18 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   generate:
     name: Render monthly Pro audio assets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PROJECT_PAT }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -80,7 +83,7 @@ jobs:
 
       - name: Upload generated audio assets
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: monthly-pro-audio-content
           path: |
@@ -90,7 +93,9 @@ jobs:
             native-android/app/src/main/assets
             native-android/app/src/main/res/raw
 
-      - name: Commit regenerated monthly audio bundle
+      - name: Create PR with regenerated audio
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
         run: |
           if git diff --quiet -- \
             content/pro_audio/monthly_pro_audio_packs.json \
@@ -105,6 +110,8 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="feat/pro-audio-regen-$(date -u +%Y%m%d)"
+          git checkout -b "$BRANCH"
           git add \
             content/pro_audio/monthly_pro_audio_packs.json \
             content/pro_audio/runtime \
@@ -113,4 +120,7 @@ jobs:
             native-android/app/src/main/assets \
             native-android/app/src/main/res/raw
           git commit -m "chore: regenerate monthly pro audio content"
-          git push
+          git push origin "$BRANCH"
+          gh pr create --base develop --head "$BRANCH" \
+            --title "chore(audio): regenerate Pro audio content" \
+            --body "Auto-generated via manual dispatch of generate-ios-voice-callouts workflow."

@@ -323,16 +323,16 @@ def main() -> int:
     freesound_token = os.environ.get("FREESOUND_API_TOKEN", "").strip()
     elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 
+    sound_paths: list[Path] = []
     if not freesound_token:
         print(
-            "❌ FREESOUND_API_TOKEN is not set. Cannot fetch CC0 sounds.",
+            "⚠️  FREESOUND_API_TOKEN is not set — skipping CC0 sound fetch.",
             file=sys.stderr,
         )
-        return 1
-
-    print("=== Step 1: Fetch CC0 sounds from Freesound ===")
-    sound_paths = fetch_freesound_pack(freesound_token, dry_run=args.dry_run)
-    print(f"Fetched {len(sound_paths)} sound file(s).")
+    else:
+        print("=== Step 1: Fetch CC0 sounds from Freesound ===")
+        sound_paths = fetch_freesound_pack(freesound_token, dry_run=args.dry_run)
+        print(f"Fetched {len(sound_paths)} sound file(s).")
 
     voice_paths: list[Path] = []
     if not args.skip_voice:
