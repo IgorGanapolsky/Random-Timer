@@ -1,7 +1,8 @@
 # Monthly Pro Content Release Pipeline
 #
 # Runs on the 1st of each month at 08:00 UTC (+ manual dispatch).
-# Delivers fresh voice callouts and CC0 sound effects to both stores without manual CEO gates.
+# Generates verified Pro audio updates, then dispatches store release automation.
+# Public store availability must still be proven by store read-back; App Review timing is not guaranteed.
 #
 # ─────────────────────────────────────────────────────────────────────────
 # Required Secrets
@@ -446,10 +447,10 @@ jobs:
           EOF
 
 # ============================================================
-# Job 5 — Publish to both stores (only if regression tests pass)
+# Job 5 — Submit store release (only if regression tests pass)
 # ============================================================
   publish-production:
-    name: "Step 5 — Publish to App Store + Play Store"
+    name: "Step 5 — Submit App Store + publish Play Store"
     needs: [generate-content, merge-and-cut-release, regression-gate]
     if: needs.merge-and-cut-release.outputs.release_branch != '' && needs.regression-gate.result == 'success'
     runs-on: ubuntu-latest
@@ -473,13 +474,13 @@ jobs:
             --ref "${RELEASE_BRANCH}" \
             -f platform=both \
             -f android_track=production \
-            -f submit_review=false \
+            -f submit_review=true \
             -f confirm_ios_only_release=false \
             -f skip_internal_signoff=true \
             -f skip_production_signoff=true
 
           echo "✅ Dispatched Native App Release for ${RELEASE_BRANCH}"
-          echo "Both Play Store and App Store uploads will proceed via native-release.yml (signoff gates waived for monthly schedule)."
+          echo "Play production upload and App Store review submission will proceed via native-release.yml (signoff gates waived for monthly schedule)."
 
       - name: Write pipeline completion summary
         env:
@@ -488,15 +489,15 @@ jobs:
           RELEASE_BRANCH: ${{ needs.merge-and-cut-release.outputs.release_branch }}
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          ## Monthly Pro Content Release — Pipeline Complete
+          ## Monthly Pro Content Release — Dispatch Complete
 
           | Field           | Value                         |
           |-----------------|-------------------------------|
           | Version         | ${RELEASE_VERSION}            |
           | Month           | ${MONTH_LABEL}                |
           | Release branch  | ${RELEASE_BRANCH}             |
-          | Platforms       | iOS (App Store) + Android (Play Store) |
+          | Platforms       | iOS App Review submission + Android Play production |
 
-          Native App Release has been dispatched. Monitor its run for the final
-          store-upload confirmation.
+          Native App Release has been dispatched. Use that run for final
+          store-upload, App Review submission, and public store read-back evidence.
           EOF

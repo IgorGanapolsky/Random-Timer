@@ -42,7 +42,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
 internal const val PAYWALL_HEADLINE = "Stop Training With the Brakes On"
-internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library that updates every month."
+internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills."
 internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
@@ -50,7 +50,7 @@ internal val PAYWALL_FEATURE_ROWS =
         "Live voice callouts keep you sharp under pressure",
         "Loop drills with round limits — just like competition",
         "Full sound arsenal — real bells, horns, and sirens",
-        "Fresh callout packs every 30 days — Pro gets them first",
+        "Verified audio drops when new packs are ready",
     )
 
 /** Identifies which subscription plan the user has selected on the paywall. */

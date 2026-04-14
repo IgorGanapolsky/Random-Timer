@@ -50,6 +50,9 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "actions: write" in contents
     assert "--body-file \"$body_file\"" in contents
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+    assert "-f submit_review=true" in contents
+    assert "-f submit_review=false" not in contents
+    assert "Public store availability must still be proven by store read-back" in contents
 
 
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
