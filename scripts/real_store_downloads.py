@@ -17,7 +17,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime as dt
+import gzip
+import io
 import json
 import os
 import sys
@@ -28,6 +31,7 @@ from typing import Any
 ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
 IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 IOS_APP_ID = "6758355312"
+APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 _ASC_DIR = _SCRIPTS_DIR / "asc"
@@ -71,6 +75,9 @@ ANDROID_REFUND_COUNT_METRIC_ID = (
 )
 IOS_REVIEW_COUNT_METRIC_ID = (
     "app_store_connect_customer_reviews_sort_created_desc_limit_50"
+)
+IOS_REFUND_COUNT_METRIC_ID = (
+    "app_store_connect_sales_reports_daily_summary_negative_units_sum"
 )
 
 
@@ -128,6 +135,74 @@ def _summarize_voided_purchases(voided: list[dict[str, Any]]) -> dict[str, Any]:
         "refund_requests_30d": len(voided),
         "voided_purchase_reason_counts": reason_counts,
     }
+
+
+def _parse_asc_sales_report_rows(raw: bytes) -> list[dict[str, str]]:
+    """Parse ASC sales report bytes (gzip TSV or plain TSV) into row dicts."""
+    if not raw:
+        return []
+    try:
+        decoded = gzip.decompress(raw).decode("utf-8", errors="replace")
+    except Exception:
+        decoded = raw.decode("utf-8", errors="replace")
+    reader = csv.DictReader(io.StringIO(decoded), delimiter="\t")
+    rows: list[dict[str, str]] = []
+    for row in reader:
+        if not isinstance(row, dict):
+            continue
+        rows.append({str(k or ""): str(v or "") for k, v in row.items()})
+    return rows
+
+
+def _summarize_ios_refunds_from_sales_rows(rows: list[dict[str, str]]) -> dict[str, Any]:
+    """Treat negative Units rows as refund units in ASC daily sales summaries."""
+    refund_units = 0.0
+    gross_units = 0.0
+    for row in rows:
+        units_raw = (row.get("Units") or "").strip()
+        if not units_raw:
+            continue
+        try:
+            units = float(units_raw)
+        except ValueError:
+            continue
+        if units < 0:
+            refund_units += abs(units)
+        elif units > 0:
+            gross_units += units
+    return {
+        "ios_refund_units_30d": int(round(refund_units)),
+        "ios_gross_units_30d": int(round(gross_units)),
+        "ios_net_units_30d": int(round(gross_units - refund_units)),
+    }
+
+
+def _fetch_asc_sales_report_bytes(
+    requests_mod: Any,
+    headers: dict[str, str],
+    vendor_number: str,
+    report_date: dt.date,
+) -> bytes | None:
+    """Fetch one daily ASC sales summary report as raw bytes."""
+    resp = _asc_get_with_retries(
+        requests_mod,
+        f"{APP_STORE_CONNECT_API}/salesReports",
+        headers=headers,
+        params={
+            "filter[frequency]": "DAILY",
+            "filter[reportDate]": report_date.strftime("%Y-%m-%d"),
+            "filter[reportSubType]": "SUMMARY",
+            "filter[reportType]": "SALES",
+            "filter[vendorNumber]": vendor_number,
+            "filter[version]": "1_0",
+        },
+        timeout=90.0,
+    )
+    if resp.status_code == 404:
+        return None
+    if resp.status_code != 200:
+        raise RuntimeError(f"ASC salesReports HTTP {resp.status_code}")
+    return resp.content or b""
 
 
 def _get_android_data(days: int) -> dict[str, Any]:
@@ -313,12 +388,47 @@ def _get_ios_data(days: int) -> dict[str, Any]:
         result["reviews_error"] = str(e)
 
     # Note: Sales and Trends API requires a separate report request
-    # which takes time to generate. For now, we use the review count
-    # and version state as ground truth.
+    # and may be unavailable for the current date until processing catches up.
+    vendor_number = (os.environ.get("APPSTORE_VENDOR_NUMBER") or "").strip()
+    if vendor_number:
+        try:
+            all_rows: list[dict[str, str]] = []
+            days_with_data = 0
+            today_utc = dt.datetime.now(dt.timezone.utc).date()
+            for offset in range(1, max(1, int(days)) + 1):
+                report_day = today_utc - dt.timedelta(days=offset)
+                blob = _fetch_asc_sales_report_bytes(
+                    requests,
+                    headers,
+                    vendor_number,
+                    report_day,
+                )
+                if not blob:
+                    continue
+                rows = _parse_asc_sales_report_rows(blob)
+                if rows:
+                    days_with_data += 1
+                    all_rows.extend(rows)
+            refund_summary = _summarize_ios_refunds_from_sales_rows(all_rows)
+            result.update(refund_summary)
+            result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+            result["sales_report_vendor_number_present"] = True
+            result["sales_report_days_scanned"] = int(days)
+            result["sales_report_days_with_data"] = days_with_data
+        except Exception as e:
+            result["refund_error"] = str(e)
+            result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+            result["sales_report_vendor_number_present"] = True
+    else:
+        result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+        result["sales_report_vendor_number_present"] = False
+
     result["note"] = (
         "App Store Connect Sales reports require async report generation. "
         "customerReviews count is the first page only (limit 50, newest first), "
-        "not total lifetime App Store reviews. Version state is live from the API."
+        "not total lifetime App Store reviews. Version state is live from the API. "
+        "iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY "
+        "reports when APPSTORE_VENDOR_NUMBER is configured."
     )
 
     return result
