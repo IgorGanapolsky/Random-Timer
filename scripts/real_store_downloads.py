@@ -31,6 +31,7 @@ from typing import Any
 ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
 IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 IOS_APP_ID = "6758355312"
+APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 _ASC_DIR = _SCRIPTS_DIR / "asc"
