@@ -359,12 +359,55 @@ The pipeline merges this branch to develop, cuts release/v*, and dispatches Nati
           echo "Cut release branch: ${RELEASE_BRANCH}"
 
 # ============================================================
-# Job 4 — Publish to both stores
+# Job 4 — Run ALL regression tests on release branch
+# ============================================================
+  regression-gate:
+    name: "Step 4 — Regression tests (must pass before publish)"
+    needs: [merge-and-cut-release]
+    if: needs.merge-and-cut-release.outputs.release_branch != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.merge-and-cut-release.outputs.release_branch }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run ALL regression tests
+        run: |
+          set -euo pipefail
+          echo "Running regression suite on release branch..."
+          python -m pytest scripts/tests/test_pro_lock_parity.py \
+                          scripts/tests/test_audio_asset_regressions.py \
+                          scripts/tests/test_store_metadata_copy.py \
+                          scripts/tests/test_voice_regression_contracts.py \
+                          scripts/tests/test_mobile_analytics_parity.py \
+                          -v --tb=short
+          echo "✅ All regression tests passed — safe to publish."
+
+      - name: Regression gate summary
+        if: success()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Regression Gate — PASSED ✅
+          All regression tests passed on release branch \`${{ needs.merge-and-cut-release.outputs.release_branch }}\`.
+          Proceeding to store publish.
+          EOF
+
+# ============================================================
+# Job 5 — Publish to both stores (only if regression tests pass)
 # ============================================================
   publish-production:
-    name: "Step 4 — Publish to App Store + Play Store"
-    needs: [generate-content, merge-and-cut-release]
-    if: needs.merge-and-cut-release.outputs.release_branch != ''
+    name: "Step 5 — Publish to App Store + Play Store"
+    needs: [generate-content, merge-and-cut-release, regression-gate]
+    if: needs.merge-and-cut-release.outputs.release_branch != '' && needs.regression-gate.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
