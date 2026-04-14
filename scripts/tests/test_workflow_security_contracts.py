@@ -63,6 +63,14 @@ def test_public_store_version_readback_requires_public_evidence() -> None:
     assert "Upload public store read-back evidence" in contents
 
 
+def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
+    contents = _read(".github/workflows/monthly-audio-pack.yml")
+
+    assert "schedule:" not in contents
+    assert "|| true" not in contents
+    assert "monthly-pro-content-release.yml" in contents
+
+
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
     contents = _read(".github/workflows/autonomous-release-automerge.yml")
 
