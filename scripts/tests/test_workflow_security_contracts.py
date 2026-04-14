@@ -38,6 +38,20 @@ def test_workflow_inputs_are_not_interpolated_inside_run_blocks() -> None:
     assert offenders == []
 
 
+def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
+    contents = _read(".github/workflows/monthly-pro-content-release.yml")
+
+    assert "PROJECT_PAT != ''" not in contents
+    assert "github.token" not in contents
+    assert "Validate required automation token" in contents
+    assert "Missing required monthly release secret(s):" in contents
+    assert "FREESOUND_API_TOKEN" in contents
+    assert contents.count("timeout-minutes:") >= 5
+    assert "actions: write" in contents
+    assert "--body-file \"$body_file\"" in contents
+    assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]
