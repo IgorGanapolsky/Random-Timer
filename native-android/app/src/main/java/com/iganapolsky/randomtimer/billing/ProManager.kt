@@ -344,7 +344,7 @@ class ProManager
 
         /**
          * Fetches product details before checking trial availability so launch-time cache races
-         * do not hide valid free-trial CTAs.
+         * do not hide valid free-trial CTAs for the selected plan.
          */
         suspend fun hasFreeTrialOffer(productID: String): Boolean {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID) ?: return false

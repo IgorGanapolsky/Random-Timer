@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import com.iganapolsky.randomtimer.billing.ProManager
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -50,5 +51,33 @@ class PaywallSheetTest {
         val annual = SubscriptionPlanSelection.ANNUAL
         assertEquals(SubscriptionPlanSelection.MONTHLY, monthly)
         assertEquals(SubscriptionPlanSelection.ANNUAL, annual)
+    }
+
+    @Test
+    fun `cta label uses trial eligibility for the selected product only`() {
+        val trialEligibility =
+            mapOf(
+                ProManager.MONTHLY_PRODUCT_ID to false,
+                ProManager.ELITE_PRODUCT_ID to true,
+            )
+
+        assertEquals(
+            "Start Monthly \u2022 $3.99/mo",
+            ctaLabelForPlan(
+                selectedPlan = SubscriptionPlanSelection.MONTHLY,
+                proPrice = "$29.99",
+                monthlyPrice = "$3.99",
+                trialEligibilityByProductId = trialEligibility,
+            ),
+        )
+        assertEquals(
+            "Start 7-Day Free Trial",
+            ctaLabelForPlan(
+                selectedPlan = SubscriptionPlanSelection.ANNUAL,
+                proPrice = "$29.99",
+                monthlyPrice = "$3.99",
+                trialEligibilityByProductId = trialEligibility,
+            ),
+        )
     }
 }
