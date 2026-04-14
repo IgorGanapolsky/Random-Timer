@@ -107,12 +107,15 @@ jobs:
           python scripts/generate_pro_audio_content.py "${args[@]}"
 
       - name: Fetch bonus CC0 sounds from Freesound (optional)
-        if: ${{ secrets.FREESOUND_API_TOKEN != '' }}
         env:
           FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${FREESOUND_API_TOKEN}" ]; then
+            echo "FREESOUND_API_TOKEN not configured; skipping optional Freesound fetch."
+            exit 0
+          fi
           echo "=== Fetching bonus CC0 sounds from Freesound ==="
           python scripts/generate_monthly_audio_pack.py --skip-voice || echo "::warning::Freesound fetch failed — continuing with ElevenLabs content only"
 
@@ -422,5 +425,6 @@ jobs:
           | Release branch  | ${RELEASE_BRANCH}                                  |
           | Platforms       | iOS App Review submission + Android Play production |
 
-          Native App Release dispatched. Use that run for final store-upload and read-back evidence.
+          Native App Release dispatched. Use that run for final store-upload evidence.
+          Public store availability must still be proven by public-store-version-readback.yml before publication is claimed.
           SUMMARY
