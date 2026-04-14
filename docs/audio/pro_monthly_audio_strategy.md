@@ -31,7 +31,8 @@ Turn ElevenLabs into a recurring Pro content engine instead of a one-off asset g
 - Pro clients refresh the hosted manifest on entitlement restore, purchase, and app foreground.
 - Hosted assets are cached locally and validated with SHA-256 before activation.
 - Playback services prefer verified cached assets and fall back to bundled assets immediately if the runtime pack is missing, corrupt, or unavailable.
-- This gives existing Pro users monthly audio refreshes without requiring a store build.
+- This gives existing Pro users verified audio refreshes for supported foreground playback without waiting on store review.
+- Public store-version claims still require store read-back evidence after App Store review and Play production rollout.
 
 ## Platform Limitation
 

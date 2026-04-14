@@ -27,7 +27,7 @@ struct PaywallSheet: View {
     static let headline = "Stop Training With the Brakes On"
     static let subheadline =
         "Go unlimited — sessions up to 60 minutes, live voice callouts, "
-        + "and a full sound library that updates every month."
+        + "and a full sound library built for pressure drills."
     static let subscriptionFooter =
         "Cancel anytime. Subscription auto-renews until cancelled. "
         + "Price shown on Apple's confirmation sheet."
@@ -37,7 +37,7 @@ struct PaywallSheet: View {
         "Live voice callouts keep you sharp under pressure",
         "Loop drills with round limits — just like competition",
         "Full sound arsenal — real bells, horns, and sirens",
-        "Fresh callout packs every 30 days — Pro gets them first",
+        "Verified audio drops when new packs are ready",
     ]
 
     @EnvironmentObject var proManager: ProManager
