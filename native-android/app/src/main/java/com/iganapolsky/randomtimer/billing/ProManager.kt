@@ -87,6 +87,7 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
+
         /** Captures the exact trial offer submitted to Google Play for the pending flow. */
         private var pendingPurchaseFreeTrialProductId: String? = null
         private var pendingPurchaseFreeTrialOfferToken: String? = null

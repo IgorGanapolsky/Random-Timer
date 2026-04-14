@@ -458,8 +458,6 @@ enum AnalyticsEvents {
     // Purchase
     static let purchaseFailed = "purchase_failed"
     static let freeTrialStarted = "free_trial_started"
-    static let trialVerificationSource = "trial_verification_source"
-    static let trialVerified = "trial_verified"
 
     // Screen engagement
     static let screenDwellTime = "screen_dwell_time"
@@ -479,6 +477,8 @@ enum AnalyticsProperties {
     static let dismissMethod = "dismiss_method"
     static let productId = "product_id"
     static let entitlementLevel = "entitlement_level"
+    static let trialVerificationSource = "trial_verification_source"
+    static let trialVerified = "trial_verified"
     static let gender = "gender"
     static let feature = "feature"
     static let alarmResponseTime = "alarm_response_time"
