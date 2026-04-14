@@ -79,6 +79,15 @@ def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
     assert "monthly-pro-content-release.yml" in contents
 
 
+def test_manual_ios_voice_callout_regen_uses_unique_branch_per_run() -> None:
+    contents = _read(".github/workflows/generate-ios-voice-callouts.yml")
+
+    assert "schedule:" not in contents
+    assert "GITHUB_RUN_ID" in contents
+    assert "GITHUB_RUN_ATTEMPT" in contents
+    assert "feat/pro-audio-regen-$(date -u +%Y%m%d)" not in contents
+
+
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
     contents = _read(".github/workflows/autonomous-release-automerge.yml")
 
