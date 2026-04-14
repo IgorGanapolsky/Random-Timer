@@ -161,6 +161,7 @@ struct PaywallSheet: View {
                         isSelected: selectedPlan == .monthly
                     ) {
                         selectedPlan = .monthly
+                        trackOfferSelected(plan: "monthly", productID: ProManager.monthlyProductID)
                     }
 
                     PlanOptionRow(
@@ -170,6 +171,7 @@ struct PaywallSheet: View {
                         isSelected: selectedPlan == .annual
                     ) {
                         selectedPlan = .annual
+                        trackOfferSelected(plan: "annual", productID: ProManager.annualProductID)
                     }
 
                     PlanOptionRow(
@@ -179,6 +181,7 @@ struct PaywallSheet: View {
                         isSelected: selectedPlan == .lifetime
                     ) {
                         selectedPlan = .lifetime
+                        trackOfferSelected(plan: "lifetime", productID: ProManager.paywallProductID)
                     }
                 }
 
@@ -239,6 +242,10 @@ struct PaywallSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
+            trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
+            AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
+                AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            ])
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
@@ -296,6 +303,13 @@ struct PaywallSheet: View {
                 AnalyticsProperties.productId: productID,
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
+            if result != .userCancelled {
+                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseFailReason, properties: [
+                    AnalyticsProperties.reason: failReason,
+                    AnalyticsProperties.productId: productID,
+                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                ])
+            }
 
             switch result {
             case .productUnavailable:
@@ -359,6 +373,25 @@ struct PaywallSheet: View {
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.dismissMethod: method,
         ])
+    }
+
+    private func trackOfferSelected(plan: String, productID: String) {
+        AnalyticsService.shared.track(AnalyticsEvents.paywallOfferSelect, properties: [
+            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            AnalyticsProperties.productId: productID,
+            "plan": plan,
+        ])
+    }
+
+    private func planName(for plan: PaywallPlanSelection) -> String {
+        switch plan {
+        case .monthly:
+            return "monthly"
+        case .annual:
+            return "annual"
+        case .lifetime:
+            return "lifetime"
+        }
     }
 
     private func triggerDebugUnlock() {
