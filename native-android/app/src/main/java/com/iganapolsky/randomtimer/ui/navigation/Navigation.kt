@@ -219,6 +219,13 @@ fun RandomTimerNavHost(
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
+            onPlanSelected = { plan, productId ->
+                viewModel.trackPaywallOfferSelected(
+                    entryPoint = paywallEntryPoint,
+                    productId = productId,
+                    plan = plan,
+                )
+            },
             onPurchase = { productID ->
                 scope.launch {
                     val launched =
