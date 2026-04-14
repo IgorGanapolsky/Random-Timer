@@ -51,6 +51,7 @@ jobs:
       new_version: ${{ steps.bump.outputs.new_version }}
       month_label: ${{ steps.meta.outputs.month_label }}
       changes_committed: ${{ steps.commit.outputs.changes_committed }}
+      content_pr_number: ${{ steps.commit.outputs.content_pr_number }}
 
     steps:
       - name: Validate required secrets
@@ -105,12 +106,15 @@ jobs:
           python scripts/generate_pro_audio_content.py "${args[@]}"
 
       - name: Fetch bonus CC0 sounds from Freesound (optional)
-        if: ${{ secrets.FREESOUND_API_TOKEN != '' }}
         env:
           FREESOUND_API_TOKEN: ${{ secrets.FREESOUND_API_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${FREESOUND_API_TOKEN}" ]; then
+            echo "FREESOUND_API_TOKEN not configured; skipping optional Freesound fetch."
+            exit 0
+          fi
           echo "=== Fetching bonus CC0 sounds from Freesound ==="
           python scripts/generate_monthly_audio_pack.py --skip-voice || echo "::warning::Freesound fetch failed — continuing with ElevenLabs content only"
 
@@ -221,6 +225,8 @@ jobs:
               --body "Auto-generated monthly Pro content update. New voice callouts + sound arsenal for ${MONTH_LABEL//-/ }. Version bump to ${NEW_VERSION}." \
               --repo "$GITHUB_REPOSITORY"
           fi
+          PR_NUMBER=$(gh pr view "${CONTENT_BRANCH}" --repo "$GITHUB_REPOSITORY" --json number --jq '.number')
+          echo "content_pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
 
           echo "changes_committed=true" >> "$GITHUB_OUTPUT"
 
@@ -236,14 +242,14 @@ jobs:
           if-no-files-found: warn
 
   # ============================================================
-  # Job 2 — Merge content branch to develop + cut release
+  # Job 2 — Submit content PR to Trunk + cut release
   # ============================================================
   merge-and-cut-release:
-    name: "Merge to develop + cut release branch"
+    name: "Submit content PR + cut release branch"
     needs: [generate-content]
     if: needs.generate-content.outputs.changes_committed == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     permissions:
       contents: write
       pull-requests: write
@@ -259,28 +265,65 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PROJECT_PAT }}
 
-      - name: Merge content branch into develop
+      - name: Submit content PR to Trunk and wait for merge
+        id: merge
         env:
-          GITHUB_TOKEN: ${{ secrets.PROJECT_PAT }}
-          CONTENT_BRANCH: ${{ needs.generate-content.outputs.content_branch }}
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
+          CONTENT_PR_NUMBER: ${{ needs.generate-content.outputs.content_pr_number }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin "${CONTENT_BRANCH}"
-          git merge --no-ff "origin/${CONTENT_BRANCH}" \
-            -m "chore: merge monthly content ${CONTENT_BRANCH} into develop"
-          git push origin develop
+
+          if [ -z "${CONTENT_PR_NUMBER}" ]; then
+            echo "::error::Missing generated content PR number."
+            exit 1
+          fi
+
+          gh pr comment "${CONTENT_PR_NUMBER}" --repo "$GITHUB_REPOSITORY" --body "/trunk merge"
+
+          deadline=$((SECONDS + 3300))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            state_json=$(gh pr view "${CONTENT_PR_NUMBER}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json state,mergedAt,mergeCommit)
+            state=$(echo "$state_json" | jq -r '.state')
+            merged_at=$(echo "$state_json" | jq -r '.mergedAt // ""')
+            merge_sha=$(echo "$state_json" | jq -r '.mergeCommit.oid // ""')
+
+            if [ -n "$merged_at" ] && [ -n "$merge_sha" ]; then
+              echo "content_merge_sha=${merge_sha}" >> "$GITHUB_OUTPUT"
+              echo "Content PR #${CONTENT_PR_NUMBER} merged at ${merged_at}: ${merge_sha}"
+              exit 0
+            fi
+
+            if [ "$state" = "CLOSED" ]; then
+              echo "::error::Content PR #${CONTENT_PR_NUMBER} closed without merge."
+              exit 1
+            fi
+
+            echo "Waiting for Trunk to merge content PR #${CONTENT_PR_NUMBER}..."
+            sleep 30
+          done
+
+          echo "::error::Timed out waiting for Trunk to merge content PR #${CONTENT_PR_NUMBER}."
+          exit 1
 
       - name: Cut release branch
         id: cut
         env:
           GITHUB_TOKEN: ${{ secrets.PROJECT_PAT }}
           NEW_VERSION: ${{ needs.generate-content.outputs.new_version }}
+          CONTENT_MERGE_SHA: ${{ steps.merge.outputs.content_merge_sha }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin develop
+          git checkout develop
+          git reset --hard origin/develop
+          if ! git merge-base --is-ancestor "${CONTENT_MERGE_SHA}" HEAD; then
+            echo "::error::origin/develop does not contain content merge ${CONTENT_MERGE_SHA}."
+            exit 1
+          fi
           RELEASE_BRANCH="release/v${NEW_VERSION}"
           git checkout -b "${RELEASE_BRANCH}"
           git push origin "${RELEASE_BRANCH}"
@@ -340,7 +383,7 @@ jobs:
   publish-production:
     name: "Publish to App Store + Play Store"
     needs: [generate-content, merge-and-cut-release, regression-gate]
-    if: needs.merge-and-cut-release.outputs.release_branch != ''
+    if: needs.merge-and-cut-release.outputs.release_branch != '' && needs.regression-gate.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -360,7 +403,7 @@ jobs:
             --ref "${RELEASE_BRANCH}" \
             -f platform=both \
             -f android_track=production \
-            -f submit_review=false \
+            -f submit_review=true \
             -f confirm_ios_only_release=false \
             -f skip_internal_signoff=true \
             -f skip_production_signoff=true
