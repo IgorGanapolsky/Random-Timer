@@ -147,7 +147,7 @@ fun TimerSetupScreen(
     hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
-    onUpgradeTap: () -> Unit = {},
+    onUpgradeTap: (String) -> Unit = {},
     onFeatureGateHit: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
@@ -336,8 +336,7 @@ fun TimerSetupScreen(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
                                                 onClick = {
-                                                    onFeatureGateHit("extended_range")
-                                                    onUpgradeTap()
+                                                    onUpgradeTap("extended_range")
                                                 },
                                                 onLongClick = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -557,8 +556,7 @@ fun TimerSetupScreen(
                                             }
                                             Surface(
                                                 onClick = {
-                                                    onFeatureGateHit("voice_callouts")
-                                                    onUpgradeTap()
+                                                    onUpgradeTap("voice_callouts")
                                                 },
                                                 shape = RoundedCornerShape(4.dp),
                                                 color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -789,8 +787,7 @@ fun TimerSetupScreen(
                                     } else {
                                         Surface(
                                             onClick = {
-                                                onFeatureGateHit("pro_sounds")
-                                                onUpgradeTap()
+                                                onUpgradeTap("pro_sounds")
                                             },
                                             shape = RoundedCornerShape(4.dp),
                                             color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
@@ -859,8 +856,7 @@ fun TimerSetupScreen(
                                 IconButton(
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onFeatureGateHit("pro_sounds")
-                                        onUpgradeTap()
+                                        onUpgradeTap("pro_sounds")
                                     },
                                     modifier =
                                         Modifier
@@ -976,7 +972,7 @@ private fun SoundArsenalCard(
     headerToContent: Dp,
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
-    onUpgradeTap: () -> Unit,
+    onUpgradeTap: (String) -> Unit,
     onFeatureGateHit: (String) -> Unit = {},
 ) {
     GlassCard(
@@ -1046,8 +1042,7 @@ private fun SoundArsenalCard(
                         fontWeight = FontWeight.SemiBold,
                         modifier =
                             Modifier.clickable(onClick = {
-                                onFeatureGateHit("pro_sounds")
-                                onUpgradeTap()
+                                onUpgradeTap("pro_sounds")
                             }),
                     )
                 }

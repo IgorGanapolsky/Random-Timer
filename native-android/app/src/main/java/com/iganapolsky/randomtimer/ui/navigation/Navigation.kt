@@ -54,7 +54,8 @@ fun RandomTimerNavHost(
             .value
             ?.destination
             ?.route
-    val activity = LocalContext.current as? Activity
+    val context = LocalContext.current
+    val activity = context as? Activity
     val scope = rememberCoroutineScope()
     var showPaywall by remember { mutableStateOf(false) }
     var proPrice by remember { mutableStateOf("$29.99") }
@@ -123,19 +124,30 @@ fun RandomTimerNavHost(
                 hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
                 isElite = isElite,
-                onUpgradeTap = {
-                    scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
-                        monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
-                        paywallEntryPoint = "setup_upgrade_cta"
-                        paywallFreeTrialByProductId =
-                            mapOf(
-                                ProManager.MONTHLY_PRODUCT_ID to
-                                    viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
-                                ProManager.ELITE_PRODUCT_ID to
-                                    viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
-                            )
-                        showPaywall = true
+                onUpgradeTap = { feature ->
+                    if (!viewModel.hasCompletedFirstTimer) {
+                        viewModel.trackPaywallGateFirstTimer(feature)
+                        android.widget.Toast
+                            .makeText(
+                                context,
+                                "Complete your first drill to unlock Pro features.",
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
+                    } else {
+                        viewModel.trackFeatureGateHit(feature)
+                        scope.launch {
+                            proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+                            monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
+                            paywallEntryPoint = "setup_upgrade_cta"
+                            paywallFreeTrialByProductId =
+                                mapOf(
+                                    ProManager.MONTHLY_PRODUCT_ID to
+                                        viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
+                                    ProManager.ELITE_PRODUCT_ID to
+                                        viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
+                                )
+                            showPaywall = true
+                        }
                     }
                 },
                 onFeatureGateHit = { feature ->
