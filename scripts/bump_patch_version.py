@@ -74,7 +74,7 @@ def read_android_version(gradle_text: str) -> str:
 
 def write_android_version(gradle_text: str, new_version: str) -> str:
     """Return gradle_text with versionName updated to new_version."""
-    pattern = re.compile(r'(versionName\s*=\s*")[0-9]+\.[0-9]+\.[0-9]+(")')
+    pattern = re.compile(r'(versionName\s*=\s*")\d+\.\d+\.\d+(")')
     replacement = rf'\g<1>{new_version}\g<2>'
     new_text, n = pattern.subn(replacement, gradle_text)
     if n == 0:
@@ -114,7 +114,7 @@ def write_ios_version(pbxproj_text: str, new_version: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _build_changelog_message(version: str, base_message: str | None) -> str:
+def _build_changelog_message(base_message: str | None) -> str:
     if base_message:
         return base_message
     month_year = datetime.now(tz=timezone.utc).strftime("%B %Y")
@@ -194,7 +194,7 @@ def bump(dry_run: bool = False, changelog_message: str | None = None) -> str:
         IOS_PBXPROJ.write_text(new_pbxproj, encoding="utf-8")
 
     # Update changelogs
-    message = _build_changelog_message(new_version, changelog_message)
+    message = _build_changelog_message(changelog_message)
     update_android_changelog(new_version, message, dry_run)
     update_ios_release_notes(message, dry_run)
 

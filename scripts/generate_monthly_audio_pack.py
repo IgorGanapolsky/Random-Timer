@@ -85,6 +85,64 @@ def _freesound_download(sound_id: int, dest: Path, token: str) -> bool:
         return False
 
 
+def _search_freesound(query: str, max_duration: float, token: str) -> list[dict[str, Any]]:
+    result = _freesound_get(
+        FREESOUND_SEARCH_URL,
+        token,
+        params={
+            "query": query,
+            "filter": f"license:\"Creative Commons 0\" duration:[0 TO {max_duration}]",
+            "fields": "id,name,duration,license,previews",
+            "page_size": "5",
+            "format": "json",
+        },
+    )
+    return result.get("results", [])
+
+
+def _preview_url(sound: dict[str, Any]) -> str | None:
+    previews = sound.get("previews", {})
+    return previews.get("preview-hq-mp3") or previews.get("preview-lq-mp3")
+
+
+def _write_preview_pair(
+    preview_url: str,
+    ios_dest: Path,
+    android_dest: Path,
+    token: str,
+) -> bool:
+    req = urllib.request.Request(preview_url, headers={"Authorization": f"Token {token}"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = resp.read()
+        ios_dest.write_bytes(data)
+        android_dest.write_bytes(data)
+        return True
+    except Exception as exc:
+        print(f"  ⚠️  Preview download failed: {exc}; falling back to download endpoint")
+        return False
+
+
+def _download_sound_pair(
+    sound: dict[str, Any],
+    ios_dest: Path,
+    android_dest: Path,
+    token: str,
+) -> bool:
+    preview_url = _preview_url(sound)
+    if preview_url and _write_preview_pair(preview_url, ios_dest, android_dest, token):
+        print(f"  ✅ Wrote {ios_dest.name} via preview URL")
+        return True
+
+    sound_id = sound["id"]
+    if not _freesound_download(sound_id, ios_dest, token):
+        return False
+
+    android_dest.write_bytes(ios_dest.read_bytes())
+    print(f"  ✅ Wrote {ios_dest.name} via download endpoint")
+    return True
+
+
 def fetch_freesound_pack(token: str, dry_run: bool = False) -> list[Path]:
     """Fetch CC0 sounds from Freesound and write them to both platform dirs.
     Returns list of written paths."""
@@ -102,22 +160,11 @@ def fetch_freesound_pack(token: str, dry_run: bool = False) -> list[Path]:
 
         print(f"Searching Freesound: {query!r} …")
         try:
-            result = _freesound_get(
-                FREESOUND_SEARCH_URL,
-                token,
-                params={
-                    "query": query,
-                    "filter": f"license:\"Creative Commons 0\" duration:[0 TO {max_dur}]",
-                    "fields": "id,name,duration,license,previews",
-                    "page_size": "5",
-                    "format": "json",
-                },
-            )
+            sounds = _search_freesound(query, max_dur, token)
         except RuntimeError as exc:
             print(f"  ⚠️  Skipping {query!r}: {exc}", file=sys.stderr)
             continue
 
-        sounds = result.get("results", [])
         if not sounds:
             print(f"  ℹ  No results for {query!r}")
             continue
@@ -133,34 +180,7 @@ def fetch_freesound_pack(token: str, dry_run: bool = False) -> list[Path]:
             print(f"  [dry-run] Would write {ios_dest} and {android_dest}")
             continue
 
-        # Try high-quality preview first (avoids OAuth download endpoint quirks)
-        preview_url = (
-            sound.get("previews", {}).get("preview-hq-mp3")
-            or sound.get("previews", {}).get("preview-lq-mp3")
-        )
-
-        downloaded = False
-        if preview_url:
-            req = urllib.request.Request(
-                preview_url, headers={"Authorization": f"Token {token}"}
-            )
-            try:
-                with urllib.request.urlopen(req, timeout=60) as resp:
-                    data = resp.read()
-                ios_dest.write_bytes(data)
-                android_dest.write_bytes(data)
-                downloaded = True
-                print(f"  ✅ Wrote {ios_dest.name} via preview URL")
-            except Exception as exc:
-                print(f"  ⚠️  Preview download failed: {exc}; falling back to download endpoint")
-
-        if not downloaded:
-            if _freesound_download(sound_id, ios_dest, token):
-                android_dest.write_bytes(ios_dest.read_bytes())
-                downloaded = True
-                print(f"  ✅ Wrote {ios_dest.name} via download endpoint")
-
-        if downloaded:
+        if _download_sound_pair(sound, ios_dest, android_dest, token):
             written.extend([ios_dest, android_dest])
 
         time.sleep(0.5)  # be polite to Freesound rate limits
@@ -232,11 +252,11 @@ def generate_voice_callouts(api_key: str, dry_run: bool = False) -> list[Path]:
     """Generate new monthly voice callouts via ElevenLabs.
     Returns list of written paths. Never raises — all errors are warnings."""
 
-    credits = _check_elevenlabs_credits(api_key)
+    available_credits = _check_elevenlabs_credits(api_key)
     total_chars = sum(len(c["text"]) for c in MONTHLY_CALLOUT_SCRIPTS)
-    if credits < total_chars:
+    if available_credits < total_chars:
         print(
-            f"  ℹ  Not enough ElevenLabs credits ({credits} < {total_chars} needed). "
+            f"  ℹ  Not enough ElevenLabs credits ({available_credits} < {total_chars} needed). "
             "Skipping voice callout generation.",
             file=sys.stderr,
         )
@@ -313,6 +333,7 @@ def main() -> int:
     sound_paths = fetch_freesound_pack(freesound_token, dry_run=args.dry_run)
     print(f"Fetched {len(sound_paths)} sound file(s).")
 
+    voice_paths: list[Path] = []
     if not args.skip_voice:
         if elevenlabs_key:
             print("\n=== Step 2: Generate voice callouts via ElevenLabs ===")
@@ -326,7 +347,7 @@ def main() -> int:
     else:
         print("\n=== Step 2: Voice callouts — SKIPPED (--skip-voice flag) ===")
 
-    all_files = sound_paths + ([] if args.skip_voice or not elevenlabs_key else [])
+    all_files = sound_paths + voice_paths
     print(f"\nDone. Total files written: {len(all_files)}")
     return 0
 
