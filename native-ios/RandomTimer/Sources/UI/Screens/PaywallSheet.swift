@@ -46,6 +46,7 @@ struct PaywallSheet: View {
     @State private var purchaseError: String?
     /// Default to monthly — lowest barrier to entry.
     @State private var selectedPlan: PaywallPlanSelection = .monthly
+    @State private var introOfferEligibleProductIDs: Set<String> = []
     let entryPoint: PaywallEntryPoint
 
     // MARK: - Derived helpers
@@ -71,20 +72,7 @@ struct PaywallSheet: View {
     }
 
     private var ctaLabel: String {
-        // Show trial CTA when a free introductory offer is available for the selected subscription plan.
-        let trialEligible: Bool
-        switch selectedPlan {
-        case .monthly:
-            trialEligible = proManager.products
-                .first(where: { $0.id == ProManager.monthlyProductID })?.subscription?.introductoryOffer != nil
-        case .annual:
-            trialEligible = proManager.products
-                .first(where: { $0.id == ProManager.annualProductID })?.subscription?.introductoryOffer != nil
-        case .lifetime:
-            trialEligible = false
-        }
-
-        if trialEligible {
+        if introOfferEligibleProductIDs.contains(selectedProductID) {
             return "Start 7-Day Free Trial"
         }
         switch selectedPlan {
@@ -251,6 +239,7 @@ struct PaywallSheet: View {
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
             await proManager.fetchProduct()
+            await refreshIntroOfferEligibility()
         }
         .onDisappear {
             trackDismiss(method: "system")
@@ -320,6 +309,20 @@ struct PaywallSheet: View {
         )
         hasTrackedDismiss = true
         dismiss()
+    }
+
+    @MainActor
+    private func refreshIntroOfferEligibility() async {
+        var eligibleProductIDs: Set<String> = []
+        for productID in [ProManager.monthlyProductID, ProManager.annualProductID] {
+            guard let product = proManager.products.first(where: { $0.id == productID }),
+                  let subscription = product.subscription
+            else { continue }
+            if await subscription.isEligibleForIntroOffer {
+                eligibleProductIDs.insert(productID)
+            }
+        }
+        introOfferEligibleProductIDs = eligibleProductIDs
     }
 
     private func purchaseProperties(
