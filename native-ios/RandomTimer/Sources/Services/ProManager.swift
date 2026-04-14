@@ -214,7 +214,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
         case Self.eliteProductID: return .elite
         case Self.monthlyProductID: return .elite
         case Self.annualProductID: return .elite
-        case Self.baseProductID: return .elite
+        case Self.baseProductID: return .base
         default: return .none
         }
     }
