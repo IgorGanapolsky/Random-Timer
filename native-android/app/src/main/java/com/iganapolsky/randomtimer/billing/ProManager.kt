@@ -666,12 +666,11 @@ internal data class SubscriptionOffer(
         get() = pricingPhases.any { it.isFree }
 }
 
-/** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M").
- *  Falls back to the first available offer if no exact match is found. */
+/** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M"). */
 internal fun selectSubscriptionOfferByPeriod(
     offers: List<SubscriptionOffer>,
     period: String,
-): SubscriptionOffer? = offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == period } } ?: offers.firstOrNull()
+): SubscriptionOffer? = offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == period } }
 
 /**
  * Select the best offer to present to the user.
@@ -680,6 +679,7 @@ internal fun selectSubscriptionOfferByPeriod(
 internal fun selectPreferredSubscriptionOffer(offers: List<SubscriptionOffer>): SubscriptionOffer? =
     offers.firstOrNull { it.hasFreeTrial }
         ?: selectSubscriptionOfferByPeriod(offers, "P1Y")
+        ?: offers.firstOrNull()
 
 private fun com.android.billingclient.api.ProductDetails.toSubscriptionOffers(): List<SubscriptionOffer> =
     subscriptionOfferDetails

@@ -69,4 +69,23 @@ class ProManagerSubscriptionOfferSelectionTest {
         assertThat(selected?.offerToken).isEqualTo("monthly-token")
         assertThat(selected?.displayPrice).isEqualTo("$4.99")
     }
+
+    @Test
+    fun `selectSubscriptionOfferByPeriod returns null when requested period is unavailable`() {
+        val monthly =
+            SubscriptionOffer(
+                offerToken = "monthly-token",
+                pricingPhases =
+                    listOf(
+                        SubscriptionPricingPhase(
+                            formattedPrice = "$4.99",
+                            billingPeriod = "P1M",
+                        ),
+                    ),
+            )
+
+        val selected = selectSubscriptionOfferByPeriod(listOf(monthly), "P1Y")
+
+        assertThat(selected).isNull()
+    }
 }
