@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import sys
+import types
+from pathlib import Path
+
 import pytest
 
 
@@ -20,6 +24,10 @@ def test_posthog_metric_field_ids_include_paywall_platform_splits() -> None:
     assert mf.get("events_paywall_purchase_success_android")
     assert mf.get("distinct_persons_paywall_purchase_success_ios")
     assert mf.get("distinct_persons_paywall_purchase_success_android")
+    assert mf.get("distinct_persons_application_installed_ios")
+    assert mf.get("distinct_persons_application_installed_android")
+    assert mf.get("distinct_persons_application_opened_ios")
+    assert mf.get("distinct_persons_application_opened_android")
 
 
 def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -56,6 +64,8 @@ def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.M
     )
     assert out.get("events_paywall_purchase_success_ios") == 0
     assert out.get("distinct_persons_paywall_purchase_success_android") == 0
+    assert out.get("distinct_persons_application_installed_ios") == 0
+    assert out.get("distinct_persons_application_opened_android") == 0
 
 
 def test_pragmatic_live_excludes_non_store_distribution_channels() -> None:
@@ -119,3 +129,49 @@ def test_posthog_section_includes_wqtu_7d_from_queries(monkeypatch: pytest.Monke
     assert out["status"] == "ok"
     assert out["wqtu_7d_distinct_persons"] == 99
     assert out["window_days"] == 30
+
+
+def test_run_includes_refunds_and_uninstall_proxy_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    monkeypatch.setattr(
+        ems,
+        "_posthog_section",
+        lambda _proj, _key, _days: {
+            "status": "ok",
+            "distinct_persons_application_installed_ios": 10,
+            "distinct_persons_application_installed_android": 20,
+            "distinct_persons_application_opened_ios": 8,
+            "distinct_persons_application_opened_android": 15,
+        },
+    )
+    monkeypatch.setattr(
+        ems,
+        "_posthog_credentials",
+        lambda: ("k", "p"),
+    )
+
+    fake_crashlytics = types.SimpleNamespace(
+        collect_crashlytics_snapshot=lambda hours: {"status": "ok", "hours": hours}
+    )
+    fake_real_store = types.SimpleNamespace(
+        _get_android_data=lambda days: {
+            "status": "ok",
+            "refund_requests_30d": 3,
+            "refund_count_metric_id": "android_refund_metric_id",
+            "voided_purchase_reason_counts": {"0": 2, "1": 1},
+        },
+        _get_ios_data=lambda days: {"status": "ok"},
+    )
+    monkeypatch.setitem(sys.modules, "check_crashlytics", fake_crashlytics)
+    monkeypatch.setitem(sys.modules, "real_store_downloads", fake_real_store)
+
+    payload = ems.run(tmp_path, days=30, load_dotenv=False)
+
+    assert payload["refunds"]["android_refund_requests_30d"] == 3
+    assert payload["refunds"]["android_reason_counts"] == {"0": 2, "1": 1}
+    assert payload["uninstalls"]["ios_uninstall_proxy_30d"] == 2
+    assert payload["uninstalls"]["android_uninstall_proxy_30d"] == 5

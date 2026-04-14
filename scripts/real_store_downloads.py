@@ -66,6 +66,9 @@ def _asc_get_with_retries(
 ANDROID_REVIEW_COUNT_METRIC_ID = (
     "google_play_androidpublisher_reviews_list_7d_commented_paginated"
 )
+ANDROID_REFUND_COUNT_METRIC_ID = (
+    "google_play_androidpublisher_voidedpurchases_list_window_paginated"
+)
 IOS_REVIEW_COUNT_METRIC_ID = (
     "app_store_connect_customer_reviews_sort_created_desc_limit_50"
 )
@@ -85,6 +88,45 @@ def _fetch_all_play_reviews_list(service: Any, package_name: str) -> list[dict[s
         if not page_token:
             break
     return accumulated
+
+
+def _fetch_all_android_voided_purchases(
+    service: Any,
+    package_name: str,
+    days: int,
+) -> list[dict[str, Any]]:
+    """Paginate purchases.voidedpurchases.list for the trailing window."""
+    end_ms = int(time.time() * 1000)
+    start_ms = end_ms - int(days * 24 * 60 * 60 * 1000)
+    accumulated: list[dict[str, Any]] = []
+    page_token: str | None = None
+    while True:
+        kwargs: dict[str, Any] = {
+            "packageName": package_name,
+            "startTime": str(start_ms),
+            "endTime": str(end_ms),
+            "maxResults": 1000,
+        }
+        if page_token:
+            kwargs["token"] = page_token
+        result = service.purchases().voidedpurchases().list(**kwargs).execute()
+        accumulated.extend(result.get("voidedPurchases", []))
+        page_token = (result.get("tokenPagination") or {}).get("nextPageToken")
+        if not page_token:
+            break
+    return accumulated
+
+
+def _summarize_voided_purchases(voided: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize refund/void records returned by Android Publisher API."""
+    reason_counts: dict[str, int] = {}
+    for item in voided:
+        reason = str(item.get("voidedReason", "unknown"))
+        reason_counts[reason] = reason_counts.get(reason, 0) + 1
+    return {
+        "refund_requests_30d": len(voided),
+        "voided_purchase_reason_counts": reason_counts,
+    }
 
 
 def _get_android_data(days: int) -> dict[str, Any]:
@@ -148,11 +190,24 @@ def _get_android_data(days: int) -> dict[str, Any]:
                 "name": latest.get("name"),
             }
 
+        refund_summary: dict[str, Any] = {}
+        try:
+            voided = _fetch_all_android_voided_purchases(service, ANDROID_PACKAGE, days)
+            refund_summary = _summarize_voided_purchases(voided)
+            refund_summary["refund_count_metric_id"] = ANDROID_REFUND_COUNT_METRIC_ID
+        except Exception as exc:
+            refund_summary = {
+                "refund_requests_30d": None,
+                "refund_count_metric_id": ANDROID_REFUND_COUNT_METRIC_ID,
+                "refund_error": str(exc),
+            }
+
         return {
             "status": "ok",
             "review_count": review_count,
             "review_count_metric_id": ANDROID_REVIEW_COUNT_METRIC_ID,
             "production_release": production_version,
+            **refund_summary,
             "note": (
                 "Play reviews.list: comment-bearing reviews created or modified in the last "
                 "7 days only; star-only ratings are excluded. Not equal to public Play "

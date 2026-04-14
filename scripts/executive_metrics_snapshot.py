@@ -73,6 +73,18 @@ POSTHOG_EXECUTIVE_METRIC_FIELD_IDS: Dict[str, str] = {
         "posthog_hogql_distinct_persons_event_application_installed"
     ),
     "distinct_persons_first_open": "posthog_hogql_distinct_persons_event_first_open",
+    "distinct_persons_application_installed_ios": (
+        "posthog_hogql_distinct_persons_event_application_installed_ios"
+    ),
+    "distinct_persons_application_installed_android": (
+        "posthog_hogql_distinct_persons_event_application_installed_android"
+    ),
+    "distinct_persons_application_opened_ios": (
+        "posthog_hogql_distinct_persons_event_application_opened_ios"
+    ),
+    "distinct_persons_application_opened_android": (
+        "posthog_hogql_distinct_persons_event_application_opened_android"
+    ),
     "timer_started_events": "posthog_hogql_count_events_timer_started",
     "timer_completed_events": "posthog_hogql_count_events_timer_completed",
     "distinct_persons_timer_started": "posthog_hogql_distinct_persons_event_timer_started",
@@ -169,6 +181,26 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
     out["distinct_persons_first_open"] = scalar(
         f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'first_open' "
         f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["distinct_persons_application_installed_ios"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'ios'"
+    )
+    out["distinct_persons_application_installed_android"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'android'"
+    )
+    out["distinct_persons_application_opened_ios"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Opened' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'ios'"
+    )
+    out["distinct_persons_application_opened_android"] = scalar(
+        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Opened' "
+        f"AND timestamp > now() - interval {win} AND {f} "
+        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'android'"
     )
     started = scalar(
         f"SELECT count() FROM events WHERE event = 'timer_started' "
@@ -347,15 +379,78 @@ def run(
                 "lookback hours. fatal_events sums crash_count only within parsed top_fatal_issues "
                 "(up to 10 rows displayed from top 20 SQL groups) — see metric_field_ids."
             ),
-            "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
+            "uninstalls": (
+                "Store uninstall truth is not available here. Executive snapshot reports only "
+                "a PostHog proxy uninstall signal under uninstalls.*."
+            ),
+            "refund_requests": (
+                "Android refund_requests_30d comes from Google Play voided purchases API "
+                "(purchases.voidedpurchases.list) over the snapshot window. iOS refund "
+                "requests are not yet wired in this snapshot."
+            ),
+            "uninstall_proxy": (
+                "Proxy only: distinct Application Installed (os) minus distinct Application "
+                "Opened (os) over the same PostHog window. This is not store uninstall truth."
+            ),
             "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
             "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
             "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
         },
         "posthog": posthog,
         "store_apis": {"android": android, "ios": ios},
+        "refunds": {
+            "android_refund_requests_30d": (
+                (android or {}).get("refund_requests_30d")
+                if (android or {}).get("status") == "ok"
+                else None
+            ),
+            "android_refund_count_metric_id": (android or {}).get("refund_count_metric_id"),
+            "android_reason_counts": (android or {}).get("voided_purchase_reason_counts"),
+            "android_status": (android or {}).get("status"),
+            "ios_refund_requests_30d": None,
+            "ios_status": "not_implemented",
+            "note": (
+                "Android uses Google Play voided purchases API. iOS refunds are not yet "
+                "ingested into executive_metrics_snapshot."
+            ),
+        },
+        "uninstalls": {
+            "android_uninstall_proxy_30d": None,
+            "ios_uninstall_proxy_30d": None,
+            "metric_id": "posthog_proxy_distinct_installed_minus_opened_by_os_window",
+            "status": "proxy_only",
+            "note": (
+                "Proxy only (not store truth): distinct Application Installed minus distinct "
+                "Application Opened by platform over the same window."
+            ),
+        },
         "crashlytics_bigquery": crashlytics,
     }
+
+    ph_installed_ios = int(
+        ((posthog or {}).get("distinct_persons_application_installed_ios") or 0)
+        if (posthog or {}).get("status") == "ok"
+        else 0
+    )
+    ph_installed_android = int(
+        ((posthog or {}).get("distinct_persons_application_installed_android") or 0)
+        if (posthog or {}).get("status") == "ok"
+        else 0
+    )
+    ph_opened_ios = int(
+        ((posthog or {}).get("distinct_persons_application_opened_ios") or 0)
+        if (posthog or {}).get("status") == "ok"
+        else 0
+    )
+    ph_opened_android = int(
+        ((posthog or {}).get("distinct_persons_application_opened_android") or 0)
+        if (posthog or {}).get("status") == "ok"
+        else 0
+    )
+    payload["uninstalls"]["ios_uninstall_proxy_30d"] = max(ph_installed_ios - ph_opened_ios, 0)
+    payload["uninstalls"]["android_uninstall_proxy_30d"] = max(
+        ph_installed_android - ph_opened_android, 0
+    )
 
     out_path = repo_root / "marketing" / "data" / "executive_metrics.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
