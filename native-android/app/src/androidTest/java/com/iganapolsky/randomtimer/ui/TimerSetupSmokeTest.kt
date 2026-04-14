@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,7 +43,7 @@ class TimerSetupSmokeTest {
     }
 
     @Test
-    fun soundArsenalLockOpensPaywallForFreeUsers() {
+    fun soundArsenalLockDoesNotOpenPaywallBeforeFirstTimerCompletion() {
         composeRule
             .onNode(hasScrollAction())
             .performScrollToNode(hasContentDescription("Unlock Sound Arsenal"))
@@ -52,15 +53,11 @@ class TimerSetupSmokeTest {
             .assertExists()
             .performClick()
 
-        composeRule.waitUntil(timeoutMillis = 5_000) {
+        assertTrue(
             composeRule
                 .onAllNodesWithText("Unlock Full Training Mode")
                 .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-
-        composeRule
-            .onNodeWithText("Unlock Full Training Mode")
-            .assertExists()
+                .isEmpty(),
+        )
     }
 }

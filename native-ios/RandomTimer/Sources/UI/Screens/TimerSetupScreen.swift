@@ -8,6 +8,8 @@ struct TimerSetupScreen: View {
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
+    @State private var showFirstTimerGate = false
+    @State private var firstTimerGateDismissToken = 0
     @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
@@ -462,6 +464,28 @@ struct TimerSetupScreen: View {
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .bottom) {
+            if showFirstTimerGate {
+                Text("Complete your first drill to unlock Pro features")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color.black.opacity(0.85))
+                    .cornerRadius(10)
+                    .padding(.bottom, 120)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: showFirstTimerGate)
+        .task(id: firstTimerGateDismissToken) {
+            guard showFirstTimerGate else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.3)) {
+                showFirstTimerGate = false
+            }
+        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(entryPoint: paywallEntryPoint)
                 .environmentObject(proManager)
@@ -549,6 +573,19 @@ struct TimerSetupScreen: View {
     }
 
     private func presentPaywall(entryPoint: PaywallEntryPoint, feature: String? = nil) {
+        guard hasCompletedFirstTimer else {
+            AnalyticsService.shared.track(
+                AnalyticsEvents.paywallGateFirstTimer,
+                properties: [
+                    AnalyticsProperties.feature: feature ?? entryPoint.featureGateName,
+                ]
+            )
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showFirstTimerGate = true
+                firstTimerGateDismissToken += 1
+            }
+            return
+        }
         let featureName = feature ?? entryPoint.featureGateName
         AnalyticsService.shared.track(
             AnalyticsEvents.featureGateHit,

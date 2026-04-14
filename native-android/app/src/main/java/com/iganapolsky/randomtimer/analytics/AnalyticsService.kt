@@ -323,6 +323,7 @@ object AnalyticsEvents {
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
