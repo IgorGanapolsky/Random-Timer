@@ -471,6 +471,16 @@ class ProManager
                         AnalyticsProperties.DEBUG_MESSAGE to (result.debugMessage ?: ""),
                     ),
                 )
+                analyticsService.track(
+                    AnalyticsEvents.PAYWALL_PURCHASE_FAIL_REASON,
+                    mapOf(
+                        AnalyticsProperties.REASON to reason,
+                        AnalyticsProperties.PRODUCT_ID to failedProductId,
+                        AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
+                        AnalyticsProperties.RESPONSE_CODE to result.responseCode,
+                        AnalyticsProperties.DEBUG_MESSAGE to (result.debugMessage ?: ""),
+                    ),
+                )
             }
             if (hasPurchased) {
                 val purchasedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: ""

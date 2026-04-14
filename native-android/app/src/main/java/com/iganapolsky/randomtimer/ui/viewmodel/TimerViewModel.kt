@@ -283,8 +283,27 @@ class TimerViewModel
 
         fun trackPaywallViewed(entryPoint: String) {
             analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEW,
+                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+            analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEWED,
                 mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+            )
+        }
+
+        fun trackPaywallOfferSelected(
+            entryPoint: String,
+            productId: String,
+            plan: String,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_OFFER_SELECT,
+                mapOf(
+                    AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PRODUCT_ID to productId,
+                    "plan" to plan,
+                ),
             )
         }
 
