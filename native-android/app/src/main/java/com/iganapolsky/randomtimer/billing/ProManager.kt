@@ -26,13 +26,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -157,8 +157,10 @@ class ProManager
 
             val hasElite =
                 subsResult.purchasesList.any { purchase ->
-                    (purchase.products.contains(ELITE_PRODUCT_ID) ||
-                        purchase.products.contains(MONTHLY_PRODUCT_ID)) &&
+                    (
+                        purchase.products.contains(ELITE_PRODUCT_ID) ||
+                            purchase.products.contains(MONTHLY_PRODUCT_ID)
+                    ) &&
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
 
@@ -327,10 +329,13 @@ class ProManager
             if (details != null) {
                 cachedProductDetails[productID] = details
             } else {
-                analyticsService.track("billing_product_not_found", mapOf(
-                    "product_id" to productID,
-                    "billing_ready" to billingClient.isReady,
-                ))
+                analyticsService.track(
+                    "billing_product_not_found",
+                    mapOf(
+                        "product_id" to productID,
+                        "billing_ready" to billingClient.isReady,
+                    ),
+                )
             }
             return details
         }
@@ -381,30 +386,38 @@ class ProManager
                 ELITE_PRODUCT_ID -> {
                     // Annual subscription: find P1Y offer token, pull priceAmountMicros from
                     // the raw Google billing PricingPhaseList (last/base phase, not any trial).
-                    val preferredToken = selectSubscriptionOfferByPeriod(
-                        details?.toSubscriptionOffers().orEmpty(), "P1Y"
-                    )?.offerToken
-                    val micros = details?.subscriptionOfferDetails
-                        ?.firstOrNull { it.offerToken == preferredToken }
-                        ?.pricingPhases
-                        ?.pricingPhaseList
-                        ?.lastOrNull()
-                        ?.priceAmountMicros
-                        ?: 29_990_000L // fallback: $29.99
+                    val preferredToken =
+                        selectSubscriptionOfferByPeriod(
+                            details?.toSubscriptionOffers().orEmpty(),
+                            "P1Y",
+                        )?.offerToken
+                    val micros =
+                        details
+                            ?.subscriptionOfferDetails
+                            ?.firstOrNull { it.offerToken == preferredToken }
+                            ?.pricingPhases
+                            ?.pricingPhaseList
+                            ?.lastOrNull()
+                            ?.priceAmountMicros
+                            ?: 29_990_000L // fallback: $29.99
                     micros / 1_000_000.0
                 }
                 MONTHLY_PRODUCT_ID -> {
                     // Monthly subscription: find P1M offer token.
-                    val preferredToken = selectSubscriptionOfferByPeriod(
-                        details?.toSubscriptionOffers().orEmpty(), "P1M"
-                    )?.offerToken
-                    val micros = details?.subscriptionOfferDetails
-                        ?.firstOrNull { it.offerToken == preferredToken }
-                        ?.pricingPhases
-                        ?.pricingPhaseList
-                        ?.lastOrNull()
-                        ?.priceAmountMicros
-                        ?: 3_990_000L // fallback: $3.99
+                    val preferredToken =
+                        selectSubscriptionOfferByPeriod(
+                            details?.toSubscriptionOffers().orEmpty(),
+                            "P1M",
+                        )?.offerToken
+                    val micros =
+                        details
+                            ?.subscriptionOfferDetails
+                            ?.firstOrNull { it.offerToken == preferredToken }
+                            ?.pricingPhases
+                            ?.pricingPhaseList
+                            ?.lastOrNull()
+                            ?.priceAmountMicros
+                            ?: 3_990_000L // fallback: $3.99
                     micros / 1_000_000.0
                 }
                 else -> {
@@ -623,10 +636,13 @@ class ProManager
             debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
-            analyticsService.track("dev_debug_unlock", mapOf(
-                "entry_point" to entryPoint,
-                "is_developer_action" to true,
-            ))
+            analyticsService.track(
+                "dev_debug_unlock",
+                mapOf(
+                    "entry_point" to entryPoint,
+                    "is_developer_action" to true,
+                ),
+            )
             return true
         }
     }
@@ -652,8 +668,10 @@ internal data class SubscriptionOffer(
 
 /** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M").
  *  Falls back to the first available offer if no exact match is found. */
-internal fun selectSubscriptionOfferByPeriod(offers: List<SubscriptionOffer>, period: String): SubscriptionOffer? =
-    offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == period } } ?: offers.firstOrNull()
+internal fun selectSubscriptionOfferByPeriod(
+    offers: List<SubscriptionOffer>,
+    period: String,
+): SubscriptionOffer? = offers.firstOrNull { offer -> offer.pricingPhases.any { it.billingPeriod == period } } ?: offers.firstOrNull()
 
 /**
  * Select the best offer to present to the user.

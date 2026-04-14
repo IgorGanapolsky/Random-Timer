@@ -31,8 +31,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
@@ -181,16 +181,23 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val (purchaseProductId, ctaLabel) = when (selectedPlan) {
-                SubscriptionPlanSelection.MONTHLY ->
-                    "elite_tactical_monthly" to
-                        if (freeTrialByProductId["elite_tactical_monthly"] == true) "Start 7-Day Free Trial"
-                        else "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
-                SubscriptionPlanSelection.ANNUAL ->
-                    "elite_tactical" to
-                        if (freeTrialByProductId["elite_tactical"] == true) "Start 7-Day Free Trial"
-                        else "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
-            }
+            val (purchaseProductId, ctaLabel) =
+                when (selectedPlan) {
+                    SubscriptionPlanSelection.MONTHLY ->
+                        "elite_tactical_monthly" to
+                            if (freeTrialByProductId["elite_tactical_monthly"] == true) {
+                                "Start 7-Day Free Trial"
+                            } else {
+                                "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
+                            }
+                    SubscriptionPlanSelection.ANNUAL ->
+                        "elite_tactical" to
+                            if (freeTrialByProductId["elite_tactical"] == true) {
+                                "Start 7-Day Free Trial"
+                            } else {
+                                "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
+                            }
+                }
 
             PrimaryButton(
                 text = ctaLabel,
@@ -233,17 +240,19 @@ fun PaywallSheet(
                     text = "Privacy Policy",
                     style = MaterialTheme.typography.labelSmall,
                     color = TimerColors.TextSecondary,
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
-                    },
+                    modifier =
+                        Modifier.clickable {
+                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+                        },
                 )
                 Text(
                     text = "Terms of Use",
                     style = MaterialTheme.typography.labelSmall,
                     color = TimerColors.TextSecondary,
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
-                    },
+                    modifier =
+                        Modifier.clickable {
+                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
+                        },
                 )
             }
 
@@ -264,17 +273,19 @@ private fun PlanOptionCard(
     val bgColor = if (isSelected) TimerColors.AccentPrimary.copy(alpha = 0.08f) else TimerColors.BackgroundDark
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(width = if (isSelected) 2.dp else 1.dp, color = borderColor),
         colors = CardDefaults.cardColors(containerColor = bgColor),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -305,8 +316,7 @@ private fun PlanOptionCard(
 }
 
 /** Strips any existing /yr, /year, /mo, /month suffix so callers can append their own unit. */
-internal fun stripPriceSuffix(price: String): String =
-    price.trim().substringBefore("/")
+internal fun stripPriceSuffix(price: String): String = price.trim().substringBefore("/")
 
 internal fun normalizedPriceLabel(price: String): String {
     val trimmed = price.trim()
