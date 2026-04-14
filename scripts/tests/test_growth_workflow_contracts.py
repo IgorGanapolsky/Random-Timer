@@ -457,6 +457,17 @@ def test_analytics_deployment_report_reads_deployment_statuses():
     assert '.state == "success"' not in source
 
 
+def test_analytics_workflow_publishes_weekly_paywall_conversion_report_artifact():
+    source = ANALYTICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "analyze-paywall-conversion:" in source
+    assert "python scripts/paywall_conversion_report.py --repo-root . --days 30" in source
+    assert "pip_packages: requests==2.32.5" in source
+    assert "artifact_name: weekly-paywall-conversion-report" in source
+    assert "marketing/data/paywall_conversion_report.md" in source
+    assert "marketing/data/paywall_conversion_report.json" in source
+
+
 def test_executive_metrics_workflow_runs_daily_and_guards_ios_refund_signal():
     source = EXECUTIVE_METRICS_WORKFLOW.read_text(encoding="utf-8")
 

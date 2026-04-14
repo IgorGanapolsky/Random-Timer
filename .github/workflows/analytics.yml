@@ -123,3 +123,18 @@ jobs:
         PY
       artifact_name: weekly-deployment-metrics-report
       artifact_path: ./deployment_report.md
+
+  analyze-paywall-conversion:
+    uses: ./.github/workflows/weekly-shared.yml
+    secrets:
+      POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+      POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+    with:
+      pip_packages: requests==2.32.5
+      run_command: |
+        set -euo pipefail
+        python scripts/paywall_conversion_report.py --repo-root . --days 30
+      artifact_name: weekly-paywall-conversion-report
+      artifact_path: |
+        ./marketing/data/paywall_conversion_report.md
+        ./marketing/data/paywall_conversion_report.json
