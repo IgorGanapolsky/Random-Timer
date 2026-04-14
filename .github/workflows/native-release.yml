@@ -984,7 +984,8 @@ jobs:
         run: |
           TAG="${{ needs.tag-release.outputs.tag || '' }}"
           python3 scripts/bump_patch_version.py \
-            --changelog-message "Bump version after $TAG release"
+            --changelog-message "Bump version after $TAG release" \
+            --skip-changelog
           NEW_VERSION=$(python3 scripts/source_versions.py --repo-root . --format json \
             | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
