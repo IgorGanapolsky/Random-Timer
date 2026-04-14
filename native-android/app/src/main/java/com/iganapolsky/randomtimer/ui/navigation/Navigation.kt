@@ -61,7 +61,7 @@ fun RandomTimerNavHost(
     var proPrice by remember { mutableStateOf("$29.99") }
     var monthlyPrice by remember { mutableStateOf("$3.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
-    var paywallFreeTrialByProductId by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+    var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -139,7 +139,7 @@ fun RandomTimerNavHost(
                             proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
                             monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
                             paywallEntryPoint = "setup_upgrade_cta"
-                            paywallFreeTrialByProductId =
+                            paywallTrialEligibilityByProductId =
                                 mapOf(
                                     ProManager.MONTHLY_PRODUCT_ID to
                                         viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
@@ -149,9 +149,6 @@ fun RandomTimerNavHost(
                             showPaywall = true
                         }
                     }
-                },
-                onFeatureGateHit = { feature ->
-                    viewModel.trackFeatureGateHit(feature)
                 },
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)
@@ -221,7 +218,7 @@ fun RandomTimerNavHost(
         PaywallSheet(
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
-            freeTrialByProductId = paywallFreeTrialByProductId,
+            trialEligibilityByProductId = paywallTrialEligibilityByProductId,
             onPurchase = { productID ->
                 scope.launch {
                     val launched =

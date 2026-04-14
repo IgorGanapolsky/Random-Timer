@@ -26,15 +26,6 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     var isPro: Bool { entitlementLevel.isPro }
     var isElite: Bool { entitlementLevel == .elite }
 
-    /// True when the paywall product has a free introductory offer available for the current user.
-    /// Uses StoreKit 2 `subscription?.introductoryOffer` — eligibility is managed automatically by App Store Connect.
-    var hasFreeTrialOffer: Bool {
-        guard let product = products.first(where: { $0.id == Self.paywallProductID }),
-              let subscription = product.subscription
-        else { return false }
-        return subscription.introductoryOffer != nil
-    }
-
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "billing")
 
     private var transactionListener: Task<Void, Never>?
@@ -101,6 +92,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     }
 
     private func doPurchase(_ product: Product) async -> ProPurchaseResult {
+        // Capture StoreKit's user-specific trial eligibility before purchase.
         let isEligibleForTrial = await product.subscription?.isEligibleForIntroOffer ?? false
         do {
             let result = try await product.purchase()
@@ -109,13 +101,14 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                 let transaction = try Self.checkVerified(verification)
                 updateEntitlement(for: transaction.productID)
                 await transaction.finish()
+                // Track only user-eligible trial purchases; configured intro offers are not enough.
                 if isEligibleForTrial && transaction.productID == product.id {
                     AnalyticsService.shared.track(
                         AnalyticsEvents.freeTrialStarted,
                         properties: [
                             AnalyticsProperties.productId: product.id,
-                            AnalyticsEvents.trialVerificationSource: "storekit_intro_offer_eligibility",
-                            AnalyticsEvents.trialVerified: true
+                            AnalyticsProperties.trialVerificationSource: "storekit_intro_offer_eligibility",
+                            AnalyticsProperties.trialVerified: true,
                         ]
                     )
                 }
@@ -212,7 +205,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
         case Self.eliteProductID: return .elite
         case Self.monthlyProductID: return .elite
         case Self.annualProductID: return .elite
-        case Self.baseProductID: return .elite
+        case Self.baseProductID: return .base
         default: return .none
         }
     }

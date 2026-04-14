@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
@@ -63,7 +64,7 @@ internal enum class SubscriptionPlanSelection {
 fun PaywallSheet(
     proPrice: String,
     monthlyPrice: String = "$3.99",
-    freeTrialByProductId: Map<String, Boolean> = emptyMap(),
+    trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -181,23 +182,14 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val (purchaseProductId, ctaLabel) =
-                when (selectedPlan) {
-                    SubscriptionPlanSelection.MONTHLY ->
-                        "elite_tactical_monthly" to
-                            if (freeTrialByProductId["elite_tactical_monthly"] == true) {
-                                "Start 7-Day Free Trial"
-                            } else {
-                                "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
-                            }
-                    SubscriptionPlanSelection.ANNUAL ->
-                        "elite_tactical" to
-                            if (freeTrialByProductId["elite_tactical"] == true) {
-                                "Start 7-Day Free Trial"
-                            } else {
-                                "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
-                            }
-                }
+            val purchaseProductId = productIdForPlan(selectedPlan)
+            val ctaLabel =
+                ctaLabelForPlan(
+                    selectedPlan = selectedPlan,
+                    proPrice = proPrice,
+                    monthlyPrice = monthlyPrice,
+                    trialEligibilityByProductId = trialEligibilityByProductId,
+                )
 
             PrimaryButton(
                 text = ctaLabel,
@@ -258,6 +250,28 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+internal fun productIdForPlan(plan: SubscriptionPlanSelection): String =
+    when (plan) {
+        SubscriptionPlanSelection.MONTHLY -> ProManager.MONTHLY_PRODUCT_ID
+        SubscriptionPlanSelection.ANNUAL -> ProManager.ELITE_PRODUCT_ID
+    }
+
+internal fun ctaLabelForPlan(
+    selectedPlan: SubscriptionPlanSelection,
+    proPrice: String,
+    monthlyPrice: String,
+    trialEligibilityByProductId: Map<String, Boolean>,
+): String {
+    val productId = productIdForPlan(selectedPlan)
+    if (trialEligibilityByProductId[productId] == true) {
+        return "Start 7-Day Free Trial"
+    }
+    return when (selectedPlan) {
+        SubscriptionPlanSelection.MONTHLY -> "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
+        SubscriptionPlanSelection.ANNUAL -> "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
     }
 }
 

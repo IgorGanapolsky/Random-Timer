@@ -71,6 +71,10 @@ struct PaywallSheet: View {
         }
     }
 
+    private var productsEligibilityKey: String {
+        proManager.products.map(\.id).sorted().joined(separator: "|")
+    }
+
     private var ctaLabel: String {
         if introOfferEligibleProductIDs.contains(selectedProductID) {
             return "Start 7-Day Free Trial"
@@ -239,6 +243,9 @@ struct PaywallSheet: View {
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
             await proManager.fetchProduct()
+            await refreshIntroOfferEligibility()
+        }
+        .task(id: productsEligibilityKey) {
             await refreshIntroOfferEligibility()
         }
         .onDisappear {

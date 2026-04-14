@@ -322,8 +322,6 @@ object AnalyticsEvents {
 
     // Free trial
     const val FREE_TRIAL_STARTED = "free_trial_started"
-    const val TRIAL_VERIFICATION_SOURCE = "trial_verification_source"
-    const val TRIAL_VERIFIED = "trial_verified"
 
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
@@ -352,6 +350,8 @@ object AnalyticsProperties {
     const val SOURCE = "source"
     const val PRODUCT_ID = "product_id"
     const val ENTITLEMENT_LEVEL = "entitlement_level"
+    const val TRIAL_VERIFICATION_SOURCE = "trial_verification_source"
+    const val TRIAL_VERIFIED = "trial_verified"
     const val ENVIRONMENT = "environment"
     const val BUILD_AUDIENCE = "build_audience"
     const val BUILD_TYPE = "build_type"

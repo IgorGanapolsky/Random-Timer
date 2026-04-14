@@ -87,6 +87,8 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private var pendingPurchaseEntryPoint: String? = null
+
+        /** Captures the exact trial offer submitted to Google Play for the pending flow. */
         private var pendingPurchaseFreeTrialProductId: String? = null
         private var pendingPurchaseFreeTrialOfferToken: String? = null
 
@@ -342,7 +344,7 @@ class ProManager
 
         /**
          * Fetches product details before checking trial availability so launch-time cache races
-         * do not hide valid free-trial CTAs.
+         * do not hide valid free-trial CTAs for the selected plan.
          */
         suspend fun hasFreeTrialOffer(productID: String): Boolean {
             val details = cachedProductDetails[productID] ?: fetchProductDetails(productID) ?: return false
@@ -484,18 +486,16 @@ class ProManager
                         AnalyticsProperties.REVENUE to revenueAmount,
                     ),
                 )
-                // Track the selected trial offer only for the product that actually purchased.
-                val trialOfferWasSelected =
-                    purchasedProductId == pendingPurchaseFreeTrialProductId &&
-                        pendingPurchaseFreeTrialOfferToken != null
-                if (trialOfferWasSelected) {
+                // Google Play's Purchase object does not expose a store-confirmed trial flag.
+                // Emit this only when the completed purchase matches the trial offer token we launched.
+                if (purchaseMatchesPendingTrialOffer(purchasedProductId)) {
                     analyticsService.track(
                         AnalyticsEvents.FREE_TRIAL_STARTED,
                         mapOf(
                             AnalyticsProperties.PRODUCT_ID to purchasedProductId,
                             AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
-                            AnalyticsEvents.TRIAL_VERIFICATION_SOURCE to "google_play_selected_offer",
-                            AnalyticsEvents.TRIAL_VERIFIED to false,
+                            AnalyticsProperties.TRIAL_VERIFICATION_SOURCE to "google_play_selected_offer",
+                            AnalyticsProperties.TRIAL_VERIFIED to false,
                         ),
                     )
                 }
@@ -510,6 +510,11 @@ class ProManager
             pendingPurchaseEntryPoint = null
             clearPendingTrialOffer()
         }
+
+        private fun purchaseMatchesPendingTrialOffer(purchasedProductId: String): Boolean =
+            purchasedProductId.isNotBlank() &&
+                purchasedProductId == pendingPurchaseFreeTrialProductId &&
+                pendingPurchaseFreeTrialOfferToken != null
 
         private fun clearPendingTrialOffer() {
             pendingPurchaseFreeTrialProductId = null

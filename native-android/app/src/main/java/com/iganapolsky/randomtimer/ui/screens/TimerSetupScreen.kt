@@ -148,7 +148,6 @@ fun TimerSetupScreen(
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
-    onFeatureGateHit: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -919,7 +918,6 @@ fun TimerSetupScreen(
                                 },
                                 onPreviewSound = onSoundPreview,
                                 onUpgradeTap = onUpgradeTap,
-                                onFeatureGateHit = onFeatureGateHit,
                             )
                         }
                     }
@@ -944,7 +942,6 @@ fun TimerSetupScreen(
                         },
                         onPreviewSound = onSoundPreview,
                         onUpgradeTap = onUpgradeTap,
-                        onFeatureGateHit = onFeatureGateHit,
                     )
                 }
             }
@@ -973,7 +970,6 @@ private fun SoundArsenalCard(
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
     onUpgradeTap: (String) -> Unit,
-    onFeatureGateHit: (String) -> Unit = {},
 ) {
     GlassCard(
         modifier =
