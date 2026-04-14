@@ -457,6 +457,7 @@ enum AnalyticsEvents {
 
     // Purchase
     static let purchaseFailed = "purchase_failed"
+    static let freeTrialStarted = "free_trial_started"
 
     // Screen engagement
     static let screenDwellTime = "screen_dwell_time"
