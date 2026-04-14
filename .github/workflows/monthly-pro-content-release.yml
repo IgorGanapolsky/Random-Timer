@@ -1,7 +1,7 @@
 # Monthly Pro Content Release Pipeline
 #
 # Runs on the 1st of each month at 08:00 UTC (+ manual dispatch).
-# Delivers fresh voice callouts and CC0 sound effects to both stores.
+# Delivers fresh voice callouts and CC0 sound effects to both stores without manual CEO gates.
 #
 # ─────────────────────────────────────────────────────────────────────────
 # Required Secrets
@@ -224,7 +224,7 @@ jobs:
 
 ## Review
 This PR is created automatically by the Monthly Pro Content Release pipeline.
-It will be merged automatically after the CEO signoff gate in the pipeline approves the build." \
+The pipeline merges this branch to develop, cuts release/v*, and dispatches Native App Release when content lands." \
             --repo "$GITHUB_REPOSITORY" || true
 
           echo "changes_committed=true" >> "$GITHUB_OUTPUT"
@@ -299,42 +299,16 @@ It will be merged automatically after the CEO signoff gate in the pipeline appro
           | Month          | ${MONTH_LABEL}                |
           | Internal run   | [View run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${INTERNAL_RUN_ID}) |
 
-          **Next step:** CEO must test the build in TestFlight / Firebase App Distribution
-          and approve in the **monthly-release-signoff** environment.
+          **Note:** Internal TestFlight / Firebase builds are for optional smoke checks. Merge + store publish proceed without a manual approval gate.
           EOF
 
 # ============================================================
-# Job 3 — CEO signoff gate (manual approval required)
-# ============================================================
-  ceo-signoff:
-    name: "Step 3 — CEO signoff (manual approval)"
-    needs: [generate-content, trigger-internal-build]
-    if: needs.generate-content.outputs.changes_committed == 'true'
-    runs-on: ubuntu-latest
-    # The `monthly-release-signoff` environment must be configured in GitHub
-    # Settings → Environments with "Required reviewers" pointing to the CEO account.
-    environment: monthly-release-signoff
-    permissions:
-      contents: read
-    outputs:
-      approved: "true"
-
-    steps:
-      - name: Signoff gate passed
-        env:
-          NEW_VERSION: ${{ needs.generate-content.outputs.new_version }}
-          MONTH_LABEL: ${{ needs.generate-content.outputs.month_label }}
-        run: |
-          echo "✅ CEO approved monthly Pro content release ${NEW_VERSION} for ${MONTH_LABEL}."
-          echo "Proceeding to production publish."
-
-# ============================================================
-# Job 4 — Merge content branch to develop + cut release
+# Job 3 — Merge content branch to develop + cut release
 # ============================================================
   merge-and-cut-release:
-    name: "Step 4 — Merge to develop + cut release branch"
-    needs: [generate-content, ceo-signoff]
-    if: needs.ceo-signoff.outputs.approved == 'true'
+    name: "Step 3 — Merge to develop + cut release branch"
+    needs: [generate-content]
+    if: needs.generate-content.outputs.changes_committed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -385,10 +359,10 @@ It will be merged automatically after the CEO signoff gate in the pipeline appro
           echo "Cut release branch: ${RELEASE_BRANCH}"
 
 # ============================================================
-# Job 5 — Publish to both stores
+# Job 4 — Publish to both stores
 # ============================================================
   publish-production:
-    name: "Step 5 — Publish to App Store + Play Store"
+    name: "Step 4 — Publish to App Store + Play Store"
     needs: [generate-content, merge-and-cut-release]
     if: needs.merge-and-cut-release.outputs.release_branch != ''
     runs-on: ubuntu-latest
@@ -404,19 +378,19 @@ It will be merged automatically after the CEO signoff gate in the pipeline appro
         run: |
           set -euo pipefail
 
-          # Trigger the production release workflow on the newly cut release branch.
-          # The native-release.yml workflow has its own production-signoff environment
-          # gate; this dispatch only triggers the build + upload phase.
+          # Monthly automation: waive internal + production signoff (release SHA != internal-build SHA).
           gh workflow run "Native App Release" \
             --repo "$GITHUB_REPOSITORY" \
             --ref "${RELEASE_BRANCH}" \
             -f platform=both \
             -f android_track=production \
             -f submit_review=false \
-            -f confirm_ios_only_release=false
+            -f confirm_ios_only_release=false \
+            -f skip_internal_signoff=true \
+            -f skip_production_signoff=true
 
           echo "✅ Dispatched Native App Release for ${RELEASE_BRANCH}"
-          echo "Both Play Store and App Store uploads will proceed via native-release.yml."
+          echo "Both Play Store and App Store uploads will proceed via native-release.yml (signoff gates waived for monthly schedule)."
 
       - name: Write pipeline completion summary
         env:
