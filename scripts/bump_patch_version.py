@@ -72,6 +72,18 @@ def read_android_version(gradle_text: str) -> str:
     raise ValueError("Could not parse versionName from build.gradle.kts")
 
 
+def read_android_version_code(gradle_text: str) -> int:
+    """Return the concrete fallback versionCode from build.gradle.kts content."""
+    for line in gradle_text.splitlines():
+        if "versionCode" not in line or "=" not in line:
+            continue
+        rhs = line.split("=", 1)[1]
+        match = re.search(r"(?:\?:\s*)?(\d+)\s*$", rhs.strip())
+        if match:
+            return int(match.group(1))
+    raise ValueError("Could not parse versionCode from build.gradle.kts")
+
+
 def write_android_version(gradle_text: str, new_version: str) -> str:
     """Return gradle_text with versionName updated to new_version."""
     pattern = re.compile(r'(versionName\s*=\s*")\d+\.\d+\.\d+(")')
@@ -121,16 +133,10 @@ def _build_changelog_message(base_message: str | None) -> str:
     return f"Monthly Pro content update — {month_year}"
 
 
-def update_android_changelog(version: str, message: str, dry_run: bool) -> Path:
-    """Write a new Android changelog file for the given version."""
+def update_android_changelog(version_code: int, message: str, dry_run: bool) -> Path:
+    """Write a new Android changelog file for the given versionCode."""
     ANDROID_CHANGELOG_DIR.mkdir(parents=True, exist_ok=True)
-    # Android changelog filenames match the versionCode, but Fastlane also
-    # accepts 'default.txt' as a fallback.  We use the patch digit as the
-    # filename to keep things predictable across automated bumps.
-    major, minor, patch = _parse_semver(version)
-    # Use a monotonically-increasing integer filename based on semver digits
-    code_filename = f"{major}{minor:02d}{patch:03d}.txt"
-    dest = ANDROID_CHANGELOG_DIR / code_filename
+    dest = ANDROID_CHANGELOG_DIR / f"{version_code}.txt"
     if dry_run:
         print(f"  [dry-run] Would write Android changelog: {dest.relative_to(REPO_ROOT)}")
     else:
@@ -155,7 +161,11 @@ def update_ios_release_notes(message: str, dry_run: bool) -> Path:
 # ---------------------------------------------------------------------------
 
 
-def bump(dry_run: bool = False, changelog_message: str | None = None) -> str:
+def bump(
+    dry_run: bool = False,
+    changelog_message: str | None = None,
+    skip_changelog: bool = False,
+) -> str:
     """Perform the version bump. Returns the new version string."""
 
     # Read current versions
@@ -163,6 +173,7 @@ def bump(dry_run: bool = False, changelog_message: str | None = None) -> str:
     pbxproj_text = IOS_PBXPROJ.read_text(encoding="utf-8")
 
     android_ver = read_android_version(gradle_text)
+    android_version_code = read_android_version_code(gradle_text)
     ios_ver = read_ios_version(pbxproj_text)
 
     print(f"Current Android version : {android_ver}")
@@ -193,10 +204,12 @@ def bump(dry_run: bool = False, changelog_message: str | None = None) -> str:
         new_pbxproj = write_ios_version(pbxproj_text, new_version)
         IOS_PBXPROJ.write_text(new_pbxproj, encoding="utf-8")
 
-    # Update changelogs
-    message = _build_changelog_message(changelog_message)
-    update_android_changelog(new_version, message, dry_run)
-    update_ios_release_notes(message, dry_run)
+    if skip_changelog:
+        print("  Skipped store changelog updates.")
+    else:
+        message = _build_changelog_message(changelog_message)
+        update_android_changelog(android_version_code, message, dry_run)
+        update_ios_release_notes(message, dry_run)
 
     return new_version
 
@@ -215,12 +228,21 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help='Override the default "Monthly Pro content update — Month YYYY" message.',
     )
+    parser.add_argument(
+        "--skip-changelog",
+        action="store_true",
+        help="Only bump source versions; do not modify store release notes.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
-    new_version = bump(dry_run=args.dry_run, changelog_message=args.changelog_message)
+    new_version = bump(
+        dry_run=args.dry_run,
+        changelog_message=args.changelog_message,
+        skip_changelog=args.skip_changelog,
+    )
     print(f"\nNew version: {new_version}")
     if not args.dry_run:
         # Write the new version to stdout in a format the shell can capture
