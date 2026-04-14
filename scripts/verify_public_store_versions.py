@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""Verify public App Store and Google Play versions by storefront read-back."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+import requests
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts import verify_play_public_listing as play
+
+DEFAULT_IOS_APP_ID = "6758355312"
+DEFAULT_ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
+DEFAULT_COUNTRY = "US"
+DEFAULT_TIMEOUT = 900
+DEFAULT_POLL_INTERVAL = 60
+
+
+@dataclass
+class StoreVersionResult:
+    platform: str
+    passed: bool
+    status: str
+    url: str
+    expected_version: str
+    observed_version: str
+    details: str
+
+
+def read_ios_version(repo_root: Path = ROOT) -> str:
+    project = repo_root / "native-ios/RandomTimer.xcodeproj/project.pbxproj"
+    text = project.read_text(encoding="utf-8")
+    versions = set(re.findall(r"MARKETING_VERSION\s*=\s*([0-9]+(?:\.[0-9]+)+);", text))
+    if not versions:
+        raise RuntimeError(f"Could not read MARKETING_VERSION from {project}")
+    if len(versions) != 1:
+        raise RuntimeError(f"Multiple iOS MARKETING_VERSION values found: {sorted(versions)}")
+    return versions.pop()
+
+
+def read_android_version(repo_root: Path = ROOT) -> str:
+    gradle = repo_root / "native-android/app/build.gradle.kts"
+    text = gradle.read_text(encoding="utf-8")
+    match = re.search(r'versionName\s*=\s*"([^"]+)"', text)
+    if not match:
+        raise RuntimeError(f"Could not read versionName from {gradle}")
+    return match.group(1)
+
+
+def build_app_store_lookup_url(app_id: str, country: str) -> str:
+    normalized = (country or DEFAULT_COUNTRY).strip().upper()
+    return f"https://itunes.apple.com/lookup?id={app_id}&country={normalized}"
+
+
+def verify_app_store_public_version(
+    app_id: str,
+    expected_version: str,
+    country: str = DEFAULT_COUNTRY,
+) -> StoreVersionResult:
+    url = build_app_store_lookup_url(app_id, country)
+    try:
+        response = requests.get(
+            url,
+            timeout=30,
+            headers={"User-Agent": "Random-Timer-Store-Version-Readback/1.0"},
+        )
+    except requests.RequestException as exc:
+        return StoreVersionResult("ios", False, "ERROR", url, expected_version, "", str(exc))
+
+    date_header = response.headers.get("date", "unknown")
+    if response.status_code != 200:
+        return StoreVersionResult(
+            "ios",
+            False,
+            f"HTTP_{response.status_code}",
+            url,
+            expected_version,
+            "",
+            f"HTTP {response.status_code} on {date_header}",
+        )
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        return StoreVersionResult("ios", False, "INVALID_JSON", url, expected_version, "", str(exc))
+
+    results = payload.get("results") or []
+    if not results:
+        return StoreVersionResult(
+            "ios",
+            False,
+            "NOT_FOUND",
+            url,
+            expected_version,
+            "",
+            f"No App Store result on {date_header}",
+        )
+
+    item = results[0]
+    observed = str(item.get("version") or "")
+    release_date = str(item.get("currentVersionReleaseDate") or "unknown")
+    details = f"HTTP 200 on {date_header} public_version={observed} release_date={release_date}"
+    if observed != expected_version:
+        return StoreVersionResult(
+            "ios",
+            False,
+            "VERSION_MISMATCH",
+            url,
+            expected_version,
+            observed,
+            details,
+        )
+    return StoreVersionResult("ios", True, "PUBLIC", url, expected_version, observed, details)
+
+
+def verify_play_public_version(
+    package: str,
+    expected_version: str,
+    country: str = DEFAULT_COUNTRY,
+) -> StoreVersionResult:
+    url = play.build_store_url(package, country)
+    result = play.verify_public_listing(url, expected_version=expected_version)
+    observed = ""
+    match = re.search(r"public_version=([0-9]+(?:\.[0-9]+)+)", result.details)
+    if match:
+        observed = match.group(1)
+    return StoreVersionResult(
+        "android",
+        result.passed,
+        result.status,
+        url,
+        expected_version,
+        observed,
+        result.details,
+    )
+
+
+def poll_until_public(
+    verify_once,
+    timeout: int,
+    poll_interval: int,
+) -> list[StoreVersionResult]:
+    deadline = time.time() + timeout
+    latest: list[StoreVersionResult] = []
+
+    while True:
+        latest = verify_once()
+        if all(item.passed for item in latest):
+            return latest
+
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            timed_out: list[StoreVersionResult] = []
+            for item in latest:
+                if item.passed:
+                    timed_out.append(item)
+                else:
+                    timed_out.append(
+                        StoreVersionResult(
+                            item.platform,
+                            False,
+                            item.status if item.status == "VERSION_MISMATCH" else "TIMEOUT",
+                            item.url,
+                            item.expected_version,
+                            item.observed_version,
+                            f"{item.details} (timed out after {timeout}s)",
+                        )
+                    )
+            return timed_out
+
+        time.sleep(min(poll_interval, max(0, remaining)))
+
+
+def print_results(results: list[StoreVersionResult]) -> bool:
+    print()
+    print("== Public Store Version Read-Back ==")
+    all_passed = True
+    for item in results:
+        marker = "PASS" if item.passed else "FAIL"
+        all_passed = all_passed and item.passed
+        print(f"{marker} {item.platform}: status={item.status}")
+        print(f"  url: {item.url}")
+        print(f"  expected_version: {item.expected_version}")
+        print(f"  observed_version: {item.observed_version or 'unknown'}")
+        print(f"  details: {item.details}")
+    print("====================================")
+    print()
+    return all_passed
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--platform", choices=["ios", "android", "both"], default="both")
+    parser.add_argument("--expected-version", default="", help="Expected public version for both stores")
+    parser.add_argument("--ios-expected-version", default="", help="Override expected iOS version")
+    parser.add_argument("--android-expected-version", default="", help="Override expected Android version")
+    parser.add_argument("--ios-app-id", default=DEFAULT_IOS_APP_ID)
+    parser.add_argument("--android-package", default=DEFAULT_ANDROID_PACKAGE)
+    parser.add_argument("--country", default=DEFAULT_COUNTRY)
+    parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    parser.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
+    parser.add_argument("--json-out", default="", help="Optional path for JSON evidence output")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    ios_expected = args.ios_expected_version or args.expected_version
+    android_expected = args.android_expected_version or args.expected_version
+
+    if args.platform in {"ios", "both"} and not ios_expected:
+        ios_expected = read_ios_version()
+    if args.platform in {"android", "both"} and not android_expected:
+        android_expected = read_android_version()
+
+    def verify_once() -> list[StoreVersionResult]:
+        checks: list[StoreVersionResult] = []
+        if args.platform in {"ios", "both"}:
+            checks.append(
+                verify_app_store_public_version(
+                    args.ios_app_id,
+                    ios_expected,
+                    country=args.country,
+                )
+            )
+        if args.platform in {"android", "both"}:
+            checks.append(
+                verify_play_public_version(
+                    args.android_package,
+                    android_expected,
+                    country=args.country,
+                )
+            )
+        return checks
+
+    results = poll_until_public(verify_once, args.timeout, args.poll_interval)
+    passed = print_results(results)
+
+    if args.json_out:
+        Path(args.json_out).write_text(
+            json.dumps({"passed": passed, "results": [asdict(item) for item in results]}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    return 0 if passed else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
