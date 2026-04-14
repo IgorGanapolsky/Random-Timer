@@ -18,6 +18,7 @@ IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
+EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -454,6 +455,20 @@ def test_analytics_deployment_report_reads_deployment_statuses():
     assert "/deployments/{deployment['id']}/statuses?per_page=1" in source
     assert 'latest_state = statuses[0]["state"] if statuses else "unknown"' in source
     assert '.state == "success"' not in source
+
+
+def test_executive_metrics_workflow_runs_daily_and_guards_ios_refund_signal():
+    source = EXECUTIVE_METRICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "schedule:" in source
+    assert "cron: '17 6 * * *'" in source
+    assert "workflow_dispatch:" in source
+    assert "Verify iOS refund ground-truth signal" in source
+    assert "python3 - <<'PY'" in source
+    assert "refunds.ios_status is not ok" in source
+    assert "refunds.ios_sales_report_vendor_number_present is not true" in source
+    assert "refunds.ios_refund_count_metric_id missing expected token" in source
+    assert "app_store_connect_sales_reports_daily_summary_negative_units_sum" in source
 
 
 def test_wqtu_health_workflow_closes_prior_alert_issue_before_creating_next_one():
