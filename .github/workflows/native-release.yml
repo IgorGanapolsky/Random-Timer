@@ -48,6 +48,22 @@ on:
           - 'true'
         required: false
         default: 'false'
+      skip_internal_signoff:
+        description: 'Waive internal-signoff/* commit statuses (scheduled monthly release only; release SHA differs from internal build SHA)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
+      skip_production_signoff:
+        description: 'Waive production-signoff environment (scheduled monthly release only)'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        required: false
+        default: 'false'
 
 concurrency:
   group: mobile-release-pipeline-${{ github.ref_name }}-${{ inputs.platform || 'both' }}
@@ -66,7 +82,7 @@ jobs:
           RELEASE_INTENT_CONFIRM_IOS_ONLY: ${{ inputs.confirm_ios_only_release }}
         run: python3 scripts/release_intent_gate.py
 
-  require-internal-signoff:
+  internal-proof-or-waive:
     needs: [release-intent-gate]
     runs-on: ubuntu-latest
     permissions:
@@ -74,19 +90,25 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - name: Read commit status proofs for release SHA
+      - name: Require internal signoff statuses (unless waived)
         env:
           GH_TOKEN: ${{ github.token }}
+          SKIP_INTERNAL: ${{ inputs.skip_internal_signoff }}
           RELEASE_PLATFORM: ${{ inputs.platform }}
         run: |
           set -euo pipefail
+          if [[ "${SKIP_INTERNAL}" == "true" ]]; then
+            echo "::warning::internal signoff waived (skip_internal_signoff=true) — use only for scheduled monthly automation"
+            exit 0
+          fi
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
-          python scripts/internal_signoff_gate.py \
+          python3 scripts/internal_signoff_gate.py \
             --platform "$RELEASE_PLATFORM" \
             --statuses-json /tmp/internal-signoff-status.json
 
   require-production-signoff:
-    needs: [release-intent-gate, require-internal-signoff]
+    needs: [release-intent-gate, internal-proof-or-waive]
+    if: ${{ inputs.skip_production_signoff != 'true' }}
     runs-on: ubuntu-latest
     environment: production-signoff
     steps:
@@ -94,9 +116,27 @@ jobs:
         run: |
           echo "Fresh production signoff approved for ${GITHUB_SHA}"
 
+  production-signoff-waive:
+    needs: [release-intent-gate, internal-proof-or-waive]
+    if: ${{ inputs.skip_production_signoff == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Waive production-signoff (automated monthly path)
+        run: |
+          echo "::notice::production-signoff waived (skip_production_signoff=true) — scheduled monthly automation only"
+
   ios-testflight:
-    needs: [release-intent-gate, require-internal-signoff, require-production-signoff]
-    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    needs:
+      - release-intent-gate
+      - internal-proof-or-waive
+      - require-production-signoff
+      - production-signoff-waive
+    if: >-
+      (inputs.platform == 'ios' || inputs.platform == 'both') &&
+      always() && !cancelled() &&
+      needs.release-intent-gate.result == 'success' &&
+      needs.internal-proof-or-waive.result == 'success' &&
+      (needs.require-production-signoff.result == 'success' || needs.production-signoff-waive.result == 'success')
     runs-on: macos-26
     environment: production
     steps:
@@ -226,8 +266,17 @@ jobs:
           path: native-ios/RandomTimer.ipa
 
   android-release:
-    needs: [release-intent-gate, require-internal-signoff, require-production-signoff]
-    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    needs:
+      - release-intent-gate
+      - internal-proof-or-waive
+      - require-production-signoff
+      - production-signoff-waive
+    if: >-
+      (inputs.platform == 'android' || inputs.platform == 'both') &&
+      always() && !cancelled() &&
+      needs.release-intent-gate.result == 'success' &&
+      needs.internal-proof-or-waive.result == 'success' &&
+      (needs.require-production-signoff.result == 'success' || needs.production-signoff-waive.result == 'success')
     runs-on: ubuntu-latest
     environment: production
     permissions:
