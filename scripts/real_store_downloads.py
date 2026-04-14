@@ -96,8 +96,9 @@ def _fetch_all_android_voided_purchases(
     days: int,
 ) -> list[dict[str, Any]]:
     """Paginate purchases.voidedpurchases.list for the trailing window."""
+    window_days = max(1, min(int(days), 29))
     end_ms = int(time.time() * 1000)
-    start_ms = end_ms - int(days * 24 * 60 * 60 * 1000)
+    start_ms = end_ms - int(window_days * 24 * 60 * 60 * 1000)
     accumulated: list[dict[str, Any]] = []
     page_token: str | None = None
     while True:
@@ -195,10 +196,12 @@ def _get_android_data(days: int) -> dict[str, Any]:
             voided = _fetch_all_android_voided_purchases(service, ANDROID_PACKAGE, days)
             refund_summary = _summarize_voided_purchases(voided)
             refund_summary["refund_count_metric_id"] = ANDROID_REFUND_COUNT_METRIC_ID
+            refund_summary["refund_window_days"] = max(1, min(int(days), 29))
         except Exception as exc:
             refund_summary = {
                 "refund_requests_30d": None,
                 "refund_count_metric_id": ANDROID_REFUND_COUNT_METRIC_ID,
+                "refund_window_days": max(1, min(int(days), 29)),
                 "refund_error": str(exc),
             }
 
