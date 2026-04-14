@@ -61,6 +61,7 @@ def test_public_store_version_readback_requires_public_evidence() -> None:
     assert "scripts/verify_public_store_versions.py" in contents
     assert "--json-out public-store-version-readback.json" in contents
     assert "Upload public store read-back evidence" in contents
+    assert "workflow_run.head_sha" not in contents
 
 
 def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:

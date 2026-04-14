@@ -27,8 +27,6 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
