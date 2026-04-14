@@ -21,6 +21,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,7 @@ fun PaywallSheet(
     monthlyPrice: String = "$3.99",
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
+    onPlanSelected: (plan: String, productId: String) -> Unit = { _, _ -> },
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
@@ -73,6 +75,9 @@ fun PaywallSheet(
     val haptic = LocalHapticFeedback.current
     // Default to monthly — lower barrier to entry
     var selectedPlan by remember { mutableStateOf(SubscriptionPlanSelection.MONTHLY) }
+    LaunchedEffect(Unit) {
+        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -167,7 +172,10 @@ fun PaywallSheet(
                 priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
                 badge = null,
                 isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
-                onClick = { selectedPlan = SubscriptionPlanSelection.MONTHLY },
+                onClick = {
+                    selectedPlan = SubscriptionPlanSelection.MONTHLY
+                    onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+                },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,7 +185,10 @@ fun PaywallSheet(
                 priceLabel = "${stripPriceSuffix(proPrice)}/year",
                 badge = "Best Value",
                 isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
-                onClick = { selectedPlan = SubscriptionPlanSelection.ANNUAL },
+                onClick = {
+                    selectedPlan = SubscriptionPlanSelection.ANNUAL
+                    onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
+                },
             )
 
             Spacer(modifier = Modifier.height(24.dp))

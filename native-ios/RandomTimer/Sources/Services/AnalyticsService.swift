@@ -420,6 +420,9 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 
 // Event names for consistency
 enum AnalyticsEvents {
+    static let paywallView = "paywall_view"
+    static let paywallOfferSelect = "paywall_offer_select"
+    static let paywallPurchaseFailReason = "paywall_purchase_fail_reason"
     static let applicationInstalled = "Application Installed"
     static let applicationOpened = "Application Opened"
     static let timerStarted = "timer_started"
