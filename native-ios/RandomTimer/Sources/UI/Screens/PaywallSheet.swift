@@ -302,11 +302,13 @@ struct PaywallSheet: View {
                 AnalyticsProperties.productId: productID,
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
-            AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseFailReason, properties: [
-                AnalyticsProperties.reason: failReason,
-                AnalyticsProperties.productId: productID,
-                AnalyticsProperties.entryPoint: entryPoint.rawValue,
-            ])
+            if result != .userCancelled {
+                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseFailReason, properties: [
+                    AnalyticsProperties.reason: failReason,
+                    AnalyticsProperties.productId: productID,
+                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                ])
+            }
 
             switch result {
             case .productUnavailable:
