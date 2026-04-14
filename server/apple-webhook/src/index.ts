@@ -265,12 +265,22 @@ export default {
 
     // Decode inner signed sub-payloads (transaction info and renewal info).
     const data = payload.data as Record<string, unknown> | undefined;
-    const txInfo: Record<string, unknown> = data?.signedTransactionInfo
-      ? await decodeInnerJws(String(data.signedTransactionInfo))
-      : {};
-    const renewalInfo: Record<string, unknown> = data?.signedRenewalInfo
-      ? await decodeInnerJws(String(data.signedRenewalInfo))
-      : {};
+    let txInfo: Record<string, unknown> = {};
+    let renewalInfo: Record<string, unknown> = {};
+    try {
+      txInfo = data?.signedTransactionInfo
+        ? await decodeInnerJws(String(data.signedTransactionInfo))
+        : {};
+      renewalInfo = data?.signedRenewalInfo
+        ? await decodeInnerJws(String(data.signedRenewalInfo))
+        : {};
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(
+        JSON.stringify({ level: "error", event: "inner_jws_verification_failed", error: msg })
+      );
+      return new Response(`Forbidden: inner JWS verification failed — ${msg}`, { status: 403 });
+    }
 
     try {
       switch (notificationType) {

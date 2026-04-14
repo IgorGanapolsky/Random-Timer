@@ -136,7 +136,7 @@ def fetch_all_refund_events(
                     pass
         result_info = resp.get("result_info", {})
         cursor = result_info.get("cursor", "")
-        if not cursor or not result_info.get("count"):
+        if not cursor:
             break
     return events
 
@@ -163,7 +163,7 @@ def fetch_all_lifecycle_events(
                     pass
         result_info = resp.get("result_info", {})
         cursor = result_info.get("cursor", "")
-        if not cursor or not result_info.get("count"):
+        if not cursor:
             break
     return events
 

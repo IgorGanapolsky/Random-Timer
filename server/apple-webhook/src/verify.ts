@@ -358,19 +358,6 @@ export async function verifyAppleJws(token: string): Promise<VerifiedPayload> {
  * embedded inside the notification data.  These are also Apple-signed JWS tokens.
  */
 export async function decodeInnerJws(token: string): Promise<Record<string, unknown>> {
-  try {
-    const verified = await verifyAppleJws(token);
-    return verified as Record<string, unknown>;
-  } catch {
-    // Fall back to unverified decode for logging purposes (logged separately as untrusted).
-    const parts = token.split(".");
-    if (parts.length !== 3) return {};
-    try {
-      const raw = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-      const json = atob(raw);
-      return JSON.parse(json) as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  }
+  const verified = await verifyAppleJws(token);
+  return verified as Record<string, unknown>;
 }
