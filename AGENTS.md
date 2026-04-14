@@ -26,6 +26,8 @@ Store and executive JSON expose **`review_count_metric_id`** where applicable so
 
 Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUDE.md` (including rotating leaked tokens, verifying `gh pr checks` before merge, resolving automated review threads that gate CI, and completion criteria for **"Done merging PRs"**). Do not embed CEO credentials in repo docs. External RAG/memory: use only when verified configured in-session.
 
+**CTO session start (PR hygiene):** follow `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol* (`gh auth status`, `git fetch --prune`, open PR audit, orphan branch map, merge only on green required checks, post-merge CI on `develop`/`main`). Say **"Done merging PRs"** only with merge SHAs and verified CI — never after a PAT appears in chat (rotate the token first; do not record it in docs).
+
 **Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 
 ## Agent-Model Matching Standard

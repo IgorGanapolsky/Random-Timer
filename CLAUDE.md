@@ -129,6 +129,16 @@ The CI workflow (`.github/workflows/ci.yml`) builds and uploads a debug APK on e
 
 ## PR Management & System Hygiene
 
+### CTO session start protocol (PR hygiene)
+
+1. Read repo directives (`CLAUDE.md`, `AGENTS.md`, `docs/GEMINI.md`).
+2. Confirm GitHub auth via `gh auth status` (keyring / `gh auth login`). **Never** paste PATs into chat, issues, or tracked files; **revoke and rotate** immediately if a token is exposed anywhere.
+3. `git fetch --prune`; list open PRs (`gh pr list --state open`) and per-PR readiness (`gh pr view <n> --json mergeStateStatus,statusCheckRollup`, `gh pr checks <n>`).
+4. Map `origin/*` branches to open PR heads; triage orphan or stale branches (merge candidate vs delete) without removing registered worktrees or dirty agent trees.
+5. Merge only when branch protection + required checks are satisfied (`mergeStateStatus` clean / documented waiver); record **merge commit SHA** and post-merge CI evidence.
+6. Verify CI on the current `develop` and `main` tips (e.g. `gh run list --workflow ci.yml --branch develop`).
+7. **RAG / external memory:** read or write only when that integration is verified in the active session; otherwise state **not verified** instead of claiming persistence.
+
 Use `/pr-management` skill for the full process. At minimum:
 1. Audit all open PRs with CI status
 2. Identify orphan branches
