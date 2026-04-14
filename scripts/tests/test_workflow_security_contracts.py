@@ -52,6 +52,16 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
 
 
+def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
+    contents = _read(".github/workflows/autonomous-release-automerge.yml")
+
+    assert 'GH_TOKEN="${PROJECT_PAT:-$DEFAULT_TOKEN}"' not in contents
+    assert "timeout-minutes: 5" in contents
+    assert contents.index('enable_automerge "GITHUB_TOKEN" "$DEFAULT_TOKEN"') < contents.index(
+        'enable_automerge "PROJECT_PAT fallback" "${PROJECT_PAT:-}"'
+    )
+
+
 def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     ci = _read(".github/workflows/ci.yml")
     device_tests = _read(".github/workflows/device-tests.yml")
