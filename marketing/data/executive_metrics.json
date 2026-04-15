@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10T17:50:23+00:00",
+  "generated_at": "2026-04-15T17:20:49+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -9,7 +9,9 @@
     "paid_posthog": "In-app telemetry: paywall_purchase_success / paywall_purchase_result (not Play/App Store revenue). Compare posthog.events_paywall_purchase_success_ios vs _android (properties.platform). Ledger: App Store Connect + Google Play billing.",
     "posthog_executive": "HogQL scalars use audience_sql (PRAGMATIC_LIVE) and window_days except wqtu_7d_distinct_persons (fixed 7d). Filters exclude non\u2013store-production distribution_channel (testflight, non_play_install, dev, emulator, etc.), is_internal, debug/sim events; legacy events without distribution_channel stay included as 'legacy'. Optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS env. See posthog.metric_field_ids and posthog.audience_note.",
     "crashes": "Crashlytics BigQuery streaming export; posthog_exception_events is separate. crashlytics_bigquery.fatal_events_in_window is COUNT(*) of fatal rows in the lookback hours. fatal_events sums crash_count only within parsed top_fatal_issues (up to 10 rows displayed from top 20 SQL groups) \u2014 see metric_field_ids.",
-    "uninstalls": "Not available on iOS; Android uninstall metrics require Play reporting APIs (not in this script yet).",
+    "uninstalls": "Store uninstall truth is not available here. Executive snapshot reports only a PostHog proxy uninstall signal under uninstalls.*.",
+    "refund_requests": "Android refund_requests_30d comes from Google Play voided purchases API (purchases.voidedpurchases.list) over the snapshot window. iOS refund signal has two sources: (1) negative Units in App Store Connect SALES/SUMMARY daily reports, and (2) real-time Apple Server Notifications V2 events stored in Cloudflare KV via server/apple-webhook worker (asn_v2_* fields in the refunds section).",
+    "uninstall_proxy": "Proxy only: distinct Application Installed (os) minus distinct Application Opened (os) over the same PostHog window. This is not store uninstall truth.",
     "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
     "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
     "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window."
@@ -19,39 +21,43 @@
     "host": "https://us.posthog.com",
     "project_id": "299775",
     "audience": "pragmatic_live",
-    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ('testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test')\n) AND person_id NOT IN (<redacted: POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS>)",
+    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ('testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test')\n)",
     "audience_note": "Excludes debug/sim/emulator, is_internal, non\u2013App Store/TestFlight/Firebase-style distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. Legacy events without distribution_channel use coalesce 'legacy' (still included). Not a guarantee of human/non-team users\u2014set person exclusions for known IDs.",
-    "exclude_person_ids_configured": true,
+    "exclude_person_ids_configured": false,
     "window_days": 30,
     "errors": [],
-    "distinct_persons_application_installed": 464,
-    "distinct_persons_first_open": 439,
-    "timer_started_events": 1479,
-    "timer_completed_events": 290,
-    "distinct_persons_timer_started": 383,
-    "distinct_persons_timer_completed": 47,
-    "distinct_persons_timer_started_and_completed": 47,
-    "wqtu_distinct_persons": 10,
-    "wqtu_7d_distinct_persons": 8,
-    "timer_abandon_rate_event_level_pct": 80.39,
+    "distinct_persons_application_installed": 530,
+    "distinct_persons_first_open": 512,
+    "distinct_persons_application_installed_ios": 93,
+    "distinct_persons_application_installed_android": 431,
+    "distinct_persons_application_opened_ios": 93,
+    "distinct_persons_application_opened_android": 432,
+    "timer_started_events": 1766,
+    "timer_completed_events": 372,
+    "distinct_persons_timer_started": 452,
+    "distinct_persons_timer_completed": 78,
+    "distinct_persons_timer_started_and_completed": 78,
+    "wqtu_distinct_persons": 15,
+    "wqtu_7d_distinct_persons": 6,
+    "timer_abandon_rate_event_level_pct": 78.94,
     "distinct_persons_paywall_purchase_success": 1,
     "events_paywall_purchase_success": 1,
     "distinct_persons_paywall_purchase_success_ios": 1,
     "distinct_persons_paywall_purchase_success_android": 0,
     "events_paywall_purchase_success_ios": 1,
     "events_paywall_purchase_success_android": 0,
-    "in_app_review_prompt_events": 12,
-    "in_app_review_prompt_distinct_persons": 12,
+    "in_app_review_prompt_events": 15,
+    "in_app_review_prompt_distinct_persons": 15,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        462,
-        2810
+        525,
+        3290
       ],
       [
         "Active Timer",
-        378,
-        1896
+        445,
+        2376
       ]
     ],
     "posthog_exception_events": 0,
@@ -59,6 +65,10 @@
     "metric_field_ids": {
       "distinct_persons_application_installed": "posthog_hogql_distinct_persons_event_application_installed",
       "distinct_persons_first_open": "posthog_hogql_distinct_persons_event_first_open",
+      "distinct_persons_application_installed_ios": "posthog_hogql_distinct_persons_event_application_installed_ios",
+      "distinct_persons_application_installed_android": "posthog_hogql_distinct_persons_event_application_installed_android",
+      "distinct_persons_application_opened_ios": "posthog_hogql_distinct_persons_event_application_opened_ios",
+      "distinct_persons_application_opened_android": "posthog_hogql_distinct_persons_event_application_opened_android",
       "timer_started_events": "posthog_hogql_count_events_timer_started",
       "timer_completed_events": "posthog_hogql_count_events_timer_completed",
       "distinct_persons_timer_started": "posthog_hogql_distinct_persons_event_timer_started",
@@ -81,51 +91,62 @@
   },
   "store_apis": {
     "android": {
-      "status": "error",
-      "reason": "credential error: Google Play key path is not a file (check GOOGLE_PLAY_JSON_KEY_PATH): <redacted>"
+      "status": "ok",
+      "review_count": 0,
+      "review_count_metric_id": "google_play_androidpublisher_reviews_list_7d_commented_paginated",
+      "production_release": {
+        "version_codes": [
+          "1776182246"
+        ],
+        "status": "completed",
+        "name": "v1776182246"
+      },
+      "refund_requests_30d": 0,
+      "voided_purchase_reason_counts": {},
+      "refund_count_metric_id": "google_play_androidpublisher_voidedpurchases_list_window_paginated",
+      "refund_window_days": 29,
+      "note": "Play reviews.list: comment-bearing reviews created or modified in the last 7 days only; star-only ratings are excluded. Not equal to public Play review totals. No per-app download count in this API."
     },
     "ios": {
       "status": "ok",
-      "app_name": "Random Tactical Timer",
-      "bundle_id": "com.igorganapolsky.randomtimer",
-      "sku": "randomtimer2026",
-      "versions": [
-        {
-          "version": "1.3.17",
-          "state": "READY_FOR_SALE",
-          "created": "2026-04-06T09:08:34-07:00"
-        },
-        {
-          "version": "1.3.16",
-          "state": "READY_FOR_SALE",
-          "created": "2026-04-02T13:16:21-07:00"
-        },
-        {
-          "version": "1.3.15",
-          "state": "READY_FOR_SALE",
-          "created": "2026-02-24T11:12:51-08:00"
-        },
-        {
-          "version": "1.2.0",
-          "state": "READY_FOR_SALE",
-          "created": "2026-02-18T15:22:27-08:00"
-        },
-        {
-          "version": "1.1.1",
-          "state": "READY_FOR_SALE",
-          "created": "2026-01-27T13:25:27-08:00"
-        }
-      ],
-      "review_count": 0,
-      "review_count_metric_id": "app_store_connect_customer_reviews_sort_created_desc_limit_50",
-      "review_count_request_limit": 50,
-      "reviews": [],
-      "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API."
+      "app_info_error": "HTTP 403",
+      "versions_error": "HTTP 403",
+      "reviews_error": "HTTP 403",
+      "refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
+      "sales_report_vendor_number_present": false,
+      "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API. iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY reports when APPSTORE_VENDOR_NUMBER is configured."
     }
+  },
+  "refunds": {
+    "android_refund_requests_30d": 0,
+    "android_refund_count_metric_id": "google_play_androidpublisher_voidedpurchases_list_window_paginated",
+    "android_reason_counts": {},
+    "android_status": "ok",
+    "ios_refund_units_30d": null,
+    "ios_refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
+    "ios_sales_report_vendor_number_present": false,
+    "ios_sales_report_days_with_data": null,
+    "ios_status": "ok",
+    "asn_v2_status": "ok",
+    "asn_v2_ios_refund_count_production": 0,
+    "asn_v2_ios_refund_count_total": 0,
+    "asn_v2_ios_refund_by_product": {},
+    "asn_v2_ios_refund_by_reason": {},
+    "asn_v2_subscription_lifecycle_count": 0,
+    "asn_v2_subscription_lifecycle_by_type": {},
+    "asn_v2_metric_id": "cloudflare_kv_apple_asn_v2_refund_window",
+    "note": "Android uses Google Play voided purchases API. iOS uses two signals: (1) negative Units in App Store Connect SALES/SUMMARY daily reports (requires APPSTORE_VENDOR_NUMBER), and (2) real-time Apple Server Notifications V2 via Cloudflare KV webhook (server/apple-webhook \u2014 requires CLOUDFLARE_API_TOKEN + CLOUDFLARE_KV_NAMESPACE_ID)."
+  },
+  "uninstalls": {
+    "android_uninstall_proxy_30d": 0,
+    "ios_uninstall_proxy_30d": 0,
+    "metric_id": "posthog_proxy_distinct_installed_minus_opened_by_os_window",
+    "status": "proxy_only",
+    "note": "Proxy only (not store truth): distinct Application Installed minus distinct Application Opened by platform over the same window."
   },
   "crashlytics_bigquery": {
     "status": "error",
-    "reason": "GOOGLE_APPLICATION_CREDENTIALS points to a missing file (<redacted>). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path.",
+    "reason": "Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.",
     "source": "crashlytics"
   }
 }
