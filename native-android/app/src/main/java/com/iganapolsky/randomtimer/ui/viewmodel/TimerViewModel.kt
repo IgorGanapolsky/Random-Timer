@@ -1,7 +1,6 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
@@ -24,7 +23,6 @@ import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +34,6 @@ import javax.inject.Inject
 class TimerViewModel
     @Inject
     constructor(
-        @ApplicationContext private val appContext: Context,
         private val repository: TimerRepository,
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
@@ -48,13 +45,6 @@ class TimerViewModel
     ) : ViewModel() {
         val totalSessions: Int get() = trainingStatsService.totalSessions
         val currentStreak: Int get() = trainingStatsService.currentStreak
-
-        private val prefs = appContext.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
-        val hasCompletedFirstTimer: Boolean get() = prefs.getBoolean("hasCompletedFirstTimer", false)
-
-        private fun markFirstTimerCompleted() {
-            prefs.edit().putBoolean("hasCompletedFirstTimer", true).apply()
-        }
 
         val config: StateFlow<TimerConfig> =
             repository
@@ -367,7 +357,6 @@ class TimerViewModel
                     ),
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
-                markFirstTimerCompleted()
             }
         }
 

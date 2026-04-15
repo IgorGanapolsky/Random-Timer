@@ -1,7 +1,5 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
-import android.content.Context
-import android.content.SharedPreferences
 import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -50,10 +48,6 @@ class TimerViewModelAnalyticsTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        val appContext = mockk<Context>()
-        val mockPrefs = mockk<SharedPreferences>(relaxed = true)
-        every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
-
         repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
@@ -73,7 +67,6 @@ class TimerViewModelAnalyticsTest {
 
         viewModel =
             TimerViewModel(
-                appContext = appContext,
                 repository = repository,
                 startTimerUseCase = startTimerUseCase,
                 soundPreviewManager = soundPreviewManager,

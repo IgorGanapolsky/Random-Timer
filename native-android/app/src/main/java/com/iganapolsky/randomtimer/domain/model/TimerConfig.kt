@@ -198,15 +198,11 @@ fun toggleExtendedRange(
     }
 
 /**
- * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s for users who have
- * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
- * when no migration applies.
+ * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s on the free range.
+ * New installs already use [TimerConfig.DEFAULT]. Returns null when no migration applies.
+ * One-shot application is enforced by the caller (e.g. `activation_first_run_range_nudge_applied`).
  */
-fun activationPresetForFirstCompletionIfEligible(
-    hasCompletedFirstTimer: Boolean,
-    current: TimerConfig,
-): TimerConfig? {
-    if (hasCompletedFirstTimer) return null
+fun activationLegacyRangePresetIfEligible(current: TimerConfig): TimerConfig? {
     if (current.useExtendedRange) return null
     if (current.minSeconds != 30 || current.maxSeconds != 120) {
         return null

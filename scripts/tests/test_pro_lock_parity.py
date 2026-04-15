@@ -30,26 +30,21 @@ class ProLockParityTest(unittest.TestCase):
         self.assertIn("soundGate", src, "iOS missing soundGate paywall entry")
         self.assertIn("rangeGate", src, "iOS missing rangeGate paywall entry")
 
-    def test_android_lock_icons_not_gated_behind_first_timer(self):
-        src = ANDROID_SETUP.read_text()
-        lines = src.splitlines()
-        for i, line in enumerate(lines):
-            if "hasCompletedFirstTimer" in line and ("lock" in line.lower() or "\uD83D\uDD12" in line):
-                self.fail(f"Android line {i+1}: lock gated behind hasCompletedFirstTimer")
-
-    def test_ios_lock_icons_not_gated_behind_first_timer(self):
-        src = IOS_SETUP.read_text()
-        lines = src.splitlines()
-        for i, line in enumerate(lines):
-            if "hasCompletedFirstTimer" in line and ("lock" in line.lower() or "\uD83D\uDD12" in line):
-                self.fail(f"iOS line {i+1}: lock gated behind hasCompletedFirstTimer")
-
-    def test_ios_paywall_not_gated_behind_first_timer(self):
-        src = IOS_SETUP.read_text()
-        lines = src.splitlines()
-        for i, line in enumerate(lines):
-            if "hasCompletedFirstTimer" in line and i + 1 < len(lines) and "presentPaywall" in lines[i + 1]:
-                self.fail(f"iOS line {i+1}: paywall gated behind hasCompletedFirstTimer")
+    def test_no_hasCompletedFirstTimer_storage_key_in_app_sources(self):
+        """Product policy: never persist or branch on hasCompletedFirstTimer (removed)."""
+        needle = "hasCompletedFirstTimer"
+        roots = [
+            ROOT / "native-android/app/src/main",
+            ROOT / "native-ios/RandomTimer/Sources",
+            ROOT / "native-ios/SharedModels",
+        ]
+        for base in roots:
+            for path in base.rglob("*"):
+                if path.suffix not in {".kt", ".swift"}:
+                    continue
+                text = path.read_text(encoding="utf-8", errors="replace")
+                if needle in text:
+                    self.fail(f"{path.relative_to(ROOT)} must not contain {needle!r}")
 
     def test_both_platforms_have_sound_arsenal_section(self):
         self.assertIn("Sound Arsenal", ANDROID_SETUP.read_text())

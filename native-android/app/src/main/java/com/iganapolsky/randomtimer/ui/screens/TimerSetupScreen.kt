@@ -86,7 +86,7 @@ import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
-import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
+import com.iganapolsky.randomtimer.domain.model.activationLegacyRangePresetIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
@@ -144,7 +144,6 @@ fun TimerSetupScreen(
     onCommandCuePreview: (VoiceGender) -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
-    hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
@@ -165,14 +164,13 @@ fun TimerSetupScreen(
     }
 
     LaunchedEffect(
-        hasCompletedFirstTimer,
         config.useExtendedRange,
         config.minSeconds,
         config.maxSeconds,
     ) {
         val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
         if (prefs.getBoolean("activation_first_run_range_nudge_applied", false)) return@LaunchedEffect
-        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        val next = activationLegacyRangePresetIfEligible(config)
         if (next != null) {
             prefs.edit().putBoolean("activation_first_run_range_nudge_applied", true).apply()
             onConfigChange(next)

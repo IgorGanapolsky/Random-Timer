@@ -123,7 +123,6 @@ fun RandomTimerNavHost(
                 onCommandCuePreview = viewModel::previewCommandCue,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
-                hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
                 isElite = isElite,
                 onUpgradeTap = { feature ->

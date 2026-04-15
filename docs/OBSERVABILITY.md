@@ -1,6 +1,6 @@
 # Observability (Random Timer)
 
-Last updated: 2026-04-15T15:42:47Z.
+Last updated: 2026-04-15T15:46:44Z.
 
 This document is the **source of truth** for what is **implemented in code** versus **optional / not built yet**. It replaces earlier wording that overstated Firebase Performance (iOS) and Remote Config.
 
@@ -91,7 +91,7 @@ Create and manage flags in the PostHog project UI. Code uses the **same string**
 - [ ] iOS Firebase Performance (optional follow-up).
 - [ ] Firebase Remote Config (optional; PostHog flags cover many cases).
 - [x] In-app PostHog feature flags used for paywall default-plan experiment (`paywall_default_plan_annual`); document new flags here when added.
-- [x] **Product:** Upgrade / paywall is never blocked behind a “complete your first timer” (or similar) gate; Pro affordances open the paywall immediately on both platforms.
+- [x] **Product:** Upgrade / paywall is never blocked behind a “complete your first timer” (or similar) gate; Pro affordances open the paywall immediately on both platforms. The `hasCompletedFirstTimer` storage key and API surface are **removed** from app code (onboarding funnel still uses PostHog `first_timer_*` events via separate analytics prefs).
 - [ ] Periodically review PostHog **retention** and **replay** cost vs sampling.
 
 ---

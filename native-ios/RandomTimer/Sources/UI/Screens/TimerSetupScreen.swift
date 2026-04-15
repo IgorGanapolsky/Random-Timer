@@ -470,7 +470,7 @@ struct TimerSetupScreen: View {
                 .interactiveDismissDisabled(false)
         }
         .onAppear {
-            timerManager.applyActivationPresetForFirstCompletionIfNeeded()
+            timerManager.applyLegacyActivationRangePresetIfNeeded()
             screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true
