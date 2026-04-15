@@ -18,6 +18,7 @@ import com.android.billingclient.api.queryPurchasesAsync
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -281,6 +282,13 @@ class ProManager
                     "has_free_trial" to (selectedFreeTrialOfferToken != null),
                 ),
             )
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PURCHASE_FLOW_LAUNCHED,
+                mapOf(
+                    AnalyticsProperties.PRODUCT_ID to productID,
+                    "has_free_trial" to (selectedFreeTrialOfferToken != null),
+                ),
+            )
             val result = billingClient.launchBillingFlow(activity, flowParams)
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
                 trackPurchaseResult(
@@ -508,7 +516,15 @@ class ProManager
                             AnalyticsProperties.TRIAL_VERIFIED to false,
                         ),
                     )
+                    analyticsService.trackSubscriptionFunnelStep(
+                        SubscriptionFunnelSteps.TRIAL_STARTED,
+                        mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
+                    )
                 }
+                analyticsService.trackSubscriptionFunnelStep(
+                    SubscriptionFunnelSteps.PURCHASE_SUCCEEDED,
+                    mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
+                )
             }
             trackPurchaseResult(
                 success = hasPurchased,

@@ -1,7 +1,6 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
@@ -10,6 +9,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.PaywallExperimentVariants
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
@@ -24,7 +24,6 @@ import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +35,6 @@ import javax.inject.Inject
 class TimerViewModel
     @Inject
     constructor(
-        @ApplicationContext private val appContext: Context,
         private val repository: TimerRepository,
         private val startTimerUseCase: StartTimerUseCase,
         private val soundPreviewManager: SoundPreviewManager,
@@ -48,13 +46,6 @@ class TimerViewModel
     ) : ViewModel() {
         val totalSessions: Int get() = trainingStatsService.totalSessions
         val currentStreak: Int get() = trainingStatsService.currentStreak
-
-        private val prefs = appContext.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
-        val hasCompletedFirstTimer: Boolean get() = prefs.getBoolean("hasCompletedFirstTimer", false)
-
-        private fun markFirstTimerCompleted() {
-            prefs.edit().putBoolean("hasCompletedFirstTimer", true).apply()
-        }
 
         val config: StateFlow<TimerConfig> =
             repository
@@ -288,18 +279,28 @@ class TimerViewModel
             }
         }
 
+        fun paywallValueFramingVariant(): String = analyticsService.paywallValueFramingVariant()
+
         fun trackPaywallViewed(
             entryPoint: String,
             defaultAnnualExperiment: Boolean,
         ) {
+            val experimentVariant =
+                PaywallExperimentVariants.fromAnnualDefaultFlag(defaultAnnualExperiment)
+            analyticsService.setPaywallSurfaceContext(entryPoint, experimentVariant)
+            val framing = analyticsService.paywallValueFramingVariant()
             val props =
                 mapOf(
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
-                    AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT to
-                        PaywallExperimentVariants.fromAnnualDefaultFlag(defaultAnnualExperiment),
+                    AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT to experimentVariant,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
                 )
             analyticsService.track(AnalyticsEvents.PAYWALL_VIEW, props)
             analyticsService.track(AnalyticsEvents.PAYWALL_VIEWED, props)
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_VIEWED,
+                emptyMap(),
+            )
         }
 
         fun trackPaywallOfferSelected(
@@ -307,10 +308,19 @@ class TimerViewModel
             productId: String,
             plan: String,
         ) {
+            val framing = analyticsService.paywallValueFramingVariant()
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_OFFER_SELECT,
                 mapOf(
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PRODUCT_ID to productId,
+                    "plan" to plan,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
+                ),
+            )
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_PLAN_SELECTED,
+                mapOf(
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
                 ),
@@ -331,17 +341,14 @@ class TimerViewModel
             )
         }
 
-        fun trackPaywallGateFirstTimer(feature: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_GATE_FIRST_TIMER,
-                mapOf(AnalyticsProperties.FEATURE to feature),
-            )
-        }
-
         fun trackPaywallDismissed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+                mapOf(
+                    AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to
+                        analyticsService.paywallValueFramingVariant(),
+                ),
             )
         }
 
@@ -374,7 +381,6 @@ class TimerViewModel
                     ),
                 )
                 analyticsService.trackFirstTimerCompletedIfNeeded()
-                markFirstTimerCompleted()
             }
         }
 

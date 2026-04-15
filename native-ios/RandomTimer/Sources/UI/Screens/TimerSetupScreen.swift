@@ -6,10 +6,10 @@ struct TimerSetupScreen: View {
     @EnvironmentObject var proManager: ProManager
     @State private var showPaywall = false
     @State private var paywallDefaultToAnnual = false
+    @State private var paywallValueFramingVariant = PaywallValueFraming.control
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
-    @AppStorage("hasCompletedFirstTimer") private var hasCompletedFirstTimer = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
     @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = TimerConfig.minimumFloorSeconds
@@ -72,12 +72,12 @@ struct TimerSetupScreen: View {
                                     timerManager.updateConfig(result.config.clamped(isPro: proManager.isPro))
                                 } label: {
                                     Text(config.useExtendedRange ? "1H" : "5m")
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
                                         .background(
                                             config.useExtendedRange
-                                                ? Color.accentPrimary.opacity(0.2)
+                                                ? Color.accentPrimary.opacity(0.3)
                                                 : Color.glassBackground
                                         )
                                         .foregroundColor(
@@ -464,14 +464,18 @@ struct TimerSetupScreen: View {
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
-            PaywallSheet(entryPoint: paywallEntryPoint, defaultToAnnualExperiment: paywallDefaultToAnnual)
+            PaywallSheet(
+                entryPoint: paywallEntryPoint,
+                defaultToAnnualExperiment: paywallDefaultToAnnual,
+                valueFramingVariant: paywallValueFramingVariant
+            )
                 .environmentObject(proManager)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .interactiveDismissDisabled(false)
         }
         .onAppear {
-            timerManager.applyActivationPresetForFirstCompletionIfNeeded()
+            timerManager.applyLegacyActivationRangePresetIfNeeded()
             screenAppearedAt = Date()
             AnalyticsService.shared.screen(AnalyticsScreens.timerSetup)
             showArsenal = true
@@ -561,6 +565,7 @@ struct TimerSetupScreen: View {
         Task { @MainActor in
             await AnalyticsService.shared.reloadPaywallExperimentFlagsIfNeeded()
             paywallDefaultToAnnual = AnalyticsService.shared.paywallDefaultAnnualExperimentEnabled()
+            paywallValueFramingVariant = AnalyticsService.shared.paywallValueFramingVariant()
             showPaywall = true
         }
     }

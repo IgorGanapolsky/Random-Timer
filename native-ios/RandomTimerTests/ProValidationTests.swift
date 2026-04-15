@@ -35,6 +35,12 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: false), "monthly_default")
         XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: true), "annual_default")
         XCTAssertEqual(PostHogExperimentKeys.paywallDefaultPlanAnnual, "paywall_default_plan_annual")
+        XCTAssertEqual(PostHogExperimentKeys.paywallValueFraming, "paywall_value_framing")
+    }
+
+    @MainActor
+    func testPaywallOutcomesFirstHeadlineMatchesAndroidExperimentCopy() {
+        XCTAssertEqual(PaywallSheet.headlineOutcomesFirst, "Finish Strong When the Clock Attacks")
     }
 
     func testPaywallUsesApprovedAppStoreConnectProductId() {

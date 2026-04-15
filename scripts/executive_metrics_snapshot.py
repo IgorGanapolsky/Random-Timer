@@ -420,7 +420,7 @@ def run(
             "android_status": (android or {}).get("status"),
             "ios_refund_units_30d": (
                 (ios or {}).get("ios_refund_units_30d")
-                if (ios or {}).get("status") == "ok"
+                if (ios or {}).get("status") in ("ok", "partial")
                 else None
             ),
             "ios_refund_count_metric_id": (ios or {}).get("refund_count_metric_id"),

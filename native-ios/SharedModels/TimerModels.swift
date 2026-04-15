@@ -210,10 +210,9 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
-    /// Migrates legacy canonical defaults (30–120s) to activation-first 5–30s when the user
-    /// has not completed a first timer. Returns nil when no migration applies.
-    public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
-        guard !hasCompletedFirstTimer else { return nil }
+    /// Migrates legacy canonical defaults (30–120s) to activation-first 5–30s on the free range.
+    /// Returns nil when no migration applies. One-shot application is enforced by the caller.
+    public func applyingLegacyActivationRangePresetIfEligible() -> TimerConfig? {
         guard !useExtendedRange else { return nil }
         guard minSeconds == 30, maxSeconds == 120 else { return nil }
         return TimerConfig(

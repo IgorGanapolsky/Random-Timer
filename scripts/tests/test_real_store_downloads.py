@@ -15,6 +15,8 @@ from real_store_downloads import (  # noqa: E402
     ANDROID_REVIEW_COUNT_METRIC_ID,
     IOS_REFUND_COUNT_METRIC_ID,
     IOS_REVIEW_COUNT_METRIC_ID,
+    _asc_error_summary,
+    _get_ios_data,
     _parse_asc_sales_report_rows,
     _fetch_all_android_voided_purchases,
     _fetch_all_play_reviews_list,
@@ -111,6 +113,49 @@ def test_parse_asc_sales_report_rows_handles_gzip_tsv() -> None:
     assert len(rows) == 2
     assert rows[0]["Units"] == "-2"
     assert rows[1]["SKU"] == "pro_yearly"
+
+
+def test_asc_error_summary_includes_apple_errors_detail() -> None:
+    resp = MagicMock()
+    resp.status_code = 403
+    resp.json.return_value = {
+        "errors": [
+            {"detail": "You do not have permission.", "code": "FORBIDDEN_ERROR"},
+        ]
+    }
+    out = _asc_error_summary(resp)
+    assert "403" in out
+    assert "permission" in out.lower()
+
+
+def test_get_ios_data_marks_partial_when_some_asc_calls_fail(monkeypatch) -> None:
+    import asc_client
+
+    fake_auth = MagicMock()
+    fake_auth.jwt.return_value = "fake-jwt"
+    monkeypatch.setattr(asc_client, "ASCAuth", MagicMock(from_env=lambda: fake_auth))
+    monkeypatch.setenv("APPSTORE_APP_ID", "6758355312")
+
+    def fake_get(url: str, **kwargs: object) -> MagicMock:
+        r = MagicMock()
+        if "customerReviews" in url:
+            r.status_code = 200
+            r.json.return_value = {"data": []}
+        else:
+            r.status_code = 403
+            r.json.return_value = {
+                "errors": [{"detail": "Forbidden", "code": "FORBIDDEN_ERROR"}]
+            }
+        return r
+
+    import requests as requests_mod
+
+    monkeypatch.setattr(requests_mod, "get", fake_get)
+    out = _get_ios_data(30)
+    assert out["status"] == "partial"
+    assert "app_info_error" in out
+    assert "versions_error" in out
+    assert out.get("reviews_error") is None
 
 
 def test_summarize_ios_refunds_uses_negative_units() -> None:

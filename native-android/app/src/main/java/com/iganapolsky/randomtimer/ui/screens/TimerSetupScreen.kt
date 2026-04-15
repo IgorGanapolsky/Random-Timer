@@ -81,12 +81,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
-import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
+import com.iganapolsky.randomtimer.domain.model.activationLegacyRangePresetIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
@@ -144,7 +145,6 @@ fun TimerSetupScreen(
     onCommandCuePreview: (VoiceGender) -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
-    hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
@@ -165,14 +165,13 @@ fun TimerSetupScreen(
     }
 
     LaunchedEffect(
-        hasCompletedFirstTimer,
         config.useExtendedRange,
         config.minSeconds,
         config.maxSeconds,
     ) {
         val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
         if (prefs.getBoolean("activation_first_run_range_nudge_applied", false)) return@LaunchedEffect
-        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        val next = activationLegacyRangePresetIfEligible(config)
         if (next != null) {
             prefs.edit().putBoolean("activation_first_run_range_nudge_applied", true).apply()
             onConfigChange(next)
@@ -289,26 +288,24 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                // Training Stats
-                if (hasCompletedFirstTimer) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                // Training Stats (always visible — never hide behind a "first completion" gate)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Session #${totalSessions + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                        )
+                        if (currentStreak > 1) {
                             Text(
-                                text = "Session #${totalSessions + 1}",
+                                text = "\uD83D\uDD25 $currentStreak day streak",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TimerColors.TextSecondary,
+                                color = TimerColors.AccentPrimary,
                             )
-                            if (currentStreak > 1) {
-                                Text(
-                                    text = "\uD83D\uDD25 $currentStreak day streak",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TimerColors.AccentPrimary,
-                                )
-                            }
                         }
                     }
                 }
@@ -367,13 +364,14 @@ fun TimerSetupScreen(
                                         label = {
                                             Text(
                                                 text = if (config.useExtendedRange) "1H" else "5m",
-                                                style = MaterialTheme.typography.labelSmall,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = if (config.useExtendedRange) FontWeight.Bold else FontWeight.Normal,
                                             )
                                         },
                                         colors =
                                             FilterChipDefaults.filterChipColors(
                                                 containerColor = TimerColors.GlassBackground,
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.3f),
                                                 labelColor = TimerColors.TextSecondary,
                                                 selectedLabelColor = TimerColors.AccentPrimary,
                                             ),

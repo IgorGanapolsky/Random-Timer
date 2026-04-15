@@ -84,14 +84,10 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
     private static let activationRangeNudgeAppliedKey = "activation_first_run_range_nudge_applied"
 
-    /// Migrates legacy 30–120s to 5–30s once for users who have not finished a first timer.
-    func applyActivationPresetForFirstCompletionIfNeeded() {
+    /// Migrates legacy 30–120s to 5–30s once (free range), independent of any completion milestone.
+    func applyLegacyActivationRangePresetIfNeeded() {
         if UserDefaults.standard.bool(forKey: Self.activationRangeNudgeAppliedKey) { return }
-        let done = UserDefaults.standard.bool(forKey: "hasCompletedFirstTimer")
-        let preset = config.applyingActivationPresetForFirstCompletionIfEligible(
-            hasCompletedFirstTimer: done
-        )
-        guard let next = preset else {
+        guard let next = config.applyingLegacyActivationRangePresetIfEligible() else {
             return
         }
         updateConfig(next)
@@ -204,7 +200,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         if let state = timerState, state.status == .alarm {
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
-            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
                 "source": "alarm_dismissed",
@@ -346,7 +341,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                         timerState = state
                         StoreReviewManager.shared.recordCompletion()
                         TrainingStatsService.shared.recordSession()
-                        UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
                         AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                             "target_duration": state.targetDuration,
                             "source": "foreground_return_alarm_expired",
@@ -418,7 +412,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                     timerState = state
                     StoreReviewManager.shared.recordCompletion()
                     TrainingStatsService.shared.recordSession()
-                    UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
                     AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                         "target_duration": state.targetDuration,
                         "source": "foreground_return_timer_and_alarm_expired",
@@ -579,7 +572,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             // Timer was in alarm or already complete when app was killed — count as completed
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
-            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": saved.targetDuration,
                 "source": "restore_alarm_or_complete",
@@ -607,7 +599,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             // Timer completed while app was closed — track as completion, not abandonment
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
-            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": saved.targetDuration,
                 "source": "background_completion",
@@ -729,7 +720,6 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
             TrainingStatsService.shared.recordSession()
-            UserDefaults.standard.set(true, forKey: "hasCompletedFirstTimer")
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
                 AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,

@@ -12,6 +12,15 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Ordered steps for PostHog funnels (`subscription_funnel_step` event). */
+object SubscriptionFunnelSteps {
+    const val PAYWALL_VIEWED = "paywall_viewed"
+    const val PAYWALL_PLAN_SELECTED = "paywall_plan_selected"
+    const val PURCHASE_FLOW_LAUNCHED = "purchase_flow_launched"
+    const val PURCHASE_SUCCEEDED = "purchase_succeeded"
+    const val TRIAL_STARTED = "trial_started"
+}
+
 @Singleton
 class AnalyticsService
     @Inject
@@ -19,6 +28,12 @@ class AnalyticsService
         private var initialized = false
         private var prefs: SharedPreferences? = null
         private var analyticsContextProperties: Map<String, Any> = emptyMap()
+
+        @Volatile
+        private var lastPaywallEntryPoint: String? = null
+
+        @Volatile
+        private var lastPaywallExperimentVariant: String? = null
 
         fun initialize(application: Application) {
             if (initialized) return
@@ -124,6 +139,48 @@ class AnalyticsService
             } catch (_: Exception) {
                 false
             }
+        }
+
+        fun setPaywallSurfaceContext(
+            entryPoint: String,
+            experimentVariant: String,
+        ) {
+            lastPaywallEntryPoint = entryPoint
+            lastPaywallExperimentVariant = experimentVariant
+        }
+
+        fun paywallValueFramingVariant(): String {
+            if (!initialized) return PaywallValueFraming.CONTROL
+            return try {
+                when (
+                    val raw =
+                        PostHog.getFeatureFlag(PostHogExperimentKeys.PAYWALL_VALUE_FRAMING)
+                ) {
+                    PaywallValueFraming.OUTCOMES_FIRST, "outcomes_first" -> PaywallValueFraming.OUTCOMES_FIRST
+                    else -> PaywallValueFraming.CONTROL
+                }
+            } catch (_: Exception) {
+                PaywallValueFraming.CONTROL
+            }
+        }
+
+        fun trackSubscriptionFunnelStep(
+            funnelStep: String,
+            properties: Map<String, Any> = emptyMap(),
+        ) {
+            if (!initialized) return
+            val framing = paywallValueFramingVariant()
+            val merged =
+                mutableMapOf<String, Any>(
+                    "funnel_step" to funnelStep,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
+                )
+            lastPaywallEntryPoint?.let { merged[AnalyticsProperties.ENTRY_POINT] = it }
+            lastPaywallExperimentVariant?.let {
+                merged[AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT] = it
+            }
+            merged.putAll(properties)
+            track(AnalyticsEvents.SUBSCRIPTION_FUNNEL_STEP, merged)
         }
 
         fun reloadFeatureFlags(onReady: () -> Unit) {
@@ -350,10 +407,12 @@ object AnalyticsEvents {
     // Free trial
     const val FREE_TRIAL_STARTED = "free_trial_started"
 
+    /** Canonical paywall → trial → purchase funnel (same `funnel_step` values on iOS). */
+    const val SUBSCRIPTION_FUNNEL_STEP = "subscription_funnel_step"
+
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
-    const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
@@ -391,6 +450,7 @@ object AnalyticsProperties {
     const val REASON = "reason"
     const val REVENUE = "revenue"
     const val PAYWALL_EXPERIMENT_VARIANT = "paywall_experiment_variant"
+    const val PAYWALL_VALUE_FRAMING_VARIANT = "paywall_value_framing_variant"
 }
 
 object AnalyticsScreens {

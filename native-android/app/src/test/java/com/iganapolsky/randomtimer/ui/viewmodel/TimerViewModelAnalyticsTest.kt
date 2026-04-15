@@ -1,10 +1,9 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
-import android.content.Context
-import android.content.SharedPreferences
 import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
@@ -50,15 +49,12 @@ class TimerViewModelAnalyticsTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        val appContext = mockk<Context>()
-        val mockPrefs = mockk<SharedPreferences>(relaxed = true)
-        every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
-
         repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
+        every { analyticsService.paywallValueFramingVariant() } returns "control"
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
@@ -73,7 +69,6 @@ class TimerViewModelAnalyticsTest {
 
         viewModel =
             TimerViewModel(
-                appContext = appContext,
                 repository = repository,
                 startTimerUseCase = startTimerUseCase,
                 soundPreviewManager = soundPreviewManager,
@@ -144,11 +139,15 @@ class TimerViewModelAnalyticsTest {
     fun `trackPaywallViewed tracks with entry point and experiment variant`() {
         viewModel.trackPaywallViewed("setup_upgrade_cta", defaultAnnualExperiment = false)
         verify {
+            analyticsService.setPaywallSurfaceContext("setup_upgrade_cta", "monthly_default")
+        }
+        verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEW,
                 match {
                     it["entry_point"] == "setup_upgrade_cta" &&
-                        it["paywall_experiment_variant"] == "monthly_default"
+                        it["paywall_experiment_variant"] == "monthly_default" &&
+                        it["paywall_value_framing_variant"] == "control"
                 },
             )
         }
@@ -157,8 +156,15 @@ class TimerViewModelAnalyticsTest {
                 AnalyticsEvents.PAYWALL_VIEWED,
                 match {
                     it["entry_point"] == "setup_upgrade_cta" &&
-                        it["paywall_experiment_variant"] == "monthly_default"
+                        it["paywall_experiment_variant"] == "monthly_default" &&
+                        it["paywall_value_framing_variant"] == "control"
                 },
+            )
+        }
+        verify {
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_VIEWED,
+                match { it.isEmpty() },
             )
         }
     }
@@ -169,7 +175,10 @@ class TimerViewModelAnalyticsTest {
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
+                match {
+                    it["entry_point"] == "setup_upgrade_cta" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
             )
         }
     }

@@ -9,6 +9,7 @@ Unlike store_downloads_snapshot.py (PostHog proxy), this queries the actual stor
 Requires:
   Android: GOOGLE_PLAY_JSON_KEY or GOOGLE_PLAY_JSON_KEY_PATH
   iOS: APPSTORE_KEY_ID + APPSTORE_ISSUER_ID + APPSTORE_PRIVATE_KEY
+  Optional iOS: APPSTORE_APP_ID (defaults to resolving via ASC filter[bundleId], then built-in id)
 
 Usage:
   python scripts/real_store_downloads.py [--repo-root .] [--days 30]
@@ -61,6 +62,66 @@ def _asc_get_with_retries(
                 time.sleep(2.0 * (i + 1))
     assert last_exc is not None
     raise last_exc
+
+
+def _asc_error_summary(resp: Any) -> str:
+    """Human-readable ASC failure (status + Apple errors detail or truncated body)."""
+    code = getattr(resp, "status_code", None)
+    base = f"HTTP {code}" if code is not None else "HTTP error"
+    try:
+        body = resp.json()
+    except Exception:
+        text = (getattr(resp, "text", None) or "").strip()
+        if text:
+            return f"{base}: {text[:500]}"
+        return base
+    if not isinstance(body, dict):
+        return base
+    errors = body.get("errors")
+    if isinstance(errors, list) and errors:
+        parts: list[str] = []
+        for item in errors[:5]:
+            if not isinstance(item, dict):
+                continue
+            chunk = item.get("detail") or item.get("title") or item.get("code")
+            if chunk:
+                parts.append(str(chunk))
+        if parts:
+            return f"{base}: " + " | ".join(parts)
+    return base
+
+
+def _resolve_ios_app_id(
+    requests_mod: Any,
+    headers: dict[str, str],
+) -> tuple[str, str | None]:
+    """Return (App Store Connect apps resource id, lookup_error_or_none).
+
+    Uses APPSTORE_APP_ID when set; otherwise GET /v1/apps?filter[bundleId]=…
+    falls back to IOS_APP_ID if lookup fails or returns no rows.
+    """
+    explicit = (os.environ.get("APPSTORE_APP_ID") or "").strip()
+    if explicit:
+        return explicit, None
+    resp = _asc_get_with_retries(
+        requests_mod,
+        f"{APP_STORE_CONNECT_API}/apps",
+        headers=headers,
+        params={"filter[bundleId]": IOS_BUNDLE_ID, "limit": 1},
+    )
+    if resp.status_code != 200:
+        return IOS_APP_ID, _asc_error_summary(resp)
+    try:
+        data = (resp.json() or {}).get("data") or []
+    except Exception:
+        return IOS_APP_ID, None
+    if not data or not isinstance(data[0], dict):
+        return IOS_APP_ID, None
+    rid = data[0].get("id")
+    if rid:
+        return str(rid), None
+    return IOS_APP_ID, None
+
 
 # Google Play Reply-to-Reviews API: list only includes reviews with user *comments*
 # (star-only ratings are omitted), and only those created or modified in the last 7 days.
@@ -320,11 +381,16 @@ def _get_ios_data(days: int) -> dict[str, Any]:
 
     result: dict[str, Any] = {"status": "ok"}
 
+    app_id, lookup_err = _resolve_ios_app_id(requests, headers)
+    if lookup_err:
+        result["app_id_lookup_error"] = lookup_err
+    result["app_id"] = app_id
+
     # Get app info
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}",
             headers=headers,
         )
         if resp.status_code == 200:
@@ -333,7 +399,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
             result["bundle_id"] = app_data.get("bundleId")
             result["sku"] = app_data.get("sku")
         else:
-            result["app_info_error"] = f"HTTP {resp.status_code}"
+            result["app_info_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["app_info_error"] = str(e)
 
@@ -341,7 +407,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/appStoreVersions",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}/appStoreVersions",
             headers=headers,
             params={"filter[platform]": "IOS", "limit": 5},
         )
@@ -356,7 +422,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
                 for v in versions
             ]
         else:
-            result["versions_error"] = f"HTTP {resp.status_code}"
+            result["versions_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["versions_error"] = str(e)
 
@@ -364,7 +430,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/customerReviews",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}/customerReviews",
             headers=headers,
             params={"limit": 50, "sort": "-createdDate"},
         )
@@ -383,7 +449,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
                 for r in reviews[:10]
             ]
         else:
-            result["reviews_error"] = f"HTTP {resp.status_code}"
+            result["reviews_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["reviews_error"] = str(e)
 
@@ -430,6 +496,16 @@ def _get_ios_data(days: int) -> dict[str, Any]:
         "iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY "
         "reports when APPSTORE_VENDOR_NUMBER is configured."
     )
+
+    core_errs = [
+        k
+        for k in ("app_info_error", "versions_error", "reviews_error")
+        if result.get(k)
+    ]
+    if len(core_errs) == 3:
+        result["status"] = "error"
+    elif core_errs:
+        result["status"] = "partial"
 
     return result
 

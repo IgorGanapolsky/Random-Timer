@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
+import com.iganapolsky.randomtimer.analytics.PaywallValueFraming
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
@@ -64,6 +65,7 @@ fun RandomTimerNavHost(
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
+    var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -123,7 +125,6 @@ fun RandomTimerNavHost(
                 onCommandCuePreview = viewModel::previewCommandCue,
                 totalSessions = viewModel.totalSessions,
                 currentStreak = viewModel.currentStreak,
-                hasCompletedFirstTimer = viewModel.hasCompletedFirstTimer,
                 isPro = isPro,
                 isElite = isElite,
                 onUpgradeTap = { feature ->
@@ -145,6 +146,7 @@ fun RandomTimerNavHost(
                                     cont.resume(enabled)
                                 }
                             }
+                        paywallValueFramingVariant = viewModel.paywallValueFramingVariant()
                         showPaywall = true
                     }
                 },
@@ -217,6 +219,7 @@ fun RandomTimerNavHost(
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
             defaultToAnnualPlan = paywallDefaultToAnnual,
+            valueFramingVariant = paywallValueFramingVariant,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
             onPlanSelected = { plan, productId ->
                 viewModel.trackPaywallOfferSelected(

@@ -1,6 +1,6 @@
 # Observability (Random Timer)
 
-Last updated: 2026-04-15T13:52:51Z.
+Last updated: 2026-04-15T15:46:44Z.
 
 This document is the **source of truth** for what is **implemented in code** versus **optional / not built yet**. It replaces earlier wording that overstated Firebase Performance (iOS) and Remote Config.
 
@@ -77,6 +77,7 @@ Create and manage flags in the PostHog project UI. Code uses the **same string**
 | Flag key (PostHog) | Type | Behavior when **enabled** | Analytics |
 |--------------------|------|-----------------------------|-----------|
 | `paywall_default_plan_annual` | Boolean | Paywall opens with **annual** plan selected by default (treatment). When disabled / unavailable, default remains **monthly** (control). | `paywall_view` and `paywall_viewed` include property **`paywall_experiment_variant`**: `annual_default` or `monthly_default`. |
+| `paywall_value_framing` | Multivariate / string | **`outcomes_first`** uses alternate paywall headline/subhead (same strings on iOS and Android); otherwise **`control`**. | `paywall_value_framing_variant` on paywall and funnel events; default `control` when flag absent. |
 
 **Code references:** `PostHogExperimentKeys` + `PaywallExperimentVariants` (`native-android/.../analytics/PostHogExperimentKeys.kt`); `PostHogExperimentKeys` + `PaywallExperimentVariants` (`native-ios/.../Services/AnalyticsService.swift`). Paywall UI: `PaywallSheet` on each platform; Android resolves the flag in `Navigation.kt` before showing the sheet; iOS resolves in `TimerSetupScreen.presentPaywall`.
 
@@ -91,6 +92,7 @@ Create and manage flags in the PostHog project UI. Code uses the **same string**
 - [ ] iOS Firebase Performance (optional follow-up).
 - [ ] Firebase Remote Config (optional; PostHog flags cover many cases).
 - [x] In-app PostHog feature flags used for paywall default-plan experiment (`paywall_default_plan_annual`); document new flags here when added.
+- [x] **Product:** Upgrade / paywall is never blocked behind a “finish one session first” (or similar) gate; Pro affordances open the paywall immediately on both platforms. **No** app-level persistence or branching on a “first completion” user flag (legacy completion flag removed from native sources). Onboarding **analytics** still emit PostHog `first_timer_*` events using separate analytics-only prefs (see `AnalyticsService` on each platform).
 - [ ] Periodically review PostHog **retention** and **replay** cost vs sampling.
 
 ---
