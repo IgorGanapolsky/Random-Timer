@@ -108,6 +108,37 @@ def test_check_bigquery_export_returns_table_names():
         assert result == ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_debug"]
 
 
+def test_check_bigquery_export_paginates_next_page_token():
+    """Crashlytics datasets can exceed one page; follow nextPageToken."""
+    with patch.object(cc.urllib.request, "urlopen") as mock_urlopen:
+        import json
+
+        page1 = {
+            "tables": [{"tableReference": {"tableId": "aaa_other"}}],
+            "nextPageToken": "tok1",
+        }
+        page2 = {
+            "tables": [{"tableReference": {"tableId": "com_iganapolsky_randomtimer"}}],
+        }
+
+        mock_r1 = MagicMock()
+        mock_r1.read.return_value = json.dumps(page1).encode()
+        mock_r1.__enter__ = MagicMock(return_value=mock_r1)
+        mock_r1.__exit__ = MagicMock(return_value=False)
+        mock_r2 = MagicMock()
+        mock_r2.read.return_value = json.dumps(page2).encode()
+        mock_r2.__enter__ = MagicMock(return_value=mock_r2)
+        mock_r2.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.side_effect = [mock_r1, mock_r2]
+
+        result = cc.check_bigquery_export("fake_token")
+        assert result == ["aaa_other", "com_iganapolsky_randomtimer"]
+        assert mock_urlopen.call_count == 2
+        second_req = mock_urlopen.call_args_list[1][0][0]
+        second_url = getattr(second_req, "full_url", str(second_req))
+        assert "pageToken=tok1" in second_url
+
+
 def test_select_crashlytics_table_prefers_exact_match():
     tables = ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_ANDROID_REALTIME"]
     assert cc.select_crashlytics_table(tables) == "com_iganapolsky_randomtimer"

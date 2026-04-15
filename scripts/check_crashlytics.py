@@ -29,6 +29,8 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -126,25 +128,47 @@ def bq_query(token, sql):
 
 
 def check_bigquery_export(token):
-    """Check if Crashlytics BQ export is set up by listing tables."""
+    """Check if Crashlytics BQ export is set up by listing tables (paginated).
+
+    BigQuery returns at most ``maxResults`` tables per page; Crashlytics datasets can
+    exceed a single page, so we follow ``nextPageToken`` until exhausted.
+    """
     ctx = ssl.create_default_context()
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-    url = (
+    base = (
         f"https://bigquery.googleapis.com/bigquery/v2"
-        f"/projects/{PROJECT_ID}/datasets/{BQ_DATASET}/tables?maxResults=10"
+        f"/projects/{PROJECT_ID}/datasets/{BQ_DATASET}/tables"
     )
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
-    try:
-        resp = urllib.request.urlopen(req, context=ctx)
-        data = json.loads(resp.read())
-        tables = [t["tableReference"]["tableId"] for t in data.get("tables", [])]
-        return tables
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None  # Dataset doesn't exist
-        error_body = e.read().decode()
-        print(f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}", file=sys.stderr)
-        raise RuntimeError(f"BigQuery API {e.code}: {error_body[:200]}")
+    tables: list[str] = []
+    page_token: str | None = None
+    while True:
+        params: dict[str, str] = {"maxResults": "500"}
+        if page_token:
+            params["pageToken"] = page_token
+        url = f"{base}?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        try:
+            resp = urllib.request.urlopen(req, context=ctx)
+            data = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None  # Dataset doesn't exist
+            error_body = e.read().decode()
+            print(
+                f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}",
+                file=sys.stderr,
+            )
+            raise RuntimeError(f"BigQuery API {e.code}: {error_body[:200]}")
+        batch = [
+            t["tableReference"]["tableId"]
+            for t in data.get("tables", [])
+            if t.get("tableReference", {}).get("tableId")
+        ]
+        tables.extend(batch)
+        page_token = data.get("nextPageToken") or None
+        if not page_token:
+            break
+    return tables
 
 
 def select_crashlytics_table(tables):
@@ -330,6 +354,7 @@ def collect_crashlytics_snapshot(hours=24):
         payload["reason"] = "Crashlytics BigQuery export not set up"
         return payload
     if not tables:
+        payload["status"] = "skipped"
         payload["reason"] = "BigQuery dataset exists but no tables yet"
         return payload
 
