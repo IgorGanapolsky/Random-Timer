@@ -21,12 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 
 private val ButtonShape = RoundedCornerShape(16.dp)
+
+/** Visible CTA copy: never return whitespace-only (Material labels can collapse visually). */
+internal fun nonBlankButtonLabel(label: String): String = label.trim().ifBlank { "Continue" }
 
 @Composable
 fun PrimaryButton(
@@ -86,8 +90,11 @@ fun PrimaryButton(
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
     ) {
         Text(
-            text = text,
+            text = nonBlankButtonLabel(text),
             style = MaterialTheme.typography.titleMedium,
+            color = contentColor,
+            textAlign = TextAlign.Center,
+            maxLines = 3,
         )
     }
 }
@@ -134,8 +141,11 @@ fun SecondaryButton(
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
     ) {
         Text(
-            text = text,
+            text = nonBlankButtonLabel(text),
             style = MaterialTheme.typography.titleMedium,
+            color = TimerColors.TextPrimary,
+            textAlign = TextAlign.Center,
+            maxLines = 3,
         )
     }
 }

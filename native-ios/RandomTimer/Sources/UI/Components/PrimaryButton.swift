@@ -9,13 +9,20 @@ struct PrimaryButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(foregroundColor)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(backgroundColor)
+                Text(title)
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.65)
+                    .lineLimit(3)
+                    .padding(.horizontal, 10)
+                    .foregroundStyle(foregroundColor)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityLabel(title)
