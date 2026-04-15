@@ -6,9 +6,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -17,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -64,38 +68,54 @@ fun PrimaryButton(
             this.alpha = alpha
         }
 
-    val styledModifier = if (useGradient && enabled) {
-        baseModifier.background(
-            brush = Brush.horizontalGradient(
-                colors = listOf(backgroundColor, TimerColors.AccentSecondary),
-            ),
-            shape = ButtonShape,
-        )
-    } else {
-        baseModifier
-    }
+    // Draw fill inside the button slot so label is never composited under a transparent M3 surface edge case.
+    val innerBackgroundModifier =
+        if (useGradient) {
+            val end =
+                if (enabled) TimerColors.AccentSecondary else TimerColors.AccentSecondary.copy(alpha = 0.5f)
+            val start = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.5f)
+            Modifier.background(
+                brush = Brush.horizontalGradient(colors = listOf(start, end)),
+                shape = ButtonShape,
+            )
+        } else {
+            Modifier.background(
+                color = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.5f),
+                shape = ButtonShape,
+            )
+        }
 
     Button(
         onClick = onClick,
-        modifier = styledModifier,
+        modifier = baseModifier,
         enabled = enabled,
         interactionSource = interactionSource,
         shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (useGradient) Color.Transparent else backgroundColor,
+            containerColor = Color.Transparent,
             contentColor = contentColor,
-            disabledContainerColor = backgroundColor.copy(alpha = 0.5f),
+            disabledContainerColor = Color.Transparent,
             disabledContentColor = contentColor.copy(alpha = 0.5f),
         ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(0.dp),
     ) {
-        Text(
-            text = nonBlankButtonLabel(text),
-            style = MaterialTheme.typography.titleMedium,
-            color = contentColor,
-            textAlign = TextAlign.Center,
-            maxLines = 3,
-        )
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .then(innerBackgroundModifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = nonBlankButtonLabel(text),
+                style = MaterialTheme.typography.titleMedium,
+                color = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        }
     }
 }
 
