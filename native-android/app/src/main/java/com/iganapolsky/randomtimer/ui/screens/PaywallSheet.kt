@@ -65,6 +65,7 @@ internal enum class SubscriptionPlanSelection {
 fun PaywallSheet(
     proPrice: String,
     monthlyPrice: String = "$3.99",
+    defaultToAnnualPlan: Boolean = false,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String) -> Unit = { _, _ -> },
@@ -73,10 +74,15 @@ fun PaywallSheet(
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
-    // Default to monthly — lower barrier to entry
-    var selectedPlan by remember { mutableStateOf(SubscriptionPlanSelection.MONTHLY) }
-    LaunchedEffect(Unit) {
-        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+    val initialSelection =
+        if (defaultToAnnualPlan) SubscriptionPlanSelection.ANNUAL else SubscriptionPlanSelection.MONTHLY
+    var selectedPlan by remember(defaultToAnnualPlan) { mutableStateOf(initialSelection) }
+    LaunchedEffect(defaultToAnnualPlan) {
+        if (defaultToAnnualPlan) {
+            onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
+        } else {
+            onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+        }
     }
 
     ModalBottomSheet(
@@ -156,7 +162,7 @@ fun PaywallSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Plan selector — monthly (default) and annual
+            // Plan selector — monthly vs annual (default arm from PostHog `paywall_default_plan_annual`)
             Text(
                 text = "CHOOSE A PLAN",
                 style = MaterialTheme.typography.labelSmall,

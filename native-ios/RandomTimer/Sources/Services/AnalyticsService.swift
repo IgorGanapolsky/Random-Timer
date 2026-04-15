@@ -240,6 +240,27 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #endif
     }
 
+    /// Ensures latest feature flags before opening the paywall (safe no-op when PostHog is off).
+    func reloadPaywallExperimentFlagsIfNeeded() async {
+#if canImport(PostHog)
+        guard initialized else { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            PostHogSDK.shared.reloadFeatureFlags {
+                continuation.resume()
+            }
+        }
+#endif
+    }
+
+    func paywallDefaultAnnualExperimentEnabled() -> Bool {
+#if canImport(PostHog)
+        guard initialized else { return false }
+        return PostHogSDK.shared.isFeatureEnabled(PostHogExperimentKeys.paywallDefaultPlanAnnual)
+#else
+        return false
+#endif
+    }
+
     // MARK: - UTM Attribution
 
     func trackDeepLink(_ url: URL) {
@@ -418,6 +439,20 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     }
 }
 
+/// PostHog feature-flag keys (parity with Android `PostHogExperimentKeys`).
+enum PostHogExperimentKeys {
+    static let paywallDefaultPlanAnnual = "paywall_default_plan_annual"
+}
+
+enum PaywallExperimentVariants {
+    static let monthlyDefault = "monthly_default"
+    static let annualDefault = "annual_default"
+
+    static func label(defaultAnnual: Bool) -> String {
+        defaultAnnual ? annualDefault : monthlyDefault
+    }
+}
+
 // Event names for consistency
 enum AnalyticsEvents {
     static let paywallView = "paywall_view"
@@ -495,6 +530,7 @@ enum AnalyticsProperties {
     static let screen = "screen"
     static let reason = "reason"
     static let revenue = "revenue"
+    static let paywallExperimentVariant = "paywall_experiment_variant"
 }
 
 enum AnalyticsValues {

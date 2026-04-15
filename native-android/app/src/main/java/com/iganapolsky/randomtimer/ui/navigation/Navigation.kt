@@ -22,7 +22,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
@@ -30,6 +29,8 @@ import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 sealed class Screen(
     val route: String,
@@ -62,6 +63,7 @@ fun RandomTimerNavHost(
     var monthlyPrice by remember { mutableStateOf("$3.99") }
     var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
+    var paywallDefaultToAnnual by remember { mutableStateOf(false) }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -125,29 +127,25 @@ fun RandomTimerNavHost(
                 isPro = isPro,
                 isElite = isElite,
                 onUpgradeTap = { feature ->
-                    if (!viewModel.hasCompletedFirstTimer) {
-                        viewModel.trackPaywallGateFirstTimer(feature)
-                        android.widget.Toast
-                            .makeText(
-                                context,
-                                "Complete your first drill to unlock Pro features.",
-                                android.widget.Toast.LENGTH_LONG,
-                            ).show()
-                    } else {
-                        viewModel.trackFeatureGateHit(feature)
-                        scope.launch {
-                            proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
-                            monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
-                            paywallEntryPoint = "setup_upgrade_cta"
-                            paywallTrialEligibilityByProductId =
-                                mapOf(
-                                    ProManager.MONTHLY_PRODUCT_ID to
-                                        viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
-                                    ProManager.ELITE_PRODUCT_ID to
-                                        viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
-                                )
-                            showPaywall = true
-                        }
+                    viewModel.trackFeatureGateHit(feature)
+                    scope.launch {
+                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+                        monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
+                        paywallEntryPoint = "setup_upgrade_cta"
+                        paywallTrialEligibilityByProductId =
+                            mapOf(
+                                ProManager.MONTHLY_PRODUCT_ID to
+                                    viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
+                                ProManager.ELITE_PRODUCT_ID to
+                                    viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
+                            )
+                        paywallDefaultToAnnual =
+                            suspendCoroutine { cont ->
+                                viewModel.resolvePaywallDefaultAnnualExperiment { enabled ->
+                                    cont.resume(enabled)
+                                }
+                            }
+                        showPaywall = true
                     }
                 },
                 onVoiceGenderSelected = { gender ->
@@ -208,9 +206,9 @@ fun RandomTimerNavHost(
         }
     }
 
-    LaunchedEffect(showPaywall, paywallEntryPoint) {
+    LaunchedEffect(showPaywall, paywallEntryPoint, paywallDefaultToAnnual) {
         if (showPaywall) {
-            viewModel.trackPaywallViewed(paywallEntryPoint)
+            viewModel.trackPaywallViewed(paywallEntryPoint, paywallDefaultToAnnual)
         }
     }
 
@@ -218,6 +216,7 @@ fun RandomTimerNavHost(
         PaywallSheet(
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
+            defaultToAnnualPlan = paywallDefaultToAnnual,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
             onPlanSelected = { plan, productId ->
                 viewModel.trackPaywallOfferSelected(

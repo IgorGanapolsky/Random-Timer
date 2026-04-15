@@ -31,6 +31,12 @@ final class TimerConfigProClampingTests: XCTestCase {
         )
     }
 
+    func testPaywallExperimentVariantLabelsMatchAndroid() {
+        XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: false), "monthly_default")
+        XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: true), "annual_default")
+        XCTAssertEqual(PostHogExperimentKeys.paywallDefaultPlanAnnual, "paywall_default_plan_annual")
+    }
+
     func testPaywallUsesApprovedAppStoreConnectProductId() {
         XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
         XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")

@@ -23,9 +23,14 @@ Events emitted on both platforms:
 - `settings_changed`
 - `review_prompt_requested`
 - `write_review_tapped`
+- `paywall_view` (compatibility; same session as `paywall_viewed`)
 - `paywall_viewed`
+- `paywall_offer_select`
 - `paywall_dismissed`
+- `paywall_purchase_attempt`
 - `paywall_purchase_result`
+- `paywall_purchase_success`
+- `paywall_purchase_fail_reason`
 - `paywall_restore_result`
 
 Screens emitted on both platforms:
@@ -39,7 +44,9 @@ Screens emitted on both platforms:
 - `settings_changed`: `min_duration` (seconds), `max_duration` (seconds), `sound_type`, `repeat_enabled`
 - `alarm_triggered`: `target_duration` (seconds)
 - `timer_completed`: see [timer_completed emission paths](#timer_completed-emission-paths) below (iOS and Android differ in **number of code paths** and optional `source` / `entitlement_level`)
-- `paywall_*`: `entry_point`; result events also include `result` (iOS) or `success`/`response_code` (Android)
+- `paywall_view` / `paywall_viewed`: `entry_point`, **`paywall_experiment_variant`** (`monthly_default` \| `annual_default`) — reflects the in-app default plan arm driven by PostHog flag **`paywall_default_plan_annual`** (see `docs/OBSERVABILITY.md`).
+- `paywall_offer_select`: `entry_point`, `product_id`, `plan`
+- `paywall_*` (other): `entry_point` where applicable; purchase/result events also include `result` (iOS) or `success` / `response_code` (Android) as implemented per platform
 - common context on all events: `platform`, `app_version`, `environment`, `build_audience`, `build_type`, `runtime_target`
 
 ## `timer_completed` emission paths
