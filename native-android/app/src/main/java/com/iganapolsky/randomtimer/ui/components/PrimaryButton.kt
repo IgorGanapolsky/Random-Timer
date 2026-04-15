@@ -59,14 +59,15 @@ fun PrimaryButton(
         label = "pressAlpha",
     )
 
-    val baseModifier = modifier
-        .fillMaxWidth()
-        .height(56.dp)
-        .graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-        }
+    val baseModifier =
+        modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            }
 
     // Draw fill inside the button slot so label is never composited under a transparent M3 surface edge case.
     val innerBackgroundModifier =
@@ -91,12 +92,13 @@ fun PrimaryButton(
         enabled = enabled,
         interactionSource = interactionSource,
         shape = ButtonShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = contentColor,
-            disabledContainerColor = Color.Transparent,
-            disabledContentColor = contentColor.copy(alpha = 0.5f),
-        ),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = contentColor,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = contentColor.copy(alpha = 0.5f),
+            ),
         contentPadding = PaddingValues(0.dp),
     ) {
         Box(
@@ -141,23 +143,25 @@ fun SecondaryButton(
 
     Button(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    this.alpha = alpha
+                },
         enabled = enabled,
         interactionSource = interactionSource,
         shape = ButtonShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = TimerColors.GlassBackground,
-            contentColor = TimerColors.TextPrimary,
-            disabledContainerColor = TimerColors.GlassBackground.copy(alpha = 0.5f),
-            disabledContentColor = TimerColors.TextPrimary.copy(alpha = 0.5f),
-        ),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = TimerColors.GlassBackground,
+                contentColor = TimerColors.TextPrimary,
+                disabledContainerColor = TimerColors.GlassBackground.copy(alpha = 0.5f),
+                disabledContentColor = TimerColors.TextPrimary.copy(alpha = 0.5f),
+            ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
     ) {
         Text(
