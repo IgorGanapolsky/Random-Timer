@@ -36,7 +36,7 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `paywall_restore_result` | `PAYWALL_RESTORE_RESULT` | `paywallRestoreResult` | Restore tapped | `entry_point`, `result` |
 | `feature_gate_hit` | `FEATURE_GATE_HIT` | `featureGateHit` | Free user taps a Pro upgrade affordance | `feature` |
 
-**PostHog feature flags:** Boolean **`paywall_default_plan_annual`** — when enabled, annual is pre-selected; `paywall_experiment_variant` is `annual_default` vs `monthly_default`. Multivariate / string **`paywall_value_framing`**: `control` (default) vs `outcomes_first` (alternate paywall headline/subhead; same copy on iOS and Android). See `docs/POSTHOG_ANALYTICS.md`.
+**PostHog feature flags:** Boolean **`paywall_default_plan_annual`** — when enabled, annual is pre-selected; `paywall_experiment_variant` is `annual_default` vs `monthly_default`. Multivariate / string **`paywall_value_framing`**: `control` (default) vs `outcomes_first` (alternate paywall headline/subhead; same copy on iOS and Android). See `docs/POSTHOG_ANALYTICS.md` and `docs/OBSERVABILITY.md`.
 
 ## Onboarding Funnel Events (PostHog queries only)
 

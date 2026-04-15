@@ -77,6 +77,7 @@ Create and manage flags in the PostHog project UI. Code uses the **same string**
 | Flag key (PostHog) | Type | Behavior when **enabled** | Analytics |
 |--------------------|------|-----------------------------|-----------|
 | `paywall_default_plan_annual` | Boolean | Paywall opens with **annual** plan selected by default (treatment). When disabled / unavailable, default remains **monthly** (control). | `paywall_view` and `paywall_viewed` include property **`paywall_experiment_variant`**: `annual_default` or `monthly_default`. |
+| `paywall_value_framing` | Multivariate / string | **`outcomes_first`** uses alternate paywall headline/subhead (same strings on iOS and Android); otherwise **`control`**. | `paywall_value_framing_variant` on paywall and funnel events; default `control` when flag absent. |
 
 **Code references:** `PostHogExperimentKeys` + `PaywallExperimentVariants` (`native-android/.../analytics/PostHogExperimentKeys.kt`); `PostHogExperimentKeys` + `PaywallExperimentVariants` (`native-ios/.../Services/AnalyticsService.swift`). Paywall UI: `PaywallSheet` on each platform; Android resolves the flag in `Navigation.kt` before showing the sheet; iOS resolves in `TimerSetupScreen.presentPaywall`.
 
