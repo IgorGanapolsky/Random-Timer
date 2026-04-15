@@ -289,26 +289,24 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                // Training Stats
-                if (hasCompletedFirstTimer) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                // Training Stats (always visible — never hide behind a "first completion" gate)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Session #${totalSessions + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                        )
+                        if (currentStreak > 1) {
                             Text(
-                                text = "Session #${totalSessions + 1}",
+                                text = "\uD83D\uDD25 $currentStreak day streak",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TimerColors.TextSecondary,
+                                color = TimerColors.AccentPrimary,
                             )
-                            if (currentStreak > 1) {
-                                Text(
-                                    text = "\uD83D\uDD25 $currentStreak day streak",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TimerColors.AccentPrimary,
-                                )
-                            }
                         }
                     }
                 }

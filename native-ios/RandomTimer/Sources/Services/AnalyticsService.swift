@@ -484,8 +484,6 @@ enum AnalyticsEvents {
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
     static let featureGateHit = "feature_gate_hit"
-    static let paywallGateFirstTimer = "paywall_gate_first_timer"
-
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
     static let appleAdsAttribution = "apple_ads_attribution"

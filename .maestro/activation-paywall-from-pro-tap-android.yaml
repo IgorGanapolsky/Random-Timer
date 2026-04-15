@@ -1,0 +1,15 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: Pro upgrade affordance opens paywall on a fresh install (no deferred upgrade).
+- clearState
+- launchApp
+
+- assertVisible:
+    text: 'Start Timer'
+
+# Extended range PRO affordance — should open paywall
+- tapOn:
+    text: 'PRO: 1H'
+
+- assertVisible:
+    text: 'Stop Training With the Brakes On'

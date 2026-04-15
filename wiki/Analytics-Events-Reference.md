@@ -33,8 +33,7 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `paywall_purchase_success` | `PAYWALL_PURCHASE_SUCCESS` | `paywallPurchaseSuccess` | Successful purchase | per `ProManager` / billing layer |
 | `paywall_purchase_fail_reason` | `PAYWALL_PURCHASE_FAIL_REASON` | `paywallPurchaseFailReason` | Failed purchase (not user-cancel on iOS where omitted) | `reason`, `product_id`, `entry_point` |
 | `paywall_restore_result` | `PAYWALL_RESTORE_RESULT` | `paywallRestoreResult` | Restore tapped | `entry_point`, `result` |
-| `feature_gate_hit` | `FEATURE_GATE_HIT` | `featureGateHit` | Free user hits a Pro gate | `feature` |
-| `paywall_gate_first_timer` | `PAYWALL_GATE_FIRST_TIMER` | `paywallGateFirstTimer` | Upgrade blocked until first completion | `feature` |
+| `feature_gate_hit` | `FEATURE_GATE_HIT` | `featureGateHit` | Free user taps a Pro upgrade affordance | `feature` |
 
 **PostHog feature flag (default plan):** Boolean flag key **`paywall_default_plan_annual`** (same string on iOS and Android). When enabled, the paywall opens with annual selected; `paywall_experiment_variant` on view events is `annual_default` vs `monthly_default`. See `docs/OBSERVABILITY.md`.
 
@@ -44,7 +43,7 @@ These events are emitted from app code (`AnalyticsService`); PostHog lifecycle a
 
 | Event | Description |
 |-------|-------------|
-| `first_open` | First app launch (local prefs gate + `track`) |
+| `first_open` | First app launch (one-shot flag in local storage + `track`) |
 | `first_timer_configured` | First `settings_changed` event for a user |
 | `first_timer_completed` | First `timer_completed` event for a user |
 

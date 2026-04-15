@@ -1,7 +1,7 @@
 appId: com.igorganapolsky.randomtimer
 ---
-# Regression test: ALL Pro features must show lock icons to free users on iOS
-# Bug: PR #1073 hid Pro locks before first timer completion, blocking revenue
+# Regression test: ALL Pro affordances must remain visible to free users on iOS
+# (Never hide upgrade paths — revenue depends on discoverable Pro entry points.)
 - launchApp:
     clearState: true
 # Timer Range - PRO: 1H lock must be visible

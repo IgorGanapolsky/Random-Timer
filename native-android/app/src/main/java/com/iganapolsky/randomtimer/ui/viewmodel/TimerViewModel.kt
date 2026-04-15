@@ -331,13 +331,6 @@ class TimerViewModel
             )
         }
 
-        fun trackPaywallGateFirstTimer(feature: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_GATE_FIRST_TIMER,
-                mapOf(AnalyticsProperties.FEATURE to feature),
-            )
-        }
-
         fun trackPaywallDismissed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
