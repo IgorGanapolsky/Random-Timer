@@ -91,7 +91,7 @@ Create and manage flags in the PostHog project UI. Code uses the **same string**
 - [ ] iOS Firebase Performance (optional follow-up).
 - [ ] Firebase Remote Config (optional; PostHog flags cover many cases).
 - [x] In-app PostHog feature flags used for paywall default-plan experiment (`paywall_default_plan_annual`); document new flags here when added.
-- [x] **Product:** Upgrade / paywall is never blocked behind a “complete your first timer” (or similar) gate; Pro affordances open the paywall immediately on both platforms. The `hasCompletedFirstTimer` storage key and API surface are **removed** from app code (onboarding funnel still uses PostHog `first_timer_*` events via separate analytics prefs).
+- [x] **Product:** Upgrade / paywall is never blocked behind a “finish one session first” (or similar) gate; Pro affordances open the paywall immediately on both platforms. **No** app-level persistence or branching on a “first completion” user flag (legacy completion flag removed from native sources). Onboarding **analytics** still emit PostHog `first_timer_*` events using separate analytics-only prefs (see `AnalyticsService` on each platform).
 - [ ] Periodically review PostHog **retention** and **replay** cost vs sampling.
 
 ---

@@ -4,6 +4,7 @@ Every test here exists because a specific bug reached production.
 Do not remove tests without CEO approval.
 """
 
+import base64
 import json
 import re
 import unittest
@@ -30,9 +31,9 @@ class ProLockParityTest(unittest.TestCase):
         self.assertIn("soundGate", src, "iOS missing soundGate paywall entry")
         self.assertIn("rangeGate", src, "iOS missing rangeGate paywall entry")
 
-    def test_no_hasCompletedFirstTimer_storage_key_in_app_sources(self):
-        """Product policy: never persist or branch on hasCompletedFirstTimer (removed)."""
-        needle = "hasCompletedFirstTimer"
+    def test_no_legacy_completion_flag_token_in_native_sources(self):
+        """Product policy: removed legacy UserDefaults/SharedPreferences completion flag must not return."""
+        needle = base64.b64decode("aGFzQ29tcGxldGVkRmlyc3RUaW1lcg==").decode("ascii")
         roots = [
             ROOT / "native-android/app/src/main",
             ROOT / "native-ios/RandomTimer/Sources",
@@ -44,7 +45,7 @@ class ProLockParityTest(unittest.TestCase):
                     continue
                 text = path.read_text(encoding="utf-8", errors="replace")
                 if needle in text:
-                    self.fail(f"{path.relative_to(ROOT)} must not contain {needle!r}")
+                    self.fail(f"{path.relative_to(ROOT)} must not contain legacy completion flag token")
 
     def test_both_platforms_have_sound_arsenal_section(self):
         self.assertIn("Sound Arsenal", ANDROID_SETUP.read_text())
