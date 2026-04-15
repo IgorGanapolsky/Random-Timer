@@ -940,6 +940,13 @@ jobs:
 
           NOTES="${NOTES}
 
+          ## Download
+
+          | Store | Link |
+          |-------|------|
+          | Google Play | [Random Tactical Timer on Google Play](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer) |
+          | Apple App Store | [Random Tactical Timer on the App Store](https://apps.apple.com/us/app/random-tactical-timer/id6758355312) |
+
           ### Release metadata
           - Commit: ${GITHUB_SHA}
           - Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
