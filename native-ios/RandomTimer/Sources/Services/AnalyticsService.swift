@@ -58,6 +58,9 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
 
+    private var lastPaywallEntryPoint: String?
+    private var lastPaywallExperimentVariant: String?
+
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
         Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
@@ -261,6 +264,40 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #endif
     }
 
+    func setPaywallSurfaceContext(entryPoint: String, experimentVariant: String) {
+        lastPaywallEntryPoint = entryPoint
+        lastPaywallExperimentVariant = experimentVariant
+    }
+
+    func paywallValueFramingVariant() -> String {
+#if canImport(PostHog)
+        guard initialized else { return PaywallValueFraming.control }
+        if let raw = PostHogSDK.shared.getFeatureFlag(PostHogExperimentKeys.paywallValueFraming) as? String,
+           raw == PaywallValueFraming.outcomesFirst {
+            return PaywallValueFraming.outcomesFirst
+        }
+#endif
+        return PaywallValueFraming.control
+    }
+
+    func trackSubscriptionFunnelStep(_ funnelStep: String, properties: [String: Any] = [:]) {
+        guard initialized else { return }
+        var merged: [String: Any] = [
+            "funnel_step": funnelStep,
+            AnalyticsProperties.paywallValueFramingVariant: paywallValueFramingVariant(),
+        ]
+        if let ep = lastPaywallEntryPoint {
+            merged[AnalyticsProperties.entryPoint] = ep
+        }
+        if let ev = lastPaywallExperimentVariant {
+            merged[AnalyticsProperties.paywallExperimentVariant] = ev
+        }
+        for (k, v) in properties {
+            merged[k] = v
+        }
+        track(AnalyticsEvents.subscriptionFunnelStep, properties: merged)
+    }
+
     // MARK: - UTM Attribution
 
     func trackDeepLink(_ url: URL) {
@@ -442,6 +479,21 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 /// PostHog feature-flag keys (parity with Android `PostHogExperimentKeys`).
 enum PostHogExperimentKeys {
     static let paywallDefaultPlanAnnual = "paywall_default_plan_annual"
+    /// Multivariate / string flag: `control` vs `outcomes_first` (paywall copy).
+    static let paywallValueFraming = "paywall_value_framing"
+}
+
+enum PaywallValueFraming {
+    static let control = "control"
+    static let outcomesFirst = "outcomes_first"
+}
+
+enum SubscriptionFunnelSteps {
+    static let paywallViewed = "paywall_viewed"
+    static let paywallPlanSelected = "paywall_plan_selected"
+    static let purchaseFlowLaunched = "purchase_flow_launched"
+    static let purchaseSucceeded = "purchase_succeeded"
+    static let trialStarted = "trial_started"
 }
 
 enum PaywallExperimentVariants {
@@ -494,6 +546,7 @@ enum AnalyticsEvents {
     // Purchase
     static let purchaseFailed = "purchase_failed"
     static let freeTrialStarted = "free_trial_started"
+    static let subscriptionFunnelStep = "subscription_funnel_step"
 
     // Screen engagement
     static let screenDwellTime = "screen_dwell_time"
@@ -529,6 +582,7 @@ enum AnalyticsProperties {
     static let reason = "reason"
     static let revenue = "revenue"
     static let paywallExperimentVariant = "paywall_experiment_variant"
+    static let paywallValueFramingVariant = "paywall_value_framing_variant"
 }
 
 enum AnalyticsValues {

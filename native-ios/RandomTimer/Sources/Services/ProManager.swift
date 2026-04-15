@@ -111,6 +111,10 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                             AnalyticsProperties.trialVerified: true,
                         ]
                     )
+                    AnalyticsService.shared.trackSubscriptionFunnelStep(
+                        SubscriptionFunnelSteps.trialStarted,
+                        properties: [AnalyticsProperties.productId: product.id]
+                    )
                 }
                 return .success
             case .userCancelled:

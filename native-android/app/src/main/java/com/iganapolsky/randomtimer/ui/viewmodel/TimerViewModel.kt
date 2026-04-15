@@ -9,6 +9,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.PaywallExperimentVariants
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
@@ -278,18 +279,28 @@ class TimerViewModel
             }
         }
 
+        fun paywallValueFramingVariant(): String = analyticsService.paywallValueFramingVariant()
+
         fun trackPaywallViewed(
             entryPoint: String,
             defaultAnnualExperiment: Boolean,
         ) {
+            val experimentVariant =
+                PaywallExperimentVariants.fromAnnualDefaultFlag(defaultAnnualExperiment)
+            analyticsService.setPaywallSurfaceContext(entryPoint, experimentVariant)
+            val framing = analyticsService.paywallValueFramingVariant()
             val props =
                 mapOf(
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
-                    AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT to
-                        PaywallExperimentVariants.fromAnnualDefaultFlag(defaultAnnualExperiment),
+                    AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT to experimentVariant,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
                 )
             analyticsService.track(AnalyticsEvents.PAYWALL_VIEW, props)
             analyticsService.track(AnalyticsEvents.PAYWALL_VIEWED, props)
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_VIEWED,
+                emptyMap(),
+            )
         }
 
         fun trackPaywallOfferSelected(
@@ -297,10 +308,19 @@ class TimerViewModel
             productId: String,
             plan: String,
         ) {
+            val framing = analyticsService.paywallValueFramingVariant()
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_OFFER_SELECT,
                 mapOf(
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PRODUCT_ID to productId,
+                    "plan" to plan,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
+                ),
+            )
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_PLAN_SELECTED,
+                mapOf(
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
                 ),
@@ -324,7 +344,11 @@ class TimerViewModel
         fun trackPaywallDismissed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
+                mapOf(
+                    AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to
+                        analyticsService.paywallValueFramingVariant(),
+                ),
             )
         }
 

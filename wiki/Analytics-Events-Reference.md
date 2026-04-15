@@ -17,17 +17,18 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `timer_abandoned` | `TIMER_ABANDONED` | `timerAbandoned` | User cancels before countdown finishes | `target_duration`, `remaining_duration`, `status` |
 | `timer_countdown_finished` | `TIMER_COUNTDOWN_FINISHED` | `timerCountdownFinished` | Countdown reaches zero (before alarm phase) | `target_duration` |
 | `settings_changed` | `SETTINGS_CHANGED` | `settingsChanged` | User modifies timer config | `min_duration`, `max_duration`, `sound_type`, `repeat_enabled` |
-| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown | — |
+| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown (after ≥3 completions + cooldown; iOS fires when returning to setup after a session, mirroring Android) | — |
 | `write_review_tapped` | `WRITE_REVIEW_TAPPED` | `writeReviewTapped` | User taps "Write Review" | — |
 
 ## Paywall & monetization
 
 | Event Name | Android Constant | iOS Constant | Trigger | Properties |
 |-----------|-----------------|-------------|---------|-----------|
-| `paywall_view` | `PAYWALL_VIEW` | `paywallView` | Paywall becomes visible (compatibility; paired with `paywall_viewed`) | `entry_point`, `paywall_experiment_variant` (`monthly_default` \| `annual_default`) |
-| `paywall_viewed` | `PAYWALL_VIEWED` | `paywallViewed` | Same as `paywall_view` | `entry_point`, `paywall_experiment_variant` |
-| `paywall_offer_select` | `PAYWALL_OFFER_SELECT` | `paywallOfferSelect` | User selects a plan (including default on open) | `entry_point`, `product_id`, `plan` |
-| `paywall_dismissed` | `PAYWALL_DISMISSED` | `paywallDismissed` | User leaves paywall | `entry_point` |
+| `paywall_view` | `PAYWALL_VIEW` | `paywallView` | Paywall becomes visible (compatibility; paired with `paywall_viewed`) | `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_viewed` | `PAYWALL_VIEWED` | `paywallViewed` | Same as `paywall_view` | `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_offer_select` | `PAYWALL_OFFER_SELECT` | `paywallOfferSelect` | User selects a plan (including default on open) | `entry_point`, `product_id`, `plan`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_dismissed` | `PAYWALL_DISMISSED` | `paywallDismissed` | User leaves paywall | `entry_point`, `paywall_value_framing_variant` |
+| `subscription_funnel_step` | `SUBSCRIPTION_FUNNEL_STEP` | `subscriptionFunnelStep` | Ordered funnel for paywall → plan → purchase → trial | `funnel_step` (`paywall_viewed` \| `paywall_plan_selected` \| `purchase_flow_launched` \| `purchase_succeeded` \| `trial_started`), plus `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`, and step-specific keys |
 | `paywall_purchase_attempt` | `PAYWALL_PURCHASE_ATTEMPT` | `paywallPurchaseAttempt` | User taps purchase CTA | `entry_point`, product / result fields per implementation |
 | `paywall_purchase_result` | `PAYWALL_PURCHASE_RESULT` | `paywallPurchaseResult` | Purchase flow completes | `entry_point`, `result` / `success` (platform-specific) |
 | `paywall_purchase_success` | `PAYWALL_PURCHASE_SUCCESS` | `paywallPurchaseSuccess` | Successful purchase | per `ProManager` / billing layer |
@@ -35,7 +36,7 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `paywall_restore_result` | `PAYWALL_RESTORE_RESULT` | `paywallRestoreResult` | Restore tapped | `entry_point`, `result` |
 | `feature_gate_hit` | `FEATURE_GATE_HIT` | `featureGateHit` | Free user taps a Pro upgrade affordance | `feature` |
 
-**PostHog feature flag (default plan):** Boolean flag key **`paywall_default_plan_annual`** (same string on iOS and Android). When enabled, the paywall opens with annual selected; `paywall_experiment_variant` on view events is `annual_default` vs `monthly_default`. See `docs/OBSERVABILITY.md`.
+**PostHog feature flags:** Boolean **`paywall_default_plan_annual`** — when enabled, annual is pre-selected; `paywall_experiment_variant` is `annual_default` vs `monthly_default`. Multivariate / string **`paywall_value_framing`**: `control` (default) vs `outcomes_first` (alternate paywall headline/subhead; same copy on iOS and Android). See `docs/POSTHOG_ANALYTICS.md`.
 
 ## Onboarding Funnel Events (PostHog queries only)
 

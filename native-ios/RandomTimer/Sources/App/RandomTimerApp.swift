@@ -83,6 +83,11 @@ struct ContentView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: timerManager.timerState != nil)
+            .onChange(of: timerManager.timerState) { oldValue, newValue in
+                if oldValue != nil && newValue == nil {
+                    StoreReviewManager.shared.presentPendingReviewPromptIfQueued()
+                }
+            }
         }
         .onAppear {
 #if DEBUG

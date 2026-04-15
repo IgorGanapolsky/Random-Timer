@@ -32,6 +32,7 @@ Events emitted on both platforms:
 - `paywall_purchase_success`
 - `paywall_purchase_fail_reason`
 - `paywall_restore_result`
+- `subscription_funnel_step` — canonical paywall → plan → purchase → trial funnel; use property **`funnel_step`** (`paywall_viewed` \| `paywall_plan_selected` \| `purchase_flow_launched` \| `purchase_succeeded` \| `trial_started`) with the same `entry_point` / `paywall_experiment_variant` / `paywall_value_framing_variant` context as other paywall events.
 
 Screens emitted on both platforms:
 
@@ -44,7 +45,8 @@ Screens emitted on both platforms:
 - `settings_changed`: `min_duration` (seconds), `max_duration` (seconds), `sound_type`, `repeat_enabled`
 - `alarm_triggered`: `target_duration` (seconds)
 - `timer_completed`: see [timer_completed emission paths](#timer_completed-emission-paths) below (iOS and Android differ in **number of code paths** and optional `source` / `entitlement_level`)
-- `paywall_view` / `paywall_viewed`: `entry_point`, **`paywall_experiment_variant`** (`monthly_default` \| `annual_default`) — reflects the in-app default plan arm driven by PostHog flag **`paywall_default_plan_annual`** (see `docs/OBSERVABILITY.md`).
+- `paywall_view` / `paywall_viewed`: `entry_point`, **`paywall_experiment_variant`** (`monthly_default` \| `annual_default`) — reflects the in-app default plan arm driven by PostHog flag **`paywall_default_plan_annual`** (see `docs/OBSERVABILITY.md`). Also **`paywall_value_framing_variant`** (`control` \| `outcomes_first`) from multivariate flag **`paywall_value_framing`** (copy experiment; default `control` until you add the flag in PostHog).
+- `subscription_funnel_step`: `funnel_step`, plus `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`, and step-specific keys (e.g. `product_id`, `plan`).
 - `paywall_offer_select`: `entry_point`, `product_id`, `plan`
 - `paywall_*` (other): `entry_point` where applicable; purchase/result events also include `result` (iOS) or `success` / `response_code` (Android) as implemented per platform
 - common context on all events: `platform`, `app_version`, `environment`, `build_audience`, `build_type`, `runtime_target`
@@ -78,6 +80,14 @@ There are **two** production `analyticsService.track(AnalyticsEvents.TIMER_COMPL
 **Parity note:** iOS encodes more distinct `source` values for edge cases (foreground restore, persisted alarm/complete, background completion). Android does not emit `timer_completed` from those separate code paths today; product analytics comparing `source` across platforms should treat Android as sparse or filter to shared keys only.
 
 **Maintenance:** `scripts/tests/test_mobile_analytics_parity.py` asserts the **count** of `timer_completed` emission sites in `TimerManager.swift` (6) and in the two Android files (2). If you add or remove a path, bump the test and this section together.
+
+## Monetization surface parity (Android vs iOS)
+
+Both apps ship the same **subscription paywall** (monthly + annual subscriptions, same product IDs / Play base plans) opened from **feature gates** on the timer setup surface (`range_gate`, `sound_gate` on iOS; `setup_upgrade_cta` on Android for the primary upgrade CTA). **Lifetime / one-time SKUs** may appear on iOS only where the sheet exposes a third plan; Android’s primary sheet is subscription-first. For revenue truth, use store ledgers; for funnel health, use `subscription_funnel_step` + `paywall_*` events with `platform` breakdown.
+
+## Store review API counts (Play / App Store Connect)
+
+Executive snapshots that read Play `reviews.list` or ASC `customerReviews` measure **narrow API slices** (e.g. 7-day commented reviews on Play, first page on ASC), **not** public lifetime totals — treat those fields as labeled proxies per `docs/OPERATIONAL_RELIABILITY.md`.
 
 ## Verification
 

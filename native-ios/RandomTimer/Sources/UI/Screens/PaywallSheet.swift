@@ -25,9 +25,13 @@ enum PaywallPlanSelection {
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
     static let headline = "Stop Training With the Brakes On"
+    static let headlineOutcomesFirst = "Finish Strong When the Clock Attacks"
     static let subheadline =
         "Go unlimited — sessions up to 60 minutes, live voice callouts, "
         + "and a full sound library built for pressure drills."
+    static let subheadlineOutcomesFirst =
+        "Unlimited sessions, live voice callouts, and a full sound library — "
+        + "built so every rep feels like match pressure."
     static let subscriptionFooter =
         "Cancel anytime. Subscription auto-renews until cancelled. "
         + "Price shown on Apple's confirmation sheet."
@@ -48,11 +52,29 @@ struct PaywallSheet: View {
     @State private var introOfferEligibleProductIDs: Set<String> = []
     let entryPoint: PaywallEntryPoint
     let defaultToAnnualExperiment: Bool
+    let valueFramingVariant: String
 
-    init(entryPoint: PaywallEntryPoint, defaultToAnnualExperiment: Bool = false) {
+    init(
+        entryPoint: PaywallEntryPoint,
+        defaultToAnnualExperiment: Bool = false,
+        valueFramingVariant: String = PaywallValueFraming.control
+    ) {
         self.entryPoint = entryPoint
         self.defaultToAnnualExperiment = defaultToAnnualExperiment
+        self.valueFramingVariant = valueFramingVariant
         _selectedPlan = State(initialValue: defaultToAnnualExperiment ? .annual : .monthly)
+    }
+
+    private var displayHeadline: String {
+        valueFramingVariant == PaywallValueFraming.outcomesFirst
+            ? Self.headlineOutcomesFirst
+            : Self.headline
+    }
+
+    private var displaySubheadline: String {
+        valueFramingVariant == PaywallValueFraming.outcomesFirst
+            ? Self.subheadlineOutcomesFirst
+            : Self.subheadline
     }
 
     // MARK: - Derived helpers
@@ -117,13 +139,13 @@ struct PaywallSheet: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text(Self.headline)
+                    Text(displayHeadline)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.textPrimary)
 
                     VStack(spacing: 4) {
-                        Text(Self.subheadline)
+                        Text(displaySubheadline)
                         Text(Self.subscriptionFooter)
                     }
                     .font(.caption)
@@ -248,16 +270,24 @@ struct PaywallSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
-            trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
             let variant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+            AnalyticsService.shared.setPaywallSurfaceContext(
+                entryPoint: entryPoint.rawValue,
+                experimentVariant: variant
+            )
+            trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
+            let framing = AnalyticsService.shared.paywallValueFramingVariant()
             AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
                 AnalyticsProperties.paywallExperimentVariant: variant,
+                AnalyticsProperties.paywallValueFramingVariant: framing,
             ])
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
                 AnalyticsProperties.paywallExperimentVariant: variant,
+                AnalyticsProperties.paywallValueFramingVariant: framing,
             ])
+            AnalyticsService.shared.trackSubscriptionFunnelStep(SubscriptionFunnelSteps.paywallViewed)
             await proManager.fetchProduct()
             await refreshIntroOfferEligibility()
         }
@@ -282,6 +312,12 @@ struct PaywallSheet: View {
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseAttempt,
             properties: purchaseProperties(productID: productID)
+        )
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.purchaseFlowLaunched,
+            properties: [
+                AnalyticsProperties.productId: productID,
+            ]
         )
 
         let result = await proManager.purchase(productID: productID)
@@ -337,6 +373,10 @@ struct PaywallSheet: View {
             AnalyticsEvents.paywallPurchaseSuccess,
             properties: purchaseProperties(productID: productID, result: result, includeRevenue: true)
         )
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.purchaseSucceeded,
+            properties: [AnalyticsProperties.productId: productID]
+        )
         hasTrackedDismiss = true
         dismiss()
     }
@@ -360,9 +400,13 @@ struct PaywallSheet: View {
         result: ProPurchaseResult? = nil,
         includeRevenue: Bool = false
     ) -> [String: Any] {
+        let experimentVariant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+        let framing = valueFramingVariant
         var properties: [String: Any] = [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.productId: productID,
+            AnalyticsProperties.paywallExperimentVariant: experimentVariant,
+            AnalyticsProperties.paywallValueFramingVariant: framing,
         ]
         if let result {
             properties[AnalyticsProperties.result] = result.rawValue
@@ -381,15 +425,27 @@ struct PaywallSheet: View {
         AnalyticsService.shared.track(AnalyticsEvents.paywallDismissed, properties: [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.dismissMethod: method,
+            AnalyticsProperties.paywallValueFramingVariant: valueFramingVariant,
         ])
     }
 
     private func trackOfferSelected(plan: String, productID: String) {
+        let experimentVariant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+        let framing = AnalyticsService.shared.paywallValueFramingVariant()
         AnalyticsService.shared.track(AnalyticsEvents.paywallOfferSelect, properties: [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.productId: productID,
             "plan": plan,
+            AnalyticsProperties.paywallExperimentVariant: experimentVariant,
+            AnalyticsProperties.paywallValueFramingVariant: framing,
         ])
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.paywallPlanSelected,
+            properties: [
+                AnalyticsProperties.productId: productID,
+                "plan": plan,
+            ]
+        )
     }
 
     private func planName(for plan: PaywallPlanSelection) -> String {

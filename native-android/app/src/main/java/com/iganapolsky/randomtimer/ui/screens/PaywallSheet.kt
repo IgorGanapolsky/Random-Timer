@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.iganapolsky.randomtimer.analytics.PaywallValueFraming
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.ui.components.PrimaryButton
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
@@ -44,6 +45,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
 internal const val PAYWALL_HEADLINE = "Stop Training With the Brakes On"
 internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills."
+internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong When the Clock Attacks"
+internal const val PAYWALL_SUBHEADLINE_OUTCOMES_FIRST =
+    "Unlimited sessions, live voice callouts, and a full sound library — built so every rep feels like match pressure."
 internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
@@ -66,6 +70,7 @@ fun PaywallSheet(
     proPrice: String,
     monthlyPrice: String = "$3.99",
     defaultToAnnualPlan: Boolean = false,
+    valueFramingVariant: String = PaywallValueFraming.CONTROL,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String) -> Unit = { _, _ -> },
@@ -77,6 +82,18 @@ fun PaywallSheet(
     val initialSelection =
         if (defaultToAnnualPlan) SubscriptionPlanSelection.ANNUAL else SubscriptionPlanSelection.MONTHLY
     var selectedPlan by remember(defaultToAnnualPlan) { mutableStateOf(initialSelection) }
+    val headline =
+        if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
+            PAYWALL_HEADLINE_OUTCOMES_FIRST
+        } else {
+            PAYWALL_HEADLINE
+        }
+    val subheadline =
+        if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
+            PAYWALL_SUBHEADLINE_OUTCOMES_FIRST
+        } else {
+            PAYWALL_SUBHEADLINE
+        }
     LaunchedEffect(defaultToAnnualPlan) {
         if (defaultToAnnualPlan) {
             onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
@@ -110,7 +127,7 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = PAYWALL_HEADLINE,
+                text = headline,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = TimerColors.TextPrimary,
@@ -132,7 +149,7 @@ fun PaywallSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = PAYWALL_SUBHEADLINE,
+                text = subheadline,
                 style = MaterialTheme.typography.bodySmall,
                 color = TimerColors.TextSecondary,
                 textAlign = TextAlign.Center,

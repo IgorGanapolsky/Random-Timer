@@ -6,6 +6,7 @@ struct TimerSetupScreen: View {
     @EnvironmentObject var proManager: ProManager
     @State private var showPaywall = false
     @State private var paywallDefaultToAnnual = false
+    @State private var paywallValueFramingVariant = PaywallValueFraming.control
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
@@ -463,7 +464,11 @@ struct TimerSetupScreen: View {
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
-            PaywallSheet(entryPoint: paywallEntryPoint, defaultToAnnualExperiment: paywallDefaultToAnnual)
+            PaywallSheet(
+                entryPoint: paywallEntryPoint,
+                defaultToAnnualExperiment: paywallDefaultToAnnual,
+                valueFramingVariant: paywallValueFramingVariant
+            )
                 .environmentObject(proManager)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
@@ -560,6 +565,7 @@ struct TimerSetupScreen: View {
         Task { @MainActor in
             await AnalyticsService.shared.reloadPaywallExperimentFlagsIfNeeded()
             paywallDefaultToAnnual = AnalyticsService.shared.paywallDefaultAnnualExperimentEnabled()
+            paywallValueFramingVariant = AnalyticsService.shared.paywallValueFramingVariant()
             showPaywall = true
         }
     }
