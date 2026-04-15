@@ -13,7 +13,10 @@ Setup (one-time in Firebase Console):
     2. Streaming export lands in: <project>.firebase_crashlytics (see CRASHLYTICS_PROJECT_ID).
 
 Requires:
-    - CRASHLYTICS_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
+    - CRASHLYTICS_SERVICE_ACCOUNT_JSON (inline JSON), or
+      CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH (path to a service account JSON file), or
+      GOOGLE_APPLICATION_CREDENTIALS (path to a service account JSON file), or
+      Application Default Credentials (e.g. gcloud auth application-default login)
     - BigQuery API enabled on the Firebase/GCP project that owns the export
     - Env CRASHLYTICS_PROJECT_ID must match that project (default: random-timer-dist-new)
 
@@ -30,6 +33,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 import google.auth
+from google.auth.exceptions import DefaultCredentialsError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 
@@ -50,17 +54,43 @@ def get_credentials():
             scopes=SCOPES,
         )
 
+    sa_path = os.environ.get("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", "").strip()
+    if sa_path:
+        expanded_sa = os.path.expanduser(sa_path)
+        if not os.path.isfile(expanded_sa):
+            raise RuntimeError(
+                "CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH points to a missing file "
+                f"({expanded_sa})."
+            )
+        return service_account.Credentials.from_service_account_file(
+            expanded_sa,
+            scopes=SCOPES,
+        )
+
     gac = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
     if gac:
         expanded = os.path.expanduser(gac)
         if not os.path.isfile(expanded):
             raise RuntimeError(
                 "GOOGLE_APPLICATION_CREDENTIALS points to a missing file "
-                f"({expanded}). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path."
+                f"({expanded}). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON, "
+                "CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH, or fix the path."
             )
+        return service_account.Credentials.from_service_account_file(
+            expanded,
+            scopes=SCOPES,
+        )
 
-    creds, _ = google.auth.default(scopes=SCOPES)
-    return creds
+    try:
+        creds, _ = google.auth.default(scopes=SCOPES)
+        return creds
+    except DefaultCredentialsError as exc:
+        raise RuntimeError(
+            "No Google credentials for Crashlytics BigQuery. Set one of: "
+            "CRASHLYTICS_SERVICE_ACCOUNT_JSON, CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH, "
+            "GOOGLE_APPLICATION_CREDENTIALS, or configure Application Default Credentials "
+            f"(see google.auth.default). Original error: {exc}"
+        ) from exc
 
 
 def get_access_token(credentials=None):

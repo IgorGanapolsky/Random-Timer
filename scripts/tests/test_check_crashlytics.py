@@ -127,6 +127,59 @@ def test_select_crashlytics_table_rejects_wrong_package():
         raise AssertionError("expected ValueError for missing package table")
 
 
+def test_get_credentials_loads_google_application_credentials_file(tmp_path, monkeypatch):
+    key_file = tmp_path / "sa.json"
+    key_file.write_text('{"type": "service_account", "project_id": "p"}', encoding="utf-8")
+    fake_creds = MagicMock()
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", raising=False)
+    with patch.dict(os.environ, {"GOOGLE_APPLICATION_CREDENTIALS": str(key_file)}):
+        with patch.object(
+            cc.service_account.Credentials,
+            "from_service_account_file",
+            return_value=fake_creds,
+        ) as mock_file:
+            with patch.object(cc.google.auth, "default", side_effect=AssertionError("ADC must not run")):
+                out = cc.get_credentials()
+    assert out is fake_creds
+    mock_file.assert_called_once()
+    assert mock_file.call_args[0][0] == str(key_file)
+
+
+def test_get_credentials_loads_crashlytics_service_account_json_path(tmp_path, monkeypatch):
+    key_file = tmp_path / "crashlytics-sa.json"
+    key_file.write_text('{"type": "service_account"}', encoding="utf-8")
+    fake_creds = MagicMock()
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    with patch.dict(
+        os.environ,
+        {"CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH": str(key_file)},
+    ):
+        with patch.object(
+            cc.service_account.Credentials,
+            "from_service_account_file",
+            return_value=fake_creds,
+        ) as mock_file:
+            out = cc.get_credentials()
+    assert out is fake_creds
+    mock_file.assert_called_once()
+
+
+def test_get_credentials_wraps_default_credentials_error(monkeypatch):
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    with patch.object(cc.google.auth, "default", side_effect=cc.DefaultCredentialsError("none")):
+        try:
+            cc.get_credentials()
+        except RuntimeError as exc:
+            assert "CRASHLYTICS_SERVICE_ACCOUNT_JSON" in str(exc)
+            assert "none" in str(exc).lower()
+        else:
+            raise AssertionError("expected RuntimeError")
+
+
 def test_get_access_token_uses_inline_service_account_json():
     fake_creds = MagicMock()
     access_value = "inline-access-value"
