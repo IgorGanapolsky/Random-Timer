@@ -114,6 +114,12 @@ struct PaywallSheet: View {
         }
     }
 
+    /// Never pass an all-whitespace title to `PrimaryButton` (empty labels can disappear in sheets).
+    private var ctaButtonTitle: String {
+        let trimmed = ctaLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Continue" : trimmed
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -214,7 +220,7 @@ struct PaywallSheet: View {
                 }
 
                 VStack(spacing: 12) {
-                    PrimaryButton(title: ctaLabel) {
+                    PrimaryButton(title: ctaButtonTitle) {
                         Task {
                             await purchase(productID: selectedProductID)
                         }
