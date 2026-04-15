@@ -71,12 +71,12 @@ struct TimerSetupScreen: View {
                                     timerManager.updateConfig(result.config.clamped(isPro: proManager.isPro))
                                 } label: {
                                     Text(config.useExtendedRange ? "1H" : "5m")
-                                        .font(.caption2.weight(.bold))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
                                         .background(
                                             config.useExtendedRange
-                                                ? Color.accentPrimary.opacity(0.2)
+                                                ? Color.accentPrimary.opacity(0.3)
                                                 : Color.glassBackground
                                         )
                                         .foregroundColor(

@@ -363,13 +363,14 @@ fun TimerSetupScreen(
                                         label = {
                                             Text(
                                                 text = if (config.useExtendedRange) "1H" else "5m",
-                                                style = MaterialTheme.typography.labelSmall,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = if (config.useExtendedRange) FontWeight.Bold else FontWeight.Normal,
                                             )
                                         },
                                         colors =
                                             FilterChipDefaults.filterChipColors(
                                                 containerColor = TimerColors.GlassBackground,
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.3f),
                                                 labelColor = TimerColors.TextSecondary,
                                                 selectedLabelColor = TimerColors.AccentPrimary,
                                             ),
