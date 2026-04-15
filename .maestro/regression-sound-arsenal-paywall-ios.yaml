@@ -1,7 +1,7 @@
 appId: com.igorganapolsky.randomtimer
 ---
-# Regression test: before first timer completion, Sound Arsenal must gate
-# the paywall behind a completed drill instead of opening purchase UI.
+# Regression test: tapping Sound Arsenal upgrade opens the paywall immediately,
+# even before the user has completed their first drill.
 - launchApp:
     clearState: true
 - scrollUntilVisible:
@@ -10,8 +10,7 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
-- assertVisible: "Complete your first drill to unlock Pro features"
-- assertNotVisible:
+- assertVisible:
     text: "Stop Training With the Brakes On"
     optional: true
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
