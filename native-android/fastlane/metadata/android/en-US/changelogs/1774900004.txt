@@ -1,0 +1,5 @@
+Training and monetization improvements:
+- Subscription funnel analytics for clearer upgrade diagnostics.
+- Paywall copy experiment support (value framing) with safer defaults.
+- Pro upgrade opens immediately when you tap Pro (no artificial first-session gate).
+- Crashlytics export tooling and store telemetry hygiene.
