@@ -46,6 +46,7 @@ class AnalyticsService
                     captureApplicationLifecycleEvents = false
                     captureDeepLinks = true
                     captureScreenViews = false // We track manually for better control
+                    preloadFeatureFlags = true
                     // Session replay: production installs only (enable in PostHog Project Settings → Session replay).
                     // Jetpack Compose requires screenshot mode. No client sampleRate in SDK 3.8.2 — tune in PostHog + debouncerDelayMs.
                     if (!isInternalUser) {
@@ -114,6 +115,29 @@ class AnalyticsService
         fun flush() {
             if (!initialized) return
             PostHog.flush()
+        }
+
+        fun paywallDefaultAnnualExperimentEnabled(): Boolean {
+            if (!initialized) return false
+            return try {
+                PostHog.isFeatureEnabled(PostHogExperimentKeys.PAYWALL_DEFAULT_PLAN_ANNUAL, false)
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        fun reloadFeatureFlags(onReady: () -> Unit) {
+            if (!initialized) {
+                onReady()
+                return
+            }
+            try {
+                PostHog.reloadFeatureFlags {
+                    onReady()
+                }
+            } catch (_: Exception) {
+                onReady()
+            }
         }
 
         // --- UTM Attribution ---
@@ -366,6 +390,7 @@ object AnalyticsProperties {
     const val SCREEN = "screen"
     const val REASON = "reason"
     const val REVENUE = "revenue"
+    const val PAYWALL_EXPERIMENT_VARIANT = "paywall_experiment_variant"
 }
 
 object AnalyticsScreens {

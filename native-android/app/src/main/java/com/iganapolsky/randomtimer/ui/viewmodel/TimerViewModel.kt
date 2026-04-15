@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.analytics.PaywallExperimentVariants
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
@@ -281,15 +282,24 @@ class TimerViewModel
             )
         }
 
-        fun trackPaywallViewed(entryPoint: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_VIEW,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
-            )
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_VIEWED,
-                mapOf(AnalyticsProperties.ENTRY_POINT to entryPoint),
-            )
+        fun resolvePaywallDefaultAnnualExperiment(onResolved: (Boolean) -> Unit) {
+            analyticsService.reloadFeatureFlags {
+                onResolved(analyticsService.paywallDefaultAnnualExperimentEnabled())
+            }
+        }
+
+        fun trackPaywallViewed(
+            entryPoint: String,
+            defaultAnnualExperiment: Boolean,
+        ) {
+            val props =
+                mapOf(
+                    AnalyticsProperties.ENTRY_POINT to entryPoint,
+                    AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT to
+                        PaywallExperimentVariants.fromAnnualDefaultFlag(defaultAnnualExperiment),
+                )
+            analyticsService.track(AnalyticsEvents.PAYWALL_VIEW, props)
+            analyticsService.track(AnalyticsEvents.PAYWALL_VIEWED, props)
         }
 
         fun trackPaywallOfferSelected(

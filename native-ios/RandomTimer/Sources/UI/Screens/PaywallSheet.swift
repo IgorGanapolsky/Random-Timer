@@ -44,10 +44,16 @@ struct PaywallSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
     @State private var purchaseError: String?
-    /// Default to monthly — lowest barrier to entry.
-    @State private var selectedPlan: PaywallPlanSelection = .monthly
+    @State private var selectedPlan: PaywallPlanSelection
     @State private var introOfferEligibleProductIDs: Set<String> = []
     let entryPoint: PaywallEntryPoint
+    let defaultToAnnualExperiment: Bool
+
+    init(entryPoint: PaywallEntryPoint, defaultToAnnualExperiment: Bool = false) {
+        self.entryPoint = entryPoint
+        self.defaultToAnnualExperiment = defaultToAnnualExperiment
+        _selectedPlan = State(initialValue: defaultToAnnualExperiment ? .annual : .monthly)
+    }
 
     // MARK: - Derived helpers
 
@@ -243,11 +249,14 @@ struct PaywallSheet: View {
         .background(Color.backgroundDark)
         .task {
             trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
+            let variant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
             AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                AnalyticsProperties.paywallExperimentVariant: variant,
             ])
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                AnalyticsProperties.paywallExperimentVariant: variant,
             ])
             await proManager.fetchProduct()
             await refreshIntroOfferEligibility()

@@ -28,9 +28,9 @@ import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
+import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.launch
 
 sealed class Screen(
     val route: String,

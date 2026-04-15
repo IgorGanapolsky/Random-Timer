@@ -141,12 +141,24 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
-    fun `trackPaywallViewed tracks with entry point`() {
-        viewModel.trackPaywallViewed("setup_upgrade_cta")
+    fun `trackPaywallViewed tracks with entry point and experiment variant`() {
+        viewModel.trackPaywallViewed("setup_upgrade_cta", defaultAnnualExperiment = false)
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEW,
+                match {
+                    it["entry_point"] == "setup_upgrade_cta" &&
+                        it["paywall_experiment_variant"] == "monthly_default"
+                },
+            )
+        }
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEWED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
+                match {
+                    it["entry_point"] == "setup_upgrade_cta" &&
+                        it["paywall_experiment_variant"] == "monthly_default"
+                },
             )
         }
     }
