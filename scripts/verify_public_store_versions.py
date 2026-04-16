@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""Verify public App Store and Google Play versions by storefront read-back."""
+"""Verify public App Store and Google Play versions by storefront read-back.
+
+Expected versions default to the **latest GitHub release tag** (not repo marketing
+versions on integration branches). Override with ``--expected-version`` or
+``--expected-source repo`` when comparing storefronts to checked-out sources.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
 import re
+import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
@@ -56,6 +62,86 @@ def read_android_version(repo_root: Path = ROOT) -> str:
     if not match:
         raise RuntimeError(f"Could not read versionName from {gradle}")
     return match.group(1)
+
+
+def read_github_latest_release_version(repo_root: Path = ROOT) -> str:
+    """Return X.Y.Z from ``gh release view`` for the repo at ``repo_root``."""
+    try:
+        proc = subprocess.run(
+            ["gh", "release", "view", "--json", "tagName"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=120,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            "gh CLI is required for --expected-source github_latest_release "
+            "(install GitHub CLI and authenticate, e.g. gh auth login)"
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        err = (exc.stderr or exc.stdout or "").strip() or str(exc)
+        raise RuntimeError(f"gh release view failed: {err}") from exc
+
+    data = json.loads(proc.stdout)
+    tag = str(data.get("tagName") or "").strip()
+    if not tag:
+        raise RuntimeError("gh release view returned empty tagName (no GitHub release?)")
+
+    version = tag[1:] if tag.startswith("v") else tag
+    if not re.fullmatch(r"\d+(?:\.\d+)+", version):
+        raise RuntimeError(f"Unexpected release tag format: {tag!r} -> {version!r}")
+    return version
+
+
+def _fill_missing_expected_from_repo(
+    platform: str, ios: str, android: str, repo_root: Path
+) -> tuple[str, str]:
+    if platform in {"ios", "both"} and not ios:
+        ios = read_ios_version(repo_root)
+    if platform in {"android", "both"} and not android:
+        android = read_android_version(repo_root)
+    return ios, android
+
+
+def _expected_from_repo_sources(platform: str, repo_root: Path) -> tuple[str, str]:
+    ios = read_ios_version(repo_root) if platform in {"ios", "both"} else ""
+    android = read_android_version(repo_root) if platform in {"android", "both"} else ""
+    return ios, android
+
+
+def _expected_from_shared_release(platform: str, shared: str) -> tuple[str, str]:
+    ios = shared if platform in {"ios", "both"} else ""
+    android = shared if platform in {"android", "both"} else ""
+    return ios, android
+
+
+def resolve_expected_versions(
+    *,
+    platform: str,
+    expected_version: str,
+    ios_expected_version: str,
+    android_expected_version: str,
+    expected_source: str,
+    repo_root: Path,
+) -> tuple[str, str, str]:
+    """Return (ios_expected, android_expected, evidence_label)."""
+    ios = ios_expected_version or expected_version
+    android = android_expected_version or expected_version
+    explicit_any = bool(expected_version or ios_expected_version or android_expected_version)
+
+    if explicit_any:
+        ios, android = _fill_missing_expected_from_repo(platform, ios, android, repo_root)
+        return ios, android, "explicit_cli"
+
+    if expected_source == "repo":
+        ios, android = _expected_from_repo_sources(platform, repo_root)
+        return ios, android, "repo_sources"
+
+    shared = read_github_latest_release_version(repo_root)
+    ios, android = _expected_from_shared_release(platform, shared)
+    return ios, android, "github_latest_release"
 
 
 def build_app_store_lookup_url(app_id: str, country: str) -> str:
@@ -110,7 +196,10 @@ def verify_app_store_public_version(
     item = results[0]
     observed = str(item.get("version") or "")
     release_date = str(item.get("currentVersionReleaseDate") or "unknown")
-    details = f"HTTP 200 on {date_header} public_version={observed} release_date={release_date}"
+    details = (
+        f"HTTP 200 on {date_header} public_version={observed} release_date={release_date} "
+        "ios_semantics=itunes_lookup_public_version_field_not_App_Store_Connect_ground_truth"
+    )
     if observed != expected_version:
         return StoreVersionResult(
             "ios",
@@ -182,9 +271,10 @@ def poll_until_public(
         time.sleep(min(poll_interval, max(0, remaining)))
 
 
-def print_results(results: list[StoreVersionResult]) -> bool:
+def print_results(results: list[StoreVersionResult], expected_source_label: str) -> bool:
     print()
     print("== Public Store Version Read-Back ==")
+    print(f"expected_source: {expected_source_label}")
     all_passed = True
     for item in results:
         marker = "PASS" if item.passed else "FAIL"
@@ -205,6 +295,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--expected-version", default="", help="Expected public version for both stores")
     parser.add_argument("--ios-expected-version", default="", help="Override expected iOS version")
     parser.add_argument("--android-expected-version", default="", help="Override expected Android version")
+    parser.add_argument(
+        "--expected-source",
+        choices=["github_latest_release", "repo"],
+        default="github_latest_release",
+        help=(
+            "Where to read expected versions when --expected-version is not set: "
+            "latest GitHub release tag (default) or native repo versionName/MARKETING_VERSION."
+        ),
+    )
     parser.add_argument("--ios-app-id", default=DEFAULT_IOS_APP_ID)
     parser.add_argument("--android-package", default=DEFAULT_ANDROID_PACKAGE)
     parser.add_argument("--country", default=DEFAULT_COUNTRY)
@@ -216,13 +315,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    ios_expected = args.ios_expected_version or args.expected_version
-    android_expected = args.android_expected_version or args.expected_version
-
-    if args.platform in {"ios", "both"} and not ios_expected:
-        ios_expected = read_ios_version()
-    if args.platform in {"android", "both"} and not android_expected:
-        android_expected = read_android_version()
+    ios_expected, android_expected, expected_source_label = resolve_expected_versions(
+        platform=args.platform,
+        expected_version=args.expected_version,
+        ios_expected_version=args.ios_expected_version,
+        android_expected_version=args.android_expected_version,
+        expected_source=args.expected_source,
+        repo_root=ROOT,
+    )
 
     def verify_once() -> list[StoreVersionResult]:
         checks: list[StoreVersionResult] = []
@@ -245,11 +345,19 @@ def main() -> int:
         return checks
 
     results = poll_until_public(verify_once, args.timeout, args.poll_interval)
-    passed = print_results(results)
+    passed = print_results(results, expected_source_label)
 
     if args.json_out:
         Path(args.json_out).write_text(
-            json.dumps({"passed": passed, "results": [asdict(item) for item in results]}, indent=2) + "\n",
+            json.dumps(
+                {
+                    "passed": passed,
+                    "expected_source": expected_source_label,
+                    "results": [asdict(item) for item in results],
+                },
+                indent=2,
+            )
+            + "\n",
             encoding="utf-8",
         )
 

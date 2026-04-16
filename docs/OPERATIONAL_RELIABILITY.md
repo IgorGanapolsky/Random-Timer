@@ -21,6 +21,7 @@ Every quantitative claim MUST identify:
 - Play `reviews.list` counts are **not** “public Play review totals.” Use `review_count_metric_id` in `executive_metrics.json` / `real_store_downloads` output.
 - PostHog “installs” from `Application Installed` are **not** Play Console download units. Executive PostHog scalars map to `posthog.metric_field_ids` under `metric_bundle_id` `posthog_executive_pragmatic_live_hogql_v1`.
 - Crashlytics **`fatal_events_in_window`** is **COUNT(\*)** of fatal rows in the BQ lookback window (canonical crash volume). **`fatal_events`** is the sum of crash counts in the **parsed top-issue sample** (see `metric_field_ids` — not a full-window total if many issue groups exist).
+- **Public storefront version read-back** (`scripts/verify_public_store_versions.py`): iOS uses the **iTunes public lookup** `version` field (US storefront JSON — a public proxy, not a substitute for App Store Connect internal state). Android uses a **regex on the public Play HTML** (embedded `141` payload string — a fragile listing proxy, not Play Console track truth). Default expected version for automation is the **latest GitHub release tag** so integration-branch repo versions are not mistaken for “what must be live” in the US storefront.
 
 ## 2. Evidence, not assertions
 
