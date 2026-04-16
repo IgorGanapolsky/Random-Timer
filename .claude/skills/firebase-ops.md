@@ -61,6 +61,10 @@ bq query --use_legacy_sql=false \
 - App ID format: `1:PROJECT_NUMBER:android:APP_ID` (e.g. `1:624873778337:android:4503588605a3273edc14e0`).
 - To see group alias: Firebase Console → App Distribution → Testers & groups → select group.
 
+### App Testing agent (Android, preview)
+
+AI-guided tests via App Distribution + Test Lab devices. Canonical doc: `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` (App Testing agent section). In-repo YAML: `firebase-apptesting/tests/`. Manual CI: `.github/workflows/firebase-app-testing-agent.yml`. Runner script: `scripts/ci_firebase_apptesting_execute.sh`.
+
 ### Automated Crash Check (CI)
 
 ```bash
