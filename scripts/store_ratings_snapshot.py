@@ -135,7 +135,16 @@ def fetch_play_reviews_capped(service: Any, package: str, cap: int) -> list[dict
 
 
 def build_ios_ratings(bundle_id: str, limit: int) -> dict[str, Any]:
-    from scripts.asc.asc_client import ASCClient, AscClientError
+    try:
+        from scripts.asc.asc_client import ASCClient, AscClientError
+    except ImportError as exc:
+        return {
+            "platform": "ios",
+            "bundle_id": bundle_id,
+            "review_count_metric_id": IOS_RATING_SAMPLE_METRIC_ID,
+            "status": "skipped",
+            "reason": f"missing dependency: {exc}",
+        }
 
     base: dict[str, Any] = {
         "platform": "ios",
@@ -175,7 +184,7 @@ def build_ios_ratings(bundle_id: str, limit: int) -> dict[str, Any]:
             "average_rating_sample_mean": mean,
             "rating_histogram": hist,
         }
-    except Exception as exc:
+    except (AscClientError, KeyError, OSError, TypeError, ValueError) as exc:
         return {**base, "status": "error", "reason": str(exc)}
 
 
@@ -191,8 +200,10 @@ def build_android_ratings(package: str, limit: int) -> dict[str, Any]:
         ),
     }
     try:
+        from google.auth.exceptions import GoogleAuthError
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
+        from googleapiclient.errors import HttpError
     except ImportError as exc:
         return {**base, "status": "skipped", "reason": f"missing dependency: {exc}"}
 
@@ -229,7 +240,7 @@ def build_android_ratings(package: str, limit: int) -> dict[str, Any]:
             "average_rating_sample_mean": mean,
             "rating_histogram": hist,
         }
-    except Exception as exc:
+    except (GoogleAuthError, HttpError, KeyError, OSError, TypeError, ValueError) as exc:
         return {**base, "status": "error", "reason": str(exc)}
 
 
