@@ -96,6 +96,31 @@ def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions
     assert ".presentationDetents([.large])" in ios_setup
 
 
+def test_paywall_sticky_chrome_keeps_primary_cta_outside_scroll():
+    """Sticky footer must hold CTA + restore + legal links so long content cannot strand the purchase path."""
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+
+    assert "Scaffold(" in android_paywall
+    assert "bottomBar = {" in android_paywall
+    assert ".verticalScroll(" in android_paywall
+    assert android_paywall.index("bottomBar = {") < android_paywall.index("PrimaryButton(")
+    assert ".navigationBarsPadding()" in android_paywall
+    for label in ("Restore purchase", "Privacy Policy", "Start Monthly", "Start Annual"):
+        assert label in android_paywall
+
+    assert "paywallStickyChrome" in ios_paywall
+    body_start = ios_paywall.find("var body: some View")
+    assert body_start != -1
+    body_region = ios_paywall[body_start:]
+    scroll_at = body_region.find("ScrollView")
+    chrome_at = body_region.find("paywallStickyChrome")
+    assert scroll_at != -1 and chrome_at != -1 and scroll_at < chrome_at
+    assert "PrimaryButton(title: ctaButtonTitle)" in ios_paywall
+    for label in ("Restore purchase", "Privacy Policy", "Terms of Use (EULA)", "Start Monthly", "Start Annual"):
+        assert label in ios_paywall
+
+
 def test_voice_callouts_present_on_both_platforms():
     android_setup = _read(ANDROID_SETUP)
     ios_setup = _read(IOS_SETUP)

@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -11,13 +12,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -28,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -102,187 +109,202 @@ fun PaywallSheet(
         }
     }
 
+    val purchaseProductId = productIdForPlan(selectedPlan)
+    val ctaLabel =
+        ctaLabelForPlan(
+            selectedPlan = selectedPlan,
+            proPrice = proPrice,
+            monthlyPrice = monthlyPrice,
+            trialEligibilityByProductId = trialEligibilityByProductId,
+        )
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = TimerColors.BackgroundDark,
     ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = "Not now",
-                style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .align(Alignment.Start)
-                        .clickable(onClick = onDismiss),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = headline,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.TextPrimary,
-                textAlign = TextAlign.Center,
-                modifier =
-                    Modifier.fillMaxWidth().then(
-                        if (onDebugUnlock != null) {
-                            Modifier.holdForHiddenUnlock(
-                                holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
-                                haptic = haptic,
-                                onHoldComplete = onDebugUnlock,
-                            )
-                        } else {
+        val scrollState = rememberScrollState()
+        Scaffold(
+            containerColor = TimerColors.BackgroundDark,
+            contentColor = TimerColors.TextPrimary,
+            bottomBar = {
+                val uriHandler = LocalUriHandler.current
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(color = TimerColors.TextSecondary.copy(alpha = 0.28f))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    PrimaryButton(
+                        text = ctaLabel,
+                        onClick = { onPurchase(purchaseProductId) },
+                        modifier =
                             Modifier
-                        },
-                    ),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = subheadline,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = PAYWALL_PRICING_FOOTER,
-                style = MaterialTheme.typography.bodySmall,
-                color = TimerColors.TextSecondary,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "PRO FEATURES",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.AccentPrimary,
-                modifier = Modifier.align(Alignment.Start),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            PAYWALL_FEATURE_ROWS.forEach { feature ->
-                ProFeatureRow(text = feature)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Plan selector — monthly vs annual (default arm from PostHog `paywall_default_plan_annual`)
-            Text(
-                text = "CHOOSE A PLAN",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TimerColors.AccentPrimary,
-                modifier = Modifier.align(Alignment.Start),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            PlanOptionCard(
-                title = "Monthly",
-                priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
-                badge = null,
-                isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
-                onClick = {
-                    selectedPlan = SubscriptionPlanSelection.MONTHLY
-                    onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
-                },
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            PlanOptionCard(
-                title = "Annual",
-                priceLabel = "${stripPriceSuffix(proPrice)}/year",
-                badge = "Best Value",
-                isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
-                onClick = {
-                    selectedPlan = SubscriptionPlanSelection.ANNUAL
-                    onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
-                },
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            val purchaseProductId = productIdForPlan(selectedPlan)
-            val ctaLabel =
-                ctaLabelForPlan(
-                    selectedPlan = selectedPlan,
-                    proPrice = proPrice,
-                    monthlyPrice = monthlyPrice,
-                    trialEligibilityByProductId = trialEligibilityByProductId,
-                )
-
-            PrimaryButton(
-                text = ctaLabel,
-                onClick = { onPurchase(purchaseProductId) },
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Restore purchase",
-                style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextSecondary,
+                                .fillMaxWidth()
+                                .border(
+                                    width = 2.5.dp,
+                                    color = Color.White.copy(alpha = 0.95f),
+                                    shape = RoundedCornerShape(16.dp),
+                                ),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Restore purchase",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TimerColors.TextSecondary,
+                        modifier = Modifier.clickable(onClick = onRestore),
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Not now",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TimerColors.TextSecondary,
+                        modifier = Modifier.clickable(onClick = onDismiss),
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = "Privacy Policy",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                            modifier =
+                                Modifier.clickable {
+                                    uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
+                                },
+                        )
+                        Text(
+                            text = "Terms of Use",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                            modifier =
+                                Modifier.clickable {
+                                    uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
+                                },
+                        )
+                    }
+                }
+            },
+        ) { innerPadding ->
+            Column(
                 modifier =
                     Modifier
-                        .clickable(onClick = onRestore),
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Not now",
-                style = MaterialTheme.typography.labelMedium,
-                color = TimerColors.TextSecondary,
-                modifier =
-                    Modifier
-                        .clickable(onClick = onDismiss),
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Required by Play Store guidelines for subscription disclosures
-            val uriHandler = LocalUriHandler.current
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(innerPadding)
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .padding(bottom = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Privacy Policy",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "Not now",
+                    style = MaterialTheme.typography.labelMedium,
                     color = TimerColors.TextSecondary,
                     modifier =
-                        Modifier.clickable {
-                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/privacy-policy/")
-                        },
+                        Modifier
+                            .align(Alignment.Start)
+                            .clickable(onClick = onDismiss),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = headline,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier.fillMaxWidth().then(
+                            if (onDebugUnlock != null) {
+                                Modifier.holdForHiddenUnlock(
+                                    holdDurationMs = HIDDEN_UNLOCK_HOLD_DURATION_MS,
+                                    haptic = haptic,
+                                    onHoldComplete = onDebugUnlock,
+                                )
+                            } else {
+                                Modifier
+                            },
+                        ),
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = subheadline,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center,
                 )
                 Text(
-                    text = "Terms of Use",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = PAYWALL_PRICING_FOOTER,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TimerColors.TextSecondary,
-                    modifier =
-                        Modifier.clickable {
-                            uriHandler.openUri("https://igorganapolsky.github.io/Random-Timer/eula/")
-                        },
+                    textAlign = TextAlign.Center,
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "PRO FEATURES",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary,
+                    modifier = Modifier.align(Alignment.Start),
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PAYWALL_FEATURE_ROWS.forEach { feature ->
+                    ProFeatureRow(text = feature)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "CHOOSE A PLAN",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary,
+                    modifier = Modifier.align(Alignment.Start),
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PlanOptionCard(
+                    title = "Monthly",
+                    priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
+                    badge = null,
+                    isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
+                    onClick = {
+                        selectedPlan = SubscriptionPlanSelection.MONTHLY
+                        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PlanOptionCard(
+                    title = "Annual",
+                    priceLabel = "${stripPriceSuffix(proPrice)}/year",
+                    badge = "Best Value",
+                    isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
+                    onClick = {
+                        selectedPlan = SubscriptionPlanSelection.ANNUAL
+                        onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }

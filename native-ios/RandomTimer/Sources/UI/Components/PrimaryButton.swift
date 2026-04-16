@@ -5,19 +5,30 @@ struct PrimaryButton: View {
     let title: String
     let action: () -> Void
     var backgroundColor: Color = .accentPrimary
-    var foregroundColor: Color = .textPrimary
+    /// Always a light tone: fills use crimson/red accents; label must stay readable in sheets and under system tint.
+    var foregroundColor: Color = Color.white
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(foregroundColor)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(backgroundColor)
+                Text(title)
+                    .font(.headline.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.65)
+                    .lineLimit(3)
+                    .padding(.horizontal, 10)
+                    .foregroundStyle(foregroundColor)
+                    .foregroundColor(foregroundColor)
+            }
+            .compositingGroup()
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(PressableButtonStyle())
+        .tint(foregroundColor)
         .accessibilityLabel(title)
     }
 }

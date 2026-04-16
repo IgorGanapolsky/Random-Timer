@@ -1,5 +1,8 @@
-Training and monetization improvements:
+Training and monetization:
 - Subscription funnel analytics for clearer upgrade diagnostics.
 - Paywall copy experiment support (value framing) with safer defaults.
 - Pro upgrade opens immediately when you tap Pro (no artificial first-session gate).
+- Paywall primary purchase button stays readable with correct chrome (iOS and Android).
+- Monthly Pro, clearer upgrade copy, and post-first-session paywall timing when applicable.
 - Crashlytics export tooling and store telemetry hygiene.
+- April Pro audio and Sound Arsenal freshness.
