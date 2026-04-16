@@ -1,6 +1,6 @@
 # Product Hunt Launch Plan
 
-**Tagline:** Random timer for HIIT, drills & party games — you never know when it fires
+**Tagline:** Random tactical timer for combat sports & HIIT — you never know when it fires
 
 ## Description
 Random Tactical Timer picks a random moment within your chosen time range to fire an alarm.
@@ -8,18 +8,18 @@ Random Tactical Timer picks a random moment within your chosen time range to fir
 Set a minimum and maximum duration, press start, and go about your activity. You never know exactly when it goes off — keeping you sharp, alert, and engaged.
 
 Perfect for:
-- HIIT & Tabata with unpredictable rest periods
+- HIIT & Tabata with unpredictable work/rest periods
 - Reaction training for martial arts & boxing
-- Party games like Musical Chairs & Hot Potato
-- Pomodoro sessions with random breaks
+- BJJ scrambles and positional drills
+- Conditioning blocks where anticipation is the enemy
 
-No ads. No tracking. No subscriptions. Just set your range and go.
+Optional Pro unlocks AI coach voice callouts, Sound Arsenal, longer sessions, and structured round limits. No ads in the training experience; optional privacy‑respecting product analytics may run to improve the app (see Privacy Policy).
 
 ## Topics
-Productivity, Health & Fitness, Developer Tools
+Health & Fitness, Productivity, Sports
 
 ## Maker Comment
-Hey PH! I built this because every timer app lets you predict exactly when it ends. That defeats the purpose for reaction training and surprise-based games. This one keeps you guessing.
+Hey PH! I built this because every timer app lets you predict exactly when it ends. That defeats the purpose for reaction training. This one keeps you guessing — and Pro adds coach voices and a fuller sound library when you want match pressure, not a metronome.
 
 ## Pre-Launch Checklist
 - [ ] Prepare 3-5 screenshots for PH gallery
