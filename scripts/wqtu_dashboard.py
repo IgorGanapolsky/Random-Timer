@@ -129,7 +129,7 @@ def compute_monetization_funnel(key: str, project_id: str, errors: list) -> dict
         FROM events
         WHERE (
             event = 'paywall_purchase_success'
-            OR (event = 'paywall_purchase_result' AND lower(coalesce(properties.success, '')) = 'true')
+            OR (event = 'paywall_purchase_result' AND lower(coalesce(toString(properties.success), '')) = 'true')
         )
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
