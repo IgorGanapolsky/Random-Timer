@@ -90,9 +90,31 @@ def read_github_latest_release_version(repo_root: Path = ROOT) -> str:
         raise RuntimeError("gh release view returned empty tagName (no GitHub release?)")
 
     version = tag[1:] if tag.startswith("v") else tag
-    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)+", version):
+    if not re.fullmatch(r"\d+(?:\.\d+)+", version):
         raise RuntimeError(f"Unexpected release tag format: {tag!r} -> {version!r}")
     return version
+
+
+def _fill_missing_expected_from_repo(
+    platform: str, ios: str, android: str, repo_root: Path
+) -> tuple[str, str]:
+    if platform in {"ios", "both"} and not ios:
+        ios = read_ios_version(repo_root)
+    if platform in {"android", "both"} and not android:
+        android = read_android_version(repo_root)
+    return ios, android
+
+
+def _expected_from_repo_sources(platform: str, repo_root: Path) -> tuple[str, str]:
+    ios = read_ios_version(repo_root) if platform in {"ios", "both"} else ""
+    android = read_android_version(repo_root) if platform in {"android", "both"} else ""
+    return ios, android
+
+
+def _expected_from_shared_release(platform: str, shared: str) -> tuple[str, str]:
+    ios = shared if platform in {"ios", "both"} else ""
+    android = shared if platform in {"android", "both"} else ""
+    return ios, android
 
 
 def resolve_expected_versions(
@@ -110,25 +132,15 @@ def resolve_expected_versions(
     explicit_any = bool(expected_version or ios_expected_version or android_expected_version)
 
     if explicit_any:
-        label = "explicit_cli"
-        if platform in {"ios", "both"} and not ios:
-            ios = read_ios_version(repo_root)
-        if platform in {"android", "both"} and not android:
-            android = read_android_version(repo_root)
-        return ios, android, label
+        ios, android = _fill_missing_expected_from_repo(platform, ios, android, repo_root)
+        return ios, android, "explicit_cli"
 
     if expected_source == "repo":
-        if platform in {"ios", "both"}:
-            ios = read_ios_version(repo_root)
-        if platform in {"android", "both"}:
-            android = read_android_version(repo_root)
+        ios, android = _expected_from_repo_sources(platform, repo_root)
         return ios, android, "repo_sources"
 
     shared = read_github_latest_release_version(repo_root)
-    if platform in {"ios", "both"}:
-        ios = shared
-    if platform in {"android", "both"}:
-        android = shared
+    ios, android = _expected_from_shared_release(platform, shared)
     return ios, android, "github_latest_release"
 
 
