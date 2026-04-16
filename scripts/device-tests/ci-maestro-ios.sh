@@ -160,6 +160,7 @@ run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
 run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
 run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
 run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
+run_maestro_flow "paywall-sticky-cta" "$PROJECT_ROOT/.maestro/regression-paywall-sticky-cta-ios.yaml"
 
 # Reset app state before Agent Device validates the home screen. Regression
 # flows may leave transient setup overlays or sheets visible.

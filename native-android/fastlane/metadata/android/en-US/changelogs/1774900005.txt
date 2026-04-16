@@ -1,0 +1,4 @@
+Store submission (1.3.22):
+- Paywall: sticky footer keeps purchase, restore, and legal links above the home indicator.
+- Primary CTA chrome scales correctly on press (no drifting ring).
+- Includes subscription funnel analytics, value-framing experiment wiring, and Pro upgrade affordance fixes.
