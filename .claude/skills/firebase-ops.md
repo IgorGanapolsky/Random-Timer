@@ -63,7 +63,7 @@ bq query --use_legacy_sql=false \
 
 ### App Testing agent (Android, preview)
 
-AI-guided tests via App Distribution + Test Lab devices. Canonical doc: `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` (App Testing agent section). In-repo YAML: `firebase-apptesting/tests/`. Manual CI: `.github/workflows/firebase-app-testing-agent.yml`. Runner script: `scripts/ci_firebase_apptesting_execute.sh`.
+AI-guided tests via App Distribution + Test Lab devices. Canonical doc: `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` (App Testing agent section + troubleshooting). In-repo YAML: `firebase-apptesting/tests/`. Manual CI: `.github/workflows/firebase-app-testing-agent.yml`. Runner: `scripts/ci_firebase_apptesting_execute.sh` (uses `firebase --non-interactive -P <project_id from SA>`). If execution fails after upload, enable **Cloud Testing** + **Tool Results** APIs and grant **`roles/cloudtestservice.testAdmin`** to the CI service account (see doc).
 
 ### Automated Crash Check (CI)
 

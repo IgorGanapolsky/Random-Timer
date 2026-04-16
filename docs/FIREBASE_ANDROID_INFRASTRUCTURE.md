@@ -146,6 +146,24 @@ bash scripts/ci_firebase_apptesting_execute.sh --apk native-android/app/build/ou
 
 **Quota / budget:** During preview, Firebase documents a **default free quota** (e.g. 200 agent tests per project per month); multi-device runs multiply usage. Stay within the repo **$20/month external spend** mandate for any paid Test Lab overages beyond preview allowances.
 
+### If `firebase apptesting:execute` fails after upload (“Failed to request test execution”)
+
+Upload uses **App Distribution** APIs; execution uses **Cloud Testing / Test Lab** infrastructure. A green upload followed by this failure almost always means **APIs disabled** and/or **IAM missing Test Lab permissions** on the **same** GCP project as `FIREBASE_SERVICE_ACCOUNT_JSON` → `project_id` (for `random-timer-dist-new`, that is the App Distribution backend project).
+
+**1. Enable required Google Cloud APIs** (GCP Console → APIs & Library, project = service account `project_id`):
+
+- [Google Cloud Testing API](https://console.cloud.google.com/apis/library/testing.googleapis.com?project=random-timer-dist-new) (`testing.googleapis.com`)
+- [Google Cloud Tool Results API](https://console.cloud.google.com/apis/library/toolresults.googleapis.com?project=random-timer-dist-new) (`toolresults.googleapis.com`)
+
+**2. Grant IAM on the CI service account** (`client_email` in `FIREBASE_SERVICE_ACCOUNT_JSON`), same GCP project:
+
+- **`Firebase Test Lab Admin`** — role id `roles/cloudtestservice.testAdmin` (creates/runs test matrices).
+- Keep **`Firebase App Distribution Admin`** (or equivalent) for uploads.
+
+**3. Repo automation fixes (already in tree):** `scripts/ci_firebase_apptesting_execute.sh` runs `firebase --non-interactive -P <project_id from SA>` so the CLI is bound to the same project as credentials. For raw HTTP errors, re-run the GitHub workflow with **`debug_firebase_cli: true`** (prints `firebase --debug`; **do not** paste logs that contain signed download URLs publicly).
+
+**4. Billing:** If enabling APIs requires an active billing account, attach billing for that GCP project (still subject to the repo external-spend cap for anything beyond preview/free allowances).
+
 ## Change Rules
 
 When touching Android Firebase infrastructure:
