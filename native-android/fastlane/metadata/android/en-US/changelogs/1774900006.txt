@@ -1,0 +1,3 @@
+Release 1.3.23:
+- Keeps parity with the latest iOS/Android training and paywall experience.
+- Routine fixes and stability from the 1.3.x line.
