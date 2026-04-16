@@ -4,6 +4,8 @@ This project uses PostHog as the single source of truth for product analytics on
 
 ## Runtime contract
 
+**SDK and event definitions in this repository do not prove delivery to PostHog in production.** Treat “fully wired” as verified only after a live check (PostHog Live, HogQL, or an authenticated API query) shows recent events from production builds.
+
 - iOS and Android emit the same event names and screen names.
 - Both platforms identify users with a persistent anonymous `distinct_id`.
 - Firebase Analytics collection is disabled on Android to avoid duplicated event streams.

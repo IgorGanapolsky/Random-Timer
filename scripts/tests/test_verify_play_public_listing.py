@@ -54,6 +54,7 @@ def test_verify_public_listing_requires_expected_version(monkeypatch):
     assert result.status == "PUBLIC"
     assert "public_version=1.3.17" in result.details
     assert "expected_version=1.3.17" in result.details
+    assert "android_listing_semantics=embedded_play_html_141_string_proxy" in result.details
 
 
 def test_verify_public_listing_reports_version_mismatch(monkeypatch):
