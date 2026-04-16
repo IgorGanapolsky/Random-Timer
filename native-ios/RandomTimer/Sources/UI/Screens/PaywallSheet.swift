@@ -120,159 +120,186 @@ struct PaywallSheet: View {
         return trimmed.isEmpty ? "Continue" : trimmed
     }
 
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                HStack {
-                    Button("Not now") {
-                        trackDismiss(method: "header_not_now")
-                        dismiss()
-                    }
-                    .font(.footnote.weight(.semibold))
-                    .foregroundColor(.textSecondary)
-
-                    Spacer()
-
-                    Button {
-                        trackDismiss(method: "close_button")
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(.textSecondary)
-                            .accessibilityLabel("Close paywall")
-                    }
-                }
-
-                VStack(spacing: 4) {
-                    Text(displayHeadline)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.textPrimary)
-
-                    VStack(spacing: 4) {
-                        Text(displaySubheadline)
-                        Text(Self.subscriptionFooter)
-                    }
-                    .font(.caption)
-                    .foregroundColor(.textSecondary)
-                    .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .contentShape(Rectangle())
-                .highPriorityGesture(
-                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
-                        .onEnded { _ in
-                            triggerDebugUnlock()
-                        }
-                )
-
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(Self.featureTitle)
-                            .font(.caption.bold())
-                            .foregroundColor(.accentPrimary)
-                        ForEach(Self.featureRows, id: \.self) { feature in
-                            ProFeatureRow(text: feature)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-
-                // Plan selector
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("CHOOSE A PLAN")
-                        .font(.caption.bold())
-                        .foregroundColor(.accentPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-
-                    PlanOptionRow(
-                        title: "Monthly",
-                        priceLabel: "\(monthlyPrice)/month",
-                        badge: nil,
-                        isSelected: selectedPlan == .monthly
-                    ) {
-                        selectedPlan = .monthly
-                        trackOfferSelected(plan: "monthly", productID: ProManager.monthlyProductID)
-                    }
-
-                    PlanOptionRow(
-                        title: "Annual",
-                        priceLabel: "\(annualPrice)/year",
-                        badge: "Best Value",
-                        isSelected: selectedPlan == .annual
-                    ) {
-                        selectedPlan = .annual
-                        trackOfferSelected(plan: "annual", productID: ProManager.annualProductID)
-                    }
-
-                    PlanOptionRow(
-                        title: "Lifetime",
-                        priceLabel: lifetimePrice,
-                        badge: "One-time",
-                        isSelected: selectedPlan == .lifetime
-                    ) {
-                        selectedPlan = .lifetime
-                        trackOfferSelected(plan: "lifetime", productID: ProManager.paywallProductID)
-                    }
-                }
-
-                VStack(spacing: 12) {
-                    PrimaryButton(title: ctaButtonTitle) {
-                        Task {
-                            await purchase(productID: selectedProductID)
-                        }
-                    }
-                }
-
-                Button("Restore purchase") {
-                    Task {
-                        let result = await proManager.restorePurchases()
-                        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
-                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                            AnalyticsProperties.result: result.rawValue,
-                        ])
-
-                        if result == .restored || result == .alreadyUnlocked {
-                            hasTrackedDismiss = true
-                            dismiss()
-                        }
-                    }
-                }
-                .font(.footnote)
-                .foregroundColor(.textSecondary)
-
+    /// Headline, value props, and plan picker — scrolls so the purchase strip can stay pinned.
+    @ViewBuilder
+    private var paywallScrollContent: some View {
+        VStack(spacing: 24) {
+            HStack {
                 Button("Not now") {
-                    trackDismiss(method: "footer_not_now")
+                    trackDismiss(method: "header_not_now")
                     dismiss()
                 }
-                .font(.footnote)
+                .font(.footnote.weight(.semibold))
                 .foregroundColor(.textSecondary)
 
-                // Required by App Store Guideline 3.1.2(c)
-                // swiftlint:disable force_unwrapping
-                HStack(spacing: 16) {
-                    Link(
-                        "Privacy Policy",
-                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
-                    )
-                    Link(
-                        "Terms of Use (EULA)",
-                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
-                    )
+                Spacer()
+
+                Button {
+                    trackDismiss(method: "close_button")
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.textSecondary)
+                        .accessibilityLabel("Close paywall")
                 }
-                // swiftlint:enable force_unwrapping
-                .font(.caption2)
-                .foregroundColor(.textSecondary)
             }
-            .padding(24)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
-            .frame(maxWidth: .infinity, alignment: .top)
+
+            VStack(spacing: 4) {
+                Text(displayHeadline)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.textPrimary)
+
+                VStack(spacing: 4) {
+                    Text(displaySubheadline)
+                    Text(Self.subscriptionFooter)
+                }
+                .font(.caption)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
+                    .onEnded { _ in
+                        triggerDebugUnlock()
+                    }
+            )
+
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(Self.featureTitle)
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                    ForEach(Self.featureRows, id: \.self) { feature in
+                        ProFeatureRow(text: feature)
+                    }
+                }
+            }
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("CHOOSE A PLAN")
+                    .font(.caption.bold())
+                    .foregroundColor(.accentPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+
+                PlanOptionRow(
+                    title: "Monthly",
+                    priceLabel: "\(monthlyPrice)/month",
+                    badge: nil,
+                    isSelected: selectedPlan == .monthly
+                ) {
+                    selectedPlan = .monthly
+                    trackOfferSelected(plan: "monthly", productID: ProManager.monthlyProductID)
+                }
+
+                PlanOptionRow(
+                    title: "Annual",
+                    priceLabel: "\(annualPrice)/year",
+                    badge: "Best Value",
+                    isSelected: selectedPlan == .annual
+                ) {
+                    selectedPlan = .annual
+                    trackOfferSelected(plan: "annual", productID: ProManager.annualProductID)
+                }
+
+                PlanOptionRow(
+                    title: "Lifetime",
+                    priceLabel: lifetimePrice,
+                    badge: "One-time",
+                    isSelected: selectedPlan == .lifetime
+                ) {
+                    selectedPlan = .lifetime
+                    trackOfferSelected(plan: "lifetime", productID: ProManager.paywallProductID)
+                }
+            }
         }
-        .scrollIndicators(.hidden)
+    }
+
+    /// Always visible above the home indicator: primary CTA + legal / dismiss affordances.
+    @ViewBuilder
+    private var paywallStickyChrome: some View {
+        VStack(spacing: 12) {
+            PrimaryButton(title: ctaButtonTitle) {
+                Task {
+                    await purchase(productID: selectedProductID)
+                }
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.95), lineWidth: 2.5)
+            )
+
+            Button("Restore purchase") {
+                Task {
+                    let result = await proManager.restorePurchases()
+                    AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
+                        AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                        AnalyticsProperties.result: result.rawValue,
+                    ])
+
+                    if result == .restored || result == .alreadyUnlocked {
+                        hasTrackedDismiss = true
+                        dismiss()
+                    }
+                }
+            }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
+
+            Button("Not now") {
+                trackDismiss(method: "footer_not_now")
+                dismiss()
+            }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
+
+            // Required by App Store Guideline 3.1.2(c)
+            // swiftlint:disable force_unwrapping
+            HStack(spacing: 16) {
+                Link(
+                    "Privacy Policy",
+                    destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
+                )
+                Link(
+                    "Terms of Use (EULA)",
+                    destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
+                )
+            }
+            // swiftlint:enable force_unwrapping
+            .font(.caption2)
+            .foregroundColor(.textSecondary)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                paywallScrollContent
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .padding(.bottom, 28)
+            }
+            .scrollIndicators(.hidden)
+
+            Rectangle()
+                .fill(Color.white.opacity(0.18))
+                .frame(height: 1)
+                .padding(.horizontal, 12)
+
+            paywallStickyChrome
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity)
+                .background(Color.backgroundDark)
+                .safeAreaPadding(.bottom, 6)
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
