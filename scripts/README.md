@@ -26,7 +26,7 @@ ADB, Maestro, and PhoneClaw device automation.
 | **Google Play** | `play_*.py`, `sync_android_metadata.py`, `verify_play_public_listing.py` |
 | **Store creatives & ASO** | `generate_*_store_creatives.py`, `check_store_listing_parity.py`, `aso_keyword_rotation.py`, `listing_snapshot.py` |
 | **Release & versioning** | `verify_release.py`, `release_ops.py`, `release_context.py`, `validate_release_branch.py`, `compute_android_release_version_code.py`, `source_versions.py` |
-| **Growth & North Star** | `growth_*.py`, `north_star_*.py`, `executive_metrics_snapshot.py`, `wqtu_dashboard.py`, `cro_optimization.py` |
+| **Growth & North Star** | `growth_*.py`, `north_star_*.py`, `executive_metrics_snapshot.py`, `wqtu_dashboard.py`, `cro_optimization.py`, `store_ratings_snapshot.py` |
 | **Audio / Pro content** | `generate_pro_audio_content.py`, `pro_audio_freshness.py`, `add_ios_audio_assets.py` |
 | **CI & guards** | `regression_guards.py`, `north_star_guardrail.py`, `review_contract_check.py`, `check_crashlytics.py` |
 | **Integrations** | `verify_elevenlabs_voices.py`, `perplexity_*.py`, `posthog_dashboard.py`, `apple_ads_*.py` |

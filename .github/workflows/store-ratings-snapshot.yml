@@ -1,0 +1,46 @@
+name: Store ratings snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "42 11 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests google-api-python-client google-auth google-auth-httplib2 pyjwt cryptography
+
+      - name: Generate store_ratings_snapshot.json
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          python3 scripts/store_ratings_snapshot.py \
+            --repo-root . \
+            --no-dotenv \
+            --limit 500 \
+            --json-out store-ratings-snapshot.json
+
+      - name: Upload ratings evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-ratings-snapshot
+          path: store-ratings-snapshot.json
+          if-no-files-found: warn
