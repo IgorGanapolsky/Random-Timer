@@ -36,6 +36,24 @@ Events emitted on both platforms:
 - `paywall_restore_result`
 - `subscription_funnel_step` — canonical paywall → plan → purchase → trial funnel; use property **`funnel_step`** (`paywall_viewed` \| `paywall_plan_selected` \| `purchase_flow_launched` \| `purchase_succeeded` \| `trial_started`) with the same `entry_point` / `paywall_experiment_variant` / `paywall_value_framing_variant` context as other paywall events.
 
+### Paywall funnel semantics (single definition of “attempt”)
+
+Dashboards (`scripts/wqtu_dashboard.py`, `scripts/engagement_dashboard.py`, `scripts/paywall_conversion_report.py`) use **`paywall_purchase_attempt`** as **“attempt.”** That event has **one** meaning in this codebase:
+
+| Step | Event | Meaning |
+| --- | --- | --- |
+| **Impression** | `paywall_viewed` (and legacy `paywall_view`) | User saw the paywall surface. |
+| **Attempt** | **`paywall_purchase_attempt`** | The app **started the platform purchase path** for a selected product: **iOS** — tracked at the beginning of `PaywallSheet`’s `purchase(productID:)` **immediately before** `proManager.purchase` (StoreKit). **Android** — tracked in `ProManager` **immediately before** `billingClient.launchBillingFlow` (Play Billing). |
+
+So **“attempt” is not a generic CTA tap** elsewhere in the app; it is **“we are invoking / about to invoke native purchase for this product from the paywall.”** It is also **not** proof the Google / Apple sheet was seen (e.g. `launchBillingFlow` can return non-OK right after; StoreKit can fail early)—only that the **instrumented** start of that path ran.
+
+**Ratios:**
+
+- **view → attempt** = distinct users with `paywall_purchase_attempt` ÷ distinct users with `paywall_viewed` (same time window and live predicate as each script).
+- **attempt → success** = distinct users with success signals (`paywall_purchase_success` or successful `paywall_purchase_result`) ÷ distinct users with `paywall_purchase_attempt`.
+
+Do not equate **attempt** with **`subscription_funnel_step` / `purchase_flow_launched`** for reporting unless you explicitly align queries; both are emitted in the same user action on current code, but **HogQL funnels should anchor on `paywall_purchase_attempt`** for “attempt” to match this contract.
+
 Screens emitted on both platforms:
 
 - `Timer Setup`

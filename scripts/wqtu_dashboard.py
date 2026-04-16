@@ -98,7 +98,11 @@ def compute_abandon_rate(key: str, project_id: str, errors: list) -> dict:
 
 
 def compute_monetization_funnel(key: str, project_id: str, errors: list) -> dict:
-    """Paywall funnel: viewed -> attempted -> succeeded."""
+    """Paywall funnel: viewed -> attempted -> succeeded.
+
+    ``attempted`` counts ``paywall_purchase_attempt`` = start of native purchase path
+    (StoreKit / Play Billing), not paywall impression. See ``docs/POSTHOG_ANALYTICS.md``.
+    """
     viewed = query_scalar(
         f"""
         SELECT count(DISTINCT person_id)

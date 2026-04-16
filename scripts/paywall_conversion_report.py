@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Weekly paywall conversion and non-conversion diagnostics."""
+"""Weekly paywall conversion and non-conversion diagnostics.
+
+``paywall_purchase_attempt`` means native purchase flow start (see
+``docs/POSTHOG_ANALYTICS.md`` § Paywall funnel semantics), not arbitrary CTA taps.
+"""
 
 from __future__ import annotations
 
