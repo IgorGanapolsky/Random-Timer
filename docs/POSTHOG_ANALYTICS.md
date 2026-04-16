@@ -109,6 +109,8 @@ Both apps ship the same **subscription paywall** (monthly + annual subscriptions
 
 Executive snapshots that read Play `reviews.list` or ASC `customerReviews` measure **narrow API slices** (e.g. 7-day commented reviews on Play, first page on ASC), **not** public lifetime totals — treat those fields as labeled proxies per `docs/OPERATIONAL_RELIABILITY.md`.
 
+For a **labeled average star rating** over vendor API samples (read-only JSON + CI artifact), run **`python scripts/store_ratings_snapshot.py`** (see `.github/workflows/store-ratings-snapshot.yml`); each platform block includes `review_count_metric_id` and `semantics` text — not PostHog.
+
 ## Verification
 
 Run parity and analytics-related tests.

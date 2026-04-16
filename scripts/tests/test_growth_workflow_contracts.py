@@ -19,6 +19,17 @@ WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
+STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+
+
+def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
+    source = STORE_RATINGS_SNAPSHOT_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "store_ratings_snapshot.py" in source
+    assert "--no-dotenv" in source
+    assert "APPSTORE_KEY_ID" in source
+    assert "GOOGLE_PLAY_JSON_KEY" in source
+    assert "contents: read" in source
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
