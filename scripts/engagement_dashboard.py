@@ -164,7 +164,7 @@ def compute_paywall_funnel(key: str, project_id: str, days: int, errors: List[st
         SELECT count(DISTINCT person_id) FROM events
         WHERE (event = 'paywall_purchase_success'
           OR (event = 'paywall_purchase_result'
-              AND lower(coalesce(properties.success, '')) = 'true'))
+              AND lower(coalesce(toString(properties.success), '')) = 'true'))
           AND timestamp > now() - interval {days} day
           AND {LIVE}
         """,
