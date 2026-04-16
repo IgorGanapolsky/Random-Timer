@@ -12,8 +12,9 @@ FEATURES
 - Random trigger timing inside your selected range
 - Hidden countdown mode to stop timer watching
 - Male or female AI coach voice callouts (Pro)
-- Loop mode with optional round limits
-- Extended session range up to 60 minutes
+- Loop mode with optional round limits (Pro)
+- Extended session range up to 60 minutes (Pro)
+- Sound Arsenal and richer alarm options for serious sessions (Pro)
 
 TRAINING USES
 - Boxing pad rounds, bag work, and shadowboxing flurries
@@ -25,7 +26,9 @@ TRAINING USES
 Stop timing your drills. Start training your response.
 
 SUBSCRIPTION INFO
-Pro Tactical is available as an auto-renewable subscription at $29.99/year. Payment is charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID > Subscriptions.
+Pro Tactical is offered as auto-renewable subscriptions (including monthly and annual options where available) and a one-time upgrade may be offered depending on App Store configuration in your region. Example list pricing when configured in App Store Connect: $3.99/month and $29.99/year; actual price is shown on Apple’s purchase confirmation sheet before you buy. Payment is charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID > Subscriptions.
+
+Optional product analytics may be collected to improve stability and features—see the Privacy Policy below.
 
 Privacy Policy: https://igorganapolsky.github.io/Random-Timer/privacy-policy/
 Terms of Use (EULA): https://igorganapolsky.github.io/Random-Timer/eula/

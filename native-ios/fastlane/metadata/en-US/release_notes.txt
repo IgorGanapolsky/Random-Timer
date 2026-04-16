@@ -1,7 +1,5 @@
-• Paywall primary button text stays readable on iOS and Android
-• Monthly Pro subscription support
-• Clearer Pro paywall focused on training outcomes
-• Paywall timing moved after the first completed timer session
-• April Pro audio and Sound Arsenal freshness
-• Cleaner review timing and analytics reliability
-• Release pipeline hardening for safer store updates
+• Clearer Pro upgrade with a readable primary purchase button
+• Paywall tuned for training outcomes; purchase, restore, and legal links stay reachable
+• Monthly and annual Pro subscriptions where available
+• AI voice callouts, Sound Arsenal, and extended range for long tactical sessions
+• Review timing and analytics reliability improvements
