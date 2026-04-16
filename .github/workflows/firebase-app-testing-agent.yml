@@ -26,6 +26,11 @@ on:
         required: false
         type: string
         default: "model=panther,version=33,locale=en,orientation=portrait"
+      debug_firebase_cli:
+        description: "Verbose firebase --debug (may log tokenized URLs; use only when diagnosing failures)"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: firebase-app-testing-agent-${{ github.run_id }}
@@ -131,11 +136,15 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           FIREBASE_APP_TESTING_DEVICES: ${{ inputs.test_devices }}
           TEST_NON_BLOCKING: ${{ inputs.test_non_blocking }}
+          FIREBASE_APPTESTING_DEBUG: ${{ inputs.debug_firebase_cli }}
         run: |
           set -euo pipefail
           EXTRA_FLAGS=()
           if [ "$TEST_NON_BLOCKING" = "true" ]; then
             EXTRA_FLAGS+=(--non-blocking)
+          fi
+          if [ "$FIREBASE_APPTESTING_DEBUG" = "true" ]; then
+            EXTRA_FLAGS+=(--debug)
           fi
           bash scripts/ci_firebase_apptesting_execute.sh \
             --test-devices "$FIREBASE_APP_TESTING_DEVICES" \
@@ -149,11 +158,15 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           FIREBASE_APP_TESTING_DEVICES: ${{ inputs.test_devices }}
           TEST_NON_BLOCKING: ${{ inputs.test_non_blocking }}
+          FIREBASE_APPTESTING_DEBUG: ${{ inputs.debug_firebase_cli }}
         run: |
           set -euo pipefail
           EXTRA_FLAGS=()
           if [ "$TEST_NON_BLOCKING" = "true" ]; then
             EXTRA_FLAGS+=(--non-blocking)
+          fi
+          if [ "$FIREBASE_APPTESTING_DEBUG" = "true" ]; then
+            EXTRA_FLAGS+=(--debug)
           fi
           bash scripts/ci_firebase_apptesting_execute.sh \
             --test-devices "$FIREBASE_APP_TESTING_DEVICES" \
