@@ -31,6 +31,11 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _android_paywall_em_dash_normalized(source: str) -> str:
+    """Kotlin may use ASCII ``\\u2014`` escapes; Swift sources typically use literal em dashes."""
+    return source.replace("\\u2014", "\u2014")
+
+
 def test_default_timer_range_is_5_to_30_on_both_platforms():
     """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
@@ -105,7 +110,7 @@ def test_paywall_sticky_chrome_keeps_primary_cta_outside_scroll():
     assert "bottomBar = {" in android_paywall
     assert ".verticalScroll(" in android_paywall
     assert android_paywall.index("bottomBar = {") < android_paywall.index("PrimaryButton(")
-    assert ".navigationBarsPadding()" in android_paywall
+    assert "ModalBottomSheet(" in android_paywall
     for label in ("Restore purchase", "Privacy Policy", "Start Monthly", "Start Annual"):
         assert label in android_paywall
 
@@ -213,6 +218,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert 'contentDescription = "Unlock Sound Arsenal"' in android_setup
     assert "Icons.Filled.Lock" in android_setup
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
+    android_paywall_norm = _android_paywall_em_dash_normalized(android_paywall)
     for expected in (
         "Full-length sessions — up to 60 minutes, no cutoffs",
         "Live voice callouts keep you sharp under pressure",
@@ -220,7 +226,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
         "Full sound arsenal — real bells, horns, and sirens",
         "Verified audio drops when new packs are ready",
     ):
-        assert expected in android_paywall
+        assert expected in android_paywall_norm
         assert expected in ios_paywall
 
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
