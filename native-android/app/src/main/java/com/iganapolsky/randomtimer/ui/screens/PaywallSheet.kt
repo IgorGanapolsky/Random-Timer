@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,17 +50,17 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
 internal const val PAYWALL_HEADLINE = "Stop Training With the Brakes On"
-internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills."
+internal const val PAYWALL_SUBHEADLINE = "Go unlimited \u2014 sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills."
 internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong When the Clock Attacks"
 internal const val PAYWALL_SUBHEADLINE_OUTCOMES_FIRST =
-    "Unlimited sessions, live voice callouts, and a full sound library — built so every rep feels like match pressure."
+    "Unlimited sessions, live voice callouts, and a full sound library \u2014 built so every rep feels like match pressure."
 internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
-        "Full-length sessions — up to 60 minutes, no cutoffs",
+        "Full-length sessions \u2014 up to 60 minutes, no cutoffs",
         "Live voice callouts keep you sharp under pressure",
-        "Loop drills with round limits — just like competition",
-        "Full sound arsenal — real bells, horns, and sirens",
+        "Loop drills with round limits \u2014 just like competition",
+        "Full sound arsenal \u2014 real bells, horns, and sirens",
         "Verified audio drops when new packs are ready",
     )
 
@@ -133,7 +132,6 @@ fun PaywallSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .navigationBarsPadding()
                             .padding(horizontal = 24.dp, vertical = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
