@@ -5,8 +5,8 @@ appId: com.igorganapolsky.randomtimer
     clearState: true
 - assertVisible: "Start Timer"
 - tapOn: "PRO: 1H"
-- assertVisible:
-    text: "Stop Training With the Brakes On"
+- extendedWaitUntil:
+    visible: "Stop Training With the Brakes On"
     timeout: 10000
 - scrollUntilVisible:
     element: "CHOOSE A PLAN"
