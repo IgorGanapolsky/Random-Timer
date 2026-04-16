@@ -18,7 +18,7 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "serious fighters and operators" not in full_description
     assert (
         short_description.strip()
-        == "Random timer for unpredictable MMA, boxing, BJJ & HIIT. AI voice callouts."
+        == "Random tactical timer: MMA, boxing, BJJ & HIIT. Random cues + AI coach voices."
     )
 
 
@@ -41,8 +41,8 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     assert "Built for combat sports, HIIT, CrossFit, and reaction training." in description
     assert (
         promotional_text.strip()
-        == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
+        == "Unpredictable intervals for combat sports & HIIT. AI coach voices, 60‑min sessions, full sound library—optional Pro."
     )
-    assert subtitle == "Dry Fire, Boxing, BJJ, HIIT"
-    assert "muay thai" in keywords
+    assert subtitle == "Random HIIT & combat rounds"
+    assert "mma" in keywords
     assert "crossfit" in keywords
