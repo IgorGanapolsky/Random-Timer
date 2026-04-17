@@ -243,6 +243,8 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testTimersAtLeastThirtySecondsScheduleFirstCommandCueAtThirtySeconds() {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 30), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 31), 30)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
     }
 

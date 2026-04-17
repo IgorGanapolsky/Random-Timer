@@ -270,7 +270,7 @@ internal fun nextPreviewCueFilename(
 
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
-        totalDurationSeconds <= 29 -> Int.MAX_VALUE
+        totalDurationSeconds <= 30 -> Int.MAX_VALUE
         else -> 30
     }
 

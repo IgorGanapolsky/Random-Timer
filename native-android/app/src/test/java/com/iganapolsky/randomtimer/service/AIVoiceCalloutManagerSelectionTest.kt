@@ -149,6 +149,8 @@ class AIVoiceCalloutManagerSelectionTest {
     fun timersAtLeastThirtySecondsScheduleFirstCommandCueAtThirtySeconds() {
         assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
         assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(30)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(31)).isEqualTo(30)
         assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
     }
 

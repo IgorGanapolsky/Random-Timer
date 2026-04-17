@@ -187,7 +187,7 @@ internal func nextPreviewFilename(
 
 internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int {
     switch totalDurationSeconds {
-    case ...29:
+    case ...30:
         return .max
     default:
         return 30
