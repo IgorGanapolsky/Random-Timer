@@ -101,12 +101,41 @@ def write_android_version_code(gradle_text: str, new_code: int) -> str:
     """Return gradle_text with defaultConfig versionCode literal updated to new_code.
 
     Supports ``versionCode = ciVersionCode ?: N`` and plain ``versionCode = N``.
+    Uses line-wise parsing (no nested-quantifier regex) for predictable Gradle layout.
     """
-    pattern = re.compile(r"(versionCode\s*=\s*(?:[^\n]*?\?:\s*)?)(\d+)")
-    new_text, n = pattern.subn(rf"\g<1>{new_code}", gradle_text, count=1)
-    if n != 1:
-        raise ValueError("Could not update versionCode in build.gradle.kts (expected exactly one match)")
-    return new_text
+    out_lines: list[str] = []
+    updated = 0
+    for line in gradle_text.splitlines(keepends=True):
+        without_nl = line.rstrip("\n\r")
+        nl_suffix = line[len(without_nl) :]
+        stripped = without_nl.lstrip()
+        if not stripped.startswith("versionCode") or stripped.startswith("//"):
+            out_lines.append(line)
+            continue
+        rhs = without_nl.split("=", 1)[1].split("//", 1)[0].strip()
+        if "?:" in rhs:
+            needle = "?: "
+            pos = without_nl.find(needle)
+            if pos != -1:
+                num_start = pos + len(needle)
+                tail = without_nl[num_start:]
+                if tail.isdigit():
+                    out_lines.append(without_nl[:num_start] + str(new_code) + nl_suffix)
+                    updated += 1
+                    continue
+        else:
+            m = re.match(r"^(\s*versionCode\s*=\s*)(\d+)(.*)$", without_nl)
+            if m:
+                out_lines.append(m.group(1) + str(new_code) + m.group(3) + nl_suffix)
+                updated += 1
+                continue
+        out_lines.append(line)
+
+    if updated != 1:
+        raise ValueError(
+            "Could not update versionCode in build.gradle.kts (expected exactly one defaultConfig line)"
+        )
+    return "".join(out_lines)
 
 
 # ---------------------------------------------------------------------------
