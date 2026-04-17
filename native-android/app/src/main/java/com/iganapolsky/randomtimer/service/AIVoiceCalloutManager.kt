@@ -103,7 +103,10 @@ private val fallbackVoiceCueCatalog =
     VoiceCueCatalog(
         previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Thirty seconds elapsed. Move with a purpose."),
         fallbackCommandFilename = "cmd_move_with_a_purpose",
-        elapsedCues = listOf(ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed. Move with a purpose.")),
+        elapsedCues =
+            listOf(
+                ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed. Keep pressure on."),
+            ),
         commandCues =
             listOf(
                 VoiceCue(filename = "cmd_move_with_a_purpose", text = "Move with a purpose."),
@@ -189,12 +192,19 @@ internal fun runtimeVoiceCueForElapsedSecond(
     return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
 }
 
+/**
+ * Returns a bundled "time elapsed" announcement only on full-minute marks (60, 120, …).
+ * Sub-minute rows in JSON are ignored here so command coaching stays on its own cadence.
+ */
 internal fun runtimeVoiceCueForElapsedMark(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
 ): VoiceCue? {
     if (elapsedSeconds <= 0) {
+        return null
+    }
+    if (elapsedSeconds % 60 != 0) {
         return null
     }
     return runtimeVoiceCueForElapsedSecond(
@@ -260,8 +270,8 @@ internal fun nextPreviewCueFilename(
 
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
-        totalDurationSeconds <= 29 -> Int.MAX_VALUE
-        else -> 15
+        totalDurationSeconds <= 30 -> Int.MAX_VALUE
+        else -> 30
     }
 
 @Singleton

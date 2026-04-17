@@ -252,10 +252,13 @@ def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
 
 def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+    ios_voice_service = _read(IOS_VOICE_SERVICE)
 
     assert "runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert "else -> 15" in android_voice_manager
+    assert "else -> 30" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
+    assert "totalDurationSeconds <= 30 -> Int.MAX_VALUE" in android_voice_manager
+    assert "case ...30:" in ios_voice_service
 
 
 def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
