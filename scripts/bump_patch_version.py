@@ -291,9 +291,6 @@ def main() -> int:
         skip_changelog=args.skip_changelog,
     )
     print(f"\nNew version: {new_version}")
-    if not args.dry_run:
-        # Write the new version to stdout in a format the shell can capture
-        print(f"::set-output name=new_version::{new_version}", flush=True)
     return 0
 
 
