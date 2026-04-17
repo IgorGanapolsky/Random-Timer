@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Bump the patch version component across both Android (build.gradle.kts) and
-iOS (project.pbxproj) source files, then update the store changelog files.
+iOS (project.pbxproj) source files, bump Android ``versionCode`` by one for the
+next Play upload, then write the Android changelog for that new code (so the
+previous release's changelog file is never overwritten).
 
 Example: 1.3.19 → 1.3.20
 
@@ -92,6 +94,18 @@ def write_android_version(gradle_text: str, new_version: str) -> str:
     new_text, n = pattern.subn(replacement, gradle_text)
     if n == 0:
         raise ValueError("Could not update versionName in build.gradle.kts")
+    return new_text
+
+
+def write_android_version_code(gradle_text: str, new_code: int) -> str:
+    """Return gradle_text with defaultConfig versionCode literal updated to new_code.
+
+    Supports ``versionCode = ciVersionCode ?: N`` and plain ``versionCode = N``.
+    """
+    pattern = re.compile(r"(versionCode\s*=\s*(?:[^\n]*?\?:\s*)?)(\d+)")
+    new_text, n = pattern.subn(rf"\g<1>{new_code}", gradle_text, count=1)
+    if n != 1:
+        raise ValueError("Could not update versionCode in build.gradle.kts (expected exactly one match)")
     return new_text
 
 
@@ -191,13 +205,16 @@ def bump(
     major, minor, patch = _parse_semver(android_ver)
     new_major, new_minor, new_patch = _bump_patch(major, minor, patch)
     new_version = _semver_str(new_major, new_minor, new_patch)
+    next_version_code = android_version_code + 1
     print(f"Bumping {android_ver} → {new_version}")
+    print(f"Android versionCode {android_version_code} → {next_version_code} (Play changelog filename)")
 
     if dry_run:
         print("[dry-run] No files written.")
     else:
-        # Write Android
+        # Write Android (semver + monotonic versionCode for the new upload)
         new_gradle = write_android_version(gradle_text, new_version)
+        new_gradle = write_android_version_code(new_gradle, next_version_code)
         ANDROID_GRADLE.write_text(new_gradle, encoding="utf-8")
         print(f"  ✅ Updated {ANDROID_GRADLE.relative_to(REPO_ROOT)}")
 
@@ -209,7 +226,7 @@ def bump(
         print("  Skipped store changelog updates.")
     else:
         message = _build_changelog_message(changelog_message)
-        update_android_changelog(android_version_code, message, dry_run)
+        update_android_changelog(next_version_code, message, dry_run)
         update_ios_release_notes(message, dry_run)
 
     return new_version
