@@ -216,7 +216,7 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
     assert 'contentDescription = "Unlock Sound Arsenal"' in android_setup
-    assert "Icons.Filled.Lock" in android_setup
+    assert 'onUpgradeTap("pro_sounds")' in android_setup
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     android_paywall_norm = _android_paywall_em_dash_normalized(android_paywall)
     for expected in (
