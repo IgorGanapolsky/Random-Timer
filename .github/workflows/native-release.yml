@@ -1016,7 +1016,7 @@ jobs:
             exit 0
           fi
           git checkout -b "$BRANCH"
-          git commit -m "chore: bump develop to v${NEW_VER} after ${TAG} release [skip ci]"
+          git commit -m "chore: bump develop to v${NEW_VER} after ${TAG} release"
           git push origin "HEAD:refs/heads/${BRANCH}"
           gh pr create \
             --repo "${GITHUB_REPOSITORY}" \
