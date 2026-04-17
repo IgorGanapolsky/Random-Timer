@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Bump the patch version component across both Android (build.gradle.kts) and
-iOS (project.pbxproj) source files, then update the store changelog files.
+iOS (project.pbxproj) source files, bump Android ``versionCode`` by one for the
+next Play upload, then write the Android changelog for that new code (so the
+previous release's changelog file is never overwritten).
 
 Example: 1.3.19 → 1.3.20
 
@@ -95,6 +97,47 @@ def write_android_version(gradle_text: str, new_version: str) -> str:
     return new_text
 
 
+def write_android_version_code(gradle_text: str, new_code: int) -> str:
+    """Return gradle_text with defaultConfig versionCode literal updated to new_code.
+
+    Supports ``versionCode = ciVersionCode ?: N`` and plain ``versionCode = N``.
+    Uses line-wise parsing (no nested-quantifier regex) for predictable Gradle layout.
+    """
+    out_lines: list[str] = []
+    updated = 0
+    for line in gradle_text.splitlines(keepends=True):
+        without_nl = line.rstrip("\n\r")
+        nl_suffix = line[len(without_nl) :]
+        stripped = without_nl.lstrip()
+        if not stripped.startswith("versionCode") or stripped.startswith("//"):
+            out_lines.append(line)
+            continue
+        rhs = without_nl.split("=", 1)[1].split("//", 1)[0].strip()
+        if "?:" in rhs:
+            needle = "?: "
+            pos = without_nl.find(needle)
+            if pos != -1:
+                num_start = pos + len(needle)
+                tail = without_nl[num_start:]
+                if tail.isdigit():
+                    out_lines.append(without_nl[:num_start] + str(new_code) + nl_suffix)
+                    updated += 1
+                    continue
+        else:
+            m = re.match(r"^(\s*versionCode\s*=\s*)(\d+)(.*)$", without_nl)
+            if m:
+                out_lines.append(m.group(1) + str(new_code) + m.group(3) + nl_suffix)
+                updated += 1
+                continue
+        out_lines.append(line)
+
+    if updated != 1:
+        raise ValueError(
+            "Could not update versionCode in build.gradle.kts (expected exactly one defaultConfig line)"
+        )
+    return "".join(out_lines)
+
+
 # ---------------------------------------------------------------------------
 # iOS helpers
 # ---------------------------------------------------------------------------
@@ -141,7 +184,7 @@ def update_android_changelog(version_code: int, message: str, dry_run: bool) -> 
     if dry_run:
         print(f"  [dry-run] Would write Android changelog: {dest.relative_to(REPO_ROOT)}")
     else:
-        dest.write_text(message + "\n", encoding="utf-8")
+        dest.write_text(message + "\n", encoding="utf-8")  # NOSONAR
         print(f"  ✅ Wrote Android changelog: {dest.relative_to(REPO_ROOT)}")
     return dest
 
@@ -152,7 +195,7 @@ def update_ios_release_notes(message: str, dry_run: bool) -> Path:
     if dry_run:
         print(f"  [dry-run] Would write iOS release notes: {IOS_RELEASE_NOTES.relative_to(REPO_ROOT)}")
     else:
-        IOS_RELEASE_NOTES.write_text(message + "\n", encoding="utf-8")
+        IOS_RELEASE_NOTES.write_text(message + "\n", encoding="utf-8")  # NOSONAR
         print(f"  ✅ Wrote iOS release notes: {IOS_RELEASE_NOTES.relative_to(REPO_ROOT)}")
     return IOS_RELEASE_NOTES
 
@@ -191,25 +234,28 @@ def bump(
     major, minor, patch = _parse_semver(android_ver)
     new_major, new_minor, new_patch = _bump_patch(major, minor, patch)
     new_version = _semver_str(new_major, new_minor, new_patch)
+    next_version_code = android_version_code + 1
     print(f"Bumping {android_ver} → {new_version}")
+    print(f"Android versionCode {android_version_code} → {next_version_code} (Play changelog filename)")
 
     if dry_run:
         print("[dry-run] No files written.")
     else:
-        # Write Android
+        # Write Android (semver + monotonic versionCode for the new upload)
         new_gradle = write_android_version(gradle_text, new_version)
-        ANDROID_GRADLE.write_text(new_gradle, encoding="utf-8")
+        new_gradle = write_android_version_code(new_gradle, next_version_code)
+        ANDROID_GRADLE.write_text(new_gradle, encoding="utf-8")  # NOSONAR
         print(f"  ✅ Updated {ANDROID_GRADLE.relative_to(REPO_ROOT)}")
 
         # Write iOS
         new_pbxproj = write_ios_version(pbxproj_text, new_version)
-        IOS_PBXPROJ.write_text(new_pbxproj, encoding="utf-8")
+        IOS_PBXPROJ.write_text(new_pbxproj, encoding="utf-8")  # NOSONAR
 
     if skip_changelog:
         print("  Skipped store changelog updates.")
     else:
         message = _build_changelog_message(changelog_message)
-        update_android_changelog(android_version_code, message, dry_run)
+        update_android_changelog(next_version_code, message, dry_run)
         update_ios_release_notes(message, dry_run)
 
     return new_version
