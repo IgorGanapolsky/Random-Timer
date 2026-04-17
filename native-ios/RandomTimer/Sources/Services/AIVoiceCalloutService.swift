@@ -76,7 +76,7 @@ private let fallbackVoiceCueCatalog = VoiceCueCatalog(
     ),
     fallbackCommandFilename: "cmd_move_with_a_purpose",
     elapsedCues: [
-        .init(second: 30, filename: "elapsed_30s", text: "Thirty seconds elapsed. Move with a purpose.")
+        .init(second: 60, filename: "elapsed_60s", text: "One minute elapsed. Keep pressure on.")
     ],
     commandCues: [
         .init(filename: "cmd_move_with_a_purpose", text: "Move with a purpose."),
@@ -190,7 +190,7 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     case ...29:
         return .max
     default:
-        return 15
+        return 30
     }
 }
 
@@ -348,8 +348,12 @@ final class AIVoiceCalloutService {
         }
     }
 
+    /// "Time elapsed" lines only on full-minute marks (60, 120, …). Other seconds use command cues only.
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
         let catalog = packStore.voiceCatalog(bundle: bundle)
+        guard elapsed > 0, elapsed % 60 == 0 else {
+            return nil
+        }
         guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
             return nil
         }

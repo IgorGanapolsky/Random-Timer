@@ -254,7 +254,7 @@ def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
     assert "runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert "else -> 15" in android_voice_manager
+    assert "else -> 30" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
 
 
