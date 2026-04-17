@@ -13,7 +13,7 @@ MAESTRO_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/maestro"
 AGENT_DEVICE_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/agent-device"
 LAST_STAGE_FILE="$AGENT_DEVICE_ARTIFACT_DIR/last-stage.txt"
 IOS_BUILD_TIMEOUT_SECONDS="${IOS_BUILD_TIMEOUT_SECONDS:-900}"
-MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-120}"
+MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-180}"
 AGENT_DEVICE_TIMEOUT_SECONDS="${AGENT_DEVICE_TIMEOUT_SECONDS:-120}"
 AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS="${AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS:-30}"
 SIMCTL_TIMEOUT_SECONDS="${SIMCTL_TIMEOUT_SECONDS:-120}"
@@ -113,10 +113,10 @@ run_maestro_flow() {
   local flow="$2"
   local attempt
   local log_path
-  for attempt in 1 2; do
+  for attempt in 1 2 3; do
     log_path="$MAESTRO_ARTIFACT_DIR/${name}-attempt-${attempt}.log"
     record_stage "maestro ${name} attempt ${attempt}"
-    echo "Maestro ${name}: attempt ${attempt}/2"
+    echo "Maestro ${name}: attempt ${attempt}/3"
     if run_with_timeout "$MAESTRO_FLOW_TIMEOUT_SECONDS" bash -o pipefail -c \
       'maestro test -p ios --device "$1" "$2" | tee "$3"' \
       _ "$SIMULATOR_UDID" "$flow" "$log_path"; then

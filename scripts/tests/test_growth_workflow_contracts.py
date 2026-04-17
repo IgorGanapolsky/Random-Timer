@@ -355,6 +355,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
     trigger_section = source.split("concurrency:", 1)[0]
 
+    assert "cancel-in-progress: false" in source
     assert "pull_request:" in trigger_section
     assert "branches: [develop, main]" in trigger_section
     assert "paths:" not in trigger_section
@@ -378,7 +379,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "run_maestro_flow" in ios_script
     assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
     assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
-    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-120" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-180" in ios_script
     assert "xcrun simctl privacy \"$SIMULATOR_UDID\" grant notifications \"$BUNDLE_ID\"" in ios_script
     assert "xcrun simctl terminate \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
