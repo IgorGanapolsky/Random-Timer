@@ -249,7 +249,8 @@ def test_bundled_sound_catalog_pack_id_matches_runtime_manifest():
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():
     catalog = _load_ios_voice_catalog()
 
-    assert len(catalog["elapsedCues"]) >= 12
+    # Minute-only elapsed rows (60s, 120s, …); bundled list is shorter than legacy half-minute grid.
+    assert len(catalog["elapsedCues"]) >= 8
     assert len(catalog["commandCues"]) >= 20
     assert all("elapsed" in cue["text"].lower() for cue in catalog["elapsedCues"])
     assert catalog["fallbackCommandFilename"] in _ios_catalog_filenames(catalog)

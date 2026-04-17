@@ -5,9 +5,11 @@ on:
     branches: [develop, main]
   workflow_dispatch:
 
+# Do not cancel in-flight device jobs: iOS Maestro + Agent Device often runs 15–25+ minutes.
+# A new push would previously abort mid-flow (looks like a flake, blocks merge, wastes runner time).
 concurrency:
   group: device-tests-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   changes:
@@ -116,7 +118,7 @@ jobs:
     runs-on: macos-15
     permissions:
       contents: read
-    timeout-minutes: 35
+    timeout-minutes: 50
 
     steps:
       - uses: actions/checkout@v6
@@ -203,6 +205,7 @@ jobs:
       - name: Run iOS UI smoke tests on simulator
         env:
           SIMULATOR_UDID: ${{ steps.sim.outputs.sim_id }}
+          MAESTRO_FLOW_TIMEOUT_SECONDS: "180"
         run: bash scripts/device-tests/ci-maestro-ios.sh
 
       - name: Upload iOS device test artifacts

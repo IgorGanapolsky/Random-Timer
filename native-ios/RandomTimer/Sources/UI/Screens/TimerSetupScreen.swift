@@ -353,9 +353,16 @@ struct TimerSetupScreen: View {
                         Button {
                             presentPaywall(entryPoint: .soundGate)
                         } label: {
-                            Image(systemName: "lock.fill")
-                                .font(.caption2)
-                                .foregroundColor(.textMuted)
+                            HStack(spacing: 4) {
+                                Text("PRO")
+                                Image(systemName: "lock.fill")
+                            }
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.accentPrimary.opacity(0.1))
+                            .foregroundColor(.accentPrimary)
+                            .cornerRadius(4)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Unlock Sound Arsenal")

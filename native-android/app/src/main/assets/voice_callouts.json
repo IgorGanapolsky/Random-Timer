@@ -6,19 +6,9 @@
   "fallbackCommandFilename": "cmd_move_with_a_purpose",
   "elapsedCues": [
     {
-      "second": 30,
-      "filename": "elapsed_30s",
-      "text": "Thirty seconds elapsed. Stay locked in."
-    },
-    {
       "second": 60,
       "filename": "elapsed_60s",
       "text": "One minute elapsed. Keep pressure on."
-    },
-    {
-      "second": 90,
-      "filename": "elapsed_90s",
-      "text": "One minute thirty elapsed. Stay disciplined."
     },
     {
       "second": 120,
@@ -26,19 +16,9 @@
       "text": "Two minutes elapsed. Pick it up."
     },
     {
-      "second": 150,
-      "filename": "elapsed_150s",
-      "text": "Two minutes thirty elapsed. Stay sharp and keep driving."
-    },
-    {
       "second": 180,
       "filename": "elapsed_180s",
       "text": "Three minutes elapsed. Sound off and move."
-    },
-    {
-      "second": 210,
-      "filename": "elapsed_210s",
-      "text": "Three minutes thirty elapsed. Do not coast."
     },
     {
       "second": 240,
