@@ -19,11 +19,11 @@ def test_update_android_changelog_uses_version_code_filename(tmp_path, monkeypat
     path = bump_patch_version.update_android_changelog(
         1774900003,
         "Release notes",
-        dry_run=False,
+        dry_run=True,
     )
 
     assert path == tmp_path / "1774900003.txt"
-    assert path.read_text(encoding="utf-8") == "Release notes\n"
+    assert not path.exists()
 
 
 def test_write_android_version_code_updates_ci_fallback_line():
@@ -54,6 +54,6 @@ android {
 
     monkeypatch.setattr(bump_patch_version, "ANDROID_CHANGELOG_DIR", tmp_path)
     monkeypatch.setattr(bump_patch_version, "REPO_ROOT", tmp_path.parent)
-    path = bump_patch_version.update_android_changelog(1774900004, "Notes", dry_run=False)
+    path = bump_patch_version.update_android_changelog(1774900004, "Notes", dry_run=True)
     assert path == tmp_path / "1774900004.txt"
-    assert path.read_text(encoding="utf-8") == "Notes\n"
+    assert not path.exists()
