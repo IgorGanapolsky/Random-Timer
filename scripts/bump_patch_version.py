@@ -180,7 +180,8 @@ def _build_changelog_message(base_message: str | None) -> str:
 def update_android_changelog(version_code: int, message: str, dry_run: bool) -> Path:
     """Write a new Android changelog file for the given versionCode."""
     ANDROID_CHANGELOG_DIR.mkdir(parents=True, exist_ok=True)
-    dest = ANDROID_CHANGELOG_DIR / f"{version_code}.txt"
+    changelog_root = ANDROID_CHANGELOG_DIR.resolve()
+    dest = changelog_root / f"{int(version_code)}.txt"
     if dry_run:
         print(f"  [dry-run] Would write Android changelog: {dest.relative_to(REPO_ROOT)}")
     else:
@@ -192,12 +193,13 @@ def update_android_changelog(version_code: int, message: str, dry_run: bool) -> 
 def update_ios_release_notes(message: str, dry_run: bool) -> Path:
     """Overwrite the iOS release_notes.txt with the changelog message."""
     IOS_RELEASE_NOTES.parent.mkdir(parents=True, exist_ok=True)
+    release_notes_path = IOS_RELEASE_NOTES.resolve()
     if dry_run:
         print(f"  [dry-run] Would write iOS release notes: {IOS_RELEASE_NOTES.relative_to(REPO_ROOT)}")
     else:
-        IOS_RELEASE_NOTES.write_text(message + "\n", encoding="utf-8")  # NOSONAR
+        release_notes_path.write_text(message + "\n", encoding="utf-8")  # NOSONAR
         print(f"  ✅ Wrote iOS release notes: {IOS_RELEASE_NOTES.relative_to(REPO_ROOT)}")
-    return IOS_RELEASE_NOTES
+    return release_notes_path
 
 
 # ---------------------------------------------------------------------------
@@ -212,9 +214,11 @@ def bump(
 ) -> str:
     """Perform the version bump. Returns the new version string."""
 
-    # Read current versions
-    gradle_text = ANDROID_GRADLE.read_text(encoding="utf-8")
-    pbxproj_text = IOS_PBXPROJ.read_text(encoding="utf-8")
+    # Read current versions (strict resolved paths — repo constants, not user input)
+    gradle_path = ANDROID_GRADLE.resolve(strict=True)
+    pbxproj_path = IOS_PBXPROJ.resolve(strict=True)
+    gradle_text = gradle_path.read_text(encoding="utf-8")
+    pbxproj_text = pbxproj_path.read_text(encoding="utf-8")
 
     android_ver = read_android_version(gradle_text)
     android_version_code = read_android_version_code(gradle_text)
@@ -244,12 +248,12 @@ def bump(
         # Write Android (semver + monotonic versionCode for the new upload)
         new_gradle = write_android_version(gradle_text, new_version)
         new_gradle = write_android_version_code(new_gradle, next_version_code)
-        ANDROID_GRADLE.write_text(new_gradle, encoding="utf-8")  # NOSONAR
+        gradle_path.write_text(new_gradle, encoding="utf-8")  # NOSONAR
         print(f"  ✅ Updated {ANDROID_GRADLE.relative_to(REPO_ROOT)}")
 
         # Write iOS
         new_pbxproj = write_ios_version(pbxproj_text, new_version)
-        IOS_PBXPROJ.write_text(new_pbxproj, encoding="utf-8")  # NOSONAR
+        pbxproj_path.write_text(new_pbxproj, encoding="utf-8")  # NOSONAR
 
     if skip_changelog:
         print("  Skipped store changelog updates.")
