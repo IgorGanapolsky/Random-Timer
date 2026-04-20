@@ -168,6 +168,7 @@ def resolve_version(
     preferred_version: str,
     create_if_needed: bool,
     auto_next_patch: bool,
+    allow_review_locked_preferred: bool = False,
 ) -> Resolution:
     versions = _list_ios_versions(client, app_id)
     highest_editable = _pick_highest_editable_version(versions)
@@ -213,6 +214,16 @@ def resolve_version(
                 selected_state=state,
                 created=False,
                 reason="preferred_version_editable",
+                selected_id=str(current.get("id") or ""),
+                preferred_version=preferred_version,
+            )
+
+        if allow_review_locked_preferred and state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
+            return Resolution(
+                selected_version=preferred_version,
+                selected_state=state,
+                created=False,
+                reason="preferred_version_review_locked_api_target",
                 selected_id=str(current.get("id") or ""),
                 preferred_version=preferred_version,
             )
@@ -366,6 +377,14 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--preferred-version", required=True, help="Preferred marketing version (X.Y.Z).")
     p.add_argument("--create-if-needed", action="store_true", help="Create target version when missing.")
     p.add_argument("--auto-next-patch", action="store_true", help="If preferred version is not editable, target next patch.")
+    p.add_argument(
+        "--allow-review-locked-preferred",
+        action="store_true",
+        help=(
+            "If the preferred version exists in WAITING_FOR_REVIEW or IN_REVIEW, still return it for "
+            "API-only steps (e.g. localization / What's New patches). Unsafe for naive Fastlane storefront uploads."
+        ),
+    )
     p.add_argument("--json-out", help="Write JSON resolution payload to this path.")
     return p.parse_args()
 
@@ -392,6 +411,7 @@ def main() -> int:
         preferred_version=args.preferred_version,
         create_if_needed=args.create_if_needed,
         auto_next_patch=args.auto_next_patch,
+        allow_review_locked_preferred=args.allow_review_locked_preferred,
     )
     payload = {
         "bundle_id": args.bundle_id,
