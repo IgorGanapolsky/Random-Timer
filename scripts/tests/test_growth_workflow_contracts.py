@@ -120,7 +120,7 @@ def test_internal_distribution_skips_impossible_auto_ios_uploads_without_signoff
 
     assert "uploaded: ${{ steps.ios_lineage.outputs.uploadable }}" in ios_job
     assert "DISTRIBUTION_REASON: ${{ needs.gate.outputs.reason }}" in ios_job
-    assert "blocked by closed App Store version" in ios_job
+    assert "blocked by (closed|a distribution-locked) App Store version" in ios_job
     assert "Skipping automatic iOS TestFlight upload" in ios_job
     assert "Record skipped iOS TestFlight upload" in ios_job
     assert "if: steps.ios_lineage.outputs.uploadable == 'true'" in ios_job

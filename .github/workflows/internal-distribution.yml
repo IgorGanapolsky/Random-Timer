@@ -259,7 +259,7 @@ jobs:
             echo "uploadable=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [[ "$DISTRIBUTION_REASON" != "manual_dispatch" ]] && printf '%s\n' "$output" | grep -q "blocked by closed App Store version"; then
+          if [[ "$DISTRIBUTION_REASON" != "manual_dispatch" ]] && printf '%s\n' "$output" | grep -Eq "blocked by (closed|a distribution-locked) App Store version"; then
             reason="$(printf '%s\n' "$output" | tail -n 1)"
             echo "::warning::Skipping automatic iOS TestFlight upload: $reason"
             echo "uploadable=false" >> "$GITHUB_OUTPUT"

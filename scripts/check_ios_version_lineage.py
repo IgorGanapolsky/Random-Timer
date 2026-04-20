@@ -26,23 +26,19 @@ except ModuleNotFoundError:
 
 
 SEMVER_RE = re.compile(r"^\s*(\d+)\.(\d+)\.(\d+)\s*$")
-APP_STORE_CLOSED_STATES = {
-    "ACCEPTED",
-    "APPROVED",
-    "IN_REVIEW",
-    "PENDING_APPLE_RELEASE",
-    "PENDING_DEVELOPER_RELEASE",
-    "PENDING_DEVELOPER_RELEASE_REJECTED",
-    "PENDING_RELEASE",
-    "PREORDER_READY_FOR_SALE",
-    "PROCESSING_FOR_DISTRIBUTION",
-    "READY_FOR_DISTRIBUTION",
-    "READY_FOR_SALE",
-    "REMOVED_FROM_SALE",
-    "REPLACED_WITH_NEW_VERSION",
-    "WAITING_FOR_EXPORT_COMPLIANCE",
-    "WAITING_FOR_REVIEW",
-}
+# Marketing-version "lock" only after the version is in a terminal / distribution state.
+# In-review and pre-submission trains still allow new TestFlight builds for the same
+# marketing version (Apple may reject the new binary for other reasons).
+APP_STORE_VERSION_LOCKED_STATES = frozenset(
+    {
+        "PREORDER_READY_FOR_SALE",
+        "PROCESSING_FOR_DISTRIBUTION",
+        "READY_FOR_DISTRIBUTION",
+        "READY_FOR_SALE",
+        "REMOVED_FROM_SALE",
+        "REPLACED_WITH_NEW_VERSION",
+    }
+)
 
 
 class LineageError(RuntimeError):
@@ -213,11 +209,11 @@ def evaluate_lineage(
     highest_remote_app_store_version, highest_remote_app_store_state = _highest_version_by_state(
         remote_app_store_versions
     )
-    highest_closed_app_store_version, _ = _highest_version_by_state(
+    highest_locked_app_store_version, _ = _highest_version_by_state(
         {
             version: state
             for version, state in remote_app_store_versions.items()
-            if state in APP_STORE_CLOSED_STATES
+            if state in APP_STORE_VERSION_LOCKED_STATES
         }
     )
     highest_remote_version = _highest_semver(
@@ -238,7 +234,7 @@ def evaluate_lineage(
             highest_remote_version=None,
             highest_remote_app_store_version=highest_remote_app_store_version,
             highest_remote_app_store_state=highest_remote_app_store_state,
-            highest_closed_app_store_version=highest_closed_app_store_version,
+            highest_closed_app_store_version=highest_locked_app_store_version,
             highest_remote_build_for_highest_version=None,
             highest_remote_build_for_local_version=highest_remote_build_for_local_version,
             passed=True,
@@ -253,7 +249,7 @@ def evaluate_lineage(
             highest_remote_version=highest_remote_version,
             highest_remote_app_store_version=highest_remote_app_store_version,
             highest_remote_app_store_state=highest_remote_app_store_state,
-            highest_closed_app_store_version=highest_closed_app_store_version,
+            highest_closed_app_store_version=highest_locked_app_store_version,
             highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
             highest_remote_build_for_local_version=highest_remote_build_for_local_version,
             passed=False,
@@ -264,8 +260,8 @@ def evaluate_lineage(
         )
 
     if (
-        highest_closed_app_store_version is not None
-        and _parse_semver(local_version) <= _parse_semver(highest_closed_app_store_version)
+        highest_locked_app_store_version is not None
+        and _parse_semver(local_version) <= _parse_semver(highest_locked_app_store_version)
     ):
         return LineageReport(
             bundle_id=bundle_id,
@@ -274,13 +270,13 @@ def evaluate_lineage(
             highest_remote_version=highest_remote_version,
             highest_remote_app_store_version=highest_remote_app_store_version,
             highest_remote_app_store_state=highest_remote_app_store_state,
-            highest_closed_app_store_version=highest_closed_app_store_version,
+            highest_closed_app_store_version=highest_locked_app_store_version,
             highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
             highest_remote_build_for_local_version=highest_remote_build_for_local_version,
             passed=False,
             reason=(
-                f"Local iOS marketing version {local_version} is blocked by closed App Store "
-                f"version {highest_closed_app_store_version}; bump the marketing version first"
+                f"Local iOS marketing version {local_version} is blocked by a distribution-locked "
+                f"App Store version {highest_locked_app_store_version}; bump the marketing version first"
             ),
         )
 
@@ -299,7 +295,7 @@ def evaluate_lineage(
         highest_remote_version=highest_remote_version,
         highest_remote_app_store_version=highest_remote_app_store_version,
         highest_remote_app_store_state=highest_remote_app_store_state,
-        highest_closed_app_store_version=highest_closed_app_store_version,
+        highest_closed_app_store_version=highest_locked_app_store_version,
         highest_remote_build_for_highest_version=highest_remote_build_for_highest_version,
         highest_remote_build_for_local_version=highest_remote_build_for_local_version,
         passed=True,
@@ -356,7 +352,7 @@ def main() -> int:
         )
     if report.highest_closed_app_store_version is not None:
         print(
-            "ASC highest closed App Store version: "
+            "ASC highest distribution-locked App Store version: "
             f"{report.highest_closed_app_store_version}"
         )
     if report.highest_remote_build_for_highest_version is not None:
