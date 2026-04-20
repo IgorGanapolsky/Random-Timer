@@ -1,0 +1,141 @@
+name: Store Release Watcher
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Marketing version to watch'
+        required: false
+        default: '1.3.24'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: store-release-watcher
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_VERSION: ${{ inputs.version || '1.3.24' }}
+      IOS_BUNDLE: com.igorganapolsky.randomtimer
+      ANDROID_PACKAGE: com.iganapolsky.randomtimer
+      ISSUE_TITLE_PREFIX: 'Release watch: v'
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: python -m pip install --quiet pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
+
+      - name: Write ASC API key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+      - name: Poll ASC state
+        id: asc
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json 2>/dev/null || echo '{}')"
+          STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); print(d.get("state","UNKNOWN"))')"
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
+          echo "json=$STATE_JSON" >> "$GITHUB_OUTPUT"
+          echo "iOS App Store state for $TARGET_VERSION: $STATE"
+
+      - name: Poll Play public listing
+        id: play
+        run: |
+          set -euo pipefail
+          STATUS="UNKNOWN"
+          DETAILS=""
+          if python scripts/verify_play_public_listing.py \
+              --package "$ANDROID_PACKAGE" \
+              --expected-version "$TARGET_VERSION" \
+              --timeout 60 \
+              --poll-interval 10 > /tmp/play.log 2>&1; then
+            STATUS="LIVE"
+          else
+            STATUS="PENDING"
+          fi
+          DISPLAYED="$(grep -oE 'displayed[_ ]version[^ ]*[[:space:]]*[=:][[:space:]]*[0-9.]+' /tmp/play.log | head -1 || true)"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "displayed=$DISPLAYED" >> "$GITHUB_OUTPUT"
+          echo "--- play.log ---"
+          cat /tmp/play.log || true
+
+      - name: Resolve watcher issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="${ISSUE_TITLE_PREFIX}${TARGET_VERSION}"
+          NUM="$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)"
+          if [ -z "$NUM" ]; then
+            BODY="Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 30 min by \`store-release-watcher.yml\`."
+            NUM="$(gh issue create --title "$TITLE" --body "$BODY" --label release-watch 2>/dev/null | awk -F/ '{print $NF}' || true)"
+            if [ -z "$NUM" ]; then
+              NUM="$(gh issue create --title "$TITLE" --body "$BODY" | awk -F/ '{print $NF}')"
+            fi
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Detect state change and notify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.issue.outputs.number }}
+          IOS_STATE: ${{ steps.asc.outputs.state }}
+          PLAY_STATUS: ${{ steps.play.outputs.status }}
+          PLAY_DISPLAYED: ${{ steps.play.outputs.displayed }}
+        run: |
+          set -euo pipefail
+          CUR="ios=${IOS_STATE}|play=${PLAY_STATUS}"
+          MARKER="<!-- watcher-state: "
+          BODY="$(gh issue view "$ISSUE_NUM" --json body --jq .body)"
+          PREV="$(echo "$BODY" | grep -oE "${MARKER}[^ ]+ -->" | sed "s|${MARKER}||;s| -->||" | tail -1 || true)"
+
+          NOW_ISO="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          SNAPSHOT=$(printf '%s\n\n- iOS App Store state: **%s**\n- Google Play public listing: **%s** %s\n- Last poll: %s\n\n%s%s -->' \
+            "Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 30 min." \
+            "$IOS_STATE" "$PLAY_STATUS" "$PLAY_DISPLAYED" "$NOW_ISO" "$MARKER" "$CUR")
+          printf '%s' "$SNAPSHOT" > /tmp/issue-body.md
+          gh issue edit "$ISSUE_NUM" --body-file /tmp/issue-body.md >/dev/null
+
+          if [ "$PREV" != "$CUR" ]; then
+            echo "State changed: '$PREV' -> '$CUR'"
+            COMMENT=$(printf '🔔 Store state change detected at %s\n\n- iOS: `%s`\n- Play: `%s` %s\n\nPrev: `%s`\nNow:  `%s`' \
+              "$NOW_ISO" "$IOS_STATE" "$PLAY_STATUS" "$PLAY_DISPLAYED" "${PREV:-first-poll}" "$CUR")
+            printf '%s' "$COMMENT" > /tmp/comment.md
+            gh issue comment "$ISSUE_NUM" --body-file /tmp/comment.md
+          else
+            echo "No state change since last poll ($CUR)"
+          fi
+
+      - name: Close watcher if both stores live
+        if: steps.asc.outputs.state == 'READY_FOR_SALE' && steps.play.outputs.status == 'LIVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.issue.outputs.number }}
+        run: |
+          gh issue comment "$ISSUE_NUM" --body "✅ v${TARGET_VERSION} is LIVE on both stores. Closing watcher."
+          gh issue close "$ISSUE_NUM" --reason completed
