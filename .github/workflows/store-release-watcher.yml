@@ -50,10 +50,11 @@ jobs:
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           PYTHONPATH: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json 2>/dev/null || echo '{}')"
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json || echo '{}')"
           STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); print(d.get("state","UNKNOWN"))')"
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
           echo "json=$STATE_JSON" >> "$GITHUB_OUTPUT"
