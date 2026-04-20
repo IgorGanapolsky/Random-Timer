@@ -970,6 +970,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6.0.2
         with:
@@ -997,15 +998,41 @@ jobs:
           NEW_VERSION=$(python3 scripts/source_versions.py --repo-root . --format json \
             | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Bumped develop to v${NEW_VERSION}"
+          echo "Bumped working tree to v${NEW_VERSION} (will open PR — develop is protected)"
 
-      - name: Commit and push version bump to develop
+      - name: Open pull request for develop version bump
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "❌ ADMIN_TOKEN is required to open the post-release bump PR (direct push to develop is blocked by branch protection)."
+            exit 1
+          fi
+          TAG="${{ needs.tag-release.outputs.tag || 'unknown' }}"
+          NEW_VERSION="${{ steps.bump.outputs.new_version }}"
+          BRANCH="chore/bump-develop-post-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
           git add native-android/app/build.gradle.kts \
                   native-ios/RandomTimer.xcodeproj/project.pbxproj \
                   native-android/fastlane/metadata/android/en-US/changelogs/ \
                   native-ios/fastlane/metadata/en-US/release_notes.txt
-          git diff --cached --quiet && echo "Nothing to commit" && exit 0
-          git commit -m "chore: bump develop to v${{ steps.bump.outputs.new_version }} after ${{ needs.tag-release.outputs.tag }} release [skip ci]"
-          git push origin develop
-          echo "✅ develop is now at v${{ steps.bump.outputs.new_version }}"
+          if git diff --cached --quiet; then
+            echo "Nothing to commit — skipping PR."
+            exit 0
+          fi
+          git commit -m "chore: bump develop to v${NEW_VERSION} after ${TAG} release [skip ci]"
+          git push -u origin "$BRANCH"
+          BODY_FILE="$(mktemp)"
+          {
+            echo "Automated post-release version bump after tag \`${TAG}\`."
+            echo ""
+            echo "develop rejects direct pushes; merge this PR to align develop with the next patch train."
+            echo ""
+            echo "Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > "$BODY_FILE"
+          gh pr create --repo "${{ github.repository }}" --base develop --head "$BRANCH" \
+            --title "chore: bump develop to v${NEW_VERSION} after ${TAG}" \
+            --body-file "$BODY_FILE"
+          rm -f "$BODY_FILE"
+          echo "✅ Opened PR for develop version bump (branch ${BRANCH})"
