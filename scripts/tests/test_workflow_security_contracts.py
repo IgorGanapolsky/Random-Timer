@@ -159,3 +159,11 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
         path = keyed_path.split("#", 1)[0]
         contents = workflow_cache.setdefault(path, _read(path))
         assert pinned_ref in contents, f"{path} is missing {pinned_ref}"
+
+
+def test_native_release_post_tag_bump_opens_pr_not_direct_push_to_develop() -> None:
+    contents = _read(".github/workflows/native-release.yml")
+    bump_block = contents.split("bump-develop-version:", 1)[1]
+    assert "git push origin develop" not in bump_block
+    assert "gh pr create" in bump_block
+    assert "pull-requests: write" in bump_block
