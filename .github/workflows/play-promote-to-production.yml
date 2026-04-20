@@ -114,12 +114,12 @@ jobs:
                   body={"releases": [body_release]},
               ).execute()
 
-              commit = svc.edits().commit(packageName=pkg, editId=eid).execute()
-              cns = commit.get("changesNotSentForReview", False)
-              print(f"✅ Edit committed. changesNotSentForReview={cns}")
-              if cns:
-                  print("⚠️  Edit not sent for Play review. Manual 'Send for review' needed in Play Console.")
-                  sys.exit(1)
+              commit = svc.edits().commit(
+                  packageName=pkg,
+                  editId=eid,
+                  changesNotSentForReview=False,
+              ).execute()
+              print(f"✅ Edit committed (sent for review). edit_id={commit.get('id','')}")
           except Exception:
               try: svc.edits().delete(packageName=pkg, editId=eid).execute()
               except Exception: pass
