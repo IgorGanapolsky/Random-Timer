@@ -69,6 +69,7 @@ jobs:
 
           edit = svc.edits().insert(packageName=pkg, body={}).execute()
           eid = edit["id"]
+          committed = False
           try:
               src_track = svc.edits().tracks().get(packageName=pkg, editId=eid, track=src).execute()
               src_releases = src_track.get("releases", [])
@@ -119,9 +120,10 @@ jobs:
                   editId=eid,
                   changesNotSentForReview=False,
               ).execute()
+              committed = True
               print(f"✅ Edit committed (sent for review). edit_id={commit.get('id','')}")
-          except Exception:
-              try: svc.edits().delete(packageName=pkg, editId=eid).execute()
-              except Exception: pass
-              raise
+          finally:
+              if not committed:
+                  try: svc.edits().delete(packageName=pkg, editId=eid).execute()
+                  except Exception: pass
           PY
