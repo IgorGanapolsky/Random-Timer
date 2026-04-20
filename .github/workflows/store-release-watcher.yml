@@ -54,10 +54,26 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json || echo '{}')"
-          STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); print(d.get("state","UNKNOWN"))')"
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json 2>/tmp/asc.err || true)"
+          [ -z "$STATE_JSON" ] && STATE_JSON='{}'
+          STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); print(d.get("state","UNKNOWN"))' 2>/dev/null || echo UNKNOWN)"
+          if [ -s /tmp/asc.err ] && [ "$STATE" = "UNKNOWN" ]; then
+            echo "--- ASC API error (non-fatal; will fall back to iTunes) ---"
+            sed -n '1,10p' /tmp/asc.err
+          fi
+          # Fallback: query public App Store via iTunes lookup when ASC API is unavailable.
+          # iTunes lookup only returns the LIVE version, so if version matches target we report READY_FOR_SALE.
+          if [ "$STATE" = "UNKNOWN" ]; then
+            ITUNES_JSON="$(curl -sS "https://itunes.apple.com/lookup?id=6758355312&country=us" || echo '{}')"
+            LIVE_VERSION="$(echo "$ITUNES_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); r=(d.get("results") or [{}])[0]; print(r.get("version",""))' 2>/dev/null || true)"
+            if [ "$LIVE_VERSION" = "$TARGET_VERSION" ]; then
+              STATE="READY_FOR_SALE"
+              echo "ASC API unavailable. iTunes lookup confirms v$TARGET_VERSION is live → state=READY_FOR_SALE"
+            else
+              echo "ASC API unavailable and iTunes shows v${LIVE_VERSION:-?} (target v$TARGET_VERSION) → state=UNKNOWN"
+            fi
+          fi
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
-          echo "json=$STATE_JSON" >> "$GITHUB_OUTPUT"
           echo "iOS App Store state for $TARGET_VERSION: $STATE"
 
       - name: Poll Play public listing
