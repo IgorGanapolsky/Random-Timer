@@ -1,0 +1,129 @@
+name: Play Promote Internal to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Android versionCode to promote (e.g., 1776713196)'
+        required: true
+      release_name:
+        description: 'Release name (e.g., 1.3.24)'
+        required: true
+        default: '1.3.24'
+      source_track:
+        description: 'Source track to copy from'
+        required: false
+        default: 'internal'
+      user_fraction:
+        description: 'Staged rollout fraction (0.0-1.0). Empty or 1.0 means completed 100%.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-promote-${{ github.event.inputs.version_code }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: python -m pip install --quiet google-api-python-client==2.149.0 google-auth==2.35.0
+
+      - name: Promote to production track
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          PKG: com.iganapolsky.randomtimer
+          VERSION_CODE: ${{ inputs.version_code }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+          SOURCE_TRACK: ${{ inputs.source_track }}
+          USER_FRACTION: ${{ inputs.user_fraction }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          key = os.environ["GOOGLE_PLAY_JSON_KEY"]
+          pkg = os.environ["PKG"]
+          vcode = os.environ["VERSION_CODE"].strip()
+          rname = os.environ["RELEASE_NAME"].strip()
+          src = os.environ["SOURCE_TRACK"].strip() or "internal"
+          fraction_raw = os.environ.get("USER_FRACTION","").strip()
+
+          creds = service_account.Credentials.from_service_account_info(
+              json.loads(key),
+              scopes=["https://www.googleapis.com/auth/androidpublisher"],
+          )
+          svc = build("androidpublisher","v3",credentials=creds,cache_discovery=False)
+
+          edit = svc.edits().insert(packageName=pkg, body={}).execute()
+          eid = edit["id"]
+          committed = False
+          try:
+              src_track = svc.edits().tracks().get(packageName=pkg, editId=eid, track=src).execute()
+              src_releases = src_track.get("releases", [])
+              src_release = None
+              for r in src_releases:
+                  if vcode in r.get("versionCodes", []):
+                      src_release = r
+                      break
+              if not src_release:
+                  print(f"❌ versionCode {vcode} not found in '{src}' track")
+                  sys.exit(2)
+
+              release_notes = src_release.get("releaseNotes", [])
+              if not release_notes:
+                  notes_path = Path(f"native-android/fastlane/metadata/android/en-US/changelogs/{vcode}.txt")
+                  if not notes_path.is_file():
+                      notes_path = Path("native-android/fastlane/metadata/android/en-US/changelogs/default.txt")
+                  text = notes_path.read_text(encoding="utf-8") if notes_path.is_file() else "New release."
+                  release_notes = [{"language": "en-US", "text": text[:500]}]
+
+              fraction = float(fraction_raw) if fraction_raw else 1.0
+              if fraction < 1.0:
+                  body_release = {
+                      "name": rname,
+                      "versionCodes": [vcode],
+                      "status": "inProgress",
+                      "userFraction": fraction,
+                      "releaseNotes": release_notes,
+                  }
+              else:
+                  body_release = {
+                      "name": rname,
+                      "versionCodes": [vcode],
+                      "status": "completed",
+                      "releaseNotes": release_notes,
+                  }
+
+              print(f"Promoting versionCode={vcode} ({rname}) to production: status={body_release['status']}")
+              svc.edits().tracks().update(
+                  packageName=pkg,
+                  editId=eid,
+                  track="production",
+                  body={"releases": [body_release]},
+              ).execute()
+
+              commit = svc.edits().commit(
+                  packageName=pkg,
+                  editId=eid,
+                  changesNotSentForReview=False,
+              ).execute()
+              committed = True
+              print(f"✅ Edit committed (sent for review). edit_id={commit.get('id','')}")
+          finally:
+              if not committed:
+                  try: svc.edits().delete(packageName=pkg, editId=eid).execute()
+                  except Exception: pass
+          PY
