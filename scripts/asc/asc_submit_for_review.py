@@ -240,6 +240,21 @@ def find_or_create_app_store_version(client: ASCClient, app_id: str, version: st
     return vid, state
 
 
+def list_app_store_version_locale_codes(client: ASCClient, version_id: str) -> list[str]:
+    """Return locale codes (e.g. en-US, ja, de-DE) that have an App Store version localization row."""
+    rows = client.get_all(
+        f"/appStoreVersions/{version_id}/appStoreVersionLocalizations",
+        params={"limit": 200},
+    )
+    codes: list[str] = []
+    for row in rows:
+        a = row.get("attributes") or {}
+        loc = (a.get("locale") or "").strip()
+        if loc:
+            codes.append(loc)
+    return sorted(set(codes))
+
+
 def get_version_localization(client: ASCClient, version_id: str, locale: str) -> dict:
     locs = client.get_all(
         f"/appStoreVersions/{version_id}/appStoreVersionLocalizations",
@@ -264,6 +279,8 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
     for field, filename in fastlane_files.items():
         if not (attrs.get(field) or "").strip():
             val = _read_text_file(os.path.join(FASTLANE_METADATA_DIR, locale, filename))
+            if field == "whatsNew" and not val and locale != "en-US":
+                val = _read_text_file(os.path.join(FASTLANE_METADATA_DIR, "en-US", filename))
             if val:
                 patch[field] = val
 
@@ -300,10 +317,15 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
             loc = refreshed
             attrs = loc.get("attributes") or {}
 
-    # whatsNew ("Release Notes") is not always editable, and is not required for all submissions.
     for field in ("description", "keywords"):
         if not (attrs.get(field) or "").strip():
             die(f"App Store version localization {locale} missing required field: {field}")
+    # App Store Connect rejects submission when any active localization has empty "What's New".
+    if not (attrs.get("whatsNew") or "").strip():
+        die(
+            f"App Store version localization {locale} missing required field: whatsNew "
+            f"(native-ios/fastlane/metadata/{locale}/release_notes.txt, or en-US fallback)"
+        )
     return loc
 
 
@@ -1115,9 +1137,19 @@ def main() -> int:
             info(f"Already submitted: {state}")
             return 0
 
-    loc = get_version_localization(client, version_id, args.locale)
-    loc_id = loc["id"]
-    loc_attrs = loc.get("attributes") or {}
+    locale_codes = list_app_store_version_locale_codes(client, version_id)
+    if not locale_codes:
+        die("No App Store version localizations found for this version.")
+    info(f"Syncing App Store version metadata for locales: {', '.join(locale_codes)}")
+    primary_loc: dict[str, Any] | None = None
+    for code in locale_codes:
+        loc = get_version_localization(client, version_id, code)
+        if code == args.locale:
+            primary_loc = loc
+    if primary_loc is None:
+        die(f"Primary locale {args.locale!r} not found in version localizations: {locale_codes}")
+    loc_id = primary_loc["id"]
+    loc_attrs = primary_loc.get("attributes") or {}
 
     # Support URL may live on App Store version localization (newer ASC API) or on App Info localization
     # (older ASC API). Accept either, but require a non-empty https:// URL.

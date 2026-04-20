@@ -68,7 +68,8 @@ class AscSubmitForReviewVersionLocalizationAutofillTests(unittest.TestCase):
     def test_get_version_localization_ignores_whats_new_state_error(self):
         import scripts.asc.asc_submit_for_review as asc
 
-        client = _FakeClient(patch_error=_WHATS_NEW_STATE_ERROR, refreshed_whats_new="")
+        # API refuses PATCH for whatsNew (STATE_ERROR), but GET read-back still shows prior text.
+        client = _FakeClient(patch_error=_WHATS_NEW_STATE_ERROR, refreshed_whats_new="Hello")
 
         with tempfile.TemporaryDirectory() as td:
             os.makedirs(os.path.join(td, "en-US"), exist_ok=True)
@@ -82,10 +83,9 @@ class AscSubmitForReviewVersionLocalizationAutofillTests(unittest.TestCase):
             finally:
                 asc.FASTLANE_METADATA_DIR = prev
 
-        # Should not raise, and should not require whatsNew to be present.
         self.assertEqual((loc.get("attributes") or {}).get("description"), "desc")
         self.assertEqual((loc.get("attributes") or {}).get("keywords"), "kw")
-        self.assertEqual((loc.get("attributes") or {}).get("whatsNew"), "")
+        self.assertEqual((loc.get("attributes") or {}).get("whatsNew"), "Hello")
 
 
 if __name__ == "__main__":

@@ -22,3 +22,11 @@ class RouterClient:
             return value()
         return value
 
+    def get_all(self, path: str, *, params=None):
+        """Match ASCClient.get_all: one GET returning data[] (optionally paginated)."""
+        data = self.request("GET", path, params=params or {})
+        if not isinstance(data, dict):
+            return []
+        chunk = data.get("data") or []
+        return chunk if isinstance(chunk, list) else []
+
