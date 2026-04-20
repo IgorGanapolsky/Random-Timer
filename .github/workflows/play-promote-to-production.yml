@@ -89,13 +89,13 @@ jobs:
                   text = notes_path.read_text(encoding="utf-8") if notes_path.is_file() else "New release."
                   release_notes = [{"language": "en-US", "text": text[:500]}]
 
-              if fraction_raw and fraction_raw != "1.0":
-                  status = "inProgress"
+              fraction = float(fraction_raw) if fraction_raw else 1.0
+              if fraction < 1.0:
                   body_release = {
                       "name": rname,
                       "versionCodes": [vcode],
-                      "status": status,
-                      "userFraction": float(fraction_raw),
+                      "status": "inProgress",
+                      "userFraction": fraction,
                       "releaseNotes": release_notes,
                   }
               else:
