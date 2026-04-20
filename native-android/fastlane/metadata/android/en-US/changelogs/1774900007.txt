@@ -1,0 +1,3 @@
+Release 1.3.24:
+- App renamed to Random Tactical Timer on Google Play.
+- Keeps parity with the latest iOS training and paywall experience.
