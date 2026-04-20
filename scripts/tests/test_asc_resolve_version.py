@@ -80,6 +80,33 @@ class AscResolveVersionUnitTests(unittest.TestCase):
         self.assertFalse(result.created)
         self.assertEqual(result.reason, "preferred_version_editable")
 
+    def test_review_locked_preferred_exits_without_escape_hatch(self):
+        client = _FakeClient([_version("1.3.24", "WAITING_FOR_REVIEW")])
+        with self.assertRaises(SystemExit) as ctx:
+            resolve_version(
+                client=client,
+                app_id="app1",
+                preferred_version="1.3.24",
+                create_if_needed=True,
+                auto_next_patch=False,
+            )
+        self.assertEqual(ctx.exception.code, 1)
+
+    def test_allow_review_locked_preferred_returns_in_review_train(self):
+        client = _FakeClient([_version("1.3.24", "WAITING_FOR_REVIEW", vid="ver-wfr")])
+        result = resolve_version(
+            client=client,
+            app_id="app1",
+            preferred_version="1.3.24",
+            create_if_needed=True,
+            auto_next_patch=False,
+            allow_review_locked_preferred=True,
+        )
+        self.assertEqual(result.selected_version, "1.3.24")
+        self.assertEqual(result.selected_id, "ver-wfr")
+        self.assertEqual(result.selected_state, "WAITING_FOR_REVIEW")
+        self.assertEqual(result.reason, "preferred_version_review_locked_api_target")
+
     def test_creates_next_patch_when_preferred_is_live(self):
         client = _FakeClient([_version("1.1.1", "READY_FOR_SALE")])
         result = resolve_version(

@@ -225,6 +225,16 @@ def test_native_release_workflow_keeps_ios_review_submission_opt_in():
     assert "default: 'false'" in submit_review_block
 
 
+def test_native_release_ios_submit_review_resolves_version_even_when_review_locked():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    resolve_block = source.split("- name: Resolve editable App Store version", 1)[1].split(
+        "- name: Write App Store Connect key (for API)", 1
+    )[0]
+    assert "asc_resolve_version.py" in resolve_block
+    assert "--allow-review-locked-preferred" in resolve_block
+
+
 def test_native_release_workflow_marks_android_firebase_mirror_input_deprecated():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
