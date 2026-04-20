@@ -1,5 +1,5 @@
+• App now appears as Random Tactical Timer on the App Store
 • Clearer Pro upgrade with a readable primary purchase button
 • Paywall tuned for training outcomes; purchase, restore, and legal links stay reachable
 • Monthly and annual Pro subscriptions where available
 • AI voice callouts, Sound Arsenal, and extended range for long tactical sessions
-• Review timing and analytics reliability improvements
