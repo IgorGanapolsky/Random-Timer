@@ -1,0 +1,52 @@
+name: Play State Query (one-shot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Play track to query'
+        required: false
+        default: 'production'
+
+permissions:
+  contents: read
+
+jobs:
+  query:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --quiet google-api-python-client==2.149.0 google-auth==2.35.0
+      - name: Query Play track
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          PKG: com.iganapolsky.randomtimer
+          TRACK: ${{ inputs.track }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          creds = service_account.Credentials.from_service_account_info(
+              json.loads(os.environ["GOOGLE_PLAY_JSON_KEY"]),
+              scopes=["https://www.googleapis.com/auth/androidpublisher"],
+          )
+          svc = build("androidpublisher","v3",credentials=creds,cache_discovery=False)
+          pkg = os.environ["PKG"]; track = os.environ["TRACK"]
+          edit = svc.edits().insert(packageName=pkg, body={}).execute()
+          try:
+              info = svc.edits().tracks().get(packageName=pkg, editId=edit["id"], track=track).execute()
+              print("=== TRACK:", track, "===")
+              for r in info.get("releases", []):
+                  print({
+                      "name": r.get("name"),
+                      "status": r.get("status"),
+                      "userFraction": r.get("userFraction"),
+                      "versionCodes": r.get("versionCodes"),
+                  })
+          finally:
+              try: svc.edits().delete(packageName=pkg, editId=edit["id"]).execute()
+              except Exception: pass
+          PY
