@@ -83,25 +83,44 @@ jobs:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: fastlane setup
 
-      - name: Build and upload to TestFlight (Apple-ID)
+      - name: Compute build number (timestamp)
+        id: bn
+        run: |
+          set -euo pipefail
+          echo "build_number=$(date -u +%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed IPA (no upload)
         working-directory: native-ios
         env:
           CI: "true"
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
           FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "6"
-          FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
-          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
-          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
-          FASTLANE_ITC_TEAM_ID: ${{ secrets.FASTLANE_ITC_TEAM_ID }}
           FASTLANE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || 'Internal Testers' }}
-          TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"
-          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"
-        run: fastlane beta
+        run: fastlane build_ipa build_number:${{ steps.bn.outputs.build_number }}
+
+      - name: Upload IPA to TestFlight via altool (app-specific password)
+        working-directory: native-ios
+        env:
+          ALTOOL_USER: ${{ secrets.FASTLANE_USER }}
+          ALTOOL_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ ! -f RandomTimer.ipa ]; then
+            echo "::error::RandomTimer.ipa not found after build"
+            ls -la
+            exit 1
+          fi
+          echo "IPA size: $(du -h RandomTimer.ipa | cut -f1)"
+          xcrun altool --upload-app \
+            --file RandomTimer.ipa \
+            --type ios \
+            --username "$ALTOOL_USER" \
+            --password "$ALTOOL_PASSWORD" \
+            --verbose
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v7
