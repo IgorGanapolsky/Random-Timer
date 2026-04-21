@@ -536,14 +536,19 @@ class AIVoiceCalloutManager
 
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
-            val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
+            // Only consider cues whose audio is actually resolvable (bundled raw or remote pack).
+            // Without this filter, missing cues would fall back to `cmd_move_with_a_purpose` at
+            // playback time and the user hears the same line on repeat while dedup thinks
+            // different cues were picked.
+            val playable = catalog.commandCues.filter { cueHasAudio(it.filename) }
+            val baseline = if (playable.isNotEmpty()) playable else catalog.commandCues
+            val available = baseline.filter { it.filename !in usedCommandCueFilenames }
             val pool =
                 available.ifEmpty {
-                    // All cues used — reset and exclude only the last one
                     usedCommandCueFilenames.clear()
-                    catalog.commandCues
+                    baseline
                         .filter { it.filename != lastCommandCueFilename }
-                        .ifEmpty { catalog.commandCues }
+                        .ifEmpty { baseline }
                 }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
@@ -552,6 +557,12 @@ class AIVoiceCalloutManager
             lastCommandCueFilename = cue.filename
             usedCommandCueFilenames.add(cue.filename)
             return cue
+        }
+
+        private fun cueHasAudio(filename: String): Boolean {
+            val gendered = genderedVoiceFilename(filename, currentGender)
+            if (packStore.voiceFile(gendered) != null) return true
+            return context.resources.getIdentifier(gendered, "raw", context.packageName) != 0
         }
 
         fun shutdown() {

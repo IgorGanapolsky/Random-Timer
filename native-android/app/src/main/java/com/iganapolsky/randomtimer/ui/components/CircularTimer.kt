@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -24,8 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -73,8 +70,10 @@ object CircularTimerAnimationConfig {
 internal fun shouldBreatheText(status: TimerStatus): Boolean =
     status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
 
-internal fun effectiveTrackAlpha(status: TimerStatus, pulseAlpha: Float): Float =
-    if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
+internal fun effectiveTrackAlpha(
+    status: TimerStatus,
+    pulseAlpha: Float,
+): Float = if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
 
 @Composable
 fun CircularTimer(
@@ -82,16 +81,14 @@ fun CircularTimer(
     status: TimerStatus,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 12.dp,
-    isHiddenMode: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") isHiddenMode: Boolean = false,
     rangeText: String = "", // e.g., "30s - 2m"
 ) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 300),
-        label = "progress",
-    )
+    // Random timer contract: never reveal elapsed or remaining time visually.
+    // No progress arc, no tip glow, no start dot — only a pulsing track and orbiting shimmer.
+    @Suppress("UNUSED_VARIABLE")
+    val _p = progress
 
-    // For random timer, don't reveal warning/danger states - just show running until complete
     val statusColor =
         when (status) {
             TimerStatus.RUNNING, TimerStatus.WARNING, TimerStatus.DANGER -> TimerColors.TimerActive
@@ -210,58 +207,10 @@ fun CircularTimer(
                 )
             }
 
-            // Progress arc
-            val sweepAngle = 360f * animatedProgress
-            drawArc(
-                brush =
-                    Brush.sweepGradient(
-                        colors =
-                            listOf(
-                                animatedColor.copy(alpha = 0.3f),
-                                animatedColor,
-                                animatedColor,
-                            ),
-                    ),
-                startAngle = -90f,
-                sweepAngle = sweepAngle,
-                useCenter = false,
-                topLeft = Offset(strokePx / 2, strokePx / 2),
-                size = Size(diameter - strokePx, diameter - strokePx),
-                style = Stroke(width = strokePx, cap = StrokeCap.Round),
-            )
-
-            // Glow effect at the tip (end of progress arc)
-            if (animatedProgress > 0f) {
-                val angle = Math.toRadians((-90 + sweepAngle).toDouble())
-                val glowX = (radius + (radius - strokePx / 2) * kotlin.math.cos(angle)).toFloat()
-                val glowY = (radius + (radius - strokePx / 2) * kotlin.math.sin(angle)).toFloat()
-
-                drawCircle(
-                    color = animatedColor.copy(alpha = 0.6f),
-                    radius = strokePx,
-                    center = Offset(glowX, glowY),
-                )
-            }
-
-            // Tracking dot at the start of progress (like iOS)
-            if (animatedProgress > 0f && animatedProgress < 1f) {
-                val startAngle = Math.toRadians(-90.0)
-                val trackDotX = (radius + (radius - strokePx / 2) * kotlin.math.cos(startAngle)).toFloat()
-                val trackDotY = (radius + (radius - strokePx / 2) * kotlin.math.sin(startAngle)).toFloat()
-
-                // Outer glow
-                drawCircle(
-                    color = animatedColor.copy(alpha = 0.3f),
-                    radius = strokePx * 1.5f,
-                    center = Offset(trackDotX, trackDotY),
-                )
-                // Inner dot
-                drawCircle(
-                    color = animatedColor.copy(alpha = 0.6f),
-                    radius = strokePx * 0.8f,
-                    center = Offset(trackDotX, trackDotY),
-                )
-            }
+            // No progress arc, tip glow, or start dot — they would reveal elapsed time.
+            // Status color is still reflected in the track pulse for running vs. paused/complete.
+            @Suppress("UNUSED_VARIABLE")
+            val _c = animatedColor
         }
 
         // Center display - show "Complete!" when alarm/complete, otherwise show range
