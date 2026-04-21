@@ -228,7 +228,7 @@ final class AIVoiceCalloutService {
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
     private var usedCommandCueFilenames: Set<String> = []
-    private var lastCueFiredAt: Date?
+    private var lastCueFiredAtElapsed: Int?
     private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
     private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
 
@@ -267,7 +267,7 @@ final class AIVoiceCalloutService {
         usedCommandCueFilenames.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
-        lastCueFiredAt = nil
+        lastCueFiredAtElapsed = nil
     }
 
     func preview() {
@@ -333,9 +333,7 @@ final class AIVoiceCalloutService {
     }
 
     func triggerCallout(elapsedSeconds: Int) {
-        // Global 30s cooldown — parity with Android AIVoiceCalloutManager.
-        let now = Date()
-        if let last = lastCueFiredAt, now.timeIntervalSince(last) < 30 {
+        if let last = lastCueFiredAtElapsed, elapsedSeconds - last < 30 {
             return
         }
 
@@ -345,7 +343,7 @@ final class AIVoiceCalloutService {
             if nextCommandCueAt <= elapsedSeconds {
                 nextCommandCueAt = elapsedSeconds + 30
             }
-            lastCueFiredAt = now
+            lastCueFiredAtElapsed = elapsedSeconds
             return
         }
 
@@ -354,7 +352,7 @@ final class AIVoiceCalloutService {
             speak(cue.text)
             lastCommandCueFilename = cue.filename
             nextCommandCueAt = elapsedSeconds + 30
-            lastCueFiredAt = now
+            lastCueFiredAtElapsed = elapsedSeconds
         }
     }
 

@@ -344,6 +344,7 @@ class AIVoiceCalloutManager
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
+            lastCueFiredAtElapsed = -1
             currentGender = VoiceGender.MALE
         }
 
@@ -499,17 +500,16 @@ class AIVoiceCalloutManager
             return true
         }
 
-        private var lastCueTime = 0L
+        private var lastCueFiredAtElapsed = -1
 
         fun triggerCallout(elapsedSeconds: Int) {
-            val now = System.currentTimeMillis()
-            if (now - lastCueTime < 30000) return // 30s global cooldown
+            if (lastCueFiredAtElapsed >= 0 && elapsedSeconds - lastCueFiredAtElapsed < 30) return
 
             val catalog = packStore.voiceCatalog()
             runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
-                lastCueTime = now
+                lastCueFiredAtElapsed = elapsedSeconds
                 if (nextCommandCueAt <= elapsedSeconds) {
                     nextCommandCueAt = elapsedSeconds + 30
                 }
@@ -520,7 +520,7 @@ class AIVoiceCalloutManager
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
                 nextCommandCueAt = elapsedSeconds + 30
-                lastCueTime = now
+                lastCueFiredAtElapsed = elapsedSeconds
             }
         }
 
