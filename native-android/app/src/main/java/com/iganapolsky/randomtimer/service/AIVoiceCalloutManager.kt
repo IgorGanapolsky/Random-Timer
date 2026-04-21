@@ -499,11 +499,17 @@ class AIVoiceCalloutManager
             return true
         }
 
+        private var lastCueTime = 0L
+
         fun triggerCallout(elapsedSeconds: Int) {
+            val now = System.currentTimeMillis()
+            if (now - lastCueTime < 30000) return // 30s global cooldown
+
             val catalog = packStore.voiceCatalog()
             runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
+                lastCueTime = now
                 if (nextCommandCueAt <= elapsedSeconds) {
                     nextCommandCueAt = elapsedSeconds + 30
                 }
@@ -514,6 +520,7 @@ class AIVoiceCalloutManager
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
                 nextCommandCueAt = elapsedSeconds + 30
+                lastCueTime = now
             }
         }
 
