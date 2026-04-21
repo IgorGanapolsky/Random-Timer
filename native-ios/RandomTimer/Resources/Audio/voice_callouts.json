@@ -170,66 +170,6 @@
     {
       "filename": "cmd_stay_sharp",
       "text": "Stay sharp. Eyes up."
-    },
-    {
-      "filename": "cmd_check_stance",
-      "text": "Check that stance!"
-    },
-    {
-      "filename": "cmd_jab_circle",
-      "text": "Jab and circle out!"
-    },
-    {
-      "filename": "cmd_footwork",
-      "text": "Footwork first!"
-    },
-    {
-      "filename": "cmd_hands_high",
-      "text": "Hands high! Protect yourself!"
-    },
-    {
-      "filename": "cmd_pressure_cage",
-      "text": "Pressure the cage!"
-    },
-    {
-      "filename": "cmd_double_leg",
-      "text": "Double leg setup! Shoot!"
-    },
-    {
-      "filename": "cmd_sprawl_brawl",
-      "text": "Sprawl and brawl!"
-    },
-    {
-      "filename": "cmd_mix_strikes",
-      "text": "Mix your strikes!"
-    },
-    {
-      "filename": "cmd_control_center",
-      "text": "Control the center!"
-    },
-    {
-      "filename": "cmd_snap_jab",
-      "text": "Snap that jab!"
-    },
-    {
-      "filename": "cmd_feint_fire",
-      "text": "Feint and fire!"
-    },
-    {
-      "filename": "cmd_wall_pound",
-      "text": "Wall and pound!"
-    },
-    {
-      "filename": "cmd_takedown_defense",
-      "text": "Takedown defense! Spread base!"
-    },
-    {
-      "filename": "cmd_chain_wrestling",
-      "text": "Chain wrestling!"
-    },
-    {
-      "filename": "cmd_finish_feet",
-      "text": "Finish on the feet!"
     }
   ]
 }
