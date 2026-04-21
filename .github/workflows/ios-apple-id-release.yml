@@ -1,0 +1,112 @@
+name: iOS Apple-ID Release (ASC JWT fallback)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch/tag/SHA)'
+        required: true
+        default: 'release/v1.3.25'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-apple-id-release-${{ inputs.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testflight-upload:
+    name: iOS TestFlight (Apple-ID auth)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Write GoogleService-Info.plist from secret
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        working-directory: native-ios
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+            echo "Wrote GoogleService-Info.plist"
+          fi
+
+      - name: Fail fast on required Apple-ID secrets
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          for name in MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION FASTLANE_USER FASTLANE_PASSWORD FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD ADMIN_TOKEN; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Preflight release checks (iOS)
+        run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        working-directory: native-ios
+        run: gem install fastlane
+
+      - name: Configure git credentials for match
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global url."https://x-access-token:${GIT_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Setup signing assets (match readonly, no ASC JWT)
+        working-directory: native-ios
+        env:
+          CI: "true"
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: fastlane setup
+
+      - name: Build and upload to TestFlight (Apple-ID)
+        working-directory: native-ios
+        env:
+          CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "6"
+          FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+          FASTLANE_ITC_TEAM_ID: ${{ secrets.FASTLANE_ITC_TEAM_ID }}
+          FASTLANE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_INTERNAL_GROUPS || 'Internal Testers' }}
+          TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"
+          TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"
+        run: fastlane beta
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ios-ipa-apple-id
+          path: native-ios/RandomTimer.ipa
+          if-no-files-found: warn
