@@ -227,6 +227,25 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(selected.filename, "cue_b")
     }
 
+    func testCommandCueRepeatFamilyGroupsMoveWithAPurposeVariants() {
+        XCTAssertEqual(commandCueRepeatFamilyKey("cmd_move_with_a_purpose"), "move_with_a_purpose")
+        XCTAssertEqual(commandCueRepeatFamilyKey("cmd_most_ricky_tick"), "move_with_a_purpose")
+        XCTAssertEqual(commandCueRepeatFamilyKey("cmd_stay_locked_in"), "cmd_stay_locked_in")
+    }
+
+    func testMaleCommandCuePoolPrefersCombatStyleLinesAndDropsMostRickyTick() {
+        let cues = [
+            VoiceCueCatalog.Cue(filename: "cmd_most_ricky_tick", text: "Most ricky tick. Move with a purpose."),
+            VoiceCueCatalog.Cue(filename: "cmd_stay_in_the_fight", text: "Stay in the fight."),
+            VoiceCueCatalog.Cue(filename: "cmd_drive_forward", text: "Drive forward. No hesitation."),
+            VoiceCueCatalog.Cue(filename: "cmd_keep_tempo_high", text: "Keep the tempo high."),
+        ]
+
+        let selected = commandCuePool(for: cues, gender: .male)
+
+        XCTAssertEqual(selected.map(\.filename), ["cmd_stay_in_the_fight", "cmd_drive_forward"])
+    }
+
     func testNextPreviewFilenameAvoidsImmediateRepeatWhenPossible() {
         var usedFilenames: Set<String> = ["cue_a"]
 
@@ -246,6 +265,13 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 30), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 31), 30)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
+    }
+
+    func testVoiceCalloutCooldownRequiresThirtySecondsBetweenSpokenCues() {
+        XCTAssertFalse(hasMetVoiceCalloutCooldown(elapsedSeconds: 29, lastCueSecond: 1))
+        XCTAssertFalse(hasMetVoiceCalloutCooldown(elapsedSeconds: 30, lastCueSecond: 1))
+        XCTAssertTrue(hasMetVoiceCalloutCooldown(elapsedSeconds: 31, lastCueSecond: 1))
+        XCTAssertTrue(hasMetVoiceCalloutCooldown(elapsedSeconds: 60, lastCueSecond: 30))
     }
 
     func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
@@ -277,17 +303,20 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
         XCTAssertEqual(atThirty.nextCommandCueAt, 60)
         XCTAssertNotNil(atThirty.lastCommandCueFilename)
+        XCTAssertEqual(atThirty.lastSpokenCueAt, 30)
 
         sut.triggerCallout(elapsedSeconds: 45)
         let atFortyFive = sut._stateSnapshotForTesting()
         XCTAssertEqual(atFortyFive.lastElapsedMilestone, 0)
         XCTAssertEqual(atFortyFive.nextCommandCueAt, 60)
         XCTAssertNotNil(atFortyFive.lastCommandCueFilename)
+        XCTAssertEqual(atFortyFive.lastSpokenCueAt, 30)
 
         sut.triggerCallout(elapsedSeconds: 60)
         let atSixty = sut._stateSnapshotForTesting()
         XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
         XCTAssertEqual(atSixty.nextCommandCueAt, 90)
+        XCTAssertEqual(atSixty.lastSpokenCueAt, 60)
     }
 
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {

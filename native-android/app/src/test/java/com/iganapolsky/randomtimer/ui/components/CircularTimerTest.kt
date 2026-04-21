@@ -9,13 +9,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class CircularTimerTest {
-
     // -- Animation timing parity tests (must match iOS CircularTimerView) --
-
-    @Test
-    fun `shimmer orbit is 3 seconds`() {
-        assertThat(CircularTimerAnimationConfig.SHIMMER_ORBIT_MS).isEqualTo(3000)
-    }
 
     @Test
     fun `circle pulse full cycle is 3 seconds`() {

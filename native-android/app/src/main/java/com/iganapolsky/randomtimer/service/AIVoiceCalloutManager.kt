@@ -64,21 +64,46 @@ internal fun selectPreferredVoice(candidates: List<VoiceCandidate>): VoiceCandid
         }
 
 private const val VOICE_CATALOG_ASSET = "voice_callouts.json"
+internal const val MIN_VOICE_CALLOUT_SPACING_SECONDS = 30
+
+private val maleCombatCommandFilenames =
+    setOf(
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_eyes_up_keep_moving",
+        "cmd_keep_pressure_on",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight",
+        "cmd_drive_through_it",
+        "cmd_reset_and_attack",
+        "cmd_strong_feet_strong_pace",
+        "cmd_move_fast_stay_precise",
+        "cmd_instant_response_go",
+        "cmd_snap_back_and_drive",
+        "cmd_drive_forward",
+        "cmd_keep_pressure",
+        "cmd_move_now",
+        "cmd_push_through",
+        "cmd_stay_sharp",
+    )
+
+private val malePreviewCommandFilenames =
+    listOf(
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_in_the_fight",
+        "cmd_reset_and_attack",
+        "cmd_drive_through_it",
+        "cmd_drive_forward",
+        "cmd_keep_pressure_on",
+        "cmd_instant_response_go",
+    )
 
 private object VoicePreviewSampleCatalog {
-    val maleCommandFilenames =
-        listOf(
-            "cmd_move_with_a_purpose",
-            "cmd_stay_locked_in",
-            "cmd_no_hesitation_move",
-            "cmd_sound_off_and_drive",
-            "cmd_snap_back_and_drive",
-            "cmd_stay_disciplined",
-            "cmd_keep_your_bearing",
-            "cmd_reset_and_attack",
-            "cmd_sharp_movement_sharp_focus",
-            "cmd_stay_in_the_fight",
-        )
+    val maleCommandFilenames = malePreviewCommandFilenames
 
     const val maleElapsedFilename = "preview_elapsed"
 
@@ -274,6 +299,32 @@ internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
         else -> 30
     }
 
+internal fun hasMetVoiceCalloutCooldown(
+    elapsedSeconds: Int,
+    lastCueSecond: Int,
+): Boolean = lastCueSecond <= 0 || elapsedSeconds - lastCueSecond >= MIN_VOICE_CALLOUT_SPACING_SECONDS
+
+internal fun commandCueRepeatFamilyKey(filename: String): String =
+    when (filename) {
+        "cmd_move_with_a_purpose", "cmd_most_ricky_tick" -> "move_with_a_purpose"
+        "cmd_stay_in_the_fight", "cmd_push_through" -> "stay_in_the_fight"
+        "cmd_keep_pressure_on", "cmd_keep_pressure" -> "keep_pressure"
+        "cmd_no_hesitation_move", "cmd_drive_forward" -> "no_hesitation"
+        else -> filename
+    }
+
+internal fun commandCuePoolForGender(
+    cues: List<VoiceCue>,
+    gender: VoiceGender,
+): List<VoiceCue> {
+    if (gender != VoiceGender.MALE) {
+        return cues
+    }
+
+    val combatPool = cues.filter { it.filename in maleCombatCommandFilenames }
+    return combatPool.ifEmpty { cues.filter { it.filename != "cmd_most_ricky_tick" }.ifEmpty { cues } }
+}
+
 @Singleton
 class AIVoiceCalloutManager
     @Inject
@@ -285,6 +336,7 @@ class AIVoiceCalloutManager
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
+        private var lastCommandCueFamilyKey: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
         private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
         private val usedPreviewCommandFilenamesByGender =
@@ -293,6 +345,7 @@ class AIVoiceCalloutManager
                 VoiceGender.FEMALE to mutableSetOf<String>(),
             )
         private var nextCommandCueAt = 0
+        private var lastSpokenCueAt = 0
 
         /** Current voice gender for the active session. */
         var currentGender: VoiceGender = VoiceGender.MALE
@@ -325,25 +378,24 @@ class AIVoiceCalloutManager
             val mappedFilename = catalog.filenameByText[text]
             val baseFilename = mappedFilename ?: catalog.fallbackCommandCue.filename
             val filename = genderedVoiceFilename(baseFilename, currentGender)
-            val directResId = context.resources.getIdentifier(filename, "raw", context.packageName)
-            val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
-            val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
-            val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, text, catalog)
+            val fallbackResId = if (mappedFilename == null) voiceResIdOrFallback(context, text, catalog) else 0
             if (mappedFilename == null) {
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
             }
 
-            playVoiceFile(filename = filename, fallbackResId = resId, cueText = text)
+            playVoiceFile(filename = filename, fallbackResId = fallbackResId, cueText = text)
         }
 
         fun resetSession() {
             stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
+            lastCommandCueFamilyKey = null
             usedCommandCueFilenames.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
+            lastSpokenCueAt = 0
             currentGender = VoiceGender.MALE
         }
 
@@ -501,11 +553,16 @@ class AIVoiceCalloutManager
 
         fun triggerCallout(elapsedSeconds: Int) {
             val catalog = packStore.voiceCatalog()
-            runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
-                speak(it.text)
+            runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let { cue ->
+                if (!hasMetVoiceCalloutCooldown(elapsedSeconds, lastSpokenCueAt)) {
+                    return@let
+                }
+
+                speak(cue.text)
                 lastElapsedMilestone = elapsedSeconds
+                lastSpokenCueAt = elapsedSeconds
                 if (nextCommandCueAt <= elapsedSeconds) {
-                    nextCommandCueAt = elapsedSeconds + 30
+                    nextCommandCueAt = elapsedSeconds + MIN_VOICE_CALLOUT_SPACING_SECONDS
                 }
                 return
             }
@@ -513,36 +570,47 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
-                nextCommandCueAt = elapsedSeconds + 30
+                lastSpokenCueAt = elapsedSeconds
+                nextCommandCueAt = elapsedSeconds + MIN_VOICE_CALLOUT_SPACING_SECONDS
             }
         }
 
         private fun shouldFireCommandCue(elapsedSeconds: Int): Boolean {
             if (nextCommandCueAt == 0) {
-                nextCommandCueAt = 30
+                nextCommandCueAt = MIN_VOICE_CALLOUT_SPACING_SECONDS
             }
             if (nextCommandCueAt == Int.MAX_VALUE) {
                 return false
             }
-            return elapsedSeconds >= nextCommandCueAt
+            return elapsedSeconds >= nextCommandCueAt && hasMetVoiceCalloutCooldown(elapsedSeconds, lastSpokenCueAt)
         }
 
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
-            val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
+            val curated = commandCuePoolForGender(catalog.commandCues, currentGender)
+            val available =
+                curated.filter { cue ->
+                    cue.filename !in usedCommandCueFilenames &&
+                        commandCueRepeatFamilyKey(cue.filename) != lastCommandCueFamilyKey
+                }
             val pool =
                 available.ifEmpty {
                     // All cues used — reset and exclude only the last one
                     usedCommandCueFilenames.clear()
-                    catalog.commandCues
-                        .filter { it.filename != lastCommandCueFilename }
-                        .ifEmpty { catalog.commandCues }
+                    curated
+                        .filter { commandCueRepeatFamilyKey(it.filename) != lastCommandCueFamilyKey }
+                        .ifEmpty {
+                            curated
+                                .filter { it.filename != lastCommandCueFilename }
+                                .ifEmpty { curated }
+                        }
                 }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
                 }
             lastCommandCueFilename = cue.filename
+            lastCommandCueFamilyKey = commandCueRepeatFamilyKey(cue.filename)
             usedCommandCueFilenames.add(cue.filename)
             return cue
         }

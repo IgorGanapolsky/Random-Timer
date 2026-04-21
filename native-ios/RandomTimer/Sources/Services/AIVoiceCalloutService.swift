@@ -51,13 +51,44 @@ internal struct VoiceCueCatalog: Codable {
 }
 
 internal let voiceCatalogResourceName = "voice_callouts"
+internal let minVoiceCalloutSpacingSeconds = 30
+
+private let maleCombatCommandFilenames: Set<String> = [
+    "cmd_stay_locked_in",
+    "cmd_no_hesitation_move",
+    "cmd_sound_off_and_drive",
+    "cmd_eyes_up_keep_moving",
+    "cmd_keep_pressure_on",
+    "cmd_sharp_movement_sharp_focus",
+    "cmd_stay_in_the_fight",
+    "cmd_drive_through_it",
+    "cmd_reset_and_attack",
+    "cmd_strong_feet_strong_pace",
+    "cmd_move_fast_stay_precise",
+    "cmd_instant_response_go",
+    "cmd_snap_back_and_drive",
+    "cmd_drive_forward",
+    "cmd_keep_pressure",
+    "cmd_move_now",
+    "cmd_push_through",
+    "cmd_stay_sharp",
+]
+
+private let malePreviewCommandFilenames = [
+    "cmd_stay_locked_in",
+    "cmd_no_hesitation_move",
+    "cmd_sound_off_and_drive",
+    "cmd_snap_back_and_drive",
+    "cmd_stay_in_the_fight",
+    "cmd_reset_and_attack",
+    "cmd_drive_through_it",
+    "cmd_drive_forward",
+    "cmd_keep_pressure_on",
+    "cmd_instant_response_go",
+]
 
 private enum VoicePreviewSampleCatalog {
-    static let maleCommandFilenames = [
-        "cmd_move_with_a_purpose", "cmd_stay_locked_in", "cmd_no_hesitation_move", "cmd_sound_off_and_drive",
-        "cmd_snap_back_and_drive", "cmd_stay_disciplined", "cmd_keep_your_bearing", "cmd_reset_and_attack",
-        "cmd_sharp_movement_sharp_focus", "cmd_stay_in_the_fight",
-    ]
+    static let maleCommandFilenames = malePreviewCommandFilenames
     static let maleElapsedFilename = "preview_elapsed"
     static let femaleCommandFilenames = [
         "female/cmd_move_with_a_purpose", "female/cmd_no_hesitation_move", "female/cmd_stay_in_the_fight",
@@ -194,12 +225,41 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     }
 }
 
+internal func hasMetVoiceCalloutCooldown(elapsedSeconds: Int, lastCueSecond: Int) -> Bool {
+    lastCueSecond <= 0 || elapsedSeconds - lastCueSecond >= minVoiceCalloutSpacingSeconds
+}
+
+internal func commandCueRepeatFamilyKey(_ filename: String) -> String {
+    switch filename {
+    case "cmd_move_with_a_purpose", "cmd_most_ricky_tick":
+        return "move_with_a_purpose"
+    case "cmd_stay_in_the_fight", "cmd_push_through":
+        return "stay_in_the_fight"
+    case "cmd_keep_pressure_on", "cmd_keep_pressure":
+        return "keep_pressure"
+    case "cmd_no_hesitation_move", "cmd_drive_forward":
+        return "no_hesitation"
+    default:
+        return filename
+    }
+}
+
+internal func commandCuePool(for cues: [VoiceCueCatalog.Cue], gender: VoiceGender) -> [VoiceCueCatalog.Cue] {
+    guard gender == .male else {
+        return cues
+    }
+
+    let combatPool = cues.filter { maleCombatCommandFilenames.contains($0.filename) }
+    return combatPool.isEmpty ? cues.filter { $0.filename != "cmd_most_ricky_tick" } : combatPool
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {
         let lastElapsedMilestone: Int
         let nextCommandCueAt: Int
         let lastCommandCueFilename: String?
+        let lastSpokenCueAt: Int
     }
 
     typealias AudioSessionActivator = @MainActor () -> Void
@@ -207,7 +267,7 @@ final class AIVoiceCalloutService {
     static let shared = AIVoiceCalloutService()
 
     /// Current voice gender preference, set from TimerManager based on config.
-    /// Male = drill sergeant, Female = HIIT instructor.
+    /// Male = mixed combatives coach, Female = HIIT instructor.
     var currentGender: VoiceGender = .male
 
     private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice")
@@ -227,6 +287,8 @@ final class AIVoiceCalloutService {
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
+    private var lastCommandCueFamilyKey: String?
+    private var lastSpokenCueAt = 0
     private var usedCommandCueFilenames: Set<String> = []
     private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
     private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
@@ -263,6 +325,8 @@ final class AIVoiceCalloutService {
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
         lastCommandCueFilename = nil
+        lastCommandCueFamilyKey = nil
+        lastSpokenCueAt = 0
         usedCommandCueFilenames.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
@@ -332,10 +396,14 @@ final class AIVoiceCalloutService {
 
     func triggerCallout(elapsedSeconds: Int) {
         if let callout = elapsedMilestone(for: elapsedSeconds) {
+            guard hasMetVoiceCalloutCooldown(elapsedSeconds: elapsedSeconds, lastCueSecond: lastSpokenCueAt) else {
+                return
+            }
             speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
+            lastSpokenCueAt = elapsedSeconds
             if nextCommandCueAt <= elapsedSeconds {
-                nextCommandCueAt = elapsedSeconds + 30
+                nextCommandCueAt = elapsedSeconds + minVoiceCalloutSpacingSeconds
             }
             return
         }
@@ -344,7 +412,8 @@ final class AIVoiceCalloutService {
             let cue = randomCommandCue()
             speak(cue.text)
             lastCommandCueFilename = cue.filename
-            nextCommandCueAt = elapsedSeconds + 30
+            lastSpokenCueAt = elapsedSeconds
+            nextCommandCueAt = elapsedSeconds + minVoiceCalloutSpacingSeconds
         }
     }
 
@@ -362,27 +431,36 @@ final class AIVoiceCalloutService {
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
         if nextCommandCueAt == 0 {
-            nextCommandCueAt = 30
+            nextCommandCueAt = minVoiceCalloutSpacingSeconds
         }
         if nextCommandCueAt == .max {
             return false
         }
         return elapsedSeconds >= nextCommandCueAt
+            && hasMetVoiceCalloutCooldown(elapsedSeconds: elapsedSeconds, lastCueSecond: lastSpokenCueAt)
     }
 
     private func randomCommandCue() -> VoiceCueCatalog.Cue {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        var pool = catalog.commandCues.filter { !usedCommandCueFilenames.contains($0.filename) }
+        let curated = commandCuePool(for: catalog.commandCues, gender: currentGender)
+        var pool = curated.filter {
+            !usedCommandCueFilenames.contains($0.filename)
+                && commandCueRepeatFamilyKey($0.filename) != lastCommandCueFamilyKey
+        }
         if pool.isEmpty {
             // All cues used — reset and exclude only the last one
             usedCommandCueFilenames.removeAll()
-            pool = catalog.commandCues.filter { $0.filename != lastCommandCueFilename }
-            if pool.isEmpty { pool = catalog.commandCues }
+            pool = curated.filter { commandCueRepeatFamilyKey($0.filename) != lastCommandCueFamilyKey }
+            if pool.isEmpty {
+                pool = curated.filter { $0.filename != lastCommandCueFilename }
+            }
+            if pool.isEmpty { pool = curated }
         }
         let cue = nextCommandCue(from: pool, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
         }
         lastCommandCueFilename = cue.filename
+        lastCommandCueFamilyKey = commandCueRepeatFamilyKey(cue.filename)
         usedCommandCueFilenames.insert(cue.filename)
         return cue
     }
@@ -403,7 +481,8 @@ final class AIVoiceCalloutService {
         StateSnapshot(
             lastElapsedMilestone: lastElapsedMilestone,
             nextCommandCueAt: nextCommandCueAt,
-            lastCommandCueFilename: lastCommandCueFilename
+            lastCommandCueFilename: lastCommandCueFilename,
+            lastSpokenCueAt: lastSpokenCueAt
         )
     }
 }

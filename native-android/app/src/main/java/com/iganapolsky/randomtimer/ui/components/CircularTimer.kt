@@ -2,7 +2,6 @@ package com.iganapolsky.randomtimer.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -46,9 +45,6 @@ import kotlin.time.Duration
  * iOS uses SwiftUI withAnimation with these same durations.
  */
 object CircularTimerAnimationConfig {
-    /** Ball orbit: one full 360° rotation in milliseconds (LinearEasing, Restart) */
-    const val SHIMMER_ORBIT_MS = 3000
-
     /** Circle pulse: one-way duration in ms (default easing, Reverse). Full cycle = 2x */
     const val CIRCLE_PULSE_ONE_WAY_MS = 1500
 
@@ -73,8 +69,10 @@ object CircularTimerAnimationConfig {
 internal fun shouldBreatheText(status: TimerStatus): Boolean =
     status == TimerStatus.RUNNING || status == TimerStatus.WARNING || status == TimerStatus.DANGER
 
-internal fun effectiveTrackAlpha(status: TimerStatus, pulseAlpha: Float): Float =
-    if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
+internal fun effectiveTrackAlpha(
+    status: TimerStatus,
+    pulseAlpha: Float,
+): Float = if (status == TimerStatus.PAUSED) 0.45f else pulseAlpha
 
 @Composable
 fun CircularTimer(
@@ -144,22 +142,6 @@ fun CircularTimer(
     }
     val circlePulseAlpha = circlePulseAlphaAnim.value
 
-    // Orbiting shimmer dot
-    val shimmerAngleAnim = remember { Animatable(0f) }
-    LaunchedEffect(isActivelyRunning) {
-        if (isActivelyRunning) {
-            shimmerAngleAnim.animateTo(
-                targetValue = shimmerAngleAnim.value + 360f,
-                animationSpec =
-                    infiniteRepeatable(
-                        animation = tween(durationMillis = CircularTimerAnimationConfig.SHIMMER_ORBIT_MS, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart,
-                    ),
-            )
-        }
-    }
-    val shimmerAngle = shimmerAngleAnim.value
-
     // Accessibility: only expose status and range, never timing data
     val accessibilityText =
         when (status) {
@@ -188,27 +170,6 @@ fun CircularTimer(
                 radius = radius - strokePx / 2,
                 style = Stroke(width = strokePx, cap = StrokeCap.Round),
             )
-
-            // Orbiting shimmer dot (only when actively running, not paused/complete)
-            if (isActivelyRunning) {
-                val shimmerAngleRad = Math.toRadians((shimmerAngle - 90).toDouble())
-                val arcRadius = radius - strokePx / 2
-                val shimmerX = (radius + arcRadius * kotlin.math.cos(shimmerAngleRad)).toFloat()
-                val shimmerY = (radius + arcRadius * kotlin.math.sin(shimmerAngleRad)).toFloat()
-
-                // Outer glow (large, soft)
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.15f),
-                    radius = strokePx * 2.5f,
-                    center = Offset(shimmerX, shimmerY),
-                )
-                // Inner bright spot
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.5f),
-                    radius = strokePx,
-                    center = Offset(shimmerX, shimmerY),
-                )
-            }
 
             // Progress arc
             val sweepAngle = 360f * animatedProgress
@@ -243,19 +204,12 @@ fun CircularTimer(
                 )
             }
 
-            // Tracking dot at the start of progress (like iOS)
+            // Keep the start marker to a single dot so the ring never looks like a countdown.
             if (animatedProgress > 0f && animatedProgress < 1f) {
                 val startAngle = Math.toRadians(-90.0)
                 val trackDotX = (radius + (radius - strokePx / 2) * kotlin.math.cos(startAngle)).toFloat()
                 val trackDotY = (radius + (radius - strokePx / 2) * kotlin.math.sin(startAngle)).toFloat()
 
-                // Outer glow
-                drawCircle(
-                    color = animatedColor.copy(alpha = 0.3f),
-                    radius = strokePx * 1.5f,
-                    center = Offset(trackDotX, trackDotY),
-                )
-                // Inner dot
                 drawCircle(
                     color = animatedColor.copy(alpha = 0.6f),
                     radius = strokePx * 0.8f,

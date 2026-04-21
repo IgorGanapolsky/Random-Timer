@@ -113,9 +113,10 @@ fix-ios-device:
 
 # Install git hooks
 install-hooks:
-	@cp scripts/pre-commit .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "✅ Pre-commit hook installed"
+	@./scripts/shell/bootstrap_git_config.sh
+	@echo "✅ Git bootstrap complete"
+
+bootstrap-git: install-hooks
 
 # Verify (unit tests + builds)
 verify: verify-android verify-ios

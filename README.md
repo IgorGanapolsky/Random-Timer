@@ -98,8 +98,11 @@ flowchart TB
 Entry point: **[`Makefile`](Makefile)**.
 
 ```bash
+make bootstrap-git
 make verify
 ```
+
+`make bootstrap-git` is worktree-safe. On Git `2.54+`, it configures the repo pre-commit hook via `hook.*` config and enables `git status` comparisons against both `@{upstream}` and `@{push}`. On older Git versions, it falls back to a managed hook wrapper in the resolved hooks directory.
 
 Details: iOS `native-ios/` (`xcodebuild`), Android `native-android/` (`./gradlew …`). See Makefile targets for simulators, Maestro, and platform-specific checks.
 

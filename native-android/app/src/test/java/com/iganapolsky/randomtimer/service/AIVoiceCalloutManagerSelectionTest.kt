@@ -110,6 +110,28 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun commandCueRepeatFamilyGroupsMoveWithAPurposeVariants() {
+        assertThat(commandCueRepeatFamilyKey("cmd_move_with_a_purpose")).isEqualTo("move_with_a_purpose")
+        assertThat(commandCueRepeatFamilyKey("cmd_most_ricky_tick")).isEqualTo("move_with_a_purpose")
+        assertThat(commandCueRepeatFamilyKey("cmd_stay_locked_in")).isEqualTo("cmd_stay_locked_in")
+    }
+
+    @Test
+    fun maleCommandCuePoolPrefersCombatStyleLinesAndDropsMostRickyTick() {
+        val cues =
+            listOf(
+                VoiceCue(filename = "cmd_most_ricky_tick", text = "Most ricky tick. Move with a purpose."),
+                VoiceCue(filename = "cmd_stay_in_the_fight", text = "Stay in the fight."),
+                VoiceCue(filename = "cmd_drive_forward", text = "Drive forward. No hesitation."),
+                VoiceCue(filename = "cmd_keep_tempo_high", text = "Keep the tempo high."),
+            )
+
+        val selected = commandCuePoolForGender(cues, VoiceGender.MALE)
+
+        assertThat(selected.map { it.filename }).containsExactly("cmd_stay_in_the_fight", "cmd_drive_forward")
+    }
+
+    @Test
     fun nextPreviewCueFilenameAvoidsImmediateRepeatsAndCyclesUnusedSamples() {
         val used = linkedSetOf("cue_a")
 
@@ -152,6 +174,14 @@ class AIVoiceCalloutManagerSelectionTest {
         assertThat(initialFollowupCommandCueSecond(30)).isEqualTo(Int.MAX_VALUE)
         assertThat(initialFollowupCommandCueSecond(31)).isEqualTo(30)
         assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
+    }
+
+    @Test
+    fun calloutCooldownRequiresThirtySecondsBetweenSpokenCues() {
+        assertThat(hasMetVoiceCalloutCooldown(elapsedSeconds = 29, lastCueSecond = 1)).isFalse()
+        assertThat(hasMetVoiceCalloutCooldown(elapsedSeconds = 30, lastCueSecond = 1)).isFalse()
+        assertThat(hasMetVoiceCalloutCooldown(elapsedSeconds = 31, lastCueSecond = 1)).isTrue()
+        assertThat(hasMetVoiceCalloutCooldown(elapsedSeconds = 60, lastCueSecond = 30)).isTrue()
     }
 
     @Test
