@@ -484,8 +484,12 @@ platform :ios do
 
     app_ids = ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"]
 
+    # match_nuke action accepts only the strict type enum
+    # (appstore/adhoc/development/enterprise/developer_id/…). "distribution"
+    # is a fastlane CLI-only alias that maps to appstore; passing it to the
+    # action throws "Unsupported environment distribution".
     match_nuke(
-      type: "distribution",
+      type: "appstore",
       app_identifier: app_ids,
       api_key: api_key,
       skip_confirmation: true
