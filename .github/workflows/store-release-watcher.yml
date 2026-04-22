@@ -8,7 +8,7 @@ on:
       version:
         description: 'Marketing version to watch'
         required: false
-        default: '1.3.24'
+        default: '1.3.26'
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     env:
-      TARGET_VERSION: ${{ inputs.version || '1.3.24' }}
+      TARGET_VERSION: ${{ inputs.version || '1.3.26' }}
       IOS_BUNDLE: com.igorganapolsky.randomtimer
       ANDROID_PACKAGE: com.iganapolsky.randomtimer
       ISSUE_TITLE_PREFIX: 'Release watch: v'
