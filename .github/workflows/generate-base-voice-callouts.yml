@@ -61,20 +61,18 @@ jobs:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
         run: |
           set -euo pipefail
-          if git diff --quiet -- \
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
             native-ios/RandomTimer/Resources/Audio \
-            native-android/app/src/main/res/raw; then
+            native-android/app/src/main/res/raw
+          if git diff --cached --quiet; then
             echo "No new audio assets generated."
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           BRANCH="feat/base-voice-callouts-$(date -u +%Y%m%d-%H%M%S)-run-${GITHUB_RUN_ID}"
           git checkout -b "$BRANCH"
-          git add \
-            native-ios/RandomTimer/Resources/Audio \
-            native-android/app/src/main/res/raw
           git commit -m "feat(audio): render missing base voice callouts"
           git push origin "$BRANCH"
           gh pr create --base develop --head "$BRANCH" \
