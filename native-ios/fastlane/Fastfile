@@ -488,9 +488,14 @@ platform :ios do
     # (appstore/adhoc/development/enterprise/developer_id/…). "distribution"
     # is a fastlane CLI-only alias that maps to appstore; passing it to the
     # action throws "Unsupported environment distribution".
+    # Explicit readonly:false — fastlane's Matchfile / setup_ci can otherwise
+    # default match_nuke to readonly, producing a dry-run that refuses with
+    # "fastlane match nuke doesn't delete anything when running with
+    # --readonly enabled".
     match_nuke(
       type: "appstore",
       app_identifier: app_ids,
+      readonly: false,
       api_key: api_key,
       skip_confirmation: true
     )
