@@ -10,8 +10,17 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
+
+_SAFE_FILENAME = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+
+
+def _safe_filename(filename: str) -> str:
+    if not _SAFE_FILENAME.fullmatch(filename):
+        raise ValueError(f"Unsafe cue filename rejected: {filename!r}")
+    return filename
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -36,13 +45,18 @@ DEFAULT_VOICE_SETTINGS = {
 
 def _missing_male_cues(catalog: dict) -> list[tuple[str, str]]:
     return [
-        (cue["filename"], cue["text"])
+        (_safe_filename(cue["filename"]), cue["text"])
         for cue in catalog["commandCues"]
-        if not (ANDROID_RAW_DIR / f"{cue['filename']}.mp3").is_file()
+        if not (ANDROID_RAW_DIR / f"{_safe_filename(cue['filename'])}.mp3").is_file()
     ]
 
 
-def _mirror(src: Path, dst: Path) -> None:
+def _mirror_into(src_dir: Path, dst_dir: Path, filename: str) -> None:
+    safe = _safe_filename(filename)
+    src = (src_dir / f"{safe}.mp3").resolve()
+    dst = (dst_dir / f"{safe}.mp3").resolve()
+    if src_dir.resolve() not in src.parents or dst_dir.resolve() not in dst.parents:
+        raise ValueError(f"Mirror path escaped allowed dir: {src} -> {dst}")
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_bytes(src.read_bytes())
     print(f"mirrored -> {dst}")
@@ -78,7 +92,7 @@ def main() -> int:
         output_dir=IOS_AUDIO_DIR,
     )
     for filename, _ in missing:
-        _mirror(IOS_AUDIO_DIR / f"{filename}.mp3", ANDROID_RAW_DIR / f"{filename}.mp3")
+        _mirror_into(IOS_AUDIO_DIR, ANDROID_RAW_DIR, filename)
 
     if female_voice_id:
         female_settings = _load_voice_settings(api_key, female_voice_id, DEFAULT_VOICE_SETTINGS)
@@ -91,10 +105,14 @@ def main() -> int:
             output_dir=IOS_FEMALE_AUDIO_DIR,
         )
         for filename, _ in missing:
-            _mirror(
-                IOS_FEMALE_AUDIO_DIR / f"{filename}.mp3",
-                ANDROID_RAW_DIR / f"female_{filename}.mp3",
-            )
+            safe = _safe_filename(filename)
+            src = (IOS_FEMALE_AUDIO_DIR / f"{safe}.mp3").resolve()
+            dst = (ANDROID_RAW_DIR / f"female_{safe}.mp3").resolve()
+            if IOS_FEMALE_AUDIO_DIR.resolve() not in src.parents or ANDROID_RAW_DIR.resolve() not in dst.parents:
+                raise ValueError(f"Female mirror path escaped allowed dir: {src} -> {dst}")
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes(src.read_bytes())
+            print(f"mirrored -> {dst}")
     else:
         print("FEMALE_VOICE_ID not set — skipping female render.")
 
