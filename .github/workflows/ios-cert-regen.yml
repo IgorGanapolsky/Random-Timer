@@ -98,6 +98,10 @@ jobs:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_SKIP_CONFIRMATION: "1"
+          # MATCH_SKIP_CONFIRMATION must be the literal string "true"/"false";
+          # "1" causes match to reject with `'skip_confirmation' value must be
+          # either true or false! Found String instead.` when the env var
+          # leaks into the subsequent match appstore regen call.
+          MATCH_SKIP_CONFIRMATION: "true"
           FASTLANE_SKIP_UPDATE_CHECK: "1"
         run: fastlane regen_dist_certs
