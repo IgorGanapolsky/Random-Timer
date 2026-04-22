@@ -228,6 +228,7 @@ final class AIVoiceCalloutService {
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
     private var usedCommandCueFilenames: Set<String> = []
+    private var lastCueFiredAtElapsed: Int?
     private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
     private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
 
@@ -266,6 +267,7 @@ final class AIVoiceCalloutService {
         usedCommandCueFilenames.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
+        lastCueFiredAtElapsed = nil
     }
 
     func preview() {
@@ -331,12 +333,17 @@ final class AIVoiceCalloutService {
     }
 
     func triggerCallout(elapsedSeconds: Int) {
+        if let last = lastCueFiredAtElapsed, elapsedSeconds - last < 30 {
+            return
+        }
+
         if let callout = elapsedMilestone(for: elapsedSeconds) {
             speak(callout.text)
             lastElapsedMilestone = elapsedSeconds
             if nextCommandCueAt <= elapsedSeconds {
                 nextCommandCueAt = elapsedSeconds + 30
             }
+            lastCueFiredAtElapsed = elapsedSeconds
             return
         }
 
@@ -345,6 +352,7 @@ final class AIVoiceCalloutService {
             speak(cue.text)
             lastCommandCueFilename = cue.filename
             nextCommandCueAt = elapsedSeconds + 30
+            lastCueFiredAtElapsed = elapsedSeconds
         }
     }
 
@@ -372,12 +380,16 @@ final class AIVoiceCalloutService {
 
     private func randomCommandCue() -> VoiceCueCatalog.Cue {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        var pool = catalog.commandCues.filter { !usedCommandCueFilenames.contains($0.filename) }
+        // Only consider cues whose audio is actually resolvable. Without this, unbundled
+        // cues cause playback to fall back to `cmd_move_with_a_purpose` and the user hears
+        // the same line on repeat while dedup thinks different cues were picked.
+        let playable = catalog.commandCues.filter { cueHasAudio($0.filename) }
+        let baseline = playable.isEmpty ? catalog.commandCues : playable
+        var pool = baseline.filter { !usedCommandCueFilenames.contains($0.filename) }
         if pool.isEmpty {
-            // All cues used — reset and exclude only the last one
             usedCommandCueFilenames.removeAll()
-            pool = catalog.commandCues.filter { $0.filename != lastCommandCueFilename }
-            if pool.isEmpty { pool = catalog.commandCues }
+            pool = baseline.filter { $0.filename != lastCommandCueFilename }
+            if pool.isEmpty { pool = baseline }
         }
         let cue = nextCommandCue(from: pool, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
@@ -385,6 +397,11 @@ final class AIVoiceCalloutService {
         lastCommandCueFilename = cue.filename
         usedCommandCueFilenames.insert(cue.filename)
         return cue
+    }
+
+    private func cueHasAudio(_ filename: String) -> Bool {
+        let gendered = genderedVoiceFilename(filename, gender: currentGender)
+        return packStore.voiceAudioURL(for: gendered, bundle: bundle) != nil
     }
 
     private func secureRandomInt(in range: ClosedRange<Int>) -> Int {
