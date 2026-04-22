@@ -541,34 +541,18 @@ def verify_pricing(client: ASCClient, app_id: str) -> None:
     schedule_id: str | None = None
     base_territory_id: str | None = None
 
-    # Current API: some accounts expose a singular schedule relationship off the app.
+    # Current API: price schedule is exposed as a singular relationship off the app.
     try:
         data = client.request(
             "GET",
             f"/apps/{app_id}/appPriceSchedule",
-            params={"include": "baseTerritory", "limit": 10},
+            params={"include": "baseTerritory"},
         )
         candidate = data.get("data")
         if isinstance(candidate, dict) and candidate.get("id"):
             schedule = candidate
     except Exception:
         schedule = None
-
-    # Common API: schedules are top-level resources filtered by app.
-    if not schedule:
-        try:
-            data = client.request(
-                "GET",
-                "/appPriceSchedules",
-                params={"filter[app]": app_id, "include": "baseTerritory", "limit": 10},
-            )
-            schedule_list = data.get("data") or []
-            for item in schedule_list:
-                if isinstance(item, dict) and item.get("id"):
-                    schedule = item
-                    break
-        except Exception:
-            schedule = None
 
     if schedule and schedule.get("id"):
         schedule_id = schedule["id"]

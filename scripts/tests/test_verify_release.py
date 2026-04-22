@@ -130,6 +130,23 @@ def test_google_play_verify_api_error(monkeypatch):
     assert result["status"] == "ERROR"
 
 
+def test_google_play_verify_production_clarifies_backend_only(monkeypatch):
+    gp = vr.GooglePlayVerifier()
+    mock_edits = MagicMock()
+    mock_edits.insert.return_value.execute.return_value = {"id": "edit-1"}
+    mock_edits.tracks.return_value.get.return_value.execute.return_value = {
+        "releases": [{"versionCodes": ["42"], "status": "completed"}]
+    }
+    mock_edits.delete.return_value.execute.return_value = {}
+    gp.service = MagicMock(edits=lambda: mock_edits)
+
+    result = gp.verify("production", 42)
+
+    assert result["passed"] is True
+    assert result["status"] == "completed"
+    assert "backend track state only" in result["details"]
+
+
 def test_appstore_verifier_verify_build_found(monkeypatch):
     asc = vr.AppStoreVerifier()
     monkeypatch.setattr(asc, "_get_app_id", lambda: "app-123")

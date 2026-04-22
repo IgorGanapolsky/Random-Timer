@@ -164,13 +164,19 @@ class GooglePlayVerifier:
                 codes = [int(c) for c in release.get("versionCodes", [])]
                 if version_code in codes:
                     status = release.get("status", "unknown")
+                    details = (
+                        f"versionCode {version_code} found on '{track}' "
+                        f"track with status '{status}'"
+                    )
+                    if track == "production":
+                        details += (
+                            "; this proves backend track state only, not public storefront visibility. "
+                            "Managed publishing or storefront propagation can still delay public availability."
+                        )
                     return {
                         "passed": status in ("completed", "inProgress", "draft", "halted"),
                         "status": status,
-                        "details": (
-                            f"versionCode {version_code} found on '{track}' "
-                            f"track with status '{status}'"
-                        ),
+                        "details": details,
                     }
 
             # Not found on any release in this track

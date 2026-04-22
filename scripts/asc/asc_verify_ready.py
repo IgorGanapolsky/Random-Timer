@@ -203,13 +203,74 @@ def _get_app_review_details(client: AscClient, app_store_version_id: str) -> Dic
     return data if isinstance(data, dict) else {}
 
 
-def _get_app_price_schedules(client: AscClient, app_id: str) -> List[Dict[str, Any]]:
-    # If pricing is not set, this list tends to be empty.
-    payload = client.get(
-        f"/apps/{app_id}/appPriceSchedules",
-        params={"limit": "10"},
-    )
-    return payload.get("data", []) or []
+def _get_app_pricing_summary(client: AscClient, app_id: str) -> Dict[str, Any]:
+    # Pricing verification needs read-back evidence, not "best effort" skips.
+    # Prefer the current price-schedule model, but accept legacy /prices when present.
+    try:
+        legacy = client.get(f"/apps/{app_id}/prices", params={"limit": "1"})
+        legacy_data = legacy.get("data") or []
+        if legacy_data:
+            return {
+                "source": "legacy_prices",
+                "schedule_count": len(legacy_data),
+                "manual_price_count": len(legacy_data),
+                "automatic_price_count": 0,
+            }
+    except Exception:
+        pass
+
+    schedule: Dict[str, Any] | None = None
+    schedule_id: str | None = None
+    errors: List[str] = []
+
+    try:
+        payload = client.get(
+            f"/apps/{app_id}/appPriceSchedule",
+            params={"include": "baseTerritory"},
+        )
+        candidate = payload.get("data")
+        if isinstance(candidate, dict) and candidate.get("id"):
+            schedule = candidate
+            schedule_id = str(candidate["id"])
+    except Exception as exc:
+        errors.append(f"/apps/{app_id}/appPriceSchedule: {exc}")
+
+    if not schedule_id:
+        detail = "; ".join(errors) if errors else "no price schedule resource found"
+        raise AscClientError(f"Could not verify pricing: {detail}")
+
+    manual_prices = []
+    automatic_prices = []
+    manual_error: Exception | None = None
+    automatic_error: Exception | None = None
+
+    try:
+        payload = client.get(f"/appPriceSchedules/{schedule_id}/manualPrices", params={"limit": "10"})
+        manual_prices = payload.get("data") or []
+    except Exception as exc:
+        manual_error = exc
+
+    try:
+        payload = client.get(f"/appPriceSchedules/{schedule_id}/automaticPrices", params={"limit": "10"})
+        automatic_prices = payload.get("data") or []
+    except Exception as exc:
+        automatic_error = exc
+
+    if not manual_prices and not automatic_prices:
+        detail_parts = [f"schedule_id={schedule_id}"]
+        if manual_error is not None:
+            detail_parts.append(f"manualPrices={manual_error}")
+        if automatic_error is not None:
+            detail_parts.append(f"automaticPrices={automatic_error}")
+        raise AscClientError("Could not verify pricing: " + "; ".join(detail_parts))
+
+    return {
+        "source": "price_schedule",
+        "schedule_count": 1 if schedule else 0,
+        "schedule_id": schedule_id,
+        "manual_price_count": len(manual_prices),
+        "automatic_price_count": len(automatic_prices),
+    }
 
 
 def _get_age_rating_declaration(
@@ -464,24 +525,27 @@ def verify_ready(
             )
         )
 
-    # Pricing (App Price Schedule exists)
+    # Pricing
     try:
-        schedules = _get_app_price_schedules(client, app_id)
+        pricing = _get_app_pricing_summary(client, app_id)
         checks.append(
             Check(
                 name="Pricing Set",
-                passed=len(schedules) > 0,
-                details=f"appPriceSchedules={len(schedules)}",
-                evidence={"appPriceSchedules_count": len(schedules)},
+                passed=True,
+                details=(
+                    f"source={pricing['source']} schedule_id={pricing.get('schedule_id', '') or 'legacy'} "
+                    f"manualPrices={pricing['manual_price_count']} "
+                    f"automaticPrices={pricing['automatic_price_count']}"
+                ),
+                evidence=pricing,
             )
         )
     except AscClientError as exc:
         checks.append(
             Check(
                 name="Pricing Set",
-                passed=True,
-                details=f"Skipped check (endpoint/API unavailable): {exc}",
-                evidence={"skipped": True},
+                passed=False,
+                details=str(exc),
             )
         )
     except Exception as exc:

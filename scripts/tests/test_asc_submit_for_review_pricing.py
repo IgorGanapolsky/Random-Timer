@@ -13,14 +13,29 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
             {
                 ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 ("GET", "/apps/app1/appPriceSchedule"): RuntimeError("404"),
-                ("GET", "/appPriceSchedules"): {"data": [{"id": "sched1", "type": "appPriceSchedules"}]},
-                ("GET", "/appPriceSchedules/sched1/manualPrices"): {"data": [{"id": "mp1", "type": "appPrices"}]},
+                (
+                    "GET",
+                    "/apps/app1/appPricePoints",
+                ): {
+                    "data": [
+                        {"id": "pp1", "type": "appPricePoints", "attributes": {"customerPrice": "0.00"}},
+                        {"id": "pp2", "type": "appPricePoints", "attributes": {"customerPrice": "0.99"}},
+                    ]
+                },
+                ("POST", "/appPriceSchedules"): {"data": {"id": "sched1", "type": "appPriceSchedules"}},
+                ("GET", "/appPriceSchedules/sched1"): {"data": {"id": "sched1", "type": "appPriceSchedules"}},
             }
         )
         verify_pricing(client, "app1")
         self.assertEqual(
             [c["path"] for c in client.calls],
-            ["/apps/app1/prices", "/apps/app1/appPriceSchedule", "/appPriceSchedules", "/appPriceSchedules/sched1/manualPrices"],
+            [
+                "/apps/app1/prices",
+                "/apps/app1/appPriceSchedule",
+                "/apps/app1/appPricePoints",
+                "/appPriceSchedules",
+                "/appPriceSchedules/sched1",
+            ],
         )
 
     def test_verify_pricing_falls_back_to_singular_schedule_endpoint(self):
@@ -44,7 +59,6 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
 
         client = RouterClient(
             {
-                ("GET", "/appPriceSchedules"): {"data": []},
                 ("GET", "/apps/app1/appPriceSchedule"): RuntimeError("404"),
                 ("GET", "/apps/app1/prices"): RuntimeError("404"),
                 (
@@ -65,7 +79,6 @@ class AscSubmitForReviewVerifyPricingTests(unittest.TestCase):
             verify_pricing(client, "app1")
 
         paths = [c["path"] for c in client.calls]
-        self.assertIn("/appPriceSchedules", paths)
         self.assertIn("/apps/app1/appPricePoints", paths)
         self.assertIn("/appPriceSchedules/sched1", paths)
         post = next((c for c in client.calls if c["method"] == "POST" and c["path"] == "/appPriceSchedules"), None)

@@ -80,8 +80,14 @@ class _FakeAscClient:
                 }
             }
 
-        if path == "/apps/app1/appPriceSchedules":
-            return {"data": [{"id": "price1", "type": "appPriceSchedules"}]}
+        if path == "/apps/app1/appPriceSchedule":
+            return {"data": {"id": "price1", "type": "appPriceSchedules"}}
+
+        if path == "/appPriceSchedules/price1/manualPrices":
+            return {"data": [{"id": "manual1", "type": "appPrices"}]}
+
+        if path == "/appPriceSchedules/price1/automaticPrices":
+            return {"data": []}
 
         if path == "/appInfos/info1/ageRatingDeclaration":
             return {"data": {"id": "age1", "type": "appStoreAgeRatingDeclarations"}}
@@ -205,6 +211,44 @@ class AscVerifyReadyScreenshotStateTests(unittest.TestCase):
         self.assertFalse(passed)
         terms_check = next(c for c in report["checks"] if c["name"] == "Terms of Use Link")
         self.assertFalse(terms_check["passed"])
+
+    def test_verify_ready_fails_when_pricing_cannot_be_verified(self):
+        from scripts.asc import asc_verify_ready
+
+        fake = _FakeAscClient(
+            app_screenshots_by_set={
+                "set_iphone": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "ph"),
+                "set_ipad": self._shots(["COMPLETE", "COMPLETE", "COMPLETE"], "pd"),
+            }
+        )
+
+        original_get = fake.get
+
+        def patched_get(path, params=None):
+            if path in {
+                "/apps/app1/prices",
+                "/apps/app1/appPriceSchedule",
+                "/appPriceSchedules",
+            }:
+                raise RuntimeError("pricing endpoint unavailable")
+            return original_get(path, params)
+
+        fake.get = patched_get
+
+        with mock.patch("scripts.asc.asc_verify_ready.AscClient", return_value=fake):
+            passed, report = asc_verify_ready.verify_ready(
+                bundle_id="com.igorganapolsky.randomtimer",
+                version="1.1.1",
+                locale="en-US",
+                min_iphone=3,
+                min_ipad=3,
+                require_build=True,
+            )
+
+        self.assertFalse(passed)
+        pricing_check = next(c for c in report["checks"] if c["name"] == "Pricing Set")
+        self.assertFalse(pricing_check["passed"])
+        self.assertIn("Could not verify pricing", pricing_check["details"])
 
 
 if __name__ == "__main__":
