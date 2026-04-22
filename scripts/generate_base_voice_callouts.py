@@ -18,9 +18,13 @@ _SAFE_FILENAME = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 
 def _safe_filename(filename: str) -> str:
-    if not _SAFE_FILENAME.fullmatch(filename):
+    # Strip any path components Sonar taint analysis cares about, then
+    # enforce an alphanumeric/underscore whitelist. Both together.
+    stripped = os.path.basename(filename)
+    if not _SAFE_FILENAME.fullmatch(stripped):
         raise ValueError(f"Unsafe cue filename rejected: {filename!r}")
-    return filename
+    return stripped
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -43,19 +47,26 @@ DEFAULT_VOICE_SETTINGS = {
 }
 
 
+def _existing_android_raw_stems() -> set[str]:
+    return {path.stem for path in ANDROID_RAW_DIR.glob("*.mp3")}
+
+
 def _missing_male_cues(catalog: dict) -> list[tuple[str, str]]:
-    return [
-        (_safe_filename(cue["filename"]), cue["text"])
-        for cue in catalog["commandCues"]
-        if not (ANDROID_RAW_DIR / f"{_safe_filename(cue['filename'])}.mp3").is_file()
-    ]
+    existing = _existing_android_raw_stems()
+    result: list[tuple[str, str]] = []
+    for cue in catalog["commandCues"]:
+        name = _safe_filename(cue["filename"])
+        if name not in existing:
+            result.append((name, cue["text"]))
+    return result
 
 
-def _mirror_into(src_dir: Path, dst_dir: Path, filename: str) -> None:
-    safe = _safe_filename(filename)
-    src = (src_dir / f"{safe}.mp3").resolve()
-    dst = (dst_dir / f"{safe}.mp3").resolve()
-    if src_dir.resolve() not in src.parents or dst_dir.resolve() not in dst.parents:
+def _write_mirror(src_dir: Path, dst_dir: Path, stem: str, dst_prefix: str = "") -> None:
+    src_dir_resolved = src_dir.resolve()
+    dst_dir_resolved = dst_dir.resolve()
+    src = src_dir_resolved / f"{stem}.mp3"
+    dst = dst_dir_resolved / f"{dst_prefix}{stem}.mp3"
+    if src.parent != src_dir_resolved or dst.parent != dst_dir_resolved:
         raise ValueError(f"Mirror path escaped allowed dir: {src} -> {dst}")
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_bytes(src.read_bytes())
@@ -79,8 +90,8 @@ def main() -> int:
         return 0
 
     print(f"Generating {len(missing)} missing cue(s):")
-    for filename, text in missing:
-        print(f"  - {filename}: {text!r}")
+    for stem, text in missing:
+        print(f"  - {stem}: {text!r}")
 
     male_settings = _load_voice_settings(api_key, male_voice_id, DEFAULT_VOICE_SETTINGS)
     _generate_voice_assets(
@@ -91,8 +102,8 @@ def main() -> int:
         lines=missing,
         output_dir=IOS_AUDIO_DIR,
     )
-    for filename, _ in missing:
-        _mirror_into(IOS_AUDIO_DIR, ANDROID_RAW_DIR, filename)
+    for stem, _ in missing:
+        _write_mirror(IOS_AUDIO_DIR, ANDROID_RAW_DIR, stem)
 
     if female_voice_id:
         female_settings = _load_voice_settings(api_key, female_voice_id, DEFAULT_VOICE_SETTINGS)
@@ -104,15 +115,8 @@ def main() -> int:
             lines=missing,
             output_dir=IOS_FEMALE_AUDIO_DIR,
         )
-        for filename, _ in missing:
-            safe = _safe_filename(filename)
-            src = (IOS_FEMALE_AUDIO_DIR / f"{safe}.mp3").resolve()
-            dst = (ANDROID_RAW_DIR / f"female_{safe}.mp3").resolve()
-            if IOS_FEMALE_AUDIO_DIR.resolve() not in src.parents or ANDROID_RAW_DIR.resolve() not in dst.parents:
-                raise ValueError(f"Female mirror path escaped allowed dir: {src} -> {dst}")
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_bytes(src.read_bytes())
-            print(f"mirrored -> {dst}")
+        for stem, _ in missing:
+            _write_mirror(IOS_FEMALE_AUDIO_DIR, ANDROID_RAW_DIR, stem, dst_prefix="female_")
     else:
         print("FEMALE_VOICE_ID not set — skipping female render.")
 
