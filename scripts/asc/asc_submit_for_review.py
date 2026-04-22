@@ -8,6 +8,7 @@ It performs hard preflight checks and reads back state before reporting success.
 from __future__ import annotations
 
 import argparse
+import re
 import os
 import sys
 import time
@@ -795,7 +796,30 @@ def _list_review_submission_items(client: ASCClient, submission_id: str) -> list
             "fields[reviewSubmissionItems]": "state",
         },
     )
-    return data.get("data") or []
+    items = data.get("data") or []
+    if not isinstance(items, list):
+        return []
+
+    included_versions = [
+        inc
+        for inc in (data.get("included") or [])
+        if isinstance(inc, dict) and inc.get("type") == "appStoreVersions" and inc.get("id")
+    ]
+    if len(included_versions) == 1:
+        version_id = included_versions[0]["id"]
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            relationships = item.setdefault("relationships", {})
+            if not isinstance(relationships, dict):
+                item["relationships"] = {}
+                relationships = item["relationships"]
+            app_store_version = relationships.get("appStoreVersion")
+            if app_store_version:
+                continue
+            relationships["appStoreVersion"] = {"data": {"type": "appStoreVersions", "id": version_id}}
+
+    return [item for item in items if isinstance(item, dict)]
 
 
 def _find_submission_for_version(
@@ -850,6 +874,52 @@ def _create_review_submission_item(client: ASCClient, *, submission_id: str, ver
         }
     }
     return client.request("POST", "/reviewSubmissionItems", payload=payload).get("data") or {}
+
+
+def _extract_submission_id_from_item_conflict(exc: Exception) -> str | None:
+    msg = str(exc)
+    if "ITEM_PART_OF_ANOTHER_SUBMISSION" not in msg:
+        return None
+    match = re.search(r"another reviewSubmission with id ([A-Za-z0-9-]+)", msg)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def _get_review_submission(client: ASCClient, submission_id: str) -> dict[str, Any]:
+    return client.request(
+        "GET",
+        f"/reviewSubmissions/{submission_id}",
+        params={"fields[reviewSubmissions]": "platform,state,submittedDate"},
+    ).get("data") or {}
+
+
+def _recover_submission_from_item_conflict(
+    client: ASCClient,
+    *,
+    submission_id: str,
+    version_id: str,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    submission = _get_review_submission(client, submission_id)
+    item: dict[str, Any] | None = None
+    items = _list_review_submission_items(client, submission_id)
+    for candidate in items:
+        rel_version = ((candidate.get("relationships") or {}).get("appStoreVersion") or {}).get("data") or {}
+        if rel_version.get("id") == version_id:
+            item = candidate
+            break
+    if item is None and len(items) == 1:
+        only_item = items[0]
+        if ((only_item.get("relationships") or {}).get("appStoreVersion") or {}).get("data"):
+            item = only_item
+    if not submission:
+        die(f"Conflict referenced missing review submission {submission_id}.")
+    if item is None:
+        die(
+            "Conflict referenced an existing review submission, but its App Store version item "
+            f"could not be recovered: submission_id={submission_id} version_id={version_id}"
+        )
+    return submission, item
 
 
 def _create_subscription_review_item(client: ASCClient, *, submission_id: str, subscription_id: str) -> dict[str, Any]:
@@ -1035,13 +1105,43 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach
         submission_id = str(submission.get("id") or "")
         if not submission_id:
             die("Failed to create review submission (missing submission id in response).")
-        item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        try:
+            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+        except Exception as exc:
+            conflicting_submission_id = _extract_submission_id_from_item_conflict(exc)
+            if not conflicting_submission_id:
+                raise
+            info(
+                "App Store version is already attached to another review submission; "
+                f"recovering submission {conflicting_submission_id}."
+            )
+            submission, item = _recover_submission_from_item_conflict(
+                client,
+                submission_id=conflicting_submission_id,
+                version_id=version_id,
+            )
+            submission_id = str(submission.get("id") or conflicting_submission_id)
     else:
         submission_id = str(submission.get("id") or "")
         if not submission_id:
             die("Existing review submission is missing an id.")
         if not item:
-            item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+            try:
+                item = _create_review_submission_item(client, submission_id=submission_id, version_id=version_id)
+            except Exception as exc:
+                conflicting_submission_id = _extract_submission_id_from_item_conflict(exc)
+                if not conflicting_submission_id:
+                    raise
+                info(
+                    "App Store version is already attached to another review submission; "
+                    f"recovering submission {conflicting_submission_id}."
+                )
+                submission, item = _recover_submission_from_item_conflict(
+                    client,
+                    submission_id=conflicting_submission_id,
+                    version_id=version_id,
+                )
+                submission_id = str(submission.get("id") or conflicting_submission_id)
 
     item_id = str((item or {}).get("id") or "")
     item_state = ((item or {}).get("attributes") or {}).get("state", "UNKNOWN")

@@ -30,10 +30,12 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         self.notificationService = notificationService
         self.liveActivityService = liveActivityService
 
-        // Load config synchronously from storage to avoid UI flicker.
-        // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
-        let rawConfig = storageService.loadConfigSync() ?? .default
-        self.config = rawConfig.clamped(isPro: ProManager.shared.isPro)
+        let startupPlan = TimerManagerStartupPlan.resolve(
+            rawConfig: storageService.loadConfigSync(),
+            persistedTimerState: storageService.loadTimerStateSync(),
+            isPro: ProManager.shared.isPro
+        )
+        self.config = startupPlan.initialConfig
 
         // Wire Bluetooth/CarPlay media button and notification action callbacks.
         // Media button behavior must match timer-circle tap (silence + stay on timer screen).
@@ -59,18 +61,12 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         notificationService.stopAlarmSound()
         notificationService.stopVibration()
 
-        // Check synchronously if there's a stale alarm/complete state and clear it
-        // This prevents showing the alarm screen when reopening after force close
-        if let savedState = storageService.loadTimerStateSync() {
-            if savedState.status == .alarm || savedState.status == .complete {
-                storageService.clearTimerStateSync()
-                // timerState stays nil - go to home screen
-            } else {
-                // There's an active timer - restore it async
-                Task {
-                    await endAllLiveActivities()
-                    await restoreActiveTimer()
-                }
+        if startupPlan.shouldClearPersistedTimerState {
+            storageService.clearTimerStateSync()
+        } else if startupPlan.shouldRestoreActiveTimer {
+            Task {
+                await endAllLiveActivities()
+                await restoreActiveTimer()
             }
         }
 

@@ -443,6 +443,14 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             "OTHER_SWIFT_FLAGS=\$(inherited) -D RT_SKIP_FIREBASE_FOR_CI"
 
+      - name: Enforce targeted iOS launch coverage
+        run: |
+          xcrun xccov view --report --json native-ios/build/TestResults.xcresult > native-ios/build/xccov-report.json
+          python3 scripts/check_ios_targeted_coverage.py \
+            --report-json native-ios/build/xccov-report.json \
+            --require native-ios/RandomTimer/Sources/App/AppBootstrap.swift=1.0 \
+            --require native-ios/RandomTimer/Sources/Services/TimerManagerStartupPlan.swift=1.0
+
       - name: Upload iOS xcresult
         if: always()
         uses: actions/upload-artifact@v7

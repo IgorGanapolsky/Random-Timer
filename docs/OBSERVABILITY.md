@@ -12,7 +12,7 @@ This document is the **source of truth** for what is **implemented in code** ver
 |------------|-----|---------|--------|
 | **PostHog** (events, identify, funnels) | Yes | Yes | Initializes only when `POSTHOG_API_KEY` is non-empty at build/runtime wiring. |
 | **Session replay** | Yes (SDK config) | Yes (SDK config) | Masking + throttling in code. **Internal** builds / simulators excluded on iOS; Android excludes emulators / debug similarly. **PostHog project** must have session recording enabled if you want replays in the UI. |
-| **Firebase Crashlytics** | Yes | Yes | Release pipelines require real `GoogleService-Info.plist` / `google-services.json` (not committed). iOS debug/test builds can run without a local `GoogleService-Info.plist`; Firebase init is skipped when the plist is not bundled or when CI/test skip flags are set. |
+| **Firebase Crashlytics** | Yes | Yes | Release pipelines require real `GoogleService-Info.plist` / `google-services.json` (not committed). iOS debug/test builds can run without a local `GoogleService-Info.plist`; Firebase init is skipped when the plist is not bundled or when CI/test skip flags are set, and release workflows fail before distribution if the iOS plist secret is missing. |
 | **Firebase Performance** | **No** (SPM product not linked) | **Yes** (Gradle plugin + `firebase-perf` dependency) | iOS auto-instrumentation was removed to stabilize CI; can be re-added later with the same CI skip pattern if validated. |
 | **Firebase Remote Config** | **No** | **No** | Not referenced in app sources; use PostHog feature flags until/unless RC is added. |
 | **PostHog feature flags (in-app)** | Yes | Yes | SDK `isFeatureEnabled` / `reloadFeatureFlags` (see `AnalyticsService` on each platform). Flags load at init with `preloadFeatureFlags` on Android; iOS reloads before paywall when needed. |
@@ -49,7 +49,7 @@ Nothing below should be pasted into chat or committed to git. Use Xcode, Gradle 
 
 ### 2. Firebase (Crashlytics + Android Performance)
 
-- [ ] **iOS release / local Firebase validation:** Download **`GoogleService-Info.plist`** from Firebase Console for `com.iganapolsky.randomtimer`, place at `native-ios/RandomTimer/GoogleService-Info.plist` (file is **gitignored**). Debug/test builds can compile without it, but Firebase/Crashlytics will stay disabled until the real plist is present.
+- [ ] **iOS release / local Firebase validation:** Download **`GoogleService-Info.plist`** from Firebase Console for `com.iganapolsky.randomtimer`, place at `native-ios/RandomTimer/GoogleService-Info.plist` (file is **gitignored**). Debug/test builds can compile without it, but Firebase/Crashlytics will stay disabled until the real plist is present, and distribution workflows now fail fast if `GOOGLE_SERVICE_INFO_PLIST` is unset.
 - [ ] **Android:** **`google-services.json`** in `native-android/app/` for real builds (gitignored in normal dev; CI generates a dummy for builds/tests).
 - [ ] Firebase Console: ensure **Crashlytics** is enabled for the app; **Performance Monitoring** enabled for Android (already depends on Gradle setup).
 

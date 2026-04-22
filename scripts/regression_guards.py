@@ -231,6 +231,7 @@ def check_voice_contract(repo_root: Path, errors: list[str]) -> None:
 
 def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
     app_source = _read(repo_root, "native-ios/RandomTimer/Sources/App/RandomTimerApp.swift")
+    bootstrap_source = _read(repo_root, "native-ios/RandomTimer/Sources/App/AppBootstrap.swift")
     pbxproj = _read(repo_root, "native-ios/RandomTimer.xcodeproj/project.pbxproj")
     observability = _read(repo_root, "docs/OBSERVABILITY.md")
 
@@ -241,14 +242,14 @@ def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
         label="RandomTimerApp.swift",
     )
     _assert_contains(
-        app_source,
+        bootstrap_source,
         "Skipping Firebase initialization because GoogleService-Info.plist is not bundled.",
         errors=errors,
-        label="RandomTimerApp.swift",
+        label="AppBootstrap.swift",
     )
-    _assert_contains(
+    _assert_not_contains(
         app_source,
-        "Missing bundled GoogleService-Info.plist in release build.",
+        "preconditionFailure(\"Missing bundled GoogleService-Info.plist in release build.\")",
         errors=errors,
         label="RandomTimerApp.swift",
     )
@@ -273,6 +274,12 @@ def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
     _assert_contains(
         observability,
         "iOS debug/test builds can run without a local `GoogleService-Info.plist`",
+        errors=errors,
+        label="docs/OBSERVABILITY.md",
+    )
+    _assert_contains(
+        observability,
+        "release workflows fail before distribution if the iOS plist secret is missing",
         errors=errors,
         label="docs/OBSERVABILITY.md",
     )

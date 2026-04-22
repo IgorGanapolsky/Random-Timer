@@ -30,10 +30,12 @@ jobs:
         working-directory: native-ios
         run: |
           set -euo pipefail
-          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
-            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
-            echo "Wrote GoogleService-Info.plist"
+          if [ -z "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST is required for distributed iOS builds"
+            exit 1
           fi
+          printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+          echo "Wrote GoogleService-Info.plist"
 
       - name: Fail fast on required Apple-ID secrets
         env:

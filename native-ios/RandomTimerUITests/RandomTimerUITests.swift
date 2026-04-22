@@ -264,11 +264,13 @@ final class RandomTimerUITests: XCTestCase {
     }
 }
 
+@MainActor
 private func saveScreenshot(_ screenshot: XCUIScreenshot, named name: String, outputDir: String) {
     let path = "\(outputDir)/\(name)"
     FileManager.default.createFile(atPath: path, contents: screenshot.pngRepresentation)
 }
 
+@MainActor
 private func captureSetupStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
     let loopToggle = app.switches["Loop Enabled"]
     if loopToggle.waitForExistence(timeout: 3.0) && loopToggle.value as? String == "0" {
@@ -282,6 +284,7 @@ private func captureSetupStorefront(_ app: XCUIApplication, isPadCapture: Bool, 
     )
 }
 
+@MainActor
 private func captureSoundStorefrontIfNeeded(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
     guard !isPadCapture else { return }
 
@@ -296,6 +299,7 @@ private func captureSoundStorefrontIfNeeded(_ app: XCUIApplication, isPadCapture
     sleep(1)
 }
 
+@MainActor
 private func captureRunningStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
     sleep(1)
     app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
@@ -307,6 +311,7 @@ private func captureRunningStorefront(_ app: XCUIApplication, isPadCapture: Bool
     )
 }
 
+@MainActor
 private func capturePausedStorefront(_ app: XCUIApplication, isPadCapture: Bool, outputDir: String) {
     let pauseButton = app.buttons["Pause"]
     if pauseButton.waitForExistence(timeout: 3.0) {

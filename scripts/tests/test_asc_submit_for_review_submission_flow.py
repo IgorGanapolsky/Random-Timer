@@ -199,6 +199,90 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             ],
         )
 
+    def test_submit_for_review_recovers_existing_rejected_submission_from_item_conflict(self):
+        from scripts.asc.asc_submit_for_review import submit_for_review
+
+        existing_submission_id = "d3ce3d68-cf57-4204-9d3a-44fdc69a4ef4"
+        conflict_shell_id = "sub-empty"
+        version_id = "ver-1"
+        item_id = "item-existing"
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                ("GET", "/apps/app-1/reviewSubmissions"): {
+                    "data": [
+                        {
+                            "id": conflict_shell_id,
+                            "type": "reviewSubmissions",
+                            "attributes": {"state": "READY_FOR_REVIEW", "submittedDate": None},
+                        }
+                    ]
+                },
+                ("GET", f"/reviewSubmissions/{conflict_shell_id}/items"): {"data": []},
+                ("POST", "/reviewSubmissionItems"): RuntimeError(
+                    "POST /reviewSubmissionItems failed: HTTP 409 {'errors': [{'code': "
+                    "'STATE_ERROR.ITEM_PART_OF_ANOTHER_SUBMISSION', 'detail': "
+                    "'appStoreVersions with id 884770007 was already added to another "
+                    f"reviewSubmission with id {existing_submission_id}'}}]"
+                ),
+                ("GET", f"/reviewSubmissions/{existing_submission_id}"): {
+                    "data": {
+                        "id": existing_submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "UNRESOLVED_ISSUES"},
+                    }
+                },
+                ("GET", f"/reviewSubmissions/{existing_submission_id}/items"): {
+                    "data": [
+                        {
+                            "id": item_id,
+                            "type": "reviewSubmissionItems",
+                            "attributes": {"state": "REJECTED"},
+                        }
+                    ],
+                    "included": [
+                        {
+                            "id": version_id,
+                            "type": "appStoreVersions",
+                        }
+                    ],
+                },
+                ("PATCH", f"/reviewSubmissionItems/{item_id}"): {
+                    "data": {
+                        "id": item_id,
+                        "type": "reviewSubmissionItems",
+                        "attributes": {"state": "READY_FOR_REVIEW"},
+                    }
+                },
+                ("PATCH", f"/reviewSubmissions/{existing_submission_id}"): {
+                    "data": {
+                        "id": existing_submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", version_id)
+
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{conflict_shell_id}/items",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{conflict_shell_id}/items",
+                "/reviewSubmissionItems",
+                f"/reviewSubmissions/{existing_submission_id}",
+                f"/reviewSubmissions/{existing_submission_id}/items",
+                f"/reviewSubmissionItems/{item_id}",
+                f"/reviewSubmissions/{existing_submission_id}",
+            ],
+        )
+
     def test_submit_for_review_with_attach_subscriptions_skips_existing_waiting_submission_when_none_pending(self):
         from scripts.asc.asc_submit_for_review import submit_for_review
 

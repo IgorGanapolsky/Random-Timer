@@ -29,18 +29,23 @@ struct RandomTimerApp: App {
     }
 
     init() {
-        guard !Self.shouldSkipFirebaseForHostedTests else { return }
-        guard Self.hasBundledFirebaseConfig else {
-            #if DEBUG
-            Self.logger.warning("Skipping Firebase initialization because GoogleService-Info.plist is not bundled.")
-            return
-            #else
-            preconditionFailure("Missing bundled GoogleService-Info.plist in release build.")
-            #endif
+        let bootstrapPlan = AppBootstrapPlan.resolve(
+            skipHostedTests: Self.shouldSkipFirebaseForHostedTests,
+            hasBundledFirebaseConfig: Self.hasBundledFirebaseConfig,
+        )
+
+        if let logMessage = bootstrapPlan.logMessage {
+            Self.logger.warning("\(logMessage, privacy: .public)")
         }
-        FirebaseApp.configure()
-        CrashReportingService.shared.initialize()
-        AnalyticsService.shared.initialize()
+
+        if bootstrapPlan.shouldInitializeFirebase {
+            FirebaseApp.configure()
+            CrashReportingService.shared.initialize()
+        }
+
+        if bootstrapPlan.shouldInitializeAnalytics {
+            AnalyticsService.shared.initialize()
+        }
     }
 
     var body: some Scene {

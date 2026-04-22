@@ -176,12 +176,12 @@ jobs:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: |
           set -euo pipefail
-          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
-            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
-            echo "✅ Wrote RandomTimer/GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST"
-          else
-            echo "ℹ️ GOOGLE_SERVICE_INFO_PLIST not set; using any plist already in the workspace"
+          if [ -z "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            echo "❌ GOOGLE_SERVICE_INFO_PLIST is required for distributed iOS builds"
+            exit 1
           fi
+          printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > RandomTimer/GoogleService-Info.plist
+          echo "✅ Wrote RandomTimer/GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST"
         working-directory: native-ios
 
       - name: Fail fast on required iOS distribution secrets

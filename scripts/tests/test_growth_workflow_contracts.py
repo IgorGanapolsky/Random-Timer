@@ -6,6 +6,7 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 INTERNAL_DISTRIBUTION_WORKFLOW = ROOT / ".github/workflows/internal-distribution.yml"
 IOS_METADATA_SYNC_WORKFLOW = ROOT / ".github/workflows/ios-metadata-sync.yml"
 IOS_INTERNAL_RETRY_WORKFLOW = ROOT / ".github/workflows/ios-internal-retry.yml"
+IOS_APPLE_ID_RELEASE_WORKFLOW = ROOT / ".github/workflows/ios-apple-id-release.yml"
 IOS_SUBMIT_REVIEW_WORKFLOW = ROOT / ".github/workflows/ios-submit-review.yml"
 NATIVE_RELEASE_WORKFLOW = ROOT / ".github/workflows/native-release.yml"
 ANDROID_PRODUCTION_RETRY_WORKFLOW = ROOT / ".github/workflows/android-production-retry.yml"
@@ -44,6 +45,14 @@ def test_ci_workflow_covers_release_and_hotfix_branches():
     source = CI_WORKFLOW.read_text(encoding="utf-8")
 
     assert "branches: [develop, main, 'release/**', 'hotfix/**']" in source
+
+
+def test_ci_workflow_enforces_targeted_ios_launch_coverage():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "check_ios_targeted_coverage.py" in source
+    assert "--require native-ios/RandomTimer/Sources/App/AppBootstrap.swift=1.0" in source
+    assert "--require native-ios/RandomTimer/Sources/Services/TimerManagerStartupPlan.swift=1.0" in source
 
 
 def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evidence():
@@ -216,6 +225,17 @@ def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requ
     assert "(inputs.platform == 'both' && needs.ios-testflight.result == 'success' && needs.android-release.result == 'success')" in source
     assert "(inputs.platform == 'ios' && needs.ios-testflight.result == 'success')" in source
     assert "(inputs.platform == 'android' && needs.android-release.result == 'success')" in source
+
+
+def test_distributed_ios_workflows_require_google_service_info_secret():
+    for workflow in (
+        NATIVE_RELEASE_WORKFLOW,
+        INTERNAL_DISTRIBUTION_WORKFLOW,
+        IOS_APPLE_ID_RELEASE_WORKFLOW,
+    ):
+        source = workflow.read_text(encoding="utf-8")
+        assert "GOOGLE_SERVICE_INFO_PLIST" in source
+        assert "required for distributed iOS builds" in source
 
 
 def test_native_release_workflow_keeps_ios_review_submission_opt_in():
