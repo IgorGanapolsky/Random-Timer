@@ -7,10 +7,10 @@ appId: com.igorganapolsky.randomtimer
 - assertVisible: 'Random Tactical Timer'
 - assertVisible:
     text: '.*Timer Range.*'
-- assertVisible: 'Start Timer'
+- assertVisible: 'Start First Drill'
 
 # Start the timer
-- tapOn: 'Start Timer'
+- tapOn: 'Start First Drill'
 
 # End the smoke flow with the app stopped. This avoids a Maestro iOS teardown
 # hang while the animated timer screen is active.

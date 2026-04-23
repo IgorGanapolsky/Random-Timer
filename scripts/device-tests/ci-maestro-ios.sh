@@ -191,7 +191,7 @@ record_stage "agent-device diagnostic snapshot"
 if run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
   snapshot -i -c --depth 8 --platform ios --udid "$SIMULATOR_UDID" --no-record \
   > "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
-  if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
+  if ! grep -Eq "Random Tactical Timer|Start First Drill|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
     echo "::warning::Agent Device snapshot did not include expected home anchors; preserving diagnostic snapshot."
     sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
   fi
