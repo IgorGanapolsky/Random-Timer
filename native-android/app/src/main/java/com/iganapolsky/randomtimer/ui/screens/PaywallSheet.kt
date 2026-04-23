@@ -50,19 +50,20 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
-internal const val PAYWALL_HEADLINE = "Stop Training With the Brakes On"
-internal const val PAYWALL_SUBHEADLINE = "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills."
-internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong When the Clock Attacks"
+internal const val PAYWALL_HEADLINE = "Unlock Full Fight-Ready Training"
+internal const val PAYWALL_SUBHEADLINE =
+    "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills."
+internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong With Full Random Pressure"
 internal const val PAYWALL_SUBHEADLINE_OUTCOMES_FIRST =
-    "Unlimited sessions, live voice callouts, and a full sound library — built so every rep feels like match pressure."
+    "Longer random windows, combat callouts, and full-spectrum sounds — built so every rep feels closer to live pressure."
 internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
-        "Full-length sessions — up to 60 minutes, no cutoffs",
-        "Live voice callouts keep you sharp under pressure",
-        "Loop drills with round limits — just like competition",
-        "Full sound arsenal — real bells, horns, and sirens",
-        "Verified audio drops when new packs are ready",
+        "60-minute random windows for full-length drills",
+        "Combat and MMA voice callouts with live time checks",
+        "Round-capped loops for pad work, sparring, and circuits",
+        "Full sound arsenal — bells, horns, sirens, and more",
+        "Fresh pro audio drops when new packs land",
     )
 
 /** Identifies which subscription plan the user has selected on the paywall. */
@@ -141,7 +142,10 @@ fun PaywallSheet(
                     Spacer(modifier = Modifier.height(12.dp))
                     PrimaryButton(
                         text = ctaLabel,
-                        onClick = { onPurchase(purchaseProductId) },
+                        onClick = {
+                            onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)
+                            onPurchase(purchaseProductId)
+                        },
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -313,6 +317,12 @@ internal fun productIdForPlan(plan: SubscriptionPlanSelection): String =
     when (plan) {
         SubscriptionPlanSelection.MONTHLY -> ProManager.MONTHLY_PRODUCT_ID
         SubscriptionPlanSelection.ANNUAL -> ProManager.ELITE_PRODUCT_ID
+    }
+
+internal fun planNameForSelection(plan: SubscriptionPlanSelection): String =
+    when (plan) {
+        SubscriptionPlanSelection.MONTHLY -> "monthly"
+        SubscriptionPlanSelection.ANNUAL -> "annual"
     }
 
 internal fun ctaLabelForPlan(

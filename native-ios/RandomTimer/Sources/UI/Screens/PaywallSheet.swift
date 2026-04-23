@@ -24,24 +24,24 @@ enum PaywallPlanSelection {
 
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
-    static let headline = "Stop Training With the Brakes On"
-    static let headlineOutcomesFirst = "Finish Strong When the Clock Attacks"
+    static let headline = "Unlock Full Fight-Ready Training"
+    static let headlineOutcomesFirst = "Finish Strong With Full Random Pressure"
     static let subheadline =
-        "Go unlimited — sessions up to 60 minutes, live voice callouts, "
-        + "and a full sound library built for pressure drills."
+        "Unlock 60-minute random windows, combat voice callouts, round-capped loops, "
+        + "and the full sound arsenal built for pressure drills."
     static let subheadlineOutcomesFirst =
-        "Unlimited sessions, live voice callouts, and a full sound library — "
-        + "built so every rep feels like match pressure."
+        "Longer random windows, combat callouts, and full-spectrum sounds — "
+        + "built so every rep feels closer to live pressure."
     static let subscriptionFooter =
         "Cancel anytime. Subscription auto-renews until cancelled. "
         + "Price shown on Apple's confirmation sheet."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
-        "Full-length sessions — up to 60 minutes, no cutoffs",
-        "Live voice callouts keep you sharp under pressure",
-        "Loop drills with round limits — just like competition",
-        "Full sound arsenal — real bells, horns, and sirens",
-        "Verified audio drops when new packs are ready",
+        "60-minute random windows for full-length drills",
+        "Combat and MMA voice callouts with live time checks",
+        "Round-capped loops for pad work, sparring, and circuits",
+        "Full sound arsenal — bells, horns, sirens, and more",
+        "Fresh pro audio drops when new packs land",
     ]
 
     @EnvironmentObject var proManager: ProManager
@@ -227,6 +227,7 @@ struct PaywallSheet: View {
         VStack(spacing: 12) {
             PrimaryButton(title: ctaButtonTitle) {
                 Task {
+                    trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
                     await purchase(productID: selectedProductID)
                 }
             }

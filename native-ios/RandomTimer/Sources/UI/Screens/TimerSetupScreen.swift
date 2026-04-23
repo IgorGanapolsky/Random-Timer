@@ -1,5 +1,13 @@
 import SwiftUI
 
+func primaryStartButtonTitle(hasFirstCompleted: Bool) -> String {
+    hasFirstCompleted ? "Start Timer" : "Start First Drill"
+}
+
+func primaryStartButtonCaption(hasFirstCompleted: Bool) -> String? {
+    hasFirstCompleted ? nil : "Quick start: the default drill fires in 5-30 seconds."
+}
+
 /// Initial screen for configuring and starting a timer
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
@@ -10,6 +18,7 @@ struct TimerSetupScreen: View {
     @State private var paywallEntryPoint: PaywallEntryPoint = .unknown
     @State private var showArsenal = true
     @State private var screenAppearedAt: Date?
+    @AppStorage("has_first_completed") private var hasFirstCompleted = false
     @AppStorage("timer_range_free_min") private var storedFreeMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
     @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = TimerConfig.minimumFloorSeconds
@@ -457,9 +466,16 @@ struct TimerSetupScreen: View {
             .padding(.horizontal, 24)
         }
         .safeAreaInset(edge: .bottom) {
-            PrimaryButton(title: "Start Timer") {
-                Task {
-                    await timerManager.startTimer()
+            VStack(spacing: 8) {
+                if let caption = primaryStartButtonCaption(hasFirstCompleted: hasFirstCompleted) {
+                    Text(caption)
+                        .font(.caption)
+                        .foregroundColor(.textMuted)
+                }
+                PrimaryButton(title: primaryStartButtonTitle(hasFirstCompleted: hasFirstCompleted)) {
+                    Task {
+                        await timerManager.startTimer()
+                    }
                 }
             }
             .scaleEffect(1.02)

@@ -103,18 +103,7 @@ class TimerViewModel
         }
 
         fun updateConfig(newConfig: TimerConfig) {
-            analyticsService.track(
-                AnalyticsEvents.SETTINGS_CHANGED,
-                mapOf(
-                    "min_duration" to newConfig.minSeconds,
-                    "max_duration" to newConfig.maxSeconds,
-                    "sound_type" to newConfig.soundType.name,
-                    "repeat_enabled" to newConfig.repeatEnabled,
-                    AnalyticsProperties.ENTITLEMENT_LEVEL to
-                        proManager.entitlementLevel.value.name
-                            .lowercase(),
-                ),
-            )
+            trackSettingsChanges(config.value, newConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(newConfig)
             }
@@ -209,18 +198,7 @@ class TimerViewModel
                     repeatRounds = current.repeatRounds,
                 )
             _timerState.value = _timerState.value?.copy(config = updatedConfig)
-            analyticsService.track(
-                AnalyticsEvents.SETTINGS_CHANGED,
-                mapOf(
-                    "min_duration" to updatedConfig.minSeconds,
-                    "max_duration" to updatedConfig.maxSeconds,
-                    "sound_type" to updatedConfig.soundType.name,
-                    "repeat_enabled" to updatedConfig.repeatEnabled,
-                    AnalyticsProperties.ENTITLEMENT_LEVEL to
-                        proManager.entitlementLevel.value.name
-                            .lowercase(),
-                ),
-            )
+            trackSettingsChanges(current, updatedConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
                 serviceController.updateLoop(enabled)
@@ -237,23 +215,52 @@ class TimerViewModel
                     repeatRounds = current.repeatRounds,
                 )
             _timerState.value = _timerState.value?.copy(config = updatedConfig)
-            analyticsService.track(
-                AnalyticsEvents.SETTINGS_CHANGED,
-                mapOf(
-                    "min_duration" to updatedConfig.minSeconds,
-                    "max_duration" to updatedConfig.maxSeconds,
-                    "sound_type" to updatedConfig.soundType.name,
-                    "repeat_enabled" to updatedConfig.repeatEnabled,
-                    "voice_callouts_enabled" to updatedConfig.voiceEnabled,
-                    AnalyticsProperties.ENTITLEMENT_LEVEL to
-                        proManager.entitlementLevel.value.name
-                            .lowercase(),
-                ),
-            )
+            trackSettingsChanges(current, updatedConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
                 serviceController.updateVoiceEnabled(enabled)
             }
+        }
+
+        private fun trackSettingsChanges(
+            previousConfig: TimerConfig,
+            updatedConfig: TimerConfig,
+        ) {
+            val baseProperties =
+                mapOf(
+                    AnalyticsProperties.ENTITLEMENT_LEVEL to
+                        proManager.entitlementLevel.value.name
+                            .lowercase(),
+                )
+
+            fun emit(
+                name: String,
+                previousValue: Any,
+                updatedValue: Any,
+            ) {
+                if (previousValue.toString() == updatedValue.toString()) return
+                analyticsService.track(
+                    AnalyticsEvents.SETTINGS_CHANGED,
+                    baseProperties +
+                        mapOf(
+                            AnalyticsProperties.SETTING_NAME to name,
+                            AnalyticsProperties.PREVIOUS_VALUE to previousValue,
+                            AnalyticsProperties.SETTING_VALUE to updatedValue,
+                        ),
+                )
+            }
+
+            emit("min_seconds", previousConfig.minSeconds, updatedConfig.minSeconds)
+            emit("max_seconds", previousConfig.maxSeconds, updatedConfig.maxSeconds)
+            emit("alarm_duration", previousConfig.alarmDuration, updatedConfig.alarmDuration)
+            emit("repeat_enabled", previousConfig.repeatEnabled, updatedConfig.repeatEnabled)
+            emit("sound_type", previousConfig.soundType.name.lowercase(), updatedConfig.soundType.name.lowercase())
+            emit("volume", previousConfig.volume, updatedConfig.volume)
+            emit("vibration_enabled", previousConfig.vibrationEnabled, updatedConfig.vibrationEnabled)
+            emit("use_extended_range", previousConfig.useExtendedRange, updatedConfig.useExtendedRange)
+            emit("voice_callouts_enabled", previousConfig.voiceEnabled, updatedConfig.voiceEnabled)
+            emit("voice_gender", previousConfig.voiceGender.name.lowercase(), updatedConfig.voiceGender.name.lowercase())
+            emit("repeat_rounds", previousConfig.repeatRounds, updatedConfig.repeatRounds)
         }
 
         fun trackScreen(screen: String) {

@@ -2,6 +2,7 @@ package com.iganapolsky.randomtimer.ui.viewmodel
 
 import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
@@ -178,6 +179,45 @@ class TimerViewModelAnalyticsTest {
                 match {
                     it["entry_point"] == "setup_upgrade_cta" &&
                         it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `updateConfig emits per-setting analytics with setting_name`() {
+        val updated = TimerConfig.DEFAULT.copy(minSeconds = 10, maxSeconds = 45, voiceEnabled = true)
+
+        viewModel.updateConfig(updated)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "min_seconds" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == 5 &&
+                        it[AnalyticsProperties.SETTING_VALUE] == 10
+                },
+            )
+        }
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "max_seconds" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == 30 &&
+                        it[AnalyticsProperties.SETTING_VALUE] == 45
+                },
+            )
+        }
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "voice_callouts_enabled" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == false &&
+                        it[AnalyticsProperties.SETTING_VALUE] == true
                 },
             )
         }

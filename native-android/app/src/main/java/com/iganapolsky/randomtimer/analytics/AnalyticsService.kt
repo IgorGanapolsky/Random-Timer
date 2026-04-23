@@ -351,11 +351,11 @@ class AnalyticsService
         }
 
         companion object {
-            private const val PREFS_NAME = "random_timer_analytics"
+            const val PREFS_NAME = "random_timer_analytics"
             private const val KEY_DISTINCT_ID = "posthog_distinct_id"
             private const val KEY_HAS_OPENED = "has_first_opened"
             private const val KEY_HAS_CONFIGURED = "has_first_configured"
-            private const val KEY_HAS_COMPLETED = "has_first_completed"
+            const val KEY_HAS_COMPLETED = "has_first_completed"
             private const val KEY_HAS_TRACKED_APPLICATION_INSTALLED = "has_tracked_application_installed"
             private val UTM_KEYS =
                 listOf(
@@ -428,6 +428,9 @@ object AnalyticsProperties {
     /** Mirrors iOS; consumed by executive_metrics_snapshot PRAGMATIC filter. */
     const val DISTRIBUTION_CHANNEL = "distribution_channel"
 
+    const val SETTING_NAME = "setting_name"
+    const val SETTING_VALUE = "setting_value"
+    const val PREVIOUS_VALUE = "previous_value"
     const val ENTRY_POINT = "entry_point"
     const val RESULT = "result"
     const val SUCCESS = "success"

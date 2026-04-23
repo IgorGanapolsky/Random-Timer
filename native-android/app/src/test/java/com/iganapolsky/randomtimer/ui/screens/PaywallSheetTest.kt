@@ -12,19 +12,19 @@ class PaywallSheetTest {
 
     @Test
     fun `paywall copy focuses on training outcomes`() {
-        assertEquals("Stop Training With the Brakes On", PAYWALL_HEADLINE)
+        assertEquals("Unlock Full Fight-Ready Training", PAYWALL_HEADLINE)
         assertEquals(
-            "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library built for pressure drills.",
+            "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills.",
             PAYWALL_SUBHEADLINE,
         )
         assertEquals("Cancel anytime. Subscription auto-renews until cancelled.", PAYWALL_PRICING_FOOTER)
         assertEquals(
             listOf(
-                "Full-length sessions — up to 60 minutes, no cutoffs",
-                "Live voice callouts keep you sharp under pressure",
-                "Loop drills with round limits — just like competition",
-                "Full sound arsenal — real bells, horns, and sirens",
-                "Verified audio drops when new packs are ready",
+                "60-minute random windows for full-length drills",
+                "Combat and MMA voice callouts with live time checks",
+                "Round-capped loops for pad work, sparring, and circuits",
+                "Full sound arsenal — bells, horns, sirens, and more",
+                "Fresh pro audio drops when new packs land",
             ),
             PAYWALL_FEATURE_ROWS,
         )
@@ -51,6 +51,8 @@ class PaywallSheetTest {
         val annual = SubscriptionPlanSelection.ANNUAL
         assertEquals(SubscriptionPlanSelection.MONTHLY, monthly)
         assertEquals(SubscriptionPlanSelection.ANNUAL, annual)
+        assertEquals("monthly", planNameForSelection(monthly))
+        assertEquals("annual", planNameForSelection(annual))
     }
 
     @Test

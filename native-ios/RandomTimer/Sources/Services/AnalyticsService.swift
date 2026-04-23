@@ -559,6 +559,9 @@ enum AnalyticsEvents {
 
 enum AnalyticsProperties {
     static let distributionChannel = "distribution_channel"
+    static let settingName = "setting_name"
+    static let settingValue = "setting_value"
+    static let previousValue = "previous_value"
     static let entryPoint = "entry_point"
     static let result = "result"
     static let abandonReason = "abandon_reason"
