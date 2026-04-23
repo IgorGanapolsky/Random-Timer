@@ -66,6 +66,54 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertNil(ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-state", "running"]))
     }
 
+    func testReviewPromptMilestonesAdvancePredictably() {
+        XCTAssertNil(reviewPromptMilestone(for: 2))
+        XCTAssertEqual(reviewPromptMilestone(for: 3), 3)
+        XCTAssertEqual(reviewPromptMilestone(for: 9), 3)
+        XCTAssertEqual(reviewPromptMilestone(for: 10), 10)
+        XCTAssertEqual(reviewPromptMilestone(for: 24), 10)
+        XCTAssertEqual(reviewPromptMilestone(for: 25), 25)
+        XCTAssertEqual(reviewPromptMilestone(for: 74), 50)
+    }
+
+    func testReviewPromptRequiresNewMilestone() {
+        XCTAssertFalse(
+            isEligibleForReviewPrompt(
+                completionCount: 4,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: 0,
+                now: 86_400,
+                minDaysBetweenRequests: 30
+            )
+        )
+    }
+
+    func testReviewPromptRespectsCooldownAtNewMilestone() {
+        let now: TimeInterval = 40 * 86_400
+        XCTAssertFalse(
+            isEligibleForReviewPrompt(
+                completionCount: 10,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: now - (10 * 86_400),
+                now: now,
+                minDaysBetweenRequests: 30
+            )
+        )
+    }
+
+    func testReviewPromptAllowsEarnedRepeatAfterCooldown() {
+        let now: TimeInterval = 40 * 86_400
+        XCTAssertTrue(
+            isEligibleForReviewPrompt(
+                completionCount: 10,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: now - (31 * 86_400),
+                now: now,
+                minDaysBetweenRequests: 30
+            )
+        )
+    }
+
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {
         let proConfig = RandomTimer.TimerConfig(
             minSeconds: 0,

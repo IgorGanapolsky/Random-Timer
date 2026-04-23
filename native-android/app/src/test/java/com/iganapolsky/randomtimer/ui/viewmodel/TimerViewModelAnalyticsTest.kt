@@ -138,15 +138,15 @@ class TimerViewModelAnalyticsTest {
 
     @Test
     fun `trackPaywallViewed tracks with entry point and experiment variant`() {
-        viewModel.trackPaywallViewed("setup_upgrade_cta", defaultAnnualExperiment = false)
+        viewModel.trackPaywallViewed("sound_arsenal_gate", defaultAnnualExperiment = false)
         verify {
-            analyticsService.setPaywallSurfaceContext("setup_upgrade_cta", "monthly_default")
+            analyticsService.setPaywallSurfaceContext("sound_arsenal_gate", "monthly_default")
         }
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEW,
                 match {
-                    it["entry_point"] == "setup_upgrade_cta" &&
+                    it["entry_point"] == "sound_arsenal_gate" &&
                         it["paywall_experiment_variant"] == "monthly_default" &&
                         it["paywall_value_framing_variant"] == "control"
                 },
@@ -156,7 +156,7 @@ class TimerViewModelAnalyticsTest {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEWED,
                 match {
-                    it["entry_point"] == "setup_upgrade_cta" &&
+                    it["entry_point"] == "sound_arsenal_gate" &&
                         it["paywall_experiment_variant"] == "monthly_default" &&
                         it["paywall_value_framing_variant"] == "control"
                 },
@@ -172,12 +172,12 @@ class TimerViewModelAnalyticsTest {
 
     @Test
     fun `trackPaywallDismissed tracks with entry point`() {
-        viewModel.trackPaywallDismissed("setup_upgrade_cta")
+        viewModel.trackPaywallDismissed("sound_arsenal_gate")
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
                 match {
-                    it["entry_point"] == "setup_upgrade_cta" &&
+                    it["entry_point"] == "sound_arsenal_gate" &&
                         it["paywall_value_framing_variant"] == "control"
                 },
             )

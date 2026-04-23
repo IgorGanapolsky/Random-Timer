@@ -2,14 +2,18 @@ import SwiftUI
 
 enum PaywallEntryPoint: String {
     case rangeGate = "range_gate"
-    case soundGate = "sound_gate"
+    case voiceGate = "voice_gate"
+    case repeatGate = "repeat_gate"
+    case soundArsenalGate = "sound_arsenal_gate"
     case unknown = "unknown"
 
     /// Maps to the analytics feature name for feature_gate_hit events.
     var featureGateName: String {
         switch self {
         case .rangeGate: return "extended_range"
-        case .soundGate: return "pro_sounds"
+        case .voiceGate: return "voice_callouts"
+        case .repeatGate: return "repeat_loop"
+        case .soundArsenalGate: return "pro_sounds"
         case .unknown: return "unknown"
         }
     }

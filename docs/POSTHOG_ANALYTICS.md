@@ -103,7 +103,7 @@ There are **two** production `analyticsService.track(AnalyticsEvents.TIMER_COMPL
 
 ## Monetization surface parity (Android vs iOS)
 
-Both apps ship the same **subscription paywall** (monthly + annual subscriptions, same product IDs / Play base plans) opened from **feature gates** on the timer setup surface (`range_gate`, `sound_gate` on iOS; `setup_upgrade_cta` on Android for the primary upgrade CTA). **Lifetime / one-time SKUs** may appear on iOS only where the sheet exposes a third plan; Android’s primary sheet is subscription-first. For revenue truth, use store ledgers; for funnel health, use `subscription_funnel_step` + `paywall_*` events with `platform` breakdown.
+Both apps ship the same **subscription paywall** (monthly + annual subscriptions, same product IDs / Play base plans) opened from **feature gates** on the timer setup surface. Current entry points are `range_gate`, `voice_gate`, `repeat_gate`, and `sound_arsenal_gate`, with `unknown` reserved as a fallback when a surface is unmapped. **Lifetime / one-time SKUs** may appear on iOS only where the sheet exposes a third plan; Android’s primary sheet is subscription-first. For revenue truth, use store ledgers; for funnel health, use `subscription_funnel_step` + `paywall_*` events with `platform` breakdown.
 
 ## Store review API counts (Play / App Store Connect)
 

@@ -35,7 +35,7 @@ First Open  →  First Timer Configured  →  First Timer Completed
 | Store listing clarity | Install → Open rate | CRO screenshot/title experiments |
 | First-use simplicity | Open → Configured rate | Timer setup UX (single screen) |
 | Value delivery | Configured → Completed rate | Alarm quality, loop mode |
-| Review prompts | Completed → Review rate | `StoreReviewManager` (3 completions gate) |
+| Review prompts | Completed → Review rate | `StoreReviewManager` (earned milestone gate: 3, 10, 25, then every 25, plus cooldown) |
 
 <!-- LIVE_DATA_START -->
 ## Latest Funnel Data

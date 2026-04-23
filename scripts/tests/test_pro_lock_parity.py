@@ -28,7 +28,9 @@ class ProLockParityTest(unittest.TestCase):
     def test_ios_has_pro_lock_for_all_features(self):
         src = IOS_SETUP.read_text()
         self.assertIn("presentPaywall", src, "iOS missing paywall presentation")
-        self.assertIn("soundGate", src, "iOS missing soundGate paywall entry")
+        self.assertIn("voiceGate", src, "iOS missing voiceGate paywall entry")
+        self.assertIn("repeatGate", src, "iOS missing repeatGate paywall entry")
+        self.assertIn("soundArsenalGate", src, "iOS missing soundArsenalGate paywall entry")
         self.assertIn("rangeGate", src, "iOS missing rangeGate paywall entry")
 
     def test_no_legacy_completion_flag_token_in_native_sources(self):

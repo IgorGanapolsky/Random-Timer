@@ -1091,17 +1091,6 @@ private fun SoundArsenalCard(
                         color = TimerColors.TextMuted,
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Unlock Pro",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TimerColors.AccentPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier =
-                            Modifier.clickable(onClick = {
-                                onUpgradeTap("pro_sounds")
-                            }),
-                    )
                 }
             }
         }
