@@ -17,7 +17,7 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `timer_abandoned` | `TIMER_ABANDONED` | `timerAbandoned` | User cancels before countdown finishes | `target_duration`, `remaining_duration`, `status` |
 | `timer_countdown_finished` | `TIMER_COUNTDOWN_FINISHED` | `timerCountdownFinished` | Countdown reaches zero (before alarm phase) | `target_duration` |
 | `settings_changed` | `SETTINGS_CHANGED` | `settingsChanged` | User modifies timer config | `min_duration`, `max_duration`, `sound_type`, `repeat_enabled` |
-| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown (after ≥3 completions + cooldown; iOS fires when returning to setup after a session, mirroring Android) | — |
+| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown after earned completion milestones (3, 10, 25, then every 25) plus cooldown; iOS fires when returning to setup after a session, mirroring Android | — |
 | `write_review_tapped` | `WRITE_REVIEW_TAPPED` | `writeReviewTapped` | User taps "Write Review" | — |
 
 ## Paywall & monetization

@@ -10,14 +10,14 @@ class NavigationAnalyticsMappingTest {
     }
 
     @Test
-    fun soundAndLoopUpgradesMapToSoundGateEntryPoint() {
-        assertThat(paywallEntryPointForFeature("voice_callouts")).isEqualTo("sound_gate")
-        assertThat(paywallEntryPointForFeature("pro_sounds")).isEqualTo("sound_gate")
-        assertThat(paywallEntryPointForFeature("repeat_loop")).isEqualTo("sound_gate")
+    fun upgradeSurfacesMapToDistinctIntentEntryPoints() {
+        assertThat(paywallEntryPointForFeature("voice_callouts")).isEqualTo("voice_gate")
+        assertThat(paywallEntryPointForFeature("pro_sounds")).isEqualTo("sound_arsenal_gate")
+        assertThat(paywallEntryPointForFeature("repeat_loop")).isEqualTo("repeat_gate")
     }
 
     @Test
-    fun unknownUpgradeFallsBackToSetupCtaEntryPoint() {
-        assertThat(paywallEntryPointForFeature("mystery_feature")).isEqualTo("setup_upgrade_cta")
+    fun unknownUpgradeFallsBackToUnknownEntryPoint() {
+        assertThat(paywallEntryPointForFeature("mystery_feature")).isEqualTo("unknown")
     }
 }

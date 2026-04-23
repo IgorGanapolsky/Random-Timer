@@ -1,6 +1,33 @@
 import StoreKit
 import UIKit
 
+func reviewPromptMilestone(for completionCount: Int) -> Int? {
+    switch completionCount {
+    case ..<3:
+        return nil
+    case 3..<10:
+        return 3
+    case 10..<25:
+        return 10
+    default:
+        return 25 + ((completionCount - 25) / 25) * 25
+    }
+}
+
+func isEligibleForReviewPrompt(
+    completionCount: Int,
+    lastPromptMilestone: Int,
+    lastReviewTimestamp: TimeInterval,
+    now: TimeInterval,
+    minDaysBetweenRequests: Int
+) -> Bool {
+    guard let milestone = reviewPromptMilestone(for: completionCount) else { return false }
+    guard milestone > lastPromptMilestone else { return false }
+    guard lastReviewTimestamp != 0 else { return true }
+    let elapsedDays = Int((now - lastReviewTimestamp) / 86_400)
+    return elapsedDays >= minDaysBetweenRequests
+}
+
 @MainActor
 final class StoreReviewManager {
     static let shared = StoreReviewManager()
@@ -9,8 +36,8 @@ final class StoreReviewManager {
     private let lastReviewTimestampKey = "review_last_timestamp"
     private let lastReviewVersionKey = "review_last_version"
     private let pendingReviewKey = "review_pending_prompt"
+    private let lastPromptMilestoneKey = "review_last_prompt_milestone"
 
-    private let completionsBeforeReview = 3
     private let minDaysBetweenRequests = 30
 
     private init() {}
@@ -39,6 +66,10 @@ final class StoreReviewManager {
 
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastReviewTimestampKey)
         UserDefaults.standard.set(appVersion, forKey: lastReviewVersionKey)
+        UserDefaults.standard.set(
+            reviewPromptMilestone(for: UserDefaults.standard.integer(forKey: completionCountKey)) ?? 0,
+            forKey: lastPromptMilestoneKey
+        )
     }
 
     private var currentWindowScene: UIWindowScene {
@@ -58,15 +89,14 @@ final class StoreReviewManager {
     private func isEligibleToQueueReviewPrompt() -> Bool {
         let count = UserDefaults.standard.integer(forKey: completionCountKey)
         let lastTimestamp = UserDefaults.standard.double(forKey: lastReviewTimestampKey)
-        let lastVersion = UserDefaults.standard.string(forKey: lastReviewVersionKey)
-
-        guard count >= completionsBeforeReview else { return false }
-        guard lastTimestamp != 0 else { return true }
-        if lastVersion != appVersion { return true }
-
-        let lastDate = Date(timeIntervalSince1970: lastTimestamp)
-        let days = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
-        return days >= minDaysBetweenRequests
+        let lastPromptMilestone = UserDefaults.standard.integer(forKey: lastPromptMilestoneKey)
+        return isEligibleForReviewPrompt(
+            completionCount: count,
+            lastPromptMilestone: lastPromptMilestone,
+            lastReviewTimestamp: lastTimestamp,
+            now: Date().timeIntervalSince1970,
+            minDaysBetweenRequests: minDaysBetweenRequests
+        )
     }
 
     private var appVersion: String {

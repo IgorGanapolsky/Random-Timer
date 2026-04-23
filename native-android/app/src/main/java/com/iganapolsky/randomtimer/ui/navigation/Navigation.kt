@@ -44,8 +44,10 @@ sealed class Screen(
 internal fun paywallEntryPointForFeature(feature: String): String =
     when (feature) {
         "extended_range" -> "range_gate"
-        "voice_callouts", "pro_sounds", "repeat_loop" -> "sound_gate"
-        else -> "setup_upgrade_cta"
+        "voice_callouts" -> "voice_gate"
+        "repeat_loop" -> "repeat_gate"
+        "pro_sounds" -> "sound_arsenal_gate"
+        else -> "unknown"
     }
 
 @Composable
@@ -69,7 +71,7 @@ fun RandomTimerNavHost(
     var showPaywall by remember { mutableStateOf(false) }
     var proPrice by remember { mutableStateOf("$29.99") }
     var monthlyPrice by remember { mutableStateOf("$3.99") }
-    var paywallEntryPoint by remember { mutableStateOf("setup_upgrade_cta") }
+    var paywallEntryPoint by remember { mutableStateOf("unknown") }
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
     var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }

@@ -73,7 +73,7 @@
 | iOS | — | — | — reviews/day |
 | Android | — | — | — reviews/day |
 
-**Prompt Config:** Show after 3 completions, 30 days between prompts
+**Prompt Config:** Show after earned milestones (3, 10, 25, then every 25), 30 days between prompts
 <!-- REVIEWS_END -->
 
 ## Active CRO Experiments

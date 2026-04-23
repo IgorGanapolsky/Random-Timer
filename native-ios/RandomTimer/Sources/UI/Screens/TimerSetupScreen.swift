@@ -184,7 +184,7 @@ struct TimerSetupScreen: View {
                                     .accessibilityLabel("Preview Voice Callouts")
 
                                     Button {
-                                        presentPaywall(entryPoint: .soundGate, feature: "voice_callouts")
+                                        presentPaywall(entryPoint: .voiceGate, feature: "voice_callouts")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
@@ -331,7 +331,7 @@ struct TimerSetupScreen: View {
                                     .labelsHidden()
                                 } else {
                                     Button {
-                                        presentPaywall(entryPoint: .soundGate)
+                                        presentPaywall(entryPoint: .repeatGate, feature: "repeat_loop")
                                     } label: {
                                         HStack(spacing: 4) {
                                             Text("PRO")
@@ -360,7 +360,7 @@ struct TimerSetupScreen: View {
 
                     if !proManager.isPro {
                         Button {
-                            presentPaywall(entryPoint: .soundGate)
+                            presentPaywall(entryPoint: .soundArsenalGate, feature: "pro_sounds")
                         } label: {
                             HStack(spacing: 4) {
                                 Text("PRO")
@@ -447,11 +447,6 @@ struct TimerSetupScreen: View {
                                         .font(.caption2)
                                         .foregroundColor(.textMuted)
 
-                                    Button("Unlock Pro") {
-                                        presentPaywall(entryPoint: .soundGate)
-                                    }
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundColor(.accentPrimary)
                                 }
                                 .padding(.top, 8)
                             }
