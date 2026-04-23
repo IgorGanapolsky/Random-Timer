@@ -3,7 +3,7 @@ appId: com.igorganapolsky.randomtimer
 # Regression: primary CTA + restore stay in sticky chrome after scrolling long paywall content.
 - launchApp:
     clearState: true
-- assertVisible: "Start Timer"
+- assertVisible: "Start First Drill"
 - tapOn:
     text: ".*PRO: 1H.*"
 - extendedWaitUntil:

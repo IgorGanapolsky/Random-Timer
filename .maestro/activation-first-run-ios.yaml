@@ -12,11 +12,11 @@ appId: com.igorganapolsky.randomtimer
 - assertVisible:
     text: '.*random duration.*'
 
-# Start Timer button should be visible
-- assertVisible: 'Start Timer'
+# Start First Drill button should be visible
+- assertVisible: 'Start First Drill'
 
 # Tap Start — timer starts with new 30s-120s defaults
-- tapOn: 'Start Timer'
+- tapOn: 'Start First Drill'
 
 # Timer screen should appear
 - assertVisible:

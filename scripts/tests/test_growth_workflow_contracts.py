@@ -398,7 +398,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "home-pre-agent.png" in ios_script
     assert "Simulator home screenshot was not captured." in ios_script
     assert "retry_agent_device \"wait-home\"" not in ios_script
-    assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
+    assert "Random Tactical Timer|Start First Drill|Start Timer|Timer Range" in ios_script
     assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("agent-device diagnostic screenshot")
     assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" not in ios_script
     assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
@@ -443,7 +443,7 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
 def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
     source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
 
-    assert "- tapOn: 'Start Timer'" in source
+    assert "- tapOn: 'Start First Drill'" in source
     assert "- stopApp" in source
     assert ".*Timer running.*" not in source
     assert "text: 'Pause'" not in source
