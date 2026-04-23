@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -57,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -81,6 +83,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
@@ -133,6 +139,25 @@ private object SetupSpacing {
         )
 }
 
+internal fun primaryStartButtonText(hasFirstCompleted: Boolean): String =
+    if (hasFirstCompleted) {
+        "Start Timer"
+    } else {
+        "Start First Drill"
+    }
+
+internal fun primaryStartButtonCaption(hasFirstCompleted: Boolean): String? =
+    if (hasFirstCompleted) {
+        null
+    } else {
+        "Quick start: the default drill fires in 5-30 seconds."
+    }
+
+internal fun readHasFirstCompleted(context: Context): Boolean =
+    context
+        .getSharedPreferences(AnalyticsService.PREFS_NAME, Context.MODE_PRIVATE)
+        .getBoolean(AnalyticsService.KEY_HAS_COMPLETED, false)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TimerSetupScreen(
@@ -152,6 +177,8 @@ fun TimerSetupScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var hasFirstCompleted by remember(context) { mutableStateOf(readHasFirstCompleted(context)) }
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(!isPro) }
     var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
@@ -161,6 +188,17 @@ fun TimerSetupScreen(
 
     LaunchedEffect(isPro) {
         showArsenal = true
+    }
+
+    DisposableEffect(lifecycleOwner, context) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    hasFirstCompleted = readHasFirstCompleted(context)
+                }
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(
@@ -255,21 +293,37 @@ fun TimerSetupScreen(
                 }
             },
             bottomBar = {
-                PrimaryButton(
-                    text = "Start Timer",
-                    onClick = onStartTimer,
+                Column(
                     modifier =
                         Modifier
-                            .semantics { testTagsAsResourceId = true }
-                            .testTag("start_timer")
+                            .fillMaxWidth()
                             .padding(horizontal = spacing.outerHorizontal)
                             .padding(bottom = 16.dp, top = 8.dp)
-                            .navigationBarsPadding()
-                            .graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                )
+                            .navigationBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    primaryStartButtonCaption(hasFirstCompleted)?.let { caption ->
+                        Text(
+                            text = caption,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextMuted,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
+                    PrimaryButton(
+                        text = primaryStartButtonText(hasFirstCompleted),
+                        onClick = onStartTimer,
+                        modifier =
+                            Modifier
+                                .semantics { testTagsAsResourceId = true }
+                                .testTag("start_timer")
+                                .graphicsLayer {
+                                    scaleX = 1.02f
+                                    scaleY = 1.02f
+                                },
+                    )
+                }
             },
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),

@@ -182,6 +182,72 @@ def _entry_point_funnel(api_key: str, project_id: str, days: int, errors: List[s
     return out
 
 
+def _settings_hotspots(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
+    win = f"{days} day"
+    rows = _table(
+        f"""
+        SELECT
+          coalesce(toString(properties.setting_name), 'unknown') AS setting_name,
+          count() AS changes,
+          count(DISTINCT person_id) AS users
+        FROM events
+        WHERE event = 'settings_changed'
+          AND timestamp > now() - interval {win}
+          AND {LIVE_EVENTS_PREDICATE}
+        GROUP BY setting_name
+        ORDER BY changes DESC
+        LIMIT 15
+        /* settings_hotspots */
+        """,
+        api_key,
+        project_id,
+        errors,
+    )
+    return [
+        {
+            "setting_name": str(row[0] or "unknown"),
+            "changes": _safe_int(row[1]),
+            "users": _safe_int(row[2]),
+        }
+        for row in rows
+    ]
+
+
+def _leaky_entry_points(entry_points: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in entry_points
+        if _safe_int(row.get("views")) >= 20 and _safe_int(row.get("attempts")) == 0
+    ]
+
+
+def _data_quality_warnings(
+    counts: dict[str, int],
+    entry_points: list[dict[str, Any]],
+    settings_hotspots: list[dict[str, Any]],
+) -> list[str]:
+    warnings: list[str] = []
+    offer_selects = _safe_int(counts.get("offer_selects"))
+    attempts = _safe_int(counts.get("purchase_attempts"))
+    views = _safe_int(counts.get("views"))
+
+    if attempts > offer_selects and offer_selects > 0:
+        warnings.append(
+            "purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review"
+        )
+    if attempts > views and views > 0:
+        warnings.append(
+            "purchase_attempts exceed paywall views; entry or purchase attempt events are being emitted without matching impressions"
+        )
+    if any(str(row.get("entry_point")) == "unknown" and _safe_int(row.get("views")) >= 20 for row in entry_points):
+        warnings.append("unknown paywall entry_point is still receiving meaningful traffic")
+    if settings_hotspots:
+        top = settings_hotspots[0]
+        if str(top.get("setting_name")) == "unknown" and _safe_int(top.get("changes")) >= 100:
+            warnings.append("settings_changed is still dominated by unknown setting_name rows in live data")
+    return warnings
+
+
 def build_markdown(payload: Dict[str, Any]) -> str:
     funnel = payload.get("funnel", {})
     lines = [
@@ -224,6 +290,46 @@ def build_markdown(payload: Dict[str, Any]) -> str:
         )
     if not payload.get("entry_points"):
         lines.append("| (none) | 0 | 0 | 0 | 0.0% | 0.0% |")
+
+    lines.extend(
+        [
+            "",
+            "## Leaky Entry Points",
+        ]
+    )
+    for row in payload.get("leaky_entry_points", []):
+        lines.append(
+            f"- `{row.get('entry_point', 'unknown')}` had **{row.get('views', 0)}** views and "
+            f"**0** purchase attempts."
+        )
+    if not payload.get("leaky_entry_points"):
+        lines.append("- None")
+
+    lines.extend(
+        [
+            "",
+            "## Settings Hotspots",
+            "| Setting | Changes | Users |",
+            "|---------|---------|-------|",
+        ]
+    )
+    for row in payload.get("settings_hotspots", []):
+        lines.append(
+            f"| {row.get('setting_name', 'unknown')} | {row.get('changes', 0)} | {row.get('users', 0)} |"
+        )
+    if not payload.get("settings_hotspots"):
+        lines.append("| (none) | 0 | 0 |")
+
+    lines.extend(
+        [
+            "",
+            "## Data Quality Warnings",
+        ]
+    )
+    for warning in payload.get("data_quality_warnings", []):
+        lines.append(f"- {warning}")
+    if not payload.get("data_quality_warnings"):
+        lines.append("- None")
 
     if payload.get("query_errors"):
         lines.extend(
@@ -268,6 +374,9 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         },
         "top_failure_reasons": [],
         "entry_points": [],
+        "leaky_entry_points": [],
+        "settings_hotspots": [],
+        "data_quality_warnings": [],
         "query_errors": [],
     }
 
@@ -282,6 +391,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     counts = _funnel_counts(api_key, project_id, days, errors)
     failures = _failure_reasons(api_key, project_id, days, errors)
     entry_points = _entry_point_funnel(api_key, project_id, days, errors)
+    settings_hotspots = _settings_hotspots(api_key, project_id, days, errors)
 
     payload["funnel"] = {
         **counts,
@@ -291,6 +401,13 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     }
     payload["top_failure_reasons"] = failures
     payload["entry_points"] = entry_points
+    payload["leaky_entry_points"] = _leaky_entry_points(entry_points)
+    payload["settings_hotspots"] = settings_hotspots
+    payload["data_quality_warnings"] = _data_quality_warnings(
+        payload["funnel"],
+        entry_points,
+        settings_hotspots,
+    )
     payload["query_errors"] = errors
     if errors:
         payload["status"] = "degraded"

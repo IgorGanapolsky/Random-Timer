@@ -61,4 +61,17 @@ final class ActivationDefaultsTests: XCTestCase {
     func testMaxSecondsProUnchangedAt3600() {
         XCTAssertEqual(TimerConfig.maxSecondsPro, 3600)
     }
+
+    func testPrimaryStartButtonUsesFirstSessionCopyBeforeFirstCompletion() {
+        XCTAssertEqual(primaryStartButtonTitle(hasFirstCompleted: false), "Start First Drill")
+        XCTAssertEqual(
+            primaryStartButtonCaption(hasFirstCompleted: false),
+            "Quick start: the default drill fires in 5-30 seconds."
+        )
+    }
+
+    func testPrimaryStartButtonFallsBackToGenericCopyAfterFirstCompletion() {
+        XCTAssertEqual(primaryStartButtonTitle(hasFirstCompleted: true), "Start Timer")
+        XCTAssertNil(primaryStartButtonCaption(hasFirstCompleted: true))
+    }
 }

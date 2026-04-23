@@ -95,6 +95,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     }
 
     func updateConfig(_ newConfig: TimerConfig) {
+        let previousConfig = config
         config = newConfig
 
         // Sync config into running timer state so alarmTick sees the change
@@ -103,18 +104,38 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             timerState = state
         }
 
-        AnalyticsService.shared.track(AnalyticsEvents.settingsChanged, properties: [
-            "min_duration": newConfig.minDuration,
-            "max_duration": newConfig.maxDuration,
-            "sound_type": String(describing: newConfig.soundType),
-            "repeat_enabled": newConfig.repeatEnabled,
-            "voice_callouts_enabled": newConfig.voiceEnabled,
-            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
-        ])
+        trackSettingsChanges(from: previousConfig, to: newConfig)
 
         Task {
             await storageService.saveConfig(newConfig)
         }
+    }
+
+    private func trackSettingsChanges(from oldConfig: TimerConfig, to newConfig: TimerConfig) {
+        let baseProperties: [String: Any] = [
+            AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,
+        ]
+
+        func emit(_ name: String, previousValue: Any, newValue: Any) {
+            guard String(describing: previousValue) != String(describing: newValue) else { return }
+            AnalyticsService.shared.track(AnalyticsEvents.settingsChanged, properties: baseProperties.merging([
+                AnalyticsProperties.settingName: name,
+                AnalyticsProperties.previousValue: previousValue,
+                AnalyticsProperties.settingValue: newValue,
+            ]) { _, new in new })
+        }
+
+        emit("min_seconds", previousValue: oldConfig.minSeconds, newValue: newConfig.minSeconds)
+        emit("max_seconds", previousValue: oldConfig.maxSeconds, newValue: newConfig.maxSeconds)
+        emit("alarm_duration", previousValue: oldConfig.alarmDuration, newValue: newConfig.alarmDuration)
+        emit("repeat_enabled", previousValue: oldConfig.repeatEnabled, newValue: newConfig.repeatEnabled)
+        emit("sound_type", previousValue: oldConfig.soundType.rawValue, newValue: newConfig.soundType.rawValue)
+        emit("volume", previousValue: oldConfig.volume, newValue: newConfig.volume)
+        emit("vibration_enabled", previousValue: oldConfig.vibrationEnabled, newValue: newConfig.vibrationEnabled)
+        emit("use_extended_range", previousValue: oldConfig.useExtendedRange, newValue: newConfig.useExtendedRange)
+        emit("voice_callouts_enabled", previousValue: oldConfig.voiceEnabled, newValue: newConfig.voiceEnabled)
+        emit("voice_gender", previousValue: oldConfig.voiceGender.rawValue, newValue: newConfig.voiceGender.rawValue)
+        emit("repeat_rounds", previousValue: oldConfig.repeatRounds, newValue: newConfig.repeatRounds)
     }
 
     func startTimer(roundCount: Int = 1) async {

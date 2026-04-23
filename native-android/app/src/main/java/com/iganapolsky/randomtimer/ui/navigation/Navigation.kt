@@ -41,6 +41,13 @@ sealed class Screen(
     data object ActiveTimer : Screen("active_timer")
 }
 
+internal fun paywallEntryPointForFeature(feature: String): String =
+    when (feature) {
+        "extended_range" -> "range_gate"
+        "voice_callouts", "pro_sounds", "repeat_loop" -> "sound_gate"
+        else -> "setup_upgrade_cta"
+    }
+
 @Composable
 fun RandomTimerNavHost(
     navController: NavHostController = rememberNavController(),
@@ -132,7 +139,7 @@ fun RandomTimerNavHost(
                     scope.launch {
                         proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
                         monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
-                        paywallEntryPoint = "setup_upgrade_cta"
+                        paywallEntryPoint = paywallEntryPointForFeature(feature)
                         paywallTrialEligibilityByProductId =
                             mapOf(
                                 ProManager.MONTHLY_PRODUCT_ID to

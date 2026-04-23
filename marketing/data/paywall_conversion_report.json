@@ -1,0 +1,86 @@
+{
+  "generated_at": "2026-04-23T15:20:19+00:00",
+  "window_days": 30,
+  "status": "ok",
+  "reason": "",
+  "funnel": {
+    "views": 783,
+    "offer_selects": 63,
+    "purchase_attempts": 84,
+    "purchase_successes": 1,
+    "view_to_select_rate": 0.0805,
+    "select_to_attempt_rate": 1.3333,
+    "attempt_to_success_rate": 0.0119
+  },
+  "top_failure_reasons": [
+    {
+      "reason": "user_cancelled",
+      "count": 39
+    }
+  ],
+  "entry_points": [
+    {
+      "entry_point": "setup_upgrade_cta",
+      "views": 527,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "unknown",
+      "views": 159,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "sound_gate",
+      "views": 66,
+      "attempts": 43,
+      "successes": 1,
+      "view_to_attempt_rate": 0.6515,
+      "attempt_to_success_rate": 0.0233
+    },
+    {
+      "entry_point": "range_gate",
+      "views": 31,
+      "attempts": 41,
+      "successes": 0,
+      "view_to_attempt_rate": 1.3226,
+      "attempt_to_success_rate": 0.0
+    }
+  ],
+  "leaky_entry_points": [
+    {
+      "entry_point": "setup_upgrade_cta",
+      "views": 527,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "unknown",
+      "views": 159,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    }
+  ],
+  "settings_hotspots": [
+    {
+      "setting_name": "unknown",
+      "changes": 35320,
+      "users": 605
+    }
+  ],
+  "data_quality_warnings": [
+    "purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review",
+    "unknown paywall entry_point is still receiving meaningful traffic",
+    "settings_changed is still dominated by unknown setting_name rows in live data"
+  ],
+  "query_errors": []
+}
