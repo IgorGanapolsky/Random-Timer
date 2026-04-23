@@ -23,13 +23,13 @@ class TimerSetupSmokeTest {
     fun setupScreenRendersCoreControls() {
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule
-                .onAllNodesWithText("Start Timer")
+                .onAllNodesWithText("Start First Drill")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
 
         composeRule
-            .onNodeWithText("Start Timer")
+            .onNodeWithText("Start First Drill")
             .assertExists()
 
         composeRule
@@ -54,7 +54,7 @@ class TimerSetupSmokeTest {
 
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule
-                .onAllNodesWithText("Stop Training With the Brakes On")
+                .onAllNodesWithText("Unlock Full Fight-Ready Training")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
