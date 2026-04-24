@@ -11,7 +11,7 @@ appId: com.igorganapolsky.randomtimer
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
 - assertVisible:
-    text: "Stop Training With the Brakes On"
+    text: ".*(Fight-Ready Training|Random Pressure).*"
     optional: true
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp
