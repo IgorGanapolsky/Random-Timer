@@ -20,6 +20,8 @@ WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+AGENTS_DOC = ROOT / "AGENTS.md"
+ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
 
 
 def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
@@ -30,6 +32,20 @@ def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets()
     assert "APPSTORE_KEY_ID" in source
     assert "GOOGLE_PLAY_JSON_KEY" in source
     assert "contents: read" in source
+
+
+def test_android_agent_workflow_documents_official_cli_skills_and_docs_without_ci_lock_in():
+    agents = AGENTS_DOC.read_text(encoding="utf-8")
+    workflow = ANDROID_AGENT_WORKFLOW_DOC.read_text(encoding="utf-8")
+
+    assert "scripts/android_agent_doctor.py --json" in agents
+    assert "docs/ANDROID_AGENT_WORKFLOW.md" in agents
+    assert "android docs search" in agents
+    assert "android skills" in agents
+    assert "Do not make preview Android CLI tooling a hard CI dependency" in agents
+    assert "android update" in workflow
+    assert "cd native-android && ./gradlew testDebugUnitTest lint" in workflow
+    assert "never remove foreground service permissions" in workflow
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -99,6 +115,15 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     )[0]
     assert "env:" in play_distribute_section
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
+
+
+def test_internal_distribution_workflow_preflights_play_fgs_declaration_before_build():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Preflight Play foreground service declaration" in source
+    assert "scripts/check_android_play_fgs_declaration.py" in source
+    assert "PLAY_FGS_DECLARATION_ACK" in source
+    assert source.index("Preflight Play foreground service declaration") < source.index("Build release Bundle (AAB)")
 
 
 def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
