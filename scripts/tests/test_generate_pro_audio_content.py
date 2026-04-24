@@ -25,6 +25,28 @@ def test_select_pack_uses_active_pack_by_default():
     assert pack["id"] == manifest["activePackId"]
 
 
+def test_select_pack_can_target_release_month() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    expected = next(pack for pack in manifest["packs"] if pack["releaseMonth"] == "2026-04")
+
+    pack = module._select_pack(manifest, None, "2026-04")
+
+    assert pack["id"] == expected["id"]
+
+
+def test_select_pack_fails_when_release_month_is_missing() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+
+    try:
+        module._select_pack(manifest, None, "2099-12")
+    except SystemExit as error:
+        assert "releaseMonth '2099-12'" in str(error)
+    else:
+        raise AssertionError("Expected missing releaseMonth to fail fast")
+
+
 def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
     module = _load_module()
     manifest = module._load_manifest(MANIFEST_PATH)

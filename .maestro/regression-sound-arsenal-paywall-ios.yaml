@@ -10,8 +10,8 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
-- assertVisible:
-    text: ".*(Fight-Ready Training|Random Pressure).*"
-    optional: true
+- extendedWaitUntil:
+    visible: "Restore purchase"
+    timeout: 10000
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp

@@ -63,6 +63,7 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert contents.count("timeout-minutes:") >= 4
     assert "actions: write" in contents
     assert "--body \"Auto-generated monthly Pro content update." in contents
+    assert '--release-month "${{ steps.meta.outputs.release_month }}"' in contents
     assert "git push origin develop" not in contents
     assert 'gh pr comment "${CONTENT_PR_NUMBER}"' in contents
     assert "/trunk merge" in contents
