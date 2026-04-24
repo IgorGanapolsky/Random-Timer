@@ -6,55 +6,61 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-ANDROID_NS = "http://schemas.android.com/apk/res/android"
-ANDROID_NAME = f"{{{ANDROID_NS}}}name"
-ANDROID_VALUE = f"{{{ANDROID_NS}}}value"
-ANDROID_FGS_TYPE = f"{{{ANDROID_NS}}}foregroundServiceType"
 SPECIAL_USE_SUBTYPE = "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+ANDROID_NAME_RE = re.compile(r'android:name\s*=\s*"([^"]+)"')
+ANDROID_VALUE_RE = re.compile(r'android:value\s*=\s*"([^"]*)"')
+ANDROID_FGS_TYPE_RE = re.compile(r'android:foregroundServiceType\s*=\s*"([^"]*)"')
+PERMISSION_RE = re.compile(r"<uses-permission\b[^>]*>", re.DOTALL)
+SERVICE_RE = re.compile(r"<service\b(?P<attrs>[^>]*)>(?P<body>.*?)</service>", re.DOTALL)
+PROPERTY_RE = re.compile(r"<property\b[^>]*/?>", re.DOTALL)
 
 
-def _parse_manifest(path: Path) -> ET.Element:
+def _read_manifest(path: Path) -> str:
     try:
-        return ET.parse(path).getroot()
+        return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise SystemExit(f"Manifest not found: {path}") from exc
-    except ET.ParseError as exc:
-        raise SystemExit(f"Manifest XML parse failed for {path}: {exc}") from exc
+
+
+def _first_match(pattern: re.Pattern[str], text: str) -> str:
+    match = pattern.search(text)
+    return match.group(1) if match else ""
 
 
 def inspect_manifest(path: Path) -> dict[str, object]:
-    root = _parse_manifest(path)
+    manifest = _read_manifest(path)
     permissions = sorted(
-        node.attrib[ANDROID_NAME]
-        for node in root.findall("uses-permission")
-        if node.attrib.get(ANDROID_NAME, "").startswith("android.permission.FOREGROUND_SERVICE")
+        name
+        for name in (_first_match(ANDROID_NAME_RE, node.group(0)) for node in PERMISSION_RE.finditer(manifest))
+        if name.startswith("android.permission.FOREGROUND_SERVICE")
     )
 
     services: list[dict[str, object]] = []
-    application = root.find("application")
-    if application is not None:
-        for service in application.findall("service"):
-            raw_types = service.attrib.get(ANDROID_FGS_TYPE, "")
-            foreground_service_types = sorted(part for part in raw_types.split("|") if part)
-            if not foreground_service_types:
-                continue
-            special_use_subtype = ""
-            for prop in service.findall("property"):
-                if prop.attrib.get(ANDROID_NAME) == SPECIAL_USE_SUBTYPE:
-                    special_use_subtype = prop.attrib.get(ANDROID_VALUE, "")
-                    break
-            services.append(
-                {
-                    "name": service.attrib.get(ANDROID_NAME, ""),
-                    "foreground_service_types": foreground_service_types,
-                    "special_use_subtype": special_use_subtype,
-                }
-            )
+    for service in SERVICE_RE.finditer(manifest):
+        attrs = service.group("attrs")
+        body = service.group("body")
+        raw_types = _first_match(ANDROID_FGS_TYPE_RE, attrs)
+        foreground_service_types = sorted(part for part in raw_types.split("|") if part)
+        if not foreground_service_types:
+            continue
+        special_use_subtype = ""
+        for prop in PROPERTY_RE.finditer(body):
+            prop_text = prop.group(0)
+            if _first_match(ANDROID_NAME_RE, prop_text) == SPECIAL_USE_SUBTYPE:
+                special_use_subtype = _first_match(ANDROID_VALUE_RE, prop_text)
+                break
+        services.append(
+            {
+                "name": _first_match(ANDROID_NAME_RE, attrs),
+                "foreground_service_types": foreground_service_types,
+                "special_use_subtype": special_use_subtype,
+            }
+        )
 
     return {
         "manifest": str(path),
