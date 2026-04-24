@@ -786,13 +786,17 @@ def _list_review_submissions(client: ASCClient, app_id: str) -> list[dict[str, A
 
 
 def _list_review_submission_items(client: ASCClient, submission_id: str) -> list[dict[str, Any]]:
+    # JSON:API sparse fieldset: if we list only "state", the server omits the
+    # relationships block, and _find_submission_for_version will never match on
+    # appStoreVersion id — producing STATE_ERROR.ITEM_PART_OF_ANOTHER_SUBMISSION
+    # 409s when the version is silently retained on an older submission.
     data = client.request(
         "GET",
         f"/reviewSubmissions/{submission_id}/items",
         params={
             "limit": 200,
             "include": "appStoreVersion,appCustomProductPageVersion",
-            "fields[reviewSubmissionItems]": "state",
+            "fields[reviewSubmissionItems]": "state,appStoreVersion,appCustomProductPageVersion",
         },
     )
     return data.get("data") or []
