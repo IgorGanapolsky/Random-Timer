@@ -101,6 +101,15 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
 
 
+def test_internal_distribution_workflow_preflights_play_fgs_declaration_before_build():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Preflight Play foreground service declaration" in source
+    assert "scripts/check_android_play_fgs_declaration.py" in source
+    assert "PLAY_FGS_DECLARATION_ACK" in source
+    assert source.index("Preflight Play foreground service declaration") < source.index("Build release Bundle (AAB)")
+
+
 def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
