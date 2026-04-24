@@ -194,6 +194,111 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     }
 }
 
+internal protocol BackgroundVoiceKeepAliveEngine: AnyObject {
+    var isRunning: Bool { get }
+    var mainMixerNode: AVAudioMixerNode { get }
+    func attach(_ node: AVAudioNode)
+    func connect(_ node1: AVAudioNode, to node2: AVAudioNode, format: AVAudioFormat?)
+    func prepare()
+    func start() throws
+    func stop()
+    func reset()
+}
+
+extension AVAudioEngine: BackgroundVoiceKeepAliveEngine {}
+
+@MainActor
+final class BackgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling {
+    typealias AudioSessionActivator = @MainActor () -> Void
+    typealias AudioSessionDeactivator = @MainActor () -> Void
+    typealias EngineFactory = @MainActor () -> BackgroundVoiceKeepAliveEngine
+
+    static let shared = BackgroundVoiceKeepAliveService()
+
+    private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice-keepalive")
+
+    private static func activateBackgroundAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            log.error("Background voice audio session setup failed: \(error.localizedDescription)")
+        }
+    }
+
+    private static func deactivateBackgroundAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            log.error("Background voice audio session teardown failed: \(error.localizedDescription)")
+        }
+    }
+
+    private let makeEngine: EngineFactory
+    private let activateAudioSession: AudioSessionActivator
+    private let deactivateAudioSession: AudioSessionDeactivator
+    private var audioEngine: BackgroundVoiceKeepAliveEngine?
+    private var sourceNode: AVAudioSourceNode?
+
+    var isActive: Bool {
+        audioEngine?.isRunning == true
+    }
+
+    init(
+        makeEngine: @escaping EngineFactory = { AVAudioEngine() },
+        activateAudioSession: @escaping AudioSessionActivator =
+            BackgroundVoiceKeepAliveService.activateBackgroundAudioSession,
+        deactivateAudioSession: @escaping AudioSessionDeactivator =
+            BackgroundVoiceKeepAliveService.deactivateBackgroundAudioSession
+    ) {
+        self.makeEngine = makeEngine
+        self.activateAudioSession = activateAudioSession
+        self.deactivateAudioSession = deactivateAudioSession
+    }
+
+    func start() {
+        guard !isActive else { return }
+
+        activateAudioSession()
+
+        let engine = makeEngine()
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)
+        let silenceSource = AVAudioSourceNode { _, _, _, audioBufferList -> OSStatus in
+            let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
+            for buffer in buffers {
+                if let data = buffer.mData {
+                    memset(data, 0, Int(buffer.mDataByteSize))
+                }
+            }
+            return 0
+        }
+
+        engine.attach(silenceSource)
+        engine.connect(silenceSource, to: engine.mainMixerNode, format: format)
+        engine.mainMixerNode.outputVolume = 0
+        engine.prepare()
+
+        do {
+            try engine.start()
+            audioEngine = engine
+            sourceNode = silenceSource
+        } catch {
+            Self.log.error("Background voice keepalive failed to start: \(error.localizedDescription)")
+            sourceNode = nil
+            audioEngine = nil
+            deactivateAudioSession()
+        }
+    }
+
+    func stop() {
+        sourceNode = nil
+        audioEngine?.stop()
+        audioEngine?.reset()
+        audioEngine = nil
+        deactivateAudioSession()
+    }
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {

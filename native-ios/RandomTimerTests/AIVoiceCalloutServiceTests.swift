@@ -1,9 +1,51 @@
 import XCTest
 import CryptoKit
+import AVFoundation
 @testable import RandomTimer
 
 private final class CounterBox {
     var value = 0
+}
+
+private final class FakeBackgroundVoiceKeepAliveEngine: BackgroundVoiceKeepAliveEngine {
+    let mainMixerNode = AVAudioMixerNode()
+    private(set) var isRunning = false
+    private(set) var attachedNodes = 0
+    private(set) var connectedNodes = 0
+    private(set) var prepareCalls = 0
+    private(set) var startCalls = 0
+    private(set) var stopCalls = 0
+    private(set) var resetCalls = 0
+    var startError: Error?
+
+    func attach(_ node: AVAudioNode) {
+        attachedNodes += 1
+    }
+
+    func connect(_ node1: AVAudioNode, to node2: AVAudioNode, format: AVAudioFormat?) {
+        connectedNodes += 1
+    }
+
+    func prepare() {
+        prepareCalls += 1
+    }
+
+    func start() throws {
+        startCalls += 1
+        if let startError {
+            throw startError
+        }
+        isRunning = true
+    }
+
+    func stop() {
+        stopCalls += 1
+        isRunning = false
+    }
+
+    func reset() {
+        resetCalls += 1
+    }
 }
 
 private func makeUnusedTestAssetURL(filename: String) -> URL {
@@ -343,5 +385,64 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             try Data(contentsOf: XCTUnwrap(store.soundAudioURL(for: .intense, bundle: .main))),
             soundPayload
         )
+    }
+
+    func testBackgroundVoiceKeepAliveStartIsIdempotent() {
+        let engine = FakeBackgroundVoiceKeepAliveEngine()
+        let activations = CounterBox()
+        let deactivations = CounterBox()
+        let sut = BackgroundVoiceKeepAliveService(
+            makeEngine: { engine },
+            activateAudioSession: { activations.value += 1 },
+            deactivateAudioSession: { deactivations.value += 1 }
+        )
+
+        sut.start()
+        sut.start()
+
+        XCTAssertTrue(sut.isActive)
+        XCTAssertEqual(activations.value, 1)
+        XCTAssertEqual(engine.startCalls, 1)
+        XCTAssertEqual(engine.attachedNodes, 1)
+        XCTAssertEqual(engine.connectedNodes, 1)
+        XCTAssertEqual(engine.prepareCalls, 1)
+        XCTAssertEqual(deactivations.value, 0)
+    }
+
+    func testBackgroundVoiceKeepAliveStopTearsDownEngineAndSession() {
+        let engine = FakeBackgroundVoiceKeepAliveEngine()
+        let deactivations = CounterBox()
+        let sut = BackgroundVoiceKeepAliveService(
+            makeEngine: { engine },
+            activateAudioSession: {},
+            deactivateAudioSession: { deactivations.value += 1 }
+        )
+
+        sut.start()
+        sut.stop()
+
+        XCTAssertFalse(sut.isActive)
+        XCTAssertEqual(engine.stopCalls, 1)
+        XCTAssertEqual(engine.resetCalls, 1)
+        XCTAssertEqual(deactivations.value, 1)
+    }
+
+    func testBackgroundVoiceKeepAliveDeactivatesSessionWhenEngineStartFails() {
+        struct StartFailure: Error {}
+
+        let engine = FakeBackgroundVoiceKeepAliveEngine()
+        engine.startError = StartFailure()
+        let deactivations = CounterBox()
+        let sut = BackgroundVoiceKeepAliveService(
+            makeEngine: { engine },
+            activateAudioSession: {},
+            deactivateAudioSession: { deactivations.value += 1 }
+        )
+
+        sut.start()
+
+        XCTAssertFalse(sut.isActive)
+        XCTAssertEqual(engine.startCalls, 1)
+        XCTAssertEqual(deactivations.value, 1)
     }
 }
