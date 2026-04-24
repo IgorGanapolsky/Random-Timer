@@ -187,31 +187,29 @@ internal fun runtimeVoiceCueForElapsedSecond(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
-): VoiceCue? {
-    if (elapsedSeconds == lastElapsedMilestone) return null
-    return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
-}
+): ElapsedVoiceCue? =
+    catalog.elapsedCues
+        .asSequence()
+        .filter { it.second > lastElapsedMilestone && it.second <= elapsedSeconds }
+        .maxByOrNull { it.second }
 
 /**
- * Returns a bundled "time elapsed" announcement only on full-minute marks (60, 120, …).
+ * Returns the latest crossed bundled "time elapsed" announcement on full-minute marks (60, 120, …).
  * Sub-minute rows in JSON are ignored here so command coaching stays on its own cadence.
  */
 internal fun runtimeVoiceCueForElapsedMark(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
-): VoiceCue? {
+): ElapsedVoiceCue? {
     if (elapsedSeconds <= 0) {
-        return null
-    }
-    if (elapsedSeconds % 60 != 0) {
         return null
     }
     return runtimeVoiceCueForElapsedSecond(
         elapsedSeconds = elapsedSeconds,
         lastElapsedMilestone = lastElapsedMilestone,
         catalog = catalog,
-    )
+    )?.takeIf { it.second % 60 == 0 }
 }
 
 internal fun nextCommandCue(
@@ -324,16 +322,26 @@ class AIVoiceCalloutManager
             val catalog = packStore.voiceCatalog()
             val mappedFilename = catalog.filenameByText[text]
             val baseFilename = mappedFilename ?: catalog.fallbackCommandCue.filename
-            val filename = genderedVoiceFilename(baseFilename, currentGender)
+            speak(
+                VoiceCue(
+                    filename = baseFilename,
+                    text = text,
+                ),
+            )
+        }
+
+        private fun speak(cue: VoiceCue) {
+            val filename = genderedVoiceFilename(cue.filename, currentGender)
             val directResId = context.resources.getIdentifier(filename, "raw", context.packageName)
+            val catalog = packStore.voiceCatalog()
             val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
             val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
-            val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, text, catalog)
-            if (mappedFilename == null) {
-                Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: $text")
+            val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, cue.text, catalog)
+            if (catalog.filenameByText[cue.text] == null) {
+                Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: ${cue.text}")
             }
 
-            playVoiceFile(filename = filename, fallbackResId = resId, cueText = text)
+            playVoiceFile(filename = filename, fallbackResId = resId, cueText = cue.text)
         }
 
         fun resetSession() {
@@ -507,8 +515,13 @@ class AIVoiceCalloutManager
 
             val catalog = packStore.voiceCatalog()
             runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
-                speak(it.text)
-                lastElapsedMilestone = elapsedSeconds
+                speak(
+                    VoiceCue(
+                        filename = it.filename,
+                        text = it.text,
+                    ),
+                )
+                lastElapsedMilestone = it.second
                 lastCueFiredAtElapsed = elapsedSeconds
                 if (nextCommandCueAt <= elapsedSeconds) {
                     nextCommandCueAt = elapsedSeconds + 30
@@ -517,7 +530,7 @@ class AIVoiceCalloutManager
             }
             if (shouldFireCommandCue(elapsedSeconds)) {
                 val cue = randomCommandCue()
-                speak(cue.text)
+                speak(cue)
                 lastCommandCueFilename = cue.filename
                 nextCommandCueAt = elapsedSeconds + 30
                 lastCueFiredAtElapsed = elapsedSeconds

@@ -258,6 +258,13 @@ final class AIVoiceCalloutService {
         playVoiceFile(named: filename, cueText: text)
     }
 
+    private func speak(_ cue: VoiceCueCatalog.Cue) {
+        activateAudioSession()
+
+        let filename = genderedVoiceFilename(cue.filename, gender: currentGender)
+        playVoiceFile(named: filename, cueText: cue.text)
+    }
+
     func resetSession() {
         audioPlayer?.stop()
         audioPlayer = nil
@@ -338,8 +345,8 @@ final class AIVoiceCalloutService {
         }
 
         if let callout = elapsedMilestone(for: elapsedSeconds) {
-            speak(callout.text)
-            lastElapsedMilestone = elapsedSeconds
+            speak(.init(filename: callout.filename, text: callout.text))
+            lastElapsedMilestone = callout.second
             if nextCommandCueAt <= elapsedSeconds {
                 nextCommandCueAt = elapsedSeconds + 30
             }
@@ -349,23 +356,20 @@ final class AIVoiceCalloutService {
 
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
             let cue = randomCommandCue()
-            speak(cue.text)
+            speak(cue)
             lastCommandCueFilename = cue.filename
             nextCommandCueAt = elapsedSeconds + 30
             lastCueFiredAtElapsed = elapsedSeconds
         }
     }
 
-    /// "Time elapsed" lines only on full-minute marks (60, 120, …). Other seconds use command cues only.
+    /// Returns the latest crossed "time elapsed" line on full-minute marks (60, 120, …).
+    /// Sub-minute elapsed rows stay out of runtime so command coaching keeps its own cadence.
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        guard elapsed > 0, elapsed % 60 == 0 else {
-            return nil
-        }
-        guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
-            return nil
-        }
-        return cue
+        return catalog.elapsedCues
+            .filter { $0.second > lastElapsedMilestone && $0.second <= elapsed && $0.second.isMultiple(of: 60) }
+            .max(by: { $0.second < $1.second })
     }
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {

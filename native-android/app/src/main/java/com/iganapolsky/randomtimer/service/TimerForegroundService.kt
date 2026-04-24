@@ -17,6 +17,7 @@ import android.media.RingtoneManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -80,6 +81,7 @@ class TimerForegroundService : Service() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
     private var screenOffReceiver: ScreenOffReceiver? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -211,6 +213,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
         voiceCalloutManager.shutdown()
         serviceScope.cancel()
     }
@@ -274,6 +277,7 @@ class TimerForegroundService : Service() {
     }
 
     private fun startTimer(initialState: TimerState) {
+        acquireTimerWakeLock()
         _timerState.value = initialState
         updateNotification(initialState)
         voiceCalloutManager.resetSession()
@@ -343,6 +347,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -374,6 +379,7 @@ class TimerForegroundService : Service() {
 
     private fun pauseTimer() {
         timerJob?.cancel()
+        releaseTimerWakeLock()
         _timerState.value?.let { state ->
             if (state.status != TimerStatus.PAUSED) {
                 val pausedState = state.copy(status = TimerStatus.PAUSED)
@@ -445,6 +451,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
@@ -459,6 +466,7 @@ class TimerForegroundService : Service() {
     }
 
     private fun triggerAlarm(state: TimerState) {
+        acquireTimerWakeLock()
         // Update status to ALARM
         _timerState.value =
             state.copy(
@@ -523,6 +531,7 @@ class TimerForegroundService : Service() {
                             // Auto-restart timer
                             restartTimerInternal()
                         } else {
+                            releaseTimerWakeLock()
                             // Loop limit reached - keep state as COMPLETE
                             _timerState.value =
                                 currentState.copy(
@@ -533,6 +542,7 @@ class TimerForegroundService : Service() {
                             _timerState.value?.let { updateNotification(it) }
                         }
                     } else {
+                        releaseTimerWakeLock()
                         // Alarm sound finished — keep state as COMPLETE (iOS parity)
                         // User must manually Stop or Reset from the ActiveTimerScreen
                         _timerState.value =
@@ -576,6 +586,41 @@ class TimerForegroundService : Service() {
             )
 
         startTimer(newState)
+    }
+
+    private fun acquireTimerWakeLock() {
+        val existing = wakeLock
+        if (existing?.isHeld == true) {
+            return
+        }
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock =
+            existing
+                ?: powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "$packageName:active_timer",
+                ).apply {
+                    setReferenceCounted(false)
+                }
+
+        runCatching {
+            wakeLock?.acquire()
+        }.onFailure { error ->
+            Log.w("TimerForegroundService", "Failed to acquire timer wake lock", error)
+        }
+    }
+
+    private fun releaseTimerWakeLock() {
+        val current = wakeLock ?: return
+        if (!current.isHeld) {
+            return
+        }
+        runCatching {
+            current.release()
+        }.onFailure { error ->
+            Log.w("TimerForegroundService", "Failed to release timer wake lock", error)
+        }
     }
 
     private fun createNotificationChannels() {

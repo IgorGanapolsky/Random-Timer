@@ -96,8 +96,31 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     return json.loads(_resolve_repo_path(path, must_exist=True).read_text(encoding="utf-8"))
 
 
-def _select_pack(manifest: dict[str, Any], pack_id: str | None) -> dict[str, Any]:
-    resolved_id = pack_id or manifest["activePackId"]
+def _select_pack(
+    manifest: dict[str, Any],
+    pack_id: str | None,
+    release_month: str | None = None,
+) -> dict[str, Any]:
+    if pack_id:
+        for pack in manifest["packs"]:
+            if pack["id"] == pack_id:
+                return pack
+        raise SystemExit(f"Could not find audio pack {pack_id!r}.")
+
+    if release_month:
+        matches = [pack for pack in manifest["packs"] if pack.get("releaseMonth") == release_month]
+        if len(matches) == 1:
+            return matches[0]
+        if matches:
+            raise SystemExit(
+                f"Found multiple audio packs for releaseMonth {release_month!r}; use --pack-id to disambiguate."
+            )
+        raise SystemExit(
+            f"Could not find an audio pack scheduled for releaseMonth {release_month!r}. "
+            "Add a fresh monthly pack before running the release."
+        )
+
+    resolved_id = manifest["activePackId"]
     for pack in manifest["packs"]:
         if pack["id"] == resolved_id:
             return pack
@@ -274,7 +297,7 @@ def _resolve_generation_api_key(args: argparse.Namespace) -> str:
 def _generate_voice_assets_if_requested(
     args: argparse.Namespace,
     api_key: str,
-    defaults: dict[str, Any],
+    voice_settings_defaults: dict[str, Any],
     voice_lines: list[tuple[str, str]],
     expected_voice_stems: set[str],
     model_id: str,
@@ -290,7 +313,7 @@ def _generate_voice_assets_if_requested(
         voices = _list_voices(api_key)
         voice = _resolve_voice(voices, None, voice_name_query)
 
-    voice_settings = _load_voice_settings(api_key, voice["voice_id"], defaults["voiceSettings"])
+    voice_settings = _load_voice_settings(api_key, voice["voice_id"], voice_settings_defaults)
     _generate_voice_assets(
         api_key=api_key,
         voice_id=voice["voice_id"],
@@ -507,6 +530,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--pack-id", default="", help="Optional explicit pack ID. Defaults to the active pack.")
     parser.add_argument(
+        "--release-month",
+        default="",
+        help="Optional YYYY-MM release window. When set, selects the pack for that month instead of activePackId.",
+    )
+    parser.add_argument(
         "--ios-audio-dir",
         type=Path,
         default=Path("native-ios/RandomTimer/Resources/Audio"),
@@ -565,15 +593,20 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _resolve_output_paths(parse_args())
     manifest = _load_manifest(args.manifest)
-    pack = _select_pack(manifest, args.pack_id.strip() or None)
+    pack = _select_pack(
+        manifest,
+        args.pack_id.strip() or None,
+        args.release_month.strip() or None,
+    )
     defaults = manifest["defaults"]
     entitlement = defaults["entitlement"]
     voice_catalog = _voice_catalog(pack)
     sound_catalog = _sound_catalog(pack, entitlement)
     voice_lines = _voice_lines(voice_catalog)
     sound_lines = _sound_entries(pack)
-    model_id = args.model_id.strip() or defaults["voiceModelId"]
-    voice_name_pattern = args.voice_name_pattern.strip() or defaults["voiceNamePattern"]
+    voice_settings_defaults = pack.get("voiceSettings") or defaults["voiceSettings"]
+    model_id = args.model_id.strip() or pack.get("voiceModelId") or defaults["voiceModelId"]
+    voice_name_pattern = args.voice_name_pattern.strip() or pack.get("voiceNamePattern") or defaults["voiceNamePattern"]
 
     estimate = {
         "pack_id": pack["id"],
@@ -602,7 +635,7 @@ def main() -> None:
     _generate_voice_assets_if_requested(
         args=args,
         api_key=api_key,
-        defaults=defaults,
+        voice_settings_defaults=voice_settings_defaults,
         voice_lines=voice_lines,
         expected_voice_stems=expected_voice_stems,
         model_id=model_id,

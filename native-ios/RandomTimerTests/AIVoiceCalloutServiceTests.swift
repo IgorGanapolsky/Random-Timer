@@ -290,6 +290,17 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(atSixty.nextCommandCueAt, 90)
     }
 
+    func testElapsedMinuteAnnouncementCatchesUpAfterSkippedSecond() {
+        let sut = makeVoiceCalloutService()
+
+        sut.beginSession(totalDurationSeconds: 180)
+        sut.triggerCallout(elapsedSeconds: 61)
+
+        let snapshot = sut._stateSnapshotForTesting()
+        XCTAssertEqual(snapshot.lastElapsedMilestone, 60)
+        XCTAssertEqual(snapshot.nextCommandCueAt, 91)
+    }
+
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {
         let counter = CounterBox()
         let sut = makeVoiceCalloutService(counter: counter)

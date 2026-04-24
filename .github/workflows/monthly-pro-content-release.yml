@@ -51,6 +51,7 @@ jobs:
       content_branch: ${{ steps.commit.outputs.content_branch }}
       new_version: ${{ steps.bump.outputs.new_version }}
       month_label: ${{ steps.meta.outputs.month_label }}
+      release_month: ${{ steps.meta.outputs.release_month }}
       changes_committed: ${{ steps.commit.outputs.changes_committed }}
       content_pr_number: ${{ steps.commit.outputs.content_pr_number }}
 
@@ -81,7 +82,9 @@ jobs:
         id: meta
         run: |
           MONTH_LABEL=$(date -u +"%B-%Y")
+          RELEASE_MONTH=$(date -u +"%Y-%m")
           echo "month_label=${MONTH_LABEL}" >> "$GITHUB_OUTPUT"
+          echo "release_month=${RELEASE_MONTH}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -97,6 +100,7 @@ jobs:
           echo "=== Generating Pro audio content via ElevenLabs ==="
           args=(
             --manifest content/pro_audio/monthly_pro_audio_packs.json
+            --release-month "${{ steps.meta.outputs.release_month }}"
             --voice-id "${ELEVENLABS_VOICE_ID:-DGzg6RaUqxGRTHSBjfgF}"
             --generate-sound-assets
             --sync-android-assets
