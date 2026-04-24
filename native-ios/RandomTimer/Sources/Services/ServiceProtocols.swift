@@ -39,3 +39,10 @@ protocol TimerLiveActivityHandling {
     func end() async
     func endAll() async
 }
+
+@MainActor
+protocol BackgroundVoiceKeepAliveHandling {
+    var isActive: Bool { get }
+    func start()
+    func stop()
+}

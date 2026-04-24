@@ -194,6 +194,111 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     }
 }
 
+internal protocol BackgroundVoiceKeepAliveEngine: AnyObject {
+    var isRunning: Bool { get }
+    var mainMixerNode: AVAudioMixerNode { get }
+    func attach(_ node: AVAudioNode)
+    func connect(_ node1: AVAudioNode, to node2: AVAudioNode, format: AVAudioFormat?)
+    func prepare()
+    func start() throws
+    func stop()
+    func reset()
+}
+
+extension AVAudioEngine: BackgroundVoiceKeepAliveEngine {}
+
+@MainActor
+final class BackgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling {
+    typealias AudioSessionActivator = @MainActor () -> Void
+    typealias AudioSessionDeactivator = @MainActor () -> Void
+    typealias EngineFactory = @MainActor () -> BackgroundVoiceKeepAliveEngine
+
+    static let shared = BackgroundVoiceKeepAliveService()
+
+    private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice-keepalive")
+
+    private static func activateBackgroundAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            log.error("Background voice audio session setup failed: \(error.localizedDescription)")
+        }
+    }
+
+    private static func deactivateBackgroundAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            log.error("Background voice audio session teardown failed: \(error.localizedDescription)")
+        }
+    }
+
+    private let makeEngine: EngineFactory
+    private let activateAudioSession: AudioSessionActivator
+    private let deactivateAudioSession: AudioSessionDeactivator
+    private var audioEngine: BackgroundVoiceKeepAliveEngine?
+    private var sourceNode: AVAudioSourceNode?
+
+    var isActive: Bool {
+        audioEngine?.isRunning == true
+    }
+
+    init(
+        makeEngine: @escaping EngineFactory = { AVAudioEngine() },
+        activateAudioSession: @escaping AudioSessionActivator =
+            BackgroundVoiceKeepAliveService.activateBackgroundAudioSession,
+        deactivateAudioSession: @escaping AudioSessionDeactivator =
+            BackgroundVoiceKeepAliveService.deactivateBackgroundAudioSession
+    ) {
+        self.makeEngine = makeEngine
+        self.activateAudioSession = activateAudioSession
+        self.deactivateAudioSession = deactivateAudioSession
+    }
+
+    func start() {
+        guard !isActive else { return }
+
+        activateAudioSession()
+
+        let engine = makeEngine()
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)
+        let silenceSource = AVAudioSourceNode { _, _, _, audioBufferList -> OSStatus in
+            let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
+            for buffer in buffers {
+                if let data = buffer.mData {
+                    memset(data, 0, Int(buffer.mDataByteSize))
+                }
+            }
+            return 0
+        }
+
+        engine.attach(silenceSource)
+        engine.connect(silenceSource, to: engine.mainMixerNode, format: format)
+        engine.mainMixerNode.outputVolume = 0
+        engine.prepare()
+
+        do {
+            try engine.start()
+            audioEngine = engine
+            sourceNode = silenceSource
+        } catch {
+            Self.log.error("Background voice keepalive failed to start: \(error.localizedDescription)")
+            sourceNode = nil
+            audioEngine = nil
+            deactivateAudioSession()
+        }
+    }
+
+    func stop() {
+        sourceNode = nil
+        audioEngine?.stop()
+        audioEngine?.reset()
+        audioEngine = nil
+        deactivateAudioSession()
+    }
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {
@@ -256,6 +361,13 @@ final class AIVoiceCalloutService {
         }
 
         playVoiceFile(named: filename, cueText: text)
+    }
+
+    private func speak(_ cue: VoiceCueCatalog.Cue) {
+        activateAudioSession()
+
+        let filename = genderedVoiceFilename(cue.filename, gender: currentGender)
+        playVoiceFile(named: filename, cueText: cue.text)
     }
 
     func resetSession() {
@@ -338,8 +450,8 @@ final class AIVoiceCalloutService {
         }
 
         if let callout = elapsedMilestone(for: elapsedSeconds) {
-            speak(callout.text)
-            lastElapsedMilestone = elapsedSeconds
+            speak(.init(filename: callout.filename, text: callout.text))
+            lastElapsedMilestone = callout.second
             if nextCommandCueAt <= elapsedSeconds {
                 nextCommandCueAt = elapsedSeconds + 30
             }
@@ -349,23 +461,20 @@ final class AIVoiceCalloutService {
 
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
             let cue = randomCommandCue()
-            speak(cue.text)
+            speak(cue)
             lastCommandCueFilename = cue.filename
             nextCommandCueAt = elapsedSeconds + 30
             lastCueFiredAtElapsed = elapsedSeconds
         }
     }
 
-    /// "Time elapsed" lines only on full-minute marks (60, 120, …). Other seconds use command cues only.
+    /// Returns the latest crossed "time elapsed" line on full-minute marks (60, 120, …).
+    /// Sub-minute elapsed rows stay out of runtime so command coaching keeps its own cadence.
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        guard elapsed > 0, elapsed % 60 == 0 else {
-            return nil
-        }
-        guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
-            return nil
-        }
-        return cue
+        return catalog.elapsedCues
+            .filter { $0.second > lastElapsedMilestone && $0.second <= elapsed && $0.second.isMultiple(of: 60) }
+            .max(by: { $0.second < $1.second })
     }
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {

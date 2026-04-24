@@ -135,6 +135,7 @@ class AIVoiceCalloutManagerSelectionTest {
                         ElapsedVoiceCue(second = 15, filename = "elapsed_15s", text = "Fifteen seconds elapsed."),
                         ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed."),
                         ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed."),
+                        ElapsedVoiceCue(second = 120, filename = "elapsed_120s", text = "Two minutes elapsed."),
                     ),
                 commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
             )
@@ -143,6 +144,8 @@ class AIVoiceCalloutManagerSelectionTest {
         assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
         assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
         assertThat(runtimeVoiceCueForElapsedMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(61, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(121, lastElapsedMilestone = 60, catalog = catalog)?.filename).isEqualTo("elapsed_120s")
     }
 
     @Test
