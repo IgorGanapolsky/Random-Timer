@@ -336,7 +336,8 @@ class AIVoiceCalloutManager
             val catalog = packStore.voiceCatalog()
             val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
             val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
-            val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, cue.text, catalog)
+            val resId =
+                directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, cue.text, catalog)
             if (catalog.filenameByText[cue.text] == null) {
                 Log.w("AIVoiceCallout", "Unmapped cue requested, using bundled fallback: ${cue.text}")
             }

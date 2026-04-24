@@ -597,12 +597,13 @@ class TimerForegroundService : Service() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock =
             existing
-                ?: powerManager.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK,
-                    "$packageName:active_timer",
-                ).apply {
-                    setReferenceCounted(false)
-                }
+                ?: powerManager
+                    .newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK,
+                        "$packageName:active_timer",
+                    ).apply {
+                        setReferenceCounted(false)
+                    }
 
         runCatching {
             wakeLock?.acquire()
