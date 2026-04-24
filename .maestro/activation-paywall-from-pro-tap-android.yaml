@@ -5,11 +5,12 @@ appId: com.iganapolsky.randomtimer
 - launchApp
 
 - assertVisible:
-    text: 'Start Timer'
+    text: 'Start First Drill'
 
 # Extended range PRO affordance — should open paywall
 - tapOn:
     text: 'PRO: 1H'
 
-- assertVisible:
-    text: 'Stop Training With the Brakes On'
+- extendedWaitUntil:
+    visible: 'Restore purchase'
+    timeout: 10000

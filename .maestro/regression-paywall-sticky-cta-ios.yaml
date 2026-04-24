@@ -7,7 +7,7 @@ appId: com.igorganapolsky.randomtimer
 - tapOn:
     text: ".*PRO: 1H.*"
 - extendedWaitUntil:
-    visible: "Stop Training With the Brakes On"
+    visible: "Restore purchase"
     timeout: 10000
 - scrollUntilVisible:
     element: "CHOOSE A PLAN"
