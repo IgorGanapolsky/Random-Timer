@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import plistlib
 import sys
 import time
 from dataclasses import dataclass
@@ -17,9 +18,18 @@ from typing import Any, Dict, Iterable, Optional
 from scripts.asc.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
+IOS_INFO_PLIST_PATH = os.path.join("native-ios", "RandomTimer", "Info.plist")
 SUBSCRIPTION_REVIEW_DOC_URL = (
     "https://developer.apple.com/documentation/appstoreconnectapi/"
     "submitting-subscriptions-and-subscription-groups-for-app-review"
+)
+BACKGROUND_AUDIO_REVIEW_NOTE = (
+    "Background audio testing: This build declares UIBackgroundModes=audio because Random Tactical Timer plays "
+    "user-enabled training audio while an active timer continues in the background or with the screen locked. "
+    "To test it, open the app, unlock Pro through StoreKit sandbox if needed, enable Voice Callouts on the setup "
+    "screen, start a timer, then background the app or lock the device. Voice callouts/time checks and the final "
+    "alarm remain audible while the timer continues. Free users can preview a voice callout from Voice Callouts > "
+    "PREVIEW; persistent timer callouts are Pro."
 )
 
 
@@ -700,6 +710,46 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
         die("App Review contactPhone is missing.")
 
 
+def declares_background_audio(info_plist_path: str = IOS_INFO_PLIST_PATH) -> bool:
+    try:
+        with open(info_plist_path, "rb") as f:
+            info_plist = plistlib.load(f)
+    except FileNotFoundError:
+        return False
+    modes = info_plist.get("UIBackgroundModes") or []
+    return isinstance(modes, list) and "audio" in modes
+
+
+def ensure_background_audio_review_note(
+    client: ASCClient,
+    version_id: str,
+    *,
+    info_plist_path: str = IOS_INFO_PLIST_PATH,
+) -> None:
+    if not declares_background_audio(info_plist_path):
+        return
+
+    data = client.request("GET", f"/appStoreVersions/{version_id}/appStoreReviewDetail")
+    detail = data.get("data") or {}
+    detail_id = detail.get("id") or ""
+    attrs = detail.get("attributes") or {}
+    current_notes = (attrs.get("notes") or "").strip()
+    if "UIBackgroundModes=audio" in current_notes and "Voice Callouts" in current_notes:
+        return
+    if not detail_id:
+        die("App Review detail is missing an id; cannot update background-audio review notes.")
+
+    notes = f"{current_notes}\n\n{BACKGROUND_AUDIO_REVIEW_NOTE}".strip()
+    patch_resource_attributes(
+        client,
+        path=f"/appStoreReviewDetails/{detail_id}",
+        type_name="appStoreReviewDetails",
+        resource_id=detail_id,
+        attrs={"notes": notes},
+    )
+    info("Updated App Review notes with background-audio test instructions.")
+
+
 def _list_app_infos(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
     params = {
         "limit": 200,
@@ -1146,6 +1196,7 @@ def main() -> int:
     version_id, state = find_or_create_app_store_version(client, app_id, args.version)
     info(f"App Store version id={version_id} state={state}")
     verify_review_detail(client, version_id)
+    ensure_background_audio_review_note(client, version_id)
     verify_age_rating(client, app_id, version_id)
 
     # If already in a submitted/in-review state, do nothing — unless attaching subscriptions.
