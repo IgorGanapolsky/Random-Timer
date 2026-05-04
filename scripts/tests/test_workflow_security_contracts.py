@@ -126,6 +126,10 @@ def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     assert device_tests.count("permissions:\n      contents: read") >= 3
     assert "Path-Aware CI Gate" in ci
     assert "Path-Aware Device Gate" in device_tests
+    assert "BEFORE_SHA: ${{ github.event.before || '' }}" in ci
+    assert "BEFORE_SHA: ${{ github.event.before || '' }}" in device_tests
+    assert 'elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then' in ci
+    assert 'elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then' in device_tests
     assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in ci
     assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in device_tests
     assert "if: needs.changes.outputs.android == 'true'" in ci
