@@ -1,11 +1,10 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -132,8 +131,8 @@ class ActiveTimerScreenTapCircleTest {
             }
         }
 
-        composeRule.onNodeWithText("Voice Callouts On").assertDoesNotExist()
-        composeRule.onNodeWithText("Voice Callouts Locked").assertDoesNotExist()
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts On").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts Locked").fetchSemanticsNodes().isEmpty())
     }
 
     @Test
