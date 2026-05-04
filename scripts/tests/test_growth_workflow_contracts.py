@@ -77,6 +77,7 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
     assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
     assert "TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}" in source
+    assert "TESTFLIGHT_INTERNAL_TESTERS must include the CEO/TestFlight Apple ID" in source
     assert "secrets.FIREBASE_REQUIRED_TESTER_EMAIL" not in source.split("Ensure TestFlight internal distribution visibility", 1)[1].split(
         "Upload IPA artifact", 1
     )[0]
@@ -168,6 +169,7 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
         "- name: Preflight release checks (Android)", 1
     )[0]
     assert "FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}" in firebase_auth_section
+    assert "FIREBASE_REQUIRED_TESTER_EMAIL must include the CEO Android tester email" in firebase_auth_section
     assert "COMBINED_FIREBASE_TESTERS" in firebase_auth_section
     assert 'os.environ.get("FIREBASE_REQUIRED_TESTER_EMAIL", "")' in firebase_auth_section
     assert 'echo "FIREBASE_INTERNAL_TESTERS=${COMBINED_FIREBASE_TESTERS}" >> "$GITHUB_ENV"' in firebase_auth_section
@@ -286,6 +288,8 @@ def test_native_release_workflow_blocks_production_without_internal_signoff_proo
     assert "internal-proof-or-waive:" in source
     assert "skip_internal_signoff:" in source
     assert "skip_production_signoff:" in source
+    assert "Internal artifact proof cannot be waived for production release." in source
+    assert "Every release must have current internal-signoff/testflight and/or internal-signoff/firebase statuses" in source
     assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
     assert "python3 scripts/internal_signoff_gate.py" in source
     assert "require-production-signoff:" in source

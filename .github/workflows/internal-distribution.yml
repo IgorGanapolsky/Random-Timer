@@ -193,6 +193,7 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}
         run: |
           set -euo pipefail
           for name in MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID ADMIN_TOKEN; do
@@ -201,6 +202,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -z "${TESTFLIGHT_REQUIRED_TESTERS:-}" ]; then
+            echo "❌ TESTFLIGHT_INTERNAL_TESTERS must include the CEO/TestFlight Apple ID so CI proves the build is visible to that account."
+            exit 1
+          fi
 
       - name: Preflight release checks (iOS)
         run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
@@ -586,6 +591,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -z "${FIREBASE_REQUIRED_TESTER_EMAIL:-}" ]; then
+            echo "❌ FIREBASE_REQUIRED_TESTER_EMAIL must include the CEO Android tester email so CI proves the Firebase build is visible to that account."
+            exit 1
+          fi
           COMBINED_FIREBASE_TESTERS="$(
             python3 - <<'PY'
           import os
