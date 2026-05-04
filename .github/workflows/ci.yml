@@ -629,7 +629,7 @@ jobs:
             --repo-root . \
             --lookback-days 30 \
             --wqtu-window-days 7 \
-            --require-posthog
+            --require-posthog-when-active
 
       - name: Warn if paid attribution guardrail is violated
         if: always()

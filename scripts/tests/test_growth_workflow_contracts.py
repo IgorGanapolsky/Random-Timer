@@ -352,6 +352,14 @@ def test_ci_workflow_has_dedicated_regression_guards_job():
     assert "AIVoiceCalloutManagerSelectionTest" in guard_job
 
 
+def test_ci_north_star_guardrail_only_requires_posthog_when_paid_campaigns_are_active():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+    guard_job = source.split("north-star-guardrail:", 1)[1].split("\n  security:\n", 1)[0]
+
+    assert "--require-posthog-when-active" in guard_job
+    assert "--require-posthog\n" not in guard_job
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
