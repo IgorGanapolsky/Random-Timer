@@ -1,8 +1,8 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
