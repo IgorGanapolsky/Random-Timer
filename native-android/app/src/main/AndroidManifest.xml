@@ -10,7 +10,6 @@
 
     <!-- Foreground Service for active timer -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- Keep screen on during alarm -->
@@ -80,16 +79,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Timer Foreground Service. mediaPlayback FGS type is required so voice
-             callouts continue when screen is off; specialUse covers the timer semantics. -->
+        <!-- Timer Foreground Service. mediaPlayback keeps voice/sound callouts
+             reliable when the app is backgrounded or the screen is off. -->
         <service
             android:name=".service.TimerForegroundService"
             android:exported="false"
-            android:foregroundServiceType="specialUse|mediaPlayback">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="timer" />
-        </service>
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- Alarm Receiver -->
         <receiver
