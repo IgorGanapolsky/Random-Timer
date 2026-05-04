@@ -256,6 +256,28 @@ jobs:
             --tests 'com.iganapolsky.randomtimer.data.repository.TimerRepositoryImplTest' \
             --tests 'com.iganapolsky.randomtimer.service.AIVoiceCalloutManagerSelectionTest'
 
+      - name: Summarize Android regression JUnit evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            'native-android/app/build/test-results/testDebugUnitTest/**/*.xml' \
+            --json-out /tmp/android-regression-junit-summary.json \
+            --markdown-out /tmp/android-regression-junit-summary.md \
+            --github-annotations
+          cat /tmp/android-regression-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Android regression test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-regression-junit-evidence
+          path: |
+            native-android/app/build/test-results/testDebugUnitTest
+            native-android/app/build/reports/tests/testDebugUnitTest
+            /tmp/android-regression-junit-summary.json
+            /tmp/android-regression-junit-summary.md
+          if-no-files-found: warn
+
   android:
     name: Autonomous Android Tests
     needs: changes
@@ -292,6 +314,17 @@ jobs:
       - name: Run unit tests with coverage
         run: ./gradlew testDebugUnitTest jacocoDebugUnitTestReport --no-daemon
 
+      - name: Summarize Android JUnit evidence
+        if: always()
+        working-directory: .
+        run: |
+          python scripts/ci_junit_summary.py \
+            'native-android/app/build/test-results/testDebugUnitTest/**/*.xml' \
+            --json-out /tmp/android-junit-summary.json \
+            --markdown-out /tmp/android-junit-summary.md \
+            --github-annotations
+          cat /tmp/android-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
 
@@ -307,9 +340,13 @@ jobs:
         with:
           name: android-unit-coverage
           path: |
+            native-android/app/build/test-results/testDebugUnitTest
             native-android/app/build/reports/tests/testDebugUnitTest
             native-android/app/build/reports/jacoco/jacocoDebugUnitTestReport
             native-android/app/build/jacoco/testDebugUnitTest.exec
+            /tmp/android-junit-summary.json
+            /tmp/android-junit-summary.md
+          if-no-files-found: warn
 
   ios:
     name: Autonomous iOS Build Check
@@ -503,7 +540,28 @@ jobs:
         run: python -m pip install --upgrade pip pytest==8.4.2 pytest-cov==7.0.0 pillow==11.3.0 google-auth==2.43.0 requests==2.32.5 PyYAML==6.0.2
 
       - name: Run unit tests
-        run: python -m pytest scripts/tests/ -q --cov=scripts --cov-report=term --cov-report=xml:coverage-python.xml
+        run: python -m pytest scripts/tests/ -q --junitxml=python-test-results.xml --cov=scripts --cov-report=term --cov-report=xml:coverage-python.xml
+
+      - name: Summarize Python JUnit evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            'python-test-results.xml' \
+            --json-out /tmp/python-junit-summary.json \
+            --markdown-out /tmp/python-junit-summary.md \
+            --github-annotations
+          cat /tmp/python-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Python JUnit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-junit-evidence
+          path: |
+            python-test-results.xml
+            /tmp/python-junit-summary.json
+            /tmp/python-junit-summary.md
+          if-no-files-found: warn
 
       - name: Upload Python coverage artifact
         if: always()
