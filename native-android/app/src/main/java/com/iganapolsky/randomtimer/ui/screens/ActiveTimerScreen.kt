@@ -272,11 +272,13 @@ fun ActiveTimerScreen(
                                 roundCount = state.roundCount,
                                 onClick = toggleLoop,
                             )
-                            VoiceBadge(
-                                enabled = voiceEnabled,
-                                isPro = isPro,
-                                onClick = toggleVoice,
-                            )
+                            if (shouldShowVoiceBadge(isPro)) {
+                                VoiceBadge(
+                                    enabled = voiceEnabled,
+                                    isPro = isPro,
+                                    onClick = toggleVoice,
+                                )
+                            }
                         }
                     }
                 }
@@ -463,6 +465,8 @@ internal fun voiceBadgeText(
         enabled -> "Voice Callouts On"
         else -> "Voice Callouts Off"
     }
+
+internal fun shouldShowVoiceBadge(isPro: Boolean): Boolean = isPro
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)

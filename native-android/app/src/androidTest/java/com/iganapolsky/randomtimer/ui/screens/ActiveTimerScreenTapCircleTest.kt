@@ -2,8 +2,10 @@ package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -101,6 +103,37 @@ class ActiveTimerScreenTapCircleTest {
             assertTrue(!silenced)
             assertTrue(!dismissed)
         }
+    }
+
+    @Test
+    fun freeRunningTimerDoesNotRenderVoiceCalloutBadge() {
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT.copy(voiceEnabled = true),
+                targetDuration = 60.seconds,
+                remainingDuration = 30.seconds,
+                status = TimerStatus.RUNNING,
+            )
+
+        composeRule.setContent {
+            RandomTimerTheme {
+                ActiveTimerScreen(
+                    state = state,
+                    isPro = false,
+                    onStop = {},
+                    onDismissAlarm = {},
+                    onSilence = {},
+                    onPause = {},
+                    onResume = {},
+                    onReset = {},
+                    onLoopToggle = {},
+                    onVoiceToggle = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Voice Callouts On").assertDoesNotExist()
+        composeRule.onNodeWithText("Voice Callouts Locked").assertDoesNotExist()
     }
 
     @Test

@@ -38,4 +38,10 @@ class ActiveTimerScreenBadgeTextTest {
     fun voiceBadgeShowsLockedStateForFreeUsersEvenWhenConfigIsStaleOn() {
         assertThat(voiceBadgeText(enabled = true, isPro = false)).isEqualTo("Voice Callouts Locked")
     }
+
+    @Test
+    fun voiceBadgeIsHiddenForFreeUsers() {
+        assertThat(shouldShowVoiceBadge(isPro = false)).isFalse()
+        assertThat(shouldShowVoiceBadge(isPro = true)).isTrue()
+    }
 }
