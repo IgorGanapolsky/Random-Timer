@@ -284,6 +284,7 @@ jobs:
           fi
 
           gh pr comment "${CONTENT_PR_NUMBER}" --repo "$GITHUB_REPOSITORY" --body "/trunk merge"
+          gh pr merge "${CONTENT_PR_NUMBER}" --repo "$GITHUB_REPOSITORY" --squash --auto --delete-branch || true
 
           deadline=$((SECONDS + 3300))
           while [ "$SECONDS" -lt "$deadline" ]; do
@@ -409,7 +410,7 @@ jobs:
             -f android_track=production \
             -f submit_review=true \
             -f confirm_ios_only_release=false \
-            -f skip_internal_signoff=true \
+            -f skip_internal_signoff=false \
             -f skip_production_signoff=true
           echo "Dispatched Native App Release for ${RELEASE_BRANCH}"
 

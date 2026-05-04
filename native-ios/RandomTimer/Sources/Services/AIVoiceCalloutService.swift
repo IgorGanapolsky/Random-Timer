@@ -376,7 +376,6 @@ final class AIVoiceCalloutService {
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
         lastCommandCueFilename = nil
-        usedCommandCueFilenames.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
         lastCueFiredAtElapsed = nil

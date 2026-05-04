@@ -127,11 +127,15 @@ def _select_pack(
     raise SystemExit(f"Could not find audio pack {resolved_id!r}.")
 
 
+def _runtime_elapsed_cues(pack: dict[str, Any]) -> list[dict[str, Any]]:
+    return [cue for cue in pack["elapsedCues"] if int(cue["second"]) % 60 == 0]
+
+
 def _voice_catalog(pack: dict[str, Any]) -> dict[str, Any]:
     return {
         "previewElapsed": pack["previewElapsed"],
         "fallbackCommandFilename": pack["fallbackCommandFilename"],
-        "elapsedCues": pack["elapsedCues"],
+        "elapsedCues": _runtime_elapsed_cues(pack),
         "commandCues": pack["commandCues"],
     }
 

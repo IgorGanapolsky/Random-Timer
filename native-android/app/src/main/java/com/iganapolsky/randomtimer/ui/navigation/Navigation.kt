@@ -198,6 +198,7 @@ fun RandomTimerNavHost(
             } else {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = isPro,
                     onStop = {
                         viewModel.cancelTimer()
                     },

@@ -1336,12 +1336,34 @@ private fun SoundTypeButton(
                 color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
             ),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
+        Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (selected) {
+                Text(
+                    text = "✓",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TimerColors.AccentPrimary,
+                )
+            }
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
+                )
+                if (selected) {
+                    Text(
+                        text = "Selected",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TimerColors.AccentPrimary,
+                    )
+                }
+            }
+        }
     }
 }
 

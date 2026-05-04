@@ -890,12 +890,26 @@ private struct SoundTypeButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            Label(label, systemImage: systemImage)
-                .font(.body)
-                .foregroundColor(selected ? .accentPrimary : .textPrimary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
+            HStack(spacing: 8) {
+                if selected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.body.weight(.bold))
+                        .foregroundColor(.accentPrimary)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Label(label, systemImage: systemImage)
+                        .font(.body)
+                    if selected {
+                        Text("Selected")
+                            .font(.caption2.weight(.bold))
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundColor(selected ? .accentPrimary : .textPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(selected ? Color.accentPrimary.opacity(0.15) : Color.glassBackground)

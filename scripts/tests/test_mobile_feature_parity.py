@@ -306,14 +306,17 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
     ios_active = _read(IOS_ACTIVE_SCREEN)
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
 
-    assert 'voiceBadgeText(enabled: Bool)' in ios_active
+    assert 'voiceBadgeText(enabled: Bool, isPro: Bool)' in ios_active
+    assert 'Voice Callouts Locked' in ios_active
     assert 'Label(' in ios_active and 'systemImage: "waveform"' in ios_active
+    assert 'guard isPro else { return }' in ios_active
     assert 'updateConfig(voiceEnabled: !isEnabled)' in ios_active
     assert 'timerManager.updateConfig(newConfig)' in ios_active
     assert 'voiceEnabled: voiceEnabled ?? current.voiceEnabled' in ios_active
     assert "if var state = timerState" in ios_timer_manager
 
-    assert "internal fun voiceBadgeText(enabled: Boolean)" in android_active
+    assert "internal fun voiceBadgeText(" in android_active
+    assert 'Voice Callouts Locked' in android_active
     assert "VoiceBadge(" in android_active
     assert "onVoiceToggle: (Boolean) -> Unit" in android_active
     assert "onVoiceToggle = viewModel::updateVoiceSetting" in android_nav

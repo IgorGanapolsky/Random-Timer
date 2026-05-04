@@ -349,7 +349,6 @@ class AIVoiceCalloutManager
             stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
-            usedCommandCueFilenames.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
