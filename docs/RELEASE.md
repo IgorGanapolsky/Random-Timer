@@ -218,6 +218,8 @@ As of April 7, 2026, production release is blocked until CEO signoff exists for 
 - Android Google Play internal
 - Android Firebase App Distribution
 
+Internal proof is mandatory for every production release. CI must prove the latest TestFlight build is visible to `TESTFLIGHT_INTERNAL_TESTERS` and the latest Firebase APK is visible to `FIREBASE_REQUIRED_TESTER_EMAIL`; production release cannot waive these checks.
+
 Use `target=all_safe` only when Firebase APK delivery must be skipped for explicit debugging reasons.
 
 Target behavior:
