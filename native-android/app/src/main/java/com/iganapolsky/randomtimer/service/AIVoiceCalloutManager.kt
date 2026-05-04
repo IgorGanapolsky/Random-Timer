@@ -348,7 +348,9 @@ class AIVoiceCalloutManager
         fun resetSession() {
             stopPlayback()
             lastElapsedMilestone = 0
-            lastCommandCueFilename = null
+            // Preserve lastCommandCueFilename across sessions so a new session cannot
+            // immediately repeat the final command cue from the previous session.
+            usedCommandCueFilenames.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0

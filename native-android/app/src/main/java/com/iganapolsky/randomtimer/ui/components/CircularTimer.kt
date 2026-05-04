@@ -186,20 +186,14 @@ fun CircularTimer(
                 style = Stroke(width = strokePx, cap = StrokeCap.Round),
             )
 
-            // Orbiting shimmer dot (only when actively running, not paused/complete)
+            // One orbiting shimmer dot only. Extra glow rings look like additional
+            // progress indicators and undermine random-timer uncertainty.
             if (isActivelyRunning) {
                 val shimmerAngleRad = Math.toRadians((shimmerAngle - 90).toDouble())
                 val arcRadius = radius - strokePx / 2
                 val shimmerX = (radius + arcRadius * kotlin.math.cos(shimmerAngleRad)).toFloat()
                 val shimmerY = (radius + arcRadius * kotlin.math.sin(shimmerAngleRad)).toFloat()
 
-                // Outer glow (large, soft)
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.15f),
-                    radius = strokePx * 2.5f,
-                    center = Offset(shimmerX, shimmerY),
-                )
-                // Inner bright spot
                 drawCircle(
                     color = Color.White.copy(alpha = 0.5f),
                     radius = strokePx,
