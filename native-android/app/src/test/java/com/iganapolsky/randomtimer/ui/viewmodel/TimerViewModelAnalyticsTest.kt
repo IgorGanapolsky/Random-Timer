@@ -60,6 +60,7 @@ class TimerViewModelAnalyticsTest {
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
+        every { proManager.isPro } returns MutableStateFlow(true)
 
         configFlow = MutableStateFlow(TimerConfig.DEFAULT)
         every { repository.getTimerConfig() } returns configFlow
