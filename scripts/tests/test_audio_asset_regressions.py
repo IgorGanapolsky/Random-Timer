@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
 IOS_SOUND_DIR = ROOT / "native-ios/RandomTimer/Resources/Sounds"
 RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
-RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds"
+RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-05_combatives_corner/sounds"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 ANDROID_SETUP = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
@@ -66,6 +66,16 @@ def test_gentle_iconography_uses_water_not_lightning() -> None:
     assert 'systemImage: "bolt.fill"' not in ios_setup
     assert 'label = "\\uD83D\\uDCA7 Gentle"' in android_setup
     assert 'label = "\\u26A1 Gentle"' not in android_setup
+
+
+def test_sound_arsenal_selection_is_visible_after_tap() -> None:
+    ios_setup = _read(IOS_SETUP)
+    android_setup = _read(ANDROID_SETUP)
+
+    assert 'Image(systemName: "checkmark.circle.fill")' in ios_setup
+    assert 'Text("Selected")' in ios_setup
+    assert 'text = "✓"' in android_setup
+    assert 'text = "Selected"' in android_setup
 
 
 def test_session_voice_playback_routes_to_gendered_assets() -> None:

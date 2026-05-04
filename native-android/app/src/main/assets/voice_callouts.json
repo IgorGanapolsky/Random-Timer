@@ -1,235 +1,147 @@
 {
   "previewElapsed": {
     "filename": "preview_elapsed",
-    "text": "Thirty seconds elapsed. Move with a purpose."
+    "text": "Thirty seconds elapsed. Stay sharp and keep working."
   },
-  "fallbackCommandFilename": "cmd_move_with_a_purpose",
+  "fallbackCommandFilename": "cmd_stay_locked_in",
   "elapsedCues": [
     {
       "second": 60,
       "filename": "elapsed_60s",
-      "text": "One minute elapsed. Keep pressure on."
+      "text": "One minute elapsed. Breathe and stay dangerous."
     },
     {
       "second": 120,
       "filename": "elapsed_120s",
-      "text": "Two minutes elapsed. Pick it up."
+      "text": "Two minutes elapsed. Keep the tempo honest."
     },
     {
       "second": 180,
       "filename": "elapsed_180s",
-      "text": "Three minutes elapsed. Sound off and move."
+      "text": "Three minutes elapsed. Dig in and close strong."
     },
     {
       "second": 240,
       "filename": "elapsed_240s",
-      "text": "Four minutes elapsed. Maintain your pace."
+      "text": "Four minutes elapsed. Smooth breathing. Violent pace."
     },
     {
       "second": 300,
       "filename": "elapsed_300s",
-      "text": "Five minutes elapsed. Finish this stretch strong."
+      "text": "Five minutes elapsed. Championship pace now."
     },
     {
       "second": 420,
       "filename": "elapsed_420s",
-      "text": "Seven minutes elapsed. Recover and press."
+      "text": "Seven minutes elapsed. Your form still matters. Keep it clean."
     },
     {
       "second": 540,
       "filename": "elapsed_540s",
-      "text": "Nine minutes elapsed. Stay precise. Stay relentless."
+      "text": "Nine minutes elapsed. Compete for every second."
     },
     {
       "second": 600,
       "filename": "elapsed_600s",
-      "text": "Ten minutes elapsed. Outstanding. Keep moving."
+      "text": "Ten minutes elapsed. You are still in it. Finish with intent."
     }
   ],
   "commandCues": [
     {
       "filename": "cmd_move_with_a_purpose",
-      "text": "Move with a purpose."
+      "text": "Cut the angle and go."
     },
     {
       "filename": "cmd_pick_it_up",
-      "text": "Pick it up."
+      "text": "Pick up the pace. Stay clean."
     },
     {
       "filename": "cmd_stay_locked_in",
-      "text": "Stay locked in."
+      "text": "Stay locked in. Read and react."
     },
     {
       "filename": "cmd_no_hesitation_move",
-      "text": "No hesitation. Move."
+      "text": "No hesitation. First move wins."
     },
     {
       "filename": "cmd_keep_your_bearing",
-      "text": "Keep your bearing."
+      "text": "Stay balanced. Stay ready."
     },
     {
       "filename": "cmd_sound_off_and_drive",
-      "text": "Sound off and drive."
+      "text": "Drive forward. Do not fade."
     },
     {
       "filename": "cmd_eyes_up_keep_moving",
-      "text": "Eyes up. Keep moving."
+      "text": "Eyes up. Find the opening."
     },
     {
       "filename": "cmd_stay_disciplined",
-      "text": "Stay disciplined."
+      "text": "Discipline over panic. Work the plan."
     },
     {
       "filename": "cmd_breathe_recover_press",
-      "text": "Breathe, recover, and press."
+      "text": "Breathe once. Then pressure."
     },
     {
       "filename": "cmd_do_not_coast",
-      "text": "Do not coast."
+      "text": "Do not coast. Compete."
     },
     {
       "filename": "cmd_own_this_rep",
-      "text": "Own this rep."
+      "text": "Own the exchange."
     },
     {
       "filename": "cmd_keep_pressure_on",
-      "text": "Keep pressure on."
+      "text": "Keep them reacting."
     },
     {
       "filename": "cmd_sharp_movement_sharp_focus",
-      "text": "Sharp movement. Sharp focus."
+      "text": "Sharp feet. Sharp reads."
     },
     {
       "filename": "cmd_stay_in_the_fight",
-      "text": "Stay in the fight."
+      "text": "Stay in the pocket and work."
     },
     {
       "filename": "cmd_drive_through_it",
-      "text": "Drive through it."
+      "text": "Drive through the fatigue."
     },
     {
       "filename": "cmd_reset_and_attack",
-      "text": "Reset and attack the next step."
+      "text": "Reset your stance and attack."
     },
     {
       "filename": "cmd_strong_feet_strong_pace",
-      "text": "Strong feet. Strong pace."
+      "text": "Light feet. Hard pace."
     },
     {
       "filename": "cmd_move_fast_stay_precise",
-      "text": "Move fast. Stay precise."
+      "text": "Fast hands. Precise decisions."
     },
     {
       "filename": "cmd_keep_tempo_high",
-      "text": "Keep the tempo high."
+      "text": "Tempo stays high. Stay composed."
     },
     {
       "filename": "cmd_most_ricky_tick",
-      "text": "Most ricky tick. Move with a purpose."
+      "text": "Win this beat. Win the next."
     },
     {
       "filename": "cmd_instant_response_go",
-      "text": "Instant response. Go."
+      "text": "Instant reaction. Go now."
     },
     {
       "filename": "cmd_maintain_your_interval",
-      "text": "Maintain your interval."
+      "text": "Manage distance. Re-enter on your terms."
     },
     {
       "filename": "cmd_snap_back_and_drive",
-      "text": "Snap back and drive."
+      "text": "Snap back, re-center, fire."
     },
     {
       "filename": "cmd_finish_rep_keep_pushing",
-      "text": "Finish the rep. Then keep pushing."
-    },
-    {
-      "filename": "cmd_drive_forward",
-      "text": "Drive forward. No hesitation."
-    },
-    {
-      "filename": "cmd_keep_pressure",
-      "text": "Keep pressure. Don't let up."
-    },
-    {
-      "filename": "cmd_move_now",
-      "text": "Move now. Sharp and precise."
-    },
-    {
-      "filename": "cmd_push_pace",
-      "text": "Push the pace. Don't coast."
-    },
-    {
-      "filename": "cmd_push_through",
-      "text": "Push through. Stay in the fight."
-    },
-    {
-      "filename": "cmd_reset_breathe",
-      "text": "Reset. Breathe. Attack again."
-    },
-    {
-      "filename": "cmd_stay_sharp",
-      "text": "Stay sharp. Eyes up."
-    },
-    {
-      "filename": "cmd_check_stance",
-      "text": "Check that stance!"
-    },
-    {
-      "filename": "cmd_jab_circle",
-      "text": "Jab and circle out!"
-    },
-    {
-      "filename": "cmd_footwork",
-      "text": "Footwork first!"
-    },
-    {
-      "filename": "cmd_hands_high",
-      "text": "Hands high! Protect yourself!"
-    },
-    {
-      "filename": "cmd_pressure_cage",
-      "text": "Pressure the cage!"
-    },
-    {
-      "filename": "cmd_double_leg",
-      "text": "Double leg setup! Shoot!"
-    },
-    {
-      "filename": "cmd_sprawl_brawl",
-      "text": "Sprawl and brawl!"
-    },
-    {
-      "filename": "cmd_mix_strikes",
-      "text": "Mix your strikes!"
-    },
-    {
-      "filename": "cmd_control_center",
-      "text": "Control the center!"
-    },
-    {
-      "filename": "cmd_snap_jab",
-      "text": "Snap that jab!"
-    },
-    {
-      "filename": "cmd_feint_fire",
-      "text": "Feint and fire!"
-    },
-    {
-      "filename": "cmd_wall_pound",
-      "text": "Wall and pound!"
-    },
-    {
-      "filename": "cmd_takedown_defense",
-      "text": "Takedown defense! Spread base!"
-    },
-    {
-      "filename": "cmd_chain_wrestling",
-      "text": "Chain wrestling!"
-    },
-    {
-      "filename": "cmd_finish_feet",
-      "text": "Finish on the feet!"
+      "text": "Finish the round like it counts."
     }
   ]
 }

@@ -38,6 +38,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = {},
                     onSilence = { silenced = true },
@@ -77,6 +78,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
                     onSilence = { silenced = true },
@@ -118,6 +120,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
                     onSilence = { silenced = true },

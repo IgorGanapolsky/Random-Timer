@@ -207,9 +207,10 @@ class TimerViewModel
 
         fun updateVoiceSetting(enabled: Boolean) {
             val current = _timerState.value?.config ?: config.value
+            val effectiveEnabled = enabled && proManager.isPro.value
             val updatedConfig =
                 current.copy(
-                    voiceEnabled = enabled,
+                    voiceEnabled = effectiveEnabled,
                     repeatEnabled = current.repeatEnabled,
                     useExtendedRange = current.useExtendedRange,
                     repeatRounds = current.repeatRounds,
@@ -218,7 +219,7 @@ class TimerViewModel
             trackSettingsChanges(current, updatedConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
-                serviceController.updateVoiceEnabled(enabled)
+                serviceController.updateVoiceEnabled(effectiveEnabled)
             }
         }
 
