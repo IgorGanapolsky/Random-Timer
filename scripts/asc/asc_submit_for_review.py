@@ -832,6 +832,14 @@ def _find_reusable_empty_submission(client: ASCClient, *, app_id: str) -> dict[s
     return None
 
 
+def _is_terminal_review_submission_state(state: str) -> bool:
+    return state.upper() in {
+        "CANCELED",
+        "CANCELLED",
+        "COMPLETE",
+    }
+
+
 def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
     payload = {
         "data": {
@@ -1014,7 +1022,14 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach
     if submission:
         sub_state = (submission.get("attributes") or {}).get("state", "UNKNOWN")
         info(f"Found existing review submission {submission.get('id')} (state={sub_state}).")
-        if attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
+        if _is_terminal_review_submission_state(str(sub_state)):
+            info(
+                f"Ignoring terminal review submission {submission.get('id')} "
+                f"(state={sub_state}); creating a fresh submission for this version."
+            )
+            submission = None
+            item = None
+        elif attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
             if pending_subs:
                 pending_names = ", ".join(name or sub_id for sub_id, name in pending_subs)
                 die(
