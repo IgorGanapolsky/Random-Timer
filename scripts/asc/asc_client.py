@@ -17,7 +17,8 @@ if _SCRIPTS_ROOT not in sys.path:
 from pem_env import normalize_inline_pem
 from repo_dotenv import load_repo_dotenv
 
-load_repo_dotenv(Path(__file__).resolve().parent.parent)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+load_repo_dotenv(REPO_ROOT)
 
 APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
