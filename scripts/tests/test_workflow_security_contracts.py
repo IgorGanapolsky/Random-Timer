@@ -139,6 +139,26 @@ def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     assert ci.count("timeout-minutes:") >= 9
 
 
+def test_internal_distribution_requires_signoff_before_testflight_and_firebase_uploads() -> None:
+    contents = _read(".github/workflows/internal-distribution.yml")
+
+    ios_signoff = contents.index("ios-testflight-signoff:")
+    ios_upload = contents.index("ios-testflight-internal:")
+    firebase_signoff = contents.index("android-firebase-signoff:")
+    firebase_upload = contents.index("android-firebase-internal:")
+
+    assert ios_signoff < ios_upload
+    assert firebase_signoff < firebase_upload
+    assert "ios-testflight-internal:\n    name: iOS TestFlight (Internal)\n    needs: [gate, ios-testflight-signoff]" in contents
+    assert (
+        "android-firebase-internal:\n"
+        "    name: Android Firebase (Internal)\n"
+        "    needs: [gate, android-firebase-signoff]"
+    ) in contents
+    assert "needs.ios-testflight-signoff.result == 'success'" in contents
+    assert "needs.android-firebase-signoff.result == 'success'" in contents
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]

@@ -159,10 +159,33 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF sha=$SHA target=$TARGET"
 
-  ios-testflight-internal:
-    name: iOS TestFlight (Internal)
+  ios-testflight-signoff:
+    name: iOS TestFlight Signoff
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
+    runs-on: ubuntu-latest
+    environment: testflight-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record TestFlight CEO signoff before upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/testflight' \
+            -f description="CEO approved TestFlight internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+  ios-testflight-internal:
+    name: iOS TestFlight (Internal)
+    needs: [gate, ios-testflight-signoff]
+    if: needs.gate.outputs.should_run == 'true' && needs.ios-testflight-signoff.result == 'success' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
     outputs:
       uploaded: ${{ steps.ios_lineage.outputs.uploadable }}
@@ -365,29 +388,6 @@ jobs:
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
 
-  ios-testflight-signoff:
-    name: iOS TestFlight Signoff
-    needs: [gate, ios-testflight-internal]
-    if: needs.ios-testflight-internal.result == 'success' && needs.ios-testflight-internal.outputs.uploaded == 'true'
-    runs-on: ubuntu-latest
-    environment: testflight-signoff
-    permissions:
-      contents: read
-      statuses: write
-    steps:
-      - name: Record TestFlight CEO signoff on distributed SHA
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: ${{ needs.gate.outputs.sha }}
-          TARGET_REF: ${{ needs.gate.outputs.ref }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
-            -f state=success \
-            -f context='internal-signoff/testflight' \
-            -f description="CEO approved TestFlight internal build for ${TARGET_REF}" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-
   android-play-internal:
     name: Android Google Play (Internal)
     needs: [gate]
@@ -558,10 +558,33 @@ jobs:
         run: |
           rm -f /tmp/release.keystore native-android/play-store-key.json
 
-  android-firebase-internal:
-    name: Android Firebase (Internal)
+  android-firebase-signoff:
+    name: Android Firebase Signoff
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
+    runs-on: ubuntu-latest
+    environment: firebase-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record Firebase CEO signoff before upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/firebase' \
+            -f description="CEO approved Firebase internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+  android-firebase-internal:
+    name: Android Firebase (Internal)
+    needs: [gate, android-firebase-signoff]
+    if: needs.gate.outputs.should_run == 'true' && needs.android-firebase-signoff.result == 'success' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
     runs-on: ubuntu-latest
     steps:
       - name: Note Play Protect mitigation
@@ -723,26 +746,3 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/release.keystore
-
-  android-firebase-signoff:
-    name: Android Firebase Signoff
-    needs: [gate, android-firebase-internal]
-    if: needs.android-firebase-internal.result == 'success'
-    runs-on: ubuntu-latest
-    environment: firebase-signoff
-    permissions:
-      contents: read
-      statuses: write
-    steps:
-      - name: Record Firebase CEO signoff on distributed SHA
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: ${{ needs.gate.outputs.sha }}
-          TARGET_REF: ${{ needs.gate.outputs.ref }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
-            -f state=success \
-            -f context='internal-signoff/firebase' \
-            -f description="CEO approved Firebase internal build for ${TARGET_REF}" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
