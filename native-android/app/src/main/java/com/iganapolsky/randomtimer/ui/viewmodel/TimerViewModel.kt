@@ -315,6 +315,7 @@ class TimerViewModel
             entryPoint: String,
             productId: String,
             plan: String,
+            selectionSource: String,
         ) {
             val framing = analyticsService.paywallValueFramingVariant()
             analyticsService.track(
@@ -323,6 +324,7 @@ class TimerViewModel
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
+                    AnalyticsProperties.PAYWALL_SELECTION_SOURCE to selectionSource,
                     AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
                 ),
             )
@@ -331,6 +333,7 @@ class TimerViewModel
                 mapOf(
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
+                    AnalyticsProperties.PAYWALL_SELECTION_SOURCE to selectionSource,
                 ),
             )
         }

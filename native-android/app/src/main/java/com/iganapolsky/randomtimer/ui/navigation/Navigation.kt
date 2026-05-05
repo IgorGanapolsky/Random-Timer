@@ -226,16 +226,18 @@ fun RandomTimerNavHost(
 
     if (showPaywall) {
         PaywallSheet(
+            entryPoint = paywallEntryPoint,
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
             defaultToAnnualPlan = paywallDefaultToAnnual,
             valueFramingVariant = paywallValueFramingVariant,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
-            onPlanSelected = { plan, productId ->
+            onPlanSelected = { plan, productId, selectionSource ->
                 viewModel.trackPaywallOfferSelected(
                     entryPoint = paywallEntryPoint,
                     productId = productId,
                     plan = plan,
+                    selectionSource = selectionSource,
                 )
             },
             onPurchase = { productID ->
