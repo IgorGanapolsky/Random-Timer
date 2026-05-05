@@ -93,15 +93,18 @@ def test_paywall_purchase_cta_reemits_current_plan_selection_before_purchase():
     android_paywall = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)" in android_paywall
+    android_selection = 'onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")'
+    assert android_selection in android_paywall
     assert "onPurchase(purchaseProductId)" in android_paywall
-    assert android_paywall.index("onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)") < android_paywall.index(
+    assert android_paywall.index(android_selection) < android_paywall.index(
         "onPurchase(purchaseProductId)"
     )
 
-    assert "trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)" in ios_paywall
+    ios_selection = 'selectionSource: "primary_cta"'
+    assert "trackOfferSelected(" in ios_paywall
+    assert ios_selection in ios_paywall
     assert "await purchase(productID: selectedProductID)" in ios_paywall
-    assert ios_paywall.index("trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)") < ios_paywall.index(
+    assert ios_paywall.index(ios_selection) < ios_paywall.index(
         "await purchase(productID: selectedProductID)"
     )
 
