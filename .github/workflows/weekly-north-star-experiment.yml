@@ -29,6 +29,7 @@ jobs:
 
       - name: Compute and enforce north star guardrail
         env:
+          PYTHONPATH: .
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: |
@@ -41,6 +42,7 @@ jobs:
 
       - name: Refresh attribution funnel snapshot
         env:
+          PYTHONPATH: .
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: |
@@ -49,10 +51,14 @@ jobs:
             --days 30
 
       - name: Build daily North Star ops input
+        env:
+          PYTHONPATH: .
         run: |
           python scripts/north_star_ops.py --repo-root .
 
       - name: Build weekly experiment brief
+        env:
+          PYTHONPATH: .
         run: |
           python scripts/north_star_experiment.py --repo-root .
 
