@@ -186,6 +186,39 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
+    fun `trackPaywallOfferSelected includes selection source`() {
+        viewModel.trackPaywallOfferSelected(
+            entryPoint = "range_gate",
+            productId = ProManager.ELITE_PRODUCT_ID,
+            plan = "annual",
+            selectionSource = "primary_cta",
+        )
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_OFFER_SELECT,
+                match {
+                    it["entry_point"] == "range_gate" &&
+                        it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+        verify {
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_PLAN_SELECTED,
+                match {
+                    it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta"
+                },
+            )
+        }
+    }
+
+    @Test
     fun `updateConfig emits per-setting analytics with setting_name`() {
         val updated = TimerConfig.DEFAULT.copy(minSeconds = 10, maxSeconds = 45, voiceEnabled = true)
 

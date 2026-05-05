@@ -19,6 +19,43 @@ enum PaywallEntryPoint: String {
     }
 }
 
+struct PaywallFeatureContext: Equatable {
+    let eyebrow: String
+    let valueCopy: String
+}
+
+func paywallFeatureContext(for entryPoint: PaywallEntryPoint) -> PaywallFeatureContext {
+    switch entryPoint {
+    case .rangeGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped 60-minute random windows",
+            valueCopy: "Pro removes the 5-minute cap so long rounds, circuits, "
+                + "and stress drills can run on your timing."
+        )
+    case .voiceGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped voice callouts",
+            valueCopy: "Pro adds time checks plus combat, MMA, and conditioning cues "
+                + "without revealing the random timer."
+        )
+    case .repeatGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped round control",
+            valueCopy: "Pro lets you cap loops from 1-100 rounds instead of guessing when a training block should end."
+        )
+    case .soundArsenalGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped the sound arsenal",
+            valueCopy: "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds."
+        )
+    case .unknown:
+        return PaywallFeatureContext(
+            eyebrow: "Pro Tactical",
+            valueCopy: "Unlock longer random windows, combat callouts, round caps, and the full sound arsenal."
+        )
+    }
+}
+
 /// Which plan option is highlighted on the paywall.
 enum PaywallPlanSelection {
     case monthly
@@ -79,6 +116,10 @@ struct PaywallSheet: View {
         valueFramingVariant == PaywallValueFraming.outcomesFirst
             ? Self.subheadlineOutcomesFirst
             : Self.subheadline
+    }
+
+    private var featureContext: PaywallFeatureContext {
+        paywallFeatureContext(for: entryPoint)
     }
 
     // MARK: - Derived helpers
@@ -173,6 +214,25 @@ struct PaywallSheet: View {
                     }
             )
 
+            VStack(alignment: .leading, spacing: 4) {
+                Text(featureContext.eyebrow)
+                    .font(.caption.bold())
+                    .foregroundColor(.accentPrimary)
+                Text(featureContext.valueCopy)
+                    .font(.caption)
+                    .foregroundColor(.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.accentPrimary.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.accentPrimary.opacity(0.25), lineWidth: 1)
+            )
+
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(Self.featureTitle)
@@ -199,7 +259,11 @@ struct PaywallSheet: View {
                     isSelected: selectedPlan == .monthly
                 ) {
                     selectedPlan = .monthly
-                    trackOfferSelected(plan: "monthly", productID: ProManager.monthlyProductID)
+                    trackOfferSelected(
+                        plan: "monthly",
+                        productID: ProManager.monthlyProductID,
+                        selectionSource: "plan_card"
+                    )
                 }
 
                 PlanOptionRow(
@@ -209,7 +273,11 @@ struct PaywallSheet: View {
                     isSelected: selectedPlan == .annual
                 ) {
                     selectedPlan = .annual
-                    trackOfferSelected(plan: "annual", productID: ProManager.annualProductID)
+                    trackOfferSelected(
+                        plan: "annual",
+                        productID: ProManager.annualProductID,
+                        selectionSource: "plan_card"
+                    )
                 }
 
                 PlanOptionRow(
@@ -219,7 +287,11 @@ struct PaywallSheet: View {
                     isSelected: selectedPlan == .lifetime
                 ) {
                     selectedPlan = .lifetime
-                    trackOfferSelected(plan: "lifetime", productID: ProManager.paywallProductID)
+                    trackOfferSelected(
+                        plan: "lifetime",
+                        productID: ProManager.paywallProductID,
+                        selectionSource: "plan_card"
+                    )
                 }
             }
         }
@@ -231,7 +303,11 @@ struct PaywallSheet: View {
         VStack(spacing: 12) {
             PrimaryButton(title: ctaButtonTitle) {
                 Task {
-                    trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
+                    trackOfferSelected(
+                        plan: planName(for: selectedPlan),
+                        productID: selectedProductID,
+                        selectionSource: "primary_cta"
+                    )
                     await purchase(productID: selectedProductID)
                 }
             }
@@ -313,7 +389,6 @@ struct PaywallSheet: View {
                 entryPoint: entryPoint.rawValue,
                 experimentVariant: variant
             )
-            trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
             let framing = AnalyticsService.shared.paywallValueFramingVariant()
             AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
@@ -467,13 +542,14 @@ struct PaywallSheet: View {
         ])
     }
 
-    private func trackOfferSelected(plan: String, productID: String) {
+    private func trackOfferSelected(plan: String, productID: String, selectionSource: String) {
         let experimentVariant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
         let framing = AnalyticsService.shared.paywallValueFramingVariant()
         AnalyticsService.shared.track(AnalyticsEvents.paywallOfferSelect, properties: [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.productId: productID,
             "plan": plan,
+            AnalyticsProperties.paywallSelectionSource: selectionSource,
             AnalyticsProperties.paywallExperimentVariant: experimentVariant,
             AnalyticsProperties.paywallValueFramingVariant: framing,
         ])
@@ -482,6 +558,7 @@ struct PaywallSheet: View {
             properties: [
                 AnalyticsProperties.productId: productID,
                 "plan": plan,
+                AnalyticsProperties.paywallSelectionSource: selectionSource,
             ]
         )
     }
