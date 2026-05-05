@@ -481,21 +481,23 @@ def run(
     content_existing = _load_json(content_existing_path)
 
     if not api_key or not project_id:
-        # Generate empty feedback files so downstream scripts don't break
+        # Generate current degraded feedback files so downstream scripts don't
+        # break, but never upload stale reports as if they were fresh evidence.
+        QUERY_ERRORS.append("missing_posthog_credentials")
         keyword_installs = aso_existing.get("keyword_installs", {}) if aso_existing else {}
         content_funnel = content_existing.get("onboarding_funnel", {"window_days": days}) if content_existing else {"window_days": days}
         campaigns = content_existing.get("top_campaigns_by_activation", []) if content_existing else []
         write_aso_feedback(repo_root, keyword_installs, preserved_from=aso_existing or None)
         write_content_feedback(repo_root, campaigns, content_funnel, preserved_from=content_existing or None)
-        if not report_path.exists():
-            report_path.write_text(
-                "# Attribution Feedback Report\n\nNo PostHog query data available: missing API key and/or project id.\n",
-                encoding="utf-8",
-            )
+        report_path.write_text(
+            build_report([], content_funnel, campaigns, keyword_installs),
+            encoding="utf-8",
+        )
         return {
-            "status": "skipped",
+            "status": "degraded",
             "reason": "missing POSTHOG_PERSONAL_API_KEY/POSTHOG_API_KEY or POSTHOG_PROJECT_ID",
             "report": str(report_path),
+            "preserved_previous_metrics": bool(aso_existing or content_existing),
         }
 
     attribution = fetch_utm_attribution(api_key, project_id, days)

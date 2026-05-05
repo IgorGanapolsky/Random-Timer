@@ -156,6 +156,36 @@ internal func nextCommandCue(
     return cues[nextIndex]
 }
 
+internal func normalizedVoiceCueText(_ text: String) -> String {
+    text
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .lowercased()
+        .components(separatedBy: .whitespacesAndNewlines)
+        .filter { !$0.isEmpty }
+        .joined(separator: " ")
+}
+
+internal func commandCuePool(
+    from baseline: [VoiceCueCatalog.Cue],
+    usedFilenames: Set<String>,
+    usedTexts: Set<String>,
+    lastFilename: String?,
+    lastText: String?
+) -> [VoiceCueCatalog.Cue] {
+    let fresh = baseline.filter {
+        !usedFilenames.contains($0.filename) && !usedTexts.contains(normalizedVoiceCueText($0.text))
+    }
+    if !fresh.isEmpty {
+        return fresh
+    }
+
+    let lastNormalizedText = lastText.map(normalizedVoiceCueText)
+    let nonRepeating = baseline.filter {
+        $0.filename != lastFilename && normalizedVoiceCueText($0.text) != lastNormalizedText
+    }
+    return nonRepeating.isEmpty ? baseline : nonRepeating
+}
+
 internal func nextPreviewFilename(
     from filenames: [String],
     lastFilename: String?,
@@ -332,7 +362,9 @@ final class AIVoiceCalloutService {
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
+    private var lastCommandCueText: String?
     private var usedCommandCueFilenames: Set<String> = []
+    private var usedCommandCueTexts: Set<String> = []
     private var lastCueFiredAtElapsed: Int?
     private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
     private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
@@ -378,6 +410,7 @@ final class AIVoiceCalloutService {
         // Preserve the final command cue across sessions so a restarted timer
         // cannot immediately repeat the last line the user just heard.
         usedCommandCueFilenames.removeAll()
+        usedCommandCueTexts.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
         lastCueFiredAtElapsed = nil
@@ -464,6 +497,7 @@ final class AIVoiceCalloutService {
             let cue = randomCommandCue()
             speak(cue)
             lastCommandCueFilename = cue.filename
+            lastCommandCueText = cue.text
             nextCommandCueAt = elapsedSeconds + 30
             lastCueFiredAtElapsed = elapsedSeconds
         }
@@ -495,17 +529,31 @@ final class AIVoiceCalloutService {
         // the same line on repeat while dedup thinks different cues were picked.
         let playable = catalog.commandCues.filter { cueHasAudio($0.filename) }
         let baseline = playable.isEmpty ? catalog.commandCues : playable
-        var pool = baseline.filter { !usedCommandCueFilenames.contains($0.filename) }
+        var pool = commandCuePool(
+            from: baseline,
+            usedFilenames: usedCommandCueFilenames,
+            usedTexts: usedCommandCueTexts,
+            lastFilename: lastCommandCueFilename,
+            lastText: lastCommandCueText
+        )
         if pool.isEmpty {
             usedCommandCueFilenames.removeAll()
-            pool = baseline.filter { $0.filename != lastCommandCueFilename }
-            if pool.isEmpty { pool = baseline }
+            usedCommandCueTexts.removeAll()
+            pool = commandCuePool(
+                from: baseline,
+                usedFilenames: [],
+                usedTexts: [],
+                lastFilename: lastCommandCueFilename,
+                lastText: lastCommandCueText
+            )
         }
         let cue = nextCommandCue(from: pool, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
         }
         lastCommandCueFilename = cue.filename
+        lastCommandCueText = cue.text
         usedCommandCueFilenames.insert(cue.filename)
+        usedCommandCueTexts.insert(normalizedVoiceCueText(cue.text))
         return cue
     }
 

@@ -73,6 +73,10 @@ struct ActiveTimerScreen: View {
         return voiceBadgeText(enabled: enabled)
     }
 
+    static func shouldShowVoiceBadge(isPro: Bool) -> Bool {
+        isPro
+    }
+
     static func voiceBadgeAccessibilityLabel(enabled: Bool) -> String {
         enabled ? "Voice callouts enabled" : "Voice callouts disabled"
     }
@@ -321,7 +325,9 @@ struct ActiveTimerScreen: View {
         } else {
             HStack(spacing: 12) {
                 loopBadge
-                voiceBadge
+                if Self.shouldShowVoiceBadge(isPro: ProManager.shared.isPro) {
+                    voiceBadge
+                }
             }
         }
     }

@@ -46,7 +46,7 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testPaywallFeatureContextExplainsSelectedGateValue() {
         let setupContext = paywallFeatureContext(for: .setupUpgradeCTA)
         XCTAssertEqual(setupContext.eyebrow, "You tapped Unlock Pro")
-        XCTAssertEqual(.setupUpgradeCTA.featureGateName, "setup_upgrade_cta")
+        XCTAssertEqual(PaywallEntryPoint.setupUpgradeCTA.featureGateName, "setup_upgrade_cta")
 
         let rangeContext = paywallFeatureContext(for: .rangeGate)
         XCTAssertEqual(rangeContext.eyebrow, "You tapped 60-minute random windows")
