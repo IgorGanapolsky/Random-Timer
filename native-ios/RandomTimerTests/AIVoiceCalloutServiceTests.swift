@@ -198,6 +198,22 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.triggerCallout(elapsedSeconds: 60)
     }
 
+    func testResetSessionPreservesLastCommandCueToPreventImmediateSessionRepeat() {
+        let sut = makeVoiceCalloutService()
+
+        sut.beginSession(totalDurationSeconds: 300)
+        sut.triggerCallout(elapsedSeconds: 30)
+        let primed = sut._stateSnapshotForTesting()
+
+        sut.resetSession()
+        let reset = sut._stateSnapshotForTesting()
+
+        XCTAssertNotNil(primed.lastCommandCueFilename)
+        XCTAssertEqual(reset.lastCommandCueFilename, primed.lastCommandCueFilename)
+        XCTAssertEqual(reset.lastElapsedMilestone, 0)
+        XCTAssertEqual(reset.nextCommandCueAt, 0)
+    }
+
     func testCommandCueScheduleDoesNotCrashAcrossLongRun() {
         let sut = makeVoiceCalloutService()
         for elapsed in 1...180 {

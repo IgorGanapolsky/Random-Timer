@@ -375,7 +375,9 @@ final class AIVoiceCalloutService {
         audioPlayer = nil
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
-        lastCommandCueFilename = nil
+        // Preserve the final command cue across sessions so a restarted timer
+        // cannot immediately repeat the last line the user just heard.
+        usedCommandCueFilenames.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
         lastCueFiredAtElapsed = nil

@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum PaywallEntryPoint: String {
+    case setupUpgradeCTA = "setup_upgrade_cta"
     case rangeGate = "range_gate"
     case voiceGate = "voice_gate"
     case repeatGate = "repeat_gate"
@@ -10,6 +11,7 @@ enum PaywallEntryPoint: String {
     /// Maps to the analytics feature name for feature_gate_hit events.
     var featureGateName: String {
         switch self {
+        case .setupUpgradeCTA: return "setup_upgrade_cta"
         case .rangeGate: return "extended_range"
         case .voiceGate: return "voice_callouts"
         case .repeatGate: return "repeat_loop"
@@ -26,6 +28,12 @@ struct PaywallFeatureContext: Equatable {
 
 func paywallFeatureContext(for entryPoint: PaywallEntryPoint) -> PaywallFeatureContext {
     switch entryPoint {
+    case .setupUpgradeCTA:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped Unlock Pro",
+            valueCopy: "Pro turns the setup screen into a full training console: longer random windows, "
+                + "live callouts, round caps, and the full sound arsenal."
+        )
     case .rangeGate:
         return PaywallFeatureContext(
             eyebrow: "You tapped 60-minute random windows",

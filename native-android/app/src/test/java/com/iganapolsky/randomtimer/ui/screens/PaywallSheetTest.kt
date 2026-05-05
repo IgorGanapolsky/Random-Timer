@@ -32,6 +32,9 @@ class PaywallSheetTest {
 
     @Test
     fun `paywall feature context explains selected gate value`() {
+        val setupContext = paywallFeatureContext("setup_upgrade_cta")
+        assertEquals("You tapped Unlock Pro", setupContext.eyebrow)
+
         val rangeContext = paywallFeatureContext("range_gate")
         assertEquals("You tapped 60-minute random windows", rangeContext.eyebrow)
         assertEquals(

@@ -10,6 +10,11 @@ class NavigationAnalyticsMappingTest {
     }
 
     @Test
+    fun setupUpgradeMapsToCanonicalSetupEntryPoint() {
+        assertThat(paywallEntryPointForFeature("setup_upgrade_cta")).isEqualTo("setup_upgrade_cta")
+    }
+
+    @Test
     fun upgradeSurfacesMapToDistinctIntentEntryPoints() {
         assertThat(paywallEntryPointForFeature("voice_callouts")).isEqualTo("voice_gate")
         assertThat(paywallEntryPointForFeature("pro_sounds")).isEqualTo("sound_arsenal_gate")
