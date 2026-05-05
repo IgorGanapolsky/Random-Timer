@@ -166,6 +166,15 @@ def test_security_workflow_moves_permissions_to_jobs() -> None:
     assert "notify:\n    needs: security-scan\n    if: always()\n    runs-on: ubuntu-latest\n    permissions:" in contents
 
 
+def test_ci_secret_scan_does_not_scan_all_refs_when_range_is_available() -> None:
+    contents = _read(".github/workflows/ci.yml")
+    secret_scan = contents.split("- name: Secret Scan", 1)[1].split("\n  autonomous-ai-review:", 1)[0]
+
+    assert 'gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"' in secret_scan
+    assert 'gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"' not in secret_scan
+    assert "Scanning full git history fallback" in secret_scan
+
+
 def test_security_sensitive_workflows_pin_third_party_actions() -> None:
     expected_pins = {
         ".github/workflows/android17-canary.yml": "android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407",

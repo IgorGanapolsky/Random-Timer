@@ -729,7 +729,7 @@ jobs:
 
           if [[ -n "$RANGE" ]]; then
             echo "Scanning commit range: $RANGE"
-            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
           else
             echo "Scanning full git history fallback"
             gitleaks git --no-banner --redact --exit-code 1
