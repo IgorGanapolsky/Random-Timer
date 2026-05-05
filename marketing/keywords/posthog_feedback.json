@@ -1,4 +1,12 @@
 {
-  "generated_at": "2026-03-01T08:05:32+00:00",
-  "keyword_installs": {}
+  "generated_at": "2026-05-05T18:48:31+00:00",
+  "status": "ok",
+  "keyword_installs": {},
+  "data_quality": {
+    "is_stale": false,
+    "preserved_previous_metrics": false,
+    "last_attempt_generated_at": "2026-05-05T18:48:31+00:00",
+    "last_good_generated_at": "",
+    "reason": ""
+  }
 }
