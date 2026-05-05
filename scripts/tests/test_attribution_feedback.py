@@ -25,11 +25,14 @@ class AttributionFeedbackTests(unittest.TestCase):
         self.assertAlmostEqual(funnel["configured_to_completed_rate"], 32 / 60, places=4)
         self.assertAlmostEqual(funnel["open_to_completed_rate"], 32 / 129, places=4)
 
-    def test_run_missing_credentials_still_writes_report(self):
+    def test_run_missing_credentials_overwrites_stale_report_with_degraded_diagnostics(self):
         from scripts import attribution_feedback as af
 
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
+            report = root / "marketing" / "data" / "attribution-report.md"
+            report.parent.mkdir(parents=True, exist_ok=True)
+            report.write_text("stale March report", encoding="utf-8")
             with mock.patch.dict(
                 "os.environ",
                 {
@@ -42,11 +45,13 @@ class AttributionFeedbackTests(unittest.TestCase):
             ):
                 result = af.run(root, days=30, dry_run=False)
 
-            self.assertEqual(result.get("status"), "skipped")
-            report = root / "marketing" / "data" / "attribution-report.md"
+            self.assertEqual(result.get("status"), "degraded")
             self.assertTrue(report.exists())
             text = report.read_text(encoding="utf-8")
-            self.assertIn("No PostHog query data available", text)
+            self.assertIn("# Attribution Feedback Report", text)
+            self.assertIn("Query Diagnostics", text)
+            self.assertIn("missing_posthog_credentials", text)
+            self.assertNotIn("stale March report", text)
 
     def test_run_preserves_previous_content_feedback_when_queries_degrade(self):
         from scripts import attribution_feedback as af
