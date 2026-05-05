@@ -43,6 +43,7 @@ sealed class Screen(
 
 internal fun paywallEntryPointForFeature(feature: String): String =
     when (feature) {
+        "setup_upgrade_cta" -> "setup_upgrade_cta"
         "extended_range" -> "range_gate"
         "voice_callouts" -> "voice_gate"
         "repeat_loop" -> "repeat_gate"

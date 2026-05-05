@@ -72,6 +72,11 @@ internal data class PaywallFeatureContext(
 
 internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
     when (entryPoint) {
+        "setup_upgrade_cta" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped Unlock Pro",
+                valueCopy = "Pro turns the setup screen into a full training console: longer random windows, live callouts, round caps, and the full sound arsenal.",
+            )
         "range_gate" ->
             PaywallFeatureContext(
                 eyebrow = "You tapped 60-minute random windows",
