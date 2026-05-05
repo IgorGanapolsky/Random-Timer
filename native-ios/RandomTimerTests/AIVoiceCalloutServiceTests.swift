@@ -285,6 +285,24 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(selected.filename, "cue_b")
     }
 
+    func testCommandCuePoolAvoidsRepeatedTextEvenWhenFilenameDiffers() {
+        let cues = [
+            VoiceCueCatalog.Cue(filename: "cue_a", text: "Move with a purpose."),
+            VoiceCueCatalog.Cue(filename: "cue_b", text: "  Move with a purpose.  "),
+            VoiceCueCatalog.Cue(filename: "cue_c", text: "Cut the angle and go."),
+        ]
+
+        let pool = commandCuePool(
+            from: cues,
+            usedFilenames: ["cue_a"],
+            usedTexts: [normalizedVoiceCueText("Move with a purpose.")],
+            lastFilename: "cue_a",
+            lastText: "Move with a purpose."
+        )
+
+        XCTAssertEqual(pool.map(\.filename), ["cue_c"])
+    }
+
     func testNextPreviewFilenameAvoidsImmediateRepeatWhenPossible() {
         var usedFilenames: Set<String> = ["cue_a"]
 

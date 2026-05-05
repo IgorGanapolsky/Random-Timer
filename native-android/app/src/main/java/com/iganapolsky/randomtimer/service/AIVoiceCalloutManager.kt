@@ -232,6 +232,36 @@ internal fun nextCommandCue(
     return cues[(boundedIndex + 1) % cues.size]
 }
 
+internal fun normalizedVoiceCueText(text: String): String =
+    text
+        .trim()
+        .lowercase(Locale.US)
+        .replace(Regex("\\s+"), " ")
+
+internal fun commandCuePool(
+    baseline: List<VoiceCue>,
+    usedFilenames: Set<String>,
+    usedTexts: Set<String>,
+    lastFilename: String?,
+    lastText: String?,
+): List<VoiceCue> {
+    val fresh =
+        baseline.filter {
+            it.filename !in usedFilenames &&
+                normalizedVoiceCueText(it.text) !in usedTexts
+        }
+    if (fresh.isNotEmpty()) {
+        return fresh
+    }
+
+    val lastNormalizedText = lastText?.let(::normalizedVoiceCueText)
+    return baseline
+        .filter {
+            it.filename != lastFilename &&
+                normalizedVoiceCueText(it.text) != lastNormalizedText
+        }.ifEmpty { baseline }
+}
+
 internal fun nextPreviewCueFilename(
     filenames: List<String>,
     lastFilename: String?,
@@ -283,7 +313,9 @@ class AIVoiceCalloutManager
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
+        private var lastCommandCueText: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val usedCommandCueTexts = mutableSetOf<String>()
         private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
         private val usedPreviewCommandFilenamesByGender =
             mutableMapOf(
@@ -351,6 +383,7 @@ class AIVoiceCalloutManager
             // Preserve lastCommandCueFilename across sessions so a new session cannot
             // immediately repeat the final command cue from the previous session.
             usedCommandCueFilenames.clear()
+            usedCommandCueTexts.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
@@ -534,6 +567,7 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue)
                 lastCommandCueFilename = cue.filename
+                lastCommandCueText = cue.text
                 nextCommandCueAt = elapsedSeconds + 30
                 lastCueFiredAtElapsed = elapsedSeconds
             }
@@ -557,20 +591,32 @@ class AIVoiceCalloutManager
             // different cues were picked.
             val playable = catalog.commandCues.filter { cueHasAudio(it.filename) }
             val baseline = if (playable.isNotEmpty()) playable else catalog.commandCues
-            val available = baseline.filter { it.filename !in usedCommandCueFilenames }
             val pool =
-                available.ifEmpty {
+                commandCuePool(
+                    baseline = baseline,
+                    usedFilenames = usedCommandCueFilenames,
+                    usedTexts = usedCommandCueTexts,
+                    lastFilename = lastCommandCueFilename,
+                    lastText = lastCommandCueText,
+                ).ifEmpty {
                     usedCommandCueFilenames.clear()
-                    baseline
-                        .filter { it.filename != lastCommandCueFilename }
-                        .ifEmpty { baseline }
+                    usedCommandCueTexts.clear()
+                    commandCuePool(
+                        baseline = baseline,
+                        usedFilenames = emptySet(),
+                        usedTexts = emptySet(),
+                        lastFilename = lastCommandCueFilename,
+                        lastText = lastCommandCueText,
+                    )
                 }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
                 }
             lastCommandCueFilename = cue.filename
+            lastCommandCueText = cue.text
             usedCommandCueFilenames.add(cue.filename)
+            usedCommandCueTexts.add(normalizedVoiceCueText(cue.text))
             return cue
         }
 

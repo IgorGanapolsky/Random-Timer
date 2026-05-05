@@ -110,6 +110,27 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun commandCuePoolAvoidsRepeatedTextEvenWhenFilenameDiffers() {
+        val cues =
+            listOf(
+                VoiceCue(filename = "cue_a", text = "Move with a purpose."),
+                VoiceCue(filename = "cue_b", text = "  Move with a purpose.  "),
+                VoiceCue(filename = "cue_c", text = "Cut the angle and go."),
+            )
+
+        val pool =
+            commandCuePool(
+                baseline = cues,
+                usedFilenames = setOf("cue_a"),
+                usedTexts = setOf(normalizedVoiceCueText("Move with a purpose.")),
+                lastFilename = "cue_a",
+                lastText = "Move with a purpose.",
+            )
+
+        assertThat(pool.map { it.filename }).containsExactly("cue_c")
+    }
+
+    @Test
     fun nextPreviewCueFilenameAvoidsImmediateRepeatsAndCyclesUnusedSamples() {
         val used = linkedSetOf("cue_a")
 

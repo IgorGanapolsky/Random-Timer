@@ -139,4 +139,9 @@ final class CircularTimerViewTests: XCTestCase {
     func testVoiceBadgeTextShowsLockedStateForFreeUsersEvenWhenConfigIsStaleOn() {
         XCTAssertEqual(ActiveTimerScreen.voiceBadgeText(enabled: true, isPro: false), "Voice Callouts Locked")
     }
+
+    func testVoiceBadgeIsHiddenForFreeUsers() {
+        XCTAssertFalse(ActiveTimerScreen.shouldShowVoiceBadge(isPro: false))
+        XCTAssertTrue(ActiveTimerScreen.shouldShowVoiceBadge(isPro: true))
+    }
 }
