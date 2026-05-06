@@ -5,7 +5,7 @@ import path from "node:path";
 const defaultAscUrl =
   "https://appstoreconnect.apple.com/apps/6758355312/distribution/ios/version/inflight";
 const defaultPlayUrl =
-  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing";
+  "https://play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing";
 const agentBrowserVersion = "0.10.0";
 
 function tryParseUrl(rawUrl) {

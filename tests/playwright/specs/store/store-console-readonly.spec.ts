@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 const defaultAscUrl =
   "https://appstoreconnect.apple.com/apps/6758355312/distribution/ios/version/inflight";
 const defaultPlayUrl =
-  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing";
+  "https://play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing";
 
 function tryParseUrl(rawUrl: string): URL | null {
   try {
@@ -65,8 +65,13 @@ async function selectPlayDeveloperAccount(page: any, expectedAccountName: string
 
 async function openPlayApp(page: any, expectedAppName: string): Promise<void> {
   const appHeading = page.getByText(new RegExp(expectedAppName, "i")).first();
-  if (isPlayAppDashboardUrl(page.url()) && (await appHeading.isVisible().catch(() => false))) {
-    return;
+  if (isPlayAppDashboardUrl(page.url())) {
+    try {
+      await expect(appHeading).toBeVisible({ timeout: 30_000 });
+      return;
+    } catch {
+      // Fall through to app-list selectors; Play can briefly show a global loading screen.
+    }
   }
 
   const appListEntry = page.getByRole("link", { name: new RegExp(expectedAppName, "i") }).first();
