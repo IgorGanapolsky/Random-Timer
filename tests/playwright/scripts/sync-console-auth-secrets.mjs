@@ -54,6 +54,17 @@ function filterPlayStorageState(rawJson) {
   return JSON.stringify({ cookies: filtered, origins: [] });
 }
 
+function filterAscStorageState(rawJson) {
+  const payload = JSON.parse(rawJson);
+  const cookies = Array.isArray(payload.cookies) ? payload.cookies : [];
+  const filtered = cookies.filter((cookie) =>
+    /(^|\.)apple\.com$|(^|\.)appstoreconnect\.apple\.com$|(^|\.)itunes\.apple\.com$/.test(
+      String(cookie.domain || ""),
+    ),
+  );
+  return JSON.stringify({ cookies: filtered, origins: [] });
+}
+
 function setSecret(repo, name, value) {
   execFileSync(
     ghPath,
@@ -71,7 +82,7 @@ const ascPath = path.join(root, ".auth", "appstore.json");
 const playPath = path.join(root, ".auth", "play.json");
 
 const repo = repoFromGitHubCli();
-const asc = readFileRequired(ascPath);
+const asc = filterAscStorageState(readFileRequired(ascPath));
 const play = filterPlayStorageState(readFileRequired(playPath));
 
 setSecret(repo, "ASC_STORAGE_STATE_JSON", asc);

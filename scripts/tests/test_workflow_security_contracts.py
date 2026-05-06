@@ -103,6 +103,9 @@ def test_store_console_verification_targets_current_app_and_release_state() -> N
     assert 'PLAY_EXPECTED_APP_NAME || "Random Tactical Timer"' in agent
     assert "`ASC_EXPECTED_STATE_TEXT` (default: `Waiting for Review`)" in readme
     assert "`PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)" in readme
+    sync = _read("tests/playwright/scripts/sync-console-auth-secrets.mjs")
+    assert "function filterAscStorageState" in sync
+    assert "appstoreconnect\\.apple\\.com" in sync
 
 
 def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
