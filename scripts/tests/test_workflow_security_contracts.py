@@ -91,10 +91,12 @@ def test_public_store_version_readback_requires_public_evidence() -> None:
 
 
 def test_store_console_verification_targets_current_app_and_release_state() -> None:
+    workflow = _read(".github/workflows/store-console-verification.yml")
     spec = _read("tests/playwright/specs/store/store-console-readonly.spec.ts")
     agent = _read("tests/playwright/scripts/verify-store-console-agent-browser.mjs")
     readme = _read("tests/playwright/README.md")
 
+    assert "chromium chromium-headless-shell" in workflow
     for contents in (spec, agent):
         assert "play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing" in contents
         assert "play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing" not in contents

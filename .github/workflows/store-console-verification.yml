@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium chromium-headless-shell
 
       - name: Prepare auth state files
         id: auth
