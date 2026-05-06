@@ -58,6 +58,16 @@ def test_sound_arsenal_checksums_match_across_ios_android_and_runtime_pack() -> 
         assert runtime_hash == ios_hash, f"Runtime pack drift for {runtime_name}.mp3"
 
 
+def test_gentle_chime_matches_production_ios_asset_on_android() -> None:
+    ios_path = IOS_SOUND_DIR / "gentle-chime.mp3"
+    android_path = ANDROID_RAW_DIR / "gentle_chime.mp3"
+
+    assert ios_path.exists(), "Missing iOS gentle chime"
+    assert android_path.exists(), "Missing Android gentle chime"
+    assert ios_path.stat().st_size == android_path.stat().st_size
+    assert _sha256(android_path) == _sha256(ios_path), "Android gentle chime drifted from iOS production asset"
+
+
 def test_gentle_iconography_uses_water_not_lightning() -> None:
     ios_setup = _read(IOS_SETUP)
     android_setup = _read(ANDROID_SETUP)
@@ -73,9 +83,9 @@ def test_sound_arsenal_selection_is_visible_after_tap() -> None:
     android_setup = _read(ANDROID_SETUP)
 
     assert 'Image(systemName: "checkmark.circle.fill")' in ios_setup
-    assert 'Text("Selected")' in ios_setup
+    assert 'Text("Selected")' not in ios_setup
     assert 'text = "✓"' in android_setup
-    assert 'text = "Selected"' in android_setup
+    assert 'text = "Selected"' not in android_setup
 
 
 def test_session_voice_playback_routes_to_gendered_assets() -> None:

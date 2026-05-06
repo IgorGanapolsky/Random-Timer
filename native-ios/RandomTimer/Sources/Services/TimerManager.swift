@@ -190,6 +190,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
         // Schedule notification with the configured alarm sound
         await notificationService.scheduleAlarmNotification(at: state.endDate, soundType: config.soundType)
+        await scheduleBackgroundVoiceNotificationsIfNeeded(for: state)
 
         // Start countdown
         startCountdown()
@@ -254,6 +255,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         guard var state = timerState, state.status != .paused else { return }
         AnalyticsService.shared.track(AnalyticsEvents.timerPaused)
         stopCountdown()
+        Task { await notificationService.cancelPendingNotifications() }
         state.status = .paused
         timerState = state
         updateBackgroundVoiceKeepAliveIfNeeded()
@@ -268,6 +270,14 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         )
         timerState = state
         updateBackgroundVoiceKeepAliveIfNeeded()
+        Task {
+            await notificationService.scheduleAlarmNotification(
+                at: Date().addingTimeInterval(state.remainingDuration),
+                soundType: state.config.soundType
+            )
+            await scheduleBackgroundVoiceNotificationsIfNeeded(for: state)
+            await storageService.saveTimerState(state)
+        }
         startCountdown()
     }
 
@@ -536,6 +546,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             at: newState.endDate,
             soundType: currentState.config.soundType
         )
+        await scheduleBackgroundVoiceNotificationsIfNeeded(for: newState)
 
         // Start countdown
         startCountdown()
@@ -706,6 +717,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                 type: state.config.soundType,
                 volume: state.config.volume
             )
+            notificationService.cancelVoiceCalloutNotifications()
             if state.config.vibrationEnabled {
                 Logger.timer.info("Starting vibration...")
                 notificationService.startVibration()
@@ -784,17 +796,22 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     }
 
     private func updateBackgroundVoiceKeepAliveIfNeeded() {
-        guard shouldKeepBackgroundVoiceAlive else {
-            backgroundVoiceKeepAliveService.stop()
-            return
-        }
-        backgroundVoiceKeepAliveService.start()
+        // App Review 2.5.4 does not allow silent audio as a background keepalive.
+        // Locked/background voice cues are scheduled as local notifications instead.
+        backgroundVoiceKeepAliveService.stop()
     }
 
-    private var shouldKeepBackgroundVoiceAlive: Bool {
-        guard isAppBackgrounded, ProManager.shared.isPro, let state = timerState else { return false }
-        guard state.config.voiceEnabled else { return false }
-        return [.running, .warning, .danger].contains(state.status)
+    private func scheduleBackgroundVoiceNotificationsIfNeeded(for state: TimerState) async {
+        guard ProManager.shared.isPro, state.config.voiceEnabled else {
+            notificationService.cancelVoiceCalloutNotifications()
+            return
+        }
+        let elapsedSeconds = max(0, Int(state.targetDuration - state.remainingDuration))
+        await notificationService.scheduleVoiceCalloutNotifications(
+            totalDurationSeconds: Int(state.targetDuration),
+            elapsedSeconds: elapsedSeconds,
+            gender: state.config.voiceGender
+        )
     }
 
     // MARK: - Live Activity Handling

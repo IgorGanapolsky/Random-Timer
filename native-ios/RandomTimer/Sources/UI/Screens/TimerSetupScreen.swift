@@ -891,33 +891,34 @@ private struct SoundTypeButton: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 8) {
-                if selected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.body.weight(.bold))
-                        .foregroundColor(.accentPrimary)
-                }
-                VStack(alignment: .leading, spacing: 2) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.body.weight(.bold))
+                    .foregroundColor(.accentPrimary)
+                    .opacity(selected ? 1 : 0)
+                    .frame(width: 20)
+
+                if systemImage.isEmpty {
+                    Text(label)
+                        .font(.body)
+                } else {
                     Label(label, systemImage: systemImage)
                         .font(.body)
-                    if selected {
-                        Text("Selected")
-                            .font(.caption2.weight(.bold))
-                    }
                 }
+
                 Spacer(minLength: 0)
             }
             .foregroundColor(selected ? .accentPrimary : .textPrimary)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(selected ? Color.accentPrimary.opacity(0.15) : Color.glassBackground)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(selected ? Color.accentPrimary : Color.glassBorder, lineWidth: 1)
-                )
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(selected ? Color.accentPrimary.opacity(0.15) : Color.glassBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(selected ? Color.accentPrimary : Color.glassBorder, lineWidth: selected ? 2 : 1)
+            )
         }
         .accessibilityLabel("\(label) sound")
         .accessibilityAddTraits(selected ? .isSelected : [])
