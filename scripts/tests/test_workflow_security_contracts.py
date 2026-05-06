@@ -84,6 +84,7 @@ def test_public_store_version_readback_requires_public_evidence() -> None:
     assert 'workflows: ["Native App Release"]' in contents
     assert 'cron: "0 */6 1-7 * *"' in contents
     assert "scripts/verify_public_store_versions.py" in contents
+    assert "GH_TOKEN: ${{ github.token }}" in contents
     assert "--json-out public-store-version-readback.json" in contents
     assert "Upload public store read-back evidence" in contents
     assert "workflow_run.head_sha" not in contents
