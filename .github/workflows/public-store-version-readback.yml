@@ -38,6 +38,7 @@ jobs:
 
       - name: Verify App Store and Play public versions
         env:
+          GH_TOKEN: ${{ github.token }}
           EXPECTED_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_version || '' }}
           TIMEOUT_SECONDS: ${{ github.event_name == 'workflow_dispatch' && inputs.timeout_seconds || '1800' }}
         run: |
