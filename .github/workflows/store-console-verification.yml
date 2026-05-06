@@ -34,6 +34,9 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium chromium-headless-shell
 
+      - name: Install agent-browser Playwright shell
+        run: npx --yes playwright@1.57.0 install chromium-headless-shell
+
       - name: Prepare auth state files
         id: auth
         env:

@@ -97,6 +97,7 @@ def test_store_console_verification_targets_current_app_and_release_state() -> N
     readme = _read("tests/playwright/README.md")
 
     assert "chromium chromium-headless-shell" in workflow
+    assert "playwright@1.57.0 install chromium-headless-shell" in workflow
     for contents in (spec, agent):
         assert "play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing" in contents
         assert "play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing" not in contents
