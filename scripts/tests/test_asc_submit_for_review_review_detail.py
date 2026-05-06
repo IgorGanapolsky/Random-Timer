@@ -82,10 +82,73 @@ class AscSubmitForReviewVerifyReviewDetailTests(unittest.TestCase):
             with plist_path.open("wb") as f:
                 plistlib.dump({"UIBackgroundModes": ["location"]}, f)
 
-            client = RouterClient({})
+            client = RouterClient(
+                {
+                    ("GET", "/appStoreVersions/ver1/appStoreReviewDetail"): {
+                        "data": {
+                            "id": "rd1",
+                            "type": "appStoreReviewDetails",
+                            "attributes": {"notes": "Existing review notes."},
+                        }
+                    },
+                }
+            )
             ensure_background_audio_review_note(client, "ver1", info_plist_path=str(plist_path))
 
-        self.assertEqual(client.calls, [])
+        self.assertEqual(len(client.calls), 1)
+
+    def test_background_audio_review_note_removes_stale_note_when_audio_mode_removed(self):
+        from scripts.asc.asc_submit_for_review import (
+            BACKGROUND_AUDIO_REVIEW_NOTE,
+            ensure_background_audio_review_note,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            plist_path = Path(tmp) / "Info.plist"
+            with plist_path.open("wb") as f:
+                plistlib.dump({}, f)
+
+            client = RouterClient(
+                {
+                    ("GET", "/appStoreVersions/ver1/appStoreReviewDetail"): {
+                        "data": {
+                            "id": "rd1",
+                            "type": "appStoreReviewDetails",
+                            "attributes": {"notes": f"Existing review notes.\n\n{BACKGROUND_AUDIO_REVIEW_NOTE}"},
+                        }
+                    },
+                    ("PATCH", "/appStoreReviewDetails/rd1"): {
+                        "data": {"id": "rd1", "type": "appStoreReviewDetails", "attributes": {}}
+                    },
+                }
+            )
+            ensure_background_audio_review_note(client, "ver1", info_plist_path=str(plist_path))
+
+        self.assertEqual(client.calls[1]["method"], "PATCH")
+        notes = client.calls[1]["payload"]["data"]["attributes"]["notes"]
+        self.assertEqual(notes, "Existing review notes.")
+
+    def test_background_audio_review_note_blocks_stale_custom_audio_note_when_audio_mode_removed(self):
+        from scripts.asc.asc_submit_for_review import ensure_background_audio_review_note
+
+        with tempfile.TemporaryDirectory() as tmp:
+            plist_path = Path(tmp) / "Info.plist"
+            with plist_path.open("wb") as f:
+                plistlib.dump({}, f)
+
+            client = RouterClient(
+                {
+                    ("GET", "/appStoreVersions/ver1/appStoreReviewDetail"): {
+                        "data": {
+                            "id": "rd1",
+                            "type": "appStoreReviewDetails",
+                            "attributes": {"notes": "This build uses UIBackgroundModes=audio."},
+                        }
+                    },
+                }
+            )
+            with self.assertRaises(SystemExit):
+                ensure_background_audio_review_note(client, "ver1", info_plist_path=str(plist_path))
 
     def test_background_audio_review_note_skips_when_already_present(self):
         from scripts.asc.asc_submit_for_review import ensure_background_audio_review_note

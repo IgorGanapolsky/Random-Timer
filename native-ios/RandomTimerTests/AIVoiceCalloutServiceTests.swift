@@ -324,6 +324,63 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
     }
 
+    func testVoiceNotificationPlanKeepsThirtySecondCadenceAndElapsedMilestones() {
+        let catalog = VoiceCueCatalog(
+            previewElapsed: .init(filename: "preview_elapsed", text: "Preview."),
+            fallbackCommandFilename: "cmd_a",
+            elapsedCues: [
+                .init(second: 60, filename: "elapsed_60s", text: "One minute elapsed."),
+                .init(second: 120, filename: "elapsed_120s", text: "Two minutes elapsed."),
+            ],
+            commandCues: [
+                .init(filename: "cmd_a", text: "Command A."),
+                .init(filename: "cmd_b", text: "Command B."),
+                .init(filename: "cmd_c", text: "Command C."),
+            ]
+        )
+
+        let plan = voiceCalloutNotificationPlan(
+            totalDurationSeconds: 120,
+            elapsedSeconds: 0,
+            gender: .male,
+            catalog: catalog,
+            options: VoiceCalloutNotificationPlanOptions(
+                audioExists: { _ in true },
+                pickIndex: { _ in 0 }
+            )
+        )
+
+        XCTAssertEqual(plan.map(\.offsetSeconds), [30, 60, 90, 120])
+        XCTAssertEqual(plan[1].text, "One minute elapsed.")
+        XCTAssertEqual(plan[3].text, "Two minutes elapsed.")
+        XCTAssertTrue(zip(plan, plan.dropFirst()).allSatisfy { $1.offsetSeconds - $0.offsetSeconds >= 30 })
+    }
+
+    func testVoiceNotificationPlanAvoidsImmediateCommandRepeats() {
+        let catalog = VoiceCueCatalog(
+            previewElapsed: .init(filename: "preview_elapsed", text: "Preview."),
+            fallbackCommandFilename: "cmd_a",
+            elapsedCues: [],
+            commandCues: [
+                .init(filename: "cmd_a", text: "Command A."),
+                .init(filename: "cmd_b", text: "Command B."),
+            ]
+        )
+
+        let plan = voiceCalloutNotificationPlan(
+            totalDurationSeconds: 90,
+            elapsedSeconds: 0,
+            gender: .male,
+            catalog: catalog,
+            options: VoiceCalloutNotificationPlanOptions(
+                audioExists: { _ in true },
+                pickIndex: { _ in 0 }
+            )
+        )
+
+        XCTAssertEqual(plan.map(\.filename), ["cmd_a", "cmd_b", "cmd_a"])
+    }
+
     func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
         let counter = CounterBox()
         let sut = makeVoiceCalloutService(counter: counter)
@@ -421,7 +478,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
     }
 
-    func testBackgroundVoiceKeepAliveStartIsIdempotent() {
+    func testBackgroundVoiceKeepAliveIsNoopForAppReviewCompliance() {
         let engine = FakeBackgroundVoiceKeepAliveEngine()
         let activations = CounterBox()
         let deactivations = CounterBox()
@@ -433,50 +490,14 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
         sut.start()
         sut.start()
-
-        XCTAssertTrue(sut.isActive)
-        XCTAssertEqual(activations.value, 1)
-        XCTAssertEqual(engine.startCalls, 1)
-        XCTAssertEqual(engine.attachedNodes, 1)
-        XCTAssertEqual(engine.connectedNodes, 1)
-        XCTAssertEqual(engine.prepareCalls, 1)
-        XCTAssertEqual(deactivations.value, 0)
-    }
-
-    func testBackgroundVoiceKeepAliveStopTearsDownEngineAndSession() {
-        let engine = FakeBackgroundVoiceKeepAliveEngine()
-        let deactivations = CounterBox()
-        let sut = BackgroundVoiceKeepAliveService(
-            makeEngine: { engine },
-            activateAudioSession: {},
-            deactivateAudioSession: { deactivations.value += 1 }
-        )
-
-        sut.start()
         sut.stop()
 
         XCTAssertFalse(sut.isActive)
-        XCTAssertEqual(engine.stopCalls, 1)
-        XCTAssertEqual(engine.resetCalls, 1)
-        XCTAssertEqual(deactivations.value, 1)
-    }
-
-    func testBackgroundVoiceKeepAliveDeactivatesSessionWhenEngineStartFails() {
-        struct StartFailure: Error {}
-
-        let engine = FakeBackgroundVoiceKeepAliveEngine()
-        engine.startError = StartFailure()
-        let deactivations = CounterBox()
-        let sut = BackgroundVoiceKeepAliveService(
-            makeEngine: { engine },
-            activateAudioSession: {},
-            deactivateAudioSession: { deactivations.value += 1 }
-        )
-
-        sut.start()
-
-        XCTAssertFalse(sut.isActive)
-        XCTAssertEqual(engine.startCalls, 1)
-        XCTAssertEqual(deactivations.value, 1)
+        XCTAssertEqual(activations.value, 0)
+        XCTAssertEqual(engine.startCalls, 0)
+        XCTAssertEqual(engine.attachedNodes, 0)
+        XCTAssertEqual(engine.connectedNodes, 0)
+        XCTAssertEqual(engine.prepareCalls, 0)
+        XCTAssertEqual(deactivations.value, 0)
     }
 }

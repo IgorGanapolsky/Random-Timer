@@ -152,10 +152,10 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     assert "voiceEnabled" in android_service and "isPro" in android_service
     assert "ProManager.shared.isPro && state.config.voiceEnabled" in ios_timer_manager
     assert "triggerCallout(elapsedSeconds: elapsedSeconds)" in ios_timer_manager
-    assert "backgroundVoiceKeepAliveService" in ios_timer_manager
+    assert "scheduleVoiceCalloutNotifications" in ios_timer_manager
     assert "updateBackgroundVoiceKeepAliveIfNeeded()" in ios_timer_manager
-    assert "<key>UIBackgroundModes</key>" in ios_info_plist
-    assert "<string>audio</string>" in ios_info_plist
+    assert "<key>UIBackgroundModes</key>" not in ios_info_plist
+    assert "<string>audio</string>" not in ios_info_plist
 
 
 def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():

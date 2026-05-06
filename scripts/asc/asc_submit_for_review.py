@@ -726,14 +726,28 @@ def ensure_background_audio_review_note(
     *,
     info_plist_path: str = IOS_INFO_PLIST_PATH,
 ) -> None:
-    if not declares_background_audio(info_plist_path):
-        return
-
     data = client.request("GET", f"/appStoreVersions/{version_id}/appStoreReviewDetail")
     detail = data.get("data") or {}
     detail_id = detail.get("id") or ""
     attrs = detail.get("attributes") or {}
     current_notes = (attrs.get("notes") or "").strip()
+    if not declares_background_audio(info_plist_path):
+        cleaned_notes = current_notes.replace(BACKGROUND_AUDIO_REVIEW_NOTE, "").strip()
+        if cleaned_notes != current_notes:
+            if not detail_id:
+                die("App Review detail is missing an id; cannot remove stale background-audio review notes.")
+            patch_resource_attributes(
+                client,
+                path=f"/appStoreReviewDetails/{detail_id}",
+                type_name="appStoreReviewDetails",
+                resource_id=detail_id,
+                attrs={"notes": cleaned_notes},
+            )
+            info("Removed stale background-audio App Review notes.")
+        elif "UIBackgroundModes=audio" in current_notes:
+            die("App Review notes still mention UIBackgroundModes=audio, but Info.plist no longer declares it.")
+        return
+
     if "UIBackgroundModes=audio" in current_notes and "Voice Callouts" in current_notes:
         return
     if not detail_id:

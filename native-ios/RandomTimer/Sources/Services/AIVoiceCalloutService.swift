@@ -224,6 +224,88 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     }
 }
 
+internal struct VoiceCalloutNotificationPlanItem: Equatable {
+    let offsetSeconds: Int
+    let filename: String
+    let text: String
+}
+
+internal struct VoiceCalloutNotificationPlanOptions {
+    let audioExists: (String) -> Bool
+    let pickIndex: (Int) -> Int
+}
+
+internal func voiceCalloutNotificationPlan(
+    totalDurationSeconds: Int,
+    elapsedSeconds: Int,
+    gender: VoiceGender,
+    catalog: VoiceCueCatalog,
+    options: VoiceCalloutNotificationPlanOptions
+) -> [VoiceCalloutNotificationPlanItem] {
+    let start = max(0, elapsedSeconds)
+    let total = max(0, totalDurationSeconds)
+    guard total - start >= 30 else { return [] }
+
+    let playableCommands = catalog.commandCues.filter {
+        options.audioExists(genderedVoiceFilename($0.filename, gender: gender))
+    }
+    let baselineCommands = playableCommands.isEmpty ? catalog.commandCues : playableCommands
+    var usedCommandFilenames = Set<String>()
+    var usedCommandTexts = Set<String>()
+    var lastCommandFilename: String?
+    var lastCommandText: String?
+    var plan: [VoiceCalloutNotificationPlanItem] = []
+    var nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: total)
+    var elapsedMilestones = catalog.elapsedCues
+        .filter { $0.second.isMultiple(of: 60) }
+        .sorted { $0.second < $1.second }
+
+    for second in stride(from: 30, through: total, by: 30) where second > start {
+        if let milestoneIndex = elapsedMilestones.firstIndex(where: { $0.second == second }) {
+            let cue = elapsedMilestones.remove(at: milestoneIndex)
+            let filename = genderedVoiceFilename(cue.filename, gender: gender)
+            guard options.audioExists(filename) else { continue }
+            plan.append(.init(offsetSeconds: second - start, filename: filename, text: cue.text))
+            if nextCommandCueAt <= second {
+                nextCommandCueAt = second + 30
+            }
+            continue
+        }
+
+        guard second >= nextCommandCueAt else { continue }
+        var pool = commandCuePool(
+            from: baselineCommands,
+            usedFilenames: usedCommandFilenames,
+            usedTexts: usedCommandTexts,
+            lastFilename: lastCommandFilename,
+            lastText: lastCommandText
+        )
+        if pool.isEmpty {
+            usedCommandFilenames.removeAll()
+            usedCommandTexts.removeAll()
+            pool = commandCuePool(
+                from: baselineCommands,
+                usedFilenames: [],
+                usedTexts: [],
+                lastFilename: lastCommandFilename,
+                lastText: lastCommandText
+            )
+        }
+
+        let cue = nextCommandCue(from: pool, lastFilename: lastCommandFilename, pickIndex: options.pickIndex)
+        let filename = genderedVoiceFilename(cue.filename, gender: gender)
+        guard options.audioExists(filename) else { continue }
+        plan.append(.init(offsetSeconds: second - start, filename: filename, text: cue.text))
+        lastCommandFilename = cue.filename
+        lastCommandText = cue.text
+        usedCommandFilenames.insert(cue.filename)
+        usedCommandTexts.insert(normalizedVoiceCueText(cue.text))
+        nextCommandCueAt = second + 30
+    }
+
+    return plan
+}
+
 internal protocol BackgroundVoiceKeepAliveEngine: AnyObject {
     var isRunning: Bool { get }
     var mainMixerNode: AVAudioMixerNode { get }
@@ -245,87 +327,22 @@ final class BackgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling {
 
     static let shared = BackgroundVoiceKeepAliveService()
 
-    private static let log = Logger(subsystem: "com.iganapolsky.randomtimer", category: "voice-keepalive")
-
-    private static func activateBackgroundAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            log.error("Background voice audio session setup failed: \(error.localizedDescription)")
-        }
-    }
-
-    private static func deactivateBackgroundAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        } catch {
-            log.error("Background voice audio session teardown failed: \(error.localizedDescription)")
-        }
-    }
-
-    private let makeEngine: EngineFactory
-    private let activateAudioSession: AudioSessionActivator
-    private let deactivateAudioSession: AudioSessionDeactivator
-    private var audioEngine: BackgroundVoiceKeepAliveEngine?
-    private var sourceNode: AVAudioSourceNode?
-
     var isActive: Bool {
-        audioEngine?.isRunning == true
+        false
     }
 
     init(
         makeEngine: @escaping EngineFactory = { AVAudioEngine() },
-        activateAudioSession: @escaping AudioSessionActivator =
-            BackgroundVoiceKeepAliveService.activateBackgroundAudioSession,
-        deactivateAudioSession: @escaping AudioSessionDeactivator =
-            BackgroundVoiceKeepAliveService.deactivateBackgroundAudioSession
-    ) {
-        self.makeEngine = makeEngine
-        self.activateAudioSession = activateAudioSession
-        self.deactivateAudioSession = deactivateAudioSession
-    }
+        activateAudioSession: @escaping AudioSessionActivator = {},
+        deactivateAudioSession: @escaping AudioSessionDeactivator = {}
+    ) {}
 
     func start() {
-        guard !isActive else { return }
-
-        activateAudioSession()
-
-        let engine = makeEngine()
-        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)
-        let silenceSource = AVAudioSourceNode { _, _, _, audioBufferList -> OSStatus in
-            let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
-            for buffer in buffers {
-                if let data = buffer.mData {
-                    memset(data, 0, Int(buffer.mDataByteSize))
-                }
-            }
-            return 0
-        }
-
-        engine.attach(silenceSource)
-        engine.connect(silenceSource, to: engine.mainMixerNode, format: format)
-        engine.mainMixerNode.outputVolume = 0
-        engine.prepare()
-
-        do {
-            try engine.start()
-            audioEngine = engine
-            sourceNode = silenceSource
-        } catch {
-            Self.log.error("Background voice keepalive failed to start: \(error.localizedDescription)")
-            sourceNode = nil
-            audioEngine = nil
-            deactivateAudioSession()
-        }
+        // Intentionally no-op. Silent audio keepalives violate App Review 2.5.4.
     }
 
     func stop() {
-        sourceNode = nil
-        audioEngine?.stop()
-        audioEngine?.reset()
-        audioEngine = nil
-        deactivateAudioSession()
+        // Intentionally no-op. Voice notifications carry locked-screen audio.
     }
 }
 

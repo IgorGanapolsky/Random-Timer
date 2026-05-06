@@ -4,6 +4,12 @@ import Foundation
 protocol TimerNotificationHandling {
     func requestNotificationPermission() async
     func scheduleAlarmNotification(at date: Date, soundType: SoundType) async
+    func scheduleVoiceCalloutNotifications(
+        totalDurationSeconds: Int,
+        elapsedSeconds: Int,
+        gender: VoiceGender
+    ) async
+    func cancelVoiceCalloutNotifications()
     func cancelPendingNotifications() async
     func playAlarmSound(type: SoundType, volume: Float)
     func stopAlarmSound()
