@@ -5,7 +5,7 @@ import path from "node:path";
 const defaultAscUrl =
   "https://appstoreconnect.apple.com/apps/6758355312/distribution/ios/version/inflight";
 const defaultPlayUrl =
-  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4974974102541773558/app-dashboard";
+  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing";
 const agentBrowserVersion = "0.10.0";
 
 function tryParseUrl(rawUrl) {
@@ -213,9 +213,9 @@ function main() {
   const ascUrl = process.env.ASC_VERSION_URL || defaultAscUrl;
   const playUrl = process.env.PLAY_CONSOLE_URL || defaultPlayUrl;
 
-  const ascExpectedState = process.env.ASC_EXPECTED_STATE_TEXT || "Prepare for Submission";
+  const ascExpectedState = process.env.ASC_EXPECTED_STATE_TEXT || "Waiting for Review";
   const ascExpectedAppName = process.env.ASC_EXPECTED_APP_NAME || "Random Tactical Timer";
-  const playExpectedAppName = process.env.PLAY_EXPECTED_APP_NAME || "Random Timer";
+  const playExpectedAppName = process.env.PLAY_EXPECTED_APP_NAME || "Random Tactical Timer";
   const playExpectedBannerText = process.env.PLAY_EXPECTED_BANNER_TEXT || "";
 
   const artifactsDir = path.resolve("test-results/agent-browser");
