@@ -90,6 +90,21 @@ def test_public_store_version_readback_requires_public_evidence() -> None:
     assert "workflow_run.head_sha" not in contents
 
 
+def test_store_console_verification_targets_current_app_and_release_state() -> None:
+    spec = _read("tests/playwright/specs/store/store-console-readonly.spec.ts")
+    agent = _read("tests/playwright/scripts/verify-store-console-agent-browser.mjs")
+    readme = _read("tests/playwright/README.md")
+
+    for contents in (spec, agent):
+        assert "4976249162120849673/publishing" in contents
+        assert "4974974102541773558" not in contents
+
+    assert 'ASC_EXPECTED_STATE_TEXT || "Waiting for Review"' in agent
+    assert 'PLAY_EXPECTED_APP_NAME || "Random Tactical Timer"' in agent
+    assert "`ASC_EXPECTED_STATE_TEXT` (default: `Waiting for Review`)" in readme
+    assert "`PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)" in readme
+
+
 def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
     contents = _read(".github/workflows/monthly-audio-pack.yml")
 

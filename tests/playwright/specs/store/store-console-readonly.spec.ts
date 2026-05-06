@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 
 const defaultAscUrl =
   "https://appstoreconnect.apple.com/apps/6758355312/distribution/ios/version/inflight";
-const defaultPlayUrl = "https://play.google.com/console";
+const defaultPlayUrl =
+  "https://play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing";
 
 function tryParseUrl(rawUrl: string): URL | null {
   try {
