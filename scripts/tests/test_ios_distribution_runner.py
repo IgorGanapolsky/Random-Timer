@@ -6,7 +6,6 @@ ROOT = Path(__file__).resolve().parents[2]
 IOS_DISTRIBUTION_WORKFLOWS = [
     ".github/workflows/internal-distribution.yml",
     ".github/workflows/native-release.yml",
-    ".github/workflows/ios-submit-review.yml",
     ".github/workflows/ios-apple-id-release.yml",
 ]
 
@@ -22,3 +21,12 @@ def test_ios_distribution_uploads_use_xcode_26_runner() -> None:
             f"{workflow} must not use macos-15 for distribution uploads; "
             "that runner builds with an SDK App Store Connect rejects."
         )
+
+
+def test_ios_submit_review_uses_linux_runner_because_it_does_not_build_binary() -> None:
+    source = (ROOT / ".github/workflows/ios-submit-review.yml").read_text(encoding="utf-8")
+
+    assert "runs-on: ubuntu-latest" in source
+    assert "runs-on: macos-26" not in source
+    assert "build_app" not in source
+    assert "upload_to_testflight" not in source
