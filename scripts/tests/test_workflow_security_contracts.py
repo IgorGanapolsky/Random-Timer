@@ -98,14 +98,16 @@ def test_store_console_verification_targets_current_app_and_release_state() -> N
 
     assert "chromium chromium-headless-shell" in workflow
     assert "playwright@1.59.1 install chromium-headless-shell" in workflow
+    assert "continue-on-error: true" in workflow
     for contents in (spec, agent):
         assert "play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing" in contents
         assert "play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing" not in contents
         assert "4974974102541773558" not in contents
 
-    assert 'ASC_EXPECTED_STATE_TEXT || "Waiting for Review"' in agent
+    assert 'ASC_EXPECTED_STATE_TEXT || ""' in agent
+    assert "Primary Playwright ASC verification remains blocking" in agent
     assert 'PLAY_EXPECTED_APP_NAME || "Random Tactical Timer"' in agent
-    assert "`ASC_EXPECTED_STATE_TEXT` (default: `Waiting for Review`)" in readme
+    assert "`ASC_EXPECTED_STATE_TEXT` (optional; when set, the agent-browser check requires this state text)" in readme
     assert "`PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)" in readme
     sync = _read("tests/playwright/scripts/sync-console-auth-secrets.mjs")
     assert "function filterAscStorageState" in sync

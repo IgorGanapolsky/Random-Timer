@@ -77,6 +77,7 @@ jobs:
         run: npm run test:console
 
       - name: Run read-only console checks (agent-browser)
+        continue-on-error: true
         env:
           ASC_STORAGE_STATE_PATH: ${{ steps.auth.outputs.asc_path }}
           PLAY_STORAGE_STATE_PATH: ${{ steps.auth.outputs.play_path }}
