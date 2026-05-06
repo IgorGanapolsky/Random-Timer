@@ -186,7 +186,7 @@ jobs:
     name: iOS TestFlight (Internal)
     needs: [gate, ios-testflight-signoff]
     if: needs.gate.outputs.should_run == 'true' && needs.ios-testflight-signoff.result == 'success' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
-    runs-on: macos-26
+    runs-on: macos-15
     outputs:
       uploaded: ${{ steps.ios_lineage.outputs.uploadable }}
     steps:

@@ -138,7 +138,7 @@ jobs:
       needs.release-intent-gate.result == 'success' &&
       needs.internal-proof-or-waive.result == 'success' &&
       (needs.require-production-signoff.result == 'success' || needs.production-signoff-waive.result == 'success')
-    runs-on: macos-26
+    runs-on: macos-15
     environment: production
     steps:
       - uses: actions/checkout@v6.0.2
