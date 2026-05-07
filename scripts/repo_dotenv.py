@@ -53,12 +53,12 @@ def load_repo_dotenv(repo_root: Path) -> None:
             quote_len = 1
 
         if quote and not val.endswith(quote):
-            parts = [val[quote_len:]]  # strip opening quote
+            parts = [val[quote_len:]]
             i += 1
             while i < len(lines):
                 line = lines[i]
                 if line.rstrip().endswith(quote):
-                    parts.append(line.rstrip()[: -len(quote)])  # strip closing quote
+                    parts.append(line.rstrip()[: -len(quote)])
                     i += 1
                     break
                 parts.append(line)
