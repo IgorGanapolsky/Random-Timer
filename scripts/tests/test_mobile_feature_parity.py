@@ -255,6 +255,25 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchPurchase(it, productID, paywallEntryPoint)" in android_nav
 
 
+def test_android_purchase_waits_for_billing_reconnect_before_failing():
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    launch_purchase = android_pro_manager.split("suspend fun launchPurchase(", 1)[1].split(
+        "private suspend fun fetchAllProductDetails",
+        1,
+    )[0]
+
+    assert "ensureBillingReadyForPurchase()" in launch_purchase
+    assert "private suspend fun ensureBillingReadyForPurchase()" in android_pro_manager
+    assert "connectAndRestore()" in android_pro_manager
+    assert "delay(500)" in android_pro_manager
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        'debugMessage = "billing_not_ready"'
+    )
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        "fetchProductDetails(productID)"
+    )
+
+
 def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
     ios_setup = _read(IOS_SETUP)
     assert "timerManager.previewSound(type: sound)" in ios_setup
