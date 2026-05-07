@@ -31,6 +31,7 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene). Say **"Done merging PRs"** only with merge SHAs + post-merge CI evidence.
 - **RAG / external memory**: treat as authoritative only when the gateway is verified in the active session; otherwise report “not verified.”
 - **Act, Don't Instruct**: Execute autonomously. Never tell the CEO to do manual steps.
+- **No Subway**: Avoid and remove corporate integrations (Microsoft Teams, Azure, Azure DevOps/ADO). Default to GitHub and local-first solutions.
 
 ## Business North Star
 
