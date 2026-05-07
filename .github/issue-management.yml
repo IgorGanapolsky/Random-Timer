@@ -44,7 +44,7 @@ automation:
   new_issues:
     - add_to_project: true
     - auto_label: true
-    - notify_teams: true
+    - notify_teams: false
     - check_duplicates: true
 
   inactive_issues:
