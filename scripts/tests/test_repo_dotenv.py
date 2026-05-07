@@ -46,7 +46,6 @@ class RepoDotenvTests(unittest.TestCase):
                 else:
                     os.environ["BAR"] = old
 
-
     def test_multiline_quoted_value(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
@@ -83,10 +82,11 @@ class RepoDotenvTests(unittest.TestCase):
                 'APPSTORE_PRIVATE_KEY=\\"-----BEGIN TEST BLOCK-----\n'  # gitleaks:allow
                 'AAAA\n'
                 'BBBB\n'
-                '-----END TEST BLOCK-----\\"\n',
+                '-----END TEST BLOCK-----\\"\n'
+                'AFTER=\\"two\\"\n',
                 encoding="utf-8",
             )
-            env_keys = ("APPSTORE_KEY_ID", "APPSTORE_PRIVATE_KEY")
+            env_keys = ("APPSTORE_KEY_ID", "APPSTORE_PRIVATE_KEY", "AFTER")
             saved = {k: os.environ.pop(k, None) for k in env_keys}
             try:
                 load_repo_dotenv(tmp)
@@ -95,6 +95,7 @@ class RepoDotenvTests(unittest.TestCase):
                     os.environ.get("APPSTORE_PRIVATE_KEY"),
                     "-----BEGIN TEST BLOCK-----\nAAAA\nBBBB\n-----END TEST BLOCK-----",
                 )
+                self.assertEqual(os.environ.get("AFTER"), "two")
             finally:
                 for k in env_keys:
                     if saved[k] is None:
