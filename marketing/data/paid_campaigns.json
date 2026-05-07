@@ -355,6 +355,16 @@
       "daily_budget_applied_usd": 0.65,
       "monthly_budget_cap_usd": 20.0,
       "budget_capped": true
+    },
+    {
+      "timestamp": "2026-05-07T12:28:57.512273+00:00",
+      "action": "campaign_refresh",
+      "apple_keywords": 15,
+      "google_themes": 10,
+      "daily_budget_requested_usd": 0.65,
+      "daily_budget_applied_usd": 0.65,
+      "monthly_budget_cap_usd": 20.0,
+      "budget_capped": false
     }
   ],
   "budget_allocation": {
