@@ -91,3 +91,4 @@ jobs:
           path: |
             tests/playwright/playwright-report
             tests/playwright/test-results
+          retention-days: 1
