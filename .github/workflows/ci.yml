@@ -300,6 +300,7 @@ jobs:
         with:
           name: app-debug
           path: native-android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
 
       - name: Upload Android coverage report
         if: always()
@@ -310,6 +311,7 @@ jobs:
             native-android/app/build/reports/tests/testDebugUnitTest
             native-android/app/build/reports/jacoco/jacocoDebugUnitTestReport
             native-android/app/build/jacoco/testDebugUnitTest.exec
+          retention-days: 1
 
   ios:
     name: Autonomous iOS Build Check
@@ -450,6 +452,7 @@ jobs:
           name: ios-test-results-xcresult
           path: native-ios/build/TestResults.xcresult
           if-no-files-found: warn
+          retention-days: 1
 
   playwright-local:
     name: Playwright Local Checks
@@ -484,6 +487,7 @@ jobs:
           path: |
             tests/playwright/playwright-report
             tests/playwright/test-results
+          retention-days: 1
 
   python-scripts:
     name: Python Script Tests
@@ -512,6 +516,7 @@ jobs:
           name: python-coverage-xml
           path: coverage-python.xml
           if-no-files-found: error
+          retention-days: 1
 
       - name: Upload Python coverage to Codecov
         if: always()
@@ -544,6 +549,7 @@ jobs:
             /tmp/release-context-ci.json
             /tmp/release-delegation-contract-ci.json
           if-no-files-found: warn
+          retention-days: 1
 
   north-star-guardrail:
     name: North Star Guardrail
@@ -601,7 +607,7 @@ jobs:
         with:
           name: north-star-guardrail
           path: marketing/data/north_star.json
-          retention-days: 7
+          retention-days: 1
 
   security:
     name: Autonomous Security
