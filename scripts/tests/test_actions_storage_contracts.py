@@ -11,6 +11,7 @@ HIGH_VOLUME_WORKFLOWS = [
     ".github/workflows/native-release.yml",
     ".github/workflows/android17-canary.yml",
     ".github/workflows/daily-growth-publishing.yml",
+    ".github/workflows/flaky-test-audit.yml",
     ".github/workflows/store-console-verification.yml",
 ]
 
@@ -42,3 +43,14 @@ def test_device_tests_do_not_cache_android_emulator_images() -> None:
 
     assert "avd-api-30" not in text
     assert "~/.android/avd" not in text
+
+
+def test_high_volume_workflows_do_not_use_gradle_actions_cache() -> None:
+    offenders = [
+        workflow
+        for workflow in HIGH_VOLUME_WORKFLOWS
+        if "cache: 'gradle'" in (ROOT / workflow).read_text(encoding="utf-8")
+        or "cache: gradle" in (ROOT / workflow).read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []

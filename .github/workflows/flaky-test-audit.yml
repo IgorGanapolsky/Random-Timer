@@ -65,6 +65,7 @@ jobs:
             /tmp/python-flaky-summary.json
             /tmp/python-flaky-summary.md
           if-no-files-found: error
+          retention-days: 1
 
       - name: Fail on Python flaky audit failures
         if: steps.audit.outputs.failed != '0'
@@ -83,7 +84,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Grant execute permission
         run: chmod +x native-android/gradlew
@@ -138,6 +138,7 @@ jobs:
             /tmp/android-flaky-summary.json
             /tmp/android-flaky-summary.md
           if-no-files-found: error
+          retention-days: 1
 
       - name: Fail on Android flaky audit failures
         if: steps.audit.outputs.failed != '0'
