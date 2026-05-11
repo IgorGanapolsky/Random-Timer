@@ -39,6 +39,39 @@ Result at execution time: no confirmed revenue today yet.
 
 - Offer post: `marketing/posts/2026-05-11-workflow-voice-agent-reliability-diagnostic.md`
 - Canonical page after GitHub Pages build: `https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-05-11-workflow-voice-agent-reliability-diagnostic.html`
+- Stripe checkout HTTP read-back: `200`
+- Canonical page HTTP read-back: `200`
+
+## Zernio fan-out read-back
+
+Workflow: `Zernio growth orchestration`, run `25694174790`, `workflow_dispatch` on `develop`.
+
+Health:
+
+```json
+{
+  "status": "ok",
+  "account_count": 6
+}
+```
+
+Publish result:
+
+```json
+{
+  "status": "published",
+  "fallback": "retried_with_current_text_accounts",
+  "platform_count": 4,
+  "platform_results": [
+    {"platform": "threads", "status": "published", "url": "https://www.threads.com/@igorganapolsky/post/DYNguPflxWA"},
+    {"platform": "twitter", "status": "published"},
+    {"platform": "bluesky", "status": "failed", "reason": "post exceeded 300 characters"},
+    {"platform": "reddit", "status": "failed", "reason": "selected community does not allow text posts"}
+  ]
+}
+```
+
+Public Threads URL HTTP read-back: `200`.
 
 ## Budget
 
