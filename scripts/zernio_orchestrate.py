@@ -132,7 +132,7 @@ def _parse_publish_accounts(raw: str) -> Tuple[Optional[List[Dict[str, str]]], O
 
 
 def _account_id(account: Dict[str, Any]) -> str:
-    return str(account.get("accountId") or account.get("account_id") or account.get("id") or "").strip()
+    return str(account.get("accountId") or account.get("account_id") or account.get("_id") or account.get("id") or "").strip()
 
 
 def _platform_id(account: Dict[str, Any]) -> str:

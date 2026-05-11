@@ -189,7 +189,7 @@ def test_parse_publish_accounts_platform_id_alias() -> None:
 
 def test_publish_accounts_from_current_accounts_filters_text_accounts() -> None:
     accounts = [
-        {"platform": "twitter", "id": "tw_1"},
+        {"platform": "twitter", "_id": "tw_1"},
         {"platform": "instagram", "id": "ig_1"},
         {"platformId": "threads", "accountId": "th_1"},
         {"platform": "youtube", "id": "yt_1"},
