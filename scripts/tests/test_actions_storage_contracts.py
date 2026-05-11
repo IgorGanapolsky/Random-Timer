@@ -42,3 +42,13 @@ def test_device_tests_do_not_cache_android_emulator_images() -> None:
 
     assert "avd-api-30" not in text
     assert "~/.android/avd" not in text
+
+
+def test_high_volume_workflows_do_not_use_gradle_actions_cache() -> None:
+    offenders = []
+    for workflow in HIGH_VOLUME_WORKFLOWS:
+        text = (ROOT / workflow).read_text(encoding="utf-8")
+        if "cache: 'gradle'" in text or "cache: gradle" in text:
+            offenders.append(workflow)
+
+    assert offenders == []
