@@ -73,6 +73,64 @@ Publish result:
 
 Public Threads URL HTTP read-back: `200`.
 
+## Direct buyer CTA dispatch read-back
+
+PR `#1472` merged to `develop` as `0b257afedad0f1d1d4e94135a69dbd2ee01031d0`, adding exact-text Zernio dispatch for short buyer CTAs.
+
+Workflow: `Zernio growth orchestration`, run `25695153772`, `workflow_dispatch` on `develop`.
+
+Workflow read-back:
+
+```json
+{
+  "conclusion": "success",
+  "headSha": "0b257afedad0f1d1d4e94135a69dbd2ee01031d0",
+  "createdAt": "2026-05-11T20:23:29Z",
+  "updatedAt": "2026-05-11T20:23:57Z"
+}
+```
+
+Publish result artifact row:
+
+```json
+{
+  "timestamp": "2026-05-11T20:23:54+00:00",
+  "slug": "custom-buyer-cta-20260511202342",
+  "channel": "zernio_custom",
+  "status": "published",
+  "content_chars": 215,
+  "platform_count": 3,
+  "allowed_platforms": ["bluesky", "threads", "twitter"]
+}
+```
+
+Published URLs and HTTP read-back:
+
+- Bluesky: `https://bsky.app/profile/iganapolsky.bsky.social/post/3mlm453667g2c` -> `200`
+- Threads: `https://www.threads.com/@igorganapolsky/post/DYNi9X1F0jo` -> `200`
+- Twitter/X: `https://twitter.com/i/web/status/2053934104794603523` -> `200`
+- Stripe checkout: `https://buy.stripe.com/9B63cveyU1eS7xT9uj3sI2g` -> `200`
+
+Post text:
+
+```text
+AI agent/voice workflow stuck, looping, or blocking releases? I will do a same-day reliability diagnostic for $499 and give you the failure points + fix plan. Pay/book: https://buy.stripe.com/9B63cveyU1eS7xT9uj3sI2g
+```
+
+Post-dispatch Stripe live read-back:
+
+```json
+{
+  "balance": {
+    "available_usd_cents": 0,
+    "pending_usd_cents": 0,
+    "livemode": true
+  },
+  "charges_results": [],
+  "payment_intents_results": []
+}
+```
+
 ## Budget
 
 - New paid spend: `$0.00`
