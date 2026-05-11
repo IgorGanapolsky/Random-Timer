@@ -76,3 +76,4 @@ jobs:
             native-android/app/build/reports/tests/testDebugUnitTest
             native-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: warn
+          retention-days: 1

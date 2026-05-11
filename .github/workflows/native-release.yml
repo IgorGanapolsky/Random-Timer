@@ -264,6 +264,7 @@ jobs:
         with:
           name: ios-ipa
           path: native-ios/RandomTimer.ipa
+          retention-days: 1
 
   android-release:
     needs:
@@ -458,6 +459,7 @@ jobs:
           name: play-upload-result
           path: /tmp/play-upload-result.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload Play upload error (if any)
         uses: actions/upload-artifact@v7.0.0
@@ -466,6 +468,7 @@ jobs:
           name: play-upload-error
           path: /tmp/play-upload-error.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7.0.0
@@ -473,6 +476,7 @@ jobs:
         with:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -637,6 +641,7 @@ jobs:
           name: play-public-listing-report
           path: /tmp/play-public-listing.txt
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -843,6 +848,7 @@ jobs:
           path: |
             /tmp/asc_ready.json
             /tmp/delegation_contract.json
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Submit for App Review (App Store)
@@ -878,6 +884,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()

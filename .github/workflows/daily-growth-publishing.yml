@@ -133,6 +133,7 @@ jobs:
             marketing/data/publications.jsonl
             marketing/data/engagement.jsonl
             marketing/data/engagement-latest.md
+          retention-days: 1
             marketing/data/publish_ab_pilot_runs.jsonl
             marketing/data/publish_ab_pilot_summary.json
             marketing/data/publish_ab_pilot_report.md

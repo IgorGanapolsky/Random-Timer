@@ -359,6 +359,7 @@ jobs:
           name: ios-ipa-internal
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
+          retention-days: 1
 
   ios-testflight-signoff:
     name: iOS TestFlight Signoff
@@ -538,6 +539,7 @@ jobs:
           name: android-aab-internal
           path: native-android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: warn
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -700,6 +702,7 @@ jobs:
           name: android-apk-firebase-internal
           path: native-android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: warn
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
