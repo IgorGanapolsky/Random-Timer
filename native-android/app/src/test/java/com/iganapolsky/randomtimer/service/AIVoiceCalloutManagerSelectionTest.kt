@@ -97,6 +97,14 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun approvedVoiceFilenameRejectsUnapprovedMaleCatalogEntries() {
+        assertThat(approvedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.FEMALE)).isEqualTo("female_cmd_chain_wrestling")
+        assertThat(approvedMaleVoiceFilenames).doesNotContain("cmd_chain_wrestling")
+    }
+
+    @Test
     fun nextCommandCueAvoidsImmediateRepeatsWhenMultipleCuesExist() {
         val cues =
             listOf(
