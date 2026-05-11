@@ -187,6 +187,26 @@ def test_parse_publish_accounts_platform_id_alias() -> None:
     assert parsed == [{"platform": "linkedin", "accountId": "acc_x"}]
 
 
+def test_publish_accounts_from_current_accounts_filters_text_accounts() -> None:
+    accounts = [
+        {"platform": "twitter", "id": "tw_1"},
+        {"platform": "instagram", "id": "ig_1"},
+        {"platformId": "threads", "accountId": "th_1"},
+        {"platform": "youtube", "id": "yt_1"},
+        {"platform": "twitter", "id": "tw_1"},
+    ]
+
+    assert zo._publish_accounts_from_current_accounts(accounts) == [
+        {"platform": "twitter", "accountId": "tw_1"},
+        {"platform": "threads", "accountId": "th_1"},
+    ]
+
+
+def test_stale_account_error_detects_zernio_403() -> None:
+    assert zo._stale_account_error('http_403:{"error":"One or more accounts do not belong to this user"}')
+    assert not zo._stale_account_error("http_500:bad gateway")
+
+
 def test_cmd_health_skipped_without_key(capsys: pytest.CaptureFixture[str]) -> None:
     args = MagicMock()
     with patch.object(zo, "zernio_api_key", return_value=""):
