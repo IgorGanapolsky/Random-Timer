@@ -99,6 +99,45 @@ private object VoicePreviewSampleCatalog {
     const val femaleElapsedFilename = "female_preview_elapsed"
 }
 
+internal val approvedMaleVoiceFilenames =
+    setOf(
+        "preview_elapsed",
+        "elapsed_60s",
+        "elapsed_120s",
+        "elapsed_180s",
+        "elapsed_240s",
+        "elapsed_300s",
+        "elapsed_420s",
+        "elapsed_540s",
+        "elapsed_600s",
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_disciplined",
+        "cmd_keep_your_bearing",
+        "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight",
+    )
+
+internal fun approvedVoiceFilename(
+    filename: String,
+    gender: VoiceGender,
+    fallbackFilename: String = "cmd_move_with_a_purpose",
+): String =
+    when (gender) {
+        VoiceGender.FEMALE -> genderedVoiceFilename(filename, gender)
+        VoiceGender.MALE -> {
+            if (filename in approvedMaleVoiceFilenames) {
+                filename
+            } else {
+                fallbackFilename.takeIf { it in approvedMaleVoiceFilenames } ?: "cmd_move_with_a_purpose"
+            }
+        }
+    }
+
 private val fallbackVoiceCueCatalog =
     VoiceCueCatalog(
         previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Thirty seconds elapsed. Move with a purpose."),
@@ -324,9 +363,9 @@ class AIVoiceCalloutManager
             val catalog = packStore.voiceCatalog()
             val mappedFilename = catalog.filenameByText[text]
             val baseFilename = mappedFilename ?: catalog.fallbackCommandCue.filename
-            val filename = genderedVoiceFilename(baseFilename, currentGender)
+            val filename = approvedVoiceFilename(baseFilename, currentGender, catalog.fallbackCommandCue.filename)
             val directResId = context.resources.getIdentifier(filename, "raw", context.packageName)
-            val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
+            val fallbackFilename = approvedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
             val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
             val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, text, catalog)
             if (mappedFilename == null) {
@@ -560,7 +599,8 @@ class AIVoiceCalloutManager
         }
 
         private fun cueHasAudio(filename: String): Boolean {
-            val gendered = genderedVoiceFilename(filename, currentGender)
+            if (currentGender == VoiceGender.MALE && filename !in approvedMaleVoiceFilenames) return false
+            val gendered = approvedVoiceFilename(filename, currentGender)
             if (packStore.voiceFile(gendered) != null) return true
             return context.resources.getIdentifier(gendered, "raw", context.packageName) != 0
         }

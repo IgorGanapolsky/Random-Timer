@@ -72,7 +72,8 @@ def test_session_voice_playback_routes_to_gendered_assets() -> None:
     ios_voice_service = _read(IOS_VOICE_SERVICE)
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "genderedVoiceFilename(baseFilename, gender: currentGender)" in ios_voice_service
+    assert "approvedVoiceFilename(" in ios_voice_service
+    assert "fallbackFilename: catalog.fallbackCommandCue.filename" in ios_voice_service
     assert 'return "female/\\(filename)"' in ios_voice_service
-    assert "val filename = genderedVoiceFilename(baseFilename, currentGender)" in android_voice_manager
+    assert "approvedVoiceFilename(baseFilename, currentGender, catalog.fallbackCommandCue.filename)" in android_voice_manager
     assert 'VoiceGender.FEMALE -> if (filename.startsWith("female_")) filename else "female_$filename"' in android_voice_manager

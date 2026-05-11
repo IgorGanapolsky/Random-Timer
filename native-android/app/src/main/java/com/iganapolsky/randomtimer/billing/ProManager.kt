@@ -457,11 +457,12 @@ class ProManager
                     }
                 }
             }
-            // Track purchase_failed for non-success, non-cancellation outcomes
-            if (!hasPurchased && result.responseCode != BillingClient.BillingResponseCode.USER_CANCELED) {
+            // Track purchase_failed for non-success outcomes (including cancellations)
+            if (!hasPurchased) {
                 val failedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: "unknown"
                 val reason =
                     when (result.responseCode) {
+                        BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
                         BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
                         BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
                         BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
@@ -667,6 +668,8 @@ class ProManager
             debugOverrideActive = true
             _entitlementLevel.value = EntitlementLevel.ELITE
             packStore.refreshIfNeeded(isPro = true)
+            // Mark as internal user persistently so future events from this device are filtered
+            analyticsService.markAsInternalUser()
             analyticsService.track(
                 "dev_debug_unlock",
                 mapOf(

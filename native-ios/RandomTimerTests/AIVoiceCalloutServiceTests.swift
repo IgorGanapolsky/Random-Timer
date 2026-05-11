@@ -149,6 +149,22 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
     }
 
+    func testApprovedVoiceFilenameRejectsUnapprovedMaleCatalogEntries() {
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_move_with_a_purpose", gender: .male),
+            "cmd_move_with_a_purpose"
+        )
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_chain_wrestling", gender: .male),
+            "cmd_move_with_a_purpose"
+        )
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_chain_wrestling", gender: .female),
+            "female/cmd_chain_wrestling"
+        )
+        XCTAssertFalse(approvedMaleVoiceFilenames.contains("cmd_chain_wrestling"))
+    }
+
     func testResetSessionAllowsElapsedMilestoneToReplay() {
         let sut = makeVoiceCalloutService()
         sut.triggerCallout(elapsedSeconds: 60)

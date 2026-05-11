@@ -315,11 +315,6 @@ struct PaywallSheet: View {
             )
             trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)
             let framing = AnalyticsService.shared.paywallValueFramingVariant()
-            AnalyticsService.shared.track(AnalyticsEvents.paywallView, properties: [
-                AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                AnalyticsProperties.paywallExperimentVariant: variant,
-                AnalyticsProperties.paywallValueFramingVariant: framing,
-            ])
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
                 AnalyticsProperties.paywallExperimentVariant: variant,

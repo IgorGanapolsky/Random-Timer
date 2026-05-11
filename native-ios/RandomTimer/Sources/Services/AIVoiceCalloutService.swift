@@ -69,6 +69,44 @@ private enum VoicePreviewSampleCatalog {
     static let femaleElapsedFilename = "female/preview_elapsed"
 }
 
+internal let approvedMaleVoiceFilenames: Set<String> = [
+    "preview_elapsed",
+    "elapsed_60s",
+    "elapsed_120s",
+    "elapsed_180s",
+    "elapsed_240s",
+    "elapsed_300s",
+    "elapsed_420s",
+    "elapsed_540s",
+    "elapsed_600s",
+    "cmd_move_with_a_purpose",
+    "cmd_stay_locked_in",
+    "cmd_no_hesitation_move",
+    "cmd_sound_off_and_drive",
+    "cmd_snap_back_and_drive",
+    "cmd_stay_disciplined",
+    "cmd_keep_your_bearing",
+    "cmd_reset_and_attack",
+    "cmd_sharp_movement_sharp_focus",
+    "cmd_stay_in_the_fight",
+]
+
+internal func approvedVoiceFilename(
+    _ filename: String,
+    gender: VoiceGender,
+    fallbackFilename: String = "cmd_move_with_a_purpose"
+) -> String {
+    switch gender {
+    case .female:
+        return genderedVoiceFilename(filename, gender: gender)
+    case .male:
+        if approvedMaleVoiceFilenames.contains(filename) {
+            return filename
+        }
+        return approvedMaleVoiceFilenames.contains(fallbackFilename) ? fallbackFilename : "cmd_move_with_a_purpose"
+    }
+}
+
 private let fallbackVoiceCueCatalog = VoiceCueCatalog(
     previewElapsed: .init(
         filename: "preview_elapsed",
@@ -249,7 +287,11 @@ final class AIVoiceCalloutService {
         let catalog = packStore.voiceCatalog(bundle: bundle)
         let mappedFilename = catalog.filenameByText[text]
         let baseFilename = mappedFilename ?? catalog.fallbackCommandCue.filename
-        let filename = genderedVoiceFilename(baseFilename, gender: currentGender)
+        let filename = approvedVoiceFilename(
+            baseFilename,
+            gender: currentGender,
+            fallbackFilename: catalog.fallbackCommandCue.filename
+        )
 
         if mappedFilename == nil {
             Self.log.error("Unmapped cue requested, using bundled fallback: \(text, privacy: .public)")
@@ -400,7 +442,10 @@ final class AIVoiceCalloutService {
     }
 
     private func cueHasAudio(_ filename: String) -> Bool {
-        let gendered = genderedVoiceFilename(filename, gender: currentGender)
+        if currentGender == .male && !approvedMaleVoiceFilenames.contains(filename) {
+            return false
+        }
+        let gendered = approvedVoiceFilename(filename, gender: currentGender)
         return packStore.voiceAudioURL(for: gendered, bundle: bundle) != nil
     }
 

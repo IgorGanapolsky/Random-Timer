@@ -40,17 +40,31 @@ class AnalyticsService
 
             prefs = application.getSharedPreferences(PREFS_NAME, Application.MODE_PRIVATE)
 
-            val apiKey = BuildConfig.POSTHOG_API_KEY
-            if (apiKey.isBlank()) {
-                return
-            }
-
+            val isPersistentInternal = prefs?.getBoolean(KEY_IS_INTERNAL_USER, false) ?: false
             val distributionChannel = resolveDistributionChannel(application)
             val isInternalUser =
-                isEmulator() ||
+                isPersistentInternal ||
+                    isEmulator() ||
                     BuildConfig.DEBUG ||
                     isUiTestSession(application) ||
                     distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL
+
+            val apiKey = BuildConfig.POSTHOG_API_KEY
+            if (apiKey.isBlank()) {
+                analyticsContextProperties =
+                    mapOf(
+                        "platform" to "android",
+                        "app_version" to BuildConfig.VERSION_NAME,
+                        "\$app_build" to BuildConfig.VERSION_CODE,
+                        AnalyticsProperties.ENVIRONMENT to environment(),
+                        AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
+                        AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
+                        AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
+                        AnalyticsProperties.DISTRIBUTION_CHANNEL to distributionChannel,
+                        "is_internal" to isInternalUser,
+                    )
+                return
+            }
 
             val config =
                 PostHogAndroidConfig(
@@ -350,6 +364,14 @@ class AnalyticsService
             )
         }
 
+        fun markAsInternalUser() {
+            prefs?.edit()?.putBoolean(KEY_IS_INTERNAL_USER, true)?.apply()
+            identify(
+                PostHog.distinctId(),
+                mapOf("is_internal" to true, "developer_backdoor_used" to true),
+            )
+        }
+
         companion object {
             const val PREFS_NAME = "random_timer_analytics"
             private const val KEY_DISTINCT_ID = "posthog_distinct_id"
@@ -357,6 +379,7 @@ class AnalyticsService
             private const val KEY_HAS_CONFIGURED = "has_first_configured"
             const val KEY_HAS_COMPLETED = "has_first_completed"
             private const val KEY_HAS_TRACKED_APPLICATION_INSTALLED = "has_tracked_application_installed"
+            private const val KEY_IS_INTERNAL_USER = "is_internal_user"
             private val UTM_KEYS =
                 listOf(
                     "utm_source",
