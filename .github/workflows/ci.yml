@@ -234,7 +234,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Grant Android execute permission
         run: chmod +x native-android/gradlew
@@ -274,7 +273,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Grant execute permission
         run: chmod +x gradlew
