@@ -1,1 +1,1 @@
-random,timer,reaction,boxing,mma,bjj,sparring,hiit,crossfit,wod,military,interval,dryfire
+app sparring prep,app boxing drills,app focus drills

@@ -27,6 +27,34 @@
         "Random Tactical Timer - App Boxing Drills",
         "Random Tactical Timer - App Focus Drills"
       ]
+    },
+    {
+      "timestamp": "2026-05-11T11:11:54.336510+00:00",
+      "current_keyword_count": 13,
+      "performing": 0,
+      "underperforming": 13,
+      "replacements_selected": [
+        "app sparring prep",
+        "app boxing drills",
+        "app focus drills"
+      ],
+      "removed_keywords": [
+        "random",
+        "timer",
+        "reaction"
+      ],
+      "data_sources": [
+        "simulated"
+      ],
+      "posthog_feedback_available": false,
+      "dry_run": false,
+      "new_ios_keywords": "app sparring prep,app boxing drills,app focus drills",
+      "title_variants": [
+        "Random Tactical Timer",
+        "Random Tactical Timer - App Sparring Prep",
+        "Random Tactical Timer - App Boxing Drills",
+        "Random Tactical Timer - App Focus Drills"
+      ]
     }
   ],
   "current_keywords": {
@@ -35,6 +63,6 @@
       "app boxing drills",
       "app focus drills"
     ],
-    "updated_at": "2026-05-07T19:39:26.135313+00:00"
+    "updated_at": "2026-05-11T11:11:54.336510+00:00"
   }
 }
