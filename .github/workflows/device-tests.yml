@@ -61,7 +61,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Create dummy google-services.json for CI
         working-directory: native-android
