@@ -213,6 +213,47 @@ fun activationLegacyRangePresetIfEligible(current: TimerConfig): TimerConfig? {
     )
 }
 
+data class TrainingPreset(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val minSeconds: Int,
+    val maxSeconds: Int,
+    val alarmDuration: Int,
+    val repeatEnabled: Boolean,
+    val soundType: SoundType,
+    val vibrationEnabled: Boolean,
+) {
+    fun applyTo(config: TimerConfig): TimerConfig =
+        config.copy(
+            minSeconds = minSeconds,
+            maxSeconds = maxSeconds,
+            alarmDuration = alarmDuration,
+            hiddenMode = false,
+            repeatEnabled = repeatEnabled,
+            soundType = soundType,
+            vibrationEnabled = vibrationEnabled,
+            useExtendedRange = false,
+        )
+
+    companion object {
+        val CompetitionWarmup =
+            TrainingPreset(
+                id = "competition_warmup",
+                title = "Competition Warmup",
+                subtitle = "Reactive mat-ready cues for the 30 minutes before first call.",
+                minSeconds = 20,
+                maxSeconds = 90,
+                alarmDuration = 5,
+                repeatEnabled = true,
+                soundType = SoundType.INTENSE,
+                vibrationEnabled = true,
+            )
+
+        val ALL = listOf(CompetitionWarmup)
+    }
+}
+
 /**
  * Represents the current state of an active timer.
  */

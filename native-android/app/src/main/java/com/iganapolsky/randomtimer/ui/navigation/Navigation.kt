@@ -163,6 +163,13 @@ fun RandomTimerNavHost(
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)
                 },
+                onTrainingPresetApplied = { preset ->
+                    viewModel.trackTrainingPresetApplied(
+                        presetId = preset.id,
+                        minSeconds = preset.minSeconds,
+                        maxSeconds = preset.maxSeconds,
+                    )
+                },
                 onSecretUnlock = {
                     viewModel.proManager.forcePro()
                 },
