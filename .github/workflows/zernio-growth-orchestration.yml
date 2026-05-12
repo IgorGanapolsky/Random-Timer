@@ -6,6 +6,19 @@ on:
   schedule:
     - cron: '25 */6 * * *' # Every 6 hours at :25 UTC
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Operation to run'
+        required: false
+        type: choice
+        default: sync-latest
+        options:
+          - sync-latest
+          - post-text
+      content:
+        description: 'Exact post text when mode is post-text'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -43,7 +56,14 @@ jobs:
           ZERNIO_TOKEN: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_PUBLISH_ACCOUNTS: ${{ secrets.ZERNIO_PUBLISH_ACCOUNTS }}
           ZERNIO_AUTO_PUBLISH: ${{ secrets.ZERNIO_AUTO_PUBLISH }}
-        run: python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
+          ZERNIO_CUSTOM_CONTENT: ${{ inputs.content }}
+          ZERNIO_MODE: ${{ inputs.mode }}
+        run: |
+          if [ "$ZERNIO_MODE" = "post-text" ]; then
+            python scripts/zernio_orchestrate.py post-text --repo-root . --output-root marketing --content "$ZERNIO_CUSTOM_CONTENT"
+          else
+            python scripts/zernio_orchestrate.py sync-latest --repo-root . --output-root marketing
+          fi
 
       - name: Upload orchestration log
         if: always()

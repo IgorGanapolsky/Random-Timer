@@ -148,6 +148,75 @@ class AscSubmitForReviewSubmissionFlowTests(unittest.TestCase):
             },
         )
 
+    def test_submit_for_review_ignores_terminal_complete_submission_and_creates_fresh_one(self):
+        from scripts.asc.asc_submit_for_review import submit_for_review
+
+        old_submission_id = "sub-complete"
+        new_submission_id = "sub-new"
+        version_id = "ver-1"
+
+        client = RouterClient(
+            {
+                ("GET", "/apps/app-1/subscriptionGroups"): {"data": []},
+                ("GET", "/apps/app-1/reviewSubmissions"): {
+                    "data": [
+                        {
+                            "id": old_submission_id,
+                            "type": "reviewSubmissions",
+                            "attributes": {"state": "COMPLETE"},
+                        }
+                    ]
+                },
+                ("GET", f"/reviewSubmissions/{old_submission_id}/items"): {
+                    "data": [
+                        {
+                            "id": "item-old",
+                            "type": "reviewSubmissionItems",
+                            "attributes": {"state": "READY_FOR_REVIEW"},
+                            "relationships": {
+                                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}
+                            },
+                        }
+                    ]
+                },
+                ("POST", "/reviewSubmissions"): {
+                    "data": {
+                        "id": new_submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "READY_FOR_REVIEW"},
+                    }
+                },
+                ("POST", "/reviewSubmissionItems"): {
+                    "data": {
+                        "id": "item-new",
+                        "type": "reviewSubmissionItems",
+                        "attributes": {"state": "READY_FOR_REVIEW"},
+                    }
+                },
+                ("PATCH", f"/reviewSubmissions/{new_submission_id}"): {
+                    "data": {
+                        "id": new_submission_id,
+                        "type": "reviewSubmissions",
+                        "attributes": {"state": "WAITING_FOR_REVIEW"},
+                    }
+                },
+            }
+        )
+
+        submit_for_review(client, "app-1", version_id)
+
+        self.assertEqual(
+            [call["path"] for call in client.calls],
+            [
+                "/apps/app-1/subscriptionGroups",
+                "/apps/app-1/reviewSubmissions",
+                f"/reviewSubmissions/{old_submission_id}/items",
+                "/reviewSubmissions",
+                "/reviewSubmissionItems",
+                f"/reviewSubmissions/{new_submission_id}",
+            ],
+        )
+
     def test_submit_for_review_reuses_empty_ready_for_review_submission_when_limit_shell_exists(self):
         from scripts.asc.asc_submit_for_review import submit_for_review
 

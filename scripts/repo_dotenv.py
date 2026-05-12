@@ -11,6 +11,16 @@ import os
 from pathlib import Path
 
 
+def _strip_outer_quotes(value: str) -> str:
+    if len(value) >= 2 and value[:2] in ('\\"', "\\'") and value.endswith(value[:2]):
+        return value[2:-2]
+    if value.startswith('\\"') and value.endswith('\\"'):
+        return value[2:-2]
+    if value.startswith("\\'") and value.endswith("\\'"):
+        return value[2:-2]
+    return value.strip('"').strip("'")
+
+
 def load_repo_dotenv(repo_root: Path) -> None:
     env_path = repo_root / ".env"
     if not env_path.is_file():
@@ -28,22 +38,34 @@ def load_repo_dotenv(repo_root: Path) -> None:
             i += 1
             continue
         val = v.strip()
-        # Handle multiline quoted values (double or single quotes)
-        if val and val[0] in ('"', "'") and not val.endswith(val[0]):
+        # Handle multiline quoted values, including shell-escaped quotes copied
+        # from chat/tools into `.env` as \"...\".
+        quote = ""
+        quote_len = 0
+        if val.startswith('\\"'):
+            quote = '\\"'
+            quote_len = 2
+        elif val.startswith("\\'"):
+            quote = "\\'"
+            quote_len = 2
+        elif val and val[0] in ('"', "'"):
             quote = val[0]
-            parts = [val[1:]]  # strip opening quote
+            quote_len = 1
+
+        if quote and not val.endswith(quote):
+            parts = [val[quote_len:]]
             i += 1
             while i < len(lines):
                 line = lines[i]
                 if line.rstrip().endswith(quote):
-                    parts.append(line.rstrip()[:-1])  # strip closing quote
+                    parts.append(line.rstrip()[: -len(quote)])
                     i += 1
                     break
                 parts.append(line)
                 i += 1
             val = "\n".join(parts)
         else:
-            val = val.strip('"').strip("'")
+            val = _strip_outer_quotes(val)
             i += 1
         if key in os.environ and str(os.environ.get(key, "")).strip():
             continue

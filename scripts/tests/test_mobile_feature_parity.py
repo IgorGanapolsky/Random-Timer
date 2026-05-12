@@ -93,15 +93,18 @@ def test_paywall_purchase_cta_reemits_current_plan_selection_before_purchase():
     android_paywall = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)" in android_paywall
+    android_selection = 'onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")'
+    assert android_selection in android_paywall
     assert "onPurchase(purchaseProductId)" in android_paywall
-    assert android_paywall.index("onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)") < android_paywall.index(
+    assert android_paywall.index(android_selection) < android_paywall.index(
         "onPurchase(purchaseProductId)"
     )
 
-    assert "trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)" in ios_paywall
+    ios_selection = 'selectionSource: "primary_cta"'
+    assert "trackOfferSelected(" in ios_paywall
+    assert ios_selection in ios_paywall
     assert "await purchase(productID: selectedProductID)" in ios_paywall
-    assert ios_paywall.index("trackOfferSelected(plan: planName(for: selectedPlan), productID: selectedProductID)") < ios_paywall.index(
+    assert ios_paywall.index(ios_selection) < ios_paywall.index(
         "await purchase(productID: selectedProductID)"
     )
 
@@ -252,6 +255,25 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "launchPurchase(it, productID, paywallEntryPoint)" in android_nav
 
 
+def test_android_purchase_waits_for_billing_reconnect_before_failing():
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    launch_purchase = android_pro_manager.split("suspend fun launchPurchase(", 1)[1].split(
+        "private suspend fun fetchAllProductDetails",
+        1,
+    )[0]
+
+    assert "ensureBillingReadyForPurchase()" in launch_purchase
+    assert "private suspend fun ensureBillingReadyForPurchase()" in android_pro_manager
+    assert "connectAndRestore()" in android_pro_manager
+    assert "delay(500)" in android_pro_manager
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        'debugMessage = "billing_not_ready"'
+    )
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        "fetchProductDetails(productID)"
+    )
+
+
 def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
     ios_setup = _read(IOS_SETUP)
     assert "timerManager.previewSound(type: sound)" in ios_setup
@@ -306,14 +328,17 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
     ios_active = _read(IOS_ACTIVE_SCREEN)
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
 
-    assert 'voiceBadgeText(enabled: Bool)' in ios_active
+    assert 'voiceBadgeText(enabled: Bool, isPro: Bool)' in ios_active
+    assert 'Voice Callouts Locked' in ios_active
     assert 'Label(' in ios_active and 'systemImage: "waveform"' in ios_active
+    assert 'guard isPro else { return }' in ios_active
     assert 'updateConfig(voiceEnabled: !isEnabled)' in ios_active
     assert 'timerManager.updateConfig(newConfig)' in ios_active
     assert 'voiceEnabled: voiceEnabled ?? current.voiceEnabled' in ios_active
     assert "if var state = timerState" in ios_timer_manager
 
-    assert "internal fun voiceBadgeText(enabled: Boolean)" in android_active
+    assert "internal fun voiceBadgeText(" in android_active
+    assert 'Voice Callouts Locked' in android_active
     assert "VoiceBadge(" in android_active
     assert "onVoiceToggle: (Boolean) -> Unit" in android_active
     assert "onVoiceToggle = viewModel::updateVoiceSetting" in android_nav

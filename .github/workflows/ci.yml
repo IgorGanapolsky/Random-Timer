@@ -40,11 +40,15 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          BEFORE_SHA: ${{ github.event.before || '' }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
             git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+            python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
+          elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+            git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
             python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
           else
             python3 scripts/ci_changed_components.py --all --github-output
@@ -234,7 +238,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Grant Android execute permission
         run: chmod +x native-android/gradlew
@@ -256,6 +259,29 @@ jobs:
             --tests 'com.iganapolsky.randomtimer.data.repository.TimerRepositoryImplTest' \
             --tests 'com.iganapolsky.randomtimer.service.AIVoiceCalloutManagerSelectionTest'
 
+      - name: Summarize Android regression JUnit evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            'native-android/app/build/test-results/testDebugUnitTest/**/*.xml' \
+            --json-out /tmp/android-regression-junit-summary.json \
+            --markdown-out /tmp/android-regression-junit-summary.md \
+            --github-annotations
+          cat /tmp/android-regression-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Android regression test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-regression-junit-evidence
+          path: |
+            native-android/app/build/test-results/testDebugUnitTest
+            native-android/app/build/reports/tests/testDebugUnitTest
+            /tmp/android-regression-junit-summary.json
+            /tmp/android-regression-junit-summary.md
+          if-no-files-found: warn
+          retention-days: 1
+
   android:
     name: Autonomous Android Tests
     needs: changes
@@ -274,7 +300,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Grant execute permission
         run: chmod +x gradlew
@@ -292,6 +317,17 @@ jobs:
       - name: Run unit tests with coverage
         run: ./gradlew testDebugUnitTest jacocoDebugUnitTestReport --no-daemon
 
+      - name: Summarize Android JUnit evidence
+        if: always()
+        working-directory: .
+        run: |
+          python scripts/ci_junit_summary.py \
+            'native-android/app/build/test-results/testDebugUnitTest/**/*.xml' \
+            --json-out /tmp/android-junit-summary.json \
+            --markdown-out /tmp/android-junit-summary.md \
+            --github-annotations
+          cat /tmp/android-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
 
@@ -300,6 +336,7 @@ jobs:
         with:
           name: app-debug
           path: native-android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
 
       - name: Upload Android coverage report
         if: always()
@@ -307,9 +344,14 @@ jobs:
         with:
           name: android-unit-coverage
           path: |
+            native-android/app/build/test-results/testDebugUnitTest
             native-android/app/build/reports/tests/testDebugUnitTest
             native-android/app/build/reports/jacoco/jacocoDebugUnitTestReport
             native-android/app/build/jacoco/testDebugUnitTest.exec
+            /tmp/android-junit-summary.json
+            /tmp/android-junit-summary.md
+          if-no-files-found: warn
+          retention-days: 1
 
   ios:
     name: Autonomous iOS Build Check
@@ -450,6 +492,7 @@ jobs:
           name: ios-test-results-xcresult
           path: native-ios/build/TestResults.xcresult
           if-no-files-found: warn
+          retention-days: 1
 
   playwright-local:
     name: Playwright Local Checks
@@ -484,6 +527,7 @@ jobs:
           path: |
             tests/playwright/playwright-report
             tests/playwright/test-results
+          retention-days: 1
 
   python-scripts:
     name: Python Script Tests
@@ -503,7 +547,29 @@ jobs:
         run: python -m pip install --upgrade pip pytest==8.4.2 pytest-cov==7.0.0 pillow==11.3.0 google-auth==2.43.0 requests==2.32.5 PyYAML==6.0.2
 
       - name: Run unit tests
-        run: python -m pytest scripts/tests/ -q --cov=scripts --cov-report=term --cov-report=xml:coverage-python.xml
+        run: python -m pytest scripts/tests/ -q --junitxml=python-test-results.xml --cov=scripts --cov-report=term --cov-report=xml:coverage-python.xml
+
+      - name: Summarize Python JUnit evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            'python-test-results.xml' \
+            --json-out /tmp/python-junit-summary.json \
+            --markdown-out /tmp/python-junit-summary.md \
+            --github-annotations
+          cat /tmp/python-junit-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Python JUnit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-junit-evidence
+          path: |
+            python-test-results.xml
+            /tmp/python-junit-summary.json
+            /tmp/python-junit-summary.md
+          if-no-files-found: warn
+          retention-days: 1
 
       - name: Upload Python coverage artifact
         if: always()
@@ -512,6 +578,7 @@ jobs:
           name: python-coverage-xml
           path: coverage-python.xml
           if-no-files-found: error
+          retention-days: 1
 
       - name: Upload Python coverage to Codecov
         if: always()
@@ -544,6 +611,7 @@ jobs:
             /tmp/release-context-ci.json
             /tmp/release-delegation-contract-ci.json
           if-no-files-found: warn
+          retention-days: 1
 
   north-star-guardrail:
     name: North Star Guardrail
@@ -572,7 +640,7 @@ jobs:
             --repo-root . \
             --lookback-days 30 \
             --wqtu-window-days 7 \
-            --require-posthog
+            --require-posthog-when-active
 
       - name: Warn if paid attribution guardrail is violated
         if: always()
@@ -601,7 +669,7 @@ jobs:
         with:
           name: north-star-guardrail
           path: marketing/data/north_star.json
-          retention-days: 7
+          retention-days: 1
 
   security:
     name: Autonomous Security
@@ -667,7 +735,7 @@ jobs:
 
           if [[ -n "$RANGE" ]]; then
             echo "Scanning commit range: $RANGE"
-            gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"
+            gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"
           else
             echo "Scanning full git history fallback"
             gitleaks git --no-banner --redact --exit-code 1

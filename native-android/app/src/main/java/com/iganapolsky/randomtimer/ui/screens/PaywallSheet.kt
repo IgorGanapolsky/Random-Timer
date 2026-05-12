@@ -27,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +65,45 @@ internal val PAYWALL_FEATURE_ROWS =
         "Fresh pro audio drops when new packs land",
     )
 
+internal data class PaywallFeatureContext(
+    val eyebrow: String,
+    val valueCopy: String,
+)
+
+internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
+    when (entryPoint) {
+        "setup_upgrade_cta" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped Unlock Pro",
+                valueCopy = "Pro turns the setup screen into a full training console: longer random windows, live callouts, round caps, and the full sound arsenal.",
+            )
+        "range_gate" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped 60-minute random windows",
+                valueCopy = "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing.",
+            )
+        "voice_gate" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped voice callouts",
+                valueCopy = "Pro adds time checks plus combat, MMA, and conditioning cues without revealing the random timer.",
+            )
+        "repeat_gate" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped round control",
+                valueCopy = "Pro lets you cap loops from 1-100 rounds instead of guessing when a training block should end.",
+            )
+        "sound_arsenal_gate" ->
+            PaywallFeatureContext(
+                eyebrow = "You tapped the sound arsenal",
+                valueCopy = "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds.",
+            )
+        else ->
+            PaywallFeatureContext(
+                eyebrow = "Pro Tactical",
+                valueCopy = "Unlock longer random windows, combat callouts, round caps, and the full sound arsenal.",
+            )
+    }
+
 /** Identifies which subscription plan the user has selected on the paywall. */
 internal enum class SubscriptionPlanSelection {
     MONTHLY,
@@ -75,13 +113,14 @@ internal enum class SubscriptionPlanSelection {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
+    entryPoint: String = "unknown",
     proPrice: String,
     monthlyPrice: String = "$3.99",
     defaultToAnnualPlan: Boolean = false,
     valueFramingVariant: String = PaywallValueFraming.CONTROL,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     onPurchase: (String) -> Unit,
-    onPlanSelected: (plan: String, productId: String) -> Unit = { _, _ -> },
+    onPlanSelected: (plan: String, productId: String, selectionSource: String) -> Unit = { _, _, _ -> },
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
     onDebugUnlock: (() -> Unit)? = null,
@@ -90,6 +129,7 @@ fun PaywallSheet(
     val initialSelection =
         if (defaultToAnnualPlan) SubscriptionPlanSelection.ANNUAL else SubscriptionPlanSelection.MONTHLY
     var selectedPlan by remember(defaultToAnnualPlan) { mutableStateOf(initialSelection) }
+    val featureContext = paywallFeatureContext(entryPoint)
     val headline =
         if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
             PAYWALL_HEADLINE_OUTCOMES_FIRST
@@ -102,14 +142,6 @@ fun PaywallSheet(
         } else {
             PAYWALL_SUBHEADLINE
         }
-    LaunchedEffect(defaultToAnnualPlan) {
-        if (defaultToAnnualPlan) {
-            onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
-        } else {
-            onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
-        }
-    }
-
     val purchaseProductId = productIdForPlan(selectedPlan)
     val ctaLabel =
         ctaLabelForPlan(
@@ -143,7 +175,7 @@ fun PaywallSheet(
                     PrimaryButton(
                         text = ctaLabel,
                         onClick = {
-                            onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId)
+                            onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")
                             onPurchase(purchaseProductId)
                         },
                         modifier =
@@ -248,6 +280,32 @@ fun PaywallSheet(
                     color = TimerColors.TextSecondary,
                     textAlign = TextAlign.Center,
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = TimerColors.AccentPrimary.copy(alpha = 0.08f),
+                        ),
+                    border = BorderStroke(1.dp, TimerColors.AccentPrimary.copy(alpha = 0.25f)),
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = featureContext.eyebrow,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TimerColors.AccentPrimary,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = featureContext.valueCopy,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TimerColors.TextPrimary,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = PAYWALL_PRICING_FOOTER,
                     style = MaterialTheme.typography.bodySmall,
@@ -290,7 +348,7 @@ fun PaywallSheet(
                     isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
                     onClick = {
                         selectedPlan = SubscriptionPlanSelection.MONTHLY
-                        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID)
+                        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID, "plan_card")
                     },
                 )
 
@@ -303,7 +361,7 @@ fun PaywallSheet(
                     isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
                     onClick = {
                         selectedPlan = SubscriptionPlanSelection.ANNUAL
-                        onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID)
+                        onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID, "plan_card")
                     },
                 )
 

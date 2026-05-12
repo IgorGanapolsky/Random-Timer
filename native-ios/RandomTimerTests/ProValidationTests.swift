@@ -43,6 +43,21 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(PaywallSheet.headlineOutcomesFirst, "Finish Strong With Full Random Pressure")
     }
 
+    func testPaywallFeatureContextExplainsSelectedGateValue() {
+        let setupContext = paywallFeatureContext(for: .setupUpgradeCTA)
+        XCTAssertEqual(setupContext.eyebrow, "You tapped Unlock Pro")
+        XCTAssertEqual(PaywallEntryPoint.setupUpgradeCTA.featureGateName, "setup_upgrade_cta")
+
+        let rangeContext = paywallFeatureContext(for: .rangeGate)
+        XCTAssertEqual(rangeContext.eyebrow, "You tapped 60-minute random windows")
+        XCTAssertEqual(
+            rangeContext.valueCopy,
+            "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing."
+        )
+
+        XCTAssertEqual(paywallFeatureContext(for: .unknown).eyebrow, "Pro Tactical")
+    }
+
     func testPaywallUsesApprovedAppStoreConnectProductId() {
         XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
         XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")

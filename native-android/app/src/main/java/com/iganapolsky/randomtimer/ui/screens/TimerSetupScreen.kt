@@ -1332,16 +1332,28 @@ private fun SoundTypeButton(
             },
         border =
             BorderStroke(
-                width = 1.dp,
+                width = if (selected) 2.dp else 1.dp,
                 color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
             ),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "✓",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = TimerColors.AccentPrimary.copy(alpha = if (selected) 1f else 0f),
+                modifier = Modifier.width(18.dp),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
+            )
+        }
     }
 }
 

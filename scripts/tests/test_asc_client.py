@@ -29,6 +29,10 @@ def test_auth_from_env_requires_values(monkeypatch):
         ac.ASCAuth.from_env()
 
 
+def test_asc_client_loads_dotenv_from_repo_root():
+    assert ac.REPO_ROOT == ac.Path(__file__).resolve().parents[2]
+
+
 def test_request_raises_on_http_error(monkeypatch):
     auth = ac.ASCAuth(key_id="kid", issuer_id="iss", private_key="pk")
     client = ac.ASCClient(auth=auth)

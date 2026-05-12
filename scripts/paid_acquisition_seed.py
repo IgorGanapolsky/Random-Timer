@@ -22,20 +22,27 @@ from growth_keyword_engine import load_blueprint, build_backlog
 
 CAMPAIGNS_PATH = "marketing/data/paid_campaigns.json"
 STRATEGY_PATH = "marketing/keywords/strategy.json"
+MONTHLY_EXTERNAL_SPEND_CAP_USD = 20.0
+MONTHLY_BUDGET_DAYS = 31
 
 # Default budget configuration
 DEFAULT_BUDGET = {
-    "daily_budget_usd": 10.0,
+    "daily_budget_usd": round(MONTHLY_EXTERNAL_SPEND_CAP_USD / MONTHLY_BUDGET_DAYS, 2),
     "launch_week_multiplier": 1.5,
     "max_cpt_usd": 1.50,  # max cost per tap (Apple) / click (Google)
     "target_cpa_usd": 3.00,  # target cost per acquisition
 }
 
 
+def _monthly_cap_daily_budget() -> float:
+    return round(MONTHLY_EXTERNAL_SPEND_CAP_USD / MONTHLY_BUDGET_DAYS, 2)
+
+
 def _safe_daily_budget_cap(previous_daily_budget: float) -> float:
+    monthly_cap = _monthly_cap_daily_budget()
     if previous_daily_budget <= 0:
-        return DEFAULT_BUDGET["daily_budget_usd"]
-    return round(min(previous_daily_budget * 1.25, previous_daily_budget + 5.0), 2)
+        return monthly_cap
+    return round(min(previous_daily_budget * 1.25, previous_daily_budget + 5.0, monthly_cap), 2)
 
 
 def _apply_budget_override_guardrails(
@@ -47,10 +54,8 @@ def _apply_budget_override_guardrails(
     budget_capped = False
     merged_budget = dict(current_budget)
 
-    if budget_override is None:
-        return merged_budget, requested_daily_budget, applied_daily_budget, budget_capped
-
-    merged_budget.update(budget_override)
+    if budget_override is not None:
+        merged_budget.update(budget_override)
     requested_daily_budget = float(merged_budget.get("daily_budget_usd", requested_daily_budget))
     previous_daily_budget = float(current_budget.get("daily_budget_usd", DEFAULT_BUDGET["daily_budget_usd"]))
     max_allowed_daily_budget = _safe_daily_budget_cap(previous_daily_budget)
@@ -73,6 +78,29 @@ def _merge_managed_campaign(
         if key in existing_campaign:
             merged[key] = existing_campaign[key]
     return merged
+
+
+def _guard_unmanaged_campaign(
+    campaign: Dict[str, Any],
+    total_daily_budget: float,
+) -> Dict[str, Any]:
+    """Prevent stale unmanaged configs from bypassing the monthly budget cap."""
+    guarded = dict(campaign)
+    daily_budget = float(guarded.get("daily_budget_usd") or 0.0)
+    if daily_budget <= 0:
+        return guarded
+
+    guarded["budget_guardrail_blocked"] = True
+    guarded["budget_guardrail_reason"] = (
+        "unmanaged_paid_channel_requires_explicit_budget_allocation_under_monthly_cap"
+    )
+    guarded["daily_budget_requested_usd"] = daily_budget
+    guarded["daily_budget_usd"] = 0.0
+    if guarded.get("status") in {"draft", "ready_to_launch"}:
+        guarded["status"] = "blocked_budget_guardrail"
+    guarded["monthly_budget_cap_usd"] = MONTHLY_EXTERNAL_SPEND_CAP_USD
+    guarded["total_managed_daily_budget_usd"] = total_daily_budget
+    return guarded
 
 
 def load_campaigns(repo_root: Path) -> Dict[str, Any]:
@@ -230,6 +258,8 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
         [apple_campaign, google_campaign],
         budget["daily_budget_usd"],
     )
+    apple_campaign["daily_budget_usd"] = allocation["apple_search_ads"]
+    google_campaign["daily_budget_usd"] = allocation["google_uac"]
 
     # Update managed campaigns while preserving unrelated platforms.
     existing_campaigns = campaigns_data.get("campaigns", [])
@@ -254,7 +284,7 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
             updated_campaigns.append(managed_updates[platform])
             managed_inserted.add(platform)
         else:
-            updated_campaigns.append(campaign)
+            updated_campaigns.append(_guard_unmanaged_campaign(campaign, budget["daily_budget_usd"]))
     for platform, campaign in managed_updates.items():
         if platform not in managed_inserted:
             updated_campaigns.append(campaign)
@@ -269,6 +299,7 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
         "google_themes": len(google_campaign["targeting"]["keyword_themes"]),
         "daily_budget_requested_usd": requested_daily_budget,
         "daily_budget_applied_usd": applied_daily_budget,
+        "monthly_budget_cap_usd": MONTHLY_EXTERNAL_SPEND_CAP_USD,
         "budget_capped": budget_capped,
     })
     campaigns_data["history"] = campaigns_data["history"][-50:]
@@ -283,6 +314,17 @@ def run_acquisition(repo_root: Path, budget_override: Optional[Dict] = None) -> 
         "apple_total_keywords": sum(len(ag["keywords"]) for ag in apple_campaign["ad_groups"]),
         "google_themes": len(google_campaign["targeting"]["keyword_themes"]),
         "google_headlines": len(google_campaign["ad_assets"]["headlines"]),
+        "monthly_budget_cap_usd": MONTHLY_EXTERNAL_SPEND_CAP_USD,
+        "budget_capped": budget_capped,
+        "unmanaged_budget_guardrails": [
+            {
+                "platform": campaign.get("platform"),
+                "daily_budget_requested_usd": campaign.get("daily_budget_requested_usd"),
+                "status": campaign.get("status"),
+            }
+            for campaign in updated_campaigns
+            if campaign.get("budget_guardrail_blocked")
+        ],
     }
 
 
@@ -294,6 +336,8 @@ def build_report(result: Dict[str, Any]) -> str:
         "",
         "## Budget",
         f"- Daily budget: **${result['budget']['daily_budget_usd']}**",
+        f"- Monthly external spend cap: **${result['monthly_budget_cap_usd']}**",
+        f"- Budget capped by guardrail: **{result['budget_capped']}**",
         f"- Target CPA: **${result['budget']['target_cpa_usd']}**",
         f"- Max CPT: **${result['budget']['max_cpt_usd']}**",
         "",
@@ -308,6 +352,21 @@ def build_report(result: Dict[str, Any]) -> str:
         "## Google UAC",
         f"- Keyword themes: {result['google_themes']}",
         f"- Headlines: {result['google_headlines']}",
+        "",
+        "## Unmanaged Paid Channel Guardrails",
+        *(
+            [
+                "- none",
+            ]
+            if not result.get("unmanaged_budget_guardrails")
+            else [
+                (
+                    f"- {item['platform']}: blocked at $0/day "
+                    f"(requested ${item['daily_budget_requested_usd']}/day, status {item['status']})"
+                )
+                for item in result["unmanaged_budget_guardrails"]
+            ]
+        ),
         "",
         "## Next Steps",
         "1. Review campaign configs in `marketing/data/paid_campaigns.json`",

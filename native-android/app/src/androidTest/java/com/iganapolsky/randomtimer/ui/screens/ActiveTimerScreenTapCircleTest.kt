@@ -3,6 +3,7 @@ package com.iganapolsky.randomtimer.ui.screens
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -38,6 +39,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = {},
                     onSilence = { silenced = true },
@@ -77,6 +79,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
                     onSilence = { silenced = true },
@@ -102,6 +105,37 @@ class ActiveTimerScreenTapCircleTest {
     }
 
     @Test
+    fun freeRunningTimerDoesNotRenderVoiceCalloutBadge() {
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT.copy(voiceEnabled = true),
+                targetDuration = 60.seconds,
+                remainingDuration = 30.seconds,
+                status = TimerStatus.RUNNING,
+            )
+
+        composeRule.setContent {
+            RandomTimerTheme {
+                ActiveTimerScreen(
+                    state = state,
+                    isPro = false,
+                    onStop = {},
+                    onDismissAlarm = {},
+                    onSilence = {},
+                    onPause = {},
+                    onResume = {},
+                    onReset = {},
+                    onLoopToggle = {},
+                    onVoiceToggle = {},
+                )
+            }
+        }
+
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts On").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts Locked").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
     fun tappingCircleWhenCompleteDoesNothing() {
         val state =
             TimerState(
@@ -118,6 +152,7 @@ class ActiveTimerScreenTapCircleTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
                     onSilence = { silenced = true },

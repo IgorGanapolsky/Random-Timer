@@ -187,6 +187,54 @@ def test_parse_publish_accounts_platform_id_alias() -> None:
     assert parsed == [{"platform": "linkedin", "accountId": "acc_x"}]
 
 
+def test_publish_accounts_from_current_accounts_filters_text_accounts() -> None:
+    accounts = [
+        {"platform": "twitter", "_id": "tw_1"},
+        {"platform": "instagram", "id": "ig_1"},
+        {"platformId": "threads", "accountId": "th_1"},
+        {"platform": "youtube", "id": "yt_1"},
+        {"platform": "twitter", "id": "tw_1"},
+    ]
+
+    assert zo._publish_accounts_from_current_accounts(accounts) == [
+        {"platform": "twitter", "accountId": "tw_1"},
+        {"platform": "threads", "accountId": "th_1"},
+    ]
+
+
+def test_publish_accounts_from_current_accounts_honors_allowed_platforms() -> None:
+    accounts = [
+        {"platform": "twitter", "_id": "tw_1"},
+        {"platform": "reddit", "id": "rd_1"},
+        {"platform": "bluesky", "id": "bs_1"},
+    ]
+
+    assert zo._publish_accounts_from_current_accounts(
+        accounts,
+        allowed_platforms={"twitter", "bluesky"},
+    ) == [
+        {"platform": "twitter", "accountId": "tw_1"},
+        {"platform": "bluesky", "accountId": "bs_1"},
+    ]
+
+
+def test_filter_platforms_dedupes_and_filters() -> None:
+    platforms = [
+        {"platform": "twitter", "accountId": "tw_1"},
+        {"platform": "reddit", "accountId": "rd_1"},
+        {"platform": "twitter", "accountId": "tw_1"},
+    ]
+
+    assert zo._filter_platforms(platforms, {"twitter"}) == [
+        {"platform": "twitter", "accountId": "tw_1"},
+    ]
+
+
+def test_stale_account_error_detects_zernio_403() -> None:
+    assert zo._stale_account_error('http_403:{"error":"One or more accounts do not belong to this user"}')
+    assert not zo._stale_account_error("http_500:bad gateway")
+
+
 def test_cmd_health_skipped_without_key(capsys: pytest.CaptureFixture[str]) -> None:
     args = MagicMock()
     with patch.object(zo, "zernio_api_key", return_value=""):
@@ -233,3 +281,9 @@ def test_main_routes_health(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(zo, "load_repo_dotenv", lambda _p: None)
     monkeypatch.setattr("sys.argv", ["zernio", "health"])
     assert zo.main() == 42
+
+
+def test_main_routes_post_text(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(zo, "cmd_post_text", lambda _a: 43)
+    monkeypatch.setattr("sys.argv", ["zernio", "post-text", "--content", "hello"])
+    assert zo.main() == 43

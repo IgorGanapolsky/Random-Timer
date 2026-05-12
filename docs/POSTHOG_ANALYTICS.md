@@ -43,6 +43,7 @@ Dashboards (`scripts/wqtu_dashboard.py`, `scripts/engagement_dashboard.py`, `scr
 | Step | Event | Meaning |
 | --- | --- | --- |
 | **Impression** | `paywall_viewed` (and legacy `paywall_view`) | User saw the paywall surface. |
+| **Plan selection** | `paywall_offer_select` | User selected a plan card or tapped the primary paywall CTA. It includes `paywall_selection_source` (`plan_card` \| `primary_cta`). Automatic default-plan impressions must not emit this event. |
 | **Attempt** | **`paywall_purchase_attempt`** | The app **started the platform purchase path** for a selected product: **iOS** — tracked at the beginning of `PaywallSheet`’s `purchase(productID:)` **immediately before** `proManager.purchase` (StoreKit). **Android** — tracked in `ProManager` **immediately before** `billingClient.launchBillingFlow` (Play Billing). |
 
 So **“attempt” is not a generic CTA tap** elsewhere in the app; it is **“we are invoking / about to invoke native purchase for this product from the paywall.”** It is also **not** proof the Google / Apple sheet was seen (e.g. `launchBillingFlow` can return non-OK right after; StoreKit can fail early)—only that the **instrumented** start of that path ran.
@@ -66,8 +67,8 @@ Screens emitted on both platforms:
 - `alarm_triggered`: `target_duration` (seconds)
 - `timer_completed`: see [timer_completed emission paths](#timer_completed-emission-paths) below (iOS and Android differ in **number of code paths** and optional `source` / `entitlement_level`)
 - `paywall_view` / `paywall_viewed`: `entry_point`, **`paywall_experiment_variant`** (`monthly_default` \| `annual_default`) — reflects the in-app default plan arm driven by PostHog flag **`paywall_default_plan_annual`** (see `docs/OBSERVABILITY.md`). Also **`paywall_value_framing_variant`** (`control` \| `outcomes_first`) from multivariate flag **`paywall_value_framing`** (copy experiment; default `control` until you add the flag in PostHog).
-- `subscription_funnel_step`: `funnel_step`, plus `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`, and step-specific keys (e.g. `product_id`, `plan`).
-- `paywall_offer_select`: `entry_point`, `product_id`, `plan`
+- `subscription_funnel_step`: `funnel_step`, plus `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`, and step-specific keys (e.g. `product_id`, `plan`, `paywall_selection_source`).
+- `paywall_offer_select`: `entry_point`, `product_id`, `plan`, `paywall_selection_source`
 - `paywall_*` (other): `entry_point` where applicable; purchase/result events also include `result` (iOS) or `success` / `response_code` (Android) as implemented per platform
 - common context on all events: `platform`, `app_version`, `environment`, `build_audience`, `build_type`, `runtime_target`
 

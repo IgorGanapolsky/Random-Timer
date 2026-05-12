@@ -262,6 +262,36 @@ internal func nextCommandCue(
     return cues[nextIndex]
 }
 
+internal func normalizedVoiceCueText(_ text: String) -> String {
+    text
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .lowercased()
+        .components(separatedBy: .whitespacesAndNewlines)
+        .filter { !$0.isEmpty }
+        .joined(separator: " ")
+}
+
+internal func commandCuePool(
+    from baseline: [VoiceCueCatalog.Cue],
+    usedFilenames: Set<String>,
+    usedTexts: Set<String>,
+    lastFilename: String?,
+    lastText: String?
+) -> [VoiceCueCatalog.Cue] {
+    let fresh = baseline.filter {
+        !usedFilenames.contains($0.filename) && !usedTexts.contains(normalizedVoiceCueText($0.text))
+    }
+    if !fresh.isEmpty {
+        return fresh
+    }
+
+    let lastNormalizedText = lastText.map(normalizedVoiceCueText)
+    let nonRepeating = baseline.filter {
+        $0.filename != lastFilename && normalizedVoiceCueText($0.text) != lastNormalizedText
+    }
+    return nonRepeating.isEmpty ? baseline : nonRepeating
+}
+
 internal func nextPreviewFilename(
     from filenames: [String],
     lastFilename: String?,
@@ -300,6 +330,128 @@ internal func initialFollowupCommandCueSecond(totalDurationSeconds: Int) -> Int 
     }
 }
 
+internal struct VoiceCalloutNotificationPlanItem: Equatable {
+    let offsetSeconds: Int
+    let filename: String
+    let text: String
+}
+
+internal struct VoiceCalloutNotificationPlanOptions {
+    let audioExists: (String) -> Bool
+    let pickIndex: (Int) -> Int
+}
+
+internal func voiceCalloutNotificationPlan(
+    totalDurationSeconds: Int,
+    elapsedSeconds: Int,
+    gender: VoiceGender,
+    catalog: VoiceCueCatalog,
+    options: VoiceCalloutNotificationPlanOptions
+) -> [VoiceCalloutNotificationPlanItem] {
+    let start = max(0, elapsedSeconds)
+    let total = max(0, totalDurationSeconds)
+    guard total - start >= 30 else { return [] }
+
+    let playableCommands = catalog.commandCues.filter {
+        options.audioExists(genderedVoiceFilename($0.filename, gender: gender))
+    }
+    let baselineCommands = playableCommands.isEmpty ? catalog.commandCues : playableCommands
+    var usedCommandFilenames = Set<String>()
+    var usedCommandTexts = Set<String>()
+    var lastCommandFilename: String?
+    var lastCommandText: String?
+    var plan: [VoiceCalloutNotificationPlanItem] = []
+    var nextCommandCueAt = initialFollowupCommandCueSecond(totalDurationSeconds: total)
+    var elapsedMilestones = catalog.elapsedCues
+        .filter { $0.second.isMultiple(of: 60) }
+        .sorted { $0.second < $1.second }
+
+    for second in stride(from: 30, through: total, by: 30) where second > start {
+        if let milestoneIndex = elapsedMilestones.firstIndex(where: { $0.second == second }) {
+            let cue = elapsedMilestones.remove(at: milestoneIndex)
+            let filename = genderedVoiceFilename(cue.filename, gender: gender)
+            guard options.audioExists(filename) else { continue }
+            plan.append(.init(offsetSeconds: second - start, filename: filename, text: cue.text))
+            if nextCommandCueAt <= second {
+                nextCommandCueAt = second + 30
+            }
+            continue
+        }
+
+        guard second >= nextCommandCueAt else { continue }
+        var pool = commandCuePool(
+            from: baselineCommands,
+            usedFilenames: usedCommandFilenames,
+            usedTexts: usedCommandTexts,
+            lastFilename: lastCommandFilename,
+            lastText: lastCommandText
+        )
+        if pool.isEmpty {
+            usedCommandFilenames.removeAll()
+            usedCommandTexts.removeAll()
+            pool = commandCuePool(
+                from: baselineCommands,
+                usedFilenames: [],
+                usedTexts: [],
+                lastFilename: lastCommandFilename,
+                lastText: lastCommandText
+            )
+        }
+
+        let cue = nextCommandCue(from: pool, lastFilename: lastCommandFilename, pickIndex: options.pickIndex)
+        let filename = genderedVoiceFilename(cue.filename, gender: gender)
+        guard options.audioExists(filename) else { continue }
+        plan.append(.init(offsetSeconds: second - start, filename: filename, text: cue.text))
+        lastCommandFilename = cue.filename
+        lastCommandText = cue.text
+        usedCommandFilenames.insert(cue.filename)
+        usedCommandTexts.insert(normalizedVoiceCueText(cue.text))
+        nextCommandCueAt = second + 30
+    }
+
+    return plan
+}
+
+internal protocol BackgroundVoiceKeepAliveEngine: AnyObject {
+    var isRunning: Bool { get }
+    var mainMixerNode: AVAudioMixerNode { get }
+    func attach(_ node: AVAudioNode)
+    func connect(_ node1: AVAudioNode, to node2: AVAudioNode, format: AVAudioFormat?)
+    func prepare()
+    func start() throws
+    func stop()
+    func reset()
+}
+
+extension AVAudioEngine: BackgroundVoiceKeepAliveEngine {}
+
+@MainActor
+final class BackgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling {
+    typealias AudioSessionActivator = @MainActor () -> Void
+    typealias AudioSessionDeactivator = @MainActor () -> Void
+    typealias EngineFactory = @MainActor () -> BackgroundVoiceKeepAliveEngine
+
+    static let shared = BackgroundVoiceKeepAliveService()
+
+    var isActive: Bool {
+        false
+    }
+
+    init(
+        makeEngine: @escaping EngineFactory = { AVAudioEngine() },
+        activateAudioSession: @escaping AudioSessionActivator = {},
+        deactivateAudioSession: @escaping AudioSessionDeactivator = {}
+    ) {}
+
+    func start() {
+        // Intentionally no-op. Silent audio keepalives violate App Review 2.5.4.
+    }
+
+    func stop() {
+        // Intentionally no-op. Voice notifications carry locked-screen audio.
+    }
+}
+
 @MainActor
 final class AIVoiceCalloutService {
     struct StateSnapshot {
@@ -333,7 +485,9 @@ final class AIVoiceCalloutService {
     private var lastElapsedMilestone = 0
     private var nextCommandCueAt = 0
     private var lastCommandCueFilename: String?
+    private var lastCommandCueText: String?
     private var usedCommandCueFilenames: Set<String> = []
+    private var usedCommandCueTexts: Set<String> = []
     private var lastCueFiredAtElapsed: Int?
     private var lastPreviewCommandFilenameByGender: [VoiceGender: String] = [:]
     private var usedPreviewCommandFilenamesByGender: [VoiceGender: Set<String>] = [:]
@@ -368,13 +522,22 @@ final class AIVoiceCalloutService {
         playVoiceFile(named: filename, cueText: text)
     }
 
+    private func speak(_ cue: VoiceCueCatalog.Cue) {
+        activateAudioSession()
+
+        let filename = genderedVoiceFilename(cue.filename, gender: currentGender)
+        playVoiceFile(named: filename, cueText: cue.text)
+    }
+
     func resetSession() {
         audioPlayer?.stop()
         audioPlayer = nil
         lastElapsedMilestone = 0
         nextCommandCueAt = 0
-        lastCommandCueFilename = nil
+        // Preserve the final command cue across sessions so a restarted timer
+        // cannot immediately repeat the last line the user just heard.
         usedCommandCueFilenames.removeAll()
+        usedCommandCueTexts.removeAll()
         lastPreviewCommandFilenameByGender.removeAll()
         usedPreviewCommandFilenamesByGender.removeAll()
         lastCueFiredAtElapsed = nil
@@ -448,8 +611,8 @@ final class AIVoiceCalloutService {
         }
 
         if let callout = elapsedMilestone(for: elapsedSeconds) {
-            speak(callout.text)
-            lastElapsedMilestone = elapsedSeconds
+            speak(.init(filename: callout.filename, text: callout.text))
+            lastElapsedMilestone = callout.second
             if nextCommandCueAt <= elapsedSeconds {
                 nextCommandCueAt = elapsedSeconds + 30
             }
@@ -459,23 +622,21 @@ final class AIVoiceCalloutService {
 
         if shouldFireCommandCue(elapsedSeconds: elapsedSeconds) {
             let cue = randomCommandCue()
-            speak(cue.text)
+            speak(cue)
             lastCommandCueFilename = cue.filename
+            lastCommandCueText = cue.text
             nextCommandCueAt = elapsedSeconds + 30
             lastCueFiredAtElapsed = elapsedSeconds
         }
     }
 
-    /// "Time elapsed" lines only on full-minute marks (60, 120, …). Other seconds use command cues only.
+    /// Returns the latest crossed "time elapsed" line on full-minute marks (60, 120, …).
+    /// Sub-minute elapsed rows stay out of runtime so command coaching keeps its own cadence.
     private func elapsedMilestone(for elapsed: Int) -> VoiceCueCatalog.ElapsedCue? {
         let catalog = packStore.voiceCatalog(bundle: bundle)
-        guard elapsed > 0, elapsed % 60 == 0 else {
-            return nil
-        }
-        guard let cue = catalog.elapsedCueBySecond[elapsed], elapsed != lastElapsedMilestone else {
-            return nil
-        }
-        return cue
+        return catalog.elapsedCues
+            .filter { $0.second > lastElapsedMilestone && $0.second <= elapsed && $0.second.isMultiple(of: 60) }
+            .max(by: { $0.second < $1.second })
     }
 
     private func shouldFireCommandCue(elapsedSeconds: Int) -> Bool {
@@ -495,17 +656,31 @@ final class AIVoiceCalloutService {
         // the same line on repeat while dedup thinks different cues were picked.
         let playable = catalog.commandCues.filter { cueHasAudio($0.filename) }
         let baseline = playable.isEmpty ? catalog.commandCues : playable
-        var pool = baseline.filter { !usedCommandCueFilenames.contains($0.filename) }
+        var pool = commandCuePool(
+            from: baseline,
+            usedFilenames: usedCommandCueFilenames,
+            usedTexts: usedCommandCueTexts,
+            lastFilename: lastCommandCueFilename,
+            lastText: lastCommandCueText
+        )
         if pool.isEmpty {
             usedCommandCueFilenames.removeAll()
-            pool = baseline.filter { $0.filename != lastCommandCueFilename }
-            if pool.isEmpty { pool = baseline }
+            usedCommandCueTexts.removeAll()
+            pool = commandCuePool(
+                from: baseline,
+                usedFilenames: [],
+                usedTexts: [],
+                lastFilename: lastCommandCueFilename,
+                lastText: lastCommandCueText
+            )
         }
         let cue = nextCommandCue(from: pool, lastFilename: lastCommandCueFilename) { upperBound in
             secureRandomInt(in: 0...(upperBound - 1))
         }
         lastCommandCueFilename = cue.filename
+        lastCommandCueText = cue.text
         usedCommandCueFilenames.insert(cue.filename)
+        usedCommandCueTexts.insert(normalizedVoiceCueText(cue.text))
         return cue
     }
 

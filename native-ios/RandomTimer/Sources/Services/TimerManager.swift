@@ -18,17 +18,21 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     nonisolated private let storageService: TimerStorage
     private let notificationService: TimerNotificationHandling
     private let liveActivityService: TimerLiveActivityHandling
+    private let backgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling
+    private var isAppBackgrounded = false
 
     // MARK: - Initialization
 
     init(
         storageService: TimerStorage = StorageService(),
         notificationService: TimerNotificationHandling = NotificationService(),
-        liveActivityService: TimerLiveActivityHandling = LiveActivityService()
+        liveActivityService: TimerLiveActivityHandling = LiveActivityService(),
+        backgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling = BackgroundVoiceKeepAliveService.shared
     ) {
         self.storageService = storageService
         self.notificationService = notificationService
         self.liveActivityService = liveActivityService
+        self.backgroundVoiceKeepAliveService = backgroundVoiceKeepAliveService
 
         // Load config synchronously from storage to avoid UI flicker.
         // Clamp to current Pro entitlement so expired Pro users don't retain Pro-only values.
@@ -105,6 +109,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         }
 
         trackSettingsChanges(from: previousConfig, to: newConfig)
+        updateBackgroundVoiceKeepAliveIfNeeded()
 
         Task {
             await storageService.saveConfig(newConfig)
@@ -167,6 +172,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                 gender: state.config.voiceGender
             )
         }
+        updateBackgroundVoiceKeepAliveIfNeeded()
 
         AnalyticsService.shared.track(AnalyticsEvents.timerStarted, properties: [
             "min_duration": config.minDuration,
@@ -184,6 +190,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
 
         // Schedule notification with the configured alarm sound
         await notificationService.scheduleAlarmNotification(at: state.endDate, soundType: config.soundType)
+        await scheduleBackgroundVoiceNotificationsIfNeeded(for: state)
 
         // Start countdown
         startCountdown()
@@ -203,6 +210,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         stopCountdown()
         AIVoiceCalloutService.shared.resetSession()
         timerState = nil
+        updateBackgroundVoiceKeepAliveIfNeeded()
 
         await storageService.clearTimerState()
         await endLiveActivity()
@@ -247,8 +255,10 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         guard var state = timerState, state.status != .paused else { return }
         AnalyticsService.shared.track(AnalyticsEvents.timerPaused)
         stopCountdown()
+        Task { await notificationService.cancelPendingNotifications() }
         state.status = .paused
         timerState = state
+        updateBackgroundVoiceKeepAliveIfNeeded()
     }
 
     func resumeTimer() {
@@ -259,6 +269,15 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             currentStatus: .running
         )
         timerState = state
+        updateBackgroundVoiceKeepAliveIfNeeded()
+        Task {
+            await notificationService.scheduleAlarmNotification(
+                at: Date().addingTimeInterval(state.remainingDuration),
+                soundType: state.config.soundType
+            )
+            await scheduleBackgroundVoiceNotificationsIfNeeded(for: state)
+            await storageService.saveTimerState(state)
+        }
         startCountdown()
     }
 
@@ -282,6 +301,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.
     func handleBackground() {
+        isAppBackgrounded = true
         // When a running timer is backgrounded, the countdown continues and the alarm will still
         // fire via the scheduled notification. This is NOT abandonment — fire timer_backgrounded
         // (informational only) so we can measure background rate without inflating abandon rate.
@@ -294,6 +314,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                 "status": state.status.rawValue,
             ])
         }
+        updateBackgroundVoiceKeepAliveIfNeeded()
 
         guard let state = timerState, state.status == .alarm else { return }
         // Silence alarm — stops sound/vibration AND marks as silenced so
@@ -325,6 +346,8 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     }
 
     func handleForeground() async {
+        isAppBackgrounded = false
+        updateBackgroundVoiceKeepAliveIfNeeded()
         // User is back — cancel any pending re-engagement reminders
         notificationService.cancelReengagementReminders()
 
@@ -510,6 +533,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         )
 
         timerState = newState
+        updateBackgroundVoiceKeepAliveIfNeeded()
 
         // Save state for recovery
         await storageService.saveTimerState(newState)
@@ -522,6 +546,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             at: newState.endDate,
             soundType: currentState.config.soundType
         )
+        await scheduleBackgroundVoiceNotificationsIfNeeded(for: newState)
 
         // Start countdown
         startCountdown()
@@ -672,6 +697,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             state.alarmTimeRemaining = TimeInterval(state.config.alarmDuration)
             state.alarmStartedAt = Date()
             timerState = state
+            updateBackgroundVoiceKeepAliveIfNeeded()
 
             // Save alarm state so we can detect it on app restart
             await storageService.saveTimerState(state)
@@ -691,6 +717,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                 type: state.config.soundType,
                 volume: state.config.volume
             )
+            notificationService.cancelVoiceCalloutNotifications()
             if state.config.vibrationEnabled {
                 Logger.timer.info("Starting vibration...")
                 notificationService.startVibration()
@@ -707,6 +734,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                 currentStatus: state.status
             )
             timerState = state
+            updateBackgroundVoiceKeepAliveIfNeeded()
 
             await storageService.saveTimerState(state)
             await updateLiveActivity(state: state)
@@ -735,6 +763,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             state.alarmTimeRemaining = 0
             state.status = .complete
             timerState = state
+            updateBackgroundVoiceKeepAliveIfNeeded()
 
             stopCountdown()
             notificationService.stopAlarmSound()
@@ -764,6 +793,25 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         } else {
             timerState = state
         }
+    }
+
+    private func updateBackgroundVoiceKeepAliveIfNeeded() {
+        // App Review 2.5.4 does not allow silent audio as a background keepalive.
+        // Locked/background voice cues are scheduled as local notifications instead.
+        backgroundVoiceKeepAliveService.stop()
+    }
+
+    private func scheduleBackgroundVoiceNotificationsIfNeeded(for state: TimerState) async {
+        guard ProManager.shared.isPro, state.config.voiceEnabled else {
+            notificationService.cancelVoiceCalloutNotifications()
+            return
+        }
+        let elapsedSeconds = max(0, Int(state.targetDuration - state.remainingDuration))
+        await notificationService.scheduleVoiceCalloutNotifications(
+            totalDurationSeconds: Int(state.targetDuration),
+            elapsedSeconds: elapsedSeconds,
+            gender: state.config.voiceGender
+        )
     }
 
     // MARK: - Live Activity Handling

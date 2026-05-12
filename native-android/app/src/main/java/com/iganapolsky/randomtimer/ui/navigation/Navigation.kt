@@ -43,6 +43,7 @@ sealed class Screen(
 
 internal fun paywallEntryPointForFeature(feature: String): String =
     when (feature) {
+        "setup_upgrade_cta" -> "setup_upgrade_cta"
         "extended_range" -> "range_gate"
         "voice_callouts" -> "voice_gate"
         "repeat_loop" -> "repeat_gate"
@@ -198,6 +199,7 @@ fun RandomTimerNavHost(
             } else {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = isPro,
                     onStop = {
                         viewModel.cancelTimer()
                     },
@@ -231,16 +233,18 @@ fun RandomTimerNavHost(
 
     if (showPaywall) {
         PaywallSheet(
+            entryPoint = paywallEntryPoint,
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
             defaultToAnnualPlan = paywallDefaultToAnnual,
             valueFramingVariant = paywallValueFramingVariant,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
-            onPlanSelected = { plan, productId ->
+            onPlanSelected = { plan, productId, selectionSource ->
                 viewModel.trackPaywallOfferSelected(
                     entryPoint = paywallEntryPoint,
                     productId = productId,
                     plan = plan,
+                    selectionSource = selectionSource,
                 )
             },
             onPurchase = { productID ->

@@ -204,8 +204,7 @@ class ProManager
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
             clearPendingTrialOffer()
-            if (!billingClient.isReady) {
-                connectAndRestore()
+            if (!ensureBillingReadyForPurchase()) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -303,6 +302,20 @@ class ProManager
                 return false
             }
             return true
+        }
+
+        private suspend fun ensureBillingReadyForPurchase(): Boolean {
+            if (billingClient.isReady) {
+                return true
+            }
+            connectAndRestore()
+            repeat(6) {
+                delay(500)
+                if (billingClient.isReady) {
+                    return true
+                }
+            }
+            return billingClient.isReady
         }
 
         private suspend fun fetchAllProductDetails() {

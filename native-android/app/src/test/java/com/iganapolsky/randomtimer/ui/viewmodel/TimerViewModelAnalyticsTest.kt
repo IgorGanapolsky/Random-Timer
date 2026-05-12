@@ -60,6 +60,7 @@ class TimerViewModelAnalyticsTest {
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
+        every { proManager.isPro } returns MutableStateFlow(true)
 
         configFlow = MutableStateFlow(TimerConfig.DEFAULT)
         every { repository.getTimerConfig() } returns configFlow
@@ -179,6 +180,39 @@ class TimerViewModelAnalyticsTest {
                 match {
                     it["entry_point"] == "sound_arsenal_gate" &&
                         it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `trackPaywallOfferSelected includes selection source`() {
+        viewModel.trackPaywallOfferSelected(
+            entryPoint = "range_gate",
+            productId = ProManager.ELITE_PRODUCT_ID,
+            plan = "annual",
+            selectionSource = "primary_cta",
+        )
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_OFFER_SELECT,
+                match {
+                    it["entry_point"] == "range_gate" &&
+                        it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+        verify {
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_PLAN_SELECTED,
+                match {
+                    it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta"
                 },
             )
         }

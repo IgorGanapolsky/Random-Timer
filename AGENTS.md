@@ -149,6 +149,12 @@ Do not infer progress from draft campaign configs.
 - Treat every App Store rejection as a preventable failure. Anticipate review issues before submission.
 - When something fails, diagnose the root cause from the actual error response before retrying.
 
+## Android Agent Acceleration
+
+- Before Android platform/build/store-policy work, run `python3 scripts/android_agent_doctor.py --json` and use `docs/ANDROID_AGENT_WORKFLOW.md`.
+- If Android CLI is installed, run `android update`, use `android docs search '<topic>'` for current official guidance, and use `android skills` for AGP, R8, edge-to-edge, Navigation, Compose, emulator, and release-build work.
+- Do not make preview Android CLI tooling a hard CI dependency; CI remains Gradle wrapper, repo scripts, store API read-back, and explicit evidence.
+
 ## Worktree & Branch Protocol
 
 ### Mandatory for ALL Agents

@@ -51,6 +51,7 @@ jobs:
       content_branch: ${{ steps.commit.outputs.content_branch }}
       new_version: ${{ steps.bump.outputs.new_version }}
       month_label: ${{ steps.meta.outputs.month_label }}
+      release_month: ${{ steps.meta.outputs.release_month }}
       changes_committed: ${{ steps.commit.outputs.changes_committed }}
       content_pr_number: ${{ steps.commit.outputs.content_pr_number }}
 
@@ -81,7 +82,9 @@ jobs:
         id: meta
         run: |
           MONTH_LABEL=$(date -u +"%B-%Y")
+          RELEASE_MONTH=$(date -u +"%Y-%m")
           echo "month_label=${MONTH_LABEL}" >> "$GITHUB_OUTPUT"
+          echo "release_month=${RELEASE_MONTH}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -97,6 +100,7 @@ jobs:
           echo "=== Generating Pro audio content via ElevenLabs ==="
           args=(
             --manifest content/pro_audio/monthly_pro_audio_packs.json
+            --release-month "${{ steps.meta.outputs.release_month }}"
             --voice-id "${ELEVENLABS_VOICE_ID:-DGzg6RaUqxGRTHSBjfgF}"
             --generate-sound-assets
             --sync-android-assets
@@ -280,6 +284,7 @@ jobs:
           fi
 
           gh pr comment "${CONTENT_PR_NUMBER}" --repo "$GITHUB_REPOSITORY" --body "/trunk merge"
+          gh pr merge "${CONTENT_PR_NUMBER}" --repo "$GITHUB_REPOSITORY" --squash --auto --delete-branch || true
 
           deadline=$((SECONDS + 3300))
           while [ "$SECONDS" -lt "$deadline" ]; do
@@ -405,7 +410,7 @@ jobs:
             -f android_track=production \
             -f submit_review=true \
             -f confirm_ios_only_release=false \
-            -f skip_internal_signoff=true \
+            -f skip_internal_signoff=false \
             -f skip_production_signoff=true
           echo "Dispatched Native App Release for ${RELEASE_BRANCH}"
 

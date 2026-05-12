@@ -49,7 +49,7 @@ on:
         required: false
         default: 'false'
       skip_internal_signoff:
-        description: 'Waive internal-signoff/* commit statuses (scheduled monthly release only; release SHA differs from internal build SHA)'
+        description: 'Deprecated/disabled. Releases must have TestFlight/Firebase internal proof on the exact SHA.'
         type: choice
         options:
           - 'false'
@@ -98,8 +98,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${SKIP_INTERNAL}" == "true" ]]; then
-            echo "::warning::internal signoff waived (skip_internal_signoff=true) — use only for scheduled monthly automation"
-            exit 0
+            echo "❌ Internal artifact proof cannot be waived for production release."
+            echo "Every release must have current internal-signoff/testflight and/or internal-signoff/firebase statuses on the exact release SHA."
+            exit 1
           fi
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
           python3 scripts/internal_signoff_gate.py \
@@ -264,6 +265,7 @@ jobs:
         with:
           name: ios-ipa
           path: native-ios/RandomTimer.ipa
+          retention-days: 1
 
   android-release:
     needs:
@@ -458,6 +460,7 @@ jobs:
           name: play-upload-result
           path: /tmp/play-upload-result.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload Play upload error (if any)
         uses: actions/upload-artifact@v7.0.0
@@ -466,6 +469,7 @@ jobs:
           name: play-upload-error
           path: /tmp/play-upload-error.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7.0.0
@@ -473,6 +477,7 @@ jobs:
         with:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -637,6 +642,7 @@ jobs:
           name: play-public-listing-report
           path: /tmp/play-public-listing.txt
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -843,6 +849,7 @@ jobs:
           path: |
             /tmp/asc_ready.json
             /tmp/delegation_contract.json
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Submit for App Review (App Store)
@@ -878,6 +885,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()

@@ -31,6 +31,22 @@ class PaywallSheetTest {
     }
 
     @Test
+    fun `paywall feature context explains selected gate value`() {
+        val setupContext = paywallFeatureContext("setup_upgrade_cta")
+        assertEquals("You tapped Unlock Pro", setupContext.eyebrow)
+
+        val rangeContext = paywallFeatureContext("range_gate")
+        assertEquals("You tapped 60-minute random windows", rangeContext.eyebrow)
+        assertEquals(
+            "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing.",
+            rangeContext.valueCopy,
+        )
+
+        val unknownContext = paywallFeatureContext("unknown")
+        assertEquals("Pro Tactical", unknownContext.eyebrow)
+    }
+
+    @Test
     fun `price label normalizes to yearly pricing`() {
         assertEquals("$29.99/year", normalizedPriceLabel("$29.99"))
         assertEquals("$29.99/yr", normalizedPriceLabel("$29.99/yr"))

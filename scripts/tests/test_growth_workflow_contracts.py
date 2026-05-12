@@ -20,6 +20,8 @@ WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+AGENTS_DOC = ROOT / "AGENTS.md"
+ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
 
 
 def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
@@ -30,6 +32,20 @@ def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets()
     assert "APPSTORE_KEY_ID" in source
     assert "GOOGLE_PLAY_JSON_KEY" in source
     assert "contents: read" in source
+
+
+def test_android_agent_workflow_documents_official_cli_skills_and_docs_without_ci_lock_in():
+    agents = AGENTS_DOC.read_text(encoding="utf-8")
+    workflow = ANDROID_AGENT_WORKFLOW_DOC.read_text(encoding="utf-8")
+
+    assert "scripts/android_agent_doctor.py --json" in agents
+    assert "docs/ANDROID_AGENT_WORKFLOW.md" in agents
+    assert "android docs search" in agents
+    assert "android skills" in agents
+    assert "Do not make preview Android CLI tooling a hard CI dependency" in agents
+    assert "android update" in workflow
+    assert "cd native-android && ./gradlew testDebugUnitTest lint" in workflow
+    assert "never remove foreground service permissions" in workflow
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -61,6 +77,7 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
     assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
     assert "TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}" in source
+    assert "TESTFLIGHT_INTERNAL_TESTERS must include the CEO/TestFlight Apple ID" in source
     assert "secrets.FIREBASE_REQUIRED_TESTER_EMAIL" not in source.split("Ensure TestFlight internal distribution visibility", 1)[1].split(
         "Upload IPA artifact", 1
     )[0]
@@ -101,6 +118,15 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
 
 
+def test_internal_distribution_workflow_preflights_play_fgs_declaration_before_build():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Preflight Play foreground service declaration" in source
+    assert "scripts/check_android_play_fgs_declaration.py" in source
+    assert "PLAY_FGS_DECLARATION_ACK" in source
+    assert source.index("Preflight Play foreground service declaration") < source.index("Build release Bundle (AAB)")
+
+
 def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
@@ -115,16 +141,24 @@ def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_
 def test_internal_distribution_skips_impossible_auto_ios_uploads_without_signoff():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
-    ios_job = source.split("ios-testflight-internal:", 1)[1].split("ios-testflight-signoff:", 1)[0]
-    signoff_job = source.split("ios-testflight-signoff:", 1)[1].split("android-play-internal:", 1)[0]
+    signoff_index = source.index("ios-testflight-signoff:")
+    upload_index = source.index("ios-testflight-internal:")
+    assert signoff_index < upload_index
 
+    signoff_job = source.split("ios-testflight-signoff:", 1)[1].split("ios-testflight-internal:", 1)[0]
+    ios_job = source.split("ios-testflight-internal:", 1)[1].split("android-play-internal:", 1)[0]
+
+    assert "needs: [gate]" in signoff_job
+    assert "environment:" in signoff_job
+    assert "testflight-signoff" in signoff_job
+    assert "needs: [gate, ios-testflight-signoff]" in ios_job
+    assert "needs.ios-testflight-signoff.result == 'success'" in ios_job
     assert "uploaded: ${{ steps.ios_lineage.outputs.uploadable }}" in ios_job
     assert "DISTRIBUTION_REASON: ${{ needs.gate.outputs.reason }}" in ios_job
     assert "blocked by (closed|a distribution-locked) App Store version" in ios_job
     assert "Skipping automatic iOS TestFlight upload" in ios_job
     assert "Record skipped iOS TestFlight upload" in ios_job
     assert "if: steps.ios_lineage.outputs.uploadable == 'true'" in ios_job
-    assert "needs.ios-testflight-internal.outputs.uploaded == 'true'" in signoff_job
 
 
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
@@ -143,6 +177,7 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
         "- name: Preflight release checks (Android)", 1
     )[0]
     assert "FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}" in firebase_auth_section
+    assert "FIREBASE_REQUIRED_TESTER_EMAIL must include the CEO Android tester email" in firebase_auth_section
     assert "COMBINED_FIREBASE_TESTERS" in firebase_auth_section
     assert 'os.environ.get("FIREBASE_REQUIRED_TESTER_EMAIL", "")' in firebase_auth_section
     assert 'echo "FIREBASE_INTERNAL_TESTERS=${COMBINED_FIREBASE_TESTERS}" >> "$GITHUB_ENV"' in firebase_auth_section
@@ -261,6 +296,8 @@ def test_native_release_workflow_blocks_production_without_internal_signoff_proo
     assert "internal-proof-or-waive:" in source
     assert "skip_internal_signoff:" in source
     assert "skip_production_signoff:" in source
+    assert "Internal artifact proof cannot be waived for production release." in source
+    assert "Every release must have current internal-signoff/testflight and/or internal-signoff/firebase statuses" in source
     assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
     assert "python3 scripts/internal_signoff_gate.py" in source
     assert "require-production-signoff:" in source
@@ -321,6 +358,14 @@ def test_ci_workflow_has_dedicated_regression_guards_job():
     assert "scripts/tests/test_voice_regression_contracts.py" in guard_job
     assert "TimerRepositoryImplTest" in guard_job
     assert "AIVoiceCalloutManagerSelectionTest" in guard_job
+
+
+def test_ci_north_star_guardrail_only_requires_posthog_when_paid_campaigns_are_active():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+    guard_job = source.split("north-star-guardrail:", 1)[1].split("\n  security:\n", 1)[0]
+
+    assert "--require-posthog-when-active" in guard_job
+    assert "--require-posthog\n" not in guard_job
 
 
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():

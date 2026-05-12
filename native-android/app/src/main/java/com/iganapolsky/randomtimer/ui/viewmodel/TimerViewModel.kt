@@ -207,9 +207,10 @@ class TimerViewModel
 
         fun updateVoiceSetting(enabled: Boolean) {
             val current = _timerState.value?.config ?: config.value
+            val effectiveEnabled = enabled && proManager.isPro.value
             val updatedConfig =
                 current.copy(
-                    voiceEnabled = enabled,
+                    voiceEnabled = effectiveEnabled,
                     repeatEnabled = current.repeatEnabled,
                     useExtendedRange = current.useExtendedRange,
                     repeatRounds = current.repeatRounds,
@@ -218,7 +219,7 @@ class TimerViewModel
             trackSettingsChanges(current, updatedConfig)
             viewModelScope.launch {
                 repository.saveTimerConfig(updatedConfig)
-                serviceController.updateVoiceEnabled(enabled)
+                serviceController.updateVoiceEnabled(effectiveEnabled)
             }
         }
 
@@ -314,6 +315,7 @@ class TimerViewModel
             entryPoint: String,
             productId: String,
             plan: String,
+            selectionSource: String,
         ) {
             val framing = analyticsService.paywallValueFramingVariant()
             analyticsService.track(
@@ -322,6 +324,7 @@ class TimerViewModel
                     AnalyticsProperties.ENTRY_POINT to entryPoint,
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
+                    AnalyticsProperties.PAYWALL_SELECTION_SOURCE to selectionSource,
                     AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
                 ),
             )
@@ -330,6 +333,7 @@ class TimerViewModel
                 mapOf(
                     AnalyticsProperties.PRODUCT_ID to productId,
                     "plan" to plan,
+                    AnalyticsProperties.PAYWALL_SELECTION_SOURCE to selectionSource,
                 ),
             )
         }

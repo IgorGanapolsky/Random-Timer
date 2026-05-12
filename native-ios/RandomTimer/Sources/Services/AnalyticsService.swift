@@ -596,6 +596,7 @@ enum AnalyticsProperties {
     static let revenue = "revenue"
     static let paywallExperimentVariant = "paywall_experiment_variant"
     static let paywallValueFramingVariant = "paywall_value_framing_variant"
+    static let paywallSelectionSource = "paywall_selection_source"
 }
 
 enum AnalyticsValues {

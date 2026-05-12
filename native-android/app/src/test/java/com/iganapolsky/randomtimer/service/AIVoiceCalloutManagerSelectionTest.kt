@@ -134,6 +134,27 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun commandCuePoolAvoidsRepeatedTextEvenWhenFilenameDiffers() {
+        val cues =
+            listOf(
+                VoiceCue(filename = "cue_a", text = "Move with a purpose."),
+                VoiceCue(filename = "cue_b", text = "  Move with a purpose.  "),
+                VoiceCue(filename = "cue_c", text = "Cut the angle and go."),
+            )
+
+        val pool =
+            commandCuePool(
+                baseline = cues,
+                usedFilenames = setOf("cue_a"),
+                usedTexts = setOf(normalizedVoiceCueText("Move with a purpose.")),
+                lastFilename = "cue_a",
+                lastText = "Move with a purpose.",
+            )
+
+        assertThat(pool.map { it.filename }).containsExactly("cue_c")
+    }
+
+    @Test
     fun nextPreviewCueFilenameAvoidsImmediateRepeatsAndCyclesUnusedSamples() {
         val used = linkedSetOf("cue_a")
 
@@ -159,6 +180,7 @@ class AIVoiceCalloutManagerSelectionTest {
                         ElapsedVoiceCue(second = 15, filename = "elapsed_15s", text = "Fifteen seconds elapsed."),
                         ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed."),
                         ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed."),
+                        ElapsedVoiceCue(second = 120, filename = "elapsed_120s", text = "Two minutes elapsed."),
                     ),
                 commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
             )
@@ -167,6 +189,8 @@ class AIVoiceCalloutManagerSelectionTest {
         assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
         assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
         assertThat(runtimeVoiceCueForElapsedMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(61, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(121, lastElapsedMilestone = 60, catalog = catalog)?.filename).isEqualTo("elapsed_120s")
     }
 
     @Test

@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   submit:
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     environment: production
     env:
       PYTHONPATH: ${{ github.workspace }}

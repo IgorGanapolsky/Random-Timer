@@ -477,6 +477,7 @@ object AnalyticsProperties {
     const val REVENUE = "revenue"
     const val PAYWALL_EXPERIMENT_VARIANT = "paywall_experiment_variant"
     const val PAYWALL_VALUE_FRAMING_VARIANT = "paywall_value_framing_variant"
+    const val PAYWALL_SELECTION_SOURCE = "paywall_selection_source"
 }
 
 object AnalyticsScreens {

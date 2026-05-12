@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Marketing version to watch'
+        description: 'Marketing version to watch; blank uses source_versions.py'
         required: false
-        default: '1.3.26'
+        default: ''
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     env:
-      TARGET_VERSION: ${{ inputs.version || '1.3.26' }}
+      REQUESTED_VERSION: ${{ github.event.inputs.version || '' }}
       IOS_BUNDLE: com.igorganapolsky.randomtimer
       ANDROID_PACKAGE: com.iganapolsky.randomtimer
       ISSUE_TITLE_PREFIX: 'Release watch: v'
@@ -32,6 +32,22 @@ jobs:
       - uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.11'
+
+      - name: Resolve target version
+        id: version
+        run: |
+          set -euo pipefail
+          if [ -n "$REQUESTED_VERSION" ]; then
+            TARGET_VERSION="$REQUESTED_VERSION"
+          else
+            TARGET_VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
+          fi
+          if ! echo "$TARGET_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid watcher target version: $TARGET_VERSION" >&2
+            exit 1
+          fi
+          echo "target_version=$TARGET_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Watching store release version: $TARGET_VERSION"
 
       - name: Install deps
         run: python -m pip install --quiet pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
@@ -52,6 +68,7 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
           PYTHONPATH: ${{ github.workspace }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           set -euo pipefail
           STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$TARGET_VERSION" --json 2>/tmp/asc.err || true)"
@@ -78,10 +95,11 @@ jobs:
 
       - name: Poll Play public listing
         id: play
+        env:
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           set -euo pipefail
           STATUS="UNKNOWN"
-          DETAILS=""
           if python scripts/verify_play_public_listing.py \
               --package "$ANDROID_PACKAGE" \
               --expected-version "$TARGET_VERSION" \
@@ -101,6 +119,7 @@ jobs:
         id: issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           set -euo pipefail
           TITLE="${ISSUE_TITLE_PREFIX}${TARGET_VERSION}"
@@ -124,6 +143,7 @@ jobs:
           IOS_STATE: ${{ steps.asc.outputs.state }}
           PLAY_STATUS: ${{ steps.play.outputs.status }}
           PLAY_DISPLAYED: ${{ steps.play.outputs.displayed }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           set -euo pipefail
           CUR="ios=${IOS_STATE}|play=${PLAY_STATUS}"
@@ -140,6 +160,7 @@ jobs:
 
           if [ "$PREV" != "$CUR" ]; then
             echo "State changed: '$PREV' -> '$CUR'"
+            # shellcheck disable=SC2016
             COMMENT=$(printf '🔔 Store state change detected at %s\n\n- iOS: `%s`\n- Play: `%s` %s\n\nPrev: `%s`\nNow:  `%s`' \
               "$NOW_ISO" "$IOS_STATE" "$PLAY_STATUS" "$PLAY_DISPLAYED" "${PREV:-first-poll}" "$CUR")
             printf '%s' "$COMMENT" > /tmp/comment.md
@@ -153,6 +174,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ steps.issue.outputs.number }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           gh issue comment "$ISSUE_NUM" --body "✅ v${TARGET_VERSION} is LIVE on both stores. Closing watcher."
           gh issue close "$ISSUE_NUM" --reason completed

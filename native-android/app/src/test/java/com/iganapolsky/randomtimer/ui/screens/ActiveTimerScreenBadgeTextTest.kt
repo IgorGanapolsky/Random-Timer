@@ -26,11 +26,22 @@ class ActiveTimerScreenBadgeTextTest {
 
     @Test
     fun voiceBadgeShowsOnStateWhenEnabled() {
-        assertThat(voiceBadgeText(enabled = true)).isEqualTo("Voice Callouts On")
+        assertThat(voiceBadgeText(enabled = true, isPro = true)).isEqualTo("Voice Callouts On")
     }
 
     @Test
     fun voiceBadgeShowsOffStateWhenDisabled() {
-        assertThat(voiceBadgeText(enabled = false)).isEqualTo("Voice Callouts Off")
+        assertThat(voiceBadgeText(enabled = false, isPro = true)).isEqualTo("Voice Callouts Off")
+    }
+
+    @Test
+    fun voiceBadgeShowsLockedStateForFreeUsersEvenWhenConfigIsStaleOn() {
+        assertThat(voiceBadgeText(enabled = true, isPro = false)).isEqualTo("Voice Callouts Locked")
+    }
+
+    @Test
+    fun voiceBadgeIsHiddenForFreeUsers() {
+        assertThat(shouldShowVoiceBadge(isPro = false)).isFalse()
+        assertThat(shouldShowVoiceBadge(isPro = true)).isTrue()
     }
 }

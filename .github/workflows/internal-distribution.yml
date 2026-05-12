@@ -159,10 +159,33 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "gate: should_run=$SHOULD_RUN reason=$REASON ref=$REF sha=$SHA target=$TARGET"
 
-  ios-testflight-internal:
-    name: iOS TestFlight (Internal)
+  ios-testflight-signoff:
+    name: iOS TestFlight Signoff
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
+    runs-on: ubuntu-latest
+    environment: testflight-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record TestFlight CEO signoff before upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/testflight' \
+            -f description="CEO approved TestFlight internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+  ios-testflight-internal:
+    name: iOS TestFlight (Internal)
+    needs: [gate, ios-testflight-signoff]
+    if: needs.gate.outputs.should_run == 'true' && needs.ios-testflight-signoff.result == 'success' && (needs.gate.outputs.target == 'all_safe' || needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'ios')
     runs-on: macos-26
     outputs:
       uploaded: ${{ steps.ios_lineage.outputs.uploadable }}
@@ -193,6 +216,7 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}
         run: |
           set -euo pipefail
           for name in MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION APPSTORE_PRIVATE_KEY APPSTORE_KEY_ID APPSTORE_ISSUER_ID ADMIN_TOKEN; do
@@ -201,6 +225,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -z "${TESTFLIGHT_REQUIRED_TESTERS:-}" ]; then
+            echo "❌ TESTFLIGHT_INTERNAL_TESTERS must include the CEO/TestFlight Apple ID so CI proves the build is visible to that account."
+            exit 1
+          fi
 
       - name: Preflight release checks (iOS)
         run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
@@ -359,29 +387,7 @@ jobs:
           name: ios-ipa-internal
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
-
-  ios-testflight-signoff:
-    name: iOS TestFlight Signoff
-    needs: [gate, ios-testflight-internal]
-    if: needs.ios-testflight-internal.result == 'success' && needs.ios-testflight-internal.outputs.uploaded == 'true'
-    runs-on: ubuntu-latest
-    environment: testflight-signoff
-    permissions:
-      contents: read
-      statuses: write
-    steps:
-      - name: Record TestFlight CEO signoff on distributed SHA
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: ${{ needs.gate.outputs.sha }}
-          TARGET_REF: ${{ needs.gate.outputs.ref }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
-            -f state=success \
-            -f context='internal-signoff/testflight' \
-            -f description="CEO approved TestFlight internal build for ${TARGET_REF}" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          retention-days: 1
 
   android-play-internal:
     name: Android Google Play (Internal)
@@ -410,6 +416,15 @@ jobs:
 
       - name: Preflight release checks (Android)
         run: bash scripts/shell/preflight-release.sh --platform android --layer 1
+
+      - name: Preflight Play foreground service declaration
+        env:
+          PLAY_FGS_DECLARATION_ACK: ${{ vars.PLAY_FGS_DECLARATION_ACK || secrets.PLAY_FGS_DECLARATION_ACK || '' }}
+        run: |
+          set -euo pipefail
+          python scripts/check_android_play_fgs_declaration.py \
+            --manifest native-android/app/src/main/AndroidManifest.xml \
+            --require-ack-env PLAY_FGS_DECLARATION_ACK
 
       - name: Setup Java
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -538,16 +553,40 @@ jobs:
           name: android-aab-internal
           path: native-android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: warn
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
         run: |
           rm -f /tmp/release.keystore native-android/play-store-key.json
 
-  android-firebase-internal:
-    name: Android Firebase (Internal)
+  android-firebase-signoff:
+    name: Android Firebase Signoff
     needs: [gate]
     if: needs.gate.outputs.should_run == 'true' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
+    runs-on: ubuntu-latest
+    environment: firebase-signoff
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Record Firebase CEO signoff before upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          TARGET_REF: ${{ needs.gate.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='internal-signoff/firebase' \
+            -f description="CEO approved Firebase internal build for ${TARGET_REF}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+  android-firebase-internal:
+    name: Android Firebase (Internal)
+    needs: [gate, android-firebase-signoff]
+    if: needs.gate.outputs.should_run == 'true' && needs.android-firebase-signoff.result == 'success' && (needs.gate.outputs.target == 'all' || needs.gate.outputs.target == 'android_firebase')
     runs-on: ubuntu-latest
     steps:
       - name: Note Play Protect mitigation
@@ -577,6 +616,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -z "${FIREBASE_REQUIRED_TESTER_EMAIL:-}" ]; then
+            echo "❌ FIREBASE_REQUIRED_TESTER_EMAIL must include the CEO Android tester email so CI proves the Firebase build is visible to that account."
+            exit 1
+          fi
           COMBINED_FIREBASE_TESTERS="$(
             python3 - <<'PY'
           import os
@@ -700,31 +743,9 @@ jobs:
           name: android-apk-firebase-internal
           path: native-android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: warn
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
         run: |
           rm -f /tmp/release.keystore
-
-  android-firebase-signoff:
-    name: Android Firebase Signoff
-    needs: [gate, android-firebase-internal]
-    if: needs.android-firebase-internal.result == 'success'
-    runs-on: ubuntu-latest
-    environment: firebase-signoff
-    permissions:
-      contents: read
-      statuses: write
-    steps:
-      - name: Record Firebase CEO signoff on distributed SHA
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: ${{ needs.gate.outputs.sha }}
-          TARGET_REF: ${{ needs.gate.outputs.ref }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
-            -f state=success \
-            -f context='internal-signoff/firebase' \
-            -f description="CEO approved Firebase internal build for ${TARGET_REF}" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

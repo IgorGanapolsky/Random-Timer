@@ -64,6 +64,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun ActiveTimerScreen(
     state: TimerState,
+    isPro: Boolean,
     onStop: () -> Unit,
     onDismissAlarm: () -> Unit,
     onSilence: () -> Unit,
@@ -78,7 +79,7 @@ fun ActiveTimerScreen(
     val isComplete = state.status == TimerStatus.COMPLETE || state.status == TimerStatus.ALARM
     val isPaused = state.status == TimerStatus.PAUSED
     var loopEnabled by remember(state.config.repeatEnabled) { mutableStateOf(state.config.repeatEnabled) }
-    var voiceEnabled by remember(state.config.voiceEnabled) { mutableStateOf(state.config.voiceEnabled) }
+    var voiceEnabled by remember(state.config.voiceEnabled, isPro) { mutableStateOf(isPro && state.config.voiceEnabled) }
     var showResetFeedback by remember { mutableStateOf(false) }
     var resetFeedbackCounter by remember { mutableStateOf(0) }
     val toggleLoop = {
@@ -88,8 +89,10 @@ fun ActiveTimerScreen(
     }
     val toggleVoice = {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        voiceEnabled = !voiceEnabled
-        onVoiceToggle(voiceEnabled)
+        if (isPro) {
+            voiceEnabled = !voiceEnabled
+            onVoiceToggle(voiceEnabled)
+        }
     }
 
     LaunchedEffect(resetFeedbackCounter) {
@@ -164,11 +167,12 @@ fun ActiveTimerScreen(
 
             @Composable
             fun StatusText() {
-                val statusText = when {
-                    isComplete -> ""
-                    isPaused -> "Paused"
-                    else -> "Timer running..."
-                }
+                val statusText =
+                    when {
+                        isComplete -> ""
+                        isPaused -> "Paused"
+                        else -> "Timer running..."
+                    }
                 Crossfade(
                     targetState = statusText,
                     animationSpec = tween(200),
@@ -268,10 +272,13 @@ fun ActiveTimerScreen(
                                 roundCount = state.roundCount,
                                 onClick = toggleLoop,
                             )
-                            VoiceBadge(
-                                enabled = voiceEnabled,
-                                onClick = toggleVoice,
-                            )
+                            if (shouldShowVoiceBadge(isPro)) {
+                                VoiceBadge(
+                                    enabled = voiceEnabled,
+                                    isPro = isPro,
+                                    onClick = toggleVoice,
+                                )
+                            }
                         }
                     }
                 }
@@ -359,13 +366,14 @@ private fun LoopBadge(
 @Composable
 private fun VoiceBadge(
     enabled: Boolean,
+    isPro: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ToggleBadge(
         icon = "🔊",
-        text = voiceBadgeText(enabled = enabled),
-        enabled = enabled,
+        text = voiceBadgeText(enabled = enabled, isPro = isPro),
+        enabled = isPro && enabled,
         onClick = onClick,
         modifier = modifier,
         scaleLabel = "voicePressScale",
@@ -448,7 +456,17 @@ internal fun loopBadgeText(
     return "Loop On · Round $clampedRound/$repeatRounds"
 }
 
-internal fun voiceBadgeText(enabled: Boolean): String = if (enabled) "Voice Callouts On" else "Voice Callouts Off"
+internal fun voiceBadgeText(
+    enabled: Boolean,
+    isPro: Boolean,
+): String =
+    when {
+        !isPro -> "Voice Callouts Locked"
+        enabled -> "Voice Callouts On"
+        else -> "Voice Callouts Off"
+    }
+
+internal fun shouldShowVoiceBadge(isPro: Boolean): Boolean = isPro
 
 private fun formatDurationReadable(duration: kotlin.time.Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
@@ -473,7 +491,7 @@ private fun formatRangeText(
         } else if (seconds >= 60) {
             val mins = seconds / 60
             val secs = seconds % 60
-            if (secs > 0) "${mins}:${"%02d".format(secs)}" else "${mins}m"
+            if (secs > 0) "$mins:${"%02d".format(secs)}" else "${mins}m"
         } else {
             "${seconds}s"
         }
@@ -492,6 +510,7 @@ private fun ActiveTimerScreenRunningPreview() {
                     remainingDuration = 2.minutes + 30.seconds,
                     status = TimerStatus.RUNNING,
                 ),
+            isPro = false,
             onStop = {},
             onDismissAlarm = {},
             onSilence = {},
@@ -516,6 +535,7 @@ private fun ActiveTimerScreenPausedPreview() {
                     remainingDuration = 2.minutes,
                     status = TimerStatus.PAUSED,
                 ),
+            isPro = false,
             onStop = {},
             onDismissAlarm = {},
             onSilence = {},
@@ -540,6 +560,7 @@ private fun ActiveTimerScreenCompletePreview() {
                     remainingDuration = 0.seconds,
                     status = TimerStatus.ALARM,
                 ),
+            isPro = false,
             onStop = {},
             onDismissAlarm = {},
             onSilence = {},
