@@ -72,6 +72,7 @@ fun RandomTimerNavHost(
     var showPaywall by remember { mutableStateOf(false) }
     var proPrice by remember { mutableStateOf("$29.99") }
     var monthlyPrice by remember { mutableStateOf("$3.99") }
+    var lifetimePrice by remember { mutableStateOf("$4.99") }
     var paywallEntryPoint by remember { mutableStateOf("unknown") }
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
@@ -142,6 +143,7 @@ fun RandomTimerNavHost(
                     scope.launch {
                         proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
                         monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
+                        lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
                         paywallEntryPoint = paywallEntryPointForFeature(feature)
                         paywallTrialEligibilityByProductId =
                             mapOf(
@@ -243,6 +245,7 @@ fun RandomTimerNavHost(
             entryPoint = paywallEntryPoint,
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
+            lifetimePrice = lifetimePrice,
             defaultToAnnualPlan = paywallDefaultToAnnual,
             valueFramingVariant = paywallValueFramingVariant,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
