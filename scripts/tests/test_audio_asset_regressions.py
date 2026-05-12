@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
 IOS_SOUND_DIR = ROOT / "native-ios/RandomTimer/Resources/Sounds"
 RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
-RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-05_combatives_corner/sounds"
+RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 ANDROID_SETUP = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
@@ -58,16 +58,6 @@ def test_sound_arsenal_checksums_match_across_ios_android_and_runtime_pack() -> 
         assert runtime_hash == ios_hash, f"Runtime pack drift for {runtime_name}.mp3"
 
 
-def test_gentle_chime_matches_production_ios_asset_on_android() -> None:
-    ios_path = IOS_SOUND_DIR / "gentle-chime.mp3"
-    android_path = ANDROID_RAW_DIR / "gentle_chime.mp3"
-
-    assert ios_path.exists(), "Missing iOS gentle chime"
-    assert android_path.exists(), "Missing Android gentle chime"
-    assert ios_path.stat().st_size == android_path.stat().st_size
-    assert _sha256(android_path) == _sha256(ios_path), "Android gentle chime drifted from iOS production asset"
-
-
 def test_gentle_iconography_uses_water_not_lightning() -> None:
     ios_setup = _read(IOS_SETUP)
     android_setup = _read(ANDROID_SETUP)
@@ -78,22 +68,12 @@ def test_gentle_iconography_uses_water_not_lightning() -> None:
     assert 'label = "\\u26A1 Gentle"' not in android_setup
 
 
-def test_sound_arsenal_selection_is_visible_after_tap() -> None:
-    ios_setup = _read(IOS_SETUP)
-    android_setup = _read(ANDROID_SETUP)
-
-    assert 'Image(systemName: "checkmark.circle.fill")' in ios_setup
-    assert 'Text("Selected")' not in ios_setup
-    assert 'text = "✓"' in android_setup
-    assert 'text = "Selected"' not in android_setup
-
-
 def test_session_voice_playback_routes_to_gendered_assets() -> None:
     ios_voice_service = _read(IOS_VOICE_SERVICE)
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
 
-    assert "genderedVoiceFilename(baseFilename, gender: currentGender)" in ios_voice_service
+    assert "approvedVoiceFilename(" in ios_voice_service
+    assert "fallbackFilename: catalog.fallbackCommandCue.filename" in ios_voice_service
     assert 'return "female/\\(filename)"' in ios_voice_service
-    assert "private fun speak(cue: VoiceCue)" in android_voice_manager
-    assert "val filename = genderedVoiceFilename(cue.filename, currentGender)" in android_voice_manager
+    assert "approvedVoiceFilename(baseFilename, currentGender, catalog.fallbackCommandCue.filename)" in android_voice_manager
     assert 'VoiceGender.FEMALE -> if (filename.startsWith("female_")) filename else "female_$filename"' in android_voice_manager

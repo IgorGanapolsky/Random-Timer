@@ -249,6 +249,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     func unlockProForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
+        AnalyticsService.shared.markAsInternalUser()
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
@@ -257,6 +258,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
+        AnalyticsService.shared.markAsInternalUser()
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }

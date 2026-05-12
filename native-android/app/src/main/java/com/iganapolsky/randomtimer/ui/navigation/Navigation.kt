@@ -225,6 +225,12 @@ fun RandomTimerNavHost(
         }
     }
 
+    LaunchedEffect(showPaywall, isPro) {
+        if (showPaywall && isPro) {
+            showPaywall = false
+        }
+    }
+
     if (showPaywall) {
         PaywallSheet(
             entryPoint = paywallEntryPoint,
@@ -257,11 +263,7 @@ fun RandomTimerNavHost(
                                 android.widget.Toast.LENGTH_LONG,
                             ).show()
                     }
-                    // Only dismiss if billing dialog launched (user will see Google Play sheet)
-                    // The actual purchase result comes via onPurchasesUpdated callback
-                    if (launched) {
-                        showPaywall = false
-                    }
+                    // Keep the sheet open until entitlement changes so cancellation/errors can retry.
                 }
             },
             onDebugUnlock = {

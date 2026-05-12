@@ -48,7 +48,14 @@ class AIVoiceCalloutManagerSelectionTest {
         val required =
             listOf(
                 "female_cmd_move_with_a_purpose.mp3",
+                "female_cmd_stay_locked_in.mp3",
                 "female_cmd_no_hesitation_move.mp3",
+                "female_cmd_sound_off_and_drive.mp3",
+                "female_cmd_snap_back_and_drive.mp3",
+                "female_cmd_stay_disciplined.mp3",
+                "female_cmd_keep_your_bearing.mp3",
+                "female_cmd_reset_and_attack.mp3",
+                "female_cmd_sharp_movement_sharp_focus.mp3",
                 "female_cmd_stay_in_the_fight.mp3",
                 "female_cmd_push_pace.mp3",
                 "female_cmd_keep_tempo_high.mp3",
@@ -80,6 +87,13 @@ class AIVoiceCalloutManagerSelectionTest {
                 "cmd_reset_and_attack.mp3",
                 "cmd_sharp_movement_sharp_focus.mp3",
                 "cmd_stay_in_the_fight.mp3",
+                "cmd_push_pace.mp3",
+                "cmd_keep_tempo_high.mp3",
+                "cmd_finish_rep_keep_pushing.mp3",
+                "cmd_drive_forward.mp3",
+                "cmd_own_this_rep.mp3",
+                "cmd_pick_it_up.mp3",
+                "cmd_strong_feet_strong_pace.mp3",
                 "preview_elapsed.mp3",
             )
 
@@ -94,6 +108,16 @@ class AIVoiceCalloutManagerSelectionTest {
         assertThat(genderedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
         assertThat(genderedVoiceFilename("female_cmd_move_with_a_purpose", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
         assertThat(genderedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+    }
+
+    @Test
+    fun approvedVoiceFilenameRejectsUnapprovedMaleCatalogEntries() {
+        assertThat(approvedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        // Female now also has an allowlist safety net
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
+        assertThat(approvedMaleVoiceFilenames).doesNotContain("cmd_chain_wrestling")
+        assertThat(approvedFemaleVoiceFilenames).doesNotContain("female_cmd_chain_wrestling")
     }
 
     @Test

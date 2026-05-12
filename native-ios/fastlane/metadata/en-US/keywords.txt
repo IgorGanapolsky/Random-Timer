@@ -1,1 +1,1 @@
-random,timer,reaction,boxing,mma,bjj,sparring,hiit,crossfit,wod,military,interval,dryfire
+mma,crossfit,boxing,bjj,hiit,sparring,combat timer,random timer,reaction drills

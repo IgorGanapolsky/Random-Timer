@@ -55,6 +55,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     private let hasFirstConfiguredKey = "has_first_configured"
     private let hasFirstCompletedKey = "has_first_completed"
     private let hasTrackedApplicationInstalledKey = "has_tracked_application_installed"
+    private let isInternalUserDefaultsKey = "is_internal_user"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
 
@@ -121,6 +122,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         return true
         #else
         if ProcessInfo.processInfo.arguments.contains("-ui-test-state") { return true }
+        if UserDefaults.standard.bool(forKey: isInternalUserDefaultsKey) { return true }
         return distributionChannelValue != DistributionChannelResolver.appStore
         #endif
     }
@@ -227,6 +229,14 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #if canImport(PostHog)
         PostHogSDK.shared.identify(userId, userProperties: mergedProperties(properties))
 #endif
+    }
+
+    func markAsInternalUser() {
+        UserDefaults.standard.set(true, forKey: isInternalUserDefaultsKey)
+        identify(
+            userId: getOrCreateDistinctId(),
+            properties: ["is_internal": true, "developer_backdoor_used": true]
+        )
     }
 
     func reset() {
