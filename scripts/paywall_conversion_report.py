@@ -142,6 +142,83 @@ def _failure_reasons(api_key: str, project_id: str, days: int, errors: List[str]
     return [{"reason": str(row[0] or "unknown"), "count": _safe_int(row[1])} for row in rows]
 
 
+def _failure_breakdown(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
+    win = f"{days} day"
+    rows = _table(
+        f"""
+        SELECT
+          coalesce(toString(properties.platform), 'unknown') AS platform,
+          coalesce(toString(properties.product_id), 'unknown') AS product_id,
+          coalesce(toString(coalesce(properties.reason, properties.result, 'unknown')), 'unknown') AS reason,
+          count() AS failures,
+          count(DISTINCT person_id) AS users
+        FROM events
+        WHERE event IN ('paywall_purchase_fail_reason', 'purchase_failed')
+          AND timestamp > now() - interval {win}
+          AND {LIVE_EVENTS_PREDICATE}
+        GROUP BY platform, product_id, reason
+        ORDER BY failures DESC
+        LIMIT 25
+        /* failure_breakdown */
+        """,
+        api_key,
+        project_id,
+        errors,
+    )
+    return [
+        {
+            "platform": str(row[0] or "unknown"),
+            "product_id": str(row[1] or "unknown"),
+            "reason": str(row[2] or "unknown"),
+            "failures": _safe_int(row[3]),
+            "users": _safe_int(row[4]),
+        }
+        for row in rows
+    ]
+
+
+def _product_funnel(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
+    win = f"{days} day"
+    rows = _table(
+        f"""
+        SELECT
+          coalesce(toString(properties.platform), 'unknown') AS platform,
+          coalesce(toString(properties.product_id), 'unknown') AS product_id,
+          countIf(event = 'paywall_offer_select') AS offer_selects,
+          countIf(event = 'paywall_purchase_attempt') AS attempts,
+          countIf(event = 'paywall_purchase_success') AS successes
+        FROM events
+        WHERE event IN ('paywall_offer_select', 'paywall_purchase_attempt', 'paywall_purchase_success')
+          AND timestamp > now() - interval {win}
+          AND {LIVE_EVENTS_PREDICATE}
+        GROUP BY platform, product_id
+        ORDER BY attempts DESC, offer_selects DESC
+        LIMIT 25
+        /* product_funnel */
+        """,
+        api_key,
+        project_id,
+        errors,
+    )
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        offer_selects = _safe_int(row[2])
+        attempts = _safe_int(row[3])
+        successes = _safe_int(row[4])
+        out.append(
+            {
+                "platform": str(row[0] or "unknown"),
+                "product_id": str(row[1] or "unknown"),
+                "offer_selects": offer_selects,
+                "attempts": attempts,
+                "successes": successes,
+                "select_to_attempt_rate": _rate(attempts, offer_selects),
+                "attempt_to_success_rate": _rate(successes, attempts),
+            }
+        )
+    return out
+
+
 def _entry_point_funnel(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
     win = f"{days} day"
     rows = _table(
@@ -225,6 +302,7 @@ def _data_quality_warnings(
     counts: dict[str, int],
     entry_points: list[dict[str, Any]],
     settings_hotspots: list[dict[str, Any]],
+    failure_reasons: list[dict[str, Any]],
 ) -> list[str]:
     warnings: list[str] = []
     offer_selects = _safe_int(counts.get("offer_selects"))
@@ -245,6 +323,16 @@ def _data_quality_warnings(
         top = settings_hotspots[0]
         if str(top.get("setting_name")) == "unknown" and _safe_int(top.get("changes")) >= 100:
             warnings.append("settings_changed is still dominated by unknown setting_name rows in live data")
+    failure_total = sum(_safe_int(row.get("count")) for row in failure_reasons)
+    user_cancelled = sum(
+        _safe_int(row.get("count"))
+        for row in failure_reasons
+        if str(row.get("reason")) == "user_cancelled"
+    )
+    if failure_total > 0 and _rate(user_cancelled, failure_total) >= 0.75:
+        warnings.append(
+            "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage"
+        )
     return warnings
 
 
@@ -273,6 +361,39 @@ def build_markdown(payload: Dict[str, Any]) -> str:
         lines.append(f"| {row.get('reason', 'unknown')} | {row.get('count', 0)} |")
     if not payload.get("top_failure_reasons"):
         lines.append("| (none) | 0 |")
+
+    lines.extend(
+        [
+            "",
+            "## Failure Breakdown",
+            "| Platform | Product ID | Reason | Failures | Users |",
+            "|----------|------------|--------|----------|-------|",
+        ]
+    )
+    for row in payload.get("failure_breakdown", []):
+        lines.append(
+            f"| {row.get('platform', 'unknown')} | {row.get('product_id', 'unknown')} | "
+            f"{row.get('reason', 'unknown')} | {row.get('failures', 0)} | {row.get('users', 0)} |"
+        )
+    if not payload.get("failure_breakdown"):
+        lines.append("| (none) | (none) | (none) | 0 | 0 |")
+
+    lines.extend(
+        [
+            "",
+            "## Product Funnel",
+            "| Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |",
+            "|----------|------------|---------|----------|-----------|-----------------|------------------|",
+        ]
+    )
+    for row in payload.get("product_funnel", []):
+        lines.append(
+            f"| {row.get('platform', 'unknown')} | {row.get('product_id', 'unknown')} | "
+            f"{row.get('offer_selects', 0)} | {row.get('attempts', 0)} | {row.get('successes', 0)} | "
+            f"{row.get('select_to_attempt_rate', 0):.1%} | {row.get('attempt_to_success_rate', 0):.1%} |"
+        )
+    if not payload.get("product_funnel"):
+        lines.append("| (none) | (none) | 0 | 0 | 0 | 0.0% | 0.0% |")
 
     lines.extend(
         [
@@ -373,6 +494,8 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
             "attempt_to_success_rate": 0.0,
         },
         "top_failure_reasons": [],
+        "failure_breakdown": [],
+        "product_funnel": [],
         "entry_points": [],
         "leaky_entry_points": [],
         "settings_hotspots": [],
@@ -390,6 +513,8 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
 
     counts = _funnel_counts(api_key, project_id, days, errors)
     failures = _failure_reasons(api_key, project_id, days, errors)
+    failure_breakdown = _failure_breakdown(api_key, project_id, days, errors)
+    product_funnel = _product_funnel(api_key, project_id, days, errors)
     entry_points = _entry_point_funnel(api_key, project_id, days, errors)
     settings_hotspots = _settings_hotspots(api_key, project_id, days, errors)
 
@@ -400,6 +525,8 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         "attempt_to_success_rate": _rate(counts["purchase_successes"], counts["purchase_attempts"]),
     }
     payload["top_failure_reasons"] = failures
+    payload["failure_breakdown"] = failure_breakdown
+    payload["product_funnel"] = product_funnel
     payload["entry_points"] = entry_points
     payload["leaky_entry_points"] = _leaky_entry_points(entry_points)
     payload["settings_hotspots"] = settings_hotspots
@@ -407,6 +534,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         payload["funnel"],
         entry_points,
         settings_hotspots,
+        failures,
     )
     payload["query_errors"] = errors
     if errors:
