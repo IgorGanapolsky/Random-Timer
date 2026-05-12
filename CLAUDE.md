@@ -163,3 +163,4 @@ PRDs live in `.claude/prds/`, epics in `.claude/epics/`. Navigate with `ls`, `ca
 - Say **"Done merging PRs"** only after: open PRs audited (`gh pr list`, `gh pr checks`), merges evidenced with **merge commit SHA** + required checks green (or documented waiver), orphan branches triaged, and **CI verified** on the post-merge `develop` / `main` tip.
 - Prefer **`gh` CLI** and Actions secrets over raw PATs in chat or tracked files. **Rotate** any token that appears in a prompt or log.
 - **RAG / external memory**: read or write only when that gateway is verified in the active session; otherwise state “not verified” instead of claiming persistence.
+- Final confirmation must use **"Done merging PRs. CI passing. System hygiene complete. Ready for next session."** only after merge SHAs, branch count before/after, stale cleanup counts, CI links, dry-run evidence, and RAG/lesson logging status have all been read back.

@@ -42,6 +42,52 @@ struct TimerSetupScreen: View {
                     .padding(.top, 16)
                     .padding(.leading, 4)
 
+                // Event-weekend preset for combat-sports competitors.
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Competition Prep", systemImage: "figure.martial.arts")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.textPrimary)
+
+                        ForEach(TrainingPreset.all) { preset in
+                            Button {
+                                applyTrainingPreset(preset)
+                            } label: {
+                                HStack(alignment: .center, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(preset.title)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundColor(.textPrimary)
+
+                                        Text(preset.subtitle)
+                                            .font(.caption2)
+                                            .foregroundColor(.textMuted)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+
+                                    Spacer()
+
+                                    let minLabel = TimeInterval(preset.minSeconds).formattedDuration
+                                    let maxLabel = TimeInterval(preset.maxSeconds).formattedDuration
+                                    Text("\(minLabel)-\(maxLabel)")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundColor(.accentPrimary)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .background(Color.glassBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.glassBorder, lineWidth: 1)
+                                )
+                                .cornerRadius(8)
+                            }
+                            .accessibilityLabel("Apply \(preset.title) preset")
+                        }
+                    }
+                }
+
                 // 1. Timer Range Card
                 GlassCard {
                     VStack(alignment: .leading) {
@@ -586,6 +632,24 @@ struct TimerSetupScreen: View {
             paywallValueFramingVariant = AnalyticsService.shared.paywallValueFramingVariant()
             showPaywall = true
         }
+    }
+
+    private func applyTrainingPreset(_ preset: TrainingPreset) {
+        let presetConfig = preset.applying(to: config)
+        persistActiveRangeProfile(
+            minSeconds: presetConfig.minSeconds,
+            maxSeconds: presetConfig.maxSeconds,
+            useExtendedRange: presetConfig.useExtendedRange
+        )
+        timerManager.updateConfig(presetConfig.clamped(isPro: proManager.isPro))
+        AnalyticsService.shared.track(
+            AnalyticsEvents.trainingPresetApplied,
+            properties: [
+                AnalyticsProperties.presetId: preset.id,
+                "min_duration": preset.minSeconds,
+                "max_duration": preset.maxSeconds,
+            ]
+        )
     }
 
     private var currentRangeProfiles: RangeToggleProfiles {

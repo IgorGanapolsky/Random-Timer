@@ -28,6 +28,8 @@ Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUD
 
 **CTO session start (PR hygiene):** follow `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol* (`gh auth status`, `git fetch --prune`, open PR audit, orphan branch map, merge only on green required checks, post-merge CI on `develop`/`main`). Say **"Done merging PRs"** only with merge SHAs and verified CI — never after a PAT appears in chat (rotate the token first; do not record it in docs).
 
+**Completion phrase:** use **"Done merging PRs. CI passing. System hygiene complete. Ready for next session."** only after all open PRs are reviewed/merged or blocked with evidence, orphan branches/worktrees are addressed with before/after counts, stale files/logs are cleaned with counts, `develop` and `main` CI are verified by link, an operational dry run completes, and RAG/lesson logging status is read back. Never include secrets or PAT values in these docs or status reports.
+
 **Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 
 ## Agent-Model Matching Standard

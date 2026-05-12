@@ -436,6 +436,8 @@ object AnalyticsEvents {
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
+    const val TRAINING_PRESET_APPLIED = "training_preset_applied"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
@@ -470,6 +472,7 @@ object AnalyticsProperties {
     const val RUNTIME_TARGET = "runtime_target"
     const val GENDER = "gender"
     const val FEATURE = "feature"
+    const val PRESET_ID = "preset_id"
     const val ALARM_RESPONSE_TIME = "alarm_response_time"
     const val ABANDON_REASON = "abandon_reason"
     const val SCREEN = "screen"

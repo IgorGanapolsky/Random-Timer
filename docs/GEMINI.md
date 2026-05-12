@@ -94,3 +94,4 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 
 ### CTO session start protocol (PR hygiene)
 - Same numbered protocol as `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol*: auth without pasting PATs, prune + open PR list + checks, orphan branch triage, merge only when required checks are green, verify `develop`/`main` CI, RAG only if verified in-session.
+- Use **"Done merging PRs. CI passing. System hygiene complete. Ready for next session."** only after merge SHAs, branch count before/after, stale cleanup counts, CI links, dry-run evidence, and RAG/lesson logging status have all been verified and reported without secrets.

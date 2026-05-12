@@ -285,10 +285,12 @@ internal fun runtimeVoiceCueForElapsedSecond(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
-): VoiceCue? {
-    if (elapsedSeconds == lastElapsedMilestone) return null
-    return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
-}
+): VoiceCue? =
+    catalog.elapsedCues
+        .asSequence()
+        .filter { it.second > lastElapsedMilestone && it.second <= elapsedSeconds }
+        .maxByOrNull { it.second }
+        ?.let { VoiceCue(filename = it.filename, text = it.text) }
 
 /**
  * Returns a bundled "time elapsed" announcement only on full-minute marks (60, 120, …).
@@ -302,14 +304,16 @@ internal fun runtimeVoiceCueForElapsedMark(
     if (elapsedSeconds <= 0) {
         return null
     }
-    if (elapsedSeconds % 60 != 0) {
-        return null
-    }
     return runtimeVoiceCueForElapsedSecond(
         elapsedSeconds = elapsedSeconds,
         lastElapsedMilestone = lastElapsedMilestone,
         catalog = catalog,
-    )
+    )?.takeIf { cue ->
+        catalog.elapsedCues
+            .firstOrNull { it.filename == cue.filename }
+            ?.second
+            ?.rem(60) == 0
+    }
 }
 
 internal fun nextCommandCue(
@@ -330,6 +334,36 @@ internal fun nextCommandCue(
         return candidate
     }
     return cues[(boundedIndex + 1) % cues.size]
+}
+
+internal fun normalizedVoiceCueText(text: String): String =
+    text
+        .trim()
+        .lowercase(Locale.US)
+        .replace(Regex("\\s+"), " ")
+
+internal fun commandCuePool(
+    baseline: List<VoiceCue>,
+    usedFilenames: Set<String>,
+    usedTexts: Set<String>,
+    lastFilename: String?,
+    lastText: String?,
+): List<VoiceCue> {
+    val fresh =
+        baseline.filter {
+            it.filename !in usedFilenames &&
+                normalizedVoiceCueText(it.text) !in usedTexts
+        }
+    if (fresh.isNotEmpty()) {
+        return fresh
+    }
+
+    val lastNormalizedText = lastText?.let(::normalizedVoiceCueText)
+    return baseline
+        .filter {
+            it.filename != lastFilename &&
+                normalizedVoiceCueText(it.text) != lastNormalizedText
+        }.ifEmpty { baseline }
 }
 
 internal fun nextPreviewCueFilename(
@@ -383,7 +417,9 @@ class AIVoiceCalloutManager
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
+        private var lastCommandCueText: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val usedCommandCueTexts = mutableSetOf<String>()
         private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
         private val usedPreviewCommandFilenamesByGender =
             mutableMapOf(
@@ -438,7 +474,9 @@ class AIVoiceCalloutManager
             stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
+            lastCommandCueText = null
             usedCommandCueFilenames.clear()
+            usedCommandCueTexts.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
@@ -617,6 +655,7 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
+                lastCommandCueText = cue.text
                 nextCommandCueAt = elapsedSeconds + 30
                 lastCueFiredAtElapsed = elapsedSeconds
             }
@@ -640,20 +679,34 @@ class AIVoiceCalloutManager
             // different cues were picked.
             val playable = catalog.commandCues.filter { cueHasAudio(it.filename) }
             val baseline = if (playable.isNotEmpty()) playable else catalog.commandCues
-            val available = baseline.filter { it.filename !in usedCommandCueFilenames }
-            val pool =
-                available.ifEmpty {
-                    usedCommandCueFilenames.clear()
-                    baseline
-                        .filter { it.filename != lastCommandCueFilename }
-                        .ifEmpty { baseline }
-                }
+            var pool =
+                commandCuePool(
+                    baseline = baseline,
+                    usedFilenames = usedCommandCueFilenames,
+                    usedTexts = usedCommandCueTexts,
+                    lastFilename = lastCommandCueFilename,
+                    lastText = lastCommandCueText,
+                )
+            if (pool.size == baseline.size && usedCommandCueFilenames.isNotEmpty()) {
+                usedCommandCueFilenames.clear()
+                usedCommandCueTexts.clear()
+                pool =
+                    commandCuePool(
+                        baseline = baseline,
+                        usedFilenames = usedCommandCueFilenames,
+                        usedTexts = usedCommandCueTexts,
+                        lastFilename = lastCommandCueFilename,
+                        lastText = lastCommandCueText,
+                    )
+            }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
                 }
             lastCommandCueFilename = cue.filename
+            lastCommandCueText = cue.text
             usedCommandCueFilenames.add(cue.filename)
+            usedCommandCueTexts.add(normalizedVoiceCueText(cue.text))
             return cue
         }
 

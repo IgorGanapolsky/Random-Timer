@@ -10,6 +10,7 @@ Built for combat sports, HIIT, CrossFit, and reaction training.
 
 FEATURES
 - Random trigger timing inside your selected range
+- Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
 - Hidden countdown mode to stop timer watching
 - Male or female AI coach voice callouts (Pro)
 - Loop mode with optional round limits (Pro)
