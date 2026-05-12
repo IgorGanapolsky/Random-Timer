@@ -47,6 +47,15 @@ class _FakeClient:
 
 
 class AscVerifyIapProductsTests(unittest.TestCase):
+    def test_default_expected_products_match_live_ios_paywall_products(self):
+        self.assertEqual(
+            [
+                "com.iganapolsky.randomtimer.pro",
+                "com.iganapolsky.randomtimer.elite",
+            ],
+            verify.DEFAULT_EXPECTED_PRODUCT_IDS,
+        )
+
     def test_build_report_marks_expected_products_ready(self):
         report = verify.build_report(
             _FakeClient(),

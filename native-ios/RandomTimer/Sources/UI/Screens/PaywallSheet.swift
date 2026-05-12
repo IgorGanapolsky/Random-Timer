@@ -84,6 +84,26 @@ func initialPaywallPlanSelection(
     return .monthly
 }
 
+func shouldShowPaywallPlan(
+    _ plan: PaywallPlanSelection,
+    availableProductIDs: Set<String>
+) -> Bool {
+    if availableProductIDs.isEmpty {
+        return plan != .monthly
+    }
+
+    let requiredProductID: String
+    switch plan {
+    case .monthly:
+        requiredProductID = ProManager.monthlyProductID
+    case .annual:
+        requiredProductID = ProManager.annualProductID
+    case .lifetime:
+        requiredProductID = ProManager.paywallProductID
+    }
+    return availableProductIDs.contains(requiredProductID)
+}
+
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
     static let headline = "Unlock Full Fight-Ready Training"
@@ -172,6 +192,10 @@ struct PaywallSheet: View {
         proManager.products.map(\.id).sorted().joined(separator: "|")
     }
 
+    private var availableProductIDs: Set<String> {
+        Set(proManager.products.map(\.id))
+    }
+
     private var ctaLabel: String {
         if introOfferEligibleProductIDs.contains(selectedProductID) {
             return "Start 7-Day Free Trial"
@@ -202,6 +226,14 @@ struct PaywallSheet: View {
                 .foregroundColor(.textSecondary)
 
                 Spacer()
+
+                Button("Restore purchase") {
+                    Task {
+                        await restorePurchaseFromPaywall()
+                    }
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.textSecondary)
 
                 Button {
                     trackDismiss(method: "close_button")
@@ -276,46 +308,64 @@ struct PaywallSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
 
-                PlanOptionRow(
-                    title: "Monthly",
-                    priceLabel: "\(monthlyPrice)/month",
-                    badge: nil,
-                    isSelected: selectedPlan == .monthly
-                ) {
-                    selectedPlan = .monthly
-                    trackOfferSelected(
-                        plan: "monthly",
-                        productID: ProManager.monthlyProductID,
-                        selectionSource: "plan_card"
-                    )
+                if shouldShowPaywallPlan(.lifetime, availableProductIDs: availableProductIDs) {
+                    PlanOptionRow(
+                        title: "Lifetime",
+                        priceLabel: lifetimePrice,
+                        badge: "One-time",
+                        isSelected: selectedPlan == .lifetime
+                    ) {
+                        selectedPlan = .lifetime
+                        trackOfferSelected(
+                            plan: "lifetime",
+                            productID: ProManager.paywallProductID,
+                            selectionSource: "plan_card"
+                        )
+                    }
                 }
 
-                PlanOptionRow(
-                    title: "Annual",
-                    priceLabel: "\(annualPrice)/year",
-                    badge: "Best Value",
-                    isSelected: selectedPlan == .annual
-                ) {
-                    selectedPlan = .annual
-                    trackOfferSelected(
-                        plan: "annual",
-                        productID: ProManager.annualProductID,
-                        selectionSource: "plan_card"
-                    )
+                if shouldShowPaywallPlan(.annual, availableProductIDs: availableProductIDs) {
+                    PlanOptionRow(
+                        title: "Annual",
+                        priceLabel: "\(annualPrice)/year",
+                        badge: "Best Value",
+                        isSelected: selectedPlan == .annual
+                    ) {
+                        selectedPlan = .annual
+                        trackOfferSelected(
+                            plan: "annual",
+                            productID: ProManager.annualProductID,
+                            selectionSource: "plan_card"
+                        )
+                    }
                 }
 
-                PlanOptionRow(
-                    title: "Lifetime",
-                    priceLabel: lifetimePrice,
-                    badge: "One-time",
-                    isSelected: selectedPlan == .lifetime
-                ) {
+                if shouldShowPaywallPlan(.monthly, availableProductIDs: availableProductIDs) {
+                    PlanOptionRow(
+                        title: "Monthly",
+                        priceLabel: "\(monthlyPrice)/month",
+                        badge: nil,
+                        isSelected: selectedPlan == .monthly
+                    ) {
+                        selectedPlan = .monthly
+                        trackOfferSelected(
+                            plan: "monthly",
+                            productID: ProManager.monthlyProductID,
+                            selectionSource: "plan_card"
+                        )
+                    }
+                }
+            }
+            .onChange(of: productsEligibilityKey) { _, _ in
+                if shouldShowPaywallPlan(selectedPlan, availableProductIDs: availableProductIDs) {
+                    return
+                }
+                if shouldShowPaywallPlan(.lifetime, availableProductIDs: availableProductIDs) {
                     selectedPlan = .lifetime
-                    trackOfferSelected(
-                        plan: "lifetime",
-                        productID: ProManager.paywallProductID,
-                        selectionSource: "plan_card"
-                    )
+                } else if shouldShowPaywallPlan(.annual, availableProductIDs: availableProductIDs) {
+                    selectedPlan = .annual
+                } else if shouldShowPaywallPlan(.monthly, availableProductIDs: availableProductIDs) {
+                    selectedPlan = .monthly
                 }
             }
         }
@@ -342,16 +392,7 @@ struct PaywallSheet: View {
 
             Button("Restore purchase") {
                 Task {
-                    let result = await proManager.restorePurchases()
-                    AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
-                        AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                        AnalyticsProperties.result: result.rawValue,
-                    ])
-
-                    if result == .restored || result == .alreadyUnlocked {
-                        hasTrackedDismiss = true
-                        dismiss()
-                    }
+                    await restorePurchaseFromPaywall()
                 }
             }
             .font(.footnote)
@@ -436,6 +477,20 @@ struct PaywallSheet: View {
             Button("OK") { purchaseError = nil }
         } message: {
             Text(purchaseError ?? "")
+        }
+    }
+
+    @MainActor
+    private func restorePurchaseFromPaywall() async {
+        let result = await proManager.restorePurchases()
+        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
+            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            AnalyticsProperties.result: result.rawValue,
+        ])
+
+        if result == .restored || result == .alreadyUnlocked {
+            hasTrackedDismiss = true
+            dismiss()
         }
     }
 
