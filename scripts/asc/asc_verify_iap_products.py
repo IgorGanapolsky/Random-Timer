@@ -23,8 +23,7 @@ else:
 DEFAULT_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 DEFAULT_EXPECTED_PRODUCT_IDS = [
     "com.iganapolsky.randomtimer.pro",
-    "com.iganapolsky.randomtimer.pro.monthly",
-    "com.iganapolsky.randomtimer.pro.annual",
+    "com.iganapolsky.randomtimer.elite",
 ]
 DEFAULT_READY_STATES = {"APPROVED"}
 

@@ -11,8 +11,8 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     /// Monthly subscription — $3.99/month. Must be created in App Store Connect as an auto-renewable
     /// subscription before the paywall can complete a live purchase.
     static nonisolated let monthlyProductID = "com.iganapolsky.randomtimer.pro.monthly"
-    /// Annual subscription — $29.99/year. Maps to the existing elite SKU billing period.
-    static nonisolated let annualProductID = "com.iganapolsky.randomtimer.pro.annual"
+    /// Annual subscription — $29.99/year. App Store Connect currently exposes this as the elite SKU.
+    static nonisolated let annualProductID = eliteProductID
     /// In-app paywall default product — one-time non-consumable Pro Upgrade.
     static nonisolated let paywallProductID = baseProductID
     static nonisolated var productIDs: Set<String> {

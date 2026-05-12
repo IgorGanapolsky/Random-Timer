@@ -626,11 +626,11 @@ struct TimerSetupScreen: View {
             ]
         )
         paywallEntryPoint = entryPoint
+        showPaywall = true
         Task { @MainActor in
             await AnalyticsService.shared.reloadPaywallExperimentFlagsIfNeeded()
             paywallDefaultToAnnual = AnalyticsService.shared.paywallDefaultAnnualExperimentEnabled()
             paywallValueFramingVariant = AnalyticsService.shared.paywallValueFramingVariant()
-            showPaywall = true
         }
     }
 

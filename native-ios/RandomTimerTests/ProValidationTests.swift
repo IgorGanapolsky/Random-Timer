@@ -61,6 +61,22 @@ final class TimerConfigProClampingTests: XCTestCase {
     func testPaywallUsesApprovedAppStoreConnectProductId() {
         XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
         XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")
+        XCTAssertEqual(ProManager.annualProductID, ProManager.eliteProductID)
+        XCTAssertEqual(ProManager.annualProductID, "com.iganapolsky.randomtimer.elite")
+    }
+
+    func testPaywallDoesNotShowMissingMonthlyProductWhenStoreKitDoesNotReturnIt() {
+        XCTAssertTrue(shouldShowPaywallPlan(.lifetime, availableProductIDs: []))
+        XCTAssertTrue(shouldShowPaywallPlan(.annual, availableProductIDs: []))
+        XCTAssertFalse(shouldShowPaywallPlan(.monthly, availableProductIDs: []))
+
+        let approvedProductIDs: Set<String> = [
+            ProManager.baseProductID,
+            ProManager.eliteProductID,
+        ]
+        XCTAssertTrue(shouldShowPaywallPlan(.lifetime, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(shouldShowPaywallPlan(.annual, availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(shouldShowPaywallPlan(.monthly, availableProductIDs: approvedProductIDs))
     }
 
     func testSetupUpgradeDefaultsToLifetimePlan() {
