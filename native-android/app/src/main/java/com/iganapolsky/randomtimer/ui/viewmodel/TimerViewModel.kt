@@ -295,6 +295,21 @@ class TimerViewModel
             )
         }
 
+        fun trackTrainingPresetApplied(
+            presetId: String,
+            minSeconds: Int,
+            maxSeconds: Int,
+        ) {
+            analyticsService.track(
+                AnalyticsEvents.TRAINING_PRESET_APPLIED,
+                mapOf(
+                    AnalyticsProperties.PRESET_ID to presetId,
+                    "min_duration" to minSeconds,
+                    "max_duration" to maxSeconds,
+                ),
+            )
+        }
+
         fun trackFeatureGateHit(feature: String) {
             analyticsService.track(
                 AnalyticsEvents.FEATURE_GATE_HIT,

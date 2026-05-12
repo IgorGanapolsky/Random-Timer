@@ -85,6 +85,7 @@ import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.TrainingPreset
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
@@ -149,6 +150,7 @@ fun TimerSetupScreen(
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
+    onTrainingPresetApplied: (TrainingPreset) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -308,6 +310,70 @@ fun TimerSetupScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TimerColors.AccentPrimary,
                                 )
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Competition Prep",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TimerColors.TextPrimary,
+                            )
+
+                            TrainingPreset.ALL.forEach { preset ->
+                                Surface(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        updateConfig(
+                                            minSeconds = preset.minSeconds,
+                                            maxSeconds = preset.maxSeconds,
+                                            alarmDuration = preset.alarmDuration,
+                                            repeatEnabled = preset.repeatEnabled,
+                                            soundType = preset.soundType,
+                                            vibrationEnabled = preset.vibrationEnabled,
+                                            useExtendedRange = false,
+                                        )
+                                        onTrainingPresetApplied(preset)
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = TimerColors.GlassBackground,
+                                    border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            Text(
+                                                text = preset.title,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = TimerColors.TextPrimary,
+                                            )
+                                            Text(
+                                                text = preset.subtitle,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TimerColors.TextMuted,
+                                            )
+                                        }
+                                        Text(
+                                            text = "${formatTime(preset.minSeconds)}-${formatTime(preset.maxSeconds)}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

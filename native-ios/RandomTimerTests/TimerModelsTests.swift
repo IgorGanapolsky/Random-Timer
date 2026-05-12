@@ -65,6 +65,19 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertTrue(config.vibrationEnabled)
     }
 
+    func testCompetitionWarmupPresetAppliesEventDaySettings() {
+        let base = TimerConfig.default
+        let config = TrainingPreset.competitionWarmup.applying(to: base)
+
+        XCTAssertEqual(config.minSeconds, 20)
+        XCTAssertEqual(config.maxSeconds, 90)
+        XCTAssertEqual(config.alarmDuration, 5)
+        XCTAssertTrue(config.repeatEnabled)
+        XCTAssertTrue(config.vibrationEnabled)
+        XCTAssertEqual(config.soundType, .intense)
+        XCTAssertFalse(config.useExtendedRange)
+    }
+
     func testConfigDecodingFromLooseJSON() throws {
         // Test that our custom decoder handles various formats (strings, numbers, etc)
         let payload = Data("""

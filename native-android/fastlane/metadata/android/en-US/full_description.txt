@@ -20,6 +20,7 @@ WHY IT WORKS:
 
 KEY FEATURES:
 - True random trigger within your selected min/max range
+- Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
 - Hidden countdown mode — no timer watching allowed
 - Loop mode for continuous random chaos rounds
 - High-intensity alarm + haptic vibration + volume precision
