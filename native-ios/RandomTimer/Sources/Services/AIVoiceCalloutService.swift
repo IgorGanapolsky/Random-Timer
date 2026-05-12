@@ -54,15 +54,42 @@ internal let voiceCatalogResourceName = "voice_callouts"
 
 private enum VoicePreviewSampleCatalog {
     static let maleCommandFilenames = [
-        "cmd_move_with_a_purpose", "cmd_stay_locked_in", "cmd_no_hesitation_move", "cmd_sound_off_and_drive",
-        "cmd_snap_back_and_drive", "cmd_stay_disciplined", "cmd_keep_your_bearing", "cmd_reset_and_attack",
-        "cmd_sharp_movement_sharp_focus", "cmd_stay_in_the_fight",
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_disciplined",
+        "cmd_keep_your_bearing",
+        "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight",
+        "cmd_push_pace",
+        "cmd_keep_tempo_high",
+        "cmd_finish_rep_keep_pushing",
+        "cmd_drive_forward",
+        "cmd_own_this_rep",
+        "cmd_pick_it_up",
+        "cmd_strong_feet_strong_pace",
     ]
     static let maleElapsedFilename = "preview_elapsed"
     static let femaleCommandFilenames = [
-        "female/cmd_move_with_a_purpose", "female/cmd_no_hesitation_move", "female/cmd_stay_in_the_fight",
-        "female/cmd_push_pace", "female/cmd_keep_tempo_high", "female/cmd_finish_rep_keep_pushing",
-        "female/cmd_drive_forward", "female/cmd_own_this_rep", "female/cmd_pick_it_up",
+        "female/cmd_move_with_a_purpose",
+        "female/cmd_stay_locked_in",
+        "female/cmd_no_hesitation_move",
+        "female/cmd_sound_off_and_drive",
+        "female/cmd_snap_back_and_drive",
+        "female/cmd_stay_disciplined",
+        "female/cmd_keep_your_bearing",
+        "female/cmd_reset_and_attack",
+        "female/cmd_sharp_movement_sharp_focus",
+        "female/cmd_stay_in_the_fight",
+        "female/cmd_push_pace",
+        "female/cmd_keep_tempo_high",
+        "female/cmd_finish_rep_keep_pushing",
+        "female/cmd_drive_forward",
+        "female/cmd_own_this_rep",
+        "female/cmd_pick_it_up",
         "female/cmd_strong_feet_strong_pace",
     ]
 
@@ -89,6 +116,42 @@ internal let approvedMaleVoiceFilenames: Set<String> = [
     "cmd_reset_and_attack",
     "cmd_sharp_movement_sharp_focus",
     "cmd_stay_in_the_fight",
+    "cmd_push_pace",
+    "cmd_keep_tempo_high",
+    "cmd_finish_rep_keep_pushing",
+    "cmd_drive_forward",
+    "cmd_own_this_rep",
+    "cmd_pick_it_up",
+    "cmd_strong_feet_strong_pace",
+]
+
+internal let approvedFemaleVoiceFilenames: Set<String> = [
+    "female/preview_elapsed",
+    "female/elapsed_60s",
+    "female/elapsed_120s",
+    "female/elapsed_180s",
+    "female/elapsed_240s",
+    "female/elapsed_300s",
+    "female/elapsed_420s",
+    "female/elapsed_540s",
+    "female/elapsed_600s",
+    "female/cmd_move_with_a_purpose",
+    "female/cmd_stay_locked_in",
+    "female/cmd_no_hesitation_move",
+    "female/cmd_sound_off_and_drive",
+    "female/cmd_snap_back_and_drive",
+    "female/cmd_stay_disciplined",
+    "female/cmd_keep_your_bearing",
+    "female/cmd_reset_and_attack",
+    "female/cmd_sharp_movement_sharp_focus",
+    "female/cmd_stay_in_the_fight",
+    "female/cmd_push_pace",
+    "female/cmd_keep_tempo_high",
+    "female/cmd_finish_rep_keep_pushing",
+    "female/cmd_drive_forward",
+    "female/cmd_own_this_rep",
+    "female/cmd_pick_it_up",
+    "female/cmd_strong_feet_strong_pace",
 ]
 
 internal func approvedVoiceFilename(
@@ -98,7 +161,12 @@ internal func approvedVoiceFilename(
 ) -> String {
     switch gender {
     case .female:
-        return genderedVoiceFilename(filename, gender: gender)
+        let gendered = genderedVoiceFilename(filename, gender: gender)
+        if approvedFemaleVoiceFilenames.contains(gendered) {
+            return gendered
+        }
+        let fallback = genderedVoiceFilename(fallbackFilename, gender: gender)
+        return approvedFemaleVoiceFilenames.contains(fallback) ? fallback : "female/cmd_move_with_a_purpose"
     case .male:
         if approvedMaleVoiceFilenames.contains(filename) {
             return filename

@@ -92,7 +92,14 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testFemalePreviewSamplesResolveFromMainBundle() {
         let filenames = [
             "female/cmd_move_with_a_purpose",
+            "female/cmd_stay_locked_in",
             "female/cmd_no_hesitation_move",
+            "female/cmd_sound_off_and_drive",
+            "female/cmd_snap_back_and_drive",
+            "female/cmd_stay_disciplined",
+            "female/cmd_keep_your_bearing",
+            "female/cmd_reset_and_attack",
+            "female/cmd_sharp_movement_sharp_focus",
             "female/cmd_stay_in_the_fight",
             "female/cmd_push_pace",
             "female/cmd_keep_tempo_high",
@@ -120,6 +127,13 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             "cmd_reset_and_attack",
             "cmd_sharp_movement_sharp_focus",
             "cmd_stay_in_the_fight",
+            "cmd_push_pace",
+            "cmd_keep_tempo_high",
+            "cmd_finish_rep_keep_pushing",
+            "cmd_drive_forward",
+            "cmd_own_this_rep",
+            "cmd_pick_it_up",
+            "cmd_strong_feet_strong_pace",
             "preview_elapsed",
         ]
 
@@ -158,11 +172,13 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             approvedVoiceFilename("cmd_chain_wrestling", gender: .male),
             "cmd_move_with_a_purpose"
         )
+        // Female now also has an allowlist safety net
         XCTAssertEqual(
             approvedVoiceFilename("cmd_chain_wrestling", gender: .female),
-            "female/cmd_chain_wrestling"
+            "female/cmd_move_with_a_purpose"
         )
         XCTAssertFalse(approvedMaleVoiceFilenames.contains("cmd_chain_wrestling"))
+        XCTAssertFalse(approvedFemaleVoiceFilenames.contains("female/cmd_chain_wrestling"))
     }
 
     func testResetSessionAllowsElapsedMilestoneToReplay() {

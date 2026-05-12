@@ -78,6 +78,13 @@ private object VoicePreviewSampleCatalog {
             "cmd_reset_and_attack",
             "cmd_sharp_movement_sharp_focus",
             "cmd_stay_in_the_fight",
+            "cmd_push_pace",
+            "cmd_keep_tempo_high",
+            "cmd_finish_rep_keep_pushing",
+            "cmd_drive_forward",
+            "cmd_own_this_rep",
+            "cmd_pick_it_up",
+            "cmd_strong_feet_strong_pace",
         )
 
     const val maleElapsedFilename = "preview_elapsed"
@@ -85,7 +92,14 @@ private object VoicePreviewSampleCatalog {
     val femaleCommandFilenames =
         listOf(
             "female_cmd_move_with_a_purpose",
+            "female_cmd_stay_locked_in",
             "female_cmd_no_hesitation_move",
+            "female_cmd_sound_off_and_drive",
+            "female_cmd_snap_back_and_drive",
+            "female_cmd_stay_disciplined",
+            "female_cmd_keep_your_bearing",
+            "female_cmd_reset_and_attack",
+            "female_cmd_sharp_movement_sharp_focus",
             "female_cmd_stay_in_the_fight",
             "female_cmd_push_pace",
             "female_cmd_keep_tempo_high",
@@ -120,6 +134,43 @@ internal val approvedMaleVoiceFilenames =
         "cmd_reset_and_attack",
         "cmd_sharp_movement_sharp_focus",
         "cmd_stay_in_the_fight",
+        "cmd_push_pace",
+        "cmd_keep_tempo_high",
+        "cmd_finish_rep_keep_pushing",
+        "cmd_drive_forward",
+        "cmd_own_this_rep",
+        "cmd_pick_it_up",
+        "cmd_strong_feet_strong_pace",
+    )
+
+internal val approvedFemaleVoiceFilenames =
+    setOf(
+        "female_preview_elapsed",
+        "female_elapsed_60s",
+        "female_elapsed_120s",
+        "female_elapsed_180s",
+        "female_elapsed_240s",
+        "female_elapsed_300s",
+        "female_elapsed_420s",
+        "female_elapsed_540s",
+        "female_elapsed_600s",
+        "female_cmd_move_with_a_purpose",
+        "female_cmd_stay_locked_in",
+        "female_cmd_no_hesitation_move",
+        "female_cmd_sound_off_and_drive",
+        "female_cmd_snap_back_and_drive",
+        "female_cmd_stay_disciplined",
+        "female_cmd_keep_your_bearing",
+        "female_cmd_reset_and_attack",
+        "female_cmd_sharp_movement_sharp_focus",
+        "female_cmd_stay_in_the_fight",
+        "female_cmd_push_pace",
+        "female_cmd_keep_tempo_high",
+        "female_cmd_finish_rep_keep_pushing",
+        "female_cmd_drive_forward",
+        "female_cmd_own_this_rep",
+        "female_cmd_pick_it_up",
+        "female_cmd_strong_feet_strong_pace",
     )
 
 internal fun approvedVoiceFilename(
@@ -128,7 +179,15 @@ internal fun approvedVoiceFilename(
     fallbackFilename: String = "cmd_move_with_a_purpose",
 ): String =
     when (gender) {
-        VoiceGender.FEMALE -> genderedVoiceFilename(filename, gender)
+        VoiceGender.FEMALE -> {
+            val gendered = genderedVoiceFilename(filename, gender)
+            if (gendered in approvedFemaleVoiceFilenames) {
+                gendered
+            } else {
+                val fallback = genderedVoiceFilename(fallbackFilename, gender)
+                if (fallback in approvedFemaleVoiceFilenames) fallback else "female_cmd_move_with_a_purpose"
+            }
+        }
         VoiceGender.MALE -> {
             if (filename in approvedMaleVoiceFilenames) {
                 filename

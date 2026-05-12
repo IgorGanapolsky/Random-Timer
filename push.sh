@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 GHTOKEN=$(gh auth token)
 BASIC=$(printf 'x-access-token:%s' "$GHTOKEN" | base64)
