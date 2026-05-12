@@ -14,6 +14,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -119,40 +120,39 @@ def main():
 
     os.makedirs(IOS_AUDIO, exist_ok=True)
     os.makedirs(ANDROID_AUDIO, exist_ok=True)
-    tmp_dir = Path("/tmp/voice_pack_gen")
-    tmp_dir.mkdir(exist_ok=True)
-
     results = []
-    for i, entry in enumerate(manifest):
-        filename = entry["filename"]
-        text = entry["text"]
-        seed = entry.get("seed", hash(filename) % 2**32)
-        category = entry.get("category", "command")
+    with tempfile.TemporaryDirectory(prefix="voice_pack_gen_") as tmp_root:
+        tmp_dir = Path(tmp_root)
+        for i, entry in enumerate(manifest):
+            filename = entry["filename"]
+            text = entry["text"]
+            seed = entry.get("seed", hash(filename) % 2**32)
+            category = entry.get("category", "command")
 
-        print(f"[{i+1}/{len(manifest)}] {filename}: {text[:60]}...")
+            print(f"[{i+1}/{len(manifest)}] {filename}: {text[:60]}...")
 
-        # Generate
-        wav = generate_utterance(model, text, seed, args.ref_audio)
-        wav_path = str(tmp_dir / f"{filename}.wav")
-        torchaudio.save(wav_path, wav.cpu(), model.sr)
+            # Generate
+            wav = generate_utterance(model, text, seed, args.ref_audio)
+            wav_path = str(tmp_dir / f"{filename}.wav")
+            torchaudio.save(wav_path, wav.cpu(), model.sr)
 
-        # Normalize
-        normalize_lufs(wav_path)
+            # Normalize
+            normalize_lufs(wav_path)
 
-        # Convert to MP3
-        ios_mp3 = str(IOS_AUDIO / f"{filename}.mp3")
-        wav_to_mp3(wav_path, ios_mp3)
+            # Convert to MP3
+            ios_mp3 = str(IOS_AUDIO / f"{filename}.mp3")
+            wav_to_mp3(wav_path, ios_mp3)
 
-        # Copy to Android (stem normalization: hyphens to underscores)
-        android_filename = filename.replace("-", "_")
-        android_mp3 = str(ANDROID_AUDIO / f"{android_filename}.mp3")
-        wav_to_mp3(wav_path, android_mp3)
+            # Copy to Android (stem normalization: hyphens to underscores)
+            android_filename = filename.replace("-", "_")
+            android_mp3 = str(ANDROID_AUDIO / f"{android_filename}.mp3")
+            wav_to_mp3(wav_path, android_mp3)
 
-        # Validate
-        v = validate_mp3(ios_mp3)
-        status = "OK" if v["valid"] else "FAIL"
-        print(f"  → {status} | LUFS: {v['lufs']:.1f} | {v['duration']:.1f}s | {v['channels']}ch | {v['sample_rate']}Hz")
-        results.append({"filename": filename, **v})
+            # Validate
+            v = validate_mp3(ios_mp3)
+            status = "OK" if v["valid"] else "FAIL"
+            print(f"  → {status} | LUFS: {v['lufs']:.1f} | {v['duration']:.1f}s | {v['channels']}ch | {v['sample_rate']}Hz")
+            results.append({"filename": filename, **v})
 
     # Summary
     passed = sum(1 for r in results if r["valid"])
