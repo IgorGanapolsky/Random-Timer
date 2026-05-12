@@ -63,6 +63,21 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")
     }
 
+    func testSetupUpgradeDefaultsToLifetimePlan() {
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: false),
+            .lifetime
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .rangeGate, defaultToAnnualExperiment: false),
+            .monthly
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: true),
+            .annual
+        )
+    }
+
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
         XCTAssertEqual(
             ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-pro", "true"]),

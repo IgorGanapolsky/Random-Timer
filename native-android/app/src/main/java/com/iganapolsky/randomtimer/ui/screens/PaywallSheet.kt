@@ -108,6 +108,7 @@ internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
 internal enum class SubscriptionPlanSelection {
     MONTHLY,
     ANNUAL,
+    LIFETIME,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,6 +117,7 @@ fun PaywallSheet(
     entryPoint: String = "unknown",
     proPrice: String,
     monthlyPrice: String = "$3.99",
+    lifetimePrice: String = "$4.99",
     defaultToAnnualPlan: Boolean = false,
     valueFramingVariant: String = PaywallValueFraming.CONTROL,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
@@ -126,9 +128,8 @@ fun PaywallSheet(
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
-    val initialSelection =
-        if (defaultToAnnualPlan) SubscriptionPlanSelection.ANNUAL else SubscriptionPlanSelection.MONTHLY
-    var selectedPlan by remember(defaultToAnnualPlan) { mutableStateOf(initialSelection) }
+    val initialSelection = initialPlanSelection(entryPoint, defaultToAnnualPlan)
+    var selectedPlan by remember(entryPoint, defaultToAnnualPlan) { mutableStateOf(initialSelection) }
     val featureContext = paywallFeatureContext(entryPoint)
     val headline =
         if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
@@ -148,6 +149,7 @@ fun PaywallSheet(
             selectedPlan = selectedPlan,
             proPrice = proPrice,
             monthlyPrice = monthlyPrice,
+            lifetimePrice = lifetimePrice,
             trialEligibilityByProductId = trialEligibilityByProductId,
         )
 
@@ -342,6 +344,19 @@ fun PaywallSheet(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PlanOptionCard(
+                    title = "Lifetime",
+                    priceLabel = stripPriceSuffix(lifetimePrice),
+                    badge = "One-time",
+                    isSelected = selectedPlan == SubscriptionPlanSelection.LIFETIME,
+                    onClick = {
+                        selectedPlan = SubscriptionPlanSelection.LIFETIME
+                        onPlanSelected("lifetime", ProManager.BASE_PRODUCT_ID, "plan_card")
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PlanOptionCard(
                     title = "Monthly",
                     priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
                     badge = null,
@@ -375,18 +390,31 @@ internal fun productIdForPlan(plan: SubscriptionPlanSelection): String =
     when (plan) {
         SubscriptionPlanSelection.MONTHLY -> ProManager.MONTHLY_PRODUCT_ID
         SubscriptionPlanSelection.ANNUAL -> ProManager.ELITE_PRODUCT_ID
+        SubscriptionPlanSelection.LIFETIME -> ProManager.BASE_PRODUCT_ID
     }
 
 internal fun planNameForSelection(plan: SubscriptionPlanSelection): String =
     when (plan) {
         SubscriptionPlanSelection.MONTHLY -> "monthly"
         SubscriptionPlanSelection.ANNUAL -> "annual"
+        SubscriptionPlanSelection.LIFETIME -> "lifetime"
+    }
+
+internal fun initialPlanSelection(
+    entryPoint: String,
+    defaultToAnnualPlan: Boolean,
+): SubscriptionPlanSelection =
+    when {
+        defaultToAnnualPlan -> SubscriptionPlanSelection.ANNUAL
+        entryPoint == "setup_upgrade_cta" -> SubscriptionPlanSelection.LIFETIME
+        else -> SubscriptionPlanSelection.MONTHLY
     }
 
 internal fun ctaLabelForPlan(
     selectedPlan: SubscriptionPlanSelection,
     proPrice: String,
     monthlyPrice: String,
+    lifetimePrice: String,
     trialEligibilityByProductId: Map<String, Boolean>,
 ): String {
     val productId = productIdForPlan(selectedPlan)
@@ -396,6 +424,7 @@ internal fun ctaLabelForPlan(
     return when (selectedPlan) {
         SubscriptionPlanSelection.MONTHLY -> "Start Monthly \u2022 ${stripPriceSuffix(monthlyPrice)}/mo"
         SubscriptionPlanSelection.ANNUAL -> "Start Annual \u2022 ${stripPriceSuffix(proPrice)}/yr"
+        SubscriptionPlanSelection.LIFETIME -> "Unlock Lifetime \u2022 ${stripPriceSuffix(lifetimePrice)}"
     }
 }
 

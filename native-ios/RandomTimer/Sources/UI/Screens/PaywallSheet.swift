@@ -71,6 +71,19 @@ enum PaywallPlanSelection {
     case lifetime
 }
 
+func initialPaywallPlanSelection(
+    entryPoint: PaywallEntryPoint,
+    defaultToAnnualExperiment: Bool
+) -> PaywallPlanSelection {
+    if defaultToAnnualExperiment {
+        return .annual
+    }
+    if entryPoint == .setupUpgradeCTA {
+        return .lifetime
+    }
+    return .monthly
+}
+
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
     static let headline = "Unlock Full Fight-Ready Training"
@@ -111,7 +124,10 @@ struct PaywallSheet: View {
         self.entryPoint = entryPoint
         self.defaultToAnnualExperiment = defaultToAnnualExperiment
         self.valueFramingVariant = valueFramingVariant
-        _selectedPlan = State(initialValue: defaultToAnnualExperiment ? .annual : .monthly)
+        _selectedPlan = State(initialValue: initialPaywallPlanSelection(
+            entryPoint: entryPoint,
+            defaultToAnnualExperiment: defaultToAnnualExperiment
+        ))
     }
 
     private var displayHeadline: String {

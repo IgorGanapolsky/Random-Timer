@@ -62,13 +62,17 @@ class PaywallSheetTest {
     }
 
     @Test
-    fun `subscription plan selection enum has monthly and annual variants`() {
+    fun `subscription plan selection enum has monthly annual and lifetime variants`() {
         val monthly = SubscriptionPlanSelection.MONTHLY
         val annual = SubscriptionPlanSelection.ANNUAL
+        val lifetime = SubscriptionPlanSelection.LIFETIME
         assertEquals(SubscriptionPlanSelection.MONTHLY, monthly)
         assertEquals(SubscriptionPlanSelection.ANNUAL, annual)
+        assertEquals(SubscriptionPlanSelection.LIFETIME, lifetime)
         assertEquals("monthly", planNameForSelection(monthly))
         assertEquals("annual", planNameForSelection(annual))
+        assertEquals("lifetime", planNameForSelection(lifetime))
+        assertEquals(ProManager.BASE_PRODUCT_ID, productIdForPlan(lifetime))
     }
 
     @Test
@@ -85,6 +89,7 @@ class PaywallSheetTest {
                 selectedPlan = SubscriptionPlanSelection.MONTHLY,
                 proPrice = "$29.99",
                 monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
                 trialEligibilityByProductId = trialEligibility,
             ),
         )
@@ -94,8 +99,35 @@ class PaywallSheetTest {
                 selectedPlan = SubscriptionPlanSelection.ANNUAL,
                 proPrice = "$29.99",
                 monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
                 trialEligibilityByProductId = trialEligibility,
             ),
+        )
+        assertEquals(
+            "Unlock Lifetime \u2022 $4.99",
+            ctaLabelForPlan(
+                selectedPlan = SubscriptionPlanSelection.LIFETIME,
+                proPrice = "$29.99",
+                monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
+                trialEligibilityByProductId = trialEligibility,
+            ),
+        )
+    }
+
+    @Test
+    fun `setup upgrade defaults to lifetime while experiments can still force annual`() {
+        assertEquals(
+            SubscriptionPlanSelection.LIFETIME,
+            initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.MONTHLY,
+            initialPlanSelection(entryPoint = "range_gate", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = true),
         )
     }
 }
