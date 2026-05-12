@@ -9,11 +9,15 @@ ROOT = Path(__file__).resolve().parents[2]
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
 IOS_SOUND_DIR = ROOT / "native-ios/RandomTimer/Resources/Sounds"
 RUNTIME_LATEST = ROOT / "content/pro_audio/runtime/latest.json"
-RUNTIME_SOUND_DIR = ROOT / "content/pro_audio/runtime/packs/2026-03_marine_foundations/sounds"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 ANDROID_SETUP = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt"
 IOS_VOICE_SERVICE = ROOT / "native-ios/RandomTimer/Sources/Services/AIVoiceCalloutService.swift"
 ANDROID_VOICE_MANAGER = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/service/AIVoiceCalloutManager.kt"
+
+
+def _runtime_sound_dir() -> Path:
+    latest = json.loads(RUNTIME_LATEST.read_text(encoding="utf-8"))
+    return ROOT / "content/pro_audio/runtime/packs" / latest["packId"] / "sounds"
 
 
 def _read(path: Path) -> str:
@@ -36,20 +40,22 @@ SOUND_ARSENAL_FILES = {
 }
 
 def test_sound_arsenal_files_exist_across_ios_android_and_runtime_pack() -> None:
+    runtime_sound_dir = _runtime_sound_dir()
     for runtime_name, (ios_filename, android_filename) in SOUND_ARSENAL_FILES.items():
         ios_path = IOS_SOUND_DIR / ios_filename
         android_path = ANDROID_RAW_DIR / android_filename
-        runtime_path = RUNTIME_SOUND_DIR / f"{runtime_name}.mp3"
+        runtime_path = runtime_sound_dir / f"{runtime_name}.mp3"
         for path in (ios_path, android_path, runtime_path):
             assert path.exists(), f"Missing Sound Arsenal asset: {path}"
             assert path.stat().st_size > 5000, f"{path.name} too small ({path.stat().st_size}B)"
 
 
 def test_sound_arsenal_checksums_match_across_ios_android_and_runtime_pack() -> None:
+    runtime_sound_dir = _runtime_sound_dir()
     for runtime_name, (ios_filename, android_filename) in SOUND_ARSENAL_FILES.items():
         ios_path = IOS_SOUND_DIR / ios_filename
         android_path = ANDROID_RAW_DIR / android_filename
-        runtime_path = RUNTIME_SOUND_DIR / f"{runtime_name}.mp3"
+        runtime_path = runtime_sound_dir / f"{runtime_name}.mp3"
         ios_hash = _sha256(ios_path)
         android_hash = _sha256(android_path)
         runtime_hash = _sha256(runtime_path)
