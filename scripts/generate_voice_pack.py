@@ -7,25 +7,14 @@ Usage:
     python scripts/generate_voice_pack.py --manifest packs/april-2026.json --dry-run
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
-
-import numpy as np
-import pyloudnorm as pyln
-import soundfile as sf
-import torch
-import torchaudio
-
-# Monkey-patch Perth watermarker for Apple Silicon compatibility
-import perth
-if perth.PerthImplicitWatermarker is None:
-    perth.PerthImplicitWatermarker = perth.DummyWatermarker
-
-from chatterbox.tts import ChatterboxTTS
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IOS_AUDIO = PROJECT_ROOT / "native-ios" / "RandomTimer" / "Resources" / "Audio"
@@ -42,6 +31,8 @@ def load_manifest(path: str) -> list[dict]:
 
 def generate_utterance(model, text: str, seed: int, ref_audio: str | None = None) -> torch.Tensor:
     """Generate a single utterance with deterministic seed."""
+    import torch
+
     torch.manual_seed(seed)
     kwargs = {}
     if ref_audio:
@@ -51,6 +42,9 @@ def generate_utterance(model, text: str, seed: int, ref_audio: str | None = None
 
 def normalize_lufs(wav_path: str, target_lufs: float = TARGET_LUFS) -> None:
     """Normalize audio to target LUFS in-place."""
+    import pyloudnorm as pyln
+    import soundfile as sf
+
     data, rate = sf.read(wav_path)
     meter = pyln.Meter(rate)
     loudness = meter.integrated_loudness(data)
@@ -72,6 +66,9 @@ def wav_to_mp3(wav_path: str, mp3_path: str) -> None:
 
 def validate_mp3(mp3_path: str) -> dict:
     """Validate MP3 meets quality requirements."""
+    import pyloudnorm as pyln
+    import soundfile as sf
+
     data, rate = sf.read(mp3_path)
     meter = pyln.Meter(rate)
     loudness = meter.integrated_loudness(data)
@@ -101,6 +98,15 @@ def main():
         for entry in manifest:
             print(f"  [{entry['category']}] {entry['filename']}: {entry['text']}")
         return
+
+    import perth
+    import torch
+    import torchaudio
+    from chatterbox.tts import ChatterboxTTS
+
+    # Monkey-patch Perth watermarker for Apple Silicon compatibility.
+    if perth.PerthImplicitWatermarker is None:
+        perth.PerthImplicitWatermarker = perth.DummyWatermarker
 
     device = args.device
     if device == "auto":
