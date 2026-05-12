@@ -2,11 +2,6 @@ name: iOS IAP Product Readback
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - ".github/workflows/ios-iap-product-readback.yml"
-      - "scripts/asc/asc_verify_iap_products.py"
-      - "scripts/tests/test_asc_verify_iap_products.py"
 
 permissions:
   contents: read
