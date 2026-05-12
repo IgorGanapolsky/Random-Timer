@@ -285,10 +285,12 @@ internal fun runtimeVoiceCueForElapsedSecond(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
-): VoiceCue? {
-    if (elapsedSeconds == lastElapsedMilestone) return null
-    return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
-}
+): VoiceCue? =
+    catalog.elapsedCues
+        .asSequence()
+        .filter { it.second > lastElapsedMilestone && it.second <= elapsedSeconds }
+        .maxByOrNull { it.second }
+        ?.let { VoiceCue(filename = it.filename, text = it.text) }
 
 /**
  * Returns a bundled "time elapsed" announcement only on full-minute marks (60, 120, …).
@@ -302,14 +304,16 @@ internal fun runtimeVoiceCueForElapsedMark(
     if (elapsedSeconds <= 0) {
         return null
     }
-    if (elapsedSeconds % 60 != 0) {
-        return null
-    }
     return runtimeVoiceCueForElapsedSecond(
         elapsedSeconds = elapsedSeconds,
         lastElapsedMilestone = lastElapsedMilestone,
         catalog = catalog,
-    )
+    )?.takeIf { cue ->
+        catalog.elapsedCues
+            .firstOrNull { it.filename == cue.filename }
+            ?.second
+            ?.rem(60) == 0
+    }
 }
 
 internal fun nextCommandCue(
