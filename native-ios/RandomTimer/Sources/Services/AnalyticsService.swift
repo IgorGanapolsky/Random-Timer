@@ -542,6 +542,7 @@ enum AnalyticsEvents {
     static let paywallPurchaseSuccess = "paywall_purchase_success"
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
+    static let billingProductCatalogStatus = "billing_product_catalog_status"
 
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
@@ -601,6 +602,10 @@ enum AnalyticsProperties {
     static let paywallExperimentVariant = "paywall_experiment_variant"
     static let paywallValueFramingVariant = "paywall_value_framing_variant"
     static let paywallSelectionSource = "paywall_selection_source"
+    static let status = "status"
+    static let availableProductIds = "available_product_ids"
+    static let missingProductIds = "missing_product_ids"
+    static let productCount = "product_count"
 }
 
 enum AnalyticsValues {

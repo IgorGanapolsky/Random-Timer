@@ -76,6 +76,7 @@ fun RandomTimerNavHost(
     var lifetimePrice by remember { mutableStateOf("$4.99") }
     var paywallEntryPoint by remember { mutableStateOf("unknown") }
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
+    var paywallAvailableProductIds by remember { mutableStateOf(emptySet<String>()) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
     var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }
 
@@ -85,6 +86,7 @@ fun RandomTimerNavHost(
             proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
             monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
             lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
+            paywallAvailableProductIds = viewModel.proManager.availablePaywallProductIds()
             paywallEntryPoint = paywallEntryPointForFeature(feature)
             paywallTrialEligibilityByProductId =
                 mapOf(
@@ -261,6 +263,7 @@ fun RandomTimerNavHost(
             defaultToAnnualPlan = paywallDefaultToAnnual,
             valueFramingVariant = paywallValueFramingVariant,
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
+            availableProductIds = paywallAvailableProductIds,
             onPlanSelected = { plan, productId, selectionSource ->
                 viewModel.trackPaywallOfferSelected(
                     entryPoint = paywallEntryPoint,

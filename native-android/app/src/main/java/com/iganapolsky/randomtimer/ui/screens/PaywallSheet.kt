@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -121,6 +122,7 @@ fun PaywallSheet(
     defaultToAnnualPlan: Boolean = false,
     valueFramingVariant: String = PaywallValueFraming.CONTROL,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
+    availableProductIds: Set<String> = emptySet(),
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String, selectionSource: String) -> Unit = { _, _, _ -> },
     onRestore: () -> Unit,
@@ -130,6 +132,11 @@ fun PaywallSheet(
     val haptic = LocalHapticFeedback.current
     val initialSelection = initialPlanSelection(entryPoint, defaultToAnnualPlan)
     var selectedPlan by remember(entryPoint, defaultToAnnualPlan) { mutableStateOf(initialSelection) }
+    LaunchedEffect(availableProductIds, selectedPlan) {
+        if (!shouldShowPaywallPlan(selectedPlan, availableProductIds)) {
+            selectedPlan = fallbackPaywallPlan(availableProductIds)
+        }
+    }
     val featureContext = paywallFeatureContext(entryPoint)
     val headline =
         if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
@@ -343,42 +350,48 @@ fun PaywallSheet(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PlanOptionCard(
-                    title = "Lifetime",
-                    priceLabel = stripPriceSuffix(lifetimePrice),
-                    badge = "One-time",
-                    isSelected = selectedPlan == SubscriptionPlanSelection.LIFETIME,
-                    onClick = {
-                        selectedPlan = SubscriptionPlanSelection.LIFETIME
-                        onPlanSelected("lifetime", ProManager.BASE_PRODUCT_ID, "plan_card")
-                    },
-                )
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, availableProductIds)) {
+                    PlanOptionCard(
+                        title = "Lifetime",
+                        priceLabel = stripPriceSuffix(lifetimePrice),
+                        badge = "One-time",
+                        isSelected = selectedPlan == SubscriptionPlanSelection.LIFETIME,
+                        onClick = {
+                            selectedPlan = SubscriptionPlanSelection.LIFETIME
+                            onPlanSelected("lifetime", ProManager.BASE_PRODUCT_ID, "plan_card")
+                        },
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                PlanOptionCard(
-                    title = "Monthly",
-                    priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
-                    badge = null,
-                    isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
-                    onClick = {
-                        selectedPlan = SubscriptionPlanSelection.MONTHLY
-                        onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID, "plan_card")
-                    },
-                )
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, availableProductIds)) {
+                    PlanOptionCard(
+                        title = "Monthly",
+                        priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
+                        badge = null,
+                        isSelected = selectedPlan == SubscriptionPlanSelection.MONTHLY,
+                        onClick = {
+                            selectedPlan = SubscriptionPlanSelection.MONTHLY
+                            onPlanSelected("monthly", ProManager.MONTHLY_PRODUCT_ID, "plan_card")
+                        },
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                PlanOptionCard(
-                    title = "Annual",
-                    priceLabel = "${stripPriceSuffix(proPrice)}/year",
-                    badge = "Best Value",
-                    isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
-                    onClick = {
-                        selectedPlan = SubscriptionPlanSelection.ANNUAL
-                        onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID, "plan_card")
-                    },
-                )
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, availableProductIds)) {
+                    PlanOptionCard(
+                        title = "Annual",
+                        priceLabel = "${stripPriceSuffix(proPrice)}/year",
+                        badge = "Best Value",
+                        isSelected = selectedPlan == SubscriptionPlanSelection.ANNUAL,
+                        onClick = {
+                            selectedPlan = SubscriptionPlanSelection.ANNUAL
+                            onPlanSelected("annual", ProManager.ELITE_PRODUCT_ID, "plan_card")
+                        },
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
             }
@@ -409,6 +422,27 @@ internal fun initialPlanSelection(
         entryPoint == "setup_upgrade_cta" -> SubscriptionPlanSelection.LIFETIME
         else -> SubscriptionPlanSelection.MONTHLY
     }
+
+internal fun shouldShowPaywallPlan(
+    plan: SubscriptionPlanSelection,
+    availableProductIds: Set<String>,
+): Boolean {
+    if (availableProductIds.isEmpty()) {
+        return true
+    }
+    val knownPaywallProductIds = SubscriptionPlanSelection.entries.map(::productIdForPlan).toSet()
+    if (availableProductIds.intersect(knownPaywallProductIds).isEmpty()) {
+        return true
+    }
+    return availableProductIds.contains(productIdForPlan(plan))
+}
+
+internal fun fallbackPaywallPlan(availableProductIds: Set<String>): SubscriptionPlanSelection =
+    listOf(
+        SubscriptionPlanSelection.LIFETIME,
+        SubscriptionPlanSelection.ANNUAL,
+        SubscriptionPlanSelection.MONTHLY,
+    ).firstOrNull { shouldShowPaywallPlan(it, availableProductIds) } ?: SubscriptionPlanSelection.LIFETIME
 
 internal fun ctaLabelForPlan(
     selectedPlan: SubscriptionPlanSelection,

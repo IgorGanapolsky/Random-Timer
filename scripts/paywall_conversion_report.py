@@ -219,6 +219,43 @@ def _product_funnel(api_key: str, project_id: str, days: int, errors: List[str])
     return out
 
 
+def _product_catalog_failures(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
+    win = f"{days} day"
+    rows = _table(
+        f"""
+        SELECT
+          coalesce(toString(properties.platform), 'unknown') AS platform,
+          coalesce(toString(properties.product_id), 'unknown') AS product_id,
+          count() AS failures,
+          count(DISTINCT person_id) AS users
+        FROM events
+        WHERE event IN ('billing_product_not_found', 'billing_product_catalog_status')
+          AND timestamp > now() - interval {win}
+          AND {LIVE_EVENTS_PREDICATE}
+          AND (
+            event = 'billing_product_not_found'
+            OR coalesce(toString(properties.status), '') IN ('empty', 'missing_required_products')
+          )
+        GROUP BY platform, product_id
+        ORDER BY failures DESC
+        LIMIT 25
+        /* product_catalog_failures */
+        """,
+        api_key,
+        project_id,
+        errors,
+    )
+    return [
+        {
+            "platform": str(row[0] or "unknown"),
+            "product_id": str(row[1] or "unknown"),
+            "failures": _safe_int(row[2]),
+            "users": _safe_int(row[3]),
+        }
+        for row in rows
+    ]
+
+
 def _entry_point_funnel(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
     win = f"{days} day"
     rows = _table(
@@ -303,6 +340,7 @@ def _data_quality_warnings(
     entry_points: list[dict[str, Any]],
     settings_hotspots: list[dict[str, Any]],
     failure_reasons: list[dict[str, Any]],
+    product_catalog_failures: list[dict[str, Any]],
 ) -> list[str]:
     warnings: list[str] = []
     offer_selects = _safe_int(counts.get("offer_selects"))
@@ -332,6 +370,11 @@ def _data_quality_warnings(
     if failure_total > 0 and _rate(user_cancelled, failure_total) >= 0.75:
         warnings.append(
             "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage"
+        )
+    catalog_failure_total = sum(_safe_int(row.get("failures")) for row in product_catalog_failures)
+    if catalog_failure_total > 0:
+        warnings.append(
+            "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
         )
     return warnings
 
@@ -394,6 +437,22 @@ def build_markdown(payload: Dict[str, Any]) -> str:
         )
     if not payload.get("product_funnel"):
         lines.append("| (none) | (none) | 0 | 0 | 0 | 0.0% | 0.0% |")
+
+    lines.extend(
+        [
+            "",
+            "## Product Catalog Failures",
+            "| Platform | Product ID | Failures | Users |",
+            "|----------|------------|----------|-------|",
+        ]
+    )
+    for row in payload.get("product_catalog_failures", []):
+        lines.append(
+            f"| {row.get('platform', 'unknown')} | {row.get('product_id', 'unknown')} | "
+            f"{row.get('failures', 0)} | {row.get('users', 0)} |"
+        )
+    if not payload.get("product_catalog_failures"):
+        lines.append("| (none) | (none) | 0 | 0 |")
 
     lines.extend(
         [
@@ -496,6 +555,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         "top_failure_reasons": [],
         "failure_breakdown": [],
         "product_funnel": [],
+        "product_catalog_failures": [],
         "entry_points": [],
         "leaky_entry_points": [],
         "settings_hotspots": [],
@@ -515,6 +575,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     failures = _failure_reasons(api_key, project_id, days, errors)
     failure_breakdown = _failure_breakdown(api_key, project_id, days, errors)
     product_funnel = _product_funnel(api_key, project_id, days, errors)
+    product_catalog_failures = _product_catalog_failures(api_key, project_id, days, errors)
     entry_points = _entry_point_funnel(api_key, project_id, days, errors)
     settings_hotspots = _settings_hotspots(api_key, project_id, days, errors)
 
@@ -527,6 +588,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     payload["top_failure_reasons"] = failures
     payload["failure_breakdown"] = failure_breakdown
     payload["product_funnel"] = product_funnel
+    payload["product_catalog_failures"] = product_catalog_failures
     payload["entry_points"] = entry_points
     payload["leaky_entry_points"] = _leaky_entry_points(entry_points)
     payload["settings_hotspots"] = settings_hotspots
@@ -535,6 +597,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         entry_points,
         settings_hotspots,
         failures,
+        product_catalog_failures,
     )
     payload["query_errors"] = errors
     if errors:

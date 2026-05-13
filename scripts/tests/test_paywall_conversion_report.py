@@ -16,6 +16,8 @@ def run_report_with_mocked_posthog(report, scalar_rows, table_rows):
             return {"results": next(table_results)}
         if "product_funnel" in _query:
             return {"results": next(table_results)}
+        if "product_catalog_failures" in _query:
+            return {"results": next(table_results)}
         if "entry_point_funnel" in _query:
             return {"results": next(table_results)}
         if "settings_hotspots" in _query:
@@ -71,6 +73,14 @@ class PaywallConversionReportTests(unittest.TestCase):
                     "attempt_to_success_rate": 0.1429,
                 },
             ],
+            "product_catalog_failures": [
+                {
+                    "platform": "ios",
+                    "product_id": "com.iganapolsky.randomtimer.pro.monthly",
+                    "failures": 5,
+                    "users": 3,
+                },
+            ],
             "entry_points": [
                 {"entry_point": "setup_upgrade_cta", "views": 70, "attempts": 15, "successes": 2},
                 {"entry_point": "unknown", "views": 25, "attempts": 0, "successes": 0},
@@ -93,6 +103,7 @@ class PaywallConversionReportTests(unittest.TestCase):
         self.assertIn("user_cancelled", markdown)
         self.assertIn("Failure Breakdown", markdown)
         self.assertIn("Product Funnel", markdown)
+        self.assertIn("Product Catalog Failures", markdown)
         self.assertIn("com.iganapolsky.randomtimer.pro.monthly", markdown)
         self.assertIn("setup_upgrade_cta", markdown)
         self.assertIn("Leaky Entry Points", markdown)
@@ -140,6 +151,7 @@ class PaywallConversionReportTests(unittest.TestCase):
                 [["user_cancelled", 10], ["network_error", 5]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 4]],
+                [],
                 [["setup_upgrade_cta", 80, 16, 4], ["sound_gate", 40, 8, 2]],
                 [["voice_callouts_enabled", 31, 14], ["repeat_enabled", 15, 9]],
             ],
@@ -171,6 +183,7 @@ class PaywallConversionReportTests(unittest.TestCase):
                 [["user_cancelled", 10]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 4]],
+                [],
                 [["setup_upgrade_cta", 90, 0, 0], ["sound_gate", 40, 8, 2]],
                 [["voice_callouts_enabled", 31, 14]],
             ],
@@ -194,6 +207,7 @@ class PaywallConversionReportTests(unittest.TestCase):
                 [["user_cancelled", 10]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
                 [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 0]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", 11, 7]],
                 [["unknown", 159, 0, 0], ["sound_gate", 68, 44, 1]],
                 [["unknown", 34847, 601]],
             ],
@@ -208,6 +222,9 @@ class PaywallConversionReportTests(unittest.TestCase):
         )
         self.assertTrue(
             any("purchase failures are dominated by user_cancelled" in warning for warning in result["data_quality_warnings"])
+        )
+        self.assertTrue(
+            any("product catalog lookup failures" in warning for warning in result["data_quality_warnings"])
         )
 
 

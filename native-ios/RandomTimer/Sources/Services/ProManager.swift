@@ -58,9 +58,34 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                 let ids = Self.productIDs
                 Self.log.error("ProManager: products EMPTY for IDs: \(ids). Check ASC config.")
             }
+            trackProductCatalogStatus()
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
+            AnalyticsService.shared.track(AnalyticsEvents.billingProductCatalogStatus, properties: [
+                AnalyticsProperties.status: "fetch_failed",
+                AnalyticsProperties.reason: String(describing: error),
+                AnalyticsProperties.productCount: 0,
+            ])
         }
+    }
+
+    private func trackProductCatalogStatus() {
+        let availableProductIDs = Set(products.map(\.id))
+        let missingProductIDs = Self.productIDs.subtracting(availableProductIDs).sorted()
+        let status: String
+        if availableProductIDs.isEmpty {
+            status = "empty"
+        } else if missingProductIDs.isEmpty == false {
+            status = "missing_required_products"
+        } else {
+            status = "ok"
+        }
+        AnalyticsService.shared.track(AnalyticsEvents.billingProductCatalogStatus, properties: [
+            AnalyticsProperties.status: status,
+            AnalyticsProperties.availableProductIds: availableProductIDs.sorted(),
+            AnalyticsProperties.missingProductIds: missingProductIDs,
+            AnalyticsProperties.productCount: availableProductIDs.count,
+        ])
     }
 
     func formattedPrice(for productID: String) -> String {
