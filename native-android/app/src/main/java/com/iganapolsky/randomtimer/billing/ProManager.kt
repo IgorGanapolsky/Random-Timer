@@ -322,6 +322,33 @@ class ProManager
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
             fetchProductDetails(MONTHLY_PRODUCT_ID)
+            trackProductCatalogStatus()
+        }
+
+        suspend fun availablePaywallProductIds(): Set<String> {
+            fetchAllProductDetails()
+            return cachedProductDetails.keys.toSet()
+        }
+
+        private fun trackProductCatalogStatus() {
+            val requiredProductIds = setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID)
+            val availableProductIds = cachedProductDetails.keys.sorted()
+            val missingProductIds = requiredProductIds.minus(availableProductIds.toSet()).sorted()
+            val status =
+                when {
+                    availableProductIds.isEmpty() -> "empty"
+                    missingProductIds.isNotEmpty() -> "missing_required_products"
+                    else -> "ok"
+                }
+            analyticsService.track(
+                AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS,
+                mapOf(
+                    AnalyticsProperties.STATUS to status,
+                    AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
+                    AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
+                    AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
+                ),
+            )
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {

@@ -130,4 +130,24 @@ class PaywallSheetTest {
             initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = true),
         )
     }
+
+    @Test
+    fun `known billing catalog hides unavailable paywall plans`() {
+        val availableProductIds =
+            setOf(
+                ProManager.BASE_PRODUCT_ID,
+                ProManager.ELITE_PRODUCT_ID,
+            )
+
+        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, availableProductIds))
+        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, availableProductIds))
+        assertEquals(false, shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, availableProductIds))
+    }
+
+    @Test
+    fun `unknown billing catalog keeps paywall plans visible`() {
+        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, emptySet()))
+        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, emptySet()))
+        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet()))
+    }
 }

@@ -417,6 +417,7 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_SUCCESS = "paywall_purchase_success"
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
+    const val BILLING_PRODUCT_CATALOG_STATUS = "billing_product_catalog_status"
 
     // Loop
     const val LOOP_ROUND_COMPLETED = "loop_round_completed"
@@ -481,6 +482,10 @@ object AnalyticsProperties {
     const val PAYWALL_EXPERIMENT_VARIANT = "paywall_experiment_variant"
     const val PAYWALL_VALUE_FRAMING_VARIANT = "paywall_value_framing_variant"
     const val PAYWALL_SELECTION_SOURCE = "paywall_selection_source"
+    const val STATUS = "status"
+    const val AVAILABLE_PRODUCT_IDS = "available_product_ids"
+    const val MISSING_PRODUCT_IDS = "missing_product_ids"
+    const val PRODUCT_COUNT = "product_count"
 }
 
 object AnalyticsScreens {

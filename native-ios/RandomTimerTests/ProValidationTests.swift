@@ -65,6 +65,14 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertEqual(ProManager.annualProductID, "com.iganapolsky.randomtimer.elite")
     }
 
+    func testBillingProductCatalogDiagnosticsUseSharedAnalyticsNames() {
+        XCTAssertEqual(AnalyticsEvents.billingProductCatalogStatus, "billing_product_catalog_status")
+        XCTAssertEqual(AnalyticsProperties.status, "status")
+        XCTAssertEqual(AnalyticsProperties.availableProductIds, "available_product_ids")
+        XCTAssertEqual(AnalyticsProperties.missingProductIds, "missing_product_ids")
+        XCTAssertEqual(AnalyticsProperties.productCount, "product_count")
+    }
+
     func testPaywallDoesNotShowMissingMonthlyProductWhenStoreKitDoesNotReturnIt() {
         XCTAssertTrue(shouldShowPaywallPlan(.lifetime, availableProductIDs: []))
         XCTAssertTrue(shouldShowPaywallPlan(.annual, availableProductIDs: []))
