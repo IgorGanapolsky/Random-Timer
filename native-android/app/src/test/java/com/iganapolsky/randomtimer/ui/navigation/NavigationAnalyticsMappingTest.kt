@@ -25,4 +25,36 @@ class NavigationAnalyticsMappingTest {
     fun unknownUpgradeFallsBackToUnknownEntryPoint() {
         assertThat(paywallEntryPointForFeature("mystery_feature")).isEqualTo("unknown")
     }
+
+    @Test
+    fun monetizationDeepLinkRoutesCustomSchemeToRelevantPaywall() {
+        val target = monetizationDeepLinkFromUri("randomtimer://open/upgrade?feature=pro_sounds")
+
+        assertThat(target).isEqualTo(
+            MonetizationDeepLink(
+                entryPoint = "sound_arsenal_gate",
+                feature = "pro_sounds",
+            ),
+        )
+    }
+
+    @Test
+    fun monetizationDeepLinkRoutesWebUrlToRelevantPaywall() {
+        val target =
+            monetizationDeepLinkFromUri(
+                "https://igorganapolsky.github.io/Random-Timer/upgrade?entry_point=voice_gate",
+            )
+
+        assertThat(target).isEqualTo(
+            MonetizationDeepLink(
+                entryPoint = "voice_gate",
+                feature = "voice_callouts",
+            ),
+        )
+    }
+
+    @Test
+    fun monetizationDeepLinkIgnoresNonUpgradeDestinations() {
+        assertThat(monetizationDeepLinkFromUri("randomtimer://open/timer")).isNull()
+    }
 }

@@ -37,6 +37,8 @@
 		3FFD4482489894E382E7B6E8 /* klaxon.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 01D20814587EFDB22A275849 /* klaxon.mp3 */; };
 		49B707298D8B919D28D01A71 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD7E2987345EA2F0A52A882 /* SharedTypes.swift */; };
 		4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA529E7A224C8E8728DAE7A /* TimerSetupScreen.swift */; };
+		DEE000000000000000000002 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE000000000000000000001 /* DeepLinkRouter.swift */; };
+		DEE000000000000000000004 /* DeepLinkRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE000000000000000000003 /* DeepLinkRouterTests.swift */; };
 		4E242D865279E0BFD5B9CF7B /* gentle-chime.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 91AD2CFB9AE9EF347F990B2F /* gentle-chime.mp3 */; };
 		4ED9D921707F80E1AC5501F3 /* RandomTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368C8F93B37D3B244F271919 /* RandomTimerApp.swift */; };
 		4F4A683B236AE94216503707 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A84792F8E1380EF1A87461 /* Colors.swift */; };
@@ -143,6 +145,7 @@
 		25FCEC0B24402A66BBCC142A /* RandomTimerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3063864498ABB31478972EDD /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
 		368C8F93B37D3B244F271919 /* RandomTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerApp.swift; sourceTree = "<group>"; };
+		DEE000000000000000000001 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		1F9A3C44B55D66E77F880010 /* ProSoundCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProSoundCatalog.swift; sourceTree = "<group>"; };
 		48232C2EAE9FAA775617C954 /* StoreReviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreReviewManager.swift; sourceTree = "<group>"; };
@@ -189,6 +192,7 @@
 		F5F3E399050BD30295736FEA /* drum_roll.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = drum_roll.mp3; sourceTree = "<group>"; };
 		PRIV001122334455AABB0001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = RandomTimer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		PRVT001122334455AABB0001 /* ProValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProValidationTests.swift; sourceTree = "<group>"; };
+		DEE000000000000000000003 /* DeepLinkRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouterTests.swift; sourceTree = "<group>"; };
 		CRSVC00112233445566778801 /* CrashReportingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportingService.swift; sourceTree = "<group>"; };
 		GSIPL00112233445566778801 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = RandomTimer/GoogleService-Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -220,6 +224,7 @@
 		3F3001C89372688DF388B3EA /* App */ = {
 			isa = PBXGroup;
 			children = (
+				DEE000000000000000000001 /* DeepLinkRouter.swift */,
 				368C8F93B37D3B244F271919 /* RandomTimerApp.swift */,
 			);
 			path = App;
@@ -232,6 +237,7 @@
 				DISTCH00112233445566778801 /* DistributionChannelResolverTests.swift */,
 				A1C1001122334455667788CC /* AIVoiceCalloutServiceTests.swift */,
 				A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */,
+				DEE000000000000000000003 /* DeepLinkRouterTests.swift */,
 				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
 				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
@@ -628,6 +634,7 @@
 				1EF5792885AFE606EACC05F9 /* TimerManager.swift in Sources */,
 				17E69C010FAA04EFC0076358 /* TimerModels.swift in Sources */,
 				4C7AAC0D5B84BD7DFA0ACEAB /* TimerSetupScreen.swift in Sources */,
+				DEE000000000000000000002 /* DeepLinkRouter.swift in Sources */,
 				D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */,
 				1BAE4130DA7DC5758A7F13FE /* StoreReviewManager.swift in Sources */,
 				B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */,
@@ -656,6 +663,7 @@
 				DISTCH00112233445566778802 /* DistributionChannelResolverTests.swift in Sources */,
 				A1C1001122334455667788AA /* AIVoiceCalloutServiceTests.swift in Sources */,
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
+				DEE000000000000000000004 /* DeepLinkRouterTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
 				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,

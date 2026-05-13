@@ -55,6 +55,7 @@ internal fun paywallEntryPointForFeature(feature: String): String =
 fun RandomTimerNavHost(
     navController: NavHostController = rememberNavController(),
     viewModel: TimerViewModel = hiltViewModel(),
+    pendingDeepLinkUri: String? = null,
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
@@ -77,6 +78,38 @@ fun RandomTimerNavHost(
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
     var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }
+
+    fun presentPaywallForFeature(feature: String) {
+        viewModel.trackFeatureGateHit(feature)
+        scope.launch {
+            proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
+            monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
+            lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
+            paywallEntryPoint = paywallEntryPointForFeature(feature)
+            paywallTrialEligibilityByProductId =
+                mapOf(
+                    ProManager.MONTHLY_PRODUCT_ID to
+                        viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
+                    ProManager.ELITE_PRODUCT_ID to
+                        viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
+                )
+            paywallDefaultToAnnual =
+                suspendCoroutine { cont ->
+                    viewModel.resolvePaywallDefaultAnnualExperiment { enabled ->
+                        cont.resume(enabled)
+                    }
+                }
+            paywallValueFramingVariant = viewModel.paywallValueFramingVariant()
+            showPaywall = true
+        }
+    }
+
+    LaunchedEffect(pendingDeepLinkUri, isPro) {
+        val monetizationTarget = monetizationDeepLinkFromUri(pendingDeepLinkUri)
+        if (monetizationTarget != null && !isPro) {
+            presentPaywallForFeature(monetizationTarget.feature)
+        }
+    }
 
     // Auto-navigate based on timer state
     LaunchedEffect(timerState, currentRoute) {
@@ -139,28 +172,7 @@ fun RandomTimerNavHost(
                 isPro = isPro,
                 isElite = isElite,
                 onUpgradeTap = { feature ->
-                    viewModel.trackFeatureGateHit(feature)
-                    scope.launch {
-                        proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
-                        monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
-                        lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
-                        paywallEntryPoint = paywallEntryPointForFeature(feature)
-                        paywallTrialEligibilityByProductId =
-                            mapOf(
-                                ProManager.MONTHLY_PRODUCT_ID to
-                                    viewModel.proManager.hasFreeTrialOffer(ProManager.MONTHLY_PRODUCT_ID),
-                                ProManager.ELITE_PRODUCT_ID to
-                                    viewModel.proManager.hasFreeTrialOffer(ProManager.ELITE_PRODUCT_ID),
-                            )
-                        paywallDefaultToAnnual =
-                            suspendCoroutine { cont ->
-                                viewModel.resolvePaywallDefaultAnnualExperiment { enabled ->
-                                    cont.resume(enabled)
-                                }
-                            }
-                        paywallValueFramingVariant = viewModel.paywallValueFramingVariant()
-                        showPaywall = true
-                    }
+                    presentPaywallForFeature(feature)
                 },
                 onVoiceGenderSelected = { gender ->
                     viewModel.trackVoiceGenderSelected(gender)

@@ -12,6 +12,7 @@ func primaryStartButtonCaption(hasFirstCompleted: Bool) -> String? {
 struct TimerSetupScreen: View {
     @EnvironmentObject var timerManager: TimerManager
     @EnvironmentObject var proManager: ProManager
+    @Environment(DeepLinkRouter.self) private var deepLinkRouter
     @State private var showPaywall = false
     @State private var paywallDefaultToAnnual = false
     @State private var paywallValueFramingVariant = PaywallValueFraming.control
@@ -566,6 +567,10 @@ struct TimerSetupScreen: View {
                 }
             }
         }
+        .onChange(of: deepLinkRouter.paywallRequest?.id) { _, _ in
+            guard !proManager.isPro, let request = deepLinkRouter.paywallRequest else { return }
+            presentPaywall(entryPoint: request.entryPoint)
+        }
     }
 
     // Helper to update config with specific field changes
@@ -1036,5 +1041,6 @@ private struct VolumeSliderView: View {
         TimerSetupScreen()
             .environmentObject(TimerManager())
             .environmentObject(ProManager.shared)
+            .environment(DeepLinkRouter())
     }
 }
