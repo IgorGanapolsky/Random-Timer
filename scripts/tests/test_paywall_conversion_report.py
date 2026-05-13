@@ -12,6 +12,10 @@ def run_report_with_mocked_posthog(report, scalar_rows, table_rows):
     def fake_posthog_query(_query: str, _api_key: str, _project_id: str, _errors):
         if "top_failure_reasons" in _query:
             return {"results": next(table_results)}
+        if "failure_breakdown" in _query:
+            return {"results": next(table_results)}
+        if "product_funnel" in _query:
+            return {"results": next(table_results)}
         if "entry_point_funnel" in _query:
             return {"results": next(table_results)}
         if "settings_hotspots" in _query:
@@ -47,6 +51,26 @@ class PaywallConversionReportTests(unittest.TestCase):
                 {"reason": "user_cancelled", "count": 12},
                 {"reason": "network_error", "count": 4},
             ],
+            "failure_breakdown": [
+                {
+                    "platform": "ios",
+                    "product_id": "com.iganapolsky.randomtimer.pro.monthly",
+                    "reason": "user_cancelled",
+                    "failures": 12,
+                    "users": 8,
+                },
+            ],
+            "product_funnel": [
+                {
+                    "platform": "ios",
+                    "product_id": "com.iganapolsky.randomtimer.pro.monthly",
+                    "offer_selects": 55,
+                    "attempts": 21,
+                    "successes": 3,
+                    "select_to_attempt_rate": 0.3818,
+                    "attempt_to_success_rate": 0.1429,
+                },
+            ],
             "entry_points": [
                 {"entry_point": "setup_upgrade_cta", "views": 70, "attempts": 15, "successes": 2},
                 {"entry_point": "unknown", "views": 25, "attempts": 0, "successes": 0},
@@ -67,6 +91,9 @@ class PaywallConversionReportTests(unittest.TestCase):
         self.assertIn("Paywall Conversion Report", markdown)
         self.assertIn("View -> Offer Select", markdown)
         self.assertIn("user_cancelled", markdown)
+        self.assertIn("Failure Breakdown", markdown)
+        self.assertIn("Product Funnel", markdown)
+        self.assertIn("com.iganapolsky.randomtimer.pro.monthly", markdown)
         self.assertIn("setup_upgrade_cta", markdown)
         self.assertIn("Leaky Entry Points", markdown)
         self.assertIn("voice_callouts_enabled", markdown)
@@ -110,7 +137,9 @@ class PaywallConversionReportTests(unittest.TestCase):
                 [[6]],    # successes
             ],
             [
-                [["user_cancelled", 10], ["network_error", 3]],
+                [["user_cancelled", 10], ["network_error", 5]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 4]],
                 [["setup_upgrade_cta", 80, 16, 4], ["sound_gate", 40, 8, 2]],
                 [["voice_callouts_enabled", 31, 14], ["repeat_enabled", 15, 9]],
             ],
@@ -121,6 +150,8 @@ class PaywallConversionReportTests(unittest.TestCase):
         self.assertEqual(6, result["funnel"]["purchase_successes"])
         self.assertAlmostEqual(0.5, result["funnel"]["view_to_select_rate"], places=4)
         self.assertEqual("user_cancelled", result["top_failure_reasons"][0]["reason"])
+        self.assertEqual("ios", result["failure_breakdown"][0]["platform"])
+        self.assertEqual(17, result["product_funnel"][0]["attempts"])
         self.assertEqual("voice_callouts_enabled", result["settings_hotspots"][0]["setting_name"])
         self.assertEqual([], result["leaky_entry_points"])
         self.assertEqual([], result["data_quality_warnings"])
@@ -138,6 +169,8 @@ class PaywallConversionReportTests(unittest.TestCase):
             ],
             [
                 [["user_cancelled", 10]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 4]],
                 [["setup_upgrade_cta", 90, 0, 0], ["sound_gate", 40, 8, 2]],
                 [["voice_callouts_enabled", 31, 14]],
             ],
@@ -159,6 +192,8 @@ class PaywallConversionReportTests(unittest.TestCase):
             ],
             [
                 [["user_cancelled", 10]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", "user_cancelled", 10, 8]],
+                [["ios", "com.iganapolsky.randomtimer.pro.monthly", 42, 17, 0]],
                 [["unknown", 159, 0, 0], ["sound_gate", 68, 44, 1]],
                 [["unknown", 34847, 601]],
             ],
@@ -170,6 +205,9 @@ class PaywallConversionReportTests(unittest.TestCase):
         )
         self.assertTrue(
             any("settings_changed is still dominated by unknown" in warning for warning in result["data_quality_warnings"])
+        )
+        self.assertTrue(
+            any("purchase failures are dominated by user_cancelled" in warning for warning in result["data_quality_warnings"])
         )
 
 
