@@ -11,6 +11,7 @@ struct RandomTimerApp: App {
 
     // swiftlint:disable:next no_state_object
     @StateObject private var timerManager = TimerManager()
+    @State private var deepLinkRouter = DeepLinkRouter()
     @Environment(\.scenePhase) private var scenePhase
 
     /// GitHub Actions passes `OTHER_SWIFT_FLAGS=-D RT_SKIP_FIREBASE_FOR_CI` for `xcodebuild test`
@@ -45,9 +46,11 @@ struct RandomTimerApp: App {
             ContentView()
                 .environmentObject(timerManager)
                 .environmentObject(ProManager.shared)
+                .environment(deepLinkRouter)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     AnalyticsService.shared.trackDeepLink(url)
+                    deepLinkRouter.handle(url)
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -68,6 +71,7 @@ struct RandomTimerApp: App {
 
 struct ContentView: View {
     @EnvironmentObject var timerManager: TimerManager
+    @Environment(DeepLinkRouter.self) private var deepLinkRouter
     @State private var didApplyUITestSeed: Bool = false
 
     var body: some View {
@@ -86,6 +90,7 @@ struct ContentView: View {
                 }
             }
         }
+        .environment(deepLinkRouter)
         .onAppear {
 #if DEBUG
             guard didApplyUITestSeed == false else { return }
@@ -158,4 +163,5 @@ struct ContentView: View {
     ContentView()
         .environmentObject(TimerManager())
         .environmentObject(ProManager.shared)
+        .environment(DeepLinkRouter())
 }
