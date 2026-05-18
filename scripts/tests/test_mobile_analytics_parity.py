@@ -60,7 +60,15 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         # timer_backgrounded is iOS-only: iOS fires it when app backgrounds during
         # a running timer (informational). Android's foreground service doesn't need it.
         ios_only_events = {"timer_backgrounded"}
-        self.assertEqual(android_events, ios_events - ios_only_events)
+        # timer_extended is Android-only: Android's foreground-service notification
+        # exposes a "+5 min" extend-running-timer action (see
+        # TimerForegroundService.kt around line 430). iOS doesn't ship that
+        # affordance, so the event has no legitimate iOS emission point.
+        android_only_events = {"timer_extended"}
+        self.assertEqual(
+            android_events - android_only_events,
+            ios_events - ios_only_events,
+        )
 
     def test_screen_names_match_between_ios_and_android(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
