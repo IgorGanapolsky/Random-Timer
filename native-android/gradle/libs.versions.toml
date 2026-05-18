@@ -28,6 +28,7 @@ crashlyticsPlugin = "3.0.2"
 firebasePerfPlugin = "2.0.0"
 media = "1.7.0"
 uiautomator = "2.3.0"
+robolectric = "4.14.1"
 workManager = "2.10.0"
 
 [libraries]
@@ -52,20 +53,20 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt-version" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt-version" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk-version" }
 org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
-posthog = { group = "com.posthog", name = "posthog-android", version.ref = "posthog" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine-version" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth-version" }
+posthog = { group = "com.posthog", name = "posthog-android", version.ref = "posthog-version" }
 play-review = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
 play-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "playBilling" }
-play-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playUpdate" }
+play-app-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playUpdate" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
@@ -74,13 +75,14 @@ androidx-media = { group = "androidx.media", name = "media", version.ref = "medi
 androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "workManager" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.2" }
+ksp = { id = "com.google.devtools.ksp", version = "2.2.10-2.0.2" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics-plugin = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsPlugin" }
 firebase-perf-plugin = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerfPlugin" }
