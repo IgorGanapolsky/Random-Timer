@@ -45,7 +45,12 @@ class MonthlyContentWorkerTest {
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
-        verify { notificationManager.notify(any(), any()) }
+        verify { 
+            notificationManager.notify(2001, withArg {
+                // In a real project we'd use shadow notification to check content,
+                // for now verify the call happens with the expected ID.
+            })
+        }
     }
 
     @Test

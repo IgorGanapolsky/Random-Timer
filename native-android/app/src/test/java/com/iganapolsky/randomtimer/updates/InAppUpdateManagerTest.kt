@@ -83,4 +83,31 @@ class InAppUpdateManagerTest {
             )
         }
     }
+
+    @Test
+    fun `checkForUpdates resumes immediate update when already in progress`() {
+        val appUpdateInfo = mockk<AppUpdateInfo> {
+            every { updateAvailability() } returns UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+        }
+
+        val task = mockk<Task<AppUpdateInfo>>()
+        val slot = slot<OnSuccessListener<AppUpdateInfo>>()
+        
+        every { appUpdateManager.appUpdateInfo } returns task
+        every { task.addOnSuccessListener(capture(slot)) } returns task
+
+        inAppUpdateManager.checkForUpdates(activity)
+
+        // Simulate success
+        slot.captured.onSuccess(appUpdateInfo)
+
+        verify {
+            appUpdateManager.startUpdateFlowForResult(
+                appUpdateInfo,
+                activity,
+                any(),
+                InAppUpdateManager.UPDATE_REQUEST_CODE
+            )
+        }
+    }
 }

@@ -14,10 +14,8 @@ import javax.inject.Singleton
 
 @Singleton
 class InAppUpdateManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val appUpdateManager: AppUpdateManager
 ) {
-    private val appUpdateManager: AppUpdateManager = AppUpdateManagerFactory.create(context)
-
     companion object {
         private const val TAG = "InAppUpdateManager"
         const val UPDATE_REQUEST_CODE = 1234
