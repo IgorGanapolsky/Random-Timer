@@ -138,3 +138,6 @@ native-android/gradle/gradle-daemon-jvm.properties
 
 # RLHF runtime artifacts (per-checkout local audit / feedback / memory state)
 .rlhf/
+
+# Local-only evidence artifacts (per-checkout screenshots, manual capture)
+evidence/
