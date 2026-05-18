@@ -173,6 +173,7 @@ class TimerForegroundService : Service() {
             }
             ACTION_PAUSE -> pauseTimer()
             ACTION_RESUME -> resumeTimer()
+            ACTION_EXTEND -> extendTimer()
             ACTION_RESET -> resetTimer()
             ACTION_DISMISS_ALARM -> dismissAlarm()
             ACTION_SILENCE_ALARM -> silenceAlarm()
@@ -394,7 +395,36 @@ class TimerForegroundService : Service() {
             if (state.status == TimerStatus.PAUSED) {
                 val resumedState = state.copy(status = TimerStatus.RUNNING)
                 _timerState.value = resumedState
+                updateNotification(resumedState)
                 startTimer(resumedState)
+            }
+        }
+    }
+
+    private fun extendTimer() {
+        _timerState.value?.let { current ->
+            if (current.status == TimerStatus.RUNNING || current.status == TimerStatus.PAUSED) {
+                val extension = 5.minutes
+                val newTarget = current.targetDuration + extension
+                val newRemaining = current.remainingDuration + extension
+
+                val updated =
+                    current.copy(
+                        targetDuration = newTarget,
+                        remainingDuration = newRemaining,
+                    )
+                _timerState.value = updated
+                updateNotification(updated)
+
+                // If running, we need to restart the timer loop to account for new duration
+                if (current.status == TimerStatus.RUNNING) {
+                    timerJob?.cancel()
+                    startTimer(updated)
+                }
+                analyticsService.logEvent(
+                    AnalyticsEvents.TIMER_EXTENDED,
+                    mapOf(AnalyticsProperties.DURATION_SECONDS to 300),
+                )
             }
         }
     }
@@ -713,8 +743,14 @@ class TimerForegroundService : Service() {
                 .setColor(getColor(R.color.accent_primary))
                 .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
-        // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
-        builder.setShowWhen(false)
+        if (!isPaused && !isComplete && !isSilencedAlarm) {
+            val endTime = System.currentTimeMillis() + state.remainingDuration.inWholeMilliseconds
+            builder.setWhen(endTime)
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+        } else {
+            builder.setShowWhen(false)
+        }
 
         if (isComplete || isSilencedAlarm) {
             // Complete or silenced alarm: Stop and Reset only
@@ -729,17 +765,25 @@ class TimerForegroundService : Service() {
                 createResetIntent(),
             )
         } else {
-            // Running/Paused: Pause/Resume, Reset, Stop
+            // Running/Paused: Pause/Resume, +5 Min/Reset, Stop
             builder.addAction(
                 if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
                 if (isPaused) "Resume" else "Pause",
                 if (isPaused) createResumeIntent() else createPauseIntent(),
             )
-            builder.addAction(
-                R.drawable.ic_refresh,
-                "Reset",
-                createResetIntent(),
-            )
+            if (isPaused) {
+                builder.addAction(
+                    R.drawable.ic_refresh,
+                    "Reset",
+                    createResetIntent(),
+                )
+            } else {
+                builder.addAction(
+                    R.drawable.ic_add_time,
+                    "+5 Min",
+                    createExtendIntent(),
+                )
+            }
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
@@ -879,6 +923,19 @@ class TimerForegroundService : Service() {
         return PendingIntent.getService(
             this,
             4,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createExtendIntent(): PendingIntent {
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_EXTEND
+            }
+        return PendingIntent.getService(
+            this,
+            9,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -1080,6 +1137,7 @@ class TimerForegroundService : Service() {
         const val ACTION_STOP = "com.iganapolsky.randomtimer.STOP"
         const val ACTION_PAUSE = "com.iganapolsky.randomtimer.PAUSE"
         const val ACTION_RESUME = "com.iganapolsky.randomtimer.RESUME"
+        const val ACTION_EXTEND = "com.iganapolsky.randomtimer.EXTEND"
         const val ACTION_RESET = "com.iganapolsky.randomtimer.RESET"
         const val ACTION_DISMISS_ALARM = "com.iganapolsky.randomtimer.DISMISS"
         const val ACTION_SILENCE_ALARM = "com.iganapolsky.randomtimer.SILENCE"
