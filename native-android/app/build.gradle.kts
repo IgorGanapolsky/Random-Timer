@@ -160,7 +160,7 @@ dependencies {
     implementation(libs.play.review)
 
     // In-App Update
-    implementation(libs.play.app.update)
+    implementation(libs.play.update)
 
     // In-App Billing
     implementation(libs.play.billing)
@@ -185,6 +185,7 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.org.json)
     testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
