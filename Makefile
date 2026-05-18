@@ -183,26 +183,27 @@ phoneclaw-visual:
 	@echo "==> PhoneClaw: pushing visual test scripts to device"
 	@bash scripts/device-tests/phoneclaw/setup-device.sh
 
-memory-doctor:
-	@bash scripts/shell/verify_memory_gateway.sh
+# ThumbGate Pro
+thumbgate-doctor:
+	@thumbgate doctor
 
-memory-summary:
-	@echo "==> Memory Gateway: feedback summary"
-	@npx -y mcp-memory-gateway@0.8.0 summary
+thumbgate-summary:
+	@echo "==> ThumbGate: feedback summary"
+	@thumbgate summary
 
-memory-lessons:
-	@echo "==> Memory Gateway: lesson search"
-	@npx -y mcp-memory-gateway@0.8.0 lessons --query="$(Q)" --limit="$${LIMIT:-5}"
+thumbgate-lessons:
+	@echo "==> ThumbGate: lesson search"
+	@thumbgate lessons --query="$(Q)" --limit="$${LIMIT:-5}"
 
-memory-capture-down:
+thumbgate-capture-down:
 	@test -n "$(CONTEXT)" || (echo "ERROR: provide CONTEXT=\"...\"" && exit 1)
-	@echo "==> Memory Gateway: capture negative feedback"
-	@npx -y mcp-memory-gateway@0.8.0 capture --feedback=down --context="$(CONTEXT)" --tags="$(TAGS)"
+	@echo "==> ThumbGate: capture negative feedback"
+	@thumbgate capture --feedback=down --context="$(CONTEXT)"
 
-memory-capture-up:
+thumbgate-capture-up:
 	@test -n "$(CONTEXT)" || (echo "ERROR: provide CONTEXT=\"...\"" && exit 1)
-	@echo "==> Memory Gateway: capture positive feedback"
-	@npx -y mcp-memory-gateway@0.8.0 capture --feedback=up --context="$(CONTEXT)" --tags="$(TAGS)"
+	@echo "==> ThumbGate: capture positive feedback"
+	@thumbgate capture --feedback=up --context="$(CONTEXT)"
 
 # Forge & Maintenance
 forge-maintenance:

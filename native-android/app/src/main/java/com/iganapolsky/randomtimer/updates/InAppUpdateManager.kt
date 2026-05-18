@@ -1,14 +1,12 @@
 package com.iganapolsky.randomtimer.updates
 
 import android.app.Activity
-import android.content.Context
 import android.util.Log
+import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
-import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,9 +24,7 @@ class InAppUpdateManager @Inject constructor(
      * @param activity The activity from which to launch the update flow.
      */
     fun checkForUpdates(activity: Activity) {
-        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
-
-        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
                 // Priority evaluation: 0-5. 
                 // 5: Immediate (Force), 4: Immediate (Recommended), 1-3: Flexible
@@ -36,38 +32,23 @@ class InAppUpdateManager @Inject constructor(
                 Log.d(TAG, "Update available with priority: $priority")
 
                 if (priority >= 4 && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                    triggerImmediateUpdate(activity, appUpdateManager)
+                    triggerUpdate(activity, appUpdateInfo, AppUpdateType.IMMEDIATE)
                 } else if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                    triggerFlexibleUpdate(activity, appUpdateManager)
+                    triggerUpdate(activity, appUpdateInfo, AppUpdateType.FLEXIBLE)
                 }
             } else if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
                 // Resume an update already in progress
-                triggerImmediateUpdate(activity, appUpdateManager)
+                triggerUpdate(activity, appUpdateInfo, AppUpdateType.IMMEDIATE)
             }
         }
     }
 
-    private fun triggerImmediateUpdate(activity: Activity, manager: AppUpdateManager) {
-        val infoTask = manager.appUpdateInfo
-        infoTask.addOnSuccessListener { info ->
-            manager.startUpdateFlowForResult(
-                info,
-                activity,
-                AppUpdateOptions.defaultOptions(AppUpdateType.IMMEDIATE),
-                UPDATE_REQUEST_CODE
-            )
-        }
-    }
-
-    private fun triggerFlexibleUpdate(activity: Activity, manager: AppUpdateManager) {
-        val infoTask = manager.appUpdateInfo
-        infoTask.addOnSuccessListener { info ->
-            manager.startUpdateFlowForResult(
-                info,
-                activity,
-                AppUpdateOptions.defaultOptions(AppUpdateType.FLEXIBLE),
-                UPDATE_REQUEST_CODE
-            )
-        }
+    private fun triggerUpdate(activity: Activity, info: AppUpdateInfo, type: Int) {
+        appUpdateManager.startUpdateFlowForResult(
+            info,
+            activity,
+            AppUpdateOptions.defaultOptions(type),
+            UPDATE_REQUEST_CODE
+        )
     }
 }

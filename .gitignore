@@ -116,8 +116,7 @@ apple_*.png
 artifacts_*.png
 apple_status.json
 
-# RLHF/ThumbGate local feedback data
-.rlhf/
+# ThumbGate local feedback data
 .thumbgate/
 
 # Agent/Codex configurations
@@ -132,3 +131,7 @@ apple_status.json
 
 # Local build/daemon properties
 native-android/gradle/gradle-daemon-jvm.properties
+
+# ThumbGate local feedback data
+.thumbgate/feedback-log.jsonl
+.thumbgate/memory-log.jsonl

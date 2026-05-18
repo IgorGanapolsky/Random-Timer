@@ -19,13 +19,14 @@ import java.util.concurrent.TimeUnit
 
 class MonthlyContentWorker(
     context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
+    private val calendarProvider: () -> Calendar = { Calendar.getInstance() }
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         // In 2026, we check the content manifest for the 1st of the month.
         // For now, we simulate a check that always passes on the 1st.
-        val calendar = Calendar.getInstance()
+        val calendar = calendarProvider()
         if (calendar.get(Calendar.DAY_OF_MONTH) == 1) {
             showMonthlyNotification()
         }

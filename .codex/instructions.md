@@ -28,23 +28,23 @@ python3 scripts/perplexity_agent.py --query "topic" --tools web_search fetch_url
 ### Key Rule
 API key is in `.env` as `PERPLEXITY_API_KEY`. Never hardcode.
 
-## Memory Gateway
+## ThumbGate Pro
 
-The project memory backend is `mcp-memory-gateway`, not ad hoc local RAG claims.
+The project is governed by **ThumbGate Pro**. Feedback is captured as lessons that protect future agents.
 
 Evidence-first workflow:
 ```bash
-make memory-doctor
-make memory-summary
-make memory-lessons Q="verification"
+make thumbgate-doctor
+make thumbgate-summary
+make thumbgate-lessons Q="verification"
 ```
 
-When a session contains a confirmed mistake or correction, capture it with one sentence of context:
+When a session contains a confirmed mistake or correction, capture it with context:
 ```bash
-make memory-capture-down CONTEXT="Unverified browser-state claim" TAGS="truthfulness,verification"
+make thumbgate-capture-down CONTEXT="Unverified browser-state claim"
 ```
 
 Rules:
-- Do not claim the memory system is active until `make memory-doctor`, `make memory-summary`, and `make memory-lessons` all read back successfully.
-- Use `.mcp.json` as the Codex/Cursor MCP source of truth for the `rlhf` server.
-- Treat `.rlhf/config.json` as tracked project config and `.rlhf/*.jsonl` / derived analytics as local runtime state.
+- Do not claim the memory system is active until `make thumbgate-doctor`, `make thumbgate-summary`, and `make thumbgate-lessons` all read back successfully.
+- Use `.mcp.json` as the Codex/Cursor MCP source of truth for the `thumbgate` server.
+- Treat `.thumbgate/config.json` as tracked project config and `.thumbgate/*.jsonl` / contextfs as local runtime state.

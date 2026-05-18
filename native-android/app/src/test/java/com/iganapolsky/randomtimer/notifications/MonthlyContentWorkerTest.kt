@@ -2,31 +2,31 @@ package com.iganapolsky.randomtimer.notifications
 
 import android.app.NotificationManager
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.work.ListenableWorker
-import androidx.work.testing.TestListenableWorkerBuilder
+import androidx.work.WorkerParameters
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import java.util.Calendar
 
+@RunWith(RobolectricTestRunner::class)
 class MonthlyContentWorkerTest {
 
     private lateinit var context: Context
-    private lateinit var notificationManager: NotificationManager
 
     @Before
     fun setup() {
-        context = mockk(relaxed = true)
-        notificationManager = mockk(relaxed = true)
-        every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns notificationManager
-        every { context.applicationContext } returns context
+        context = ApplicationProvider.getApplicationContext()
     }
 
     @After
@@ -41,16 +41,14 @@ class MonthlyContentWorkerTest {
         every { Calendar.getInstance() } returns calendar
         every { calendar.get(Calendar.DAY_OF_MONTH) } returns 1
 
-        val worker = TestListenableWorkerBuilder<MonthlyContentWorker>(context).build()
+        val worker = MonthlyContentWorker(context, mockk(relaxed = true))
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
-        verify { 
-            notificationManager.notify(2001, withArg {
-                // In a real project we'd use shadow notification to check content,
-                // for now verify the call happens with the expected ID.
-            })
-        }
+        
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val shadowNotificationManager = Shadows.shadowOf(notificationManager)
+        assertEquals(1, shadowNotificationManager.size())
     }
 
     @Test
@@ -60,10 +58,12 @@ class MonthlyContentWorkerTest {
         every { Calendar.getInstance() } returns calendar
         every { calendar.get(Calendar.DAY_OF_MONTH) } returns 15
 
-        val worker = TestListenableWorkerBuilder<MonthlyContentWorker>(context).build()
+        val worker = MonthlyContentWorker(context, mockk(relaxed = true))
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
-        verify(exactly = 0) { notificationManager.notify(any(), any()) }
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val shadowNotificationManager = Shadows.shadowOf(notificationManager)
+        assertEquals(0, shadowNotificationManager.size())
     }
 }
