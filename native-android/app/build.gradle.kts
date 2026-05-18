@@ -9,8 +9,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services) apply false
-    alias(libs.plugins.firebase.crashlytics) apply false
-    alias(libs.plugins.firebase.perf) apply false
+    alias(libs.plugins.firebase.crashlytics.plugin) apply false
+    alias(libs.plugins.firebase.perf.plugin) apply false
     jacoco
 }
 
@@ -160,7 +160,7 @@ dependencies {
     implementation(libs.play.review)
 
     // In-App Update
-    implementation(libs.play.update)
+    implementation(libs.play.app.update)
 
     // In-App Billing
     implementation(libs.play.billing)
@@ -184,6 +184,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
     testImplementation(libs.org.json)
+    testImplementation(libs.androidx.work.testing)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
