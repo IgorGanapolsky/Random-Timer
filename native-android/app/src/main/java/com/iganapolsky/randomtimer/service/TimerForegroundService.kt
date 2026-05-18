@@ -421,7 +421,7 @@ class TimerForegroundService : Service() {
                     timerJob?.cancel()
                     startTimer(updated)
                 }
-                analyticsService.logEvent(
+                analyticsService.track(
                     AnalyticsEvents.TIMER_EXTENDED,
                     mapOf(AnalyticsProperties.DURATION_SECONDS to 300),
                 )

@@ -19,17 +19,20 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.notifications.MonthlyContentWorker
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import com.iganapolsky.randomtimer.updates.InAppUpdateManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var analyticsService: AnalyticsService
+    @Inject lateinit var inAppUpdateManager: InAppUpdateManager
     private var latestDeepLinkUri by mutableStateOf<Uri?>(null)
 
     private val notificationPermissionLauncher =
@@ -153,14 +156,6 @@ class MainActivity : ComponentActivity() {
             model.contains("sdk_gphone") ||
             model.contains("emulator") ||
             product.contains("sdk_gphone") ||
-            product.contains("emulator")
-    }
-}
-.contains("sdk_gphone") ||
-            product.contains("emulator")
-    }
-}
-ontains("sdk_gphone") ||
             product.contains("emulator")
     }
 }
