@@ -135,3 +135,6 @@ native-android/gradle/gradle-daemon-jvm.properties
 # ThumbGate local feedback data
 .thumbgate/feedback-log.jsonl
 .thumbgate/memory-log.jsonl
+
+# RLHF runtime artifacts (per-checkout local audit / feedback / memory state)
+.rlhf/

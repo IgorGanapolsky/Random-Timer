@@ -67,7 +67,6 @@ fun ActiveTimerScreen(
     isPro: Boolean,
     onStop: () -> Unit,
     onDismissAlarm: () -> Unit,
-    onSilence: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onReset: () -> Unit,
@@ -196,13 +195,13 @@ fun ActiveTimerScreen(
                         Modifier
                             .size(circleSize)
                             .then(
-                                if (state.status == TimerStatus.ALARM) {
+                                if (isComplete) {
                                     Modifier.clickable(
                                         indication = null,
                                         interactionSource = remember { MutableInteractionSource() },
                                     ) {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onSilence()
+                                        onDismissAlarm()
                                     }
                                 } else {
                                     Modifier
@@ -513,7 +512,6 @@ private fun ActiveTimerScreenRunningPreview() {
             isPro = false,
             onStop = {},
             onDismissAlarm = {},
-            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},
@@ -538,7 +536,6 @@ private fun ActiveTimerScreenPausedPreview() {
             isPro = false,
             onStop = {},
             onDismissAlarm = {},
-            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},
@@ -563,7 +560,6 @@ private fun ActiveTimerScreenCompletePreview() {
             isPro = false,
             onStop = {},
             onDismissAlarm = {},
-            onSilence = {},
             onPause = {},
             onResume = {},
             onReset = {},

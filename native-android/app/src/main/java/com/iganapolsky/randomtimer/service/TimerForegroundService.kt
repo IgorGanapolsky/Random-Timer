@@ -21,7 +21,10 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
@@ -83,6 +86,7 @@ class TimerForegroundService : Service() {
     private var vibrator: Vibrator? = null
     private var screenOffReceiver: ScreenOffReceiver? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var mediaSession: MediaSessionCompat? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -350,6 +354,7 @@ class TimerForegroundService : Service() {
         stopVibration()
         unregisterScreenOffReceiver()
         releaseTimerWakeLock()
+        deactivateMediaSession()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -483,6 +488,7 @@ class TimerForegroundService : Service() {
         stopVibration()
         unregisterScreenOffReceiver()
         releaseTimerWakeLock()
+        deactivateMediaSession()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
@@ -517,6 +523,8 @@ class TimerForegroundService : Service() {
         if (state.config.vibrationEnabled) {
             startVibration()
         }
+
+        activateMediaSession()
 
         // Start alarm countdown to auto-stop after alarmDuration
         startAlarmCountdown(state.config.alarmDuration)
@@ -1131,6 +1139,65 @@ class TimerForegroundService : Service() {
             }
         }
         screenOffReceiver = null
+    }
+
+    // -- Media Session (Bluetooth/Headset support) --
+
+    private fun activateMediaSession() {
+        if (mediaSession != null) return
+
+        mediaSession =
+            MediaSessionCompat(this, "RandomTimerAlarm").apply {
+                setCallback(
+                    object : MediaSessionCompat.Callback() {
+                        override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
+                            @Suppress("DEPRECATION")
+                            val keyEvent =
+                                mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
+                            if (keyEvent != null &&
+                                MediaButtonHandler.shouldSilenceAlarm(keyEvent.keyCode, keyEvent.action)
+                            ) {
+                                silenceAlarm()
+                                return true
+                            }
+                            return super.onMediaButtonEvent(mediaButtonEvent)
+                        }
+
+                        override fun onStop() {
+                            silenceAlarm()
+                        }
+
+                        override fun onPause() {
+                            silenceAlarm()
+                        }
+                    },
+                )
+
+                val state =
+                    PlaybackStateCompat
+                        .Builder()
+                        .setActions(
+                            PlaybackStateCompat.ACTION_STOP or
+                                PlaybackStateCompat.ACTION_PAUSE or
+                                PlaybackStateCompat.ACTION_PLAY_PAUSE,
+                        ).setState(
+                            PlaybackStateCompat.STATE_PLAYING,
+                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                            1f,
+                        ).build()
+                setPlaybackState(state)
+                isActive = true
+            }
+        Log.d("TimerService", "Media session activated")
+    }
+
+    private fun deactivateMediaSession() {
+        mediaSession?.let {
+            it.isActive = false
+            it.release()
+        }
+        mediaSession = null
+        Log.d("TimerService", "Media session deactivated")
     }
 
     companion object {

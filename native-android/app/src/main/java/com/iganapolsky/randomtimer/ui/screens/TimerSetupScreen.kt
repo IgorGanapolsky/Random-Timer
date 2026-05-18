@@ -183,6 +183,7 @@ fun TimerSetupScreen(
     var hasFirstCompleted by remember(context) { mutableStateOf(readHasFirstCompleted(context)) }
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(!isPro) }
+    var showCompetitionPrep by remember { mutableStateOf(false) }
     var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
     var storedFreeMaxSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.maxSeconds) }
     var storedExtendedMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
@@ -365,70 +366,6 @@ fun TimerSetupScreen(
                     }
                 }
 
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(
-                                text = "Competition Prep",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TimerColors.TextPrimary,
-                            )
-
-                            TrainingPreset.ALL.forEach { preset ->
-                                Surface(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        updateConfig(
-                                            minSeconds = preset.minSeconds,
-                                            maxSeconds = preset.maxSeconds,
-                                            alarmDuration = preset.alarmDuration,
-                                            repeatEnabled = preset.repeatEnabled,
-                                            soundType = preset.soundType,
-                                            vibrationEnabled = preset.vibrationEnabled,
-                                            useExtendedRange = false,
-                                        )
-                                        onTrainingPresetApplied(preset)
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = TimerColors.GlassBackground,
-                                    border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.weight(1f),
-                                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                                        ) {
-                                            Text(
-                                                text = preset.title,
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = TimerColors.TextPrimary,
-                                            )
-                                            Text(
-                                                text = preset.subtitle,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = TimerColors.TextMuted,
-                                            )
-                                        }
-                                        Text(
-                                            text = "${formatTime(preset.minSeconds)}-${formatTime(preset.maxSeconds)}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TimerColors.AccentPrimary,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // 1. Timer Range Card
                 item {
                     GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
@@ -533,6 +470,7 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMinSeconds = newMin,
                                             maxSecondsLimit = maxRange,
+                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = min, maxSeconds = max)
                                 },
@@ -543,6 +481,7 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMaxSeconds = newMax,
                                             maxSecondsLimit = maxRange,
+                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                                 },
@@ -924,6 +863,63 @@ fun TimerSetupScreen(
                                                     color = TimerColors.AccentPrimary,
                                                 )
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isPro) {
+                    item {
+                        GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Training Presets",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TimerColors.TextPrimary,
+                                )
+
+                                TrainingPreset.ALL.forEach { preset ->
+                                    Surface(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onTrainingPresetApplied(preset)
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = TimerColors.GlassBackground,
+                                        border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                            ) {
+                                                Text(
+                                                    text = preset.title,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = TimerColors.TextPrimary,
+                                                )
+                                                Text(
+                                                    text = preset.subtitle,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.TextMuted,
+                                                )
+                                            }
+                                            Text(
+                                                text = "${formatTime(preset.minSeconds)}-${formatTime(preset.maxSeconds)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
                                         }
                                     }
                                 }

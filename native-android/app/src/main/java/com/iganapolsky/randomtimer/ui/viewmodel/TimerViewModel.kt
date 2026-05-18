@@ -17,6 +17,7 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
+import com.iganapolsky.randomtimer.domain.model.TrainingPreset
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -109,18 +110,32 @@ class TimerViewModel
             }
         }
 
-        fun startTimer() {
+        fun applyPresetAndStart(preset: TrainingPreset) {
+            val newConfig = preset.applyTo(config.value)
+            trackTrainingPresetApplied(
+                presetId = preset.id,
+                minSeconds = preset.minSeconds,
+                maxSeconds = preset.maxSeconds,
+            )
+            viewModelScope.launch {
+                repository.saveTimerConfig(newConfig)
+                startTimer(newConfig)
+            }
+        }
+
+        fun startTimer(overrideConfig: TimerConfig? = null) {
             stopSoundPreview()
 
             viewModelScope.launch {
-                val state = startTimerUseCase(config.value)
+                val configToUse = overrideConfig ?: config.value
+                val state = startTimerUseCase(configToUse)
                 _timerState.value = state
                 serviceController.startTimer(state)
                 analyticsService.track(
                     AnalyticsEvents.TIMER_STARTED,
                     mapOf(
-                        "min_duration" to config.value.minSeconds,
-                        "max_duration" to config.value.maxSeconds,
+                        "min_duration" to configToUse.minSeconds,
+                        "max_duration" to configToUse.maxSeconds,
                         "target_duration" to state.targetDuration.inWholeSeconds,
                         AnalyticsProperties.ENTITLEMENT_LEVEL to
                             proManager.entitlementLevel.value.name
