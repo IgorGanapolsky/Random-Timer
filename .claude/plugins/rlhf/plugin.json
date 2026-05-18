@@ -9,7 +9,7 @@
     ],
     "hooks": {
       "SessionStart": "hooks/session-start.sh",
-      "BeforeAgent": "hooks/user-prompt-submit.sh"
+      "UserPromptSubmit": "hooks/user-prompt-submit.sh"
     },
     "scripts": [
       "scripts/feedback/claude-md-health-check.sh"

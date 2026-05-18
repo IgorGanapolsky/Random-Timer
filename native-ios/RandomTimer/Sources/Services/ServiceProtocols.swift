@@ -24,6 +24,7 @@ protocol TimerNotificationHandling {
     func clearNotificationTapFlag()
     func scheduleReengagementReminder()
     func cancelReengagementReminders()
+    func scheduleMonthlyContentReminder()
 }
 
 protocol TimerStorage: Sendable {

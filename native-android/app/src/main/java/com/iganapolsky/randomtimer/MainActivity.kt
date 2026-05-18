@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
         handleAlarmNotificationTap(intent)
         latestDeepLinkUri = handleDeepLink(intent)
 
+        inAppUpdateManager.checkForUpdates(this)
+        MonthlyContentWorker.schedule(this)
+
         // User is back — cancel any pending re-engagement reminders
         ReengagementScheduler.cancel(this)
 
@@ -150,6 +153,14 @@ class MainActivity : ComponentActivity() {
             model.contains("sdk_gphone") ||
             model.contains("emulator") ||
             product.contains("sdk_gphone") ||
+            product.contains("emulator")
+    }
+}
+.contains("sdk_gphone") ||
+            product.contains("emulator")
+    }
+}
+ontains("sdk_gphone") ||
             product.contains("emulator")
     }
 }

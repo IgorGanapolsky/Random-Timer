@@ -297,6 +297,11 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         await startTimer(roundCount: currentRound + 1)
     }
 
+    /// Setup background tasks like monthly reminders.
+    func setupOnboardingAndReminders() {
+        notificationService.scheduleMonthlyContentReminder()
+    }
+
     /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
     /// Treats backgrounding during alarm as a silence action (like Android's ScreenOffReceiver)
     /// so the alarm does NOT restart when returning to foreground.

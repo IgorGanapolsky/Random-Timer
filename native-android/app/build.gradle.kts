@@ -159,8 +159,14 @@ dependencies {
     // In-App Review
     implementation(libs.play.review)
 
+    // In-App Update
+    implementation(libs.play.update)
+
     // In-App Billing
     implementation(libs.play.billing)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

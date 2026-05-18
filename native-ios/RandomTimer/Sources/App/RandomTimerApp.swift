@@ -52,6 +52,19 @@ struct RandomTimerApp: App {
                     AnalyticsService.shared.trackDeepLink(url)
                     deepLinkRouter.handle(url)
                 }
+                .alert("Update Available", isPresented: Binding(
+                    get: { storeUpdateVersion != nil },
+                    set: { if !$0 { storeUpdateVersion = nil } }
+                )) {
+                    Button("Update") {
+                        if let url = URL(string: "https://apps.apple.com/app/id6758355312") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    Button("Not Now", role: .cancel) {}
+                } message: {
+                    Text("A new version (\(storeUpdateVersion ?? "")) is available on the App Store with new features and fixes.")
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
