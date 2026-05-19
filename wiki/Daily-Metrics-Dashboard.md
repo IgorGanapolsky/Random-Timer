@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 68 | 422 | 490 |
-| Active Installs | — | 425 | — |
+| Distinct install users (30d) | 69 | 428 | 497 |
+| Active Installs | — | 431 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 47 |
-| WAU | 160 |
-| MAU | 506 |
+| DAU | 54 |
+| WAU | 158 |
+| MAU | 513 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 12 |
-| Timer Completed (7d) | 198 |
-| Completed Users (7d) | 26 |
-| Sessions/Completed User (7d) | 7.62 |
+| Timer Completed (7d) | 200 |
+| Completed Users (7d) | 27 |
+| Sessions/Completed User (7d) | 7.41 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-19T19:12:58+00:00
+**Generated:** 2026-05-19T19:55:46+00:00
 
 ## Onboarding Funnel
-- First Open: **501**
-- First Timer Configured: **330** (65.9% of opens)
-- First Timer Completed: **106** (21.2% of opens)
+- First Open: **508**
+- First Timer Configured: **336** (66.1% of opens)
+- First Timer Completed: **108** (21.3% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,7 +60,7 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 363 |
+| Paywall Views | 368 |
 | Offer Selects | 112 |
 | Purchase Attempts | 7 |
 | Purchase Successes | 0 |
@@ -68,7 +68,7 @@
 
 **Top failure reasons:** user_cancelled (7)
 
-**Catalog failures (Android):** elite_tactical_monthly (513), elite_tactical (350), pro_base (115), unknown (68)
+**Catalog failures (Android):** elite_tactical_monthly (522), elite_tactical (359), pro_base (122), unknown (73)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -76,9 +76,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 501 | — |
-| First Timer Configured | 330 | 65.9% of opens |
-| First Timer Completed | 106 | 21.2% of opens |
+| First Open | 508 | — |
+| First Timer Configured | 336 | 66.1% of opens |
+| First Timer Completed | 108 | 21.3% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -154,18 +154,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-02-26" , "2026-03-12" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
+    x-axis ["2026-02-26" , "2026-03-12" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
     y-axis "Downloads"
-    line [18 , 4 , 68 , 68 , 68 , 68 , 68]
-    line [0 , 139 , 408 , 411 , 416 , 416 , 422]
+    line [18 , 4 , 68 , 68 , 68 , 68 , 68 , 69]
+    line [0 , 139 , 408 , 411 , 416 , 416 , 422 , 428]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-02-26" , "2026-03-02" , "2026-03-03" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
+    x-axis ["2026-02-26" , "2026-03-02" , "2026-03-03" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
     y-axis "Users"
-    line [2 , 0 , 0 , 12 , 12 , 12 , 12 , 12]
+    line [2 , 0 , 0 , 12 , 12 , 12 , 12 , 12 , 12]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-19T19:12:59+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-19T19:55:48+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
