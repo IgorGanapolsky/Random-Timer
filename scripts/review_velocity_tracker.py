@@ -15,9 +15,25 @@ import json
 import datetime as dt
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 
 HISTORY_PATH = "marketing/data/review_velocity.json"
+IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
+ITUNES_LOOKUP_URL = "https://itunes.apple.com/lookup?bundleId={bundle}&country=us"
+
+
+def _lookup_itunes(bundle_id: str = IOS_BUNDLE_ID, timeout: float = 5.0) -> Optional[Dict[str, Any]]:
+    """Public iTunes Search API lookup. Returns None on any network/decode failure
+    so callers can gracefully fall back to a zero placeholder."""
+    url = ITUNES_LOOKUP_URL.format(bundle=bundle_id)
+    try:
+        req = Request(url, headers={"User-Agent": "RandomTimer-review-velocity/1.0"})
+        with urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (URLError, TimeoutError, ValueError, OSError):
+        return None
 ALERT_THRESHOLD_PCT = -20  # Alert if velocity drops by 20%+
 
 
@@ -40,10 +56,12 @@ def save_velocity_history(repo_root: Path, history: Dict[str, Any]) -> None:
 
 
 def fetch_ios_reviews_count(repo_root: Path) -> Dict[str, Any]:
-    """Fetch iOS review data from ASC reviews history.
+    """Fetch iOS review data, preferring ASC cache, then iTunes Search API.
 
-    In production, call App Store Connect API directly.
-    Falls back to reading local history JSONL from ios-reviews-ops workflow.
+    Cache (populated by ASC integration) wins because it can include recent_7d
+    and per-review detail. Without it, the public iTunes Search API still
+    surfaces userRatingCount + averageUserRating so the tracker reports real
+    numbers instead of a silent zero placeholder.
     """
     history_path = repo_root / "marketing/data/asc_reviews_cache.json"
     if history_path.is_file():
@@ -53,7 +71,16 @@ def fetch_ios_reviews_count(repo_root: Path) -> Dict[str, Any]:
             "avg_rating": data.get("avg_rating", 0.0),
             "recent_count": data.get("recent_7d", 0),
         }
-    # Placeholder when no real data available
+
+    lookup = _lookup_itunes()
+    if lookup and lookup.get("resultCount", 0) >= 1:
+        result = lookup["results"][0]
+        return {
+            "total_reviews": int(result.get("userRatingCount", 0) or 0),
+            "avg_rating": float(result.get("averageUserRating", 0.0) or 0.0),
+            "recent_count": 0,
+        }
+
     return {"total_reviews": 0, "avg_rating": 0.0, "recent_count": 0}
 
 
