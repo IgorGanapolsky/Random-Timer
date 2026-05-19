@@ -7,7 +7,8 @@ Use this page for machine-readable summaries of current content and positioning.
 
 ## Intent
 - Product: Random Tactical Timer
-- Audience: athletes, trainers, coaches, and reaction-drill users
+- Audience: MMA fighters, BJJ practitioners, boxers, muay thai and kickboxing athletes, HIIT and CrossFit trainers, sparring and pad-work coaches, tactical and combatives instructors, and reaction-drill users
+- Use cases: random interval timer for MMA / BJJ / boxing / muay thai / kickboxing / HIIT / CrossFit / tabata / sparring / pad work / tactical drills
 - Outcomes: reaction readiness, unpredictability in interval training, repeatable setup
 
 ## Latest posts
