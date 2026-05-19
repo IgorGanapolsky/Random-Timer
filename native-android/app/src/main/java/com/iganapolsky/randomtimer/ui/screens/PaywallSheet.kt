@@ -124,6 +124,7 @@ fun PaywallSheet(
     valueFramingVariant: String = PaywallValueFraming.CONTROL,
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     availableProductIds: Set<String> = emptySet(),
+    billingCatalogProbed: Boolean = false,
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String, selectionSource: String) -> Unit = { _, _, _ -> },
     onRestore: () -> Unit,
@@ -131,13 +132,22 @@ fun PaywallSheet(
     onDebugUnlock: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
-    val initialSelection = initialPlanSelection(entryPoint, defaultToAnnualPlan)
-    var selectedPlan by remember(entryPoint, defaultToAnnualPlan) { mutableStateOf(initialSelection) }
-    LaunchedEffect(availableProductIds, selectedPlan) {
-        if (!shouldShowPaywallPlan(selectedPlan, availableProductIds)) {
-            selectedPlan = fallbackPaywallPlan(availableProductIds)
+    val initialSelection =
+        initialPlanSelection(
+            entryPoint = entryPoint,
+            defaultToAnnualPlan = defaultToAnnualPlan,
+            availableProductIds = availableProductIds,
+            billingCatalogProbed = billingCatalogProbed,
+        )
+    var selectedPlan by remember(entryPoint, defaultToAnnualPlan, availableProductIds, billingCatalogProbed) {
+        mutableStateOf(initialSelection)
+    }
+    LaunchedEffect(availableProductIds, billingCatalogProbed, selectedPlan) {
+        if (!shouldShowPaywallPlan(selectedPlan, availableProductIds, billingCatalogProbed)) {
+            selectedPlan = fallbackPaywallPlan(availableProductIds, billingCatalogProbed)
         }
     }
+    val hasPurchasablePlan = hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed)
     val featureContext = paywallFeatureContext(entryPoint)
     val headline =
         if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
@@ -182,9 +192,21 @@ fun PaywallSheet(
                 ) {
                     HorizontalDivider(color = TimerColors.TextSecondary.copy(alpha = 0.28f))
                     Spacer(modifier = Modifier.height(12.dp))
+                    if (billingCatalogProbed && !hasPurchasablePlan) {
+                        Text(
+                            text = "Purchases are temporarily unavailable. Please try again later.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TimerColors.TextSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                        )
+                    }
                     PrimaryButton(
-                        text = ctaLabel,
+                        text = if (hasPurchasablePlan) ctaLabel else "Purchases unavailable",
                         onClick = {
+                            if (!hasPurchasablePlan) {
+                                return@PrimaryButton
+                            }
                             onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")
                             onPurchase(purchaseProductId)
                         },
@@ -351,7 +373,7 @@ fun PaywallSheet(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                if (shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, availableProductIds)) {
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, availableProductIds, billingCatalogProbed)) {
                     PlanOptionCard(
                         title = "Lifetime",
                         priceLabel = stripPriceSuffix(lifetimePrice),
@@ -366,7 +388,7 @@ fun PaywallSheet(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                if (shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, availableProductIds)) {
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, availableProductIds, billingCatalogProbed)) {
                     PlanOptionCard(
                         title = "Monthly",
                         priceLabel = "${stripPriceSuffix(monthlyPrice)}/month",
@@ -381,7 +403,7 @@ fun PaywallSheet(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                if (shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, availableProductIds)) {
+                if (shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, availableProductIds, billingCatalogProbed)) {
                     PlanOptionCard(
                         title = "Annual",
                         priceLabel = "${stripPriceSuffix(proPrice)}/year",
@@ -417,33 +439,62 @@ internal fun planNameForSelection(plan: SubscriptionPlanSelection): String =
 internal fun initialPlanSelection(
     entryPoint: String,
     defaultToAnnualPlan: Boolean,
-): SubscriptionPlanSelection =
-    when {
-        defaultToAnnualPlan -> SubscriptionPlanSelection.ANNUAL
-        entryPoint == "setup_upgrade_cta" -> SubscriptionPlanSelection.LIFETIME
-        else -> SubscriptionPlanSelection.MONTHLY
+    availableProductIds: Set<String> = emptySet(),
+    billingCatalogProbed: Boolean = false,
+): SubscriptionPlanSelection {
+    val preferred =
+        when {
+            defaultToAnnualPlan -> SubscriptionPlanSelection.ANNUAL
+            entryPoint == "setup_upgrade_cta" -> SubscriptionPlanSelection.LIFETIME
+            else -> SubscriptionPlanSelection.MONTHLY
+        }
+    if (!billingCatalogProbed || availableProductIds.isEmpty()) {
+        return preferred
     }
+    return if (shouldShowPaywallPlan(preferred, availableProductIds, billingCatalogProbed)) {
+        preferred
+    } else {
+        fallbackPaywallPlan(availableProductIds, billingCatalogProbed)
+    }
+}
 
 internal fun shouldShowPaywallPlan(
     plan: SubscriptionPlanSelection,
     availableProductIds: Set<String>,
+    billingCatalogProbed: Boolean = false,
 ): Boolean {
+    if (!billingCatalogProbed) {
+        return false
+    }
     if (availableProductIds.isEmpty()) {
-        return true
+        return false
     }
     val knownPaywallProductIds = SubscriptionPlanSelection.entries.map(::productIdForPlan).toSet()
     if (availableProductIds.intersect(knownPaywallProductIds).isEmpty()) {
-        return true
+        return false
     }
     return availableProductIds.contains(productIdForPlan(plan))
 }
 
-internal fun fallbackPaywallPlan(availableProductIds: Set<String>): SubscriptionPlanSelection =
+internal fun hasPurchasablePaywallPlan(
+    availableProductIds: Set<String>,
+    billingCatalogProbed: Boolean,
+): Boolean =
+    billingCatalogProbed &&
+        SubscriptionPlanSelection.entries.any {
+            shouldShowPaywallPlan(it, availableProductIds, billingCatalogProbed)
+        }
+
+internal fun fallbackPaywallPlan(
+    availableProductIds: Set<String>,
+    billingCatalogProbed: Boolean = false,
+): SubscriptionPlanSelection =
     listOf(
         SubscriptionPlanSelection.LIFETIME,
         SubscriptionPlanSelection.ANNUAL,
         SubscriptionPlanSelection.MONTHLY,
-    ).firstOrNull { shouldShowPaywallPlan(it, availableProductIds) } ?: SubscriptionPlanSelection.LIFETIME
+    ).firstOrNull { shouldShowPaywallPlan(it, availableProductIds, billingCatalogProbed) }
+        ?: SubscriptionPlanSelection.ANNUAL
 
 internal fun ctaLabelForPlan(
     selectedPlan: SubscriptionPlanSelection,

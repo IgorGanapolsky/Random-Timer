@@ -441,6 +441,51 @@ def inject_dashboard_data(dashboard: str, data_dir: Path) -> str:
             flags=re.DOTALL,
         )
 
+    # --- Paywall funnel ---
+    pw = load_json(data_dir / "paywall_conversion_report.json")
+    if pw:
+        funnel = pw.get("funnel", {})
+        quality_note = _data_quality_note(pw, fallback_source="paywall conversion snapshot degraded")
+        top_failures = pw.get("top_failure_reasons", [])
+        catalog_failures = pw.get("product_catalog_failures", [])
+        failure_summary = (
+            ", ".join(f"{row.get('reason', 'unknown')} ({row.get('count', 0)})" for row in top_failures[:5])
+            if top_failures
+            else "none"
+        )
+        android_catalog = [
+            row
+            for row in catalog_failures
+            if str(row.get("platform", "")).lower() == "android"
+        ]
+        catalog_summary = (
+            ", ".join(
+                f"{row.get('product_id', 'unknown')} ({row.get('failures', 0)})"
+                for row in android_catalog[:5]
+            )
+            if android_catalog
+            else "none"
+        )
+        paywall_block = (
+            "| Metric | Value |\n"
+            "|--------|-------|\n"
+            f"| Paywall Views | {_fmt_num_allow_zero(funnel.get('views'))} |\n"
+            f"| Offer Selects | {_fmt_num_allow_zero(funnel.get('offer_selects'))} |\n"
+            f"| Purchase Attempts | {_fmt_num_allow_zero(funnel.get('purchase_attempts'))} |\n"
+            f"| Purchase Successes | {_fmt_num_allow_zero(funnel.get('purchase_successes'))} |\n"
+            f"| Attempt → Success | {_fmt(funnel.get('attempt_to_success_rate'))} |\n\n"
+            f"**Top failure reasons:** {failure_summary}\n\n"
+            f"**Catalog failures (Android):** {catalog_summary}"
+        )
+        if quality_note:
+            paywall_block += f"\n\n{quality_note}"
+        dashboard = re.sub(
+            r"<!-- PAYWALL_START -->.*?<!-- PAYWALL_END -->",
+            f"<!-- PAYWALL_START -->\n{paywall_block}\n<!-- PAYWALL_END -->",
+            dashboard,
+            flags=re.DOTALL,
+        )
+
     # --- Review Velocity ---
     rv = load_json(data_dir / "review_velocity.json")
     if rv:

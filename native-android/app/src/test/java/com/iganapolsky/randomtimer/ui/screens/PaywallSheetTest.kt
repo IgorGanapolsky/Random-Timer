@@ -140,15 +140,71 @@ class PaywallSheetTest {
                 ProManager.ELITE_PRODUCT_ID,
             )
 
-        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, availableProductIds))
-        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, availableProductIds))
-        assertEquals(false, shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, availableProductIds))
+        assertEquals(
+            true,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.LIFETIME,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
+        assertEquals(
+            true,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.ANNUAL,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.MONTHLY,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
     }
 
     @Test
-    fun `unknown billing catalog keeps paywall plans visible`() {
-        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, emptySet()))
-        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, emptySet()))
-        assertEquals(true, shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet()))
+    fun `unprobed billing catalog hides paywall plans`() {
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, emptySet(), billingCatalogProbed = false),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, emptySet(), billingCatalogProbed = false),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet(), billingCatalogProbed = false),
+        )
+    }
+
+    @Test
+    fun `probed empty billing catalog hides paywall plans`() {
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet(), billingCatalogProbed = true),
+        )
+        assertEquals(false, hasPurchasablePaywallPlan(emptySet(), billingCatalogProbed = true))
+    }
+
+    @Test
+    fun `initial plan selection prefers first purchasable plan when default is missing`() {
+        val available =
+            setOf(
+                ProManager.ELITE_PRODUCT_ID,
+            )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(
+                entryPoint = "range_gate",
+                defaultToAnnualPlan = false,
+                availableProductIds = available,
+                billingCatalogProbed = true,
+            ),
+        )
     }
 }
