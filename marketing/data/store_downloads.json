@@ -1,28 +1,41 @@
 {
-  "generated_at": "2026-03-12T14:42:48+00:00",
+  "generated_at": "2026-05-19T17:18:51+00:00",
   "window_days": 30,
   "source": "posthog",
-  "status": "degraded",
+  "status": "ok",
   "status_reason": "",
   "ios": {
-    "downloads_30d": 4
+    "downloads_30d": 68
   },
   "android": {
-    "downloads_30d": 139,
-    "active_installs": 0
+    "downloads_30d": 408,
+    "active_installs": 411
   },
   "combined": {
-    "downloads_30d": 143
+    "downloads_30d": 476
   },
   "active_users": {
-    "dau": 26,
-    "wau": 142,
-    "mau": 144
+    "dau": 36,
+    "wau": 146,
+    "mau": 492
+  },
+  "metric_definitions": {
+    "downloads_30d": {
+      "display_name": "Distinct install users (30d)",
+      "source": "posthog",
+      "semantic_type": "proxy",
+      "description": "Distinct live-device users with an 'Application Installed' event over the trailing window. This is a PostHog proxy metric, not store download truth."
+    }
+  },
+  "data_quality": {
+    "is_stale": false,
+    "preserved_previous_metrics": false,
+    "last_attempt_generated_at": "2026-05-19T17:18:51+00:00",
+    "last_good_generated_at": "",
+    "reason": ""
   },
   "query_diagnostics": {
-    "errors": [
-      "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)"
-    ]
+    "errors": []
   },
   "snapshots": [
     {
@@ -44,6 +57,16 @@
       "dau": 26,
       "wau": 142,
       "mau": 144
+    },
+    {
+      "timestamp": "2026-05-19T17:18:51+00:00",
+      "ios_downloads_30d": 68,
+      "android_downloads_30d": 408,
+      "combined_downloads_30d": 476,
+      "android_active_installs": 411,
+      "dau": 36,
+      "wau": 146,
+      "mau": 492
     }
   ]
 }
