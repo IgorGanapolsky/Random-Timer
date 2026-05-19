@@ -43,6 +43,11 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
         promotional_text.strip()
         == "Unpredictable intervals for combat sports & HIIT. AI coach voices, 60‑min sessions, full sound library—optional Pro."
     )
-    assert subtitle == "Random HIIT & combat rounds"
+    # Subtitle copy pinned (snapshot regression guard). Updated 2026-05-18 from
+    # "Random HIIT & combat rounds" to "Random HIIT & combat training": ASO swap
+    # gaining "training" as a new indexed term (high search volume, not in title
+    # or keywords field) and dropping combat-sports-only "rounds" — broader
+    # funnel, same reaction positioning. 29/30 chars within Apple's limit.
+    assert subtitle == "Random HIIT & combat training"
     assert "mma" in keywords
     assert "crossfit" in keywords
