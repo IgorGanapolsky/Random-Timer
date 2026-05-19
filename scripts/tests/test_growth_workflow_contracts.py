@@ -538,6 +538,8 @@ def test_wiki_sync_refreshes_posthog_snapshots_and_commits_marketing_data():
     assert "marketing/data/north_star.json" in source
     assert "wiki/Daily-Metrics-Dashboard.md" in source
     assert "wiki/Paid-Acquisition.md" in source
+    assert "marketing/keywords/posthog_feedback.json" in source
+    assert "git add marketing/data" in source
     assert "git pull --rebase origin develop" in source
 
 
