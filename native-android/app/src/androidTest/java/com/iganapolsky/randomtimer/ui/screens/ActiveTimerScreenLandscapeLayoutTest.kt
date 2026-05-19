@@ -43,7 +43,6 @@ class ActiveTimerScreenLandscapeLayoutTest {
                     isPro = false,
                     onStop = { stopped = true },
                     onDismissAlarm = {},
-                    onSilence = {},
                     onPause = {},
                     onResume = {},
                     onReset = {},
