@@ -16,9 +16,14 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in full_description
     assert "pattern-interrupt training built for combat sports, sparring, drills, and reaction work." in full_description
     assert "serious fighters and operators" not in full_description
+    # Short description pin (snapshot regression guard). Updated 2026-05-18:
+    # added "muay thai" as a new indexed term (high-volume combat-sport search),
+    # reordered to MMA → BJJ → boxing → muay thai → HIIT for natural reading,
+    # dropped redundant "Random cues" (Random already opens the string).
+    # 75/80 chars within Play Store's limit.
     assert (
         short_description.strip()
-        == "Random tactical timer: MMA, boxing, BJJ & HIIT. Random cues + AI coach voices."
+        == "Random tactical timer: MMA, BJJ, boxing, muay thai & HIIT. AI coach voices."
     )
 
 
