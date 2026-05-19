@@ -15,13 +15,9 @@ struct RandomTimerApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     /// Non-nil when the App Store advertises a newer version than this build.
-    /// Drives the "Update Available" alert below; the setter clears it on
-    /// dismiss. Population (App Store version probe) is intentionally
-    /// out-of-scope for this declaration — left for the in-app-update feature
-    /// commit (e9f8e111) to wire up; this @State is the missing storage that
-    /// caused `error: cannot find 'storeUpdateVersion' in scope` on every
-    /// iOS build since that commit landed.
     @State private var storeUpdateVersion: String?
+
+    private let storeUpdateService = StoreUpdateService()
 
     /// GitHub Actions passes `OTHER_SWIFT_FLAGS=-D RT_SKIP_FIREBASE_FOR_CI` for `xcodebuild test`
     /// because the simulator app does not inherit shell env vars and CI uses a placeholder plist.
@@ -79,8 +75,7 @@ struct RandomTimerApp: App {
             switch newPhase {
             case .active:
                 Task {
-                    await ProAudioPackStore.shared.refreshIfNeeded(isPro: ProManager.shared.isPro)
-                    await timerManager.handleForeground()
+                    await refreshAppActiveServices()
                 }
             case .background:
                 timerManager.handleBackground()
@@ -88,6 +83,19 @@ struct RandomTimerApp: App {
                 break
             }
         }
+        .task {
+            await refreshAppActiveServices()
+        }
+    }
+
+    @MainActor
+    private func refreshAppActiveServices() async {
+        if let newerVersion = await storeUpdateService.checkForUpdates() {
+            storeUpdateVersion = newerVersion
+        }
+        await ProAudioPackStore.shared.refreshIfNeeded(isPro: ProManager.shared.isPro)
+        await timerManager.configureMonthlyContentReminderIfNeeded()
+        await timerManager.handleForeground()
     }
 }
 

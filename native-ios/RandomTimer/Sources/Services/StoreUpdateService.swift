@@ -13,7 +13,9 @@ final class StoreUpdateService {
      Checks the App Store for a newer version of the app.
      - Returns: The version string of the update if available, otherwise nil.
      */
-    func checkForUpdates() async -> String? {
+    func checkForUpdates(
+        currentVersion: String? = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+    ) async -> String? {
         let urlString = "https://itunes.apple.com/lookup?id=\(appId)&country=us"
         guard let url = URL(string: urlString) else { return nil }
 
@@ -21,9 +23,8 @@ final class StoreUpdateService {
             let (data, _) = try await session.data(from: url)
             let lookup = try JSONDecoder().decode(ITunesLookup.self, from: data)
             guard let storeVersion = lookup.results.first?.version else { return nil }
-            
-            let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            if let currentVersion = currentVersion, isVersion(storeVersion, newerThan: currentVersion) {
+
+            if let currentVersion, isVersion(storeVersion, newerThan: currentVersion) {
                 return storeVersion
             }
         } catch {
