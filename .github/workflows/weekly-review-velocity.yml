@@ -28,7 +28,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests==2.32.5 pyjwt==2.11.0 cryptography==46.0.5
+        run: pip install requests==2.32.5 pyjwt==2.11.0 cryptography==46.0.5 google-play-scraper==1.2.7
 
       - name: Run review velocity tracker
         env:
