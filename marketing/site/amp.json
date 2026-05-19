@@ -4,7 +4,7 @@
   "name": "Random Tactical Timer",
   "operatingSystem": ["iOS", "Android"],
   "applicationCategory": "HealthAndFitnessApplication",
-  "description": "Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. Perfect for workout interval training, reaction drills, meditation, and any scenario where predictable timing defeats the purpose.",
+  "description": "Random Tactical Timer is a dual-platform mobile application for setting timers that fire at unpredictable moments. Users set a minimum and maximum duration, and the app picks a random time within that window. Built for MMA, BJJ, boxing, muay thai, kickboxing, HIIT, CrossFit, sparring, pad work, tabata, tactical drills, and any scenario where predictable timing defeats the purpose.",
   "offers": {
     "@type": "Offer",
     "price": "0.00",
@@ -19,6 +19,8 @@
     "approved_claims": [
       "The best timer app for unpredictable interval training.",
       "The ultimate reaction drill timer for coaches and athletes.",
+      "Built for combat sports: MMA, BJJ, boxing, muay thai, kickboxing, and sparring drills.",
+      "Random interval timer for HIIT, CrossFit, tabata, and tactical conditioning.",
       "Conceals the countdown timer for true unpredictability.",
       "Supports iOS Live Activities and Android foreground notifications.",
       "Fully functional in the background."
@@ -30,13 +32,18 @@
       "Multiple alarm sounds (intense/gentle) with volume control"
     ],
     "target_audiences": [
-      "Athletes",
-      "Fitness Coaches",
-      "Martial Artists",
+      "MMA fighters and grapplers",
+      "BJJ and jiu-jitsu practitioners",
+      "Boxers and muay thai athletes",
+      "Kickboxing and combat sports athletes",
+      "HIIT and CrossFit trainers",
+      "Sparring and pad-work coaches",
+      "Tactical and combatives instructors",
+      "Athletes, Fitness Coaches, Martial Artists",
       "Meditation Practitioners",
       "Teachers and Group Leaders"
     ],
     "integration_agnostic": true,
-    "last_verified": "2026-03-11T00:00:00Z"
+    "last_verified": "2026-05-18T00:00:00Z"
   }
 }
