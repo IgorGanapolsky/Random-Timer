@@ -82,13 +82,8 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add marketing/data/north_star.json \
-            marketing/data/store_downloads.json \
-            marketing/data/paywall_conversion_report.json \
-            marketing/data/paywall_conversion_report.md \
-            marketing/data/content_feedback.json \
-            marketing/data/attribution-report.md \
-            marketing/data/apple_ads_live_metrics.json \
+          git add marketing/data \
+            marketing/keywords/posthog_feedback.json \
             wiki/Daily-Metrics-Dashboard.md \
             wiki/Paid-Acquisition.md
           if git diff --staged --quiet; then
