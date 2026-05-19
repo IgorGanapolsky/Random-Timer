@@ -1,0 +1,39 @@
+name: Play IAP Product Readback
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-play-iap-products:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install google-api-python-client google-auth google-auth-httplib2
+
+      - name: Read back Google Play monetization product states
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          echo "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+          export GOOGLE_PLAY_JSON_KEY_PATH=/tmp/play-service-account.json
+          python3 scripts/play_verify_iap_products.py --json-out play-iap-product-readback.json
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: play-iap-product-readback
+          path: play-iap-product-readback.json
+          if-no-files-found: ignore
