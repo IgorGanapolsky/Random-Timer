@@ -1,7 +1,7 @@
 {
   "niche": "mobile timer app for tactical and reaction training",
   "monetization": "app installs, retention, and app store reviews",
-  "audience": "athletes, tactical trainers, coaches, and users who need unpredictable interval drills",
+  "audience": "MMA fighters, BJJ practitioners, boxers, muay thai and kickboxing athletes, HIIT and CrossFit trainers, sparring and pad-work coaches, tactical and combatives instructors, and athletes who need unpredictable interval drills",
   "seed_keywords": [
     "reaction training",
     "interval timer",
@@ -12,7 +12,13 @@
     "boxing drills",
     "home workout timer",
     "sparring prep",
-    "mental readiness"
+    "mental readiness",
+    "mma timer",
+    "bjj rounds",
+    "muay thai timer",
+    "kickboxing rounds",
+    "hiit timer",
+    "crossfit timer"
   ],
   "modifiers": [
     "best",
