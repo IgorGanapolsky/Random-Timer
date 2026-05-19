@@ -55,6 +55,22 @@
 
 <!-- ATTRIBUTION_END -->
 
+## Paywall & Revenue Funnel (30-day)
+
+<!-- PAYWALL_START -->
+| Metric | Value |
+|--------|-------|
+| Paywall Views | — |
+| Offer Selects | — |
+| Purchase Attempts | — |
+| Purchase Successes | — |
+| Attempt → Success | — |
+
+**Top failure reasons:** —
+
+**Catalog failures (Android):** —
+<!-- PAYWALL_END -->
+
 ## Onboarding Funnel (30-day window)
 
 <!-- FUNNEL_START -->

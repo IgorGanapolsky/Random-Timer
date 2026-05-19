@@ -19,6 +19,8 @@ WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
+WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
+WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
 AGENTS_DOC = ROOT / "AGENTS.md"
 ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
@@ -522,6 +524,18 @@ def test_analytics_deployment_report_reads_deployment_statuses():
     assert "/deployments/{deployment['id']}/statuses?per_page=1" in source
     assert 'latest_state = statuses[0]["state"] if statuses else "unknown"' in source
     assert '.state == "success"' not in source
+
+
+def test_wiki_sync_refreshes_posthog_snapshots_and_commits_marketing_data():
+    source = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python scripts/paywall_conversion_report.py --repo-root . --days 30" in source
+    assert "python scripts/attribution_feedback.py --repo-root . --days 30" in source
+    assert "python scripts/north_star_guardrail.py" in source
+    assert "python scripts/store_downloads_snapshot.py --repo-root . --days 30" in source
+    assert "Commit refreshed marketing analytics snapshots" in source
+    assert "marketing/data/paywall_conversion_report.json" in source
+    assert "marketing/data/north_star.json" in source
 
 
 def test_analytics_workflow_publishes_weekly_paywall_conversion_report_artifact():
