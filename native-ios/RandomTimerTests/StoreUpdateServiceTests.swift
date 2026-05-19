@@ -62,7 +62,7 @@ private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
         }
         do {
             let (response, data) = try handler(request)
-            client?.urlProtocol(self, didReceive: response)
+            client?.urlProtocol(self, didReceive: response as URLResponse)
             client?.urlProtocol(self, didLoad: data)
             client?.urlProtocolDidFinishLoading(self)
         } catch {
