@@ -65,10 +65,11 @@ def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     assert "--body \"Auto-generated monthly Pro content update." in contents
     assert '--release-month "${{ steps.meta.outputs.release_month }}"' in contents
     assert "git push origin develop" not in contents
-    assert 'gh pr comment "${CONTENT_PR_NUMBER}"' in contents
-    assert "/trunk merge" in contents
     assert 'gh pr merge "${CONTENT_PR_NUMBER}"' in contents
-    assert "--auto --delete-branch" in contents
+    assert "--squash" in contents
+    assert "--delete-branch" in contents
+    assert "/trunk merge" not in contents
+    assert 'gh pr comment "${CONTENT_PR_NUMBER}"' not in contents
     assert "-f submit_review=true" in contents
     assert "-f submit_review=false" not in contents
     assert "-f skip_internal_signoff=false" in contents

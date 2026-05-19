@@ -70,6 +70,9 @@ struct RandomTimerApp: App {
                 } message: {
                     Text("A new version (\(storeUpdateVersion ?? "")) is available on the App Store with new features and fixes.")
                 }
+                .task {
+                    await refreshAppActiveServices()
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
@@ -82,9 +85,6 @@ struct RandomTimerApp: App {
             default:
                 break
             }
-        }
-        .task {
-            await refreshAppActiveServices()
         }
     }
 
