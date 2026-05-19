@@ -4,11 +4,19 @@ Keep the **GitHub repo About** field aligned with **store listings** (canonical 
 
 ## Suggested short description (≤350 characters)
 
-> Random Tactical Timer — random-interval training for combat sports & HIIT. iOS & Android. Same story as App Store / Play (en-US).
+> Random Tactical Timer — random-interval training for MMA, BJJ, boxing, muay thai, kickboxing, HIIT, CrossFit, sparring, and tactical drills. iOS & Android. Same story as App Store / Play (en-US).
 
 Tighter option:
 
-> Train reaction, not rhythm. Native iOS + Android random timer for combat sports, BJJ, boxing, and HIIT.
+> Train reaction, not rhythm. Random interval timer for MMA, BJJ, boxing, muay thai, kickboxing, HIIT, CrossFit, sparring, and tactical drills. Native iOS + Android.
+
+**Keep this in sync with:**
+- `native-ios/fastlane/metadata/en-US/subtitle.txt` (App Store subtitle)
+- `native-android/fastlane/metadata/android/en-US/short_description.txt` (Play short description)
+- `README.md` intro paragraph
+- `marketing/keywords/strategy.json` `audience` field
+- `marketing/site/agents.md` Intent.Audience
+- `marketing/site/amp.json` + `marketing/product-pages/amp.json` `description` + `agentic_merchant_protocol.target_audiences`
 
 ## Website
 
