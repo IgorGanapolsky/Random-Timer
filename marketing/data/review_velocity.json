@@ -17,21 +17,30 @@
       "android_total": 0,
       "android_rating": 0.0,
       "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-05-19T15:15:30.359107+00:00",
+      "ios_total": 1,
+      "ios_rating": 5.0,
+      "ios_recent_7d": 0,
+      "android_total": 0,
+      "android_rating": 0.0,
+      "android_recent_7d": 0
     }
   ],
   "alerts": [],
   "ios": {
-    "total_reviews": 0,
-    "avg_rating": 0.0
+    "total_reviews": 1,
+    "avg_rating": 5.0
   },
   "android": {
     "total_reviews": 0,
     "avg_rating": 0.0
   },
   "latest_velocity": {
-    "ios_velocity": 0.0,
+    "ios_velocity": 0.01,
     "android_velocity": 0.0,
-    "window_days": 19
+    "window_days": 68
   },
   "review_prompt_config": {
     "completions_before_prompt": 3,
