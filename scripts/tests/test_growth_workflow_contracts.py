@@ -536,6 +536,9 @@ def test_wiki_sync_refreshes_posthog_snapshots_and_commits_marketing_data():
     assert "Commit refreshed marketing analytics snapshots" in source
     assert "marketing/data/paywall_conversion_report.json" in source
     assert "marketing/data/north_star.json" in source
+    assert "wiki/Daily-Metrics-Dashboard.md" in source
+    assert "wiki/Paid-Acquisition.md" in source
+    assert "git pull --rebase origin develop" in source
 
 
 def test_analytics_workflow_publishes_weekly_paywall_conversion_report_artifact():

@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -88,7 +88,9 @@ jobs:
             marketing/data/paywall_conversion_report.md \
             marketing/data/content_feedback.json \
             marketing/data/attribution-report.md \
-            marketing/data/apple_ads_live_metrics.json
+            marketing/data/apple_ads_live_metrics.json \
+            wiki/Daily-Metrics-Dashboard.md \
+            wiki/Paid-Acquisition.md
           if git diff --staged --quiet; then
             echo "No marketing snapshot changes to commit."
             exit 0
