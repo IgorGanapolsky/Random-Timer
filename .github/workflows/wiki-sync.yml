@@ -94,7 +94,8 @@ jobs:
             exit 0
           fi
           git commit -m "chore(analytics): refresh marketing snapshots from wiki-sync"
-          git push
+          git pull --rebase origin develop
+          git push origin HEAD:develop
 
       - name: Publish wiki pages
         uses: Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a # v4
