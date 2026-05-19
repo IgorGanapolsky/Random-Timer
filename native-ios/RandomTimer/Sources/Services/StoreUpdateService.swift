@@ -1,7 +1,7 @@
 import Foundation
 
 /// Service for checking if a newer version of the app is available in the App Store.
-final class StoreUpdateService {
+final class StoreUpdateService: Sendable {
     private let appId = "6758355312"
     private let session: URLSession
 
