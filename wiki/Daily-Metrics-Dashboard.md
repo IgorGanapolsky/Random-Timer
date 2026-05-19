@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-19T18:22:52+00:00
+**Generated:** 2026-05-19T18:35:35+00:00
 
 ## Onboarding Funnel
 - First Open: **495**
@@ -103,6 +103,9 @@
 | title_ab_test | android | proposed | 14 days |
 | short_description_ab_test | android | proposed | 14 days |
 | screenshot_ab_test | both | proposed | 21 days |
+| title_ab_test | android | proposed | 14 days |
+| short_description_ab_test | android | proposed | 14 days |
+| screenshot_ab_test | both | proposed | 21 days |
 <!-- CRO_END -->
 
 ## Paid Campaign Status
@@ -151,18 +154,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-02-26" , "2026-03-12" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
+    x-axis ["2026-02-26" , "2026-03-12" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
     y-axis "Downloads"
-    line [18 , 4 , 68 , 68 , 68]
-    line [0 , 139 , 408 , 411 , 416]
+    line [18 , 4 , 68 , 68 , 68 , 68]
+    line [0 , 139 , 408 , 411 , 416 , 416]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-02-26" , "2026-03-02" , "2026-03-03" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
+    x-axis ["2026-02-26" , "2026-03-02" , "2026-03-03" , "2026-05-19" , "2026-05-19" , "2026-05-19" , "2026-05-19"]
     y-axis "Users"
-    line [2 , 0 , 0 , 12 , 12 , 12]
+    line [2 , 0 , 0 , 12 , 12 , 12 , 12]
 ```
 
 ```mermaid
@@ -190,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-19T18:22:53+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-19T18:35:36+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
