@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Downloads (30d) | — | — | — |
-| Active Installs | — | — | — |
+| Distinct install users (30d) | 68 | 411 | 479 |
+| Active Installs | — | 414 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | — |
-| WAU | — |
-| MAU | — |
+| DAU | 38 |
+| WAU | 149 |
+| MAU | 495 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -22,15 +22,15 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 0 |
-| Timer Completed (7d) | 0 |
-| Completed Users (7d) | 0 |
-| Sessions/Completed User (7d) | 0.0 |
+| WQTU (7d) | 12 |
+| Timer Completed (7d) | 195 |
+| Completed Users (7d) | 24 |
+| Sessions/Completed User (7d) | 8.12 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
-| Active Campaign Count | 1 |
-| Guardrail Violated | YES |
+| Active Campaign Count | 0 |
+| Guardrail Violated | NO |
 <!-- NORTH_STAR_END -->
 
 ## Attribution Summary
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-02-24T15:47:22+00:00
+**Generated:** 2026-05-19T17:44:48+00:00
 
 ## Onboarding Funnel
-- First Open: **132**
-- First Timer Configured: **62** (47.0% of opens)
-- First Timer Completed: **32** (24.2% of opens)
+- First Open: **490**
+- First Timer Configured: **321** (65.5% of opens)
+- First Timer Completed: **104** (21.2% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,15 +60,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | — |
-| Offer Selects | — |
-| Purchase Attempts | — |
-| Purchase Successes | — |
+| Paywall Views | 361 |
+| Offer Selects | 112 |
+| Purchase Attempts | 7 |
+| Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** —
+**Top failure reasons:** user_cancelled (7)
 
-**Catalog failures (Android):** —
+**Catalog failures (Android):** elite_tactical_monthly (503), elite_tactical (340), pro_base (106), unknown (60)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -76,9 +76,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 132 | — |
-| First Timer Configured | 62 | 47.0% of opens |
-| First Timer Completed | 32 | 24.2% of opens |
+| First Open | 490 | — |
+| First Timer Configured | 321 | 65.5% of opens |
+| First Timer Completed | 104 | 21.2% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -86,10 +86,10 @@
 <!-- REVIEWS_START -->
 | Platform | Total Reviews | Avg Rating | 7-day Velocity |
 |----------|:------------:|:----------:|:--------------:|
-| iOS | — | — | — reviews/day |
-| Android | — | — | — reviews/day |
+| iOS | 1 | 5.0 | — reviews/day |
+| Android | 1 | 5.0 | 1.0 reviews/day |
 
-**Prompt Config:** Show after earned milestones (3, 10, 25, then every 25), 30 days between prompts
+**Prompt Config:** Show after 3 completions, 30 days between prompts
 <!-- REVIEWS_END -->
 
 ## Active CRO Experiments
@@ -100,6 +100,9 @@
 | title_ab_test | android | proposed | 14 days |
 | short_description_ab_test | android | proposed | 14 days |
 | screenshot_ab_test | both | proposed | 21 days |
+| title_ab_test | android | proposed | 14 days |
+| short_description_ab_test | android | proposed | 14 days |
+| screenshot_ab_test | both | proposed | 21 days |
 <!-- CRO_END -->
 
 ## Paid Campaign Status
@@ -107,16 +110,16 @@
 <!-- CAMPAIGNS_START -->
 | Platform | Daily Budget | Status | Keywords |
 |----------|:-----------:|--------|:--------:|
-| apple_search_ads | $10.00 | active | 37 |
-| google_uac | $10.00 | ready_to_launch | 10 |
-| reddit_ads | $10.00 | ready_to_launch | 0 |
-| **Total** | **$30.00** | — | 47 |
+| apple_search_ads | $18.00 | paused | 45 |
+| google_uac | $12.00 | ready_to_launch | 10 |
+| reddit_ads | $0.00 | ready_to_launch | 0 |
+| **Total** | **$30.00** | — | 55 |
 <!-- CAMPAIGNS_END -->
 
 ## ASO Keywords
 
 <!-- ASO_START -->
-**iOS (current):** `boxing,bjj,mma,combat,drills,sparring,interval,coach,hiit,crossfit,rounds,fighter,workout,tabata`
+**iOS (current):** `mma,crossfit,boxing,bjj,sparring,muay,thai,kickboxing,tabata,wod,interval,jiujitsu,fighter,reaction`
 
 **Last rotation:** —
 **Performing:** — | **Replaced:** —
@@ -146,18 +149,34 @@
 
 <!-- CHARTS_START -->
 ```mermaid
+xychart-beta
+    title "Downloads (30d rolling)"
+    x-axis ["2026-02-26" , "2026-03-12" , "2026-05-19" , "2026-05-19"]
+    y-axis "Downloads"
+    line [18 , 4 , 68 , 68]
+    line [0 , 139 , 408 , 411]
+```
+
+```mermaid
+xychart-beta
+    title "WQTU (7d)"
+    x-axis ["2026-02-26" , "2026-03-02" , "2026-03-03" , "2026-05-19" , "2026-05-19"]
+    y-axis "Users"
+    line [2 , 0 , 0 , 12 , 12]
+```
+
+```mermaid
 pie title Daily Ad Budget Allocation ($)
-    "Apple Search Ads" : 10.0
-    "Google Uac" : 10.0
-    "Reddit Ads" : 10.0
+    "Apple Search Ads" : 18.0
+    "Google Uac" : 12.0
 ```
 
 ```mermaid
 xychart-beta
     title "Keywords by Ad Group"
     x-axis ["Exact Match - High Intent" , "Search Match - Discovery" , "Competitor - Brand" , "UAC Themes"]
-    y-axis "Count" 0 --> 20
-    bar [15 , 12 , 10 , 10]
+    y-axis "Count" 0 --> 25
+    bar [15 , 20 , 10 , 10]
 ```
 
 ```mermaid
@@ -171,4 +190,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-02-24T17:38:32+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-19T17:44:50+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
