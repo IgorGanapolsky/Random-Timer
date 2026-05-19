@@ -10,14 +10,14 @@
 [![iOS](https://img.shields.io/badge/iOS-SwiftUI-blue?logo=apple)](native-ios/)
 [![Android](https://img.shields.io/badge/Android-Compose-3DDC84?logo=android)](native-android/)
 
-**Train reaction, not rhythm.** Native **iOS + Android** app: the buzzer fires at a **random** moment inside your range so you cannot anticipate it.
+**Train reaction, not rhythm.** Random interval timer for **MMA, BJJ, boxing, muay thai, kickboxing, HIIT, CrossFit, sparring, tabata, pad work, and tactical drills**. Native **iOS + Android** app: the buzzer fires at a **random** moment inside your range so you cannot anticipate it.
 
 *Store-facing line:* **TRAIN FOR CHAOS. NOT RHYTHM.** — same headline as [App Store description](native-ios/fastlane/metadata/en-US/description.txt) and [Play Store full description](native-android/fastlane/metadata/android/en-US/full_description.txt) (en-US).
 
 | Store | One-liner (en-US) |
 |--------|-------------------|
-| **App Store** subtitle | [Dry Fire, Boxing, BJJ, HIIT](native-ios/fastlane/metadata/en-US/subtitle.txt) |
-| **Play** short description | [Random timer with male & female AI coach voice for combat sports and HIIT.](native-android/fastlane/metadata/android/en-US/short_description.txt) |
+| **App Store** subtitle | [Random HIIT & combat training](native-ios/fastlane/metadata/en-US/subtitle.txt) |
+| **Play** short description | [Random tactical timer: MMA, BJJ, boxing, muay thai & HIIT. AI coach voices.](native-android/fastlane/metadata/android/en-US/short_description.txt) |
 
 ---
 
