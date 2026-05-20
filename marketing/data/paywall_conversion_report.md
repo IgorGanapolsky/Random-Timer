@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-20T19:22:42+00:00
+Generated: 2026-05-20T19:56:29+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **363**
+- Views: **367**
 - Offer Selects: **98**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **27.0%**
+- View -> Offer Select: **26.7%**
 - Select -> Purchase Attempt: **7.1%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -35,16 +35,16 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 533 | 136 |
-| android | elite_tactical | 370 | 114 |
-| android | pro_base | 148 | 71 |
-| android | unknown | 90 | 56 |
+| android | elite_tactical_monthly | 539 | 137 |
+| android | elite_tactical | 376 | 115 |
+| android | pro_base | 152 | 72 |
+| android | unknown | 92 | 57 |
 | ios | unknown | 4 | 1 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 97 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 101 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 86 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
@@ -53,7 +53,7 @@ Window (days): 30
 | sound_gate | 8 | 5 | 0 | 62.5% | 0.0% |
 
 ## Leaky Entry Points
-- `range_gate` had **97** views and **0** purchase attempts.
+- `range_gate` had **101** views and **0** purchase attempts.
 - `setup_upgrade_cta` had **86** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
@@ -62,13 +62,13 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 8375 | 121 |
-| max_seconds | 2184 | 216 |
-| alarm_duration | 1706 | 199 |
-| min_seconds | 1702 | 202 |
+| unknown | 8218 | 118 |
+| max_seconds | 2213 | 217 |
+| min_seconds | 1768 | 203 |
+| alarm_duration | 1708 | 200 |
 | sound_type | 1497 | 180 |
 | volume | 1259 | 134 |
-| repeat_enabled | 805 | 193 |
+| repeat_enabled | 810 | 194 |
 | voice_callouts_enabled | 561 | 120 |
 | vibration_enabled | 378 | 140 |
 | repeat_rounds | 292 | 88 |

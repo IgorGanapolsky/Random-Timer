@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-20T19:22:42+00:00",
+  "generated_at": "2026-05-20T19:56:29+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 363,
+    "views": 367,
     "offer_selects": 98,
     "purchase_attempts": 7,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.27,
+    "view_to_select_rate": 0.267,
     "select_to_attempt_rate": 0.0714,
     "attempt_to_success_rate": 0.0
   },
@@ -85,26 +85,26 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 533,
-      "users": 136
+      "failures": 539,
+      "users": 137
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 370,
-      "users": 114
+      "failures": 376,
+      "users": 115
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 148,
-      "users": 71
+      "failures": 152,
+      "users": 72
     },
     {
       "platform": "android",
       "product_id": "unknown",
-      "failures": 90,
-      "users": 56
+      "failures": 92,
+      "users": 57
     },
     {
       "platform": "ios",
@@ -116,7 +116,7 @@
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 97,
+      "views": 101,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -174,7 +174,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 97,
+      "views": 101,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,23 +216,23 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 8375,
-      "users": 121
+      "changes": 8218,
+      "users": 118
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2184,
-      "users": 216
-    },
-    {
-      "setting_name": "alarm_duration",
-      "changes": 1706,
-      "users": 199
+      "changes": 2213,
+      "users": 217
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1702,
-      "users": 202
+      "changes": 1768,
+      "users": 203
+    },
+    {
+      "setting_name": "alarm_duration",
+      "changes": 1708,
+      "users": 200
     },
     {
       "setting_name": "sound_type",
@@ -246,8 +246,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 805,
-      "users": 193
+      "changes": 810,
+      "users": 194
     },
     {
       "setting_name": "voice_callouts_enabled",
