@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import Mock
 
-from scripts import play_activate_iap_products as activate
+from scripts import play_monetization_client as client
 
 
 class _FakePurchaseOptions:
@@ -46,7 +46,7 @@ class PlayActivateIapProductsTests(unittest.TestCase):
                 ]
             }
         )
-        result = activate._activate_one_time_product(service, "pro_base")
+        result = client.activate_one_time_product(service, "pro_base")
         self.assertEqual(result["actions"][0]["action"], "skip")
         self.assertFalse(service.monetization.return_value.updated)
 
@@ -59,7 +59,7 @@ class PlayActivateIapProductsTests(unittest.TestCase):
                 ]
             }
         )
-        result = activate._activate_one_time_product(service, "pro_base")
+        result = client.activate_one_time_product(service, "pro_base")
         self.assertEqual(result["actions"][0]["action"], "activated")
         self.assertTrue(service.monetization.return_value.updated)
 

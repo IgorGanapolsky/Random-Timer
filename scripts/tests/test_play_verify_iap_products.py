@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 from scripts import play_verify_iap_products as verify
+from scripts import play_monetization_client as client
 
 
 class _FakeMonetization:
@@ -37,14 +38,14 @@ class PlayVerifyIapProductsTests(unittest.TestCase):
         service.monetization.return_value = _FakeMonetization(
             one_time=[{"productId": "pro_base", "state": "ACTIVE"}]
         )
-        products = verify._list_one_time(service)
+        products = client.list_one_time_products(service)
         self.assertEqual(products[0]["product_id"], "pro_base")
 
     def test_missing_required_products_fails_main(self):
         service = Mock()
         service.monetization.return_value = _FakeMonetization(one_time=[], subscriptions=[])
-        with patch.object(verify, "_build_service", return_value=service):
-            with patch.object(verify, "_resolve_key", return_value="/tmp/key.json"):
+        with patch.object(verify, "build_android_publisher_service", return_value=service):
+            with patch.object(verify, "resolve_play_credentials", return_value="/tmp/key.json"):
                 with patch("sys.argv", ["play_verify_iap_products.py"]):
                     code = verify.main()
         self.assertEqual(code, 1)
