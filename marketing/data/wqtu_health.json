@@ -1,6 +1,55 @@
 {
-  "generated_at": "2026-03-27T21:10:07+00:00",
-  "status": "skipped",
-  "reason": "missing POSTHOG credentials",
-  "wqtu": 0
+  "generated_at": "2026-05-20T18:08:00+00:00",
+  "status": "ok",
+  "nsm": {
+    "wqtu": 12,
+    "definition": "Users with >= 3 timer_completed in trailing 7 days",
+    "alert_threshold": 1,
+    "alert_fired": false
+  },
+  "engagement": {
+    "dau": 31,
+    "wau": 128
+  },
+  "abandon_rate": {
+    "started_30d": 1532,
+    "completed_30d": 617,
+    "abandon_rate_pct": 59.7
+  },
+  "monetization_funnel": {
+    "paywall_viewed_users": 109,
+    "purchase_attempted_users": 6,
+    "purchase_succeeded_users": 0,
+    "conversion_pct": 0.0
+  },
+  "wqtu_trend": [
+    {
+      "week_start": "2026-04-19",
+      "wqtu": 2
+    },
+    {
+      "week_start": "2026-04-26",
+      "wqtu": 3
+    },
+    {
+      "week_start": "2026-05-03",
+      "wqtu": 7
+    },
+    {
+      "week_start": "2026-05-10",
+      "wqtu": 11
+    },
+    {
+      "week_start": "2026-05-17",
+      "wqtu": 4
+    }
+  ],
+  "query_errors": [],
+  "history": [
+    {
+      "timestamp": "2026-05-20T18:08:00+00:00",
+      "wqtu": 12,
+      "dau": 31
+    }
+  ]
 }
