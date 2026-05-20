@@ -35,35 +35,70 @@ class MonthlyContentWorkerTest {
     }
 
     @Test
-    fun `doWork returns success and shows notification on 1st of month`() = runBlocking {
+    fun `doWork shows dynamic notification on 1st when Pro`() = runBlocking {
         mockkStatic(Calendar::class)
         val calendar = mockk<Calendar>()
         every { Calendar.getInstance() } returns calendar
         every { calendar.get(Calendar.DAY_OF_MONTH) } returns 1
 
-        val worker = MonthlyContentWorker(context, mockk(relaxed = true))
+        val worker =
+            MonthlyContentWorker(
+                context,
+                mockk(relaxed = true),
+                calendarProvider = { calendar },
+                isProProvider = { true },
+                releaseMonthProvider = { "2026-05" },
+            )
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
-        
+
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val shadowNotificationManager = Shadows.shadowOf(notificationManager)
         assertEquals(1, shadowNotificationManager.size())
+        val notification = shadowNotificationManager.getNotification(MonthlyContentWorker.NOTIFICATION_ID)
+        assertEquals("New Audio Drops for May 2026", notification.extras.getString("android.title"))
     }
 
     @Test
-    fun `doWork returns success and does NOT show notification on other days`() = runBlocking {
+    fun `doWork skips notification when not Pro`() = runBlocking {
+        mockkStatic(Calendar::class)
+        val calendar = mockk<Calendar>()
+        every { Calendar.getInstance() } returns calendar
+        every { calendar.get(Calendar.DAY_OF_MONTH) } returns 1
+
+        val worker =
+            MonthlyContentWorker(
+                context,
+                mockk(relaxed = true),
+                isProProvider = { false },
+                releaseMonthProvider = { "2026-05" },
+            )
+        val result = worker.doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        assertEquals(0, Shadows.shadowOf(notificationManager).size())
+    }
+
+    @Test
+    fun `doWork does not notify on non-first day`() = runBlocking {
         mockkStatic(Calendar::class)
         val calendar = mockk<Calendar>()
         every { Calendar.getInstance() } returns calendar
         every { calendar.get(Calendar.DAY_OF_MONTH) } returns 15
 
-        val worker = MonthlyContentWorker(context, mockk(relaxed = true))
+        val worker =
+            MonthlyContentWorker(
+                context,
+                mockk(relaxed = true),
+                isProProvider = { true },
+                releaseMonthProvider = { "2026-05" },
+            )
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val shadowNotificationManager = Shadows.shadowOf(notificationManager)
-        assertEquals(0, shadowNotificationManager.size())
+        assertEquals(0, Shadows.shadowOf(notificationManager).size())
     }
 }

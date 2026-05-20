@@ -180,10 +180,7 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            _entitlementLevel.value = level
-            if (level.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
-            }
+            setEntitlement(level)
 
             if (trackResult) {
                 trackRestoreResult(
@@ -589,16 +586,22 @@ class ProManager
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
-            if (purchase.products.contains(ELITE_PRODUCT_ID) ||
-                purchase.products.contains(MONTHLY_PRODUCT_ID)
-            ) {
-                _entitlementLevel.value = EntitlementLevel.ELITE
-            } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
-                if (_entitlementLevel.value == EntitlementLevel.NONE) {
-                    _entitlementLevel.value = EntitlementLevel.BASE
+            when {
+                purchase.products.contains(ELITE_PRODUCT_ID) ||
+                    purchase.products.contains(MONTHLY_PRODUCT_ID) -> {
+                    setEntitlement(EntitlementLevel.ELITE)
+                }
+                purchase.products.contains(BASE_PRODUCT_ID) &&
+                    _entitlementLevel.value == EntitlementLevel.NONE -> {
+                    setEntitlement(EntitlementLevel.BASE)
                 }
             }
-            if (_entitlementLevel.value.isPro) {
+        }
+
+        private fun setEntitlement(level: EntitlementLevel) {
+            _entitlementLevel.value = level
+            ProEntitlementSnapshot.persistIsPro(context, level.isPro)
+            if (level.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
             }
         }
@@ -681,10 +684,7 @@ class ProManager
                     EntitlementLevel.BASE -> EntitlementLevel.ELITE
                     EntitlementLevel.ELITE -> EntitlementLevel.NONE
                 }
-            _entitlementLevel.value = next
-            if (next.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
-            }
+            setEntitlement(next)
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
@@ -706,8 +706,7 @@ class ProManager
                 return false
             }
             debugOverrideActive = true
-            _entitlementLevel.value = EntitlementLevel.ELITE
-            packStore.refreshIfNeeded(isPro = true)
+            setEntitlement(EntitlementLevel.ELITE)
             // Mark as internal user persistently so future events from this device are filtered
             analyticsService.markAsInternalUser()
             analyticsService.track(
