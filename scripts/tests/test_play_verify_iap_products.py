@@ -45,7 +45,7 @@ class PlayVerifyIapProductsTests(unittest.TestCase):
         service = Mock()
         service.monetization.return_value = _FakeMonetization(one_time=[], subscriptions=[])
         with patch.object(verify, "build_android_publisher_service", return_value=service):
-            with patch.object(verify, "resolve_play_credentials", return_value="/tmp/key.json"):
+            with patch.object(verify, "resolve_play_credentials", return_value="play-service-account.json"):
                 with patch("sys.argv", ["play_verify_iap_products.py"]):
                     code = verify.main()
         self.assertEqual(code, 1)

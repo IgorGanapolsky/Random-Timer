@@ -6,40 +6,20 @@ from unittest.mock import Mock
 from scripts import play_monetization_client as client
 
 
-class _FakePurchaseOptions:
-    def __init__(self, parent):
-        self._parent = parent
-
-    def batchUpdateStates(self, **_kwargs):
-        self._parent.updated = True
-        return Mock(execute=lambda: {})
-
-
-class _FakeOneTimeProduct:
-    def __init__(self, product, parent):
-        self._product = product
-        self._parent = parent
-
-    def get(self, **_kwargs):
-        return Mock(execute=lambda: self._product)
-
-    def purchaseOptions(self):
-        return _FakePurchaseOptions(self._parent)
-
-
-class _FakeMonetization:
-    def __init__(self, product):
-        self.updated = False
-        self._product = product
-
-    def onetimeproducts(self):
-        return _FakeOneTimeProduct(self._product, self)
-
-
 class PlayActivateIapProductsTests(unittest.TestCase):
-    def test_skips_already_active_purchase_option(self):
+    def _service_with_product(self, product: dict) -> Mock:
+        one_time = Mock()
+        one_time.get.return_value.execute.return_value = product
+        purchase_options = Mock()
+        one_time.purchaseOptions.return_value = purchase_options
+        monetization = Mock()
+        monetization.onetimeproducts.return_value = one_time
         service = Mock()
-        service.monetization.return_value = _FakeMonetization(
+        service.monetization.return_value = monetization
+        return service, purchase_options
+
+    def test_skips_already_active_purchase_option(self):
+        service, purchase_options = self._service_with_product(
             {
                 "purchaseOptions": [
                     {"purchaseOptionId": "pro-base-buy", "state": "ACTIVE"},
@@ -48,11 +28,10 @@ class PlayActivateIapProductsTests(unittest.TestCase):
         )
         result = client.activate_one_time_product(service, "pro_base")
         self.assertEqual(result["actions"][0]["action"], "skip")
-        self.assertFalse(service.monetization.return_value.updated)
+        purchase_options.batchUpdateStates.assert_not_called()
 
     def test_activates_inactive_purchase_option(self):
-        service = Mock()
-        service.monetization.return_value = _FakeMonetization(
+        service, purchase_options = self._service_with_product(
             {
                 "purchaseOptions": [
                     {"purchaseOptionId": "pro-base-buy", "state": "DRAFT"},
@@ -61,7 +40,7 @@ class PlayActivateIapProductsTests(unittest.TestCase):
         )
         result = client.activate_one_time_product(service, "pro_base")
         self.assertEqual(result["actions"][0]["action"], "activated")
-        self.assertTrue(service.monetization.return_value.updated)
+        purchase_options.batchUpdateStates.assert_called_once()
 
 
 if __name__ == "__main__":
