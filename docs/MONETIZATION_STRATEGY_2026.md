@@ -54,7 +54,38 @@ Paywall merchandises monthly + annual (+ lifetime on iOS where catalog returns `
 
 - Funnel: `paywall_viewed` → `paywall_offer_select` / `paywall_plan_selected` → `paywall_purchase_attempt` → `paywall_purchase_success`
 - `subscription_funnel_step`, `feature_gate_hit`, `billing_product_catalog_status`
-- **New (PR):** `qualified_training_paywall_eligible` — users who hit session threshold before sheet opens
+- **P0:** `qualified_training_paywall_eligible` — users who hit session threshold before sheet opens (`entry_point=qualified_training_gate`)
+
+#### A/B paywall experiments (PostHog flags)
+
+| Flag | Values | Purpose |
+|------|--------|---------|
+| `paywall_default_plan_annual` | on/off | Default plan card: annual vs monthly |
+| `paywall_value_framing` | `control` / `outcomes_first` | Headline + subhead copy variant |
+| `rewarded_ads_enabled` | on/off (default **off**) | Gate rewarded video on free tier |
+
+#### RevenueCat-style subscription events (native StoreKit / Play Billing)
+
+Same event names on Android + iOS for cross-platform funnels:
+
+| Event | When |
+|-------|------|
+| `paywall_viewed` | Sheet opened (`entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`) |
+| `paywall_plan_selected` / `paywall_offer_select` | User taps a plan card |
+| `paywall_purchase_attempt` | Purchase flow launched |
+| `paywall_purchase_success` / `paywall_purchase_result` | Terminal purchase outcome |
+| `paywall_restore_result` | Restore purchases tapped |
+| `subscription_funnel_step` | Canonical step property (`funnel_step`: `paywall_viewed` → `purchase_succeeded`) |
+| `free_trial_started` | Trial offer accepted |
+| `billing_product_catalog_status` | Catalog probe (missing SKU diagnostics) |
+
+Rewarded IAA (P1, flag off until AdMob account):
+
+| Event | When |
+|-------|------|
+| `rewarded_ad_requested` | User starts watch-ad unlock |
+| `rewarded_ad_completed` | Ad finishes (success/fail) |
+| `rewarded_ad_unlock` | `pro_sound_trial` granted |
 
 ### Not built
 
@@ -73,16 +104,17 @@ Paywall merchandises monthly + annual (+ lifetime on iOS where catalog returns `
 
 ### P1 — Rewarded ads on free tier ($0 SDK if AdMob account exists)
 
-- Gate: PostHog flag `rewarded_ads_enabled`.
-- UX: “Watch ad → unlock 1 extra preset session” or +1 Pro sound trial; cap frequency.
-- Premium sub removes ads (when sub ships “no ads” benefit).
-- **CEO:** AdMob publisher account + app IDs.
+- **Shipped (code):** PostHog flag `rewarded_ads_enabled` (default **off**), stub ad port, test unit IDs documented, events `rewarded_ad_*`.
+- UX: watch ad → **one Pro sound trial** (`pro_sound_trial`); Elite sub copy includes ad-free.
+- **Blocker:** AdMob publisher account + SDK wiring (Google test units ready for debug).
+- **CEO:** approve AdMob publisher account to enable flag + SDK.
 
 ### P2 — One-time discipline IAP packs
 
-- SKUs: e.g. `pack_special_forces`, `pack_boxing_hiit`, `pack_crossfit`, `pack_bjj` (non-consumable).
-- Unlock preset bundles + pack-specific voice/sounds; keep sub as “all access.”
-- Store listing + paywall row per pack.
+- **Shipped (scaffold):** `DisciplinePackCatalog` — Android `pack_*`, iOS `com.iganapolsky.randomtimer.pack.*` (see `native-android/fastlane/metadata/android/en-US/iap_discipline_packs.txt`).
+- Not in Play verify required list until Console products exist.
+- Target price band: **$2.99–9.99** one-time per pack (CEO sets after P0 converts).
+- Unlock preset bundles + pack-specific voice/sounds; sub remains “all access.”
 
 ### P3 — Web funnel + affiliate (later)
 

@@ -123,10 +123,11 @@ struct PaywallSheet: View {
         "Longer random windows, combat callouts, and full-spectrum sounds — "
         + "built so every rep feels closer to live pressure."
     static let subscriptionFooter =
-        "Cancel anytime. Subscription auto-renews until cancelled. "
-        + "Price shown on Apple's confirmation sheet."
+        "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+        + "subscription auto-renews until cancelled."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
+        "Ad-free training — Elite subscription removes rewarded ads",
         "60-minute random windows for full-length drills",
         "Combat and MMA voice callouts with live time checks",
         "Round-capped loops for pad work, sparring, and circuits",

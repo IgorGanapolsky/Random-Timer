@@ -17,9 +17,13 @@ class PaywallSheetTest {
             "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills.",
             PAYWALL_SUBHEADLINE,
         )
-        assertEquals("Cancel anytime. Subscription auto-renews until cancelled.", PAYWALL_PRICING_FOOTER)
+        assertEquals(
+            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; subscription auto-renews until cancelled.",
+            PAYWALL_PRICING_FOOTER,
+        )
         assertEquals(
             listOf(
+                "Ad-free training — Elite subscription removes rewarded ads",
                 "60-minute random windows for full-length drills",
                 "Combat and MMA voice callouts with live time checks",
                 "Expert training presets (Competition, Sparring, etc.)",

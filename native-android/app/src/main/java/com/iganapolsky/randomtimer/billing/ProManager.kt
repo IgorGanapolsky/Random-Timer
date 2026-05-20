@@ -20,6 +20,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
+import com.iganapolsky.randomtimer.monetization.DisciplinePackCatalog
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.service.ProAudioPackStore
@@ -59,6 +60,9 @@ class ProManager
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
             ): Boolean = true
+
+            /** P2 scaffold — not queried until Play Console products exist. */
+            fun disciplinePackProductIds(): Set<String> = DisciplinePackCatalog.androidProductIds.toSet()
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)

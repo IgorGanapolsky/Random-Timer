@@ -155,6 +155,15 @@ class AnalyticsService
             }
         }
 
+        fun rewardedAdsEnabled(): Boolean {
+            if (!initialized) return false
+            return try {
+                PostHog.isFeatureEnabled(PostHogExperimentKeys.REWARDED_ADS_ENABLED, false)
+            } catch (_: Exception) {
+                false
+            }
+        }
+
         fun setPaywallSurfaceContext(
             entryPoint: String,
             experimentVariant: String,
@@ -439,6 +448,9 @@ object AnalyticsEvents {
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
     const val QUALIFIED_TRAINING_PAYWALL_ELIGIBLE = "qualified_training_paywall_eligible"
+    const val REWARDED_AD_REQUESTED = "rewarded_ad_requested"
+    const val REWARDED_AD_COMPLETED = "rewarded_ad_completed"
+    const val REWARDED_AD_UNLOCK = "rewarded_ad_unlock"
     const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
     const val TRAINING_PRESET_APPLIED = "training_preset_applied"
 

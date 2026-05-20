@@ -56,9 +56,11 @@ internal const val PAYWALL_SUBHEADLINE =
 internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong With Full Random Pressure"
 internal const val PAYWALL_SUBHEADLINE_OUTCOMES_FIRST =
     "Longer random windows, combat callouts, and full-spectrum sounds — built so every rep feels closer to live pressure."
-internal const val PAYWALL_PRICING_FOOTER = "Cancel anytime. Subscription auto-renews until cancelled."
+internal const val PAYWALL_PRICING_FOOTER =
+    "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
+        "Ad-free training — Elite subscription removes rewarded ads",
         "60-minute random windows for full-length drills",
         "Combat and MMA voice callouts with live time checks",
         "Expert training presets (Competition, Sparring, etc.)",

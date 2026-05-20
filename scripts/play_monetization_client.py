@@ -10,6 +10,13 @@ PACKAGE = "com.iganapolsky.randomtimer"
 REQUIRED_ONE_TIME = ("pro_base",)
 REQUIRED_SUBSCRIPTIONS = ("elite_tactical", "elite_tactical_monthly")
 TARGET_ONE_TIME = "pro_base"
+# P2 scaffold — document SKUs; not required for verify until Play Console products exist.
+SCAFFOLD_DISCIPLINE_PACKS = (
+    "pack_special_forces",
+    "pack_boxing_hiit",
+    "pack_crossfit",
+    "pack_bjj",
+)
 
 
 def resolve_play_credentials() -> str:

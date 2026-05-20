@@ -74,6 +74,10 @@
 		B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */; };
 		QTWP00112233445566778802 /* QualifiedTrainingPaywallPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = QTWP00112233445566778801 /* QualifiedTrainingPaywallPolicy.swift */; };
 		QTWP00112233445566778804 /* QualifiedTrainingPaywallPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */; };
+		RWAD00112233445566778802 /* RewardedAdSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778801 /* RewardedAdSupport.swift */; };
+		RWAD00112233445566778804 /* RewardedAdSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778803 /* RewardedAdSupportTests.swift */; };
+		DPCK00112233445566778802 /* DisciplinePackCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPCK00112233445566778801 /* DisciplinePackCatalog.swift */; };
+		DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */; };
 		BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */; };
 		D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */; };
@@ -193,6 +197,10 @@
 		B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingStatsService.swift; sourceTree = "<group>"; };
 		QTWP00112233445566778801 /* QualifiedTrainingPaywallPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualifiedTrainingPaywallPolicy.swift; sourceTree = "<group>"; };
 		QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualifiedTrainingPaywallPolicyTests.swift; sourceTree = "<group>"; };
+		RWAD00112233445566778801 /* RewardedAdSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdSupport.swift; sourceTree = "<group>"; };
+		RWAD00112233445566778803 /* RewardedAdSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdSupportTests.swift; sourceTree = "<group>"; };
+		DPCK00112233445566778801 /* DisciplinePackCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisciplinePackCatalog.swift; sourceTree = "<group>"; };
+		DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisciplinePackCatalogTests.swift; sourceTree = "<group>"; };
 		B346A5600C70703BAB7FB9E6 /* siren.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = siren.mp3; sourceTree = "<group>"; };
 		B9A84792F8E1380EF1A87461 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		BDB556957D054D23B9D4D664 /* RandomTimerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -254,6 +262,8 @@
 				DEE000000000000000000003 /* DeepLinkRouterTests.swift */,
 				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */,
+				RWAD00112233445566778803 /* RewardedAdSupportTests.swift */,
+				DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
 				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
 				PMONTHMSGT011223344556676 /* ProMonthlyContentMessagingTests.swift */,
@@ -307,6 +317,8 @@
 				PMONTHMAN0011223344556676 /* ProMonthlyContentManifestProvider.swift */,
 				B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */,
 				QTWP00112233445566778801 /* QualifiedTrainingPaywallPolicy.swift */,
+				RWAD00112233445566778801 /* RewardedAdSupport.swift */,
+				DPCK00112233445566778801 /* DisciplinePackCatalog.swift */,
 				A5A3DD46F85A68522E1B0902 /* ProManager.swift */,
 				AIVC00112233445566778800 /* AIVoiceCalloutService.swift */,
 			);
@@ -663,6 +675,8 @@
 				PMONTHMAN0011223344556677 /* ProMonthlyContentManifestProvider.swift in Sources */,
 				B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */,
 				QTWP00112233445566778802 /* QualifiedTrainingPaywallPolicy.swift in Sources */,
+				RWAD00112233445566778802 /* RewardedAdSupport.swift in Sources */,
+				DPCK00112233445566778802 /* DisciplinePackCatalog.swift in Sources */,
 				A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */,
 				85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */,
 				AIVC00112233445566778899 /* AIVoiceCalloutService.swift in Sources */,
@@ -691,6 +705,8 @@
 				DEE000000000000000000004 /* DeepLinkRouterTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				QTWP00112233445566778804 /* QualifiedTrainingPaywallPolicyTests.swift in Sources */,
+				RWAD00112233445566778804 /* RewardedAdSupportTests.swift in Sources */,
+				DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
 				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,
 				840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */,

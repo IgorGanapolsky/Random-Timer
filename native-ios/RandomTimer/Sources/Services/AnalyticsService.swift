@@ -274,6 +274,15 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #endif
     }
 
+    func rewardedAdsEnabled() -> Bool {
+#if canImport(PostHog)
+        guard initialized else { return false }
+        return PostHogSDK.shared.isFeatureEnabled(PostHogExperimentKeys.rewardedAdsEnabled)
+#else
+        return false
+#endif
+    }
+
     func setPaywallSurfaceContext(entryPoint: String, experimentVariant: String) {
         lastPaywallEntryPoint = entryPoint
         lastPaywallExperimentVariant = experimentVariant
@@ -491,6 +500,8 @@ enum PostHogExperimentKeys {
     static let paywallDefaultPlanAnnual = "paywall_default_plan_annual"
     /// Multivariate / string flag: `control` vs `outcomes_first` (paywall copy).
     static let paywallValueFraming = "paywall_value_framing"
+    /// P1: rewarded video on free tier. Default off until AdMob publisher account ships.
+    static let rewardedAdsEnabled = "rewarded_ads_enabled"
 }
 
 enum PaywallValueFraming {
