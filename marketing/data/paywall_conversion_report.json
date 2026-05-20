@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-20T15:58:52+00:00",
+  "generated_at": "2026-05-20T17:19:57+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 375,
-    "offer_selects": 104,
+    "views": 367,
+    "offer_selects": 100,
     "purchase_attempts": 7,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2773,
-    "select_to_attempt_rate": 0.0673,
+    "view_to_select_rate": 0.2725,
+    "select_to_attempt_rate": 0.07,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -74,7 +74,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 89,
+      "offer_selects": 85,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,14 +85,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 545,
-      "users": 139
+      "failures": 537,
+      "users": 137
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 382,
-      "users": 117
+      "failures": 374,
+      "users": 115
     },
     {
       "platform": "android",
@@ -115,16 +115,16 @@
   ],
   "entry_points": [
     {
-      "entry_point": "setup_upgrade_cta",
-      "views": 98,
+      "entry_point": "range_gate",
+      "views": 97,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "range_gate",
-      "views": 97,
+      "entry_point": "setup_upgrade_cta",
+      "views": 90,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -173,16 +173,16 @@
   ],
   "leaky_entry_points": [
     {
-      "entry_point": "setup_upgrade_cta",
-      "views": 98,
+      "entry_point": "range_gate",
+      "views": 97,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "range_gate",
-      "views": 97,
+      "entry_point": "setup_upgrade_cta",
+      "views": 90,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,8 +216,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 9158,
-      "users": 136
+      "changes": 8697,
+      "users": 127
     },
     {
       "setting_name": "max_seconds",
