@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-05-20T18:43:14+00:00",
+  "generated_at": "2026-05-20T19:04:43+00:00",
   "window_days": 30,
-  "status": "degraded",
-  "reason": "one or more PostHog queries failed",
+  "status": "ok",
+  "reason": "",
   "funnel": {
     "views": 363,
     "offer_selects": 98,
@@ -12,7 +12,12 @@
     "select_to_attempt_rate": 0.0714,
     "attempt_to_success_rate": 0.0
   },
-  "top_failure_reasons": [],
+  "top_failure_reasons": [
+    {
+      "reason": "user_cancelled",
+      "count": 7
+    }
+  ],
   "failure_breakdown": [
     {
       "platform": "android",
@@ -273,9 +278,8 @@
   "data_quality_warnings": [
     "unknown paywall entry_point is still receiving meaningful traffic",
     "settings_changed is still dominated by unknown setting_name rows in live data",
+    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
-  "query_errors": [
-    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
-  ]
+  "query_errors": []
 }

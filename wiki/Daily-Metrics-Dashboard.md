@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 71 | 413 | 484 |
-| Active Installs | — | 416 | — |
+| Distinct install users (30d) | 71 | 410 | 481 |
+| Active Installs | — | 413 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 30 |
-| WAU | 126 |
-| MAU | 500 |
+| DAU | 27 |
+| WAU | 124 |
+| MAU | 498 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-20T18:48:31+00:00
+**Generated:** 2026-05-20T19:05:18+00:00
 
 ## Onboarding Funnel
 - First Open: **492**
@@ -66,11 +66,9 @@
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** none
+**Top failure reasons:** user_cancelled (7)
 
 **Catalog failures (Android):** elite_tactical_monthly (533), elite_tactical (370), pro_base (148), unknown (90)
-
-_Data quality: stale; latest read issue: `paywall conversion snapshot degraded`._
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -158,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20"]
     y-axis "Downloads"
-    line [70 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71]
-    line [429 , 431 , 431 , 431 , 431 , 431 , 431 , 431 , 431 , 428 , 425 , 416 , 414 , 413]
+    line [71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71]
+    line [431 , 431 , 431 , 431 , 431 , 431 , 431 , 431 , 428 , 425 , 416 , 414 , 413 , 410]
 ```
 
 ```mermaid
@@ -167,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20"]
     y-axis "Users"
-    line [13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12]
+    line [13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12 , 12]
 ```
 
 ```mermaid
@@ -195,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-20T18:48:33+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-20T19:05:19+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
