@@ -44,6 +44,15 @@
       "android_total": 1,
       "android_rating": 5.0,
       "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-05-20T10:09:11.906284+00:00",
+      "ios_total": 1,
+      "ios_rating": 5.0,
+      "ios_recent_7d": 0,
+      "android_total": 1,
+      "android_rating": 5.0,
+      "android_recent_7d": 0
     }
   ],
   "alerts": [
