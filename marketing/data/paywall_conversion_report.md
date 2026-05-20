@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-20T01:18:49+00:00
+Generated: 2026-05-20T02:19:18+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **381**
-- Offer Selects: **112**
+- Views: **371**
+- Offer Selects: **105**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **29.4%**
-- Select -> Purchase Attempt: **6.2%**
+- View -> Offer Select: **28.3%**
+- Select -> Purchase Attempt: **6.7%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -28,15 +28,15 @@ Window (days): 30
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.pro | 0 | 3 | 0 | 0.0% | 0.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 9 | 1 | 0 | 11.1% | 0.0% |
+| android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
-| android | elite_tactical_monthly | 96 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 90 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 545 | 139 |
-| android | elite_tactical | 382 | 117 |
+| android | elite_tactical_monthly | 535 | 138 |
+| android | elite_tactical | 372 | 116 |
 | android | pro_base | 140 | 69 |
 | android | unknown | 86 | 54 |
 | ios | unknown | 4 | 1 |
@@ -44,7 +44,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| setup_upgrade_cta | 110 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 100 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 93 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
@@ -53,7 +53,7 @@ Window (days): 30
 | sound_gate | 7 | 5 | 0 | 71.4% | 0.0% |
 
 ## Leaky Entry Points
-- `setup_upgrade_cta` had **110** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **100** views and **0** purchase attempts.
 - `range_gate` had **93** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
@@ -62,7 +62,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 9691 | 145 |
+| unknown | 9473 | 141 |
 | max_seconds | 2181 | 214 |
 | alarm_duration | 1705 | 198 |
 | min_seconds | 1700 | 200 |
