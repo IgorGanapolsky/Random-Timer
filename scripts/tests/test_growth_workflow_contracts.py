@@ -19,6 +19,7 @@ WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
+PLAY_IAP_READBACK_WORKFLOW = ROOT / ".github/workflows/play-iap-product-readback.yml"
 WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
 WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
@@ -552,6 +553,22 @@ def test_analytics_workflow_publishes_weekly_paywall_conversion_report_artifact(
     assert "artifact_name: weekly-paywall-conversion-report" in source
     assert "marketing/data/paywall_conversion_report.md" in source
     assert "marketing/data/paywall_conversion_report.json" in source
+
+
+def test_play_iap_readback_workflow_scheduled_on_develop():
+    source = PLAY_IAP_READBACK_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "schedule:" in source
+    assert 'cron: "45 7 * * *"' in source
+    assert "play_verify_iap_products.py" in source
+    assert "GOOGLE_PLAY_JSON_KEY" in source
+
+
+def test_wiki_sync_builds_wqtu_health_snapshot():
+    source = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "wqtu_dashboard.py" in source
+    assert "marketing/data" in source
 
 
 def test_executive_metrics_workflow_runs_daily_and_guards_ios_refund_signal():
