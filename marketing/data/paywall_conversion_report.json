@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-05-20T18:07:46+00:00",
+  "generated_at": "2026-05-20T18:43:14+00:00",
   "window_days": 30,
-  "status": "ok",
-  "reason": "",
+  "status": "degraded",
+  "reason": "one or more PostHog queries failed",
   "funnel": {
-    "views": 367,
-    "offer_selects": 100,
+    "views": 363,
+    "offer_selects": 98,
     "purchase_attempts": 7,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2725,
-    "select_to_attempt_rate": 0.07,
+    "view_to_select_rate": 0.27,
+    "select_to_attempt_rate": 0.0714,
     "attempt_to_success_rate": 0.0
   },
-  "top_failure_reasons": [
-    {
-      "reason": "user_cancelled",
-      "count": 7
-    }
-  ],
+  "top_failure_reasons": [],
   "failure_breakdown": [
     {
       "platform": "android",
@@ -74,7 +69,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 85,
+      "offer_selects": 83,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,14 +80,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 537,
-      "users": 137
+      "failures": 533,
+      "users": 136
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 374,
-      "users": 115
+      "failures": 370,
+      "users": 114
     },
     {
       "platform": "android",
@@ -124,7 +119,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 90,
+      "views": 86,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -182,7 +177,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 90,
+      "views": 86,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,8 +211,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 8554,
-      "users": 125
+      "changes": 8375,
+      "users": 121
     },
     {
       "setting_name": "max_seconds",
@@ -278,8 +273,9 @@
   "data_quality_warnings": [
     "unknown paywall entry_point is still receiving meaningful traffic",
     "settings_changed is still dominated by unknown setting_name rows in live data",
-    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
-  "query_errors": []
+  "query_errors": [
+    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
+  ]
 }

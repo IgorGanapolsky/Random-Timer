@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T18:08:45+00:00",
+  "generated_at": "2026-05-20T18:48:32+00:00",
   "source": "apple_ads_api",
   "status": "ok",
   "status_reason": "",
@@ -341,6 +341,15 @@
     },
     {
       "timestamp": "2026-05-20T18:08:45+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-20T18:48:32+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,

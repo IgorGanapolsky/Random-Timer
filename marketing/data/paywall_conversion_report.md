@@ -1,21 +1,21 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-20T18:07:46+00:00
+Generated: 2026-05-20T18:43:14+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **367**
-- Offer Selects: **100**
+- Views: **363**
+- Offer Selects: **98**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **27.3%**
-- Select -> Purchase Attempt: **7.0%**
+- View -> Offer Select: **27.0%**
+- Select -> Purchase Attempt: **7.1%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 7 |
+| (none) | 0 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
@@ -30,13 +30,13 @@ Window (days): 30
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
-| android | elite_tactical_monthly | 85 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 83 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 537 | 137 |
-| android | elite_tactical | 374 | 115 |
+| android | elite_tactical_monthly | 533 | 136 |
+| android | elite_tactical | 370 | 114 |
 | android | pro_base | 148 | 71 |
 | android | unknown | 90 | 56 |
 | ios | unknown | 4 | 1 |
@@ -45,7 +45,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 97 | 0 | 0 | 0.0% | 0.0% |
-| setup_upgrade_cta | 90 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 86 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 46 | 0 | 0 | 0.0% | 0.0% |
@@ -54,7 +54,7 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `range_gate` had **97** views and **0** purchase attempts.
-- `setup_upgrade_cta` had **90** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **86** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **46** views and **0** purchase attempts.
@@ -62,7 +62,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 8554 | 125 |
+| unknown | 8375 | 121 |
 | max_seconds | 2184 | 216 |
 | alarm_duration | 1706 | 199 |
 | min_seconds | 1702 | 202 |
@@ -78,5 +78,8 @@ Window (days): 30
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
 - settings_changed is still dominated by unknown setting_name rows in live data
-- purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
+
+## Query Diagnostics
+- Query errors: **1**
+- Last error: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`
