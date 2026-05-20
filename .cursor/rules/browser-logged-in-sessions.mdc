@@ -1,0 +1,40 @@
+---
+description: Use CEO logged-in browser tabs — never incognito/private for consoles
+alwaysApply: true
+---
+
+## Browser sessions (binding)
+
+Authenticated store and GitHub work MUST use the CEO's **logged-in** browser profile. Sessions do not persist in incognito/private mode.
+
+### Never use private/incognito
+
+- **NEVER** open incognito, private, InPrivate, or guest browser windows for:
+  - Google Play Console
+  - GitHub (repos, Actions, PRs, settings)
+  - App Store Connect
+- Do not use automation paths that spin an isolated/private profile when auth is required.
+
+### Prefer logged-in Safari, Comet, or normal Chrome
+
+- Use **cursor-ide-browser** and attach to an **existing** logged-in tab via `browser_tabs` (`action: "list"`) and `viewId` on subsequent tools (`browser_lock`, `browser_navigate`, `browser_snapshot`, etc.).
+- CEO browsers in scope: **Safari**, **Comet**, and **normal (non-incognito) Chrome** — reuse whichever already has the needed site signed in.
+
+### Workflow (required order)
+
+1. **`browser_tabs` `action: "list"`** — find a tab already on the target origin (or signed-in dashboard).
+2. **`browser_lock` `action: "lock"`** with that tab's **`viewId`** before interactions.
+3. Navigate within that tab when possible; pass **`viewId`** on every browser tool call.
+4. **`browser_lock` `action: "unlock"`** when finished.
+
+### Do not lose auth
+
+- **`browser_navigate` with `newTab: true`** or careless new-tab opens often start **unauthenticated** — avoid for Play Console, GitHub, and App Store Connect.
+- List tabs first; **lock an existing logged-in tab** instead of opening a fresh anonymous context.
+
+### Blocked state
+
+- If **no** logged-in tab exists for the required site, **stop and report blocked** — do not fall back to incognito/private or assume the CEO will sign in inside automation.
+- Ask the CEO to open the site in Safari, Comet, or normal Chrome and sign in; then re-run with `browser_tabs` list + `viewId` attach.
+
+English only for all output (see `english-only.mdc`).
