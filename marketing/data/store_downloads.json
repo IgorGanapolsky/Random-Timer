@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-05-20T20:44:55+00:00",
+  "generated_at": "2026-05-20T21:23:23+00:00",
   "window_days": 30,
   "source": "posthog",
-  "status": "degraded",
-  "status_reason": "preserved last good metrics after degraded PostHog query",
+  "status": "ok",
+  "status_reason": "",
   "ios": {
     "downloads_30d": 71
   },
   "android": {
-    "downloads_30d": 408,
-    "active_installs": 411
+    "downloads_30d": 406,
+    "active_installs": 409
   },
   "combined": {
-    "downloads_30d": 479
+    "downloads_30d": 477
   },
   "active_users": {
     "dau": 18,
-    "wau": 113,
-    "mau": 496
+    "wau": 107,
+    "mau": 494
   },
   "metric_definitions": {
     "downloads_30d": {
@@ -28,16 +28,14 @@
     }
   },
   "data_quality": {
-    "is_stale": true,
-    "preserved_previous_metrics": true,
-    "last_attempt_generated_at": "2026-05-20T20:44:55+00:00",
-    "last_good_generated_at": "2026-05-20T19:56:20+00:00",
-    "reason": "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
+    "is_stale": false,
+    "preserved_previous_metrics": false,
+    "last_attempt_generated_at": "2026-05-20T21:23:23+00:00",
+    "last_good_generated_at": "",
+    "reason": ""
   },
   "query_diagnostics": {
-    "errors": [
-      "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
-    ]
+    "errors": []
   },
   "snapshots": [
     {
@@ -399,6 +397,16 @@
       "dau": 18,
       "wau": 113,
       "mau": 496
+    },
+    {
+      "timestamp": "2026-05-20T21:23:23+00:00",
+      "ios_downloads_30d": 71,
+      "android_downloads_30d": 406,
+      "combined_downloads_30d": 477,
+      "android_active_installs": 409,
+      "dau": 18,
+      "wau": 107,
+      "mau": 494
     }
   ]
 }

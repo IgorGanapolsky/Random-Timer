@@ -7,16 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 71 | 408 | 479 |
-| Active Installs | — | 411 | — |
+| Distinct install users (30d) | 71 | 406 | 477 |
+| Active Installs | — | 409 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 18 |
-| WAU | 113 |
-| MAU | 496 |
-
-_Data quality: stale; showing last good metrics from `2026-05-20T19:56:20+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`._
+| WAU | 107 |
+| MAU | 494 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -40,7 +38,7 @@ _Data quality: stale; showing last good metrics from `2026-05-20T19:56:20+00:00`
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-20T20:53:18+00:00
+**Generated:** 2026-05-20T21:24:08+00:00
 
 ## Onboarding Funnel
 - First Open: **488**
@@ -159,7 +157,7 @@ xychart-beta
     x-axis ["2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20"]
     y-axis "Downloads"
     line [71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71 , 71]
-    line [431 , 431 , 431 , 431 , 431 , 431 , 428 , 425 , 416 , 414 , 413 , 410 , 410 , 408]
+    line [431 , 431 , 431 , 431 , 431 , 428 , 425 , 416 , 414 , 413 , 410 , 410 , 408 , 406]
 ```
 
 ```mermaid
@@ -167,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20"]
     y-axis "Users"
-    line [13 , 13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12 , 12 , 12 , 12 , 11]
+    line [13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12 , 12 , 12 , 12 , 11 , 11]
 ```
 
 ```mermaid
@@ -195,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-20T20:53:19+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-20T21:24:09+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

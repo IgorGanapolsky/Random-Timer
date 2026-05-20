@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-20T20:48:24+00:00",
-  "status": "degraded",
+  "generated_at": "2026-05-20T21:23:44+00:00",
+  "status": "ok",
   "nsm": {
     "wqtu": 11,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
@@ -9,7 +9,7 @@
   },
   "engagement": {
     "dau": 18,
-    "wau": 0
+    "wau": 107
   },
   "abandon_rate": {
     "started_30d": 1508,
@@ -44,9 +44,7 @@
       "wqtu": 4
     }
   ],
-  "query_errors": [
-    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
-  ],
+  "query_errors": [],
   "history": [
     {
       "timestamp": "2026-05-20T18:08:00+00:00",
@@ -75,6 +73,11 @@
     },
     {
       "timestamp": "2026-05-20T20:48:24+00:00",
+      "wqtu": 11,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T21:23:44+00:00",
       "wqtu": 11,
       "dau": 18
     }
