@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-20T14:39:56+00:00
+Generated: 2026-05-20T15:58:52+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **377**
-- Offer Selects: **105**
+- Views: **375**
+- Offer Selects: **104**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **27.9%**
+- View -> Offer Select: **27.7%**
 - Select -> Purchase Attempt: **6.7%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -30,13 +30,13 @@ Window (days): 30
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
-| android | elite_tactical_monthly | 90 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 89 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 547 | 140 |
-| android | elite_tactical | 384 | 118 |
+| android | elite_tactical_monthly | 545 | 139 |
+| android | elite_tactical | 382 | 117 |
 | android | pro_base | 148 | 71 |
 | android | unknown | 90 | 56 |
 | ios | unknown | 4 | 1 |
@@ -44,7 +44,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| setup_upgrade_cta | 100 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 98 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 97 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
@@ -53,7 +53,7 @@ Window (days): 30
 | sound_gate | 8 | 5 | 0 | 62.5% | 0.0% |
 
 ## Leaky Entry Points
-- `setup_upgrade_cta` had **100** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **98** views and **0** purchase attempts.
 - `range_gate` had **97** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
@@ -62,7 +62,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 9311 | 139 |
+| unknown | 9158 | 136 |
 | max_seconds | 2183 | 215 |
 | alarm_duration | 1705 | 198 |
 | min_seconds | 1701 | 201 |
