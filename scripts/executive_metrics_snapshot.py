@@ -466,6 +466,29 @@ def run(
         "crashlytics_bigquery": crashlytics,
     }
 
+    if (posthog or {}).get("status") == "ok":
+        payload["canonical_users"] = {
+            "metric_bundle_id": "executive_canonical_users_v1",
+            "window_days": (posthog or {}).get("window_days"),
+            "wqtu_7d": (posthog or {}).get("wqtu_7d_distinct_persons"),
+            "installs_30d": (posthog or {}).get("distinct_persons_application_installed"),
+            "timer_completed_persons_30d": (posthog or {}).get(
+                "distinct_persons_timer_completed"
+            ),
+            "paywall_purchase_success_persons_30d": (posthog or {}).get(
+                "distinct_persons_paywall_purchase_success"
+            ),
+            "paywall_purchase_success_events_30d": (posthog or {}).get(
+                "events_paywall_purchase_success"
+            ),
+        }
+    else:
+        payload["canonical_users"] = {
+            "metric_bundle_id": "executive_canonical_users_v1",
+            "status": "unavailable",
+            "reason": (posthog or {}).get("status"),
+        }
+
     ph_installed_ios = int(
         ((posthog or {}).get("distinct_persons_application_installed_ios") or 0)
         if (posthog or {}).get("status") == "ok"

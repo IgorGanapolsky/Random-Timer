@@ -68,6 +68,32 @@ def test_posthog_section_includes_metric_field_ids_when_ok(monkeypatch: pytest.M
     assert out.get("distinct_persons_application_opened_android") == 0
 
 
+def test_run_payload_includes_canonical_users_when_posthog_ok(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    monkeypatch.setattr(ems, "_posthog_section", lambda *_a, **_k: {"status": "ok", "window_days": 30, "wqtu_7d_distinct_persons": 12, "distinct_persons_application_installed": 100, "distinct_persons_timer_completed": 40, "distinct_persons_paywall_purchase_success": 0, "events_paywall_purchase_success": 0})
+    monkeypatch.setattr(ems, "load_repo_dotenv", lambda *_a, **_k: None)
+
+    fake_store = types.SimpleNamespace(
+        _get_android_data=lambda _d: {"status": "skipped"},
+        _get_ios_data=lambda _d: {"status": "skipped"},
+    )
+    fake_crash = types.SimpleNamespace(
+        collect_crashlytics_snapshot=lambda **_k: {"status": "skipped"}
+    )
+    fake_refunds = types.SimpleNamespace(run=lambda **_k: {"status": "skipped"})
+    monkeypatch.setitem(sys.modules, "real_store_downloads", fake_store)
+    monkeypatch.setitem(sys.modules, "check_crashlytics", fake_crash)
+    monkeypatch.setitem(sys.modules, "check_refunds", fake_refunds)
+
+    payload = ems.run(Path("."), days=30, crashlytics_hours=168, load_dotenv=False)
+    canonical = payload.get("canonical_users") or {}
+    assert canonical.get("wqtu_7d") == 12
+    assert canonical.get("paywall_purchase_success_persons_30d") == 0
+
+
 def test_pragmatic_live_excludes_non_store_distribution_channels() -> None:
     from scripts import executive_metrics_snapshot as ems
 

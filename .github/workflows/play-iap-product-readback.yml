@@ -1,6 +1,8 @@
 name: Play IAP Product Readback
 
 on:
+  schedule:
+    - cron: "45 7 * * *"
   workflow_dispatch:
 
 permissions:
