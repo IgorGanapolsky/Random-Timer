@@ -488,23 +488,24 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         Logger.notification.debug("Cancelled re-engagement reminders")
     }
 
-    /// Schedules a recurring notification for the 1st of every month to highlight new content.
-    func scheduleMonthlyContentReminder() {
+    /// Schedules a recurring notification for the 1st of every month to highlight new Pro audio.
+    func scheduleMonthlyContentReminder(releaseMonth: String) {
         let center = UNUserNotificationCenter.current()
-        
-        // Schedule for the 1st of every month at 10:00 AM
+        center.removePendingNotificationRequests(withIdentifiers: ["monthly_content"])
+
         var dateComponents = DateComponents()
         dateComponents.day = 1
         dateComponents.hour = 10
-        
+
+        let messaging = ProMonthlyContentMessaging.notificationCopy(releaseMonth: releaseMonth)
         let content = UNMutableNotificationContent()
-        content.title = "New Audio Drops for May 2026"
-        content.body = "Your Sound Arsenal just got 5 new tactical callouts. Train now."
+        content.title = messaging.title
+        content.body = messaging.body
         content.sound = .default
-        
+
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         let request = UNNotificationRequest(identifier: "monthly_content", content: content, trigger: trigger)
-        
+
         center.add(request) { error in
             if let error = error {
                 Logger.notification.error("Failed to schedule monthly content reminder: \(error)")
@@ -512,6 +513,10 @@ final class NotificationService: NSObject, TimerNotificationHandling {
                 Logger.notification.debug("Scheduled monthly content reminder for the 1st of each month")
             }
         }
+    }
+
+    func cancelMonthlyContentReminder() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["monthly_content"])
     }
 
     /// Test-only hook for simulating notification tap.

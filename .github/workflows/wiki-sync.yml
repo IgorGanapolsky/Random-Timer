@@ -59,6 +59,13 @@ jobs:
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: python scripts/paywall_conversion_report.py --repo-root . --days 30
 
+      - name: Build WQTU health snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/wqtu_dashboard.py --repo-root . --alert-threshold 1 || true
+
       - name: Build attribution and activation funnel snapshot from PostHog
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}

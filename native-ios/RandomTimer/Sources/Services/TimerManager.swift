@@ -297,9 +297,16 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         await startTimer(roundCount: currentRound + 1)
     }
 
-    /// Setup background tasks like monthly reminders.
-    func setupOnboardingAndReminders() {
-        notificationService.scheduleMonthlyContentReminder()
+    /// Schedules or clears the monthly Pro audio reminder based on entitlement and hosted manifest.
+    func configureMonthlyContentReminderIfNeeded() async {
+        guard ProManager.shared.isPro else {
+            notificationService.cancelMonthlyContentReminder()
+            return
+        }
+        guard let releaseMonth = await ProMonthlyContentManifestProvider.shared.fetchReleaseMonth() else {
+            return
+        }
+        notificationService.scheduleMonthlyContentReminder(releaseMonth: releaseMonth)
     }
 
     /// Call synchronously when app enters background to prevent AVAudioPlayer auto-resume.
