@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-20T00:09:09+00:00
+Generated: 2026-05-20T01:18:49+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **379**
+- Views: **381**
 - Offer Selects: **112**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **29.5%**
+- View -> Offer Select: **29.4%**
 - Select -> Purchase Attempt: **6.2%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -35,17 +35,17 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 535 | 134 |
-| android | elite_tactical | 372 | 112 |
-| android | pro_base | 132 | 64 |
-| android | unknown | 80 | 49 |
+| android | elite_tactical_monthly | 545 | 139 |
+| android | elite_tactical | 382 | 117 |
+| android | pro_base | 140 | 69 |
+| android | unknown | 86 | 54 |
 | ios | unknown | 4 | 1 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | setup_upgrade_cta | 110 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 91 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 93 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 45 | 0 | 0 | 0.0% | 0.0% |
@@ -54,7 +54,7 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `setup_upgrade_cta` had **110** views and **0** purchase attempts.
-- `range_gate` had **91** views and **0** purchase attempts.
+- `range_gate` had **93** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **45** views and **0** purchase attempts.
@@ -62,18 +62,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 10085 | 151 |
-| max_seconds | 2128 | 209 |
-| alarm_duration | 1688 | 194 |
-| min_seconds | 1657 | 195 |
-| sound_type | 1478 | 175 |
-| volume | 1230 | 129 |
-| repeat_enabled | 785 | 188 |
-| voice_callouts_enabled | 548 | 117 |
-| vibration_enabled | 364 | 136 |
-| repeat_rounds | 283 | 85 |
-| voice_gender | 251 | 147 |
-| use_extended_range | 184 | 106 |
+| unknown | 9691 | 145 |
+| max_seconds | 2181 | 214 |
+| alarm_duration | 1705 | 198 |
+| min_seconds | 1700 | 200 |
+| sound_type | 1496 | 179 |
+| volume | 1258 | 133 |
+| repeat_enabled | 804 | 192 |
+| voice_callouts_enabled | 561 | 120 |
+| vibration_enabled | 377 | 139 |
+| repeat_rounds | 292 | 88 |
+| voice_gender | 257 | 152 |
+| use_extended_range | 187 | 109 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
