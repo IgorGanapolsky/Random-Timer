@@ -55,6 +55,10 @@ final class TimerConfigProClampingTests: XCTestCase {
             "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing."
         )
 
+        let qualifiedContext = paywallFeatureContext(for: .qualifiedTrainingGate)
+        XCTAssertEqual(qualifiedContext.eyebrow, "Three sessions logged")
+        XCTAssertEqual(PaywallEntryPoint.qualifiedTrainingGate.featureGateName, "qualified_training_gate")
+
         XCTAssertEqual(paywallFeatureContext(for: .unknown).eyebrow, "Pro Tactical")
     }
 

@@ -99,6 +99,11 @@ internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
                 eyebrow = "You tapped the sound arsenal",
                 valueCopy = "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds.",
             )
+        "qualified_training_gate" ->
+            PaywallFeatureContext(
+                eyebrow = "Three sessions logged",
+                valueCopy = "You are training like a serious athlete. Pro unlocks longer random windows, combat callouts, round caps, and the full sound arsenal for your next block.",
+            )
         else ->
             PaywallFeatureContext(
                 eyebrow = "Pro Tactical",

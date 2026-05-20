@@ -6,6 +6,7 @@ enum PaywallEntryPoint: String {
     case voiceGate = "voice_gate"
     case repeatGate = "repeat_gate"
     case soundArsenalGate = "sound_arsenal_gate"
+    case qualifiedTrainingGate = "qualified_training_gate"
     case unknown = "unknown"
 
     /// Maps to the analytics feature name for feature_gate_hit events.
@@ -16,6 +17,7 @@ enum PaywallEntryPoint: String {
         case .voiceGate: return "voice_callouts"
         case .repeatGate: return "repeat_loop"
         case .soundArsenalGate: return "pro_sounds"
+        case .qualifiedTrainingGate: return "qualified_training_gate"
         case .unknown: return "unknown"
         }
     }
@@ -55,6 +57,12 @@ func paywallFeatureContext(for entryPoint: PaywallEntryPoint) -> PaywallFeatureC
         return PaywallFeatureContext(
             eyebrow: "You tapped the sound arsenal",
             valueCopy: "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds."
+        )
+    case .qualifiedTrainingGate:
+        return PaywallFeatureContext(
+            eyebrow: "Three sessions logged",
+            valueCopy: "You are training like a serious athlete. Pro unlocks longer random windows, combat callouts, "
+                + "round caps, and the full sound arsenal for your next block."
         )
     case .unknown:
         return PaywallFeatureContext(

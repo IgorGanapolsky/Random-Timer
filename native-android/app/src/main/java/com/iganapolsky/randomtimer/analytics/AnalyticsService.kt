@@ -438,6 +438,7 @@ object AnalyticsEvents {
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val QUALIFIED_TRAINING_PAYWALL_ELIGIBLE = "qualified_training_paywall_eligible"
     const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
     const val TRAINING_PRESET_APPLIED = "training_preset_applied"
 

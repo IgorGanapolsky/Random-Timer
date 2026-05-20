@@ -11,6 +11,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     @Published private(set) var config: TimerConfig = .default
     @Published private(set) var timerState: TimerState?
     @Published private(set) var isAlarmSilenced: Bool = false
+    @Published private(set) var qualifiedTrainingPaywallPending = false
 
     // MARK: - Private Properties
 
@@ -20,6 +21,22 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     private let liveActivityService: TimerLiveActivityHandling
     private let backgroundVoiceKeepAliveService: BackgroundVoiceKeepAliveHandling
     private var isAppBackgrounded = false
+
+    func consumeQualifiedTrainingPaywallPending() {
+        qualifiedTrainingPaywallPending = false
+    }
+
+    private func recordTrainingSessionCompleted() {
+        TrainingStatsService.shared.recordSession()
+        let completedCount = TrainingStatsService.shared.totalSessions
+        if QualifiedTrainingPaywallPolicy.shouldPresent(
+            completedSessionCount: completedCount,
+            isPro: ProManager.shared.isPro,
+            alreadyPresented: QualifiedTrainingPaywallStore.hasPresented()
+        ) {
+            qualifiedTrainingPaywallPending = true
+        }
+    }
 
     // MARK: - Initialization
 
@@ -228,7 +245,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         // Track completion — user heard the alarm and acknowledged it
         if let state = timerState, state.status == .alarm {
             StoreReviewManager.shared.recordCompletion()
-            TrainingStatsService.shared.recordSession()
+            recordTrainingSessionCompleted()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
                 "source": "alarm_dismissed",
@@ -396,7 +413,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                         state.alarmTimeRemaining = 0
                         timerState = state
                         StoreReviewManager.shared.recordCompletion()
-                        TrainingStatsService.shared.recordSession()
+                        recordTrainingSessionCompleted()
                         AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                             "target_duration": state.targetDuration,
                             "source": "foreground_return_alarm_expired",
@@ -467,7 +484,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                     state.alarmStartedAt = alarmStartDate
                     timerState = state
                     StoreReviewManager.shared.recordCompletion()
-                    TrainingStatsService.shared.recordSession()
+                    recordTrainingSessionCompleted()
                     AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                         "target_duration": state.targetDuration,
                         "source": "foreground_return_timer_and_alarm_expired",
@@ -629,7 +646,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         if saved.status == .alarm || saved.status == .complete {
             // Timer was in alarm or already complete when app was killed — count as completed
             StoreReviewManager.shared.recordCompletion()
-            TrainingStatsService.shared.recordSession()
+            recordTrainingSessionCompleted()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": saved.targetDuration,
                 "source": "restore_alarm_or_complete",
@@ -656,7 +673,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         } else {
             // Timer completed while app was closed — track as completion, not abandonment
             StoreReviewManager.shared.recordCompletion()
-            TrainingStatsService.shared.recordSession()
+            recordTrainingSessionCompleted()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": saved.targetDuration,
                 "source": "background_completion",
@@ -781,7 +798,7 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
             notificationService.stopAlarmSound()
             notificationService.stopVibration()
             StoreReviewManager.shared.recordCompletion()
-            TrainingStatsService.shared.recordSession()
+            recordTrainingSessionCompleted()
             AnalyticsService.shared.track(AnalyticsEvents.timerCompleted, properties: [
                 "target_duration": state.targetDuration,
                 AnalyticsProperties.entitlementLevel: ProManager.shared.entitlementLevel.rawValue,

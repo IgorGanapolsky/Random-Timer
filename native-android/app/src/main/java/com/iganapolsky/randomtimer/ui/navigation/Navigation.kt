@@ -25,6 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.analytics.PaywallValueFraming
 import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallPolicy
+import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallStore
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
@@ -48,6 +50,7 @@ internal fun paywallEntryPointForFeature(feature: String): String =
         "voice_callouts" -> "voice_gate"
         "repeat_loop" -> "repeat_gate"
         "pro_sounds" -> "sound_arsenal_gate"
+        QualifiedTrainingPaywallPolicy.FEATURE_GATE -> QualifiedTrainingPaywallPolicy.ENTRY_POINT
         else -> "unknown"
     }
 
@@ -80,6 +83,7 @@ fun RandomTimerNavHost(
     var paywallBillingCatalogProbed by remember { mutableStateOf(false) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
     var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }
+    val qualifiedTrainingPaywallStore = remember { QualifiedTrainingPaywallStore(context) }
 
     fun presentPaywallForFeature(feature: String) {
         viewModel.trackFeatureGateHit(feature)
@@ -137,6 +141,22 @@ fun RandomTimerNavHost(
                 // Prompt for review after timer completion (if eligible)
                 activity?.let { viewModel.storeReviewManager.requestReview(it) }
             }
+        }
+    }
+
+    LaunchedEffect(timerState, currentRoute, isPro, viewModel.totalSessions) {
+        if (
+            timerState == null &&
+                currentRoute == Screen.Setup.route &&
+                QualifiedTrainingPaywallPolicy.shouldPresent(
+                    completedSessionCount = viewModel.totalSessions,
+                    isPro = isPro,
+                    alreadyPresented = qualifiedTrainingPaywallStore.hasPresented(),
+                )
+        ) {
+            viewModel.trackQualifiedTrainingPaywallEligible(viewModel.totalSessions)
+            qualifiedTrainingPaywallStore.markPresented()
+            presentPaywallForFeature(QualifiedTrainingPaywallPolicy.FEATURE_GATE)
         }
     }
 

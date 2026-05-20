@@ -43,6 +43,9 @@ class PaywallSheetTest {
             rangeContext.valueCopy,
         )
 
+        val qualifiedContext = paywallFeatureContext("qualified_training_gate")
+        assertEquals("Three sessions logged", qualifiedContext.eyebrow)
+
         val unknownContext = paywallFeatureContext("unknown")
         assertEquals("Pro Tactical", unknownContext.eyebrow)
     }

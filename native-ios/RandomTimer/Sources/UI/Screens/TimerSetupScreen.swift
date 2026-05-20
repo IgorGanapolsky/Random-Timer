@@ -549,6 +549,7 @@ struct TimerSetupScreen: View {
                 maxSeconds: config.maxSeconds,
                 useExtendedRange: config.useExtendedRange
             )
+            presentQualifiedTrainingPaywallIfNeeded()
         }
         .onDisappear {
             if let appearedAt = screenAppearedAt {
@@ -570,6 +571,10 @@ struct TimerSetupScreen: View {
         .onChange(of: deepLinkRouter.paywallRequest?.id) { _, _ in
             guard !proManager.isPro, let request = deepLinkRouter.paywallRequest else { return }
             presentPaywall(entryPoint: request.entryPoint)
+        }
+        .onChange(of: timerManager.qualifiedTrainingPaywallPending) { _, pending in
+            guard pending else { return }
+            presentQualifiedTrainingPaywallIfNeeded()
         }
     }
 
@@ -620,6 +625,20 @@ struct TimerSetupScreen: View {
         }
 
         return repeatRounds == 0 ? "Infinite Rounds" : "\(repeatRounds) Rounds"
+    }
+
+    private func presentQualifiedTrainingPaywallIfNeeded() {
+        guard timerManager.qualifiedTrainingPaywallPending, !proManager.isPro else { return }
+        let completedCount = TrainingStatsService.shared.totalSessions
+        AnalyticsService.shared.track(
+            QualifiedTrainingPaywallAnalytics.eligibleEvent,
+            properties: QualifiedTrainingPaywallAnalytics.eligibleProperties(
+                completedSessionCount: completedCount
+            )
+        )
+        QualifiedTrainingPaywallStore.markPresented()
+        timerManager.consumeQualifiedTrainingPaywallPending()
+        presentPaywall(entryPoint: .qualifiedTrainingGate)
     }
 
     private func presentPaywall(entryPoint: PaywallEntryPoint, feature: String? = nil) {
