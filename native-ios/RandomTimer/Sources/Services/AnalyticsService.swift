@@ -558,6 +558,10 @@ enum AnalyticsEvents {
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
     static let featureGateHit = "feature_gate_hit"
+    static let qualifiedTrainingPaywallEligible = "qualified_training_paywall_eligible"
+    static let rewardedAdRequested = "rewarded_ad_requested"
+    static let rewardedAdCompleted = "rewarded_ad_completed"
+    static let rewardedAdUnlock = "rewarded_ad_unlock"
     static let paywallGateFirstTimer = "paywall_gate_first_timer"
     static let trainingPresetApplied = "training_preset_applied"
 
