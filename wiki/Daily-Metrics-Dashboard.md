@@ -15,6 +15,8 @@
 | DAU | 18 |
 | WAU | 113 |
 | MAU | 496 |
+
+_Data quality: stale; showing last good metrics from `2026-05-20T19:56:20+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`._
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -22,10 +24,10 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 12 |
-| Timer Completed (7d) | 216 |
-| Completed Users (7d) | 26 |
-| Sessions/Completed User (7d) | 8.31 |
+| WQTU (7d) | 11 |
+| Timer Completed (7d) | 191 |
+| Completed Users (7d) | 25 |
+| Sessions/Completed User (7d) | 7.64 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +40,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-20T19:57:14+00:00
+**Generated:** 2026-05-20T20:53:18+00:00
 
 ## Onboarding Funnel
-- First Open: **490**
-- First Timer Configured: **317** (64.7% of opens)
-- First Timer Completed: **100** (20.4% of opens)
+- First Open: **488**
+- First Timer Configured: **314** (64.3% of opens)
+- First Timer Completed: **98** (20.1% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -61,14 +63,14 @@
 | Metric | Value |
 |--------|-------|
 | Paywall Views | 367 |
-| Offer Selects | 98 |
+| Offer Selects | 96 |
 | Purchase Attempts | 7 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
 **Top failure reasons:** user_cancelled (7)
 
-**Catalog failures (Android):** elite_tactical_monthly (539), elite_tactical (376), pro_base (152), unknown (92)
+**Catalog failures (Android):** elite_tactical_monthly (541), elite_tactical (378), pro_base (156), unknown (94)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -76,9 +78,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 490 | — |
-| First Timer Configured | 317 | 64.7% of opens |
-| First Timer Completed | 100 | 20.4% of opens |
+| First Open | 488 | — |
+| First Timer Configured | 314 | 64.3% of opens |
+| First Timer Completed | 98 | 20.1% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -165,7 +167,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20" , "2026-05-20"]
     y-axis "Users"
-    line [13 , 13 , 13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12 , 12 , 12 , 12]
+    line [13 , 13 , 13 , 13 , 13 , 13 , 13 , 12 , 12 , 12 , 12 , 12 , 12 , 11]
 ```
 
 ```mermaid
@@ -193,4 +195,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-20T19:57:15+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-20T20:53:19+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

@@ -9,14 +9,14 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-05-20T19:57:15+00:00` |
+| Snapshot (UTC) | `2026-05-20T20:53:19+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 0 |
 | Daily Budget Configured | $30.00 |
 | Blended CPI Target | $3.00 |
-| Open -> Completed Rate (30d) | 20.4% |
-| WQTU (7d) | 12 |
+| Open -> Completed Rate (30d) | 20.1% |
+| WQTU (7d) | 11 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
 | Distinct install users (30d) | 479 |
@@ -28,6 +28,8 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 | Apple Ads Installs (30d) | 0 |
 | Apple Ads Live Finding | API reports 1 campaign(s), 0 active; 30d taps 0, spend $0.00, installs 0. |
 | Guardrail Violated | NO |
+
+_Data quality: stale; showing last good metrics from `2026-05-20T19:56:20+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`._
 <!-- LIVE_PAID_END -->
 
 ## Paid Attribution Sources (30d)
@@ -52,13 +54,13 @@ xychart-beta
     title "North Star Progress (WQTU)"
     x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]
     y-axis "Users" 0 --> 27
-    bar [12 , 8 , 25]
+    bar [11 , 8 , 25]
 ```
 
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["05-20T07:58" , "05-20T09:18" , "05-20T10:32" , "05-20T11:40" , "05-20T12:35" , "05-20T13:39" , "05-20T14:40" , "05-20T15:59" , "05-20T17:20" , "05-20T18:08" , "05-20T18:48" , "05-20T19:05" , "05-20T19:23" , "05-20T19:57"]
+    x-axis ["05-20T09:18" , "05-20T10:32" , "05-20T11:40" , "05-20T12:35" , "05-20T13:39" , "05-20T14:40" , "05-20T15:59" , "05-20T17:20" , "05-20T18:08" , "05-20T18:48" , "05-20T19:05" , "05-20T19:23" , "05-20T19:57" , "05-20T20:53"]
     y-axis "Taps" 0 --> 1
     line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
@@ -66,7 +68,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["05-20T07:58" , "05-20T09:18" , "05-20T10:32" , "05-20T11:40" , "05-20T12:35" , "05-20T13:39" , "05-20T14:40" , "05-20T15:59" , "05-20T17:20" , "05-20T18:08" , "05-20T18:48" , "05-20T19:05" , "05-20T19:23" , "05-20T19:57"]
+    x-axis ["05-20T09:18" , "05-20T10:32" , "05-20T11:40" , "05-20T12:35" , "05-20T13:39" , "05-20T14:40" , "05-20T15:59" , "05-20T17:20" , "05-20T18:08" , "05-20T18:48" , "05-20T19:05" , "05-20T19:23" , "05-20T19:57" , "05-20T20:53"]
     y-axis "USD" 0 --> 1
     line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```

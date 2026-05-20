@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-05-20T19:56:47+00:00",
-  "status": "ok",
+  "generated_at": "2026-05-20T20:48:24+00:00",
+  "status": "degraded",
   "nsm": {
-    "wqtu": 12,
+    "wqtu": 11,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
   },
   "engagement": {
     "dau": 18,
-    "wau": 113
+    "wau": 0
   },
   "abandon_rate": {
-    "started_30d": 1517,
-    "completed_30d": 617,
+    "started_30d": 1508,
+    "completed_30d": 614,
     "abandon_rate_pct": 59.3
   },
   "monetization_funnel": {
@@ -44,7 +44,9 @@
       "wqtu": 4
     }
   ],
-  "query_errors": [],
+  "query_errors": [
+    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
+  ],
   "history": [
     {
       "timestamp": "2026-05-20T18:08:00+00:00",
@@ -69,6 +71,11 @@
     {
       "timestamp": "2026-05-20T19:56:47+00:00",
       "wqtu": 12,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T20:48:24+00:00",
+      "wqtu": 11,
       "dau": 18
     }
   ]
