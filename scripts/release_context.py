@@ -312,7 +312,7 @@ def collect_remote_context(
 
         asc_cmd = [
             sys.executable,
-            str(repo_root / "scripts" / "asc_verify_ready.py"),
+            str(repo_root / "scripts" / "asc" / "asc_verify_ready.py"),
             "--version",
             version,
             "--locale",
@@ -324,7 +324,7 @@ def collect_remote_context(
 
         reviews_cmd = [
             sys.executable,
-            str(repo_root / "scripts" / "asc_reviews_ops.py"),
+            str(repo_root / "scripts" / "asc" / "asc_reviews_ops.py"),
             "--bundle-id",
             "com.igorganapolsky.randomtimer",
             "--limit",

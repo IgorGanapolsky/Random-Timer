@@ -1,0 +1,7 @@
+# P2 scaffold — non-consumable discipline packs (not live in Play Console yet)
+# Android product IDs (create as INAPP before enabling billing queries):
+pack_special_forces
+pack_boxing_hiit
+pack_crossfit
+pack_bjj
+# Target price band: $2.99–9.99 one-time per pack (CEO approval after P0 converts)

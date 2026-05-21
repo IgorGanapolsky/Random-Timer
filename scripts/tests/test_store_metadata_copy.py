@@ -16,9 +16,14 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "Most timers teach anticipation. Random Tactical Timer trains reaction." in full_description
     assert "pattern-interrupt training built for combat sports, sparring, drills, and reaction work." in full_description
     assert "serious fighters and operators" not in full_description
+    # Short description pin (snapshot regression guard). Updated 2026-05-18:
+    # added "muay thai" as a new indexed term (high-volume combat-sport search),
+    # reordered to MMA → BJJ → boxing → muay thai → HIIT for natural reading,
+    # dropped redundant "Random cues" (Random already opens the string).
+    # 75/80 chars within Play Store's limit.
     assert (
         short_description.strip()
-        == "Random timer for unpredictable MMA, boxing, BJJ & HIIT. AI voice callouts."
+        == "Random tactical timer: MMA, BJJ, boxing, muay thai & HIIT. AI coach voices."
     )
 
 
@@ -41,8 +46,13 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     assert "Built for combat sports, HIIT, CrossFit, and reaction training." in description
     assert (
         promotional_text.strip()
-        == "Random timer for dry fire, boxing, BJJ, HIIT, and reaction drills."
+        == "Unpredictable intervals for combat sports & HIIT. AI coach voices, 60‑min sessions, full sound library—optional Pro."
     )
-    assert subtitle == "Dry Fire, Boxing, BJJ, HIIT"
-    assert "muay thai" in keywords
+    # Subtitle copy pinned (snapshot regression guard). Updated 2026-05-18 from
+    # "Random HIIT & combat rounds" to "Random HIIT & combat training": ASO swap
+    # gaining "training" as a new indexed term (high search volume, not in title
+    # or keywords field) and dropping combat-sports-only "rounds" — broader
+    # funnel, same reaction positioning. 29/30 chars within Apple's limit.
+    assert subtitle == "Random HIIT & combat training"
+    assert "mma" in keywords
     assert "crossfit" in keywords

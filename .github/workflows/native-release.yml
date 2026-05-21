@@ -49,7 +49,7 @@ on:
         required: false
         default: 'false'
       skip_internal_signoff:
-        description: 'Waive internal-signoff/* commit statuses (scheduled monthly release only; release SHA differs from internal build SHA)'
+        description: 'Deprecated/disabled. Releases must have TestFlight/Firebase internal proof on the exact SHA.'
         type: choice
         options:
           - 'false'
@@ -98,8 +98,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${SKIP_INTERNAL}" == "true" ]]; then
-            echo "::warning::internal signoff waived (skip_internal_signoff=true) — use only for scheduled monthly automation"
-            exit 0
+            echo "❌ Internal artifact proof cannot be waived for production release."
+            echo "Every release must have current internal-signoff/testflight and/or internal-signoff/firebase statuses on the exact release SHA."
+            exit 1
           fi
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" > /tmp/internal-signoff-status.json
           python3 scripts/internal_signoff_gate.py \
@@ -264,6 +265,7 @@ jobs:
         with:
           name: ios-ipa
           path: native-ios/RandomTimer.ipa
+          retention-days: 1
 
   android-release:
     needs:
@@ -458,6 +460,7 @@ jobs:
           name: play-upload-result
           path: /tmp/play-upload-result.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload Play upload error (if any)
         uses: actions/upload-artifact@v7.0.0
@@ -466,6 +469,7 @@ jobs:
           name: play-upload-error
           path: /tmp/play-upload-error.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7.0.0
@@ -473,6 +477,7 @@ jobs:
         with:
           name: android-aab
           path: native-android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -637,6 +642,7 @@ jobs:
           name: play-public-listing-report
           path: /tmp/play-public-listing.txt
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -707,6 +713,7 @@ jobs:
           python scripts/asc/asc_resolve_version.py \
             --preferred-version "$PREFERRED_VERSION" \
             --create-if-needed \
+            --allow-review-locked-preferred \
             --json-out /tmp/asc_version.json
           SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
           SELECTED_VERSION_ID=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("selected_id") or "")')
@@ -842,6 +849,7 @@ jobs:
           path: |
             /tmp/asc_ready.json
             /tmp/delegation_contract.json
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Submit for App Review (App Store)
@@ -877,6 +885,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
@@ -940,6 +949,13 @@ jobs:
 
           NOTES="${NOTES}
 
+          ## Download
+
+          | Store | Link |
+          |-------|------|
+          | Google Play | [Random Tactical Timer on Google Play](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer) |
+          | Apple App Store | [Random Tactical Timer on the App Store](https://apps.apple.com/us/app/random-tactical-timer/id6758355312) |
+
           ### Release metadata
           - Commit: ${GITHUB_SHA}
           - Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
@@ -951,7 +967,12 @@ jobs:
             --notes "$NOTES"
           echo "✅ Created GitHub Release ${{ steps.version.outputs.tag }}"
 
-  sync-main:
+  # sync-main: DISABLED — back-merge PRs always conflicted because develop had moved ahead.
+  # The release tag (created by tag-release) is the canonical source of truth for what shipped.
+  # develop is kept ahead of main via bump-develop-version below.
+  # If you need main to reflect a release, merge the release tag manually or use a hotfix branch.
+
+  bump-develop-version:
     needs: [tag-release]
     if: always() && needs.tag-release.result == 'success'
     runs-on: ubuntu-latest
@@ -961,31 +982,65 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          ref: develop
           fetch-depth: 0
+          token: ${{ secrets.ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Create PR to merge release into main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+
+      - name: Bump patch version on develop
+        id: bump
         run: |
           TAG="${{ needs.tag-release.outputs.tag || '' }}"
-          BRANCH="${GITHUB_REF_NAME}"
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "release: merge $BRANCH into main" \
-            --body "Auto-generated PR to sync main with release $TAG" \
-            || echo "PR already exists or branch is up to date"
-        continue-on-error: true
+          python3 scripts/bump_patch_version.py \
+            --changelog-message "Bump version after $TAG release" \
+            --skip-changelog
+          NEW_VERSION=$(python3 scripts/source_versions.py --repo-root . --format json \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["android"]["version_name"])')
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped working tree to v${NEW_VERSION} (will open PR — develop is protected)"
 
-      - name: Create PR to merge release back into develop
+      - name: Open pull request for develop version bump
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
-          BRANCH="${GITHUB_REF_NAME}"
-          gh pr create \
-            --base develop \
-            --head "$BRANCH" \
-            --title "chore: merge $BRANCH back into develop" \
-            --body "Auto-generated PR to sync develop after release" \
-            || echo "PR already exists or branch is up to date"
-        continue-on-error: true
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "❌ ADMIN_TOKEN is required to open the post-release bump PR (direct push to develop is blocked by branch protection)."
+            exit 1
+          fi
+          TAG="${{ needs.tag-release.outputs.tag || 'unknown' }}"
+          NEW_VERSION="${{ steps.bump.outputs.new_version }}"
+          BRANCH="chore/bump-develop-post-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+          git add native-android/app/build.gradle.kts \
+                  native-ios/RandomTimer.xcodeproj/project.pbxproj \
+                  native-android/fastlane/metadata/android/en-US/changelogs/ \
+                  native-ios/fastlane/metadata/en-US/release_notes.txt
+          if git diff --cached --quiet; then
+            echo "Nothing to commit — skipping PR."
+            exit 0
+          fi
+          git commit -m "chore: bump develop to v${NEW_VERSION} after ${TAG} release [skip ci]"
+          git push -u origin "$BRANCH"
+          BODY_FILE="$(mktemp)"
+          {
+            echo "Automated post-release version bump after tag \`${TAG}\`."
+            echo ""
+            echo "develop rejects direct pushes; merge this PR to align develop with the next patch train."
+            echo ""
+            echo "Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > "$BODY_FILE"
+          gh pr create --repo "${{ github.repository }}" --base develop --head "$BRANCH" \
+            --title "chore: bump develop to v${NEW_VERSION} after ${TAG}" \
+            --body-file "$BODY_FILE"
+          rm -f "$BODY_FILE"
+          echo "✅ Opened PR for develop version bump (branch ${BRANCH})"

@@ -17,10 +17,14 @@ import android.media.RingtoneManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.R
@@ -51,6 +55,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
@@ -80,6 +85,8 @@ class TimerForegroundService : Service() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var vibrator: Vibrator? = null
     private var screenOffReceiver: ScreenOffReceiver? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var mediaSession: MediaSessionCompat? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -171,6 +178,7 @@ class TimerForegroundService : Service() {
             }
             ACTION_PAUSE -> pauseTimer()
             ACTION_RESUME -> resumeTimer()
+            ACTION_EXTEND -> extendTimer()
             ACTION_RESET -> resetTimer()
             ACTION_DISMISS_ALARM -> dismissAlarm()
             ACTION_SILENCE_ALARM -> silenceAlarm()
@@ -211,6 +219,7 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
         voiceCalloutManager.shutdown()
         serviceScope.cancel()
     }
@@ -274,6 +283,7 @@ class TimerForegroundService : Service() {
     }
 
     private fun startTimer(initialState: TimerState) {
+        acquireTimerWakeLock()
         _timerState.value = initialState
         updateNotification(initialState)
         voiceCalloutManager.resetSession()
@@ -343,6 +353,8 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
+        deactivateMediaSession()
         _timerState.value = null
         removeForegroundNotification()
         stopSelf()
@@ -374,6 +386,7 @@ class TimerForegroundService : Service() {
 
     private fun pauseTimer() {
         timerJob?.cancel()
+        releaseTimerWakeLock()
         _timerState.value?.let { state ->
             if (state.status != TimerStatus.PAUSED) {
                 val pausedState = state.copy(status = TimerStatus.PAUSED)
@@ -388,7 +401,36 @@ class TimerForegroundService : Service() {
             if (state.status == TimerStatus.PAUSED) {
                 val resumedState = state.copy(status = TimerStatus.RUNNING)
                 _timerState.value = resumedState
+                updateNotification(resumedState)
                 startTimer(resumedState)
+            }
+        }
+    }
+
+    private fun extendTimer() {
+        _timerState.value?.let { current ->
+            if (current.status == TimerStatus.RUNNING || current.status == TimerStatus.PAUSED) {
+                val extension = 5.minutes
+                val newTarget = current.targetDuration + extension
+                val newRemaining = current.remainingDuration + extension
+
+                val updated =
+                    current.copy(
+                        targetDuration = newTarget,
+                        remainingDuration = newRemaining,
+                    )
+                _timerState.value = updated
+                updateNotification(updated)
+
+                // If running, we need to restart the timer loop to account for new duration
+                if (current.status == TimerStatus.RUNNING) {
+                    timerJob?.cancel()
+                    startTimer(updated)
+                }
+                analyticsService.track(
+                    AnalyticsEvents.TIMER_EXTENDED,
+                    mapOf(AnalyticsProperties.DURATION_SECONDS to 300),
+                )
             }
         }
     }
@@ -445,6 +487,8 @@ class TimerForegroundService : Service() {
         stopAlarmSound()
         stopVibration()
         unregisterScreenOffReceiver()
+        releaseTimerWakeLock()
+        deactivateMediaSession()
 
         _timerState.value?.let { current ->
             if (current.status == TimerStatus.ALARM) {
@@ -459,6 +503,7 @@ class TimerForegroundService : Service() {
     }
 
     private fun triggerAlarm(state: TimerState) {
+        acquireTimerWakeLock()
         // Update status to ALARM
         _timerState.value =
             state.copy(
@@ -478,6 +523,8 @@ class TimerForegroundService : Service() {
         if (state.config.vibrationEnabled) {
             startVibration()
         }
+
+        activateMediaSession()
 
         // Start alarm countdown to auto-stop after alarmDuration
         startAlarmCountdown(state.config.alarmDuration)
@@ -523,6 +570,7 @@ class TimerForegroundService : Service() {
                             // Auto-restart timer
                             restartTimerInternal()
                         } else {
+                            releaseTimerWakeLock()
                             // Loop limit reached - keep state as COMPLETE
                             _timerState.value =
                                 currentState.copy(
@@ -533,6 +581,7 @@ class TimerForegroundService : Service() {
                             _timerState.value?.let { updateNotification(it) }
                         }
                     } else {
+                        releaseTimerWakeLock()
                         // Alarm sound finished — keep state as COMPLETE (iOS parity)
                         // User must manually Stop or Reset from the ActiveTimerScreen
                         _timerState.value =
@@ -576,6 +625,42 @@ class TimerForegroundService : Service() {
             )
 
         startTimer(newState)
+    }
+
+    private fun acquireTimerWakeLock() {
+        val existing = wakeLock
+        if (existing?.isHeld == true) {
+            return
+        }
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock =
+            existing
+                ?: powerManager
+                    .newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK,
+                        "$packageName:active_timer",
+                    ).apply {
+                        setReferenceCounted(false)
+                    }
+
+        runCatching {
+            wakeLock?.acquire()
+        }.onFailure { error ->
+            Log.w("TimerForegroundService", "Failed to acquire timer wake lock", error)
+        }
+    }
+
+    private fun releaseTimerWakeLock() {
+        val current = wakeLock ?: return
+        if (!current.isHeld) {
+            return
+        }
+        runCatching {
+            current.release()
+        }.onFailure { error ->
+            Log.w("TimerForegroundService", "Failed to release timer wake lock", error)
+        }
     }
 
     private fun createNotificationChannels() {
@@ -667,8 +752,14 @@ class TimerForegroundService : Service() {
                 .setColor(getColor(R.color.accent_primary))
                 .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
-        // Never show countdown — this is a random timer, revealing remaining time defeats the purpose
-        builder.setShowWhen(false)
+        if (!isPaused && !isComplete && !isSilencedAlarm) {
+            val endTime = System.currentTimeMillis() + state.remainingDuration.inWholeMilliseconds
+            builder.setWhen(endTime)
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+        } else {
+            builder.setShowWhen(false)
+        }
 
         if (isComplete || isSilencedAlarm) {
             // Complete or silenced alarm: Stop and Reset only
@@ -683,17 +774,25 @@ class TimerForegroundService : Service() {
                 createResetIntent(),
             )
         } else {
-            // Running/Paused: Pause/Resume, Reset, Stop
+            // Running/Paused: Pause/Resume, +5 Min/Reset, Stop
             builder.addAction(
                 if (isPaused) R.drawable.ic_play else R.drawable.ic_pause,
                 if (isPaused) "Resume" else "Pause",
                 if (isPaused) createResumeIntent() else createPauseIntent(),
             )
-            builder.addAction(
-                R.drawable.ic_refresh,
-                "Reset",
-                createResetIntent(),
-            )
+            if (isPaused) {
+                builder.addAction(
+                    R.drawable.ic_refresh,
+                    "Reset",
+                    createResetIntent(),
+                )
+            } else {
+                builder.addAction(
+                    R.drawable.ic_add_time,
+                    "+5 Min",
+                    createExtendIntent(),
+                )
+            }
             builder.addAction(
                 R.drawable.ic_stop,
                 "Stop",
@@ -833,6 +932,19 @@ class TimerForegroundService : Service() {
         return PendingIntent.getService(
             this,
             4,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createExtendIntent(): PendingIntent {
+        val intent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_EXTEND
+            }
+        return PendingIntent.getService(
+            this,
+            9,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -1029,11 +1141,71 @@ class TimerForegroundService : Service() {
         screenOffReceiver = null
     }
 
+    // -- Media Session (Bluetooth/Headset support) --
+
+    private fun activateMediaSession() {
+        if (mediaSession != null) return
+
+        mediaSession =
+            MediaSessionCompat(this, "RandomTimerAlarm").apply {
+                setCallback(
+                    object : MediaSessionCompat.Callback() {
+                        override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
+                            @Suppress("DEPRECATION")
+                            val keyEvent =
+                                mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
+                            if (keyEvent != null &&
+                                MediaButtonHandler.shouldSilenceAlarm(keyEvent.keyCode, keyEvent.action)
+                            ) {
+                                silenceAlarm()
+                                return true
+                            }
+                            return super.onMediaButtonEvent(mediaButtonEvent)
+                        }
+
+                        override fun onStop() {
+                            silenceAlarm()
+                        }
+
+                        override fun onPause() {
+                            silenceAlarm()
+                        }
+                    },
+                )
+
+                val state =
+                    PlaybackStateCompat
+                        .Builder()
+                        .setActions(
+                            PlaybackStateCompat.ACTION_STOP or
+                                PlaybackStateCompat.ACTION_PAUSE or
+                                PlaybackStateCompat.ACTION_PLAY_PAUSE,
+                        ).setState(
+                            PlaybackStateCompat.STATE_PLAYING,
+                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                            1f,
+                        ).build()
+                setPlaybackState(state)
+                isActive = true
+            }
+        Log.d("TimerService", "Media session activated")
+    }
+
+    private fun deactivateMediaSession() {
+        mediaSession?.let {
+            it.isActive = false
+            it.release()
+        }
+        mediaSession = null
+        Log.d("TimerService", "Media session deactivated")
+    }
+
     companion object {
         const val ACTION_START = "com.iganapolsky.randomtimer.START"
         const val ACTION_STOP = "com.iganapolsky.randomtimer.STOP"
         const val ACTION_PAUSE = "com.iganapolsky.randomtimer.PAUSE"
         const val ACTION_RESUME = "com.iganapolsky.randomtimer.RESUME"
+        const val ACTION_EXTEND = "com.iganapolsky.randomtimer.EXTEND"
         const val ACTION_RESET = "com.iganapolsky.randomtimer.RESET"
         const val ACTION_DISMISS_ALARM = "com.iganapolsky.randomtimer.DISMISS"
         const val ACTION_SILENCE_ALARM = "com.iganapolsky.randomtimer.SILENCE"

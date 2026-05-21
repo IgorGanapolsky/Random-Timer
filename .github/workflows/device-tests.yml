@@ -5,9 +5,11 @@ on:
     branches: [develop, main]
   workflow_dispatch:
 
+# Do not cancel in-flight device jobs: iOS Maestro + Agent Device often runs 15–25+ minutes.
+# A new push would previously abort mid-flow (looks like a flake, blocks merge, wastes runner time).
 concurrency:
   group: device-tests-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   changes:
@@ -29,11 +31,15 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          BEFORE_SHA: ${{ github.event.before || '' }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
             git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+            python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
+          elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+            git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
             python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output
           else
             python3 scripts/ci_changed_components.py --all --github-output
@@ -55,7 +61,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Create dummy google-services.json for CI
         working-directory: native-android
@@ -80,15 +85,6 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: AVD cache
-        uses: actions/cache@v5.0.4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-api-30-${{ runner.os }}
-
       - name: Run Android UI smoke test on emulator
         uses: reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7 # v2
         with:
@@ -108,6 +104,7 @@ jobs:
           path: |
             native-android/app/build/reports/androidTests/connected
             native-android/app/build/outputs/androidTest-results/connected
+          retention-days: 1
 
   ios-device-tests:
     name: iOS Simulator + Maestro + Agent Device
@@ -116,7 +113,7 @@ jobs:
     runs-on: macos-15
     permissions:
       contents: read
-    timeout-minutes: 35
+    timeout-minutes: 50
 
     steps:
       - uses: actions/checkout@v6
@@ -203,6 +200,7 @@ jobs:
       - name: Run iOS UI smoke tests on simulator
         env:
           SIMULATOR_UDID: ${{ steps.sim.outputs.sim_id }}
+          MAESTRO_FLOW_TIMEOUT_SECONDS: "180"
         run: bash scripts/device-tests/ci-maestro-ios.sh
 
       - name: Upload iOS device test artifacts
@@ -214,3 +212,4 @@ jobs:
             native-ios/build/maestro
             native-ios/build/agent-device
           if-no-files-found: warn
+          retention-days: 1

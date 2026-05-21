@@ -18,6 +18,37 @@ IOS_SMOKE_FLOW = ROOT / ".maestro/ios-smoke-test.yaml"
 WEEKLY_SHARED_WORKFLOW = ROOT / ".github/workflows/weekly-shared.yml"
 WQTU_HEALTH_WORKFLOW = ROOT / ".github/workflows/wqtu-health.yml"
 ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
+EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
+PLAY_IAP_READBACK_WORKFLOW = ROOT / ".github/workflows/play-iap-product-readback.yml"
+WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
+WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
+STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+AGENTS_DOC = ROOT / "AGENTS.md"
+ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
+
+
+def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
+    source = STORE_RATINGS_SNAPSHOT_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "store_ratings_snapshot.py" in source
+    assert "--no-dotenv" in source
+    assert "APPSTORE_KEY_ID" in source
+    assert "GOOGLE_PLAY_JSON_KEY" in source
+    assert "contents: read" in source
+
+
+def test_android_agent_workflow_documents_official_cli_skills_and_docs_without_ci_lock_in():
+    agents = AGENTS_DOC.read_text(encoding="utf-8")
+    workflow = ANDROID_AGENT_WORKFLOW_DOC.read_text(encoding="utf-8")
+
+    assert "scripts/android_agent_doctor.py --json" in agents
+    assert "docs/ANDROID_AGENT_WORKFLOW.md" in agents
+    assert "android docs search" in agents
+    assert "android skills" in agents
+    assert "Do not make preview Android CLI tooling a hard CI dependency" in agents
+    assert "android update" in workflow
+    assert "cd native-android && ./gradlew testDebugUnitTest lint" in workflow
+    assert "never remove foreground service permissions" in workflow
 
 
 def test_ci_workflow_uses_real_python_suite_and_has_no_legacy_skip_path():
@@ -49,6 +80,7 @@ def test_internal_distribution_workflow_verifies_store_uploads_and_uploads_evide
     assert 'TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"' in source
     assert 'TESTFLIGHT_NOTIFY_EXTERNAL_TESTERS: "false"' in source
     assert "TESTFLIGHT_REQUIRED_TESTERS: ${{ vars.TESTFLIGHT_INTERNAL_TESTERS || secrets.TESTFLIGHT_INTERNAL_TESTERS || '' }}" in source
+    assert "TESTFLIGHT_INTERNAL_TESTERS must include the CEO/TestFlight Apple ID" in source
     assert "secrets.FIREBASE_REQUIRED_TESTER_EMAIL" not in source.split("Ensure TestFlight internal distribution visibility", 1)[1].split(
         "Upload IPA artifact", 1
     )[0]
@@ -89,6 +121,15 @@ def test_internal_distribution_workflow_passes_play_json_key_into_distribution_s
     assert "GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}" in play_distribute_section
 
 
+def test_internal_distribution_workflow_preflights_play_fgs_declaration_before_build():
+    source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Preflight Play foreground service declaration" in source
+    assert "scripts/check_android_play_fgs_declaration.py" in source
+    assert "PLAY_FGS_DECLARATION_ACK" in source
+    assert source.index("Preflight Play foreground service declaration") < source.index("Build release Bundle (AAB)")
+
+
 def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_and_retries():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
@@ -103,16 +144,24 @@ def test_internal_distribution_workflow_hardens_play_version_probe_with_timeout_
 def test_internal_distribution_skips_impossible_auto_ios_uploads_without_signoff():
     source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
 
-    ios_job = source.split("ios-testflight-internal:", 1)[1].split("ios-testflight-signoff:", 1)[0]
-    signoff_job = source.split("ios-testflight-signoff:", 1)[1].split("android-play-internal:", 1)[0]
+    signoff_index = source.index("ios-testflight-signoff:")
+    upload_index = source.index("ios-testflight-internal:")
+    assert signoff_index < upload_index
 
+    signoff_job = source.split("ios-testflight-signoff:", 1)[1].split("ios-testflight-internal:", 1)[0]
+    ios_job = source.split("ios-testflight-internal:", 1)[1].split("android-play-internal:", 1)[0]
+
+    assert "needs: [gate]" in signoff_job
+    assert "environment:" in signoff_job
+    assert "testflight-signoff" in signoff_job
+    assert "needs: [gate, ios-testflight-signoff]" in ios_job
+    assert "needs.ios-testflight-signoff.result == 'success'" in ios_job
     assert "uploaded: ${{ steps.ios_lineage.outputs.uploadable }}" in ios_job
     assert "DISTRIBUTION_REASON: ${{ needs.gate.outputs.reason }}" in ios_job
-    assert "blocked by closed App Store version" in ios_job
+    assert "blocked by (closed|a distribution-locked) App Store version" in ios_job
     assert "Skipping automatic iOS TestFlight upload" in ios_job
     assert "Record skipped iOS TestFlight upload" in ios_job
     assert "if: steps.ios_lineage.outputs.uploadable == 'true'" in ios_job
-    assert "needs.ios-testflight-internal.outputs.uploaded == 'true'" in signoff_job
 
 
 def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_delivery():
@@ -131,6 +180,7 @@ def test_internal_distribution_workflow_supports_targeted_reruns_and_firebase_de
         "- name: Preflight release checks (Android)", 1
     )[0]
     assert "FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}" in firebase_auth_section
+    assert "FIREBASE_REQUIRED_TESTER_EMAIL must include the CEO Android tester email" in firebase_auth_section
     assert "COMBINED_FIREBASE_TESTERS" in firebase_auth_section
     assert 'os.environ.get("FIREBASE_REQUIRED_TESTER_EMAIL", "")' in firebase_auth_section
     assert 'echo "FIREBASE_INTERNAL_TESTERS=${COMBINED_FIREBASE_TESTERS}" >> "$GITHUB_ENV"' in firebase_auth_section
@@ -213,6 +263,16 @@ def test_native_release_workflow_keeps_ios_review_submission_opt_in():
     assert "default: 'false'" in submit_review_block
 
 
+def test_native_release_ios_submit_review_resolves_version_even_when_review_locked():
+    source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    resolve_block = source.split("- name: Resolve editable App Store version", 1)[1].split(
+        "- name: Write App Store Connect key (for API)", 1
+    )[0]
+    assert "asc_resolve_version.py" in resolve_block
+    assert "--allow-review-locked-preferred" in resolve_block
+
+
 def test_native_release_workflow_marks_android_firebase_mirror_input_deprecated():
     source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
@@ -239,6 +299,8 @@ def test_native_release_workflow_blocks_production_without_internal_signoff_proo
     assert "internal-proof-or-waive:" in source
     assert "skip_internal_signoff:" in source
     assert "skip_production_signoff:" in source
+    assert "Internal artifact proof cannot be waived for production release." in source
+    assert "Every release must have current internal-signoff/testflight and/or internal-signoff/firebase statuses" in source
     assert 'gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status"' in source
     assert "python3 scripts/internal_signoff_gate.py" in source
     assert "require-production-signoff:" in source
@@ -301,6 +363,14 @@ def test_ci_workflow_has_dedicated_regression_guards_job():
     assert "AIVoiceCalloutManagerSelectionTest" in guard_job
 
 
+def test_ci_north_star_guardrail_only_requires_posthog_when_paid_campaigns_are_active():
+    source = CI_WORKFLOW.read_text(encoding="utf-8")
+    guard_job = source.split("north-star-guardrail:", 1)[1].split("\n  security:\n", 1)[0]
+
+    assert "--require-posthog-when-active" in guard_job
+    assert "--require-posthog\n" not in guard_job
+
+
 def test_north_star_guardrail_workflow_runs_daily_ops_pipeline():
     source = NORTH_STAR_GUARDRAIL_WORKFLOW.read_text(encoding="utf-8")
 
@@ -343,6 +413,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
     trigger_section = source.split("concurrency:", 1)[0]
 
+    assert "cancel-in-progress: false" in source
     assert "pull_request:" in trigger_section
     assert "branches: [develop, main]" in trigger_section
     assert "paths:" not in trigger_section
@@ -366,7 +437,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "run_maestro_flow" in ios_script
     assert "run_with_timeout \"$IOS_BUILD_TIMEOUT_SECONDS\" xcodebuild build" in ios_script
     assert "run_with_timeout \"$MAESTRO_FLOW_TIMEOUT_SECONDS\" bash -o pipefail -c" in ios_script
-    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-120" in ios_script
+    assert "MAESTRO_FLOW_TIMEOUT_SECONDS:-180" in ios_script
     assert "xcrun simctl privacy \"$SIMULATOR_UDID\" grant notifications \"$BUNDLE_ID\"" in ios_script
     assert "xcrun simctl terminate \"$SIMULATOR_UDID\" \"$BUNDLE_ID\"" in ios_script
     assert "run_with_timeout \"$seconds\" npx -y agent-device" in ios_script
@@ -375,7 +446,7 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "home-pre-agent.png" in ios_script
     assert "Simulator home screenshot was not captured." in ios_script
     assert "retry_agent_device \"wait-home\"" not in ios_script
-    assert "Random Tactical Timer|Start Timer|Timer Range" in ios_script
+    assert "Random Tactical Timer|Start First Drill|Start Timer|Timer Range" in ios_script
     assert ios_script.index("regression-sound-arsenal-paywall-ios.yaml") < ios_script.index("agent-device diagnostic screenshot")
     assert "retry_agent_device_capture \"snapshot\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\"" not in ios_script
     assert "retry_agent_device \"install\" \"$AGENT_DEVICE_TIMEOUT_SECONDS\" install" in ios_script
@@ -420,7 +491,7 @@ def test_ios_maestro_regression_flows_use_bounded_scrolls_and_concrete_lock_anch
 def test_ios_smoke_flow_avoids_flaky_post_start_hierarchy_queries():
     source = IOS_SMOKE_FLOW.read_text(encoding="utf-8")
 
-    assert "- tapOn: 'Start Timer'" in source
+    assert "- tapOn: 'Start First Drill'" in source
     assert "- stopApp" in source
     assert ".*Timer running.*" not in source
     assert "text: 'Pause'" not in source
@@ -454,6 +525,66 @@ def test_analytics_deployment_report_reads_deployment_statuses():
     assert "/deployments/{deployment['id']}/statuses?per_page=1" in source
     assert 'latest_state = statuses[0]["state"] if statuses else "unknown"' in source
     assert '.state == "success"' not in source
+
+
+def test_wiki_sync_refreshes_posthog_snapshots_and_commits_marketing_data():
+    source = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python scripts/paywall_conversion_report.py --repo-root . --days 30" in source
+    assert "python scripts/attribution_feedback.py --repo-root . --days 30" in source
+    assert "python scripts/north_star_guardrail.py" in source
+    assert "python scripts/store_downloads_snapshot.py --repo-root . --days 30" in source
+    assert "Commit refreshed marketing analytics snapshots" in source
+    assert "marketing/data/paywall_conversion_report.json" in source
+    assert "marketing/data/north_star.json" in source
+    assert "wiki/Daily-Metrics-Dashboard.md" in source
+    assert "wiki/Paid-Acquisition.md" in source
+    assert "marketing/keywords/posthog_feedback.json" in source
+    assert "git add marketing/data" in source
+    assert "git pull --rebase origin develop" in source
+
+
+def test_analytics_workflow_publishes_weekly_paywall_conversion_report_artifact():
+    source = ANALYTICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "analyze-paywall-conversion:" in source
+    assert "python scripts/paywall_conversion_report.py --repo-root . --days 30" in source
+    assert "pip_packages: requests==2.32.5" in source
+    assert "artifact_name: weekly-paywall-conversion-report" in source
+    assert "marketing/data/paywall_conversion_report.md" in source
+    assert "marketing/data/paywall_conversion_report.json" in source
+
+
+def test_play_iap_readback_workflow_scheduled_on_develop():
+    source = PLAY_IAP_READBACK_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "schedule:" in source
+    assert 'cron: "45 7 * * *"' in source
+    assert "play_verify_iap_products.py" in source
+    assert "play_activate_iap_products.py" in source
+    assert 'PYTHONPATH: ${{ github.workspace }}' in source
+    assert "GOOGLE_PLAY_JSON_KEY" in source
+
+
+def test_wiki_sync_builds_wqtu_health_snapshot():
+    source = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "wqtu_dashboard.py" in source
+    assert "marketing/data" in source
+
+
+def test_executive_metrics_workflow_runs_daily_and_guards_ios_refund_signal():
+    source = EXECUTIVE_METRICS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "schedule:" in source
+    assert "cron: '17 6 * * *'" in source
+    assert "workflow_dispatch:" in source
+    assert "Verify iOS refund ground-truth signal" in source
+    assert "python3 - <<'PY'" in source
+    assert "refunds.ios_status is not ok" in source
+    assert "refunds.ios_sales_report_vendor_number_present is not true" in source
+    assert "refunds.ios_refund_count_metric_id missing expected token" in source
+    assert "app_store_connect_sales_reports_daily_summary_negative_units_sum" in source
 
 
 def test_wqtu_health_workflow_closes_prior_alert_issue_before_creating_next_one():

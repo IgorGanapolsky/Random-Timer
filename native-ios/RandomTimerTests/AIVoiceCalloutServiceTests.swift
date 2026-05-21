@@ -1,9 +1,51 @@
 import XCTest
 import CryptoKit
+import AVFoundation
 @testable import RandomTimer
 
 private final class CounterBox {
     var value = 0
+}
+
+private final class FakeBackgroundVoiceKeepAliveEngine: BackgroundVoiceKeepAliveEngine {
+    let mainMixerNode = AVAudioMixerNode()
+    private(set) var isRunning = false
+    private(set) var attachedNodes = 0
+    private(set) var connectedNodes = 0
+    private(set) var prepareCalls = 0
+    private(set) var startCalls = 0
+    private(set) var stopCalls = 0
+    private(set) var resetCalls = 0
+    var startError: Error?
+
+    func attach(_ node: AVAudioNode) {
+        attachedNodes += 1
+    }
+
+    func connect(_ node1: AVAudioNode, to node2: AVAudioNode, format: AVAudioFormat?) {
+        connectedNodes += 1
+    }
+
+    func prepare() {
+        prepareCalls += 1
+    }
+
+    func start() throws {
+        startCalls += 1
+        if let startError {
+            throw startError
+        }
+        isRunning = true
+    }
+
+    func stop() {
+        stopCalls += 1
+        isRunning = false
+    }
+
+    func reset() {
+        resetCalls += 1
+    }
 }
 
 private func makeUnusedTestAssetURL(filename: String) -> URL {
@@ -92,7 +134,14 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testFemalePreviewSamplesResolveFromMainBundle() {
         let filenames = [
             "female/cmd_move_with_a_purpose",
+            "female/cmd_stay_locked_in",
             "female/cmd_no_hesitation_move",
+            "female/cmd_sound_off_and_drive",
+            "female/cmd_snap_back_and_drive",
+            "female/cmd_stay_disciplined",
+            "female/cmd_keep_your_bearing",
+            "female/cmd_reset_and_attack",
+            "female/cmd_sharp_movement_sharp_focus",
             "female/cmd_stay_in_the_fight",
             "female/cmd_push_pace",
             "female/cmd_keep_tempo_high",
@@ -120,6 +169,13 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             "cmd_reset_and_attack",
             "cmd_sharp_movement_sharp_focus",
             "cmd_stay_in_the_fight",
+            "cmd_push_pace",
+            "cmd_keep_tempo_high",
+            "cmd_finish_rep_keep_pushing",
+            "cmd_drive_forward",
+            "cmd_own_this_rep",
+            "cmd_pick_it_up",
+            "cmd_strong_feet_strong_pace",
             "preview_elapsed",
         ]
 
@@ -149,11 +205,45 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         )
     }
 
+    func testApprovedVoiceFilenameRejectsUnapprovedMaleCatalogEntries() {
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_move_with_a_purpose", gender: .male),
+            "cmd_move_with_a_purpose"
+        )
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_chain_wrestling", gender: .male),
+            "cmd_move_with_a_purpose"
+        )
+        // Female now also has an allowlist safety net
+        XCTAssertEqual(
+            approvedVoiceFilename("cmd_chain_wrestling", gender: .female),
+            "female/cmd_move_with_a_purpose"
+        )
+        XCTAssertFalse(approvedMaleVoiceFilenames.contains("cmd_chain_wrestling"))
+        XCTAssertFalse(approvedFemaleVoiceFilenames.contains("female/cmd_chain_wrestling"))
+    }
+
     func testResetSessionAllowsElapsedMilestoneToReplay() {
         let sut = makeVoiceCalloutService()
-        sut.triggerCallout(elapsedSeconds: 30)
+        sut.triggerCallout(elapsedSeconds: 60)
         sut.resetSession()
+        sut.triggerCallout(elapsedSeconds: 60)
+    }
+
+    func testResetSessionPreservesLastCommandCueToPreventImmediateSessionRepeat() {
+        let sut = makeVoiceCalloutService()
+
+        sut.beginSession(totalDurationSeconds: 300)
         sut.triggerCallout(elapsedSeconds: 30)
+        let primed = sut._stateSnapshotForTesting()
+
+        sut.resetSession()
+        let reset = sut._stateSnapshotForTesting()
+
+        XCTAssertNotNil(primed.lastCommandCueFilename)
+        XCTAssertEqual(reset.lastCommandCueFilename, primed.lastCommandCueFilename)
+        XCTAssertEqual(reset.lastElapsedMilestone, 0)
+        XCTAssertEqual(reset.nextCommandCueAt, 0)
     }
 
     func testCommandCueScheduleDoesNotCrashAcrossLongRun() {
@@ -166,7 +256,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
     func testCatalogHasVarietyAndClearElapsedLanguage() {
         let catalog = loadVoiceCalloutCatalog(bundle: .main)
 
-        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 12)
+        XCTAssertGreaterThanOrEqual(catalog.elapsedCues.count, 8)
         XCTAssertGreaterThanOrEqual(catalog.commandCues.count, 20)
         XCTAssertTrue(
             catalog.elapsedCues.allSatisfy { $0.text.localizedCaseInsensitiveContains("elapsed") },
@@ -204,8 +294,8 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             previewElapsed: .init(filename: "preview_elapsed", text: "Repeat me."),
             fallbackCommandFilename: "cmd_primary",
             elapsedCues: [
-                .init(second: 30, filename: "elapsed_primary", text: "Thirty elapsed."),
-                .init(second: 30, filename: "elapsed_duplicate", text: "Thirty elapsed duplicate."),
+                .init(second: 60, filename: "elapsed_primary", text: "Sixty elapsed."),
+                .init(second: 60, filename: "elapsed_duplicate", text: "Sixty elapsed duplicate."),
             ],
             commandCues: [
                 .init(filename: "cmd_primary", text: "Repeat me."),
@@ -213,7 +303,7 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             ]
         )
 
-        XCTAssertEqual(catalog.elapsedCueBySecond[30]?.filename, "elapsed_primary")
+        XCTAssertEqual(catalog.elapsedCueBySecond[60]?.filename, "elapsed_primary")
         XCTAssertEqual(catalog.filenameByText["Repeat me."], "preview_elapsed")
     }
 
@@ -225,6 +315,24 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
 
         let selected = nextCommandCue(from: cues, lastFilename: "cue_a") { _ in 0 }
         XCTAssertEqual(selected.filename, "cue_b")
+    }
+
+    func testCommandCuePoolAvoidsRepeatedTextEvenWhenFilenameDiffers() {
+        let cues = [
+            VoiceCueCatalog.Cue(filename: "cue_a", text: "Move with a purpose."),
+            VoiceCueCatalog.Cue(filename: "cue_b", text: "  Move with a purpose.  "),
+            VoiceCueCatalog.Cue(filename: "cue_c", text: "Cut the angle and go."),
+        ]
+
+        let pool = commandCuePool(
+            from: cues,
+            usedFilenames: ["cue_a"],
+            usedTexts: [normalizedVoiceCueText("Move with a purpose.")],
+            lastFilename: "cue_a",
+            lastText: "Move with a purpose."
+        )
+
+        XCTAssertEqual(pool.map(\.filename), ["cue_c"])
     }
 
     func testNextPreviewFilenameAvoidsImmediateRepeatWhenPossible() {
@@ -240,10 +348,69 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         XCTAssertTrue(usedFilenames.contains("cue_c"))
     }
 
-    func testShortTimersScheduleFollowupCommandCuesEarly() {
+    func testTimersAtLeastThirtySecondsScheduleFirstCommandCueAtThirtySeconds() {
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 12), .max)
         XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 20), .max)
-        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 15)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 30), .max)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 31), 30)
+        XCTAssertEqual(initialFollowupCommandCueSecond(totalDurationSeconds: 40), 30)
+    }
+
+    func testVoiceNotificationPlanKeepsThirtySecondCadenceAndElapsedMilestones() {
+        let catalog = VoiceCueCatalog(
+            previewElapsed: .init(filename: "preview_elapsed", text: "Preview."),
+            fallbackCommandFilename: "cmd_a",
+            elapsedCues: [
+                .init(second: 60, filename: "elapsed_60s", text: "One minute elapsed."),
+                .init(second: 120, filename: "elapsed_120s", text: "Two minutes elapsed."),
+            ],
+            commandCues: [
+                .init(filename: "cmd_a", text: "Command A."),
+                .init(filename: "cmd_b", text: "Command B."),
+                .init(filename: "cmd_c", text: "Command C."),
+            ]
+        )
+
+        let plan = voiceCalloutNotificationPlan(
+            totalDurationSeconds: 120,
+            elapsedSeconds: 0,
+            gender: .male,
+            catalog: catalog,
+            options: VoiceCalloutNotificationPlanOptions(
+                audioExists: { _ in true },
+                pickIndex: { _ in 0 }
+            )
+        )
+
+        XCTAssertEqual(plan.map(\.offsetSeconds), [30, 60, 90, 120])
+        XCTAssertEqual(plan[1].text, "One minute elapsed.")
+        XCTAssertEqual(plan[3].text, "Two minutes elapsed.")
+        XCTAssertTrue(zip(plan, plan.dropFirst()).allSatisfy { $1.offsetSeconds - $0.offsetSeconds >= 30 })
+    }
+
+    func testVoiceNotificationPlanAvoidsImmediateCommandRepeats() {
+        let catalog = VoiceCueCatalog(
+            previewElapsed: .init(filename: "preview_elapsed", text: "Preview."),
+            fallbackCommandFilename: "cmd_a",
+            elapsedCues: [],
+            commandCues: [
+                .init(filename: "cmd_a", text: "Command A."),
+                .init(filename: "cmd_b", text: "Command B."),
+            ]
+        )
+
+        let plan = voiceCalloutNotificationPlan(
+            totalDurationSeconds: 90,
+            elapsedSeconds: 0,
+            gender: .male,
+            catalog: catalog,
+            options: VoiceCalloutNotificationPlanOptions(
+                audioExists: { _ in true },
+                pickIndex: { _ in 0 }
+            )
+        )
+
+        XCTAssertEqual(plan.map(\.filename), ["cmd_a", "cmd_b", "cmd_a"])
     }
 
     func testPlaybackReactivatesAudioSessionAfterSessionBegin() {
@@ -267,31 +434,36 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
         sut.triggerCallout(elapsedSeconds: 14)
         let beforeFirstCommand = sut._stateSnapshotForTesting()
         XCTAssertEqual(beforeFirstCommand.lastElapsedMilestone, 0)
-        XCTAssertEqual(beforeFirstCommand.nextCommandCueAt, 15)
+        XCTAssertEqual(beforeFirstCommand.nextCommandCueAt, 30)
         XCTAssertNil(beforeFirstCommand.lastCommandCueFilename)
-
-        sut.triggerCallout(elapsedSeconds: 15)
-        let atFifteen = sut._stateSnapshotForTesting()
-        XCTAssertEqual(atFifteen.lastElapsedMilestone, 0)
-        XCTAssertEqual(atFifteen.nextCommandCueAt, 45)
-        XCTAssertNotNil(atFifteen.lastCommandCueFilename)
 
         sut.triggerCallout(elapsedSeconds: 30)
         let atThirty = sut._stateSnapshotForTesting()
-        XCTAssertEqual(atThirty.lastElapsedMilestone, 30)
-        XCTAssertEqual(atThirty.nextCommandCueAt, 45)
+        XCTAssertEqual(atThirty.lastElapsedMilestone, 0)
+        XCTAssertEqual(atThirty.nextCommandCueAt, 60)
         XCTAssertNotNil(atThirty.lastCommandCueFilename)
 
         sut.triggerCallout(elapsedSeconds: 45)
         let atFortyFive = sut._stateSnapshotForTesting()
-        XCTAssertEqual(atFortyFive.lastElapsedMilestone, 30)
-        XCTAssertEqual(atFortyFive.nextCommandCueAt, 75)
+        XCTAssertEqual(atFortyFive.lastElapsedMilestone, 0)
+        XCTAssertEqual(atFortyFive.nextCommandCueAt, 60)
         XCTAssertNotNil(atFortyFive.lastCommandCueFilename)
 
         sut.triggerCallout(elapsedSeconds: 60)
         let atSixty = sut._stateSnapshotForTesting()
         XCTAssertEqual(atSixty.lastElapsedMilestone, 60)
-        XCTAssertEqual(atSixty.nextCommandCueAt, 75)
+        XCTAssertEqual(atSixty.nextCommandCueAt, 90)
+    }
+
+    func testElapsedMinuteAnnouncementCatchesUpAfterSkippedSecond() {
+        let sut = makeVoiceCalloutService()
+
+        sut.beginSession(totalDurationSeconds: 180)
+        sut.triggerCallout(elapsedSeconds: 61)
+
+        let snapshot = sut._stateSnapshotForTesting()
+        XCTAssertEqual(snapshot.lastElapsedMilestone, 60)
+        XCTAssertEqual(snapshot.nextCommandCueAt, 91)
     }
 
     func testFirstTimedCalloutReactivatesAudioSessionBeforePlayback() {
@@ -336,5 +508,28 @@ final class AIVoiceCalloutServiceTests: XCTestCase {
             try Data(contentsOf: XCTUnwrap(store.soundAudioURL(for: .intense, bundle: .main))),
             soundPayload
         )
+    }
+
+    func testBackgroundVoiceKeepAliveIsNoopForAppReviewCompliance() {
+        let engine = FakeBackgroundVoiceKeepAliveEngine()
+        let activations = CounterBox()
+        let deactivations = CounterBox()
+        let sut = BackgroundVoiceKeepAliveService(
+            makeEngine: { engine },
+            activateAudioSession: { activations.value += 1 },
+            deactivateAudioSession: { deactivations.value += 1 }
+        )
+
+        sut.start()
+        sut.start()
+        sut.stop()
+
+        XCTAssertFalse(sut.isActive)
+        XCTAssertEqual(activations.value, 0)
+        XCTAssertEqual(engine.startCalls, 0)
+        XCTAssertEqual(engine.attachedNodes, 0)
+        XCTAssertEqual(engine.connectedNodes, 0)
+        XCTAssertEqual(engine.prepareCalls, 0)
+        XCTAssertEqual(deactivations.value, 0)
     }
 }

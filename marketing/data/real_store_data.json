@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-03-31T14:27:07+00:00",
+  "generated_at": "2026-05-12T18:05:35+00:00",
   "source": "store_apis",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "note": "Real store API data, not PostHog proxy",
   "android": {
     "status": "skipped",
@@ -8,6 +9,6 @@
   },
   "ios": {
     "status": "skipped",
-    "reason": "Missing env vars: APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH)"
+    "reason": "Missing env vars: APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_PRIVATE_KEY (or APPSTORE_PRIVATE_KEY_PATH)"
   }
 }

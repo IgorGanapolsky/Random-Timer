@@ -38,7 +38,7 @@ class AIVoiceCalloutManagerSelectionTest {
         val path = Paths.get("src/main/assets/voice_callouts.json")
         val catalog = parseVoiceCalloutCatalog(path.toFile().readText())
 
-        assertThat(catalog.elapsedCues.size).isAtLeast(12)
+        assertThat(catalog.elapsedCues.size).isAtLeast(8)
         assertThat(catalog.commandCues.size).isAtLeast(20)
         assertThat(catalog.elapsedCues.all { it.text.contains("elapsed", ignoreCase = true) }).isTrue()
     }
@@ -48,7 +48,14 @@ class AIVoiceCalloutManagerSelectionTest {
         val required =
             listOf(
                 "female_cmd_move_with_a_purpose.mp3",
+                "female_cmd_stay_locked_in.mp3",
                 "female_cmd_no_hesitation_move.mp3",
+                "female_cmd_sound_off_and_drive.mp3",
+                "female_cmd_snap_back_and_drive.mp3",
+                "female_cmd_stay_disciplined.mp3",
+                "female_cmd_keep_your_bearing.mp3",
+                "female_cmd_reset_and_attack.mp3",
+                "female_cmd_sharp_movement_sharp_focus.mp3",
                 "female_cmd_stay_in_the_fight.mp3",
                 "female_cmd_push_pace.mp3",
                 "female_cmd_keep_tempo_high.mp3",
@@ -80,6 +87,13 @@ class AIVoiceCalloutManagerSelectionTest {
                 "cmd_reset_and_attack.mp3",
                 "cmd_sharp_movement_sharp_focus.mp3",
                 "cmd_stay_in_the_fight.mp3",
+                "cmd_push_pace.mp3",
+                "cmd_keep_tempo_high.mp3",
+                "cmd_finish_rep_keep_pushing.mp3",
+                "cmd_drive_forward.mp3",
+                "cmd_own_this_rep.mp3",
+                "cmd_pick_it_up.mp3",
+                "cmd_strong_feet_strong_pace.mp3",
                 "preview_elapsed.mp3",
             )
 
@@ -97,6 +111,16 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
+    fun approvedVoiceFilenameRejectsUnapprovedMaleCatalogEntries() {
+        assertThat(approvedVoiceFilename("cmd_move_with_a_purpose", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.MALE)).isEqualTo("cmd_move_with_a_purpose")
+        // Female now also has an allowlist safety net
+        assertThat(approvedVoiceFilename("cmd_chain_wrestling", VoiceGender.FEMALE)).isEqualTo("female_cmd_move_with_a_purpose")
+        assertThat(approvedMaleVoiceFilenames).doesNotContain("cmd_chain_wrestling")
+        assertThat(approvedFemaleVoiceFilenames).doesNotContain("female_cmd_chain_wrestling")
+    }
+
+    @Test
     fun nextCommandCueAvoidsImmediateRepeatsWhenMultipleCuesExist() {
         val cues =
             listOf(
@@ -107,6 +131,27 @@ class AIVoiceCalloutManagerSelectionTest {
         val selected = nextCommandCue(cues, lastFilename = "cue_a") { 0 }
 
         assertThat(selected.filename).isEqualTo("cue_b")
+    }
+
+    @Test
+    fun commandCuePoolAvoidsRepeatedTextEvenWhenFilenameDiffers() {
+        val cues =
+            listOf(
+                VoiceCue(filename = "cue_a", text = "Move with a purpose."),
+                VoiceCue(filename = "cue_b", text = "  Move with a purpose.  "),
+                VoiceCue(filename = "cue_c", text = "Cut the angle and go."),
+            )
+
+        val pool =
+            commandCuePool(
+                baseline = cues,
+                usedFilenames = setOf("cue_a"),
+                usedTexts = setOf(normalizedVoiceCueText("Move with a purpose.")),
+                lastFilename = "cue_a",
+                lastText = "Move with a purpose.",
+            )
+
+        assertThat(pool.map { it.filename }).containsExactly("cue_c")
     }
 
     @Test
@@ -125,7 +170,7 @@ class AIVoiceCalloutManagerSelectionTest {
     }
 
     @Test
-    fun runtimeVoiceCueForElapsedMarkReturnsConfiguredElapsedAnnouncements() {
+    fun runtimeVoiceCueForElapsedMarkReturnsOnlyFullMinuteElapsedAnnouncements() {
         val catalog =
             VoiceCueCatalog(
                 previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Preview"),
@@ -135,21 +180,26 @@ class AIVoiceCalloutManagerSelectionTest {
                         ElapsedVoiceCue(second = 15, filename = "elapsed_15s", text = "Fifteen seconds elapsed."),
                         ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed."),
                         ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed."),
+                        ElapsedVoiceCue(second = 120, filename = "elapsed_120s", text = "Two minutes elapsed."),
                     ),
                 commandCues = listOf(VoiceCue(filename = "cmd_a", text = "Move.")),
             )
 
         assertThat(runtimeVoiceCueForElapsedMark(14, lastElapsedMilestone = 0, catalog = catalog)).isNull()
-        assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_15s")
-        assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_30s")
+        assertThat(runtimeVoiceCueForElapsedMark(15, lastElapsedMilestone = 0, catalog = catalog)).isNull()
+        assertThat(runtimeVoiceCueForElapsedMark(30, lastElapsedMilestone = 0, catalog = catalog)).isNull()
         assertThat(runtimeVoiceCueForElapsedMark(60, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(61, lastElapsedMilestone = 0, catalog = catalog)?.filename).isEqualTo("elapsed_60s")
+        assertThat(runtimeVoiceCueForElapsedMark(121, lastElapsedMilestone = 60, catalog = catalog)?.filename).isEqualTo("elapsed_120s")
     }
 
     @Test
-    fun shortTimersScheduleFollowupCommandCuesEarly() {
+    fun timersAtLeastThirtySecondsScheduleFirstCommandCueAtThirtySeconds() {
         assertThat(initialFollowupCommandCueSecond(12)).isEqualTo(Int.MAX_VALUE)
         assertThat(initialFollowupCommandCueSecond(20)).isEqualTo(Int.MAX_VALUE)
-        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(15)
+        assertThat(initialFollowupCommandCueSecond(30)).isEqualTo(Int.MAX_VALUE)
+        assertThat(initialFollowupCommandCueSecond(31)).isEqualTo(30)
+        assertThat(initialFollowupCommandCueSecond(40)).isEqualTo(30)
     }
 
     @Test

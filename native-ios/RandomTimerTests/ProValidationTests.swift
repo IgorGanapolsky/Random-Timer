@@ -9,31 +9,117 @@ final class TimerConfigProClampingTests: XCTestCase {
 
     @MainActor
     func testPaywallCopyFocusesOnTrainingOutcomes() {
-        XCTAssertEqual(PaywallSheet.headline, "Stop Training With the Brakes On")
+        XCTAssertEqual(PaywallSheet.headline, "Unlock Full Fight-Ready Training")
         XCTAssertEqual(
             PaywallSheet.subheadline,
-            "Go unlimited — sessions up to 60 minutes, live voice callouts, "
-                + "and a full sound library that updates every month."
+            "Unlock 60-minute random windows, combat voice callouts, round-capped loops, "
+                + "and the full sound arsenal built for pressure drills."
         )
         let expectedFooter =
-            "Cancel anytime. Subscription auto-renews until cancelled. "
-            + "Price shown on Apple's confirmation sheet."
+            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+            + "subscription auto-renews until cancelled."
         XCTAssertEqual(PaywallSheet.subscriptionFooter, expectedFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
-                "Full-length sessions — up to 60 minutes, no cutoffs",
-                "Live voice callouts keep you sharp under pressure",
-                "Loop drills with round limits — just like competition",
-                "Full sound arsenal — real bells, horns, and sirens",
-                "Fresh callout packs every 30 days — Pro gets them first",
+                "Ad-free training — Elite subscription removes rewarded ads",
+                "60-minute random windows for full-length drills",
+                "Combat and MMA voice callouts with live time checks",
+                "Round-capped loops for pad work, sparring, and circuits",
+                "Full sound arsenal — bells, horns, sirens, and more",
+                "Fresh pro audio drops when new packs land",
             ]
         )
+    }
+
+    func testPaywallExperimentVariantLabelsMatchAndroid() {
+        XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: false), "monthly_default")
+        XCTAssertEqual(PaywallExperimentVariants.label(defaultAnnual: true), "annual_default")
+        XCTAssertEqual(PostHogExperimentKeys.paywallDefaultPlanAnnual, "paywall_default_plan_annual")
+        XCTAssertEqual(PostHogExperimentKeys.paywallValueFraming, "paywall_value_framing")
+    }
+
+    @MainActor
+    func testPaywallOutcomesFirstHeadlineMatchesAndroidExperimentCopy() {
+        XCTAssertEqual(PaywallSheet.headlineOutcomesFirst, "Finish Strong With Full Random Pressure")
+    }
+
+    func testPaywallFeatureContextExplainsSelectedGateValue() {
+        let setupContext = paywallFeatureContext(for: .setupUpgradeCTA)
+        XCTAssertEqual(setupContext.eyebrow, "You tapped Unlock Pro")
+        XCTAssertEqual(PaywallEntryPoint.setupUpgradeCTA.featureGateName, "setup_upgrade_cta")
+
+        let rangeContext = paywallFeatureContext(for: .rangeGate)
+        XCTAssertEqual(rangeContext.eyebrow, "You tapped 60-minute random windows")
+        XCTAssertEqual(
+            rangeContext.valueCopy,
+            "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing."
+        )
+
+        let qualifiedContext = paywallFeatureContext(for: .qualifiedTrainingGate)
+        XCTAssertEqual(qualifiedContext.eyebrow, "Three sessions logged")
+        XCTAssertEqual(PaywallEntryPoint.qualifiedTrainingGate.featureGateName, "qualified_training_gate")
+
+        XCTAssertEqual(paywallFeatureContext(for: .unknown).eyebrow, "Pro Tactical")
     }
 
     func testPaywallUsesApprovedAppStoreConnectProductId() {
         XCTAssertEqual(ProManager.paywallProductID, ProManager.baseProductID)
         XCTAssertEqual(ProManager.paywallProductID, "com.iganapolsky.randomtimer.pro")
+        XCTAssertEqual(ProManager.annualProductID, ProManager.eliteProductID)
+        XCTAssertEqual(ProManager.annualProductID, "com.iganapolsky.randomtimer.elite")
+    }
+
+    func testBillingProductCatalogDiagnosticsUseSharedAnalyticsNames() {
+        XCTAssertEqual(AnalyticsEvents.billingProductCatalogStatus, "billing_product_catalog_status")
+        XCTAssertEqual(AnalyticsProperties.status, "status")
+        XCTAssertEqual(AnalyticsProperties.availableProductIds, "available_product_ids")
+        XCTAssertEqual(AnalyticsProperties.missingProductIds, "missing_product_ids")
+        XCTAssertEqual(AnalyticsProperties.productCount, "product_count")
+    }
+
+    func testPaywallDoesNotShowMissingMonthlyProductWhenStoreKitDoesNotReturnIt() {
+        XCTAssertTrue(shouldShowPaywallPlan(.lifetime, availableProductIDs: []))
+        XCTAssertTrue(shouldShowPaywallPlan(.annual, availableProductIDs: []))
+        XCTAssertFalse(shouldShowPaywallPlan(.monthly, availableProductIDs: []))
+
+        let approvedProductIDs: Set<String> = [
+            ProManager.baseProductID,
+            ProManager.eliteProductID,
+        ]
+        XCTAssertTrue(shouldShowPaywallPlan(.lifetime, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(shouldShowPaywallPlan(.annual, availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(shouldShowPaywallPlan(.monthly, availableProductIDs: approvedProductIDs))
+    }
+
+    func testHasPurchasablePaywallPlanRequiresLoadedStoreProducts() {
+        XCTAssertFalse(hasPurchasablePaywallPlan(.monthly, availableProductIDs: []))
+        XCTAssertFalse(hasPurchasablePaywallPlan(.lifetime, availableProductIDs: []))
+
+        let approvedProductIDs: Set<String> = [
+            ProManager.baseProductID,
+            ProManager.eliteProductID,
+        ]
+        XCTAssertTrue(hasPurchasablePaywallPlan(.lifetime, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(hasPurchasablePaywallPlan(.annual, availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(hasPurchasablePaywallPlan(.monthly, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(hasAnyPurchasablePaywallPlan(availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(hasAnyPurchasablePaywallPlan(availableProductIDs: []))
+    }
+
+    func testSetupUpgradeDefaultsToLifetimePlan() {
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: false),
+            .lifetime
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .rangeGate, defaultToAnnualExperiment: false),
+            .monthly
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: true),
+            .annual
+        )
     }
 
     func testUiTestProLaunchArgumentOverridesEntitlementToBase() {
@@ -52,6 +138,54 @@ final class TimerConfigProClampingTests: XCTestCase {
 
     func testLaunchArgumentsWithoutUiTestOverrideReturnNil() {
         XCTAssertNil(ProManager.entitlementOverride(forLaunchArguments: ["-ui-test-state", "running"]))
+    }
+
+    func testReviewPromptMilestonesAdvancePredictably() {
+        XCTAssertNil(reviewPromptMilestone(for: 2))
+        XCTAssertEqual(reviewPromptMilestone(for: 3), 3)
+        XCTAssertEqual(reviewPromptMilestone(for: 9), 3)
+        XCTAssertEqual(reviewPromptMilestone(for: 10), 10)
+        XCTAssertEqual(reviewPromptMilestone(for: 24), 10)
+        XCTAssertEqual(reviewPromptMilestone(for: 25), 25)
+        XCTAssertEqual(reviewPromptMilestone(for: 74), 50)
+    }
+
+    func testReviewPromptRequiresNewMilestone() {
+        XCTAssertFalse(
+            isEligibleForReviewPrompt(
+                completionCount: 4,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: 0,
+                now: 86_400,
+                minDaysBetweenRequests: 30
+            )
+        )
+    }
+
+    func testReviewPromptRespectsCooldownAtNewMilestone() {
+        let now: TimeInterval = 40 * 86_400
+        XCTAssertFalse(
+            isEligibleForReviewPrompt(
+                completionCount: 10,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: now - (10 * 86_400),
+                now: now,
+                minDaysBetweenRequests: 30
+            )
+        )
+    }
+
+    func testReviewPromptAllowsEarnedRepeatAfterCooldown() {
+        let now: TimeInterval = 40 * 86_400
+        XCTAssertTrue(
+            isEligibleForReviewPrompt(
+                completionCount: 10,
+                lastPromptMilestone: 3,
+                lastReviewTimestamp: now - (31 * 86_400),
+                now: now,
+                minDaysBetweenRequests: 30
+            )
+        )
     }
 
     func testExpiredProUser_maxSecondsAboveFreeLimit_isClamped() {

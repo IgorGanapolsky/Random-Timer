@@ -1,0 +1,16 @@
+appId: com.iganapolsky.randomtimer
+---
+# E2E: Pro upgrade affordance opens paywall on a fresh install (no deferred upgrade).
+- clearState
+- launchApp
+
+- assertVisible:
+    text: 'Start First Drill'
+
+# Extended range PRO affordance — should open paywall
+- tapOn:
+    text: 'PRO: 1H'
+
+- extendedWaitUntil:
+    visible: 'Restore purchase'
+    timeout: 10000

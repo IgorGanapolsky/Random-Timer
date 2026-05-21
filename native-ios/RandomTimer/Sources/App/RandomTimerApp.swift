@@ -11,7 +11,13 @@ struct RandomTimerApp: App {
 
     // swiftlint:disable:next no_state_object
     @StateObject private var timerManager = TimerManager()
+    @State private var deepLinkRouter = DeepLinkRouter()
     @Environment(\.scenePhase) private var scenePhase
+
+    /// Non-nil when the App Store advertises a newer version than this build.
+    @State private var storeUpdateVersion: String?
+
+    private let storeUpdateService = StoreUpdateService()
 
     /// GitHub Actions passes `OTHER_SWIFT_FLAGS=-D RT_SKIP_FIREBASE_FOR_CI` for `xcodebuild test`
     /// because the simulator app does not inherit shell env vars and CI uses a placeholder plist.
@@ -31,12 +37,9 @@ struct RandomTimerApp: App {
     init() {
         guard !Self.shouldSkipFirebaseForHostedTests else { return }
         guard Self.hasBundledFirebaseConfig else {
-            #if DEBUG
             Self.logger.warning("Skipping Firebase initialization because GoogleService-Info.plist is not bundled.")
+            AnalyticsService.shared.initialize()
             return
-            #else
-            preconditionFailure("Missing bundled GoogleService-Info.plist in release build.")
-            #endif
         }
         FirebaseApp.configure()
         CrashReportingService.shared.initialize()
@@ -48,17 +51,34 @@ struct RandomTimerApp: App {
             ContentView()
                 .environmentObject(timerManager)
                 .environmentObject(ProManager.shared)
+                .environment(deepLinkRouter)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     AnalyticsService.shared.trackDeepLink(url)
+                    deepLinkRouter.handle(url)
+                }
+                .alert("Update Available", isPresented: Binding(
+                    get: { storeUpdateVersion != nil },
+                    set: { if !$0 { storeUpdateVersion = nil } }
+                )) {
+                    Button("Update") {
+                        if let url = URL(string: "https://apps.apple.com/app/id6758355312") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    Button("Not Now", role: .cancel) {}
+                } message: {
+                    Text("A new version (\(storeUpdateVersion ?? "")) is available on the App Store with new features and fixes.")
+                }
+                .task {
+                    await refreshAppActiveServices()
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
                 Task {
-                    await ProAudioPackStore.shared.refreshIfNeeded(isPro: ProManager.shared.isPro)
-                    await timerManager.handleForeground()
+                    await refreshAppActiveServices()
                 }
             case .background:
                 timerManager.handleBackground()
@@ -67,10 +87,21 @@ struct RandomTimerApp: App {
             }
         }
     }
+
+    @MainActor
+    private func refreshAppActiveServices() async {
+        if let newerVersion = await storeUpdateService.checkForUpdates() {
+            storeUpdateVersion = newerVersion
+        }
+        await ProAudioPackStore.shared.refreshIfNeeded(isPro: ProManager.shared.isPro)
+        await timerManager.configureMonthlyContentReminderIfNeeded()
+        await timerManager.handleForeground()
+    }
 }
 
 struct ContentView: View {
     @EnvironmentObject var timerManager: TimerManager
+    @Environment(DeepLinkRouter.self) private var deepLinkRouter
     @State private var didApplyUITestSeed: Bool = false
 
     var body: some View {
@@ -83,7 +114,13 @@ struct ContentView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: timerManager.timerState != nil)
+            .onChange(of: timerManager.timerState) { oldValue, newValue in
+                if oldValue != nil && newValue == nil {
+                    StoreReviewManager.shared.presentPendingReviewPromptIfQueued()
+                }
+            }
         }
+        .environment(deepLinkRouter)
         .onAppear {
 #if DEBUG
             guard didApplyUITestSeed == false else { return }
@@ -156,4 +193,5 @@ struct ContentView: View {
     ContentView()
         .environmentObject(TimerManager())
         .environmentObject(ProManager.shared)
+        .environment(DeepLinkRouter())
 }

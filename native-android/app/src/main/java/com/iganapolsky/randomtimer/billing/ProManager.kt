@@ -18,7 +18,9 @@ import com.android.billingclient.api.queryPurchasesAsync
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
+import com.iganapolsky.randomtimer.monetization.DisciplinePackCatalog
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.service.ProAudioPackStore
@@ -58,6 +60,9 @@ class ProManager
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
             ): Boolean = true
+
+            /** P2 scaffold — not queried until Play Console products exist. */
+            fun disciplinePackProductIds(): Set<String> = DisciplinePackCatalog.androidProductIds.toSet()
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -179,10 +184,7 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            _entitlementLevel.value = level
-            if (level.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
-            }
+            setEntitlement(level)
 
             if (trackResult) {
                 trackRestoreResult(
@@ -203,8 +205,7 @@ class ProManager
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
             clearPendingTrialOffer()
-            if (!billingClient.isReady) {
-                connectAndRestore()
+            if (!ensureBillingReadyForPurchase()) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -281,6 +282,13 @@ class ProManager
                     "has_free_trial" to (selectedFreeTrialOfferToken != null),
                 ),
             )
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PURCHASE_FLOW_LAUNCHED,
+                mapOf(
+                    AnalyticsProperties.PRODUCT_ID to productID,
+                    "has_free_trial" to (selectedFreeTrialOfferToken != null),
+                ),
+            )
             val result = billingClient.launchBillingFlow(activity, flowParams)
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
                 trackPurchaseResult(
@@ -297,10 +305,51 @@ class ProManager
             return true
         }
 
+        private suspend fun ensureBillingReadyForPurchase(): Boolean {
+            if (billingClient.isReady) {
+                return true
+            }
+            connectAndRestore()
+            repeat(6) {
+                delay(500)
+                if (billingClient.isReady) {
+                    return true
+                }
+            }
+            return billingClient.isReady
+        }
+
         private suspend fun fetchAllProductDetails() {
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
             fetchProductDetails(MONTHLY_PRODUCT_ID)
+            trackProductCatalogStatus()
+        }
+
+        suspend fun availablePaywallProductIds(): Set<String> {
+            fetchAllProductDetails()
+            return cachedProductDetails.keys.toSet()
+        }
+
+        private fun trackProductCatalogStatus() {
+            val requiredProductIds = setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID)
+            val availableProductIds = cachedProductDetails.keys.sorted()
+            val missingProductIds = requiredProductIds.minus(availableProductIds.toSet()).sorted()
+            val status =
+                when {
+                    availableProductIds.isEmpty() -> "empty"
+                    missingProductIds.isNotEmpty() -> "missing_required_products"
+                    else -> "ok"
+                }
+            analyticsService.track(
+                AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS,
+                mapOf(
+                    AnalyticsProperties.STATUS to status,
+                    AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
+                    AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
+                    AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
+                ),
+            )
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
@@ -449,11 +498,12 @@ class ProManager
                     }
                 }
             }
-            // Track purchase_failed for non-success, non-cancellation outcomes
-            if (!hasPurchased && result.responseCode != BillingClient.BillingResponseCode.USER_CANCELED) {
+            // Track purchase_failed for non-success outcomes (including cancellations)
+            if (!hasPurchased) {
                 val failedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: "unknown"
                 val reason =
                     when (result.responseCode) {
+                        BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
                         BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
                         BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
                         BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
@@ -467,6 +517,16 @@ class ProManager
                     mapOf(
                         AnalyticsProperties.REASON to reason,
                         AnalyticsProperties.PRODUCT_ID to failedProductId,
+                        AnalyticsProperties.RESPONSE_CODE to result.responseCode,
+                        AnalyticsProperties.DEBUG_MESSAGE to (result.debugMessage ?: ""),
+                    ),
+                )
+                analyticsService.track(
+                    AnalyticsEvents.PAYWALL_PURCHASE_FAIL_REASON,
+                    mapOf(
+                        AnalyticsProperties.REASON to reason,
+                        AnalyticsProperties.PRODUCT_ID to failedProductId,
+                        AnalyticsProperties.ENTRY_POINT to (pendingPurchaseEntryPoint ?: ""),
                         AnalyticsProperties.RESPONSE_CODE to result.responseCode,
                         AnalyticsProperties.DEBUG_MESSAGE to (result.debugMessage ?: ""),
                     ),
@@ -498,7 +558,15 @@ class ProManager
                             AnalyticsProperties.TRIAL_VERIFIED to false,
                         ),
                     )
+                    analyticsService.trackSubscriptionFunnelStep(
+                        SubscriptionFunnelSteps.TRIAL_STARTED,
+                        mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
+                    )
                 }
+                analyticsService.trackSubscriptionFunnelStep(
+                    SubscriptionFunnelSteps.PURCHASE_SUCCEEDED,
+                    mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
+                )
             }
             trackPurchaseResult(
                 success = hasPurchased,
@@ -522,16 +590,22 @@ class ProManager
         }
 
         private fun updateEntitlementFromPurchase(purchase: Purchase) {
-            if (purchase.products.contains(ELITE_PRODUCT_ID) ||
-                purchase.products.contains(MONTHLY_PRODUCT_ID)
-            ) {
-                _entitlementLevel.value = EntitlementLevel.ELITE
-            } else if (purchase.products.contains(BASE_PRODUCT_ID)) {
-                if (_entitlementLevel.value == EntitlementLevel.NONE) {
-                    _entitlementLevel.value = EntitlementLevel.BASE
+            when {
+                purchase.products.contains(ELITE_PRODUCT_ID) ||
+                    purchase.products.contains(MONTHLY_PRODUCT_ID) -> {
+                    setEntitlement(EntitlementLevel.ELITE)
+                }
+                purchase.products.contains(BASE_PRODUCT_ID) &&
+                    _entitlementLevel.value == EntitlementLevel.NONE -> {
+                    setEntitlement(EntitlementLevel.BASE)
                 }
             }
-            if (_entitlementLevel.value.isPro) {
+        }
+
+        private fun setEntitlement(level: EntitlementLevel) {
+            _entitlementLevel.value = level
+            ProEntitlementSnapshot.persistIsPro(context, level.isPro)
+            if (level.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
             }
         }
@@ -614,10 +688,7 @@ class ProManager
                     EntitlementLevel.BASE -> EntitlementLevel.ELITE
                     EntitlementLevel.ELITE -> EntitlementLevel.NONE
                 }
-            _entitlementLevel.value = next
-            if (next.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
-            }
+            setEntitlement(next)
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)
                 .edit()
@@ -639,8 +710,9 @@ class ProManager
                 return false
             }
             debugOverrideActive = true
-            _entitlementLevel.value = EntitlementLevel.ELITE
-            packStore.refreshIfNeeded(isPro = true)
+            setEntitlement(EntitlementLevel.ELITE)
+            // Mark as internal user persistently so future events from this device are filtered
+            analyticsService.markAsInternalUser()
             analyticsService.track(
                 "dev_debug_unlock",
                 mapOf(

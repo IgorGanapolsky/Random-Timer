@@ -1,0 +1,66 @@
+name: Public Store Version Read-Back
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: "Expected public version for both stores. If empty, compare to latest GitHub release tag (not repo marketing versions)."
+        required: false
+        default: ""
+      timeout_seconds:
+        description: "Maximum polling time per run"
+        required: false
+        default: "1800"
+  schedule:
+    # Poll first-week monthly release propagation without claiming publication timing.
+    - cron: "0 */6 1-7 * *"
+  workflow_run:
+    workflows: ["Native App Release"]
+    types: [completed]
+
+jobs:
+  public-store-version-readback:
+    name: Verify public store versions
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install requests==2.32.5
+
+      - name: Verify App Store and Play public versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_version || '' }}
+          TIMEOUT_SECONDS: ${{ github.event_name == 'workflow_dispatch' && inputs.timeout_seconds || '1800' }}
+        run: |
+          set -euo pipefail
+          args=(
+            --platform both
+            --country US
+            --timeout "${TIMEOUT_SECONDS}"
+            --poll-interval 120
+            --json-out public-store-version-readback.json
+          )
+          if [ -n "${EXPECTED_VERSION}" ]; then
+            args+=(--expected-version "${EXPECTED_VERSION}")
+          else
+            args+=(--expected-source github_latest_release)
+          fi
+          python scripts/verify_public_store_versions.py "${args[@]}"
+
+      - name: Upload public store read-back evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: public-store-version-readback
+          path: public-store-version-readback.json
+          if-no-files-found: warn

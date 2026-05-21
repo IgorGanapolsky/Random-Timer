@@ -2,11 +2,11 @@
 
 This file is the canonical proof-of-work contract for autonomous changes in this repository.
 
-## Scope
+## Work discipline
 
-- Default allowed edit scope: `native-android/`, `native-ios/`, `scripts/`, `.github/workflows/`, `.maestro/`, `docs/`, and `wiki/`.
-- Always use an isolated git worktree branch for implementation.
-- Keep changes tightly scoped to the requested ticket or regression.
+- Always use an isolated git worktree branch for implementation (see `CLAUDE.md` / `AGENTS.md`).
+- Touch only what the task requires; avoid unrelated refactors and drive-by file churn.
+- When behavior or contracts change, update the relevant `docs/` and `wiki/` in the same change set so operators stay aligned with code.
 
 ## Forbidden Changes
 

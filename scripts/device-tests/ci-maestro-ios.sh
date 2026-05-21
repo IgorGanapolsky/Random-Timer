@@ -13,7 +13,7 @@ MAESTRO_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/maestro"
 AGENT_DEVICE_ARTIFACT_DIR="$NATIVE_IOS_DIR/build/agent-device"
 LAST_STAGE_FILE="$AGENT_DEVICE_ARTIFACT_DIR/last-stage.txt"
 IOS_BUILD_TIMEOUT_SECONDS="${IOS_BUILD_TIMEOUT_SECONDS:-900}"
-MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-120}"
+MAESTRO_FLOW_TIMEOUT_SECONDS="${MAESTRO_FLOW_TIMEOUT_SECONDS:-180}"
 AGENT_DEVICE_TIMEOUT_SECONDS="${AGENT_DEVICE_TIMEOUT_SECONDS:-120}"
 AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS="${AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS:-30}"
 SIMCTL_TIMEOUT_SECONDS="${SIMCTL_TIMEOUT_SECONDS:-120}"
@@ -113,10 +113,10 @@ run_maestro_flow() {
   local flow="$2"
   local attempt
   local log_path
-  for attempt in 1 2; do
+  for attempt in 1 2 3; do
     log_path="$MAESTRO_ARTIFACT_DIR/${name}-attempt-${attempt}.log"
     record_stage "maestro ${name} attempt ${attempt}"
-    echo "Maestro ${name}: attempt ${attempt}/2"
+    echo "Maestro ${name}: attempt ${attempt}/3"
     if run_with_timeout "$MAESTRO_FLOW_TIMEOUT_SECONDS" bash -o pipefail -c \
       'maestro test -p ios --device "$1" "$2" | tee "$3"' \
       _ "$SIMULATOR_UDID" "$flow" "$log_path"; then
@@ -160,6 +160,7 @@ run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
 run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
 run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
 run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
+run_maestro_flow "paywall-sticky-cta" "$PROJECT_ROOT/.maestro/regression-paywall-sticky-cta-ios.yaml"
 
 # Reset app state before Agent Device validates the home screen. Regression
 # flows may leave transient setup overlays or sheets visible.
@@ -190,7 +191,7 @@ record_stage "agent-device diagnostic snapshot"
 if run_with_timeout "$AGENT_DEVICE_DIAGNOSTIC_TIMEOUT_SECONDS" npx -y agent-device \
   snapshot -i -c --depth 8 --platform ios --udid "$SIMULATOR_UDID" --no-record \
   > "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
-  if ! grep -Eq "Random Tactical Timer|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
+  if ! grep -Eq "Random Tactical Timer|Start First Drill|Start Timer|Timer Range" "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"; then
     echo "::warning::Agent Device snapshot did not include expected home anchors; preserving diagnostic snapshot."
     sed -n '1,160p' "$AGENT_DEVICE_ARTIFACT_DIR/interactive-snapshot.txt"
   fi

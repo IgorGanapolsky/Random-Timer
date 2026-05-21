@@ -38,18 +38,98 @@ def test_workflow_inputs_are_not_interpolated_inside_run_blocks() -> None:
     assert offenders == []
 
 
+def test_workflow_if_conditions_do_not_reference_secrets_context() -> None:
+    offenders: list[str] = []
+
+    for path in sorted((REPO_ROOT / ".github/workflows").glob("*.yml")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for line_number, line in enumerate(lines, start=1):
+            if line.lstrip().startswith("if:") and "${{ secrets." in line:
+                offenders.append(f"{path.relative_to(REPO_ROOT)}:{line_number}")
+
+    assert offenders == []
+
+
 def test_monthly_pro_release_workflow_has_explicit_ci_guards() -> None:
     contents = _read(".github/workflows/monthly-pro-content-release.yml")
 
     assert "PROJECT_PAT != ''" not in contents
     assert "github.token" not in contents
-    assert "Validate required automation token" in contents
-    assert "Missing required monthly release secret(s):" in contents
+    assert "Validate required secrets" in contents
+    assert "Missing required secret(s):" in contents
     assert "FREESOUND_API_TOKEN" in contents
-    assert contents.count("timeout-minutes:") >= 5
+    assert "if: ${{ secrets." not in contents
+    assert "FREESOUND_API_TOKEN not configured; skipping optional Freesound fetch." in contents
+    assert contents.count("timeout-minutes:") >= 4
     assert "actions: write" in contents
-    assert "--body-file \"$body_file\"" in contents
+    assert "--body \"Auto-generated monthly Pro content update." in contents
+    assert '--release-month "${{ steps.meta.outputs.release_month }}"' in contents
+    assert "git push origin develop" not in contents
+    assert 'gh pr merge "${CONTENT_PR_NUMBER}"' in contents
+    assert "--squash" in contents
+    assert "--delete-branch" in contents
+    assert "/trunk merge" not in contents
+    assert 'gh pr comment "${CONTENT_PR_NUMBER}"' not in contents
+    assert "-f submit_review=true" in contents
+    assert "-f submit_review=false" not in contents
+    assert "-f skip_internal_signoff=false" in contents
+    assert "-f skip_internal_signoff=true" not in contents
     assert "gh pr create" in contents and "|| true" not in contents.split("gh pr create", 1)[1].split("echo \"changes_committed=true\"", 1)[0]
+    assert "Public store availability must still be proven by public-store-version-readback.yml" in contents
+
+
+def test_public_store_version_readback_requires_public_evidence() -> None:
+    contents = _read(".github/workflows/public-store-version-readback.yml")
+
+    assert "workflow_run:" in contents
+    assert 'workflows: ["Native App Release"]' in contents
+    assert 'cron: "0 */6 1-7 * *"' in contents
+    assert "scripts/verify_public_store_versions.py" in contents
+    assert "GH_TOKEN: ${{ github.token }}" in contents
+    assert "--json-out public-store-version-readback.json" in contents
+    assert "Upload public store read-back evidence" in contents
+    assert "workflow_run.head_sha" not in contents
+
+
+def test_store_console_verification_targets_current_app_and_release_state() -> None:
+    workflow = _read(".github/workflows/store-console-verification.yml")
+    spec = _read("tests/playwright/specs/store/store-console-readonly.spec.ts")
+    agent = _read("tests/playwright/scripts/verify-store-console-agent-browser.mjs")
+    readme = _read("tests/playwright/README.md")
+
+    assert "chromium chromium-headless-shell" in workflow
+    assert "playwright@1.59.1 install chromium-headless-shell" in workflow
+    assert "continue-on-error: true" in workflow
+    for contents in (spec, agent):
+        assert "play.google.com/console/u/1/developers/8239620436488925047/app/4976249162120849673/publishing" in contents
+        assert "play.google.com/console/u/0/developers/8239620436488925047/app/4976249162120849673/publishing" not in contents
+        assert "4974974102541773558" not in contents
+
+    assert 'ASC_EXPECTED_STATE_TEXT || ""' in agent
+    assert "Primary Playwright ASC verification remains blocking" in agent
+    assert 'PLAY_EXPECTED_APP_NAME || "Random Tactical Timer"' in agent
+    assert "`ASC_EXPECTED_STATE_TEXT` (optional; when set, the agent-browser check requires this state text)" in readme
+    assert "`PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)" in readme
+    sync = _read("tests/playwright/scripts/sync-console-auth-secrets.mjs")
+    assert "function filterAscStorageState" in sync
+    assert "appstoreconnect\\.apple\\.com" in sync
+
+
+def test_legacy_monthly_audio_pack_is_manual_only_and_fail_fast() -> None:
+    contents = _read(".github/workflows/monthly-audio-pack.yml")
+
+    assert "schedule:" not in contents
+    assert "|| true" not in contents
+    assert "monthly-pro-content-release.yml" in contents
+
+
+def test_manual_ios_voice_callout_regen_uses_unique_branch_per_run() -> None:
+    contents = _read(".github/workflows/generate-ios-voice-callouts.yml")
+
+    assert "schedule:" not in contents
+    assert "GITHUB_RUN_ID" in contents
+    assert "GITHUB_RUN_ATTEMPT" in contents
+    assert "feat/pro-audio-regen-$(date -u +%Y%m%d)" not in contents
 
 
 def test_release_automerge_uses_default_token_before_pat_fallback() -> None:
@@ -72,6 +152,10 @@ def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     assert device_tests.count("permissions:\n      contents: read") >= 3
     assert "Path-Aware CI Gate" in ci
     assert "Path-Aware Device Gate" in device_tests
+    assert "BEFORE_SHA: ${{ github.event.before || '' }}" in ci
+    assert "BEFORE_SHA: ${{ github.event.before || '' }}" in device_tests
+    assert 'elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then' in ci
+    assert 'elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then' in device_tests
     assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in ci
     assert "python3 scripts/ci_changed_components.py --files /tmp/changed-files.txt --github-output" in device_tests
     assert "if: needs.changes.outputs.android == 'true'" in ci
@@ -81,11 +165,40 @@ def test_pr_ci_uses_path_aware_heavy_job_gates() -> None:
     assert ci.count("timeout-minutes:") >= 9
 
 
+def test_internal_distribution_requires_signoff_before_testflight_and_firebase_uploads() -> None:
+    contents = _read(".github/workflows/internal-distribution.yml")
+
+    ios_signoff = contents.index("ios-testflight-signoff:")
+    ios_upload = contents.index("ios-testflight-internal:")
+    firebase_signoff = contents.index("android-firebase-signoff:")
+    firebase_upload = contents.index("android-firebase-internal:")
+
+    assert ios_signoff < ios_upload
+    assert firebase_signoff < firebase_upload
+    assert "ios-testflight-internal:\n    name: iOS TestFlight (Internal)\n    needs: [gate, ios-testflight-signoff]" in contents
+    assert (
+        "android-firebase-internal:\n"
+        "    name: Android Firebase (Internal)\n"
+        "    needs: [gate, android-firebase-signoff]"
+    ) in contents
+    assert "needs.ios-testflight-signoff.result == 'success'" in contents
+    assert "needs.android-firebase-signoff.result == 'success'" in contents
+
+
 def test_security_workflow_moves_permissions_to_jobs() -> None:
     contents = _read(".github/workflows/security.yml")
     assert "\npermissions:\n" not in contents.split("jobs:", 1)[0]
     assert "security-scan:\n    runs-on: ubuntu-latest\n    permissions:" in contents
     assert "notify:\n    needs: security-scan\n    if: always()\n    runs-on: ubuntu-latest\n    permissions:" in contents
+
+
+def test_ci_secret_scan_does_not_scan_all_refs_when_range_is_available() -> None:
+    contents = _read(".github/workflows/ci.yml")
+    secret_scan = contents.split("- name: Secret Scan", 1)[1].split("\n  autonomous-ai-review:", 1)[0]
+
+    assert 'gitleaks git --no-banner --redact --exit-code 1 --log-opts "$RANGE"' in secret_scan
+    assert 'gitleaks git --no-banner --redact --exit-code 1 --log-opts "--all $RANGE"' not in secret_scan
+    assert "Scanning full git history fallback" in secret_scan
 
 
 def test_security_sensitive_workflows_pin_third_party_actions() -> None:
@@ -110,3 +223,11 @@ def test_security_sensitive_workflows_pin_third_party_actions() -> None:
         path = keyed_path.split("#", 1)[0]
         contents = workflow_cache.setdefault(path, _read(path))
         assert pinned_ref in contents, f"{path} is missing {pinned_ref}"
+
+
+def test_native_release_post_tag_bump_opens_pr_not_direct_push_to_develop() -> None:
+    contents = _read(".github/workflows/native-release.yml")
+    bump_block = contents.split("bump-develop-version:", 1)[1]
+    assert "git push origin develop" not in bump_block
+    assert "gh pr create" in bump_block
+    assert "pull-requests: write" in bump_block

@@ -6,12 +6,11 @@
         "scripts/shell/perplexity_mcp_wrapper.sh"
       ]
     },
-    "rlhf": {
-      "command": "npx",
+    "thumbgate": {
+      "command": "sh",
       "args": [
-        "-y",
-        "mcp-memory-gateway@0.8.0",
-        "serve"
+        "-lc",
+        "mkdir -p \"/Users/igorganapolsky/.thumbgate/runtime\" && npm \"install\" \"--prefix\" \"/Users/igorganapolsky/.thumbgate/runtime\" \"--no-save\" \"--omit=dev\" \"thumbgate@latest\" >/dev/null 2>&1 && exec \"/Users/igorganapolsky/.thumbgate/runtime/node_modules/.bin/thumbgate\" \"serve\""
       ]
     }
   }

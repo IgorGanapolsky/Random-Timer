@@ -195,6 +195,76 @@ platform :ios do
     end
   end
 
+  desc "Build signed IPA only (no upload). Used by Apple-ID fallback workflow; upload handled by xcrun altool."
+  lane :build_ipa do |options|
+    setup_ci if ENV["CI"] == "true"
+
+    marketing_version = get_version_number(
+      xcodeproj: "RandomTimer.xcodeproj",
+      target: "RandomTimer"
+    )
+    current_build_number = get_build_number(
+      xcodeproj: "RandomTimer.xcodeproj"
+    ).to_i
+    next_build_number = options[:build_number] ? options[:build_number].to_i : current_build_number + 1
+
+    UI.message("Using build number #{next_build_number} for version #{marketing_version}")
+    increment_build_number(
+      xcodeproj: "RandomTimer.xcodeproj",
+      build_number: next_build_number
+    )
+
+    if ENV["CI"] == "true" && ENV["MATCH_GIT_URL"]
+      match(
+        type: "appstore",
+        app_identifier: ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"],
+        readonly: true
+      )
+
+      app_profile = ENV["sigh_com.igorganapolsky.randomtimer_appstore_profile-name"] ||
+                    "match AppStore com.igorganapolsky.randomtimer"
+      widget_profile = ENV["sigh_com.igorganapolsky.randomtimer.widget_appstore_profile-name"] ||
+                       "match AppStore com.igorganapolsky.randomtimer.widget"
+
+      update_code_signing_settings(
+        path: "RandomTimer.xcodeproj",
+        use_automatic_signing: false,
+        targets: ["RandomTimer"],
+        code_sign_identity: "Apple Distribution",
+        profile_name: app_profile
+      )
+
+      update_code_signing_settings(
+        path: "RandomTimer.xcodeproj",
+        use_automatic_signing: false,
+        targets: ["RandomTimerWidgetExtension"],
+        code_sign_identity: "Apple Distribution",
+        profile_name: widget_profile
+      )
+
+      build_opts = {
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        export_options: {
+          signingStyle: "manual",
+          provisioningProfiles: {
+            "com.igorganapolsky.randomtimer" => app_profile,
+            "com.igorganapolsky.randomtimer.widget" => widget_profile
+          }
+        }
+      }
+      build_opts[:xcargs] = "POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}" unless ENV["POSTHOG_API_KEY"].to_s.empty?
+      build_app(**build_opts)
+    else
+      posthog_xcargs = ENV["POSTHOG_API_KEY"].to_s.empty? ? "-allowProvisioningUpdates" : "-allowProvisioningUpdates POSTHOG_API_KEY=#{ENV['POSTHOG_API_KEY']}"
+      build_app(
+        scheme: "RandomTimer",
+        export_method: "app-store",
+        xcargs: posthog_xcargs
+      )
+    end
+  end
+
   desc "Add external beta tester to TestFlight"
   lane :add_tester do |options|
     setup_ci if ENV["CI"] == "true"
@@ -391,10 +461,51 @@ platform :ios do
   lane :deploy do
     # Setup for CI
     setup_ci if ENV["CI"]
-    
+
     # Build and upload to TestFlight using the same logic as beta lane
     beta
-    
+
     # The Firebase upload is already handled in the beta lane
+  end
+
+  desc "Nuke revoked Apple Distribution cert and regenerate via match (ASC JWT, non-interactive)"
+  lane :regen_dist_certs do
+    setup_ci if ENV["CI"] == "true"
+
+    UI.user_error!("APPSTORE_KEY_ID required") if ENV["APPSTORE_KEY_ID"].to_s.empty?
+    UI.user_error!("APPSTORE_ISSUER_ID required") if ENV["APPSTORE_ISSUER_ID"].to_s.empty?
+    UI.user_error!("MATCH_GIT_URL required") if ENV["MATCH_GIT_URL"].to_s.empty?
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APPSTORE_KEY_ID"],
+      issuer_id: ENV["APPSTORE_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8")
+    )
+
+    app_ids = ["com.igorganapolsky.randomtimer", "com.igorganapolsky.randomtimer.widget"]
+
+    # match_nuke action accepts only the strict type enum
+    # (appstore/adhoc/development/enterprise/developer_id/…). "distribution"
+    # is a fastlane CLI-only alias that maps to appstore; passing it to the
+    # action throws "Unsupported environment distribution".
+    # Explicit readonly:false — fastlane's Matchfile / setup_ci can otherwise
+    # default match_nuke to readonly, producing a dry-run that refuses with
+    # "fastlane match nuke doesn't delete anything when running with
+    # --readonly enabled".
+    match_nuke(
+      type: "appstore",
+      app_identifier: app_ids,
+      readonly: false,
+      api_key: api_key,
+      skip_confirmation: true
+    )
+
+    match(
+      type: "appstore",
+      app_identifier: app_ids,
+      readonly: false,
+      force: true,
+      api_key: api_key
+    )
   end
 end

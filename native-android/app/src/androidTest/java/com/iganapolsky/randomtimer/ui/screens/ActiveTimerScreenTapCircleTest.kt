@@ -3,6 +3,7 @@ package com.iganapolsky.randomtimer.ui.screens
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -22,7 +23,13 @@ class ActiveTimerScreenTapCircleTest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun tappingCircleWhenAlarmCallsOnSilence() {
+    fun tappingCircleWhenAlarmCallsOnDismissAlarm() {
+        // Per docs/TASKS.md: "When status is ALARM or COMPLETE, tapping the
+        // timer circle has the same effect as the Stop button." The screen
+        // wires the tap to onDismissAlarm under `isComplete` (which covers
+        // both COMPLETE and ALARM, see ActiveTimerScreen.kt:78). Previously
+        // wired to onSilence; that param was removed in the bluetooth-headset
+        // + tap-to-dismiss commit (284291be).
         val state =
             TimerState(
                 config = TimerConfig.DEFAULT,
@@ -32,15 +39,15 @@ class ActiveTimerScreenTapCircleTest {
                 alarmTimeRemaining = 10.seconds,
             )
 
-        var silenced = false
+        var dismissed = false
 
         composeRule.setContent {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
-                    onDismissAlarm = {},
-                    onSilence = { silenced = true },
+                    onDismissAlarm = { dismissed = true },
                     onPause = {},
                     onResume = {},
                     onReset = {},
@@ -56,7 +63,7 @@ class ActiveTimerScreenTapCircleTest {
             .performTouchInput { click() }
 
         composeRule.runOnIdle {
-            assertTrue(silenced)
+            assertTrue(dismissed)
         }
     }
 
@@ -70,16 +77,15 @@ class ActiveTimerScreenTapCircleTest {
                 status = TimerStatus.RUNNING,
             )
 
-        var silenced = false
         var dismissed = false
 
         composeRule.setContent {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
-                    onSilence = { silenced = true },
                     onPause = {},
                     onResume = {},
                     onReset = {},
@@ -96,13 +102,46 @@ class ActiveTimerScreenTapCircleTest {
             .performTouchInput { click() }
 
         composeRule.runOnIdle {
-            assertTrue(!silenced)
             assertTrue(!dismissed)
         }
     }
 
     @Test
-    fun tappingCircleWhenCompleteDoesNothing() {
+    fun freeRunningTimerDoesNotRenderVoiceCalloutBadge() {
+        val state =
+            TimerState(
+                config = TimerConfig.DEFAULT.copy(voiceEnabled = true),
+                targetDuration = 60.seconds,
+                remainingDuration = 30.seconds,
+                status = TimerStatus.RUNNING,
+            )
+
+        composeRule.setContent {
+            RandomTimerTheme {
+                ActiveTimerScreen(
+                    state = state,
+                    isPro = false,
+                    onStop = {},
+                    onDismissAlarm = {},
+                    onPause = {},
+                    onResume = {},
+                    onReset = {},
+                    onLoopToggle = {},
+                    onVoiceToggle = {},
+                )
+            }
+        }
+
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts On").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Voice Callouts Locked").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun tappingCircleWhenCompleteCallsOnDismissAlarm() {
+        // Per docs/TASKS.md: tap during ALARM or COMPLETE is equivalent to Stop.
+        // Updated 2026-05-18 — the prior expectation that COMPLETE tap was a no-op
+        // contradicted the spec; commit 284291be aligned the implementation to
+        // the spec via the `isComplete` predicate (ActiveTimerScreen.kt:78).
         val state =
             TimerState(
                 config = TimerConfig.DEFAULT,
@@ -111,16 +150,15 @@ class ActiveTimerScreenTapCircleTest {
                 status = TimerStatus.COMPLETE,
             )
 
-        var silenced = false
         var dismissed = false
 
         composeRule.setContent {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = {},
                     onDismissAlarm = { dismissed = true },
-                    onSilence = { silenced = true },
                     onPause = {},
                     onResume = {},
                     onReset = {},
@@ -135,9 +173,7 @@ class ActiveTimerScreenTapCircleTest {
             .performTouchInput { click() }
 
         composeRule.runOnIdle {
-            // Circle tap during COMPLETE should NOT trigger silence or dismiss
-            assertTrue(!silenced)
-            assertTrue(!dismissed)
+            assertTrue(dismissed)
         }
     }
 }

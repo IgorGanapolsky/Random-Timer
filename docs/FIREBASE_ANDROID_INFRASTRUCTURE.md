@@ -127,6 +127,61 @@ Most recent verified Android Firebase release evidence:
 - Distribution audience in live run log:
   - tester `iganapolsky@gmail.com`
 
+## App Testing agent (Android, preview)
+
+Firebase [App Testing agent](https://firebase.google.com/docs/app-distribution/android/app-testing-agent) runs natural-language / YAML test cases against your app on **Test Lab devices** (Gemini in Firebase). It is a **preview** feature: opt in under **Firebase Console → App Distribution** for the same project as `FIREBASE_ANDROID_APP_ID` (see [accessing the preview](https://firebase.google.com/docs/app-distribution/troubleshooting?platform=android#app-testing-agent-preview)).
+
+**In-repo suites:** `firebase-apptesting/tests/` (validated by `scripts/tests/test_firebase_apptesting_yaml.py`).
+
+**CI (manual):** GitHub Actions workflow `.github/workflows/firebase-app-testing-agent.yml` (`workflow_dispatch`). It installs `firebase-tools`, builds a **release APK** (unless `skip_build`), then runs `scripts/ci_firebase_apptesting_execute.sh`. Uses the same secrets as internal Firebase distribution (`FIREBASE_ANDROID_APP_ID`, `FIREBASE_SERVICE_ACCOUNT_JSON`, plus Android signing and `GOOGLE_SERVICES_JSON` when building).
+
+**Local / ad hoc:**
+
+```bash
+export FIREBASE_ANDROID_APP_ID="1:…:android:…"
+export FIREBASE_SERVICE_ACCOUNT_JSON="$(cat /path/to/sa.json)"   # or set GOOGLE_APPLICATION_CREDENTIALS
+npm install -g firebase-tools@latest
+bash scripts/ci_firebase_apptesting_execute.sh --apk native-android/app/build/outputs/apk/release/app-release.apk
+```
+
+**Quota / budget:** During preview, Firebase documents a **default free quota** (e.g. 200 agent tests per project per month); multi-device runs multiply usage. Stay within the repo **$20/month external spend** mandate for any paid Test Lab overages beyond preview allowances.
+
+### If `firebase apptesting:execute` fails after upload (“Failed to request test execution”)
+
+There are **two** different backends involved. Use `firebase --debug` (or the workflow input **`debug_firebase_cli`**) to see which RPC returns `403`.
+
+#### A) `403` on `firebaseappdistribution.googleapis.com` … `createReleaseTest` (v1alpha **tests**)
+
+The CLI uploads the binary with **App Distribution** “release” permissions, then calls **App Distribution App Testing** (`…/releases/…/tests`, `createReleaseTest`). A **narrow** custom role that only allows `firebaseappdistro.releases.update` (upload) is **not** enough: the caller must be allowed to **create release tests** on that API surface.
+
+**Fix (recommended):** On the **same GCP project** as the service account’s `project_id` (e.g. `random-timer-dist-new`), grant the CI principal (**`client_email`** in `FIREBASE_SERVICE_ACCOUNT_JSON`) the predefined role:
+
+- **`Firebase App Distribution Admin`** — IAM id **`roles/firebaseappdistro.admin`**  
+  ([Google Cloud role doc](https://cloud.google.com/iam/docs/roles-permissions/firebaseappdistro#firebaseappdistro.admin))
+
+In **GCP Console → IAM**, confirm the role is listed **by that exact name/id**, not only “Firebase App Tester” / a home-grown role with partial `firebaseappdistro.*` permissions.
+
+If `roles/firebaseappdistro.admin` is already present and `403` persists, try adding **`Firebase Quality Admin`** — **`roles/firebase.qualityAdmin`** (broader quality surface; use only if your org policy allows). After any IAM change, wait **1–3 minutes** and retry.
+
+#### B) `403` / `SERVICE_DISABLED` on **Cloud Testing** / **Test Lab** (`testing.googleapis.com`)
+
+Agent runs still need Test Lab infrastructure enabled and authorized:
+
+**1. Enable APIs** (APIs & Library, project = service account `project_id`):
+
+- [Google Cloud Testing API](https://console.cloud.google.com/apis/library/testing.googleapis.com?project=random-timer-dist-new) (`testing.googleapis.com`)
+- [Google Cloud Tool Results API](https://console.cloud.google.com/apis/library/toolresults.googleapis.com?project=random-timer-dist-new) (`toolresults.googleapis.com`)
+
+**2. IAM for Test Lab matrices:** **`Firebase Test Lab Admin`** — **`roles/cloudtestservice.testAdmin`**.
+
+#### C) Repo / CI aids (already in tree)
+
+`scripts/ci_firebase_apptesting_execute.sh` runs `firebase --non-interactive -P <project_id from SA>`. Re-run `.github/workflows/firebase-app-testing-agent.yml` with **`debug_firebase_cli: true`** when diagnosing; **do not** paste logs that contain signed binary download URLs.
+
+#### D) Billing
+
+If enabling APIs requires billing, attach it for that GCP project (still subject to the repo external-spend cap for anything beyond preview/free allowances).
+
 ## Change Rules
 
 When touching Android Firebase infrastructure:

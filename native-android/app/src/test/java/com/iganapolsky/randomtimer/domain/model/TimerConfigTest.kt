@@ -198,7 +198,7 @@ class TimerConfigTest {
     }
 
     @Test
-    fun `activation preset migrates legacy 30-120 to 5-30 when first timer not done`() {
+    fun `legacy activation preset migrates 30-120 free range to 5-30`() {
         val legacy =
             TimerConfig(
                 minSeconds = 30,
@@ -210,11 +210,7 @@ class TimerConfigTest {
                 volume = 0.5f,
                 vibrationEnabled = false,
             )
-        val next =
-            activationPresetForFirstCompletionIfEligible(
-                hasCompletedFirstTimer = false,
-                current = legacy,
-            )
+        val next = activationLegacyRangePresetIfEligible(legacy)
         assertThat(next).isNotNull()
         assertThat(next!!.minSeconds).isEqualTo(5)
         assertThat(next.maxSeconds).isEqualTo(30)
@@ -222,38 +218,13 @@ class TimerConfigTest {
     }
 
     @Test
-    fun `activation preset skipped when already on new default range`() {
-        val next =
-            activationPresetForFirstCompletionIfEligible(
-                hasCompletedFirstTimer = false,
-                current = TimerConfig.DEFAULT,
-            )
+    fun `legacy activation preset skipped when already on new default range`() {
+        val next = activationLegacyRangePresetIfEligible(TimerConfig.DEFAULT)
         assertThat(next).isNull()
     }
 
     @Test
-    fun `activation preset skipped after first timer completed`() {
-        val legacy =
-            TimerConfig(
-                minSeconds = 30,
-                maxSeconds = 120,
-                alarmDuration = 10,
-                hiddenMode = false,
-                repeatEnabled = false,
-                soundType = SoundType.INTENSE,
-                volume = 0.5f,
-                vibrationEnabled = false,
-            )
-        val next =
-            activationPresetForFirstCompletionIfEligible(
-                hasCompletedFirstTimer = true,
-                current = legacy,
-            )
-        assertThat(next).isNull()
-    }
-
-    @Test
-    fun `activation preset skipped when user already customized range`() {
+    fun `legacy activation preset skipped when user already customized range`() {
         val custom =
             TimerConfig(
                 minSeconds = 45,
@@ -265,16 +236,12 @@ class TimerConfigTest {
                 volume = 0.5f,
                 vibrationEnabled = false,
             )
-        val next =
-            activationPresetForFirstCompletionIfEligible(
-                hasCompletedFirstTimer = false,
-                current = custom,
-            )
+        val next = activationLegacyRangePresetIfEligible(custom)
         assertThat(next).isNull()
     }
 
     @Test
-    fun `activation preset skipped in extended range mode`() {
+    fun `legacy activation preset skipped in extended range mode`() {
         val extended =
             TimerConfig(
                 minSeconds = 30,
@@ -287,11 +254,7 @@ class TimerConfigTest {
                 vibrationEnabled = false,
                 useExtendedRange = true,
             )
-        val next =
-            activationPresetForFirstCompletionIfEligible(
-                hasCompletedFirstTimer = false,
-                current = extended,
-            )
+        val next = activationLegacyRangePresetIfEligible(extended)
         assertThat(next).isNull()
     }
 
@@ -324,5 +287,18 @@ class TimerConfigTest {
         assertThat(result.config.maxSeconds).isEqualTo(2400)
         assertThat(result.profiles.freeMinSeconds).isEqualTo(45)
         assertThat(result.profiles.freeMaxSeconds).isEqualTo(180)
+    }
+
+    @Test
+    fun `competition warmup preset applies event day settings`() {
+        val config = TrainingPreset.CompetitionWarmup.applyTo(TimerConfig.DEFAULT)
+
+        assertThat(config.minSeconds).isEqualTo(20)
+        assertThat(config.maxSeconds).isEqualTo(90)
+        assertThat(config.alarmDuration).isEqualTo(5)
+        assertThat(config.repeatEnabled).isTrue()
+        assertThat(config.vibrationEnabled).isTrue()
+        assertThat(config.soundType).isEqualTo(SoundType.INTENSE)
+        assertThat(config.useExtendedRange).isFalse()
     }
 }

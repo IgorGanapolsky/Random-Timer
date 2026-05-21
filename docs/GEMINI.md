@@ -31,6 +31,7 @@ Credentials are stored in `.env` (local) and GitHub Secrets (CI). Never hardcode
 - **PR hygiene**: Before merge, verify required checks with `gh pr checks` / merge state; see `CLAUDE.md` (PR Management & System Hygiene). Say **"Done merging PRs"** only with merge SHAs + post-merge CI evidence.
 - **RAG / external memory**: treat as authoritative only when the gateway is verified in the active session; otherwise report “not verified.”
 - **Act, Don't Instruct**: Execute autonomously. Never tell the CEO to do manual steps.
+- **No Subway**: Avoid and remove corporate integrations (Microsoft Teams, Azure, Azure DevOps/ADO). Default to GitHub and local-first solutions.
 
 ## Business North Star
 
@@ -93,3 +94,4 @@ cd native-ios && xcodebuild -scheme RandomTimer test
 
 ### CTO session start protocol (PR hygiene)
 - Same numbered protocol as `CLAUDE.md` → *PR Management & System Hygiene* → *CTO session start protocol*: auth without pasting PATs, prune + open PR list + checks, orphan branch triage, merge only when required checks are green, verify `develop`/`main` CI, RAG only if verified in-session.
+- Use **"Done merging PRs. CI passing. System hygiene complete. Ready for next session."** only after merge SHAs, branch count before/after, stale cleanup counts, CI links, dry-run evidence, and RAG/lesson logging status have all been verified and reported without secrets.

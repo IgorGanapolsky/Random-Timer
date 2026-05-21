@@ -12,22 +12,46 @@ class PaywallSheetTest {
 
     @Test
     fun `paywall copy focuses on training outcomes`() {
-        assertEquals("Stop Training With the Brakes On", PAYWALL_HEADLINE)
+        assertEquals("Unlock Full Fight-Ready Training", PAYWALL_HEADLINE)
         assertEquals(
-            "Go unlimited — sessions up to 60 minutes, live voice callouts, and a full sound library that updates every month.",
+            "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills.",
             PAYWALL_SUBHEADLINE,
         )
-        assertEquals("Cancel anytime. Subscription auto-renews until cancelled.", PAYWALL_PRICING_FOOTER)
+        assertEquals(
+            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; subscription auto-renews until cancelled.",
+            PAYWALL_PRICING_FOOTER,
+        )
         assertEquals(
             listOf(
-                "Full-length sessions — up to 60 minutes, no cutoffs",
-                "Live voice callouts keep you sharp under pressure",
-                "Loop drills with round limits — just like competition",
-                "Full sound arsenal — real bells, horns, and sirens",
-                "Fresh callout packs every 30 days — Pro gets them first",
+                "Ad-free training — Elite subscription removes rewarded ads",
+                "60-minute random windows for full-length drills",
+                "Combat and MMA voice callouts with live time checks",
+                "Expert training presets (Competition, Sparring, etc.)",
+                "Round-capped loops for pad work, sparring, and circuits",
+                "Full sound arsenal — bells, horns, sirens, and more",
+                "Fresh pro audio drops when new packs land",
             ),
             PAYWALL_FEATURE_ROWS,
         )
+    }
+
+    @Test
+    fun `paywall feature context explains selected gate value`() {
+        val setupContext = paywallFeatureContext("setup_upgrade_cta")
+        assertEquals("You tapped Unlock Pro", setupContext.eyebrow)
+
+        val rangeContext = paywallFeatureContext("range_gate")
+        assertEquals("You tapped 60-minute random windows", rangeContext.eyebrow)
+        assertEquals(
+            "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing.",
+            rangeContext.valueCopy,
+        )
+
+        val qualifiedContext = paywallFeatureContext("qualified_training_gate")
+        assertEquals("Three sessions logged", qualifiedContext.eyebrow)
+
+        val unknownContext = paywallFeatureContext("unknown")
+        assertEquals("Pro Tactical", unknownContext.eyebrow)
     }
 
     @Test
@@ -46,11 +70,17 @@ class PaywallSheetTest {
     }
 
     @Test
-    fun `subscription plan selection enum has monthly and annual variants`() {
+    fun `subscription plan selection enum has monthly annual and lifetime variants`() {
         val monthly = SubscriptionPlanSelection.MONTHLY
         val annual = SubscriptionPlanSelection.ANNUAL
+        val lifetime = SubscriptionPlanSelection.LIFETIME
         assertEquals(SubscriptionPlanSelection.MONTHLY, monthly)
         assertEquals(SubscriptionPlanSelection.ANNUAL, annual)
+        assertEquals(SubscriptionPlanSelection.LIFETIME, lifetime)
+        assertEquals("monthly", planNameForSelection(monthly))
+        assertEquals("annual", planNameForSelection(annual))
+        assertEquals("lifetime", planNameForSelection(lifetime))
+        assertEquals(ProManager.BASE_PRODUCT_ID, productIdForPlan(lifetime))
     }
 
     @Test
@@ -67,6 +97,7 @@ class PaywallSheetTest {
                 selectedPlan = SubscriptionPlanSelection.MONTHLY,
                 proPrice = "$29.99",
                 monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
                 trialEligibilityByProductId = trialEligibility,
             ),
         )
@@ -76,7 +107,110 @@ class PaywallSheetTest {
                 selectedPlan = SubscriptionPlanSelection.ANNUAL,
                 proPrice = "$29.99",
                 monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
                 trialEligibilityByProductId = trialEligibility,
+            ),
+        )
+        assertEquals(
+            "Unlock Lifetime \u2022 $4.99",
+            ctaLabelForPlan(
+                selectedPlan = SubscriptionPlanSelection.LIFETIME,
+                proPrice = "$29.99",
+                monthlyPrice = "$3.99",
+                lifetimePrice = "$4.99",
+                trialEligibilityByProductId = trialEligibility,
+            ),
+        )
+    }
+
+    @Test
+    fun `setup upgrade defaults to lifetime while experiments can still force annual`() {
+        assertEquals(
+            SubscriptionPlanSelection.LIFETIME,
+            initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.MONTHLY,
+            initialPlanSelection(entryPoint = "range_gate", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = true),
+        )
+    }
+
+    @Test
+    fun `known billing catalog hides unavailable paywall plans`() {
+        val availableProductIds =
+            setOf(
+                ProManager.BASE_PRODUCT_ID,
+                ProManager.ELITE_PRODUCT_ID,
+            )
+
+        assertEquals(
+            true,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.LIFETIME,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
+        assertEquals(
+            true,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.ANNUAL,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(
+                SubscriptionPlanSelection.MONTHLY,
+                availableProductIds,
+                billingCatalogProbed = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `unprobed billing catalog hides paywall plans`() {
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.LIFETIME, emptySet(), billingCatalogProbed = false),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.ANNUAL, emptySet(), billingCatalogProbed = false),
+        )
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet(), billingCatalogProbed = false),
+        )
+    }
+
+    @Test
+    fun `probed empty billing catalog hides paywall plans`() {
+        assertEquals(
+            false,
+            shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet(), billingCatalogProbed = true),
+        )
+        assertEquals(false, hasPurchasablePaywallPlan(emptySet(), billingCatalogProbed = true))
+    }
+
+    @Test
+    fun `initial plan selection prefers first purchasable plan when default is missing`() {
+        val available =
+            setOf(
+                ProManager.ELITE_PRODUCT_ID,
+            )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(
+                entryPoint = "range_gate",
+                defaultToAnnualPlan = false,
+                availableProductIds = available,
+                billingCatalogProbed = true,
             ),
         )
     }

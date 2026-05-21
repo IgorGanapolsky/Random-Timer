@@ -112,6 +112,103 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         }
     }
 
+    func scheduleVoiceCalloutNotifications(
+        totalDurationSeconds: Int,
+        elapsedSeconds: Int,
+        gender: VoiceGender
+    ) async {
+        await requestNotificationPermission()
+
+        let center = UNUserNotificationCenter.current()
+        cancelVoiceCalloutNotifications()
+
+        let catalog = packStore.voiceCatalog(bundle: .main)
+        let plan = voiceCalloutNotificationPlan(
+            totalDurationSeconds: totalDurationSeconds,
+            elapsedSeconds: elapsedSeconds,
+            gender: gender,
+            catalog: catalog,
+            options: VoiceCalloutNotificationPlanOptions(
+                audioExists: { [packStore] filename in
+                    packStore.voiceAudioURL(for: filename, bundle: .main) != nil
+                },
+                pickIndex: { upperBound in
+                    Int.random(in: 0..<upperBound)
+                }
+            )
+        )
+
+        for item in plan {
+            guard let soundName = prepareVoiceNotificationSound(named: item.filename) else { continue }
+
+            let content = UNMutableNotificationContent()
+            content.title = "Voice Callout"
+            content.body = item.text
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
+            content.interruptionLevel = .timeSensitive
+
+            let trigger = UNTimeIntervalNotificationTrigger(
+                timeInterval: TimeInterval(max(1, item.offsetSeconds)),
+                repeats: false
+            )
+            let request = UNNotificationRequest(
+                identifier: voiceCalloutNotificationIdentifier(offsetSeconds: item.offsetSeconds),
+                content: content,
+                trigger: trigger
+            )
+            do {
+                try await center.add(request)
+            } catch {
+                Logger.notification.error("Failed to schedule voice callout notification: \(error)")
+            }
+        }
+    }
+
+    func cancelVoiceCalloutNotifications() {
+        let ids = (1...TimerConfig.maxSecondsPro).map {
+            voiceCalloutNotificationIdentifier(offsetSeconds: $0)
+        }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+    }
+
+    private static let voiceCalloutNotificationPrefix = "voice_callout_"
+
+    private func voiceCalloutNotificationIdentifier(offsetSeconds: Int) -> String {
+        "\(Self.voiceCalloutNotificationPrefix)\(offsetSeconds)"
+    }
+
+    private func prepareVoiceNotificationSound(named filename: String) -> String? {
+        guard let sourceURL = packStore.voiceAudioURL(for: filename, bundle: .main) else {
+            Logger.notification.error("Voice notification asset missing: \(filename, privacy: .public)")
+            return nil
+        }
+
+        do {
+            let soundsDirectory = try notificationSoundsDirectory()
+            let soundName = "voice_\(filename.replacingOccurrences(of: "/", with: "__")).mp3"
+            let destination = soundsDirectory.appendingPathComponent(soundName, isDirectory: false)
+            if !FileManager.default.fileExists(atPath: destination.path) {
+                try FileManager.default.copyItem(at: sourceURL, to: destination)
+            }
+            return soundName
+        } catch {
+            Logger.notification.error("Failed to prepare voice notification sound: \(error)")
+            return nil
+        }
+    }
+
+    private func notificationSoundsDirectory() throws -> URL {
+        let library = try FileManager.default.url(
+            for: .libraryDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let sounds = library.appendingPathComponent("Sounds", isDirectory: true)
+        try FileManager.default.createDirectory(at: sounds, withIntermediateDirectories: true)
+        return sounds
+    }
+
     func cancelPendingNotifications() async {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
@@ -385,8 +482,41 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     }
 
     func cancelReengagementReminders() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["reengagement_24h", "reengagement_72h"])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["reengagement_24h", "reengagement_72h"]
+        )
         Logger.notification.debug("Cancelled re-engagement reminders")
+    }
+
+    /// Schedules a recurring notification for the 1st of every month to highlight new Pro audio.
+    func scheduleMonthlyContentReminder(releaseMonth: String) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ["monthly_content"])
+
+        var dateComponents = DateComponents()
+        dateComponents.day = 1
+        dateComponents.hour = 10
+
+        let messaging = ProMonthlyContentMessaging.notificationCopy(releaseMonth: releaseMonth)
+        let content = UNMutableNotificationContent()
+        content.title = messaging.title
+        content.body = messaging.body
+        content.sound = .default
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let request = UNNotificationRequest(identifier: "monthly_content", content: content, trigger: trigger)
+
+        center.add(request) { error in
+            if let error = error {
+                Logger.notification.error("Failed to schedule monthly content reminder: \(error)")
+            } else {
+                Logger.notification.debug("Scheduled monthly content reminder for the 1st of each month")
+            }
+        }
+    }
+
+    func cancelMonthlyContentReminder() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["monthly_content"])
     }
 
     /// Test-only hook for simulating notification tap.

@@ -15,9 +15,46 @@ import json
 import datetime as dt
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 
 HISTORY_PATH = "marketing/data/review_velocity.json"
+IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
+ANDROID_BUNDLE_ID = "com.iganapolsky.randomtimer"
+ITUNES_LOOKUP_URL = "https://itunes.apple.com/lookup?bundleId={bundle}&country=us"
+
+
+def _lookup_itunes(bundle_id: str = IOS_BUNDLE_ID, timeout: float = 5.0) -> Optional[Dict[str, Any]]:
+    """Public iTunes Search API lookup. Returns None on any network/decode failure
+    so callers can gracefully fall back to a zero placeholder."""
+    url = ITUNES_LOOKUP_URL.format(bundle=bundle_id)
+    try:
+        req = Request(url, headers={"User-Agent": "RandomTimer-review-velocity/1.0"})
+        with urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (URLError, TimeoutError, ValueError, OSError):
+        return None
+
+
+def _lookup_play_reviews(
+    bundle_id: str = ANDROID_BUNDLE_ID, count: int = 200
+) -> Optional[List[Dict[str, Any]]]:
+    """Fetch individual Play Store reviews via google-play-scraper. Returns None
+    if the package is unavailable or any failure occurs — callers fall back to
+    the zero placeholder. Captures reviews that Play's aggregate API hides
+    below its display threshold (e.g. Lana Karpel's 2026-03-29 5-star)."""
+    try:
+        from google_play_scraper import reviews as gp_reviews, Sort  # type: ignore
+    except ImportError:
+        return None
+    try:
+        results, _ = gp_reviews(
+            bundle_id, lang="en", country="us", sort=Sort.NEWEST, count=count
+        )
+        return results or None
+    except Exception:
+        return None
 ALERT_THRESHOLD_PCT = -20  # Alert if velocity drops by 20%+
 
 
@@ -40,10 +77,12 @@ def save_velocity_history(repo_root: Path, history: Dict[str, Any]) -> None:
 
 
 def fetch_ios_reviews_count(repo_root: Path) -> Dict[str, Any]:
-    """Fetch iOS review data from ASC reviews history.
+    """Fetch iOS review data, preferring ASC cache, then iTunes Search API.
 
-    In production, call App Store Connect API directly.
-    Falls back to reading local history JSONL from ios-reviews-ops workflow.
+    Cache (populated by ASC integration) wins because it can include recent_7d
+    and per-review detail. Without it, the public iTunes Search API still
+    surfaces userRatingCount + averageUserRating so the tracker reports real
+    numbers instead of a silent zero placeholder.
     """
     history_path = repo_root / "marketing/data/asc_reviews_cache.json"
     if history_path.is_file():
@@ -53,15 +92,27 @@ def fetch_ios_reviews_count(repo_root: Path) -> Dict[str, Any]:
             "avg_rating": data.get("avg_rating", 0.0),
             "recent_count": data.get("recent_7d", 0),
         }
-    # Placeholder when no real data available
+
+    lookup = _lookup_itunes()
+    if lookup and lookup.get("resultCount", 0) >= 1:
+        result = lookup["results"][0]
+        return {
+            "total_reviews": int(result.get("userRatingCount", 0) or 0),
+            "avg_rating": float(result.get("averageUserRating", 0.0) or 0.0),
+            "recent_count": 0,
+        }
+
     return {"total_reviews": 0, "avg_rating": 0.0, "recent_count": 0}
 
 
 def fetch_android_reviews_count(repo_root: Path) -> Dict[str, Any]:
-    """Fetch Android review data from Play Console.
+    """Fetch Android review data, preferring Play Console cache, then a public
+    Play Store review scrape.
 
-    In production, integrate with Google Play Developer API.
-    Falls back to local cache.
+    Cache (populated by a Play Developer API integration) wins because it can
+    include richer per-review detail. Without it, `google-play-scraper` fetches
+    individual reviews — necessary because Play's aggregate `ratings` field is
+    suppressed below a display threshold even when real reviews exist.
     """
     cache_path = repo_root / "marketing/data/play_reviews_cache.json"
     if cache_path.is_file():
@@ -71,6 +122,17 @@ def fetch_android_reviews_count(repo_root: Path) -> Dict[str, Any]:
             "avg_rating": data.get("avg_rating", 0.0),
             "recent_count": data.get("recent_7d", 0),
         }
+
+    scraped = _lookup_play_reviews()
+    if scraped:
+        total = len(scraped)
+        avg = sum(float(r.get("score", 0) or 0) for r in scraped) / total
+        return {
+            "total_reviews": total,
+            "avg_rating": round(avg, 2),
+            "recent_count": 0,
+        }
+
     return {"total_reviews": 0, "avg_rating": 0.0, "recent_count": 0}
 
 

@@ -246,9 +246,15 @@ def check_ios_firebase_contract(repo_root: Path, errors: list[str]) -> None:
         errors=errors,
         label="RandomTimerApp.swift",
     )
-    _assert_contains(
+    _assert_not_contains(
         app_source,
         "Missing bundled GoogleService-Info.plist in release build.",
+        errors=errors,
+        label="RandomTimerApp.swift",
+    )
+    _assert_contains(
+        app_source,
+        "AnalyticsService.shared.initialize()",
         errors=errors,
         label="RandomTimerApp.swift",
     )

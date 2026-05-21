@@ -13,7 +13,10 @@ Setup (one-time in Firebase Console):
     2. Streaming export lands in: <project>.firebase_crashlytics (see CRASHLYTICS_PROJECT_ID).
 
 Requires:
-    - CRASHLYTICS_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
+    - CRASHLYTICS_SERVICE_ACCOUNT_JSON (inline JSON), or
+      CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH (path to a service account JSON file), or
+      GOOGLE_APPLICATION_CREDENTIALS (path to a service account JSON file), or
+      Application Default Credentials (e.g. gcloud auth application-default login)
     - BigQuery API enabled on the Firebase/GCP project that owns the export
     - Env CRASHLYTICS_PROJECT_ID must match that project (default: random-timer-dist-new)
 
@@ -26,10 +29,13 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
 import google.auth
+from google.auth.exceptions import DefaultCredentialsError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 
@@ -50,17 +56,43 @@ def get_credentials():
             scopes=SCOPES,
         )
 
+    sa_path = os.environ.get("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", "").strip()
+    if sa_path:
+        expanded_sa = os.path.expanduser(sa_path)
+        if not os.path.isfile(expanded_sa):
+            raise RuntimeError(
+                "CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH points to a missing file "
+                f"({expanded_sa})."
+            )
+        return service_account.Credentials.from_service_account_file(
+            expanded_sa,
+            scopes=SCOPES,
+        )
+
     gac = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
     if gac:
         expanded = os.path.expanduser(gac)
         if not os.path.isfile(expanded):
             raise RuntimeError(
                 "GOOGLE_APPLICATION_CREDENTIALS points to a missing file "
-                f"({expanded}). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON or fix the path."
+                f"({expanded}). Set CRASHLYTICS_SERVICE_ACCOUNT_JSON, "
+                "CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH, or fix the path."
             )
+        return service_account.Credentials.from_service_account_file(
+            expanded,
+            scopes=SCOPES,
+        )
 
-    creds, _ = google.auth.default(scopes=SCOPES)
-    return creds
+    try:
+        creds, _ = google.auth.default(scopes=SCOPES)
+        return creds
+    except DefaultCredentialsError as exc:
+        raise RuntimeError(
+            "No Google credentials for Crashlytics BigQuery. Set one of: "
+            "CRASHLYTICS_SERVICE_ACCOUNT_JSON, CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH, "
+            "GOOGLE_APPLICATION_CREDENTIALS, or configure Application Default Credentials "
+            f"(see google.auth.default). Original error: {exc}"
+        ) from exc
 
 
 def get_access_token(credentials=None):
@@ -96,25 +128,47 @@ def bq_query(token, sql):
 
 
 def check_bigquery_export(token):
-    """Check if Crashlytics BQ export is set up by listing tables."""
+    """Check if Crashlytics BQ export is set up by listing tables (paginated).
+
+    BigQuery returns at most ``maxResults`` tables per page; Crashlytics datasets can
+    exceed a single page, so we follow ``nextPageToken`` until exhausted.
+    """
     ctx = ssl.create_default_context()
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-    url = (
+    base = (
         f"https://bigquery.googleapis.com/bigquery/v2"
-        f"/projects/{PROJECT_ID}/datasets/{BQ_DATASET}/tables?maxResults=10"
+        f"/projects/{PROJECT_ID}/datasets/{BQ_DATASET}/tables"
     )
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
-    try:
-        resp = urllib.request.urlopen(req, context=ctx)
-        data = json.loads(resp.read())
-        tables = [t["tableReference"]["tableId"] for t in data.get("tables", [])]
-        return tables
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None  # Dataset doesn't exist
-        error_body = e.read().decode()
-        print(f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}", file=sys.stderr)
-        raise RuntimeError(f"BigQuery API {e.code}: {error_body[:200]}")
+    tables: list[str] = []
+    page_token: str | None = None
+    while True:
+        params: dict[str, str] = {"maxResults": "500"}
+        if page_token:
+            params["pageToken"] = page_token
+        url = f"{base}?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        try:
+            resp = urllib.request.urlopen(req, context=ctx)
+            data = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None  # Dataset doesn't exist
+            error_body = e.read().decode()
+            print(
+                f"WARNING: BigQuery API returned {e.code}: {error_body[:200]}",
+                file=sys.stderr,
+            )
+            raise RuntimeError(f"BigQuery API {e.code}: {error_body[:200]}")
+        batch = [
+            t["tableReference"]["tableId"]
+            for t in data.get("tables", [])
+            if t.get("tableReference", {}).get("tableId")
+        ]
+        tables.extend(batch)
+        page_token = data.get("nextPageToken") or None
+        if not page_token:
+            break
+    return tables
 
 
 def select_crashlytics_table(tables):
@@ -300,6 +354,7 @@ def collect_crashlytics_snapshot(hours=24):
         payload["reason"] = "Crashlytics BigQuery export not set up"
         return payload
     if not tables:
+        payload["status"] = "skipped"
         payload["reason"] = "BigQuery dataset exists but no tables yet"
         return payload
 

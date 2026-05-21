@@ -9,8 +9,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services) apply false
-    alias(libs.plugins.firebase.crashlytics) apply false
-    alias(libs.plugins.firebase.perf) apply false
+    alias(libs.plugins.firebase.crashlytics.plugin) apply false
+    alias(libs.plugins.firebase.perf.plugin) apply false
     jacoco
 }
 
@@ -30,7 +30,7 @@ val enableFirebasePlugins =
 if (enableFirebasePlugins) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
-    apply(plugin = "com.google.firebase.firebase-perf")
+    // Firebase Perf Gradle plugin incompatible with AGP 9+ (removed Transform API).
 } else {
     logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }
@@ -47,8 +47,8 @@ android {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
         targetSdk = ciTargetSdk ?: 35
-        versionCode = ciVersionCode ?: 1774900003
-        versionName = "1.3.20"
+        versionCode = ciVersionCode ?: 1778679338
+        versionName = "1.3.36"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -159,8 +159,14 @@ dependencies {
     // In-App Review
     implementation(libs.play.review)
 
+    // In-App Update
+    implementation(libs.play.update)
+
     // In-App Billing
     implementation(libs.play.billing)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -178,11 +184,15 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
     testImplementation(libs.org.json)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.test.uiautomator)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
 

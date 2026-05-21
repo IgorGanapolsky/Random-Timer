@@ -9,25 +9,25 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-02-24T17:38:32+00:00` |
+| Snapshot (UTC) | `2026-05-21T18:22:16+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
-| Active Campaign Count (tracked) | 1 |
+| Active Campaign Count (tracked) | 0 |
 | Daily Budget Configured | $30.00 |
 | Blended CPI Target | $3.00 |
-| Open -> Completed Rate (30d) | 24.2% |
-| WQTU (7d) | 0 |
+| Open -> Completed Rate (30d) | 19.7% |
+| WQTU (7d) | 10 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
-| Downloads (30d) | 0 |
+| Distinct install users (30d) | 462 |
 | Apple Ads Campaigns (API) | 1 |
-| Apple Ads Active Campaigns (API) | 1 |
+| Apple Ads Active Campaigns (API) | 0 |
 | Apple Ads Impressions (30d) | 0 |
 | Apple Ads Clicks/Taps (30d) | 0 |
 | Apple Ads Spend (30d) | $0.00 |
 | Apple Ads Installs (30d) | 0 |
-| Apple Ads Live Finding | API reports 1 campaign(s), 1 active; 30d taps 0, spend $0.00, installs 0. |
-| Guardrail Violated | YES |
+| Apple Ads Live Finding | API reports 1 campaign(s), 0 active; 30d taps 0, spend $0.00, installs 0. |
+| Guardrail Violated | NO |
 <!-- LIVE_PAID_END -->
 
 ## Paid Attribution Sources (30d)
@@ -43,9 +43,8 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_CHARTS_START -->
 ```mermaid
 pie title Daily Ad Budget Allocation ($)
-    "Apple Search Ads" : 10.0
-    "Google Uac" : 10.0
-    "Reddit Ads" : 10.0
+    "Apple Search Ads" : 18.0
+    "Google Uac" : 12.0
 ```
 
 ```mermaid
@@ -53,23 +52,23 @@ xychart-beta
     title "North Star Progress (WQTU)"
     x-axis ["WQTU 7d" , "Checkpoint Target" , "Quarter Target"]
     y-axis "Users" 0 --> 27
-    bar [0 , 8 , 25]
+    bar [10 , 8 , 25]
 ```
 
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["02-24T17:36" , "02-24T17:38"]
+    x-axis ["05-21T03:48" , "05-21T05:24" , "05-21T06:47" , "05-21T08:13" , "05-21T09:28" , "05-21T10:47" , "05-21T12:03" , "05-21T13:26" , "05-21T14:24" , "05-21T15:45" , "05-21T16:43" , "05-21T17:24" , "05-21T17:35" , "05-21T18:22"]
     y-axis "Taps" 0 --> 1
-    line [0 , 0]
+    line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
 
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["02-24T17:36" , "02-24T17:38"]
+    x-axis ["05-21T03:48" , "05-21T05:24" , "05-21T06:47" , "05-21T08:13" , "05-21T09:28" , "05-21T10:47" , "05-21T12:03" , "05-21T13:26" , "05-21T14:24" , "05-21T15:45" , "05-21T16:43" , "05-21T17:24" , "05-21T17:35" , "05-21T18:22"]
     y-axis "USD" 0 --> 1
-    line [0.0 , 0.0]
+    line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```
 <!-- LIVE_PAID_CHARTS_END -->
 
@@ -78,9 +77,8 @@ xychart-beta
 <!-- LIVE_PAID_BUDGET_START -->
 | Platform | Daily Budget | Share |
 |----------|:-----------:|:-----:|
-| apple_search_ads | $10.00 | 33% |
-| google_uac | $10.00 | 33% |
-| reddit_ads | $10.00 | 33% |
+| apple_search_ads | $18.00 | 60% |
+| google_uac | $12.00 | 40% |
 | **Total** | **$30.00/day** | 100% |
 
 **Target CPA:** $3.00 | **Max CPT (Apple):** $1.75
@@ -118,8 +116,8 @@ Top 10 commercial + tool intent keywords targeting competitor searches.
 <!-- LIVE_CAMPAIGN_STATUS_START -->
 | Platform | Config Status | Live Status | Daily Budget |
 |----------|---------------|-------------|-------------:|
-| apple_search_ads | active | RUNNING | $10.00 |
-| google_uac | ready_to_launch | — | $10.00 |
+| apple_search_ads | paused | NOT_RUNNING | $30.00 |
+| google_uac | ready_to_launch | — | $30.00 |
 | reddit_ads | ready_to_launch | — | $10.00 |
 <!-- LIVE_CAMPAIGN_STATUS_END -->
 

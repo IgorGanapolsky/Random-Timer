@@ -71,53 +71,10 @@ struct CircularTimerView: View {
                         style: StrokeStyle(lineWidth: strokePx, lineCap: .round)
                     )
 
-                    // 2. Progress arc
-                    if progress > 0 {
-                        let sweepAngle = Angle.degrees(360 * progress)
-                        let arcPath = Path { p in
-                            p.addArc(
-                                center: center,
-                                radius: arcRadius,
-                                startAngle: .degrees(-90),
-                                endAngle: .degrees(-90) + sweepAngle,
-                                clockwise: false
-                            )
-                        }
-                        context.stroke(
-                            arcPath,
-                            with: .color(status.color),
-                            style: StrokeStyle(lineWidth: strokePx, lineCap: .round)
-                        )
-
-                        // Glow dot at progress tip
-                        let tipAngle = (-90.0 + 360.0 * progress) * .pi / 180.0
-                        let tipX = center.x + arcRadius * cos(tipAngle)
-                        let tipY = center.y + arcRadius * sin(tipAngle)
-                        let tipGlow = Path(ellipseIn: CGRect(
-                            x: tipX - strokePx,
-                            y: tipY - strokePx,
-                            width: strokePx * 2,
-                            height: strokePx * 2
-                        ))
-                        context.fill(tipGlow, with: .color(status.color.opacity(0.6)))
-                    }
-
-                    // 3. Tracking dot at start of progress arc (matches Android)
-                    if progress > 0 && progress < 1 {
-                        let startAngleRad = -Double.pi / 2
-                        let trackDotX = center.x + arcRadius * cos(startAngleRad)
-                        let trackDotY = center.y + arcRadius * sin(startAngleRad)
-                        let trackDotPoint = CGPoint(x: trackDotX, y: trackDotY)
-
-                        // Start-position dot (no outer glow — keeps it to two dots total)
-                        let innerDot = Path(ellipseIn: CGRect(
-                            x: trackDotPoint.x - strokePx,
-                            y: trackDotPoint.y - strokePx,
-                            width: strokePx * 2,
-                            height: strokePx * 2
-                        ))
-                        context.fill(innerDot, with: .color(status.color.opacity(0.6)))
-                    }
+                    // No progress arc, tip glow, or start dot — they would reveal elapsed time.
+                    // Random timer contract: only the background track + orbiting shimmer are visible.
+                    _ = progress
+                    _ = status.color
                 }
 
                 // Center display (text overlay)

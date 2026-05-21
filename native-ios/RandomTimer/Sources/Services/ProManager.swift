@@ -11,12 +11,17 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     /// Monthly subscription — $3.99/month. Must be created in App Store Connect as an auto-renewable
     /// subscription before the paywall can complete a live purchase.
     static nonisolated let monthlyProductID = "com.iganapolsky.randomtimer.pro.monthly"
-    /// Annual subscription — $29.99/year. Maps to the existing elite SKU billing period.
-    static nonisolated let annualProductID = "com.iganapolsky.randomtimer.pro.annual"
+    /// Annual subscription — $29.99/year. App Store Connect currently exposes this as the elite SKU.
+    static nonisolated let annualProductID = eliteProductID
     /// In-app paywall default product — one-time non-consumable Pro Upgrade.
     static nonisolated let paywallProductID = baseProductID
     static nonisolated var productIDs: Set<String> {
         [baseProductID, eliteProductID, monthlyProductID, annualProductID]
+    }
+
+    /// P2 scaffold — not fetched until App Store Connect products exist.
+    static nonisolated var disciplinePackProductIDs: Set<String> {
+        Set(DisciplinePackCatalog.iosProductIds)
     }
 
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
@@ -58,9 +63,34 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                 let ids = Self.productIDs
                 Self.log.error("ProManager: products EMPTY for IDs: \(ids). Check ASC config.")
             }
+            trackProductCatalogStatus()
         } catch {
             Self.log.error("ProManager: failed to fetch products: \(error)")
+            AnalyticsService.shared.track(AnalyticsEvents.billingProductCatalogStatus, properties: [
+                AnalyticsProperties.status: "fetch_failed",
+                AnalyticsProperties.reason: String(describing: error),
+                AnalyticsProperties.productCount: 0,
+            ])
         }
+    }
+
+    private func trackProductCatalogStatus() {
+        let availableProductIDs = Set(products.map(\.id))
+        let missingProductIDs = Self.productIDs.subtracting(availableProductIDs).sorted()
+        let status: String
+        if availableProductIDs.isEmpty {
+            status = "empty"
+        } else if missingProductIDs.isEmpty == false {
+            status = "missing_required_products"
+        } else {
+            status = "ok"
+        }
+        AnalyticsService.shared.track(AnalyticsEvents.billingProductCatalogStatus, properties: [
+            AnalyticsProperties.status: status,
+            AnalyticsProperties.availableProductIds: availableProductIDs.sorted(),
+            AnalyticsProperties.missingProductIds: missingProductIDs,
+            AnalyticsProperties.productCount: availableProductIDs.count,
+        ])
     }
 
     func formattedPrice(for productID: String) -> String {
@@ -110,6 +140,10 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
                             AnalyticsProperties.trialVerificationSource: "storekit_intro_offer_eligibility",
                             AnalyticsProperties.trialVerified: true,
                         ]
+                    )
+                    AnalyticsService.shared.trackSubscriptionFunnelStep(
+                        SubscriptionFunnelSteps.trialStarted,
+                        properties: [AnalyticsProperties.productId: product.id]
                     )
                 }
                 return .success
@@ -245,6 +279,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     func unlockProForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Pro unlocked via hidden hold gesture")
+        AnalyticsService.shared.markAsInternalUser()
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }
@@ -253,6 +288,7 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
     func unlockEliteForDebug() {
         entitlementLevel = .elite
         Self.log.notice("Developer override enabled: Elite unlocked via hidden hold gesture")
+        AnalyticsService.shared.markAsInternalUser()
         Task {
             await ProAudioPackStore.shared.refreshIfNeeded(isPro: true)
         }

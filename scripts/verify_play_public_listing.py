@@ -15,6 +15,10 @@ import requests
 DEFAULT_TIMEOUT = 900
 DEFAULT_POLL_INTERVAL = 60
 
+PLAY_LISTING_VERSION_SEMANTICS = (
+    "android_listing_semantics=embedded_play_html_141_string_proxy_not_Play_Console_ground_truth"
+)
+
 
 @dataclass
 class PublicListingResult:
@@ -58,6 +62,7 @@ def verify_public_listing(url: str, expected_version: str = "") -> PublicListing
         details = [f"HTTP 200 on {date_header}"]
         if observed_version:
             details.append(f"public_version={observed_version}")
+            details.append(PLAY_LISTING_VERSION_SEMANTICS)
         if expected_version:
             details.append(f"expected_version={expected_version}")
             if not observed_version:

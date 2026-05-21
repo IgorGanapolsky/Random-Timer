@@ -25,6 +25,28 @@ def test_select_pack_uses_active_pack_by_default():
     assert pack["id"] == manifest["activePackId"]
 
 
+def test_select_pack_can_target_release_month() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    expected = next(pack for pack in manifest["packs"] if pack["releaseMonth"] == "2026-04")
+
+    pack = module._select_pack(manifest, None, "2026-04")
+
+    assert pack["id"] == expected["id"]
+
+
+def test_select_pack_fails_when_release_month_is_missing() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+
+    try:
+        module._select_pack(manifest, None, "2099-12")
+    except SystemExit as error:
+        assert "releaseMonth '2099-12'" in str(error)
+    else:
+        raise AssertionError("Expected missing releaseMonth to fail fast")
+
+
 def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
     module = _load_module()
     manifest = module._load_manifest(MANIFEST_PATH)
@@ -33,9 +55,11 @@ def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
     catalog = module._voice_catalog(pack)
     lines = module._voice_lines(catalog)
 
-    expected_count = 1 + len(pack["elapsedCues"]) + len(pack["commandCues"])
+    expected_elapsed = [cue for cue in pack["elapsedCues"] if cue["second"] % 60 == 0]
+    expected_count = 1 + len(expected_elapsed) + len(pack["commandCues"])
     assert len(lines) == expected_count
     assert lines[0] == (pack["previewElapsed"]["filename"], pack["previewElapsed"]["text"])
+    assert [cue["second"] for cue in catalog["elapsedCues"]] == [cue["second"] for cue in expected_elapsed]
 
 
 def test_sound_catalog_tracks_pack_metadata_and_all_sound_types():
@@ -144,15 +168,14 @@ def test_runtime_manifest_contains_hashed_assets_and_catalogs():
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
         runtime_dir = root / "runtime"
-        voice_dir = runtime_dir / "packs" / "2026-03_marine_foundations" / "voice"
-        sound_dir = runtime_dir / "packs" / "2026-03_marine_foundations" / "sounds"
-        voice_dir.mkdir(parents=True)
-        sound_dir.mkdir(parents=True)
-        (voice_dir / "preview_elapsed.mp3").write_bytes(b"voice-audio")
-        (sound_dir / "alarm.mp3").write_bytes(b"sound-audio")
-
         manifest = module._load_manifest(MANIFEST_PATH)
         pack = module._select_pack(manifest, None)
+        voice_dir = runtime_dir / "packs" / pack["id"] / "voice"
+        sound_dir = runtime_dir / "packs" / pack["id"] / "sounds"
+        voice_dir.mkdir(parents=True)
+        sound_dir.mkdir(parents=True)
+        (voice_dir / f"{pack['previewElapsed']['filename']}.mp3").write_bytes(b"voice-audio")
+        (sound_dir / f"{pack['soundArsenal'][0]['filename']}.mp3").write_bytes(b"sound-audio")
         payload = module._runtime_manifest(
             pack,
             manifest["defaults"]["entitlement"],

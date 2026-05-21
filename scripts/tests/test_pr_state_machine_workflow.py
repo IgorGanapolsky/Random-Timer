@@ -8,7 +8,8 @@ PR_STATE_MACHINE_WORKFLOW = ROOT / ".github/workflows/pr-state-machine.yml"
 def test_pr_state_machine_reconciles_when_ci_workflow_completes():
     source = PR_STATE_MACHINE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "check_suite:" in source or "pull_request_target:" in source
+    assert "check_suite:" in source
+    assert "types: [completed]" in source
     assert "listPullRequestsAssociatedWithCommit" in source
     assert "workflow_dispatch:" in source or "workflow_dispatch" in source
 

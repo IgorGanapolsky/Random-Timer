@@ -1045,6 +1045,17 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         llms_lines.append(f"- {post['title']}: {base_url}/{post['markdown_url']}")
     (site_root / "llms.txt").write_text("\n".join(llms_lines) + "\n", encoding="utf-8")
 
+    audience_line = "athletes, trainers, coaches, and reaction-drill users"
+    strategy_path = output_root / "keywords" / "strategy.json"
+    if strategy_path.is_file():
+        try:
+            strategy_data = json.loads(strategy_path.read_text(encoding="utf-8"))
+            strategy_audience = str(strategy_data.get("audience") or "").strip()
+            if strategy_audience:
+                audience_line = strategy_audience
+        except (OSError, ValueError):
+            pass
+
     agent_lines = [
         "# Agent Index",
         "",
@@ -1052,7 +1063,7 @@ def build_site(output_root: Path) -> Dict[str, Any]:
         "",
         "## Intent",
         "- Product: Random Tactical Timer",
-        "- Audience: athletes, trainers, coaches, and reaction-drill users",
+        f"- Audience: {audience_line}",
         "- Outcomes: reaction readiness, unpredictability in interval training, repeatable setup",
         "",
         "## Latest posts",

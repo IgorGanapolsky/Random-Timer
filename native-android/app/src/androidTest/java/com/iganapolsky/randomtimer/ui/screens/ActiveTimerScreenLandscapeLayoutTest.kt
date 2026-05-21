@@ -40,9 +40,9 @@ class ActiveTimerScreenLandscapeLayoutTest {
             RandomTimerTheme {
                 ActiveTimerScreen(
                     state = state,
+                    isPro = false,
                     onStop = { stopped = true },
                     onDismissAlarm = {},
-                    onSilence = {},
                     onPause = {},
                     onResume = {},
                     onReset = {},

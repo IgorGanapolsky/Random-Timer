@@ -1,0 +1,145 @@
+name: Flaky Test Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 10 * * 1"
+
+concurrency:
+  group: flaky-test-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-flaky-audit:
+    name: Python Flaky Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest==8.4.2 pytest-cov==7.0.0 pillow==11.3.0 google-auth==2.43.0 requests==2.32.5 PyYAML==6.0.2
+
+      - name: Run Python tests three times
+        id: audit
+        run: |
+          set +e
+          mkdir -p /tmp/flaky-junit/python
+          failed=0
+          for run in 1 2 3; do
+            echo "Python flaky audit run ${run}/3"
+            python -m pytest scripts/tests/ -q --junitxml="/tmp/flaky-junit/python/run-${run}.xml"
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              failed=1
+            fi
+          done
+          echo "failed=${failed}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Summarize Python flaky evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            '/tmp/flaky-junit/python/*.xml' \
+            --json-out /tmp/python-flaky-summary.json \
+            --markdown-out /tmp/python-flaky-summary.md \
+            --github-annotations \
+            --require-files
+          cat /tmp/python-flaky-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Python flaky evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-flaky-evidence
+          path: |
+            /tmp/flaky-junit/python
+            /tmp/python-flaky-summary.json
+            /tmp/python-flaky-summary.md
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Fail on Python flaky audit failures
+        if: steps.audit.outputs.failed != '0'
+        run: exit 1
+
+  android-flaky-audit:
+    name: Android Flaky Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant execute permission
+        run: chmod +x native-android/gradlew
+
+      - name: Create dummy google-services.json for CI
+        run: |
+          cat > native-android/app/google-services.json << 'GSEOF'
+          {
+            "project_info": { "project_number": "000000000000", "project_id": "random-timer-ci", "storage_bucket": "random-timer-ci.appspot.com" },
+            "client": [{ "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": { "package_name": "com.iganapolsky.randomtimer" } }, "api_key": [{ "current_key": "CI_PLACEHOLDER" }] }],
+            "configuration_version": "1"
+          }
+          GSEOF
+
+      - name: Run Android unit tests three times
+        id: audit
+        working-directory: native-android
+        run: |
+          set +e
+          failed=0
+          for run in 1 2 3; do
+            echo "Android flaky audit run ${run}/3"
+            ./gradlew testDebugUnitTest --no-daemon
+            status=$?
+            mkdir -p "/tmp/flaky-junit/android/run-${run}"
+            cp -R app/build/test-results/testDebugUnitTest/. "/tmp/flaky-junit/android/run-${run}/" 2>/dev/null || true
+            if [ "$status" -ne 0 ]; then
+              failed=1
+            fi
+          done
+          echo "failed=${failed}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Summarize Android flaky evidence
+        if: always()
+        run: |
+          python scripts/ci_junit_summary.py \
+            '/tmp/flaky-junit/android/**/*.xml' \
+            --json-out /tmp/android-flaky-summary.json \
+            --markdown-out /tmp/android-flaky-summary.md \
+            --github-annotations \
+            --require-files
+          cat /tmp/android-flaky-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Android flaky evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-flaky-evidence
+          path: |
+            /tmp/flaky-junit/android
+            /tmp/android-flaky-summary.json
+            /tmp/android-flaky-summary.md
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Fail on Android flaky audit failures
+        if: steps.audit.outputs.failed != '0'
+        run: exit 1

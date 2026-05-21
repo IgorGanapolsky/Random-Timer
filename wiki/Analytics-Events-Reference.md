@@ -17,16 +17,34 @@ All events tracked via **PostHog** on both platforms. Firebase Analytics is expl
 | `timer_abandoned` | `TIMER_ABANDONED` | `timerAbandoned` | User cancels before countdown finishes | `target_duration`, `remaining_duration`, `status` |
 | `timer_countdown_finished` | `TIMER_COUNTDOWN_FINISHED` | `timerCountdownFinished` | Countdown reaches zero (before alarm phase) | `target_duration` |
 | `settings_changed` | `SETTINGS_CHANGED` | `settingsChanged` | User modifies timer config | `min_duration`, `max_duration`, `sound_type`, `repeat_enabled` |
-| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown | — |
+| `review_prompt_requested` | `REVIEW_PROMPT_REQUESTED` | `reviewPromptRequested` | In-app review dialog shown after earned completion milestones (3, 10, 25, then every 25) plus cooldown; iOS fires when returning to setup after a session, mirroring Android | — |
 | `write_review_tapped` | `WRITE_REVIEW_TAPPED` | `writeReviewTapped` | User taps "Write Review" | — |
+
+## Paywall & monetization
+
+| Event Name | Android Constant | iOS Constant | Trigger | Properties |
+|-----------|-----------------|-------------|---------|-----------|
+| `paywall_view` | `PAYWALL_VIEW` | `paywallView` | Paywall becomes visible (compatibility; paired with `paywall_viewed`) | `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_viewed` | `PAYWALL_VIEWED` | `paywallViewed` | Same as `paywall_view` | `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_offer_select` | `PAYWALL_OFFER_SELECT` | `paywallOfferSelect` | User selects a plan (including default on open) | `entry_point`, `product_id`, `plan`, `paywall_experiment_variant`, `paywall_value_framing_variant` |
+| `paywall_dismissed` | `PAYWALL_DISMISSED` | `paywallDismissed` | User leaves paywall | `entry_point`, `paywall_value_framing_variant` |
+| `subscription_funnel_step` | `SUBSCRIPTION_FUNNEL_STEP` | `subscriptionFunnelStep` | Ordered funnel for paywall → plan → purchase → trial | `funnel_step` (`paywall_viewed` \| `paywall_plan_selected` \| `purchase_flow_launched` \| `purchase_succeeded` \| `trial_started`), plus `entry_point`, `paywall_experiment_variant`, `paywall_value_framing_variant`, and step-specific keys |
+| `paywall_purchase_attempt` | `PAYWALL_PURCHASE_ATTEMPT` | `paywallPurchaseAttempt` | **Canonical “purchase attempt” for funnels:** emitted **immediately before** native purchase — **Android:** before `launchBillingFlow`; **iOS:** at start of `purchase()` before `proManager.purchase` (StoreKit). Not the same as `paywall_viewed` alone. See `docs/POSTHOG_ANALYTICS.md` § Paywall funnel semantics. | `entry_point`, `product_id` / product fields, `source` (Android), `has_free_trial` (Android) |
+| `paywall_purchase_result` | `PAYWALL_PURCHASE_RESULT` | `paywallPurchaseResult` | Purchase flow completes | `entry_point`, `result` / `success` (platform-specific) |
+| `paywall_purchase_success` | `PAYWALL_PURCHASE_SUCCESS` | `paywallPurchaseSuccess` | Successful purchase | per `ProManager` / billing layer |
+| `paywall_purchase_fail_reason` | `PAYWALL_PURCHASE_FAIL_REASON` | `paywallPurchaseFailReason` | Failed purchase (not user-cancel on iOS where omitted) | `reason`, `product_id`, `entry_point` |
+| `paywall_restore_result` | `PAYWALL_RESTORE_RESULT` | `paywallRestoreResult` | Restore tapped | `entry_point`, `result` |
+| `feature_gate_hit` | `FEATURE_GATE_HIT` | `featureGateHit` | Free user taps a Pro upgrade affordance | `feature` |
+
+**PostHog feature flags:** Boolean **`paywall_default_plan_annual`** — when enabled, annual is pre-selected; `paywall_experiment_variant` is `annual_default` vs `monthly_default`. Multivariate / string **`paywall_value_framing`**: `control` (default) vs `outcomes_first` (alternate paywall headline/subhead; same copy on iOS and Android). See `docs/POSTHOG_ANALYTICS.md` and `docs/OBSERVABILITY.md`.
 
 ## Onboarding Funnel Events (PostHog queries only)
 
-These events are queried by the attribution feedback script but fired implicitly by PostHog lifecycle tracking:
+These events are emitted from app code (`AnalyticsService`); PostHog lifecycle auto-capture is disabled so payloads always include app context.
 
 | Event | Description |
 |-------|-------------|
-| `first_open` | First app launch (PostHog lifecycle) |
+| `first_open` | First app launch (one-shot flag in local storage + `track`) |
 | `first_timer_configured` | First `settings_changed` event for a user |
 | `first_timer_completed` | First `timer_completed` event for a user |
 
@@ -43,18 +61,18 @@ These events are queried by the attribution feedback script but fired implicitly
 |---------|-------|
 | Host | `https://us.i.posthog.com` |
 | API Key | `BuildConfig.POSTHOG_API_KEY` / `Info.plist POSTHOG_API_KEY` |
-| Lifecycle Events | `true` |
+| Lifecycle Events | `false` (emitted manually from app code) |
 | Deep Links | `true` (Android) |
 | Screen Views | `false` (manual tracking) |
 | Distinct ID | `SharedPreferences` (Android) / `UserDefaults` (iOS) |
 
 ## Source Files
 
-- **Android Service:** `native-android/.../analytics/AnalyticsService.kt`
+- **Android Service:** `native-android/.../analytics/AnalyticsService.kt`, `PostHogExperimentKeys.kt`
 - **Android ViewModel:** `native-android/.../ui/viewmodel/TimerViewModel.kt`
-- **Android Navigation:** `native-android/.../ui/navigation/Navigation.kt`
+- **Android Navigation / Paywall:** `native-android/.../ui/navigation/Navigation.kt`, `PaywallSheet.kt`
 - **Android Reviews:** `native-android/.../review/StoreReviewManager.kt`
 - **iOS Service:** `native-ios/.../Services/AnalyticsService.swift`
 - **iOS Timer Manager:** `native-ios/.../Services/TimerManager.swift`
-- **iOS Screens:** `native-ios/.../UI/Screens/TimerSetupScreen.swift`, `ActiveTimerScreen.swift`
+- **iOS Screens:** `native-ios/.../UI/Screens/TimerSetupScreen.swift`, `PaywallSheet.swift`, `ActiveTimerScreen.swift`
 - **iOS Reviews:** `native-ios/.../Services/StoreReviewManager.swift`

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "description": "Documentation mirror of GitHub Actions cron schedules. Not an execution engine — workflows in .github/workflows/ are authoritative.",
+  "budget_cap_usd_monthly": 20,
+  "ceo_gates": [
+    "firebase-signoff",
+    "testflight-signoff",
+    "production-signoff",
+    "play_console_managed_publish",
+    "play_console_iap_products"
+  ],
+  "tasks": [
+    {
+      "id": "wiki-sync",
+      "workflow": ".github/workflows/wiki-sync.yml",
+      "cron": "*/15 * * * *",
+      "ceo_required": false,
+      "artifact": "marketing/data/*.json, GitHub Wiki"
+    },
+    {
+      "id": "executive-metrics",
+      "workflow": ".github/workflows/executive-metrics.yml",
+      "cron": "17 6 * * *",
+      "ceo_required": false,
+      "artifact": "executive-metrics artifact"
+    },
+    {
+      "id": "internal-distribution-push",
+      "workflow": ".github/workflows/internal-distribution.yml",
+      "trigger": "push develop|main",
+      "ceo_required": true,
+      "note": "Approves firebase-signoff and/or testflight-signoff before upload jobs run"
+    },
+    {
+      "id": "ci-pr",
+      "workflow": ".github/workflows/ci.yml",
+      "trigger": "pull_request|push develop|main",
+      "ceo_required": false,
+      "artifact": "app-debug APK"
+    },
+    {
+      "id": "device-tests-pr",
+      "workflow": ".github/workflows/device-tests.yml",
+      "trigger": "pull_request develop|main",
+      "ceo_required": false
+    },
+    {
+      "id": "store-release-watcher",
+      "workflow": ".github/workflows/store-release-watcher.yml",
+      "cron": "*/30 * * * *",
+      "ceo_required": false
+    },
+    {
+      "id": "daily-growth-publishing",
+      "workflow": ".github/workflows/daily-growth-publishing.yml",
+      "cron": "15 13 * * *",
+      "ceo_required": false
+    },
+    {
+      "id": "weekly-analytics",
+      "workflow": ".github/workflows/analytics.yml",
+      "cron": "0 0 * * 0",
+      "ceo_required": false,
+      "artifact": "weekly-paywall-conversion-report"
+    }
+  ]
+}

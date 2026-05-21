@@ -55,8 +55,12 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     private let hasFirstConfiguredKey = "has_first_configured"
     private let hasFirstCompletedKey = "has_first_completed"
     private let hasTrackedApplicationInstalledKey = "has_tracked_application_installed"
+    private let isInternalUserDefaultsKey = "is_internal_user"
     private let utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
     private let appleAdsAttributionFetchedKey = "apple_ads_attribution_fetched"
+
+    private var lastPaywallEntryPoint: String?
+    private var lastPaywallExperimentVariant: String?
 
     // API key loaded from Info.plist (set POSTHOG_API_KEY in build settings)
     private var apiKey: String {
@@ -118,6 +122,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         return true
         #else
         if ProcessInfo.processInfo.arguments.contains("-ui-test-state") { return true }
+        if UserDefaults.standard.bool(forKey: isInternalUserDefaultsKey) { return true }
         return distributionChannelValue != DistributionChannelResolver.appStore
         #endif
     }
@@ -226,6 +231,14 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #endif
     }
 
+    func markAsInternalUser() {
+        UserDefaults.standard.set(true, forKey: isInternalUserDefaultsKey)
+        identify(
+            userId: getOrCreateDistinctId(),
+            properties: ["is_internal": true, "developer_backdoor_used": true]
+        )
+    }
+
     func reset() {
         guard initialized else { return }
 #if canImport(PostHog)
@@ -238,6 +251,70 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #if canImport(PostHog)
         PostHogSDK.shared.flush()
 #endif
+    }
+
+    /// Ensures latest feature flags before opening the paywall (safe no-op when PostHog is off).
+    func reloadPaywallExperimentFlagsIfNeeded() async {
+#if canImport(PostHog)
+        guard initialized else { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            PostHogSDK.shared.reloadFeatureFlags {
+                continuation.resume()
+            }
+        }
+#endif
+    }
+
+    func paywallDefaultAnnualExperimentEnabled() -> Bool {
+#if canImport(PostHog)
+        guard initialized else { return false }
+        return PostHogSDK.shared.isFeatureEnabled(PostHogExperimentKeys.paywallDefaultPlanAnnual)
+#else
+        return false
+#endif
+    }
+
+    func rewardedAdsEnabled() -> Bool {
+#if canImport(PostHog)
+        guard initialized else { return false }
+        return PostHogSDK.shared.isFeatureEnabled(PostHogExperimentKeys.rewardedAdsEnabled)
+#else
+        return false
+#endif
+    }
+
+    func setPaywallSurfaceContext(entryPoint: String, experimentVariant: String) {
+        lastPaywallEntryPoint = entryPoint
+        lastPaywallExperimentVariant = experimentVariant
+    }
+
+    func paywallValueFramingVariant() -> String {
+#if canImport(PostHog)
+        guard initialized else { return PaywallValueFraming.control }
+        if let raw = PostHogSDK.shared.getFeatureFlag(PostHogExperimentKeys.paywallValueFraming) as? String,
+           raw == PaywallValueFraming.outcomesFirst {
+            return PaywallValueFraming.outcomesFirst
+        }
+#endif
+        return PaywallValueFraming.control
+    }
+
+    func trackSubscriptionFunnelStep(_ funnelStep: String, properties: [String: Any] = [:]) {
+        guard initialized else { return }
+        var merged: [String: Any] = [
+            "funnel_step": funnelStep,
+            AnalyticsProperties.paywallValueFramingVariant: paywallValueFramingVariant(),
+        ]
+        if let ep = lastPaywallEntryPoint {
+            merged[AnalyticsProperties.entryPoint] = ep
+        }
+        if let ev = lastPaywallExperimentVariant {
+            merged[AnalyticsProperties.paywallExperimentVariant] = ev
+        }
+        for (k, v) in properties {
+            merged[k] = v
+        }
+        track(AnalyticsEvents.subscriptionFunnelStep, properties: merged)
     }
 
     // MARK: - UTM Attribution
@@ -418,8 +495,42 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
     }
 }
 
+/// PostHog feature-flag keys (parity with Android `PostHogExperimentKeys`).
+enum PostHogExperimentKeys {
+    static let paywallDefaultPlanAnnual = "paywall_default_plan_annual"
+    /// Multivariate / string flag: `control` vs `outcomes_first` (paywall copy).
+    static let paywallValueFraming = "paywall_value_framing"
+    /// P1: rewarded video on free tier. Default off until AdMob publisher account ships.
+    static let rewardedAdsEnabled = "rewarded_ads_enabled"
+}
+
+enum PaywallValueFraming {
+    static let control = "control"
+    static let outcomesFirst = "outcomes_first"
+}
+
+enum SubscriptionFunnelSteps {
+    static let paywallViewed = "paywall_viewed"
+    static let paywallPlanSelected = "paywall_plan_selected"
+    static let purchaseFlowLaunched = "purchase_flow_launched"
+    static let purchaseSucceeded = "purchase_succeeded"
+    static let trialStarted = "trial_started"
+}
+
+enum PaywallExperimentVariants {
+    static let monthlyDefault = "monthly_default"
+    static let annualDefault = "annual_default"
+
+    static func label(defaultAnnual: Bool) -> String {
+        defaultAnnual ? annualDefault : monthlyDefault
+    }
+}
+
 // Event names for consistency
 enum AnalyticsEvents {
+    static let paywallView = "paywall_view"
+    static let paywallOfferSelect = "paywall_offer_select"
+    static let paywallPurchaseFailReason = "paywall_purchase_fail_reason"
     static let applicationInstalled = "Application Installed"
     static let applicationOpened = "Application Opened"
     static let timerStarted = "timer_started"
@@ -442,11 +553,17 @@ enum AnalyticsEvents {
     static let paywallPurchaseSuccess = "paywall_purchase_success"
     static let paywallPurchaseResult = "paywall_purchase_result"
     static let paywallRestoreResult = "paywall_restore_result"
+    static let billingProductCatalogStatus = "billing_product_catalog_status"
 
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
     static let featureGateHit = "feature_gate_hit"
+    static let qualifiedTrainingPaywallEligible = "qualified_training_paywall_eligible"
+    static let rewardedAdRequested = "rewarded_ad_requested"
+    static let rewardedAdCompleted = "rewarded_ad_completed"
+    static let rewardedAdUnlock = "rewarded_ad_unlock"
     static let paywallGateFirstTimer = "paywall_gate_first_timer"
+    static let trainingPresetApplied = "training_preset_applied"
 
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
@@ -458,6 +575,7 @@ enum AnalyticsEvents {
     // Purchase
     static let purchaseFailed = "purchase_failed"
     static let freeTrialStarted = "free_trial_started"
+    static let subscriptionFunnelStep = "subscription_funnel_step"
 
     // Screen engagement
     static let screenDwellTime = "screen_dwell_time"
@@ -470,8 +588,12 @@ enum AnalyticsEvents {
 
 enum AnalyticsProperties {
     static let distributionChannel = "distribution_channel"
+    static let settingName = "setting_name"
+    static let settingValue = "setting_value"
+    static let previousValue = "previous_value"
     static let entryPoint = "entry_point"
     static let result = "result"
+    static let success = "success"
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"
@@ -481,6 +603,7 @@ enum AnalyticsProperties {
     static let trialVerified = "trial_verified"
     static let gender = "gender"
     static let feature = "feature"
+    static let presetId = "preset_id"
     static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"
@@ -492,6 +615,13 @@ enum AnalyticsProperties {
     static let screen = "screen"
     static let reason = "reason"
     static let revenue = "revenue"
+    static let paywallExperimentVariant = "paywall_experiment_variant"
+    static let paywallValueFramingVariant = "paywall_value_framing_variant"
+    static let paywallSelectionSource = "paywall_selection_source"
+    static let status = "status"
+    static let availableProductIds = "available_product_ids"
+    static let missingProductIds = "missing_product_ids"
+    static let productCount = "product_count"
 }
 
 enum AnalyticsValues {

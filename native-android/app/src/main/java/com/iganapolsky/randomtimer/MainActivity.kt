@@ -3,6 +3,7 @@ package com.iganapolsky.randomtimer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,21 +12,28 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.notifications.MonthlyContentWorker
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
-import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
+import com.iganapolsky.randomtimer.updates.InAppUpdateManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var analyticsService: AnalyticsService
+    @Inject lateinit var inAppUpdateManager: InAppUpdateManager
+    private var latestDeepLinkUri by mutableStateOf<Uri?>(null)
 
     private val notificationPermissionLauncher =
         registerForActivityResult(
@@ -46,7 +54,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         requestNotificationPermission()
         handleAlarmNotificationTap(intent)
-        handleDeepLink(intent)
+        latestDeepLinkUri = handleDeepLink(intent)
+
+        inAppUpdateManager.checkForUpdates(this)
+        MonthlyContentWorker.schedule(this)
 
         // User is back — cancel any pending re-engagement reminders
         ReengagementScheduler.cancel(this)
@@ -57,7 +68,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = TimerColors.BackgroundDark,
                 ) {
-                    RandomTimerNavHost()
+                    RandomTimerNavHost(pendingDeepLinkUri = latestDeepLinkUri?.toString())
                 }
             }
         }
@@ -66,7 +77,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleAlarmNotificationTap(intent)
-        handleDeepLink(intent)
+        latestDeepLinkUri = null
+        latestDeepLinkUri = handleDeepLink(intent)
     }
 
     override fun onResume() {
@@ -113,9 +125,10 @@ class MainActivity : ComponentActivity() {
         startService(intent)
     }
 
-    private fun handleDeepLink(intent: Intent?) {
-        val uri = intent?.data ?: return
+    private fun handleDeepLink(intent: Intent?): Uri? {
+        val uri = intent?.data ?: return null
         analyticsService.trackDeepLink(uri)
+        return uri
     }
 
     private fun requestNotificationPermission() {

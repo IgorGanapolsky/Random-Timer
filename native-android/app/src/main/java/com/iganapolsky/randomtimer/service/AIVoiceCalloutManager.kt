@@ -78,6 +78,13 @@ private object VoicePreviewSampleCatalog {
             "cmd_reset_and_attack",
             "cmd_sharp_movement_sharp_focus",
             "cmd_stay_in_the_fight",
+            "cmd_push_pace",
+            "cmd_keep_tempo_high",
+            "cmd_finish_rep_keep_pushing",
+            "cmd_drive_forward",
+            "cmd_own_this_rep",
+            "cmd_pick_it_up",
+            "cmd_strong_feet_strong_pace",
         )
 
     const val maleElapsedFilename = "preview_elapsed"
@@ -85,7 +92,14 @@ private object VoicePreviewSampleCatalog {
     val femaleCommandFilenames =
         listOf(
             "female_cmd_move_with_a_purpose",
+            "female_cmd_stay_locked_in",
             "female_cmd_no_hesitation_move",
+            "female_cmd_sound_off_and_drive",
+            "female_cmd_snap_back_and_drive",
+            "female_cmd_stay_disciplined",
+            "female_cmd_keep_your_bearing",
+            "female_cmd_reset_and_attack",
+            "female_cmd_sharp_movement_sharp_focus",
             "female_cmd_stay_in_the_fight",
             "female_cmd_push_pace",
             "female_cmd_keep_tempo_high",
@@ -99,11 +113,98 @@ private object VoicePreviewSampleCatalog {
     const val femaleElapsedFilename = "female_preview_elapsed"
 }
 
+internal val approvedMaleVoiceFilenames =
+    setOf(
+        "preview_elapsed",
+        "elapsed_60s",
+        "elapsed_120s",
+        "elapsed_180s",
+        "elapsed_240s",
+        "elapsed_300s",
+        "elapsed_420s",
+        "elapsed_540s",
+        "elapsed_600s",
+        "cmd_move_with_a_purpose",
+        "cmd_stay_locked_in",
+        "cmd_no_hesitation_move",
+        "cmd_sound_off_and_drive",
+        "cmd_snap_back_and_drive",
+        "cmd_stay_disciplined",
+        "cmd_keep_your_bearing",
+        "cmd_reset_and_attack",
+        "cmd_sharp_movement_sharp_focus",
+        "cmd_stay_in_the_fight",
+        "cmd_push_pace",
+        "cmd_keep_tempo_high",
+        "cmd_finish_rep_keep_pushing",
+        "cmd_drive_forward",
+        "cmd_own_this_rep",
+        "cmd_pick_it_up",
+        "cmd_strong_feet_strong_pace",
+    )
+
+internal val approvedFemaleVoiceFilenames =
+    setOf(
+        "female_preview_elapsed",
+        "female_elapsed_60s",
+        "female_elapsed_120s",
+        "female_elapsed_180s",
+        "female_elapsed_240s",
+        "female_elapsed_300s",
+        "female_elapsed_420s",
+        "female_elapsed_540s",
+        "female_elapsed_600s",
+        "female_cmd_move_with_a_purpose",
+        "female_cmd_stay_locked_in",
+        "female_cmd_no_hesitation_move",
+        "female_cmd_sound_off_and_drive",
+        "female_cmd_snap_back_and_drive",
+        "female_cmd_stay_disciplined",
+        "female_cmd_keep_your_bearing",
+        "female_cmd_reset_and_attack",
+        "female_cmd_sharp_movement_sharp_focus",
+        "female_cmd_stay_in_the_fight",
+        "female_cmd_push_pace",
+        "female_cmd_keep_tempo_high",
+        "female_cmd_finish_rep_keep_pushing",
+        "female_cmd_drive_forward",
+        "female_cmd_own_this_rep",
+        "female_cmd_pick_it_up",
+        "female_cmd_strong_feet_strong_pace",
+    )
+
+internal fun approvedVoiceFilename(
+    filename: String,
+    gender: VoiceGender,
+    fallbackFilename: String = "cmd_move_with_a_purpose",
+): String =
+    when (gender) {
+        VoiceGender.FEMALE -> {
+            val gendered = genderedVoiceFilename(filename, gender)
+            if (gendered in approvedFemaleVoiceFilenames) {
+                gendered
+            } else {
+                val fallback = genderedVoiceFilename(fallbackFilename, gender)
+                if (fallback in approvedFemaleVoiceFilenames) fallback else "female_cmd_move_with_a_purpose"
+            }
+        }
+        VoiceGender.MALE -> {
+            if (filename in approvedMaleVoiceFilenames) {
+                filename
+            } else {
+                fallbackFilename.takeIf { it in approvedMaleVoiceFilenames } ?: "cmd_move_with_a_purpose"
+            }
+        }
+    }
+
 private val fallbackVoiceCueCatalog =
     VoiceCueCatalog(
         previewElapsed = VoiceCue(filename = "preview_elapsed", text = "Thirty seconds elapsed. Move with a purpose."),
         fallbackCommandFilename = "cmd_move_with_a_purpose",
-        elapsedCues = listOf(ElapsedVoiceCue(second = 30, filename = "elapsed_30s", text = "Thirty seconds elapsed. Move with a purpose.")),
+        elapsedCues =
+            listOf(
+                ElapsedVoiceCue(second = 60, filename = "elapsed_60s", text = "One minute elapsed. Keep pressure on."),
+            ),
         commandCues =
             listOf(
                 VoiceCue(filename = "cmd_move_with_a_purpose", text = "Move with a purpose."),
@@ -184,11 +285,17 @@ internal fun runtimeVoiceCueForElapsedSecond(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
     catalog: VoiceCueCatalog,
-): VoiceCue? {
-    if (elapsedSeconds == lastElapsedMilestone) return null
-    return catalog.elapsedCueBySecond[elapsedSeconds]?.let { VoiceCue(filename = it.filename, text = it.text) }
-}
+): VoiceCue? =
+    catalog.elapsedCues
+        .asSequence()
+        .filter { it.second > lastElapsedMilestone && it.second <= elapsedSeconds }
+        .maxByOrNull { it.second }
+        ?.let { VoiceCue(filename = it.filename, text = it.text) }
 
+/**
+ * Returns a bundled "time elapsed" announcement only on full-minute marks (60, 120, …).
+ * Sub-minute rows in JSON are ignored here so command coaching stays on its own cadence.
+ */
 internal fun runtimeVoiceCueForElapsedMark(
     elapsedSeconds: Int,
     lastElapsedMilestone: Int,
@@ -201,7 +308,12 @@ internal fun runtimeVoiceCueForElapsedMark(
         elapsedSeconds = elapsedSeconds,
         lastElapsedMilestone = lastElapsedMilestone,
         catalog = catalog,
-    )
+    )?.takeIf { cue ->
+        catalog.elapsedCues
+            .firstOrNull { it.filename == cue.filename }
+            ?.second
+            ?.rem(60) == 0
+    }
 }
 
 internal fun nextCommandCue(
@@ -222,6 +334,36 @@ internal fun nextCommandCue(
         return candidate
     }
     return cues[(boundedIndex + 1) % cues.size]
+}
+
+internal fun normalizedVoiceCueText(text: String): String =
+    text
+        .trim()
+        .lowercase(Locale.US)
+        .replace(Regex("\\s+"), " ")
+
+internal fun commandCuePool(
+    baseline: List<VoiceCue>,
+    usedFilenames: Set<String>,
+    usedTexts: Set<String>,
+    lastFilename: String?,
+    lastText: String?,
+): List<VoiceCue> {
+    val fresh =
+        baseline.filter {
+            it.filename !in usedFilenames &&
+                normalizedVoiceCueText(it.text) !in usedTexts
+        }
+    if (fresh.isNotEmpty()) {
+        return fresh
+    }
+
+    val lastNormalizedText = lastText?.let(::normalizedVoiceCueText)
+    return baseline
+        .filter {
+            it.filename != lastFilename &&
+                normalizedVoiceCueText(it.text) != lastNormalizedText
+        }.ifEmpty { baseline }
 }
 
 internal fun nextPreviewCueFilename(
@@ -260,8 +402,8 @@ internal fun nextPreviewCueFilename(
 
 internal fun initialFollowupCommandCueSecond(totalDurationSeconds: Int): Int =
     when {
-        totalDurationSeconds <= 29 -> Int.MAX_VALUE
-        else -> 15
+        totalDurationSeconds <= 30 -> Int.MAX_VALUE
+        else -> 30
     }
 
 @Singleton
@@ -275,7 +417,9 @@ class AIVoiceCalloutManager
         private var mediaPlayer: MediaPlayer? = null
         private var currentVolume: Float = 1.0f
         private var lastCommandCueFilename: String? = null
+        private var lastCommandCueText: String? = null
         private val usedCommandCueFilenames = mutableSetOf<String>()
+        private val usedCommandCueTexts = mutableSetOf<String>()
         private val lastPreviewCommandFilenameByGender = mutableMapOf<VoiceGender, String?>()
         private val usedPreviewCommandFilenamesByGender =
             mutableMapOf(
@@ -314,9 +458,9 @@ class AIVoiceCalloutManager
             val catalog = packStore.voiceCatalog()
             val mappedFilename = catalog.filenameByText[text]
             val baseFilename = mappedFilename ?: catalog.fallbackCommandCue.filename
-            val filename = genderedVoiceFilename(baseFilename, currentGender)
+            val filename = approvedVoiceFilename(baseFilename, currentGender, catalog.fallbackCommandCue.filename)
             val directResId = context.resources.getIdentifier(filename, "raw", context.packageName)
-            val fallbackFilename = genderedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
+            val fallbackFilename = approvedVoiceFilename(catalog.fallbackCommandCue.filename, currentGender)
             val fallbackResId = context.resources.getIdentifier(fallbackFilename, "raw", context.packageName)
             val resId = directResId.takeIf { it != 0 } ?: fallbackResId.takeIf { it != 0 } ?: voiceResIdOrFallback(context, text, catalog)
             if (mappedFilename == null) {
@@ -330,10 +474,13 @@ class AIVoiceCalloutManager
             stopPlayback()
             lastElapsedMilestone = 0
             lastCommandCueFilename = null
+            lastCommandCueText = null
             usedCommandCueFilenames.clear()
+            usedCommandCueTexts.clear()
             lastPreviewCommandFilenameByGender.clear()
             usedPreviewCommandFilenamesByGender.values.forEach { it.clear() }
             nextCommandCueAt = 0
+            lastCueFiredAtElapsed = -1
             currentGender = VoiceGender.MALE
         }
 
@@ -489,11 +636,16 @@ class AIVoiceCalloutManager
             return true
         }
 
+        private var lastCueFiredAtElapsed = -1
+
         fun triggerCallout(elapsedSeconds: Int) {
+            if (lastCueFiredAtElapsed >= 0 && elapsedSeconds - lastCueFiredAtElapsed < 30) return
+
             val catalog = packStore.voiceCatalog()
             runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {
                 speak(it.text)
                 lastElapsedMilestone = elapsedSeconds
+                lastCueFiredAtElapsed = elapsedSeconds
                 if (nextCommandCueAt <= elapsedSeconds) {
                     nextCommandCueAt = elapsedSeconds + 30
                 }
@@ -503,7 +655,9 @@ class AIVoiceCalloutManager
                 val cue = randomCommandCue()
                 speak(cue.text)
                 lastCommandCueFilename = cue.filename
+                lastCommandCueText = cue.text
                 nextCommandCueAt = elapsedSeconds + 30
+                lastCueFiredAtElapsed = elapsedSeconds
             }
         }
 
@@ -519,22 +673,48 @@ class AIVoiceCalloutManager
 
         private fun randomCommandCue(): VoiceCue {
             val catalog = packStore.voiceCatalog()
-            val available = catalog.commandCues.filter { it.filename !in usedCommandCueFilenames }
-            val pool =
-                available.ifEmpty {
-                    // All cues used — reset and exclude only the last one
-                    usedCommandCueFilenames.clear()
-                    catalog.commandCues
-                        .filter { it.filename != lastCommandCueFilename }
-                        .ifEmpty { catalog.commandCues }
-                }
+            // Only consider cues whose audio is actually resolvable (bundled raw or remote pack).
+            // Without this filter, missing cues would fall back to `cmd_move_with_a_purpose` at
+            // playback time and the user hears the same line on repeat while dedup thinks
+            // different cues were picked.
+            val playable = catalog.commandCues.filter { cueHasAudio(it.filename) }
+            val baseline = if (playable.isNotEmpty()) playable else catalog.commandCues
+            var pool =
+                commandCuePool(
+                    baseline = baseline,
+                    usedFilenames = usedCommandCueFilenames,
+                    usedTexts = usedCommandCueTexts,
+                    lastFilename = lastCommandCueFilename,
+                    lastText = lastCommandCueText,
+                )
+            if (pool.size == baseline.size && usedCommandCueFilenames.isNotEmpty()) {
+                usedCommandCueFilenames.clear()
+                usedCommandCueTexts.clear()
+                pool =
+                    commandCuePool(
+                        baseline = baseline,
+                        usedFilenames = usedCommandCueFilenames,
+                        usedTexts = usedCommandCueTexts,
+                        lastFilename = lastCommandCueFilename,
+                        lastText = lastCommandCueText,
+                    )
+            }
             val cue =
                 nextCommandCue(pool, lastCommandCueFilename) { upperBound ->
                     Random.nextInt(upperBound)
                 }
             lastCommandCueFilename = cue.filename
+            lastCommandCueText = cue.text
             usedCommandCueFilenames.add(cue.filename)
+            usedCommandCueTexts.add(normalizedVoiceCueText(cue.text))
             return cue
+        }
+
+        private fun cueHasAudio(filename: String): Boolean {
+            if (currentGender == VoiceGender.MALE && filename !in approvedMaleVoiceFilenames) return false
+            val gendered = approvedVoiceFilename(filename, currentGender)
+            if (packStore.voiceFile(gendered) != null) return true
+            return context.resources.getIdentifier(gendered, "raw", context.packageName) != 0
         }
 
         fun shutdown() {

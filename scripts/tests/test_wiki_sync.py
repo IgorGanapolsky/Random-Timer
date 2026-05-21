@@ -171,6 +171,42 @@ def test_inject_content(data_dir: Path, dashboard_template: str) -> None:
     assert "Total Posts Published | 1" in result
 
 
+def test_inject_paywall_funnel(data_dir: Path, dashboard_template: str) -> None:
+    (data_dir / "paywall_conversion_report.json").write_text(
+        json.dumps(
+            {
+                "generated_at": "2026-05-19T16:26:51+00:00",
+                "status": "ok",
+                "funnel": {
+                    "views": 361,
+                    "offer_selects": 112,
+                    "purchase_attempts": 7,
+                    "purchase_successes": 0,
+                    "attempt_to_success_rate": 0.0,
+                },
+                "top_failure_reasons": [{"reason": "user_cancelled", "count": 7}],
+                "product_catalog_failures": [
+                    {
+                        "platform": "android",
+                        "product_id": "elite_tactical_monthly",
+                        "failures": 500,
+                        "users": 117,
+                    }
+                ],
+            }
+        )
+    )
+    template = (
+        dashboard_template
+        + "\n<!-- PAYWALL_START -->\nplaceholder\n<!-- PAYWALL_END -->\n"
+    )
+    result = inject_dashboard_data(template, data_dir)
+    assert "Paywall Views | 361" in result
+    assert "Purchase Attempts | 7" in result
+    assert "user_cancelled (7)" in result
+    assert "elite_tactical_monthly (500)" in result
+
+
 def test_inject_referral(data_dir: Path, dashboard_template: str) -> None:
     result = inject_dashboard_data(dashboard_template, data_dir)
     assert "Reddit Posts | 2" in result

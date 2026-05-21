@@ -32,6 +32,8 @@ sys.path.insert(0, str(SCRIPTS))
 from repo_dotenv import load_repo_dotenv  # noqa: E402
 
 ZERNIO_BASE = "https://zernio.com/api/v1"
+TEXT_ONLY_FALLBACK_PLATFORMS = {"bluesky", "linkedin", "reddit", "threads", "twitter", "x"}
+SHORT_TEXT_CTA_PLATFORMS = {"bluesky", "threads", "twitter", "x"}
 
 
 def zernio_api_key() -> str:
@@ -128,6 +130,64 @@ def _parse_publish_accounts(raw: str) -> Tuple[Optional[List[Dict[str, str]]], O
             return None, "replace placeholder accountId values in ZERNIO_PUBLISH_ACCOUNTS"
         out.append({"platform": pid, "accountId": aid})
     return out, None
+
+
+def _account_id(account: Dict[str, Any]) -> str:
+    return str(account.get("accountId") or account.get("account_id") or account.get("_id") or account.get("id") or "").strip()
+
+
+def _platform_id(account: Dict[str, Any]) -> str:
+    return str(account.get("platform") or account.get("platformId") or account.get("platform_id") or "").strip()
+
+
+def _publish_accounts_from_current_accounts(
+    accounts: List[Dict[str, Any]],
+    *,
+    allowed_platforms: Optional[set[str]] = None,
+) -> List[Dict[str, str]]:
+    platforms: List[Dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    allowed = allowed_platforms or TEXT_ONLY_FALLBACK_PLATFORMS
+    for account in accounts:
+        if not isinstance(account, dict):
+            continue
+        platform = _platform_id(account)
+        account_id = _account_id(account)
+        if not platform or not account_id:
+            continue
+        if platform.lower() not in allowed:
+            continue
+        key = (platform, account_id)
+        if key in seen:
+            continue
+        platforms.append({"platform": platform, "accountId": account_id})
+        seen.add(key)
+    return platforms
+
+
+def _filter_platforms(platforms: List[Dict[str, str]], allowed_platforms: set[str]) -> List[Dict[str, str]]:
+    out: List[Dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for platform in platforms:
+        name = str(platform.get("platform") or "").strip()
+        account_id = str(platform.get("accountId") or "").strip()
+        if not name or not account_id:
+            continue
+        if name.lower() not in allowed_platforms:
+            continue
+        key = (name, account_id)
+        if key in seen:
+            continue
+        out.append({"platform": name, "accountId": account_id})
+        seen.add(key)
+    return out
+
+
+def _stale_account_error(err: Optional[str]) -> bool:
+    if not err:
+        return False
+    lowered = err.lower()
+    return "do not belong to this user" in lowered or ("account" in lowered and "403" in lowered)
 
 
 def _recent_zernio_publish_for_slug(log_path: Path, slug: str, hours: int = 36) -> bool:
@@ -289,12 +349,145 @@ def cmd_sync_latest(args: argparse.Namespace) -> int:
         platforms,
         publish_now=True,
     )
+    fallback_reason = None
+    if _stale_account_error(err):
+        current_accounts, accounts_err = zernio_list_accounts(key)
+        if accounts_err:
+            fallback_reason = f"fallback_account_list_failed:{accounts_err}"
+        else:
+            fallback_platforms = _publish_accounts_from_current_accounts(current_accounts or [])
+            if fallback_platforms:
+                payload, retry_err = zernio_create_post(
+                    key,
+                    text,
+                    fallback_platforms,
+                    publish_now=True,
+                )
+                fallback_reason = "retried_with_current_text_accounts"
+                err = retry_err
+                platforms = fallback_platforms
+            else:
+                fallback_reason = "fallback_found_no_text_accounts"
     row = {
         "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
         "slug": post.slug,
         "channel": "zernio",
         "status": "published" if not err else "error",
         "reason": err,
+        "fallback": fallback_reason,
+        "platform_count": len(platforms or []),
+        "response": payload,
+    }
+    _append_jsonl(log_path, row)
+    print(json.dumps(row, indent=2, default=str))
+    return 0 if not err else 1
+
+
+def cmd_post_text(args: argparse.Namespace) -> int:
+    load_repo_dotenv(Path(args.repo_root).resolve())
+    output_root = Path(args.output_root).resolve()
+    log_path = output_root / "data" / "zernio_orchestration.jsonl"
+
+    key = zernio_api_key()
+    if not key:
+        print(json.dumps({"status": "skipped", "reason": "missing ZERNIO_API_KEY or ZERNIO_TOKEN"}))
+        return 0
+
+    content = str(args.content or "").strip()
+    if not content:
+        print(json.dumps({"status": "error", "reason": "missing --content"}))
+        return 2
+
+    raw_allowed = [p.strip().lower() for p in str(args.platforms or "").split(",") if p.strip()]
+    allowed_platforms = set(raw_allowed) if raw_allowed else SHORT_TEXT_CTA_PLATFORMS
+
+    platforms, perr = _parse_publish_accounts(os.environ.get("ZERNIO_PUBLISH_ACCOUNTS", ""))
+    if perr:
+        current_accounts, accounts_err = zernio_list_accounts(key)
+        if accounts_err:
+            row = {
+                "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+                "slug": args.slug,
+                "channel": "zernio_custom",
+                "status": "error",
+                "reason": f"{perr}; account_list_failed:{accounts_err}",
+            }
+            _append_jsonl(log_path, row)
+            print(json.dumps(row, indent=2))
+            return 1
+        platforms = _publish_accounts_from_current_accounts(
+            current_accounts or [],
+            allowed_platforms=allowed_platforms,
+        )
+        fallback_reason = "used_current_accounts"
+    else:
+        platforms = _filter_platforms(platforms or [], allowed_platforms)
+        fallback_reason = None
+
+    if not platforms:
+        row = {
+            "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+            "slug": args.slug,
+            "channel": "zernio_custom",
+            "status": "error",
+            "reason": "no_matching_text_accounts",
+            "allowed_platforms": sorted(allowed_platforms),
+        }
+        _append_jsonl(log_path, row)
+        print(json.dumps(row, indent=2))
+        return 1
+
+    if args.dry_run:
+        row = {
+            "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+            "slug": args.slug,
+            "channel": "zernio_custom",
+            "status": "dry_run",
+            "preview_chars": len(content),
+            "platform_count": len(platforms),
+            "allowed_platforms": sorted(allowed_platforms),
+        }
+        _append_jsonl(log_path, row)
+        print(json.dumps(row, indent=2))
+        return 0
+
+    payload, err = zernio_create_post(
+        key,
+        content,
+        platforms,
+        publish_now=True,
+    )
+    if _stale_account_error(err):
+        current_accounts, accounts_err = zernio_list_accounts(key)
+        if accounts_err:
+            fallback_reason = f"fallback_account_list_failed:{accounts_err}"
+        else:
+            fallback_platforms = _publish_accounts_from_current_accounts(
+                current_accounts or [],
+                allowed_platforms=allowed_platforms,
+            )
+            if fallback_platforms:
+                payload, err = zernio_create_post(
+                    key,
+                    content,
+                    fallback_platforms,
+                    publish_now=True,
+                )
+                fallback_reason = "retried_with_current_text_accounts"
+                platforms = fallback_platforms
+            else:
+                fallback_reason = "fallback_found_no_matching_text_accounts"
+
+    row = {
+        "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "slug": args.slug,
+        "channel": "zernio_custom",
+        "status": "published" if not err else "error",
+        "reason": err,
+        "fallback": fallback_reason,
+        "content_chars": len(content),
+        "platform_count": len(platforms or []),
+        "allowed_platforms": sorted(allowed_platforms),
         "response": payload,
     }
     _append_jsonl(log_path, row)
@@ -311,6 +504,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     p_sync.add_argument("--output-root", type=Path, default=REPO_ROOT / "marketing")
     p_sync.add_argument("--dry-run", action="store_true", help="Never POST; log dry_run only")
+    p_post = sub.add_parser("post-text", help="Publish exact text to short-form text accounts via Zernio")
+    p_post.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    p_post.add_argument("--output-root", type=Path, default=REPO_ROOT / "marketing")
+    p_post.add_argument("--content", required=True, help="Exact post text to publish")
+    p_post.add_argument("--slug", default=f"custom-buyer-cta-{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%d%H%M%S')}")
+    p_post.add_argument("--platforms", default="twitter,threads,bluesky", help="Comma-separated allowed platforms")
+    p_post.add_argument("--dry-run", action="store_true", help="Never POST; log dry_run only")
     return p
 
 
@@ -321,6 +521,8 @@ def main() -> int:
         return cmd_health(args)
     if args.command == "sync-latest":
         return cmd_sync_latest(args)
+    if args.command == "post-text":
+        return cmd_post_text(args)
     return 1
 
 

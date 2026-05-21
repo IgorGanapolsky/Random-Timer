@@ -27,6 +27,7 @@ from pathlib import Path
 
 # Reuse PostHog query helpers from existing infra
 sys.path.append(str(Path(__file__).parent.resolve()))
+from repo_dotenv import load_repo_dotenv
 from store_downloads_snapshot import LIVE_EVENTS_PREDICATE, posthog_query, query_rows, query_scalar
 
 
@@ -98,7 +99,11 @@ def compute_abandon_rate(key: str, project_id: str, errors: list) -> dict:
 
 
 def compute_monetization_funnel(key: str, project_id: str, errors: list) -> dict:
-    """Paywall funnel: viewed -> attempted -> succeeded."""
+    """Paywall funnel: viewed -> attempted -> succeeded.
+
+    ``attempted`` counts ``paywall_purchase_attempt`` = start of native purchase path
+    (StoreKit / Play Billing), not paywall impression. See ``docs/POSTHOG_ANALYTICS.md``.
+    """
     viewed = query_scalar(
         f"""
         SELECT count(DISTINCT person_id)
@@ -129,7 +134,7 @@ def compute_monetization_funnel(key: str, project_id: str, errors: list) -> dict
         FROM events
         WHERE (
             event = 'paywall_purchase_success'
-            OR (event = 'paywall_purchase_result' AND lower(coalesce(properties.success, '')) = 'true')
+            OR (event = 'paywall_purchase_result' AND lower(coalesce(toString(properties.success), '')) = 'true')
         )
           AND timestamp > now() - interval 30 day
           AND {LIVE_EVENTS_PREDICATE}
@@ -203,6 +208,7 @@ def compute_wqtu_trend(key: str, project_id: str, errors: list) -> list:
 
 
 def run(repo_root: Path, alert_threshold: int = 0) -> dict:
+    load_repo_dotenv(repo_root)
     output_path = repo_root / "marketing" / "data" / "wqtu_health.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

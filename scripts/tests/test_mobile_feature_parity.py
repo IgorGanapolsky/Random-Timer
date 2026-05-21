@@ -31,6 +31,11 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _android_paywall_em_dash_normalized(source: str) -> str:
+    """Kotlin may use ASCII ``\\u2014`` escapes; Swift sources typically use literal em dashes."""
+    return source.replace("\\u2014", "\u2014")
+
+
 def test_default_timer_range_is_5_to_30_on_both_platforms():
     """Activation-first default range in TimerConfig.DEFAULT / Swift defaults (free-tier cap remains 300s)."""
     android_source = _read(ANDROID_TIMER_CONFIG)
@@ -59,9 +64,9 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Stop Training With the Brakes On" in android_source and "holdForHiddenUnlock" in android_source
+    assert "Unlock Full Fight-Ready Training" in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
-    assert "Stop Training With the Brakes On" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "Unlock Full Fight-Ready Training" in ios_paywall and "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
@@ -73,16 +78,35 @@ def test_paywall_single_offer_parity():
     ios_paywall = _read(IOS_PAYWALL)
 
     assert "Elite Tactical" not in android_paywall
-    assert "Stop Training With the Brakes On" in android_paywall
-    assert "Stop Training With the Brakes On" in ios_paywall
-    assert "Go unlimited" in android_paywall
-    assert "Go unlimited" in ios_paywall
-    assert "Cancel anytime" in android_paywall
+    assert "Unlock Full Fight-Ready Training" in android_paywall
+    assert "Unlock Full Fight-Ready Training" in ios_paywall
+    assert "Unlock 60-minute random windows" in android_paywall
+    assert "Unlock 60-minute random windows" in ios_paywall
     assert "Start Monthly" in android_paywall
     assert "Start Annual" in android_paywall
     assert "Start Monthly" in ios_paywall
     assert "Start Annual" in ios_paywall
     assert "Unlock Lifetime" in ios_paywall
+
+
+def test_paywall_purchase_cta_reemits_current_plan_selection_before_purchase():
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+
+    android_selection = 'onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")'
+    assert android_selection in android_paywall
+    assert "onPurchase(purchaseProductId)" in android_paywall
+    assert android_paywall.index(android_selection) < android_paywall.index(
+        "onPurchase(purchaseProductId)"
+    )
+
+    ios_selection = 'selectionSource: "primary_cta"'
+    assert "trackOfferSelected(" in ios_paywall
+    assert ios_selection in ios_paywall
+    assert "await purchase(productID: selectedProductID)" in ios_paywall
+    assert ios_paywall.index(ios_selection) < ios_paywall.index(
+        "await purchase(productID: selectedProductID)"
+    )
 
 
 def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions():
@@ -94,6 +118,31 @@ def test_ios_paywall_uses_scrollable_large_presentation_to_avoid_clipped_actions
     assert "ScrollView" in ios_paywall
     assert ".scrollIndicators(.hidden)" in ios_paywall
     assert ".presentationDetents([.large])" in ios_setup
+
+
+def test_paywall_sticky_chrome_keeps_primary_cta_outside_scroll():
+    """Sticky footer must hold CTA + restore + legal links so long content cannot strand the purchase path."""
+    android_paywall = _read(ANDROID_PAYWALL)
+    ios_paywall = _read(IOS_PAYWALL)
+
+    assert "Scaffold(" in android_paywall
+    assert "bottomBar = {" in android_paywall
+    assert ".verticalScroll(" in android_paywall
+    assert android_paywall.index("bottomBar = {") < android_paywall.index("PrimaryButton(")
+    assert "ModalBottomSheet(" in android_paywall
+    for label in ("Restore purchase", "Privacy Policy", "Start Monthly", "Start Annual"):
+        assert label in android_paywall
+
+    assert "paywallStickyChrome" in ios_paywall
+    body_start = ios_paywall.find("var body: some View")
+    assert body_start != -1
+    body_region = ios_paywall[body_start:]
+    scroll_at = body_region.find("ScrollView")
+    chrome_at = body_region.find("paywallStickyChrome")
+    assert scroll_at != -1 and chrome_at != -1 and scroll_at < chrome_at
+    assert "PrimaryButton(title: ctaButtonTitle)" in ios_paywall
+    for label in ("Restore purchase", "Privacy Policy", "Terms of Use (EULA)", "Start Monthly", "Start Annual"):
+        assert label in ios_paywall
 
 
 def test_voice_callouts_present_on_both_platforms():
@@ -186,16 +235,17 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "Preview Sounds" in android_setup
     assert "Preview Sounds" in ios_setup
     assert 'contentDescription = "Unlock Sound Arsenal"' in android_setup
-    assert "Icons.Filled.Lock" in android_setup
+    assert 'onUpgradeTap("pro_sounds")' in android_setup
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
+    android_paywall_norm = _android_paywall_em_dash_normalized(android_paywall)
     for expected in (
-        "Full-length sessions — up to 60 minutes, no cutoffs",
-        "Live voice callouts keep you sharp under pressure",
-        "Loop drills with round limits — just like competition",
-        "Full sound arsenal — real bells, horns, and sirens",
-        "Fresh callout packs every 30 days — Pro gets them first",
+        "60-minute random windows for full-length drills",
+        "Combat and MMA voice callouts with live time checks",
+        "Round-capped loops for pad work, sparring, and circuits",
+        "Full sound arsenal — bells, horns, sirens, and more",
+        "Fresh pro audio drops when new packs land",
     ):
-        assert expected in android_paywall
+        assert expected in android_paywall_norm
         assert expected in ios_paywall
 
     assert "const val PRO_PRODUCT_ID = ELITE_PRODUCT_ID" in android_pro_manager
@@ -203,6 +253,25 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert "suspend fun launchProPurchase(" in android_pro_manager
     assert "getFormattedPrice" in android_nav or "proPrice" in android_nav
     assert "launchPurchase(it, productID, paywallEntryPoint)" in android_nav
+
+
+def test_android_purchase_waits_for_billing_reconnect_before_failing():
+    android_pro_manager = _read(ANDROID_PRO_MANAGER)
+    launch_purchase = android_pro_manager.split("suspend fun launchPurchase(", 1)[1].split(
+        "private suspend fun fetchAllProductDetails",
+        1,
+    )[0]
+
+    assert "ensureBillingReadyForPurchase()" in launch_purchase
+    assert "private suspend fun ensureBillingReadyForPurchase()" in android_pro_manager
+    assert "connectAndRestore()" in android_pro_manager
+    assert "delay(500)" in android_pro_manager
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        'debugMessage = "billing_not_ready"'
+    )
+    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+        "fetchProductDetails(productID)"
+    )
 
 
 def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
@@ -221,10 +290,13 @@ def test_free_sound_arsenal_taps_preview_without_forcing_ios_paywall():
 
 def test_android_elapsed_voice_cues_fire_on_configured_marks_and_commands_start_early():
     android_voice_manager = _read(ANDROID_VOICE_MANAGER)
+    ios_voice_service = _read(IOS_VOICE_SERVICE)
 
     assert "runtimeVoiceCueForElapsedMark(elapsedSeconds, lastElapsedMilestone, catalog)?.let {" in android_voice_manager
-    assert "else -> 15" in android_voice_manager
+    assert "else -> 30" in android_voice_manager
     assert "nextCommandCueAt = elapsedSeconds + 30" in android_voice_manager
+    assert "totalDurationSeconds <= 30 -> Int.MAX_VALUE" in android_voice_manager
+    assert "case ...30:" in ios_voice_service
 
 
 def test_active_timer_loop_badge_shows_round_progress_on_both_platforms():
@@ -256,19 +328,22 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
     ios_active = _read(IOS_ACTIVE_SCREEN)
     ios_timer_manager = _read(IOS_TIMER_MANAGER)
 
-    assert 'voiceBadgeText(enabled: Bool)' in ios_active
+    assert 'voiceBadgeText(enabled: Bool, isPro: Bool)' in ios_active
+    assert 'Voice Callouts Locked' in ios_active
     assert 'Label(' in ios_active and 'systemImage: "waveform"' in ios_active
+    assert 'guard isPro else { return }' in ios_active
     assert 'updateConfig(voiceEnabled: !isEnabled)' in ios_active
     assert 'timerManager.updateConfig(newConfig)' in ios_active
     assert 'voiceEnabled: voiceEnabled ?? current.voiceEnabled' in ios_active
     assert "if var state = timerState" in ios_timer_manager
 
-    assert "internal fun voiceBadgeText(enabled: Boolean)" in android_active
+    assert "internal fun voiceBadgeText(" in android_active
+    assert 'Voice Callouts Locked' in android_active
     assert "VoiceBadge(" in android_active
     assert "onVoiceToggle: (Boolean) -> Unit" in android_active
     assert "onVoiceToggle = viewModel::updateVoiceSetting" in android_nav
     assert "fun updateVoiceSetting(enabled: Boolean)" in android_viewmodel
-    assert '"voice_callouts_enabled" to updatedConfig.voiceEnabled' in android_viewmodel
+    assert 'emit("voice_callouts_enabled", previousConfig.voiceEnabled, updatedConfig.voiceEnabled)' in android_viewmodel
     assert "fun updateVoiceEnabled(enabled: Boolean)" in android_controller
     assert "ACTION_UPDATE_VOICE" in android_service
     assert "updateVoiceSetting(voiceEnabled)" in android_service
@@ -277,8 +352,11 @@ def test_active_timer_voice_badge_is_visible_and_live_toggleable_on_both_platfor
 def test_android_setup_screen_has_single_start_timer_cta_and_clear_free_loop_copy():
     android_setup = _read(ANDROID_SETUP)
 
-    start_cta_count = len(re.findall(r'PrimaryButton\(\s*text\s*=\s*"Start Timer"', android_setup, re.MULTILINE))
-    assert start_cta_count == 1, "Android setup screen should expose exactly one Start Timer CTA"
+    assert "internal fun primaryStartButtonText(hasFirstCompleted: Boolean)" in android_setup
+    assert 'if (hasFirstCompleted)' in android_setup
+    assert '"Start First Drill"' in android_setup
+    assert '"Start Timer"' in android_setup
+    assert "PrimaryButton(" in android_setup and "text = primaryStartButtonText(hasFirstCompleted)" in android_setup
     assert 'repeatLoopDetailTitle(isPro = isPro)' in android_setup
     assert 'repeatLoopDetailSummary(' in android_setup
     assert 'Infinite Loop (Pro: set 1–100 rounds)' in android_setup
@@ -289,7 +367,10 @@ def test_ios_setup_screen_keeps_start_timer_in_sticky_bottom_inset():
     ios_setup = _read(IOS_SETUP)
 
     assert ".safeAreaInset(edge: .bottom)" in ios_setup
-    assert 'PrimaryButton(title: "Start Timer")' in ios_setup
+    assert 'func primaryStartButtonTitle(hasFirstCompleted: Bool)' in ios_setup
+    assert '"Start First Drill"' in ios_setup
+    assert '"Start Timer"' in ios_setup
+    assert 'PrimaryButton(title: primaryStartButtonTitle(hasFirstCompleted: hasFirstCompleted))' in ios_setup
     assert "Spacer(minLength: 140)" in ios_setup
 
 

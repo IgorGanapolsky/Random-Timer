@@ -1,0 +1,29 @@
+# Firebase App Testing agent (Android) — natural-language cases.
+# Schema: https://firebase.google.com/docs/app-distribution/android/app-testing-agent
+#
+# Import these into Firebase Console → App Distribution → Test Cases, or run:
+#   bash scripts/ci_firebase_apptesting_execute.sh --apk path/to.apk
+tests:
+  - displayName: Home and timer-range Pro gate (smoke)
+    id: rt-smoke-home-range-gate
+    steps:
+      - goal: >
+          Open Random Tactical Timer. If Android shows permission dialogs
+          (notifications, etc.), accept them. Reach the main timer setup screen.
+          Do not sign in with a social account. Do not complete any purchase.
+        hint: >
+          Dismiss any one-time overlays. Stay on the primary setup screen where
+          the user configures a drill before starting.
+        finalScreenAssertion: >
+          The text "Start Timer" is visible on the screen.
+      - goal: >
+          Find and tap the Pro upgrade affordance for the timer range
+          (caption mentioning PRO and a one-hour style cap, often with a lock).
+          Scroll the main content vertically if the control is not on screen.
+        hint: >
+          Prefer tapping the compact Pro label in the Timer Range card, not
+          unrelated navigation. If unsure, scroll down slightly and retry once.
+        finalScreenAssertion: >
+          A full-screen or sheet paywall is visible, and text related to choosing
+          a subscription plan or training upgrade is visible (for example words
+          like "plan", "CHOOSE", or "Stop Training").

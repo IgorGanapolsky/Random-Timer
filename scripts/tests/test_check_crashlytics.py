@@ -108,6 +108,37 @@ def test_check_bigquery_export_returns_table_names():
         assert result == ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_debug"]
 
 
+def test_check_bigquery_export_paginates_next_page_token():
+    """Crashlytics datasets can exceed one page; follow nextPageToken."""
+    with patch.object(cc.urllib.request, "urlopen") as mock_urlopen:
+        import json
+
+        page1 = {
+            "tables": [{"tableReference": {"tableId": "aaa_other"}}],
+            "nextPageToken": "tok1",
+        }
+        page2 = {
+            "tables": [{"tableReference": {"tableId": "com_iganapolsky_randomtimer"}}],
+        }
+
+        mock_r1 = MagicMock()
+        mock_r1.read.return_value = json.dumps(page1).encode()
+        mock_r1.__enter__ = MagicMock(return_value=mock_r1)
+        mock_r1.__exit__ = MagicMock(return_value=False)
+        mock_r2 = MagicMock()
+        mock_r2.read.return_value = json.dumps(page2).encode()
+        mock_r2.__enter__ = MagicMock(return_value=mock_r2)
+        mock_r2.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.side_effect = [mock_r1, mock_r2]
+
+        result = cc.check_bigquery_export("fake_token")
+        assert result == ["aaa_other", "com_iganapolsky_randomtimer"]
+        assert mock_urlopen.call_count == 2
+        second_req = mock_urlopen.call_args_list[1][0][0]
+        second_url = getattr(second_req, "full_url", str(second_req))
+        assert "pageToken=tok1" in second_url
+
+
 def test_select_crashlytics_table_prefers_exact_match():
     tables = ["com_iganapolsky_randomtimer", "com_iganapolsky_randomtimer_ANDROID_REALTIME"]
     assert cc.select_crashlytics_table(tables) == "com_iganapolsky_randomtimer"
@@ -125,6 +156,59 @@ def test_select_crashlytics_table_rejects_wrong_package():
         assert "No Crashlytics export table found" in str(exc)
     else:
         raise AssertionError("expected ValueError for missing package table")
+
+
+def test_get_credentials_loads_google_application_credentials_file(tmp_path, monkeypatch):
+    key_file = tmp_path / "sa.json"
+    key_file.write_text('{"type": "service_account", "project_id": "p"}', encoding="utf-8")
+    fake_creds = MagicMock()
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", raising=False)
+    with patch.dict(os.environ, {"GOOGLE_APPLICATION_CREDENTIALS": str(key_file)}):
+        with patch.object(
+            cc.service_account.Credentials,
+            "from_service_account_file",
+            return_value=fake_creds,
+        ) as mock_file:
+            with patch.object(cc.google.auth, "default", side_effect=AssertionError("ADC must not run")):
+                out = cc.get_credentials()
+    assert out is fake_creds
+    mock_file.assert_called_once()
+    assert mock_file.call_args[0][0] == str(key_file)
+
+
+def test_get_credentials_loads_crashlytics_service_account_json_path(tmp_path, monkeypatch):
+    key_file = tmp_path / "crashlytics-sa.json"
+    key_file.write_text('{"type": "service_account"}', encoding="utf-8")
+    fake_creds = MagicMock()
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    with patch.dict(
+        os.environ,
+        {"CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH": str(key_file)},
+    ):
+        with patch.object(
+            cc.service_account.Credentials,
+            "from_service_account_file",
+            return_value=fake_creds,
+        ) as mock_file:
+            out = cc.get_credentials()
+    assert out is fake_creds
+    mock_file.assert_called_once()
+
+
+def test_get_credentials_wraps_default_credentials_error(monkeypatch):
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON", raising=False)
+    monkeypatch.delenv("CRASHLYTICS_SERVICE_ACCOUNT_JSON_PATH", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    with patch.object(cc.google.auth, "default", side_effect=cc.DefaultCredentialsError("none")):
+        try:
+            cc.get_credentials()
+        except RuntimeError as exc:
+            assert "CRASHLYTICS_SERVICE_ACCOUNT_JSON" in str(exc)
+            assert "none" in str(exc).lower()
+        else:
+            raise AssertionError("expected RuntimeError")
 
 
 def test_get_access_token_uses_inline_service_account_json():

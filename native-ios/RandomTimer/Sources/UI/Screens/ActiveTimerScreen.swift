@@ -68,8 +68,22 @@ struct ActiveTimerScreen: View {
         enabled ? "Voice Callouts On" : "Voice Callouts Off"
     }
 
+    static func voiceBadgeText(enabled: Bool, isPro: Bool) -> String {
+        guard isPro else { return "Voice Callouts Locked" }
+        return voiceBadgeText(enabled: enabled)
+    }
+
+    static func shouldShowVoiceBadge(isPro: Bool) -> Bool {
+        isPro
+    }
+
     static func voiceBadgeAccessibilityLabel(enabled: Bool) -> String {
         enabled ? "Voice callouts enabled" : "Voice callouts disabled"
+    }
+
+    static func voiceBadgeAccessibilityLabel(enabled: Bool, isPro: Bool) -> String {
+        guard isPro else { return "Voice callouts locked" }
+        return voiceBadgeAccessibilityLabel(enabled: enabled)
     }
 
     var body: some View {
@@ -245,27 +259,32 @@ struct ActiveTimerScreen: View {
             ),
             systemImage: "repeat",
             enabled: isEnabled,
-            accessibilityLabel: Self.loopBadgeAccessibilityLabel(
-                enabled: isEnabled,
-                repeatRounds: repeatRounds,
-                roundCount: roundCount
-            ),
-            accessibilityHint: "Double-tap to toggle repeat timer"
+            accessibility: (
+                Self.loopBadgeAccessibilityLabel(
+                    enabled: isEnabled,
+                    repeatRounds: repeatRounds,
+                    roundCount: roundCount
+                ),
+                "Double-tap to toggle repeat timer"
+            )
         ) {
             updateConfig(repeatEnabled: !isEnabled)
         }
     }
 
     private var voiceBadge: some View {
-        let isEnabled = state?.config.voiceEnabled ?? timerManager.config.voiceEnabled
+        let isPro = ProManager.shared.isPro
+        let isEnabled = isPro && (state?.config.voiceEnabled ?? timerManager.config.voiceEnabled)
         return controlBadge(
-            text: Self.voiceBadgeText(enabled: isEnabled),
+            text: Self.voiceBadgeText(enabled: isEnabled, isPro: isPro),
             systemImage: "waveform",
             enabled: isEnabled,
-            accessibilityLabel: Self.voiceBadgeAccessibilityLabel(enabled: isEnabled),
-            accessibilityHint: "Double-tap to toggle voice callouts"
-        )
-        {
+            accessibility: (
+                Self.voiceBadgeAccessibilityLabel(enabled: isEnabled, isPro: isPro),
+                "Double-tap to toggle voice callouts"
+            )
+        ) {
+            guard isPro else { return }
             updateConfig(voiceEnabled: !isEnabled)
         }
     }
@@ -274,8 +293,7 @@ struct ActiveTimerScreen: View {
         text: String,
         systemImage: String,
         enabled: Bool,
-        accessibilityLabel: String,
-        accessibilityHint: String,
+        accessibility: (label: String, hint: String),
         action: @escaping () -> Void
     ) -> some View {
         return Button {
@@ -296,8 +314,8 @@ struct ActiveTimerScreen: View {
                         .stroke(enabled ? .accentPrimary : Color.glassBorder, lineWidth: 1)
                 )
         }
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint(accessibilityHint)
+        .accessibilityLabel(accessibility.label)
+        .accessibilityHint(accessibility.hint)
     }
 
     @ViewBuilder
@@ -307,7 +325,9 @@ struct ActiveTimerScreen: View {
         } else {
             HStack(spacing: 12) {
                 loopBadge
-                voiceBadge
+                if Self.shouldShowVoiceBadge(isPro: ProManager.shared.isPro) {
+                    voiceBadge
+                }
             }
         }
     }

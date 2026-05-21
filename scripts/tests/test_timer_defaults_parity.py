@@ -141,6 +141,7 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     android_service = ANDROID_FOREGROUND_SERVICE.read_text(encoding="utf-8")
     ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
     ios_timer_manager = IOS_TIMER_MANAGER.read_text(encoding="utf-8")
+    ios_info_plist = IOS_INFO_PLIST.read_text(encoding="utf-8")
     android_config = ANDROID_CONFIG.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
 
@@ -151,6 +152,10 @@ def test_voice_callouts_are_gated_as_pro_on_both_platforms():
     assert "voiceEnabled" in android_service and "isPro" in android_service
     assert "ProManager.shared.isPro && state.config.voiceEnabled" in ios_timer_manager
     assert "triggerCallout(elapsedSeconds: elapsedSeconds)" in ios_timer_manager
+    assert "scheduleVoiceCalloutNotifications" in ios_timer_manager
+    assert "updateBackgroundVoiceKeepAliveIfNeeded()" in ios_timer_manager
+    assert "<key>UIBackgroundModes</key>" not in ios_info_plist
+    assert "<string>audio</string>" not in ios_info_plist
 
 
 def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
@@ -158,9 +163,9 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     android_navigation = ANDROID_NAVIGATION.read_text(encoding="utf-8")
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
-    assert "Stop Training With the Brakes On" in android_paywall
+    assert "Unlock Full Fight-Ready Training" in android_paywall
     assert "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
-    assert "Stop Training With the Brakes On" in ios_paywall
+    assert "Unlock Full Fight-Ready Training" in ios_paywall
     assert "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
@@ -249,7 +254,8 @@ def test_bundled_sound_catalog_pack_id_matches_runtime_manifest():
 def test_ios_voice_catalog_has_clear_elapsed_language_and_more_variety():
     catalog = _load_ios_voice_catalog()
 
-    assert len(catalog["elapsedCues"]) >= 12
+    # Minute-only elapsed rows (60s, 120s, …); bundled list is shorter than legacy half-minute grid.
+    assert len(catalog["elapsedCues"]) >= 8
     assert len(catalog["commandCues"]) >= 20
     assert all("elapsed" in cue["text"].lower() for cue in catalog["elapsedCues"])
     assert catalog["fallbackCommandFilename"] in _ios_catalog_filenames(catalog)

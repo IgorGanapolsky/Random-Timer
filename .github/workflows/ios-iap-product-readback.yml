@@ -1,0 +1,40 @@
+name: iOS IAP Product Readback
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-ios-iap-products:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install ASC client dependencies
+        run: python -m pip install --upgrade requests pyjwt cryptography
+
+      - name: Run unit tests
+        run: PYTHONPATH=. python scripts/tests/test_asc_verify_iap_products.py
+
+      - name: Read back App Store Connect product states
+        run: |
+          python scripts/asc/asc_verify_iap_products.py \
+            --json-out ios-iap-product-readback.json
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: ios-iap-product-readback
+          path: ios-iap-product-readback.json
+          if-no-files-found: ignore

@@ -4,14 +4,12 @@
       "platform": "apple_search_ads",
       "created": "2026-02-20T21:08:11Z",
       "status": "paused",
-      "campaign_id": 2143440089,
-      "launched_at": "2026-02-24T16:30:00Z",
-      "daily_budget_usd": 0.0,
+      "daily_budget_usd": 30.0,
       "ad_groups": [
         {
           "name": "Exact Match - High Intent",
           "match_type": "exact",
-          "max_cpt_usd": 1.5,
+          "max_cpt_usd": 1.75,
           "keywords": [
             {
               "text": "app sparring prep",
@@ -42,44 +40,56 @@
               "bid_score": 120
             },
             {
-              "text": "checker interval timer",
-              "bid_score": 115
+              "text": "app mental readiness",
+              "bid_score": 112
             },
             {
-              "text": "generator interval timer",
-              "bid_score": 115
+              "text": "app combat conditioning",
+              "bid_score": 112
             },
             {
-              "text": "checker reaction training",
-              "bid_score": 115
+              "text": "app interval timer",
+              "bid_score": 112
             },
             {
-              "text": "checker tactical timer",
-              "bid_score": 115
+              "text": "review interval timer",
+              "bid_score": 98
             },
             {
-              "text": "calculator mental readiness",
-              "bid_score": 115
+              "text": "review reaction training",
+              "bid_score": 98
             },
             {
-              "text": "generator sparring prep",
-              "bid_score": 115
+              "text": "review sparring prep",
+              "bid_score": 98
             },
             {
-              "text": "generator random timer",
-              "bid_score": 115
+              "text": "under 20 interval timer",
+              "bid_score": 98
             },
             {
-              "text": "generator tactical timer",
-              "bid_score": 115
+              "text": "vs sparring prep",
+              "bid_score": 98
             }
           ]
         },
         {
           "name": "Search Match - Discovery",
           "match_type": "search",
-          "max_cpt_usd": 1.05,
+          "max_cpt_usd": 1.2249999999999999,
           "keywords": [
+            {
+              "text": "no ads random timer",
+              "bid_score": 52
+            },
+            {
+              "text": "no ads boxing drills",
+              "bid_score": 52
+            },
+            {
+              "text": "free random timer",
+              "bid_score": 52
+            },
             {
               "text": "home workout timer",
               "bid_score": 52
@@ -93,11 +103,35 @@
               "bid_score": 52
             },
             {
+              "text": "free home workout timer",
+              "bid_score": 52
+            },
+            {
+              "text": "free combat conditioning",
+              "bid_score": 52
+            },
+            {
+              "text": "free focus drills",
+              "bid_score": 52
+            },
+            {
+              "text": "free mental readiness",
+              "bid_score": 52
+            },
+            {
+              "text": "no ads combat conditioning",
+              "bid_score": 52
+            },
+            {
               "text": "mental readiness",
               "bid_score": 44
             },
             {
               "text": "random timer for beginners",
+              "bid_score": 44
+            },
+            {
+              "text": "no ads mental readiness",
               "bid_score": 44
             },
             {
@@ -123,17 +157,13 @@
             {
               "text": "boxing drills for beginners",
               "bid_score": 44
-            },
-            {
-              "text": "boxing drills",
-              "bid_score": 44
             }
           ]
         },
         {
           "name": "Competitor - Brand",
           "match_type": "exact",
-          "max_cpt_usd": 1.8,
+          "max_cpt_usd": 2.1,
           "keywords": [
             {
               "text": "app sparring prep",
@@ -164,16 +194,16 @@
               "bid_score": 120
             },
             {
-              "text": "checker interval timer",
-              "bid_score": 115
+              "text": "app mental readiness",
+              "bid_score": 112
             },
             {
-              "text": "generator interval timer",
-              "bid_score": 115
+              "text": "app combat conditioning",
+              "bid_score": 112
             },
             {
-              "text": "checker reaction training",
-              "bid_score": 115
+              "text": "app interval timer",
+              "bid_score": 112
             }
           ]
         }
@@ -185,37 +215,34 @@
         "clock widget"
       ],
       "target_cpa_usd": 3.0,
-      "paused_at": "2026-03-03T00:08:07Z"
+      "campaign_id": 2143440089,
+      "launched_at": "2026-02-24T16:30:00Z"
     },
     {
       "platform": "google_uac",
       "created": "2026-02-20T21:08:11Z",
       "status": "ready_to_launch",
-      "daily_budget_usd": 10.0,
+      "daily_budget_usd": 30.0,
       "campaign_type": "installs",
-      "target_cpi_usd": 2.5,
       "target_cpa_usd": 3.0,
-      "campaign_name": "RandomTacticalTimer_UAC_Installs_v1",
-      "config_file": "marketing/google_uac_campaign.md",
       "ad_assets": {
         "headlines": [
           "Random Timer for HIIT & Drills",
-          "Tactical Timer - Train Smart",
           "Surprise Interval Timer App",
+          "Tactical Timer - Train Smarter",
           "Random Countdown Timer"
         ],
         "descriptions": [
           "Set a range, press start. You never know when it fires. Perfect for HIIT.",
           "Unpredictable timer for workouts, drills & party games. No ads, no tracking.",
-          "Keep sharp with random intervals. Used by athletes, coaches & gamers.",
-          "Train reaction, not rhythm. Fires at random within your time range. Free."
+          "Keep sharp with random intervals. Used by athletes, coaches & gamers."
         ]
       },
       "targeting": {
         "locations": [
           "US",
-          "CA",
           "GB",
+          "CA",
           "AU",
           "DE"
         ],
@@ -224,46 +251,19 @@
           "de"
         ],
         "keyword_themes": [
-          "reaction training",
-          "interval timer",
-          "tactical timer",
-          "random timer",
-          "focus drills",
-          "combat conditioning",
-          "boxing drills",
-          "home workout timer",
-          "sparring prep",
-          "HIIT timer app"
-        ],
-        "audience_signals": [
-          "In-Market: Sports & Fitness > Exercise & Fitness",
-          "In-Market: Sports & Fitness > Combat Sports",
-          "Affinity: Health & Fitness Buffs",
-          "Affinity: Sports Fans > Combat Sports Fans"
-        ],
-        "demographics": {
-          "ages": "18-54",
-          "genders": "all",
-          "devices": "mobile_only"
-        },
-        "exclude_existing_users": true
+          "app sparring prep",
+          "app boxing drills",
+          "app focus drills",
+          "app reaction training",
+          "app home workout timer",
+          "app tactical timer",
+          "app random timer",
+          "app mental readiness",
+          "app combat conditioning",
+          "app interval timer"
+        ]
       },
-      "negative_keywords": [
-        "free timer online",
-        "timer website",
-        "countdown website",
-        "clock widget",
-        "egg timer",
-        "pomodoro",
-        "meditation timer",
-        "sleep timer",
-        "cooking timer"
-      ],
-      "optimization_goal": "installs",
-      "app_store_urls": {
-        "android": "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer",
-        "ios": "https://apps.apple.com/app/random-tactical-timer/id6758355312"
-      }
+      "optimization_goal": "installs"
     },
     {
       "platform": "reddit_ads",
@@ -340,11 +340,19 @@
       "campaign_id": 2143440089,
       "reason": "post_merge_validation",
       "status": "PAUSED"
+    },
+    {
+      "timestamp": "2026-05-08T18:27:53.298484+00:00",
+      "action": "campaign_refresh",
+      "apple_keywords": 15,
+      "google_themes": 10,
+      "daily_budget_requested_usd": 30.0,
+      "daily_budget_applied_usd": 30.0,
+      "budget_capped": false
     }
   ],
   "budget_allocation": {
-    "apple_search_ads": 0.0,
-    "google_uac": 10.0,
-    "reddit_ads": 10.0
+    "apple_search_ads": 18.0,
+    "google_uac": 12.0
   }
 }

@@ -210,10 +210,9 @@ public struct TimerConfig: Codable, Sendable, Equatable {
 
     public static let alarmDurationOptions = [5, 10, 15, 30, 60]
 
-    /// Migrates legacy canonical defaults (30–120s) to activation-first 5–30s when the user
-    /// has not completed a first timer. Returns nil when no migration applies.
-    public func applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: Bool) -> TimerConfig? {
-        guard !hasCompletedFirstTimer else { return nil }
+    /// Migrates legacy canonical defaults (30–120s) to activation-first 5–30s on the free range.
+    /// Returns nil when no migration applies. One-shot application is enforced by the caller.
+    public func applyingLegacyActivationRangePresetIfEligible() -> TimerConfig? {
         guard !useExtendedRange else { return nil }
         guard minSeconds == 30, maxSeconds == 120 else { return nil }
         return TimerConfig(
@@ -380,6 +379,53 @@ public struct TimerConfig: Codable, Sendable, Equatable {
             repeatRounds: isPro ? repeatRounds : 0
         )
     }
+}
+
+// MARK: - Training Presets
+
+public struct TrainingPreset: Identifiable, Sendable, Equatable {
+    public let id: String
+    public let title: String
+    public let subtitle: String
+    public let minSeconds: Int
+    public let maxSeconds: Int
+    public let alarmDuration: Int
+    public let repeatEnabled: Bool
+    public let soundType: SoundType
+    public let vibrationEnabled: Bool
+
+    public func applying(to config: TimerConfig) -> TimerConfig {
+        TimerConfig(
+            minSeconds: minSeconds,
+            maxSeconds: maxSeconds,
+            alarmDuration: alarmDuration,
+            hiddenMode: false,
+            repeatEnabled: repeatEnabled,
+            soundType: soundType,
+            volume: config.volume,
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: false,
+            voiceEnabled: config.voiceEnabled,
+            voiceGender: config.voiceGender,
+            repeatRounds: config.repeatRounds
+        )
+    }
+
+    public static let competitionWarmup = TrainingPreset(
+        id: "competition_warmup",
+        title: "Competition Warmup",
+        subtitle: "Reactive mat-ready cues for the 30 minutes before first call.",
+        minSeconds: 20,
+        maxSeconds: 90,
+        alarmDuration: 5,
+        repeatEnabled: true,
+        soundType: .intense,
+        vibrationEnabled: true
+    )
+
+    public static let all: [TrainingPreset] = [
+        .competitionWarmup,
+    ]
 }
 
 // MARK: - Range Adjustment

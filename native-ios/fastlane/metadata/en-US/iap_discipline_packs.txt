@@ -1,0 +1,5 @@
+# P2 scaffold — non-consumable discipline packs (not live in App Store Connect yet)
+com.iganapolsky.randomtimer.pack.special_forces
+com.iganapolsky.randomtimer.pack.boxing_hiit
+com.iganapolsky.randomtimer.pack.crossfit
+com.iganapolsky.randomtimer.pack.bjj

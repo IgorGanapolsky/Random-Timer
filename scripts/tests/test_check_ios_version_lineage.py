@@ -61,7 +61,22 @@ def test_evaluate_lineage_rejects_closed_app_store_train_even_when_pre_release_m
 
     assert report.passed is False
     assert report.highest_closed_app_store_version == "1.3.17"
-    assert "closed App Store version 1.3.17" in report.reason
+    assert "distribution-locked" in report.reason
+    assert "1.3.17" in report.reason
+
+
+def test_evaluate_lineage_allows_same_marketing_version_while_waiting_for_review():
+    report = evaluate_lineage(
+        bundle_id="com.igorganapolsky.randomtimer",
+        local_version="1.3.24",
+        local_build=449,
+        remote_versions=["1.3.24"],
+        remote_app_store_versions={"1.3.24": "WAITING_FOR_REVIEW"},
+        remote_builds_by_version={"1.3.24": [451]},
+    )
+
+    assert report.passed is True
+    assert "auto-increment" in report.reason
 
 
 def test_evaluate_lineage_rejects_local_version_behind_higher_app_store_version():

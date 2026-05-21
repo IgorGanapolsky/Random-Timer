@@ -1,0 +1,107 @@
+name: iOS Cert Regen (match nuke + regen Distribution)
+
+# One-off maintenance workflow. Run when the Apple Distribution cert stored in
+# the fastlane match repo has been revoked at Apple's portal and every release
+# build fails with "Signing certificate is invalid ... It may have been revoked
+# or expired." Uses the live ASC JWT (APPSTORE_* secrets) so the operation is
+# non-interactive — no Apple-ID 2FA required.
+#
+# Effect:
+#   1. `fastlane match nuke distribution` revokes the stored cert at Apple's
+#      portal (no-op if already revoked) and deletes it from the match git repo
+#      along with every App Store provisioning profile for the two bundle IDs.
+#   2. `fastlane match appstore` generates a fresh Distribution cert + App Store
+#      profiles and commits them back to the match repo.
+# After this runs, re-dispatch Internal Distribution / Native App Release on
+# the target release branch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to check out (match ops are ref-agnostic; default develop)"
+        required: false
+        default: develop
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-cert-regen
+  cancel-in-progress: false
+
+jobs:
+  regen:
+    name: Nuke + regenerate Apple Distribution cert
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Fail fast on required secrets
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          for name in APPSTORE_KEY_ID APPSTORE_ISSUER_ID APPSTORE_PRIVATE_KEY APPLE_TEAM_ID MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION ADMIN_TOKEN; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: native-ios
+
+      - name: Install Fastlane
+        working-directory: native-ios
+        run: gem install fastlane
+
+      - name: Configure git credentials for match
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global url."https://x-access-token:${GIT_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Write ASC private key
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+
+      - name: Match nuke + regenerate Distribution cert
+        working-directory: native-ios
+        env:
+          CI: "true"
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          FASTLANE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          # MATCH_SKIP_CONFIRMATION must be the literal string "true"/"false";
+          # "1" causes match to reject with `'skip_confirmation' value must be
+          # either true or false! Found String instead.` when the env var
+          # leaks into the subsequent match appstore regen call.
+          MATCH_SKIP_CONFIRMATION: "true"
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+        run: fastlane regen_dist_certs

@@ -10,6 +10,28 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+internal fun reviewPromptMilestoneForCompletionCount(count: Int): Int? =
+    when {
+        count < 3 -> null
+        count < 10 -> 3
+        count < 25 -> 10
+        else -> 25 + ((count - 25) / 25) * 25
+    }
+
+internal fun isEligibleForReviewPrompt(
+    completionCount: Int,
+    lastPromptMilestone: Int,
+    lastReviewTimestampMillis: Long,
+    nowMillis: Long,
+    minDaysBetweenRequests: Long,
+): Boolean {
+    val milestone = reviewPromptMilestoneForCompletionCount(completionCount) ?: return false
+    if (milestone <= lastPromptMilestone) return false
+    if (lastReviewTimestampMillis == 0L) return true
+    val daysSinceLast = (nowMillis - lastReviewTimestampMillis) / (1000 * 60 * 60 * 24)
+    return daysSinceLast >= minDaysBetweenRequests
+}
+
 @Singleton
 class StoreReviewManager
     @Inject
@@ -25,8 +47,8 @@ class StoreReviewManager
             private const val KEY_LAST_REVIEW_TIMESTAMP = "last_review_timestamp"
             private const val KEY_LAST_REVIEW_VERSION = "last_review_version"
             private const val KEY_PENDING_REVIEW = "pending_review"
+            private const val KEY_LAST_PROMPT_MILESTONE = "last_prompt_milestone"
 
-            private const val COMPLETIONS_BEFORE_REVIEW = 3
             private const val MIN_DAYS_BETWEEN_REQUESTS = 30L
         }
 
@@ -57,24 +79,24 @@ class StoreReviewManager
                         .edit()
                         .putLong(KEY_LAST_REVIEW_TIMESTAMP, System.currentTimeMillis())
                         .putString(KEY_LAST_REVIEW_VERSION, getAppVersion())
-                        .apply()
+                        .putInt(
+                            KEY_LAST_PROMPT_MILESTONE,
+                            reviewPromptMilestoneForCompletionCount(
+                                prefs.getInt(KEY_COMPLETION_COUNT, 0),
+                            ) ?: 0,
+                        ).apply()
                 }
             }
         }
 
-        private fun isEligibleForReview(): Boolean {
-            val count = prefs.getInt(KEY_COMPLETION_COUNT, 0)
-            val lastTimestamp = prefs.getLong(KEY_LAST_REVIEW_TIMESTAMP, 0L)
-            val lastVersion = prefs.getString(KEY_LAST_REVIEW_VERSION, null)
-            val currentVersion = getAppVersion()
-
-            if (count < COMPLETIONS_BEFORE_REVIEW) return false
-            if (lastTimestamp == 0L) return true
-            if (lastVersion != currentVersion) return true
-
-            val daysSinceLast = (System.currentTimeMillis() - lastTimestamp) / (1000 * 60 * 60 * 24)
-            return daysSinceLast >= MIN_DAYS_BETWEEN_REQUESTS
-        }
+        private fun isEligibleForReview(): Boolean =
+            isEligibleForReviewPrompt(
+                completionCount = prefs.getInt(KEY_COMPLETION_COUNT, 0),
+                lastPromptMilestone = prefs.getInt(KEY_LAST_PROMPT_MILESTONE, 0),
+                lastReviewTimestampMillis = prefs.getLong(KEY_LAST_REVIEW_TIMESTAMP, 0L),
+                nowMillis = System.currentTimeMillis(),
+                minDaysBetweenRequests = MIN_DAYS_BETWEEN_REQUESTS,
+            )
 
         private fun getAppVersion(): String =
             try {

@@ -1,5 +1,222 @@
 {
-  "generated_at": "2026-03-27T21:10:07+00:00",
-  "status": "skipped",
-  "reason": "missing POSTHOG credentials"
+  "generated_at": "2026-05-12T18:05:52+00:00",
+  "window_days": 30,
+  "status": "degraded",
+  "onboarding_funnel": {
+    "first_open_users": 552,
+    "first_timer_configured_users": 414,
+    "first_timer_completed_users": 131,
+    "open_to_configured_pct": 75.0,
+    "configured_to_completed_pct": 31.6
+  },
+  "timer_interactions": [
+    {
+      "event": "timer_started",
+      "events": 1556,
+      "users": 417
+    },
+    {
+      "event": "timer_stopped",
+      "events": 1330,
+      "users": 313
+    },
+    {
+      "event": "timer_abandoned",
+      "events": 946,
+      "users": 300
+    },
+    {
+      "event": "timer_reset",
+      "events": 626,
+      "users": 349
+    },
+    {
+      "event": "timer_completed",
+      "events": 548,
+      "users": 133
+    },
+    {
+      "event": "timer_paused",
+      "events": 502,
+      "users": 354
+    },
+    {
+      "event": "timer_resumed",
+      "events": 120,
+      "users": 77
+    }
+  ],
+  "abandon_reasons": [
+    {
+      "reason": "user_cancelled",
+      "source": "unknown",
+      "events": 826,
+      "users": 248
+    },
+    {
+      "reason": "user_cancelled",
+      "source": "timer_controls",
+      "events": 120,
+      "users": 52
+    }
+  ],
+  "alarm_engagement": [
+    {
+      "event": "alarm_triggered",
+      "events": 699,
+      "users": 170
+    },
+    {
+      "event": "alarm_dismissed",
+      "events": 171,
+      "users": 98
+    }
+  ],
+  "paywall_funnel": {
+    "paywall_viewed_users": 125,
+    "purchase_attempted_users": 9,
+    "purchase_succeeded_users": 0,
+    "paywall_dismissed_users": 101,
+    "view_to_attempt_pct": 7.2,
+    "attempt_to_success_pct": 0.0
+  },
+  "review_funnel": [
+    {
+      "event": "write_review_tapped",
+      "events": 8,
+      "users": 8
+    },
+    {
+      "event": "review_prompt_requested",
+      "events": 18,
+      "users": 18
+    }
+  ],
+  "settings_preferences": [
+    {
+      "setting": "unknown",
+      "changes": 20390,
+      "users": 344
+    },
+    {
+      "setting": "sound_type",
+      "changes": 1125,
+      "users": 91
+    },
+    {
+      "setting": "alarm_duration",
+      "changes": 1078,
+      "users": 89
+    },
+    {
+      "setting": "max_seconds",
+      "changes": 987,
+      "users": 100
+    },
+    {
+      "setting": "min_seconds",
+      "changes": 781,
+      "users": 91
+    },
+    {
+      "setting": "volume",
+      "changes": 557,
+      "users": 62
+    },
+    {
+      "setting": "repeat_enabled",
+      "changes": 300,
+      "users": 85
+    },
+    {
+      "setting": "voice_callouts_enabled",
+      "changes": 294,
+      "users": 58
+    },
+    {
+      "setting": "voice_gender",
+      "changes": 124,
+      "users": 70
+    },
+    {
+      "setting": "repeat_rounds",
+      "changes": 120,
+      "users": 41
+    },
+    {
+      "setting": "use_extended_range",
+      "changes": 103,
+      "users": 48
+    },
+    {
+      "setting": "vibration_enabled",
+      "changes": 72,
+      "users": 51
+    }
+  ],
+  "dau_trend_14d": [
+    {
+      "day": "2026-04-28",
+      "dau": 3
+    },
+    {
+      "day": "2026-04-29",
+      "dau": 6
+    },
+    {
+      "day": "2026-04-30",
+      "dau": 2
+    },
+    {
+      "day": "2026-05-01",
+      "dau": 3
+    },
+    {
+      "day": "2026-05-02",
+      "dau": 4
+    },
+    {
+      "day": "2026-05-03",
+      "dau": 2
+    },
+    {
+      "day": "2026-05-04",
+      "dau": 13
+    },
+    {
+      "day": "2026-05-05",
+      "dau": 61
+    },
+    {
+      "day": "2026-05-06",
+      "dau": 56
+    },
+    {
+      "day": "2026-05-07",
+      "dau": 33
+    },
+    {
+      "day": "2026-05-08",
+      "dau": 24
+    },
+    {
+      "day": "2026-05-09",
+      "dau": 3
+    },
+    {
+      "day": "2026-05-10",
+      "dau": 4
+    },
+    {
+      "day": "2026-05-11",
+      "dau": 18
+    },
+    {
+      "day": "2026-05-12",
+      "dau": 13
+    }
+  ],
+  "query_errors": [
+    "http_400"
+  ]
 }

@@ -35,8 +35,8 @@ final class RandomTimerUITests: XCTestCase {
     }
 
     private func ensureSetupScreen(_ app: XCUIApplication, timeout: TimeInterval = 4.0) {
-        let startButton = app.buttons["Start Timer"]
-        if startButton.waitForExistence(timeout: timeout) {
+        let startButton = waitForPrimaryStartButton(in: app, timeout: timeout)
+        if startButton != nil {
             return
         }
 
@@ -44,7 +44,32 @@ final class RandomTimerUITests: XCTestCase {
         if stopButton.waitForExistence(timeout: 2.0) {
             stopButton.tap()
         }
-        XCTAssertTrue(startButton.waitForExistence(timeout: timeout))
+        XCTAssertNotNil(waitForPrimaryStartButton(in: app, timeout: timeout))
+    }
+
+    private func primaryStartButton(in app: XCUIApplication) -> XCUIElement {
+        let firstDrillButton = app.buttons["Start First Drill"]
+        if firstDrillButton.exists {
+            return firstDrillButton
+        }
+        return app.buttons["Start Timer"]
+    }
+
+    private func waitForPrimaryStartButton(
+        in app: XCUIApplication,
+        timeout: TimeInterval = 4.0
+    ) -> XCUIElement? {
+        let firstDrillButton = app.buttons["Start First Drill"]
+        if firstDrillButton.waitForExistence(timeout: timeout) {
+            return firstDrillButton
+        }
+
+        let startTimerButton = app.buttons["Start Timer"]
+        if startTimerButton.waitForExistence(timeout: 0.5) {
+            return startTimerButton
+        }
+
+        return nil
     }
 
     private func scrollUntilVisible(
@@ -66,7 +91,7 @@ final class RandomTimerUITests: XCTestCase {
         let app = launchApp()
         ensureSetupScreen(app)
 
-        let startButton = app.buttons["Start Timer"]
+        let startButton = primaryStartButton(in: app)
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         XCTAssertTrue(startButton.isHittable)
     }
@@ -79,7 +104,7 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(previewButton.waitForExistence(timeout: 3.0))
         previewButton.tap()
 
-        let startButton = app.buttons["Start Timer"]
+        let startButton = primaryStartButton(in: app)
         XCTAssertTrue(
             startButton.waitForExistence(timeout: 3.0),
             "Preview must not crash the app or navigate away from setup."
@@ -162,6 +187,7 @@ final class RandomTimerUITests: XCTestCase {
         let app = launchApp(withState: "running")
         XCTAssertTrue(app.staticTexts["Timer running..."].waitForExistence(timeout: 2.0))
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 2.0))
+        XCTAssertFalse(app.buttons["Start First Drill"].exists)
         XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
@@ -180,6 +206,7 @@ final class RandomTimerUITests: XCTestCase {
         }
         XCTAssertTrue(app.buttons["Stop"].waitForExistence(timeout: 8.0))
         XCTAssertTrue(app.buttons["Reset"].waitForExistence(timeout: 8.0))
+        XCTAssertFalse(app.buttons["Start First Drill"].exists)
         XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
@@ -187,7 +214,7 @@ final class RandomTimerUITests: XCTestCase {
         let app = launchApp()
         ensureSetupScreen(app)
 
-        let startButton = app.buttons["Start Timer"]
+        let startButton = primaryStartButton(in: app)
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         startButton.tap()
 
@@ -217,6 +244,7 @@ final class RandomTimerUITests: XCTestCase {
         XCTAssertTrue(stopButton.waitForExistence(timeout: 2.0))
         XCTAssertTrue(app.buttons["Reset"].waitForExistence(timeout: 2.0))
         // Should NOT navigate back to setup.
+        XCTAssertFalse(app.buttons["Start First Drill"].exists)
         XCTAssertFalse(app.buttons["Start Timer"].exists)
     }
 
@@ -241,7 +269,7 @@ final class RandomTimerUITests: XCTestCase {
         app.launch()
         captureSetupStorefront(app, isPadCapture: isPadCapture, outputDir: outputDir)
         captureSoundStorefrontIfNeeded(app, isPadCapture: isPadCapture, outputDir: outputDir)
-        let startButton = app.buttons["Start Timer"]
+        let startButton = primaryStartButton(in: app)
         XCTAssertTrue(startButton.waitForExistence(timeout: 3.0))
         startButton.tap()
         captureRunningStorefront(app, isPadCapture: isPadCapture, outputDir: outputDir)

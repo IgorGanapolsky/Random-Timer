@@ -198,15 +198,11 @@ fun toggleExtendedRange(
     }
 
 /**
- * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s for users who have
- * not completed their first timer. New installs already use [TimerConfig.DEFAULT]; returns null
- * when no migration applies.
+ * Migrates legacy canonical defaults (30–120s) to activation-first 5–30s on the free range.
+ * New installs already use [TimerConfig.DEFAULT]. Returns null when no migration applies.
+ * One-shot application is enforced by the caller (e.g. `activation_first_run_range_nudge_applied`).
  */
-fun activationPresetForFirstCompletionIfEligible(
-    hasCompletedFirstTimer: Boolean,
-    current: TimerConfig,
-): TimerConfig? {
-    if (hasCompletedFirstTimer) return null
+fun activationLegacyRangePresetIfEligible(current: TimerConfig): TimerConfig? {
     if (current.useExtendedRange) return null
     if (current.minSeconds != 30 || current.maxSeconds != 120) {
         return null
@@ -215,6 +211,47 @@ fun activationPresetForFirstCompletionIfEligible(
         minSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MIN_SECONDS,
         maxSeconds = TimerConfig.ACTIVATION_FIRST_RUN_MAX_SECONDS,
     )
+}
+
+data class TrainingPreset(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val minSeconds: Int,
+    val maxSeconds: Int,
+    val alarmDuration: Int,
+    val repeatEnabled: Boolean,
+    val soundType: SoundType,
+    val vibrationEnabled: Boolean,
+) {
+    fun applyTo(config: TimerConfig): TimerConfig =
+        config.copy(
+            minSeconds = minSeconds,
+            maxSeconds = maxSeconds,
+            alarmDuration = alarmDuration,
+            hiddenMode = false,
+            repeatEnabled = repeatEnabled,
+            soundType = soundType,
+            vibrationEnabled = vibrationEnabled,
+            useExtendedRange = false,
+        )
+
+    companion object {
+        val CompetitionWarmup =
+            TrainingPreset(
+                id = "competition_warmup",
+                title = "Competition Warmup",
+                subtitle = "Reactive mat-ready cues for the 30 minutes before first call.",
+                minSeconds = 20,
+                maxSeconds = 90,
+                alarmDuration = 5,
+                repeatEnabled = true,
+                soundType = SoundType.INTENSE,
+                vibrationEnabled = true,
+            )
+
+        val ALL = listOf(CompetitionWarmup)
+    }
 }
 
 /**

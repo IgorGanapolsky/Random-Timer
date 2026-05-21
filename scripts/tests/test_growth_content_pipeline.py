@@ -107,6 +107,42 @@ class GrowthContentPipelineTests(unittest.TestCase):
             self.assertTrue((root / "site" / "agents.md").is_file())
             self.assertTrue((root / "site" / "md" / "2026-02-19-sample.md").is_file())
 
+    def test_build_site_agents_md_audience_sources_from_strategy_json(self):
+        """agents.md must reflect keyword-rich audience from marketing/keywords/strategy.json,
+        not a hardcoded generic string. Otherwise the daily growth job overwrites the
+        keyword expansion shipped in PR #1545."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+            (root / "keywords").mkdir(parents=True, exist_ok=True)
+            (root / "keywords" / "strategy.json").write_text(
+                '{"audience": "MMA fighters, BJJ practitioners, boxers, muay thai athletes",'
+                ' "seed_keywords": ["mma timer", "bjj rounds", "muay thai timer"]}',
+                encoding="utf-8",
+            )
+
+            pipeline.build_site(root)
+            agents_md = (root / "site" / "agents.md").read_text(encoding="utf-8")
+            self.assertIn("MMA fighters", agents_md)
+            self.assertIn("BJJ practitioners", agents_md)
+            self.assertNotIn(
+                "athletes, trainers, coaches, and reaction-drill users",
+                agents_md,
+                "generic placeholder leaked through despite strategy.json present",
+            )
+
+    def test_build_site_agents_md_falls_back_when_strategy_missing(self):
+        """Without strategy.json the build must still succeed with a non-empty audience line."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "posts").mkdir(parents=True, exist_ok=True)
+            (root / "diagrams").mkdir(parents=True, exist_ok=True)
+
+            pipeline.build_site(root)
+            agents_md = (root / "site" / "agents.md").read_text(encoding="utf-8")
+            self.assertIn("Audience:", agents_md)
+
     def test_build_site_renders_privacy_policy_page_and_legacy_alias(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)

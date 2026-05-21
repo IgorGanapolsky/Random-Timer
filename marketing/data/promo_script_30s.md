@@ -10,4 +10,4 @@ It forces real reaction under pressure — boxing, BJJ, combatives, conditioning
 
 Train for chaos. Not comfort.
 
-Random Tactical Timer. Free on the App Store.
+Random Tactical Timer — App Store and Google Play. Optional Pro for voices, Sound Arsenal, and long sessions.

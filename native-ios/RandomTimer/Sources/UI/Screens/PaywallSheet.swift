@@ -1,17 +1,74 @@
 import SwiftUI
 
 enum PaywallEntryPoint: String {
+    case setupUpgradeCTA = "setup_upgrade_cta"
     case rangeGate = "range_gate"
-    case soundGate = "sound_gate"
+    case voiceGate = "voice_gate"
+    case repeatGate = "repeat_gate"
+    case soundArsenalGate = "sound_arsenal_gate"
+    case qualifiedTrainingGate = "qualified_training_gate"
     case unknown = "unknown"
 
     /// Maps to the analytics feature name for feature_gate_hit events.
     var featureGateName: String {
         switch self {
+        case .setupUpgradeCTA: return "setup_upgrade_cta"
         case .rangeGate: return "extended_range"
-        case .soundGate: return "pro_sounds"
+        case .voiceGate: return "voice_callouts"
+        case .repeatGate: return "repeat_loop"
+        case .soundArsenalGate: return "pro_sounds"
+        case .qualifiedTrainingGate: return "qualified_training_gate"
         case .unknown: return "unknown"
         }
+    }
+}
+
+struct PaywallFeatureContext: Equatable {
+    let eyebrow: String
+    let valueCopy: String
+}
+
+func paywallFeatureContext(for entryPoint: PaywallEntryPoint) -> PaywallFeatureContext {
+    switch entryPoint {
+    case .setupUpgradeCTA:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped Unlock Pro",
+            valueCopy: "Pro turns the setup screen into a full training console: longer random windows, "
+                + "live callouts, round caps, and the full sound arsenal."
+        )
+    case .rangeGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped 60-minute random windows",
+            valueCopy: "Pro removes the 5-minute cap so long rounds, circuits, "
+                + "and stress drills can run on your timing."
+        )
+    case .voiceGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped voice callouts",
+            valueCopy: "Pro adds time checks plus combat, MMA, and conditioning cues "
+                + "without revealing the random timer."
+        )
+    case .repeatGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped round control",
+            valueCopy: "Pro lets you cap loops from 1-100 rounds instead of guessing when a training block should end."
+        )
+    case .soundArsenalGate:
+        return PaywallFeatureContext(
+            eyebrow: "You tapped the sound arsenal",
+            valueCopy: "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds."
+        )
+    case .qualifiedTrainingGate:
+        return PaywallFeatureContext(
+            eyebrow: "Three sessions logged",
+            valueCopy: "You are training like a serious athlete. Pro unlocks longer random windows, combat callouts, "
+                + "round caps, and the full sound arsenal for your next block."
+        )
+    case .unknown:
+        return PaywallFeatureContext(
+            eyebrow: "Pro Tactical",
+            valueCopy: "Unlock longer random windows, combat callouts, round caps, and the full sound arsenal."
+        )
     }
 }
 
@@ -22,32 +79,115 @@ enum PaywallPlanSelection {
     case lifetime
 }
 
+func initialPaywallPlanSelection(
+    entryPoint: PaywallEntryPoint,
+    defaultToAnnualExperiment: Bool
+) -> PaywallPlanSelection {
+    if defaultToAnnualExperiment {
+        return .annual
+    }
+    if entryPoint == .setupUpgradeCTA {
+        return .lifetime
+    }
+    return .monthly
+}
+
+func shouldShowPaywallPlan(
+    _ plan: PaywallPlanSelection,
+    availableProductIDs: Set<String>
+) -> Bool {
+    if availableProductIDs.isEmpty {
+        return plan != .monthly
+    }
+
+    let requiredProductID: String
+    switch plan {
+    case .monthly:
+        requiredProductID = ProManager.monthlyProductID
+    case .annual:
+        requiredProductID = ProManager.annualProductID
+    case .lifetime:
+        requiredProductID = ProManager.paywallProductID
+    }
+    return availableProductIDs.contains(requiredProductID)
+}
+
+/// True when StoreKit returned the product for this plan (required before launching purchase).
+func hasPurchasablePaywallPlan(
+    _ plan: PaywallPlanSelection,
+    availableProductIDs: Set<String>
+) -> Bool {
+    !availableProductIDs.isEmpty && shouldShowPaywallPlan(plan, availableProductIDs: availableProductIDs)
+}
+
+func hasAnyPurchasablePaywallPlan(availableProductIDs: Set<String>) -> Bool {
+    [PaywallPlanSelection.monthly, .annual, .lifetime].contains {
+        hasPurchasablePaywallPlan($0, availableProductIDs: availableProductIDs)
+    }
+}
+
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
-    static let headline = "Stop Training With the Brakes On"
+    static let headline = "Unlock Full Fight-Ready Training"
+    static let headlineOutcomesFirst = "Finish Strong With Full Random Pressure"
     static let subheadline =
-        "Go unlimited — sessions up to 60 minutes, live voice callouts, "
-        + "and a full sound library that updates every month."
+        "Unlock 60-minute random windows, combat voice callouts, round-capped loops, "
+        + "and the full sound arsenal built for pressure drills."
+    static let subheadlineOutcomesFirst =
+        "Longer random windows, combat callouts, and full-spectrum sounds — "
+        + "built so every rep feels closer to live pressure."
     static let subscriptionFooter =
-        "Cancel anytime. Subscription auto-renews until cancelled. "
-        + "Price shown on Apple's confirmation sheet."
+        "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+        + "subscription auto-renews until cancelled."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
-        "Full-length sessions — up to 60 minutes, no cutoffs",
-        "Live voice callouts keep you sharp under pressure",
-        "Loop drills with round limits — just like competition",
-        "Full sound arsenal — real bells, horns, and sirens",
-        "Fresh callout packs every 30 days — Pro gets them first",
+        "Ad-free training — Elite subscription removes rewarded ads",
+        "60-minute random windows for full-length drills",
+        "Combat and MMA voice callouts with live time checks",
+        "Round-capped loops for pad work, sparring, and circuits",
+        "Full sound arsenal — bells, horns, sirens, and more",
+        "Fresh pro audio drops when new packs land",
     ]
 
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
     @State private var hasTrackedDismiss = false
     @State private var purchaseError: String?
-    /// Default to monthly — lowest barrier to entry.
-    @State private var selectedPlan: PaywallPlanSelection = .monthly
+    @State private var selectedPlan: PaywallPlanSelection
     @State private var introOfferEligibleProductIDs: Set<String> = []
     let entryPoint: PaywallEntryPoint
+    let defaultToAnnualExperiment: Bool
+    let valueFramingVariant: String
+
+    init(
+        entryPoint: PaywallEntryPoint,
+        defaultToAnnualExperiment: Bool = false,
+        valueFramingVariant: String = PaywallValueFraming.control
+    ) {
+        self.entryPoint = entryPoint
+        self.defaultToAnnualExperiment = defaultToAnnualExperiment
+        self.valueFramingVariant = valueFramingVariant
+        _selectedPlan = State(initialValue: initialPaywallPlanSelection(
+            entryPoint: entryPoint,
+            defaultToAnnualExperiment: defaultToAnnualExperiment
+        ))
+    }
+
+    private var displayHeadline: String {
+        valueFramingVariant == PaywallValueFraming.outcomesFirst
+            ? Self.headlineOutcomesFirst
+            : Self.headline
+    }
+
+    private var displaySubheadline: String {
+        valueFramingVariant == PaywallValueFraming.outcomesFirst
+            ? Self.subheadlineOutcomesFirst
+            : Self.subheadline
+    }
+
+    private var featureContext: PaywallFeatureContext {
+        paywallFeatureContext(for: entryPoint)
+    }
 
     // MARK: - Derived helpers
 
@@ -75,6 +215,10 @@ struct PaywallSheet: View {
         proManager.products.map(\.id).sorted().joined(separator: "|")
     }
 
+    private var availableProductIDs: Set<String> {
+        Set(proManager.products.map(\.id))
+    }
+
     private var ctaLabel: String {
         if introOfferEligibleProductIDs.contains(selectedProductID) {
             return "Start 7-Day Free Trial"
@@ -86,92 +230,118 @@ struct PaywallSheet: View {
         }
     }
 
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                HStack {
-                    Button("Not now") {
-                        trackDismiss(method: "header_not_now")
-                        dismiss()
-                    }
-                    .font(.footnote.weight(.semibold))
-                    .foregroundColor(.textSecondary)
+    /// Never pass an all-whitespace title to `PrimaryButton` (empty labels can disappear in sheets).
+    private var canPurchaseSelectedPlan: Bool {
+        hasPurchasablePaywallPlan(selectedPlan, availableProductIDs: availableProductIDs)
+    }
 
-                    Spacer()
+    private var ctaButtonTitle: String {
+        if availableProductIDs.isEmpty {
+            return "Loading plans…"
+        }
+        if !canPurchaseSelectedPlan {
+            return "Purchases unavailable"
+        }
+        let trimmed = ctaLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Continue" : trimmed
+    }
 
-                    Button {
-                        trackDismiss(method: "close_button")
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(.textSecondary)
-                            .accessibilityLabel("Close paywall")
+    /// Headline, value props, and plan picker — scrolls so the purchase strip can stay pinned.
+    @ViewBuilder
+    private var paywallScrollContent: some View {
+        VStack(spacing: 24) {
+            HStack {
+                Button("Not now") {
+                    trackDismiss(method: "header_not_now")
+                    dismiss()
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.textSecondary)
+
+                Spacer()
+
+                Button("Restore purchase") {
+                    Task {
+                        await restorePurchaseFromPaywall()
                     }
                 }
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.textSecondary)
+
+                Button {
+                    trackDismiss(method: "close_button")
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.textSecondary)
+                        .accessibilityLabel("Close paywall")
+                }
+            }
+
+            VStack(spacing: 4) {
+                Text(displayHeadline)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.textPrimary)
 
                 VStack(spacing: 4) {
-                    Text(Self.headline)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.textPrimary)
-
-                    VStack(spacing: 4) {
-                        Text(Self.subheadline)
-                        Text(Self.subscriptionFooter)
+                    Text(displaySubheadline)
+                    Text(Self.subscriptionFooter)
+                }
+                .font(.caption)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
+                    .onEnded { _ in
+                        triggerDebugUnlock()
                     }
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(featureContext.eyebrow)
+                    .font(.caption.bold())
+                    .foregroundColor(.accentPrimary)
+                Text(featureContext.valueCopy)
                     .font(.caption)
-                    .foregroundColor(.textSecondary)
-                    .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .contentShape(Rectangle())
-                .highPriorityGesture(
-                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
-                        .onEnded { _ in
-                            triggerDebugUnlock()
-                        }
-                )
+                    .foregroundColor(.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.accentPrimary.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.accentPrimary.opacity(0.25), lineWidth: 1)
+            )
 
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(Self.featureTitle)
-                            .font(.caption.bold())
-                            .foregroundColor(.accentPrimary)
-                        ForEach(Self.featureRows, id: \.self) { feature in
-                            ProFeatureRow(text: feature)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-
-                // Plan selector
+            VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("CHOOSE A PLAN")
+                    Text(Self.featureTitle)
                         .font(.caption.bold())
                         .foregroundColor(.accentPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-
-                    PlanOptionRow(
-                        title: "Monthly",
-                        priceLabel: "\(monthlyPrice)/month",
-                        badge: nil,
-                        isSelected: selectedPlan == .monthly
-                    ) {
-                        selectedPlan = .monthly
+                    ForEach(Self.featureRows, id: \.self) { feature in
+                        ProFeatureRow(text: feature)
                     }
+                }
+            }
+            .padding(.horizontal)
 
-                    PlanOptionRow(
-                        title: "Annual",
-                        priceLabel: "\(annualPrice)/year",
-                        badge: "Best Value",
-                        isSelected: selectedPlan == .annual
-                    ) {
-                        selectedPlan = .annual
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("CHOOSE A PLAN")
+                    .font(.caption.bold())
+                    .foregroundColor(.accentPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
 
+                if shouldShowPaywallPlan(.lifetime, availableProductIDs: availableProductIDs) {
                     PlanOptionRow(
                         title: "Lifetime",
                         priceLabel: lifetimePrice,
@@ -179,69 +349,165 @@ struct PaywallSheet: View {
                         isSelected: selectedPlan == .lifetime
                     ) {
                         selectedPlan = .lifetime
+                        trackOfferSelected(
+                            plan: "lifetime",
+                            productID: ProManager.paywallProductID,
+                            selectionSource: "plan_card"
+                        )
                     }
                 }
 
-                VStack(spacing: 12) {
-                    PrimaryButton(title: ctaLabel) {
-                        Task {
-                            await purchase(productID: selectedProductID)
-                        }
+                if shouldShowPaywallPlan(.annual, availableProductIDs: availableProductIDs) {
+                    PlanOptionRow(
+                        title: "Annual",
+                        priceLabel: "\(annualPrice)/year",
+                        badge: "Best Value",
+                        isSelected: selectedPlan == .annual
+                    ) {
+                        selectedPlan = .annual
+                        trackOfferSelected(
+                            plan: "annual",
+                            productID: ProManager.annualProductID,
+                            selectionSource: "plan_card"
+                        )
                     }
                 }
 
-                Button("Restore purchase") {
-                    Task {
-                        let result = await proManager.restorePurchases()
-                        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
-                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
-                            AnalyticsProperties.result: result.rawValue,
-                        ])
-
-                        if result == .restored || result == .alreadyUnlocked {
-                            hasTrackedDismiss = true
-                            dismiss()
-                        }
+                if shouldShowPaywallPlan(.monthly, availableProductIDs: availableProductIDs) {
+                    PlanOptionRow(
+                        title: "Monthly",
+                        priceLabel: "\(monthlyPrice)/month",
+                        badge: nil,
+                        isSelected: selectedPlan == .monthly
+                    ) {
+                        selectedPlan = .monthly
+                        trackOfferSelected(
+                            plan: "monthly",
+                            productID: ProManager.monthlyProductID,
+                            selectionSource: "plan_card"
+                        )
                     }
                 }
-                .font(.footnote)
-                .foregroundColor(.textSecondary)
-
-                Button("Not now") {
-                    trackDismiss(method: "footer_not_now")
-                    dismiss()
-                }
-                .font(.footnote)
-                .foregroundColor(.textSecondary)
-
-                // Required by App Store Guideline 3.1.2(c)
-                // swiftlint:disable force_unwrapping
-                HStack(spacing: 16) {
-                    Link(
-                        "Privacy Policy",
-                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
-                    )
-                    Link(
-                        "Terms of Use (EULA)",
-                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
-                    )
-                }
-                // swiftlint:enable force_unwrapping
-                .font(.caption2)
-                .foregroundColor(.textSecondary)
             }
-            .padding(24)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
-            .frame(maxWidth: .infinity, alignment: .top)
+            .onChange(of: productsEligibilityKey) { _, _ in
+                if shouldShowPaywallPlan(selectedPlan, availableProductIDs: availableProductIDs) {
+                    return
+                }
+                if shouldShowPaywallPlan(.lifetime, availableProductIDs: availableProductIDs) {
+                    selectedPlan = .lifetime
+                } else if shouldShowPaywallPlan(.annual, availableProductIDs: availableProductIDs) {
+                    selectedPlan = .annual
+                } else if shouldShowPaywallPlan(.monthly, availableProductIDs: availableProductIDs) {
+                    selectedPlan = .monthly
+                }
+            }
         }
-        .scrollIndicators(.hidden)
+    }
+
+    /// Always visible above the home indicator: primary CTA + legal / dismiss affordances.
+    @ViewBuilder
+    private var paywallStickyChrome: some View {
+        VStack(spacing: 12) {
+            if availableProductIDs.isEmpty {
+                Text("Loading subscription options from the App Store…")
+                    .font(.footnote)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+            } else if !canPurchaseSelectedPlan {
+                Text("This plan is not available in the App Store right now. Choose another plan or try again later.")
+                    .font(.footnote)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            PrimaryButton(title: ctaButtonTitle) {
+                guard canPurchaseSelectedPlan else { return }
+                Task {
+                    trackOfferSelected(
+                        plan: planName(for: selectedPlan),
+                        productID: selectedProductID,
+                        selectionSource: "primary_cta"
+                    )
+                    await purchase(productID: selectedProductID)
+                }
+            }
+            .opacity(canPurchaseSelectedPlan ? 1 : 0.55)
+            .allowsHitTesting(canPurchaseSelectedPlan)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.95), lineWidth: 2.5)
+            )
+
+            Button("Restore purchase") {
+                Task {
+                    await restorePurchaseFromPaywall()
+                }
+            }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
+
+            Button("Not now") {
+                trackDismiss(method: "footer_not_now")
+                dismiss()
+            }
+            .font(.footnote)
+            .foregroundColor(.textSecondary)
+
+            // Required by App Store Guideline 3.1.2(c)
+            // swiftlint:disable force_unwrapping
+            HStack(spacing: 16) {
+                Link(
+                    "Privacy Policy",
+                    destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
+                )
+                Link(
+                    "Terms of Use (EULA)",
+                    destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
+                )
+            }
+            // swiftlint:enable force_unwrapping
+            .font(.caption2)
+            .foregroundColor(.textSecondary)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                paywallScrollContent
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .padding(.bottom, 28)
+            }
+            .scrollIndicators(.hidden)
+
+            Rectangle()
+                .fill(Color.white.opacity(0.18))
+                .frame(height: 1)
+                .padding(.horizontal, 12)
+
+            paywallStickyChrome
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity)
+                .background(Color.backgroundDark)
+                .safeAreaPadding(.bottom, 6)
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.backgroundDark)
         .task {
+            let variant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+            AnalyticsService.shared.setPaywallSurfaceContext(
+                entryPoint: entryPoint.rawValue,
+                experimentVariant: variant
+            )
+            let framing = AnalyticsService.shared.paywallValueFramingVariant()
             AnalyticsService.shared.track(AnalyticsEvents.paywallViewed, properties: [
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                AnalyticsProperties.paywallExperimentVariant: variant,
+                AnalyticsProperties.paywallValueFramingVariant: framing,
             ])
+            AnalyticsService.shared.trackSubscriptionFunnelStep(SubscriptionFunnelSteps.paywallViewed)
             await proManager.fetchProduct()
             await refreshIntroOfferEligibility()
         }
@@ -262,10 +528,30 @@ struct PaywallSheet: View {
     }
 
     @MainActor
+    private func restorePurchaseFromPaywall() async {
+        let result = await proManager.restorePurchases()
+        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
+            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            AnalyticsProperties.result: result.rawValue,
+        ])
+
+        if result == .restored || result == .alreadyUnlocked {
+            hasTrackedDismiss = true
+            dismiss()
+        }
+    }
+
+    @MainActor
     private func purchase(productID: String) async {
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseAttempt,
             properties: purchaseProperties(productID: productID)
+        )
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.purchaseFlowLaunched,
+            properties: [
+                AnalyticsProperties.productId: productID,
+            ]
         )
 
         let result = await proManager.purchase(productID: productID)
@@ -296,6 +582,13 @@ struct PaywallSheet: View {
                 AnalyticsProperties.productId: productID,
                 AnalyticsProperties.entryPoint: entryPoint.rawValue,
             ])
+            if result != .userCancelled {
+                AnalyticsService.shared.track(AnalyticsEvents.paywallPurchaseFailReason, properties: [
+                    AnalyticsProperties.reason: failReason,
+                    AnalyticsProperties.productId: productID,
+                    AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                ])
+            }
 
             switch result {
             case .productUnavailable:
@@ -313,6 +606,10 @@ struct PaywallSheet: View {
         AnalyticsService.shared.track(
             AnalyticsEvents.paywallPurchaseSuccess,
             properties: purchaseProperties(productID: productID, result: result, includeRevenue: true)
+        )
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.purchaseSucceeded,
+            properties: [AnalyticsProperties.productId: productID]
         )
         hasTrackedDismiss = true
         dismiss()
@@ -337,9 +634,13 @@ struct PaywallSheet: View {
         result: ProPurchaseResult? = nil,
         includeRevenue: Bool = false
     ) -> [String: Any] {
+        let experimentVariant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+        let framing = valueFramingVariant
         var properties: [String: Any] = [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.productId: productID,
+            AnalyticsProperties.paywallExperimentVariant: experimentVariant,
+            AnalyticsProperties.paywallValueFramingVariant: framing,
         ]
         if let result {
             properties[AnalyticsProperties.result] = result.rawValue
@@ -358,7 +659,40 @@ struct PaywallSheet: View {
         AnalyticsService.shared.track(AnalyticsEvents.paywallDismissed, properties: [
             AnalyticsProperties.entryPoint: entryPoint.rawValue,
             AnalyticsProperties.dismissMethod: method,
+            AnalyticsProperties.paywallValueFramingVariant: valueFramingVariant,
         ])
+    }
+
+    private func trackOfferSelected(plan: String, productID: String, selectionSource: String) {
+        let experimentVariant = PaywallExperimentVariants.label(defaultAnnual: defaultToAnnualExperiment)
+        let framing = AnalyticsService.shared.paywallValueFramingVariant()
+        AnalyticsService.shared.track(AnalyticsEvents.paywallOfferSelect, properties: [
+            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+            AnalyticsProperties.productId: productID,
+            "plan": plan,
+            AnalyticsProperties.paywallSelectionSource: selectionSource,
+            AnalyticsProperties.paywallExperimentVariant: experimentVariant,
+            AnalyticsProperties.paywallValueFramingVariant: framing,
+        ])
+        AnalyticsService.shared.trackSubscriptionFunnelStep(
+            SubscriptionFunnelSteps.paywallPlanSelected,
+            properties: [
+                AnalyticsProperties.productId: productID,
+                "plan": plan,
+                AnalyticsProperties.paywallSelectionSource: selectionSource,
+            ]
+        )
+    }
+
+    private func planName(for plan: PaywallPlanSelection) -> String {
+        switch plan {
+        case .monthly:
+            return "monthly"
+        case .annual:
+            return "annual"
+        case .lifetime:
+            return "lifetime"
+        }
     }
 
     private func triggerDebugUnlock() {

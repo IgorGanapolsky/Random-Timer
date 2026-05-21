@@ -50,10 +50,10 @@ To wire scheduled CI checks without manual secret editing:
 Optional:
 
 - `ASC_VERSION_URL`
-- `ASC_EXPECTED_STATE_TEXT` (default: `Prepare for Submission`)
+- `ASC_EXPECTED_STATE_TEXT` (optional; when set, the agent-browser check requires this state text)
 - `ASC_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)
 - `PLAY_CONSOLE_URL`
-- `PLAY_EXPECTED_APP_NAME` (default: `Random Timer`)
+- `PLAY_EXPECTED_APP_NAME` (default: `Random Tactical Timer`)
 - `PLAY_EXPECTED_BANNER_TEXT`
 
 ## Strict Release-Readiness Gate

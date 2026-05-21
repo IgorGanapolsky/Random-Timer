@@ -11,7 +11,7 @@ BUILT FOR:
 - MMA, Muay Thai, and kickboxing reaction drills
 - BJJ scramble and positional transition drills
 - Military combatives and self-defense scenario training
-- HIIT and CrossFit sessions that punish predictability
+- HIIT, CrossFit, and tabata sessions that punish predictability
 
 WHY IT WORKS:
 - Stop anticipation: react to the cue, not the countdown.
@@ -20,6 +20,7 @@ WHY IT WORKS:
 
 KEY FEATURES:
 - True random trigger within your selected min/max range
+- Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
 - Hidden countdown mode — no timer watching allowed
 - Loop mode for continuous random chaos rounds
 - High-intensity alarm + haptic vibration + volume precision
@@ -27,11 +28,15 @@ KEY FEATURES:
 - Full-screen tactical alerts that command attention
 
 PRO FEATURES:
-- 🎙️ AI Voice Callouts: Choose male or female coach voice — 31 unique tactical cues keep you sharp during training
-- 🗣️ Two voice styles: commanding male drill sergeant or focused female coach — pick what pushes you harder
-- ⏱️ Elapsed time announcements on the minute so you never lose track
-- 🔁 Round selection (1–100) for structured training cycles
-- 📏 Extended timer range up to 1 hour
+- AI voice callouts: male or female coach voice with tactical cues so you stay sharp mid-round
+- Command-cue previews and elapsed-time style callouts for pressure drills
+- Sound Arsenal: expanded alarm library for serious training sessions
+- Round selection (1–100) for structured training cycles
+- Extended timer range up to 60 minutes for long sessions
+
+SUBSCRIPTION & UPGRADE:
+- Pro is optional. Monthly and annual subscriptions are available where offered; pricing is shown on the purchase sheet before you confirm.
+- A one-time upgrade may be offered depending on product configuration in your region.
 
 HOW IT WORKS:
 1. Set your range (e.g. 15 seconds to 3 minutes)
@@ -47,4 +52,4 @@ WORKS FOR:
 - HIIT and CrossFit WOD timer that punishes predictability
 - Unpredictable round timer for sparring and pad work
 
-Zero ads. No tracking. Free core random timer with an optional Pro upgrade for advanced tactical training features.
+No ads in the training experience. Optional anonymous product analytics (for example via PostHog) may be used to improve stability and features—see the Privacy Policy linked on the store listing. Optional Pro subscription unlocks advanced training features above.

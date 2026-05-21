@@ -12,6 +12,15 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Ordered steps for PostHog funnels (`subscription_funnel_step` event). */
+object SubscriptionFunnelSteps {
+    const val PAYWALL_VIEWED = "paywall_viewed"
+    const val PAYWALL_PLAN_SELECTED = "paywall_plan_selected"
+    const val PURCHASE_FLOW_LAUNCHED = "purchase_flow_launched"
+    const val PURCHASE_SUCCEEDED = "purchase_succeeded"
+    const val TRIAL_STARTED = "trial_started"
+}
+
 @Singleton
 class AnalyticsService
     @Inject
@@ -20,22 +29,42 @@ class AnalyticsService
         private var prefs: SharedPreferences? = null
         private var analyticsContextProperties: Map<String, Any> = emptyMap()
 
+        @Volatile
+        private var lastPaywallEntryPoint: String? = null
+
+        @Volatile
+        private var lastPaywallExperimentVariant: String? = null
+
         fun initialize(application: Application) {
             if (initialized) return
 
             prefs = application.getSharedPreferences(PREFS_NAME, Application.MODE_PRIVATE)
 
-            val apiKey = BuildConfig.POSTHOG_API_KEY
-            if (apiKey.isBlank()) {
-                return
-            }
-
+            val isPersistentInternal = prefs?.getBoolean(KEY_IS_INTERNAL_USER, false) ?: false
             val distributionChannel = resolveDistributionChannel(application)
             val isInternalUser =
-                isEmulator() ||
+                isPersistentInternal ||
+                    isEmulator() ||
                     BuildConfig.DEBUG ||
                     isUiTestSession(application) ||
                     distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL
+
+            val apiKey = BuildConfig.POSTHOG_API_KEY
+            if (apiKey.isBlank()) {
+                analyticsContextProperties =
+                    mapOf(
+                        "platform" to "android",
+                        "app_version" to BuildConfig.VERSION_NAME,
+                        "\$app_build" to BuildConfig.VERSION_CODE,
+                        AnalyticsProperties.ENVIRONMENT to environment(),
+                        AnalyticsProperties.BUILD_AUDIENCE to buildAudience(),
+                        AnalyticsProperties.BUILD_TYPE to if (BuildConfig.DEBUG) "debug" else "release",
+                        AnalyticsProperties.RUNTIME_TARGET to if (isEmulator()) "emulator" else "device",
+                        AnalyticsProperties.DISTRIBUTION_CHANNEL to distributionChannel,
+                        "is_internal" to isInternalUser,
+                    )
+                return
+            }
 
             val config =
                 PostHogAndroidConfig(
@@ -46,6 +75,7 @@ class AnalyticsService
                     captureApplicationLifecycleEvents = false
                     captureDeepLinks = true
                     captureScreenViews = false // We track manually for better control
+                    preloadFeatureFlags = true
                     // Session replay: production installs only (enable in PostHog Project Settings → Session replay).
                     // Jetpack Compose requires screenshot mode. No client sampleRate in SDK 3.8.2 — tune in PostHog + debouncerDelayMs.
                     if (!isInternalUser) {
@@ -114,6 +144,80 @@ class AnalyticsService
         fun flush() {
             if (!initialized) return
             PostHog.flush()
+        }
+
+        fun paywallDefaultAnnualExperimentEnabled(): Boolean {
+            if (!initialized) return false
+            return try {
+                PostHog.isFeatureEnabled(PostHogExperimentKeys.PAYWALL_DEFAULT_PLAN_ANNUAL, false)
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        fun rewardedAdsEnabled(): Boolean {
+            if (!initialized) return false
+            return try {
+                PostHog.isFeatureEnabled(PostHogExperimentKeys.REWARDED_ADS_ENABLED, false)
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        fun setPaywallSurfaceContext(
+            entryPoint: String,
+            experimentVariant: String,
+        ) {
+            lastPaywallEntryPoint = entryPoint
+            lastPaywallExperimentVariant = experimentVariant
+        }
+
+        fun paywallValueFramingVariant(): String {
+            if (!initialized) return PaywallValueFraming.CONTROL
+            return try {
+                when (
+                    val raw =
+                        PostHog.getFeatureFlag(PostHogExperimentKeys.PAYWALL_VALUE_FRAMING)
+                ) {
+                    PaywallValueFraming.OUTCOMES_FIRST, "outcomes_first" -> PaywallValueFraming.OUTCOMES_FIRST
+                    else -> PaywallValueFraming.CONTROL
+                }
+            } catch (_: Exception) {
+                PaywallValueFraming.CONTROL
+            }
+        }
+
+        fun trackSubscriptionFunnelStep(
+            funnelStep: String,
+            properties: Map<String, Any> = emptyMap(),
+        ) {
+            if (!initialized) return
+            val framing = paywallValueFramingVariant()
+            val merged =
+                mutableMapOf<String, Any>(
+                    "funnel_step" to funnelStep,
+                    AnalyticsProperties.PAYWALL_VALUE_FRAMING_VARIANT to framing,
+                )
+            lastPaywallEntryPoint?.let { merged[AnalyticsProperties.ENTRY_POINT] = it }
+            lastPaywallExperimentVariant?.let {
+                merged[AnalyticsProperties.PAYWALL_EXPERIMENT_VARIANT] = it
+            }
+            merged.putAll(properties)
+            track(AnalyticsEvents.SUBSCRIPTION_FUNNEL_STEP, merged)
+        }
+
+        fun reloadFeatureFlags(onReady: () -> Unit) {
+            if (!initialized) {
+                onReady()
+                return
+            }
+            try {
+                PostHog.reloadFeatureFlags {
+                    onReady()
+                }
+            } catch (_: Exception) {
+                onReady()
+            }
         }
 
         // --- UTM Attribution ---
@@ -269,13 +373,22 @@ class AnalyticsService
             )
         }
 
+        fun markAsInternalUser() {
+            prefs?.edit()?.putBoolean(KEY_IS_INTERNAL_USER, true)?.apply()
+            identify(
+                PostHog.distinctId(),
+                mapOf("is_internal" to true, "developer_backdoor_used" to true),
+            )
+        }
+
         companion object {
-            private const val PREFS_NAME = "random_timer_analytics"
+            const val PREFS_NAME = "random_timer_analytics"
             private const val KEY_DISTINCT_ID = "posthog_distinct_id"
             private const val KEY_HAS_OPENED = "has_first_opened"
             private const val KEY_HAS_CONFIGURED = "has_first_configured"
-            private const val KEY_HAS_COMPLETED = "has_first_completed"
+            const val KEY_HAS_COMPLETED = "has_first_completed"
             private const val KEY_HAS_TRACKED_APPLICATION_INSTALLED = "has_tracked_application_installed"
+            private const val KEY_IS_INTERNAL_USER = "is_internal_user"
             private val UTM_KEYS =
                 listOf(
                     "utm_source",
@@ -289,12 +402,16 @@ class AnalyticsService
 
 // Event names for consistency
 object AnalyticsEvents {
+    const val PAYWALL_VIEW = "paywall_view"
+    const val PAYWALL_OFFER_SELECT = "paywall_offer_select"
+    const val PAYWALL_PURCHASE_FAIL_REASON = "paywall_purchase_fail_reason"
     const val APPLICATION_INSTALLED = "Application Installed"
     const val APPLICATION_OPENED = "Application Opened"
     const val TIMER_STARTED = "timer_started"
     const val TIMER_COMPLETED = "timer_completed"
     const val TIMER_PAUSED = "timer_paused"
     const val TIMER_RESUMED = "timer_resumed"
+    const val TIMER_EXTENDED = "timer_extended"
     const val TIMER_RESET = "timer_reset"
     const val TIMER_STOPPED = "timer_stopped"
     const val ALARM_TRIGGERED = "alarm_triggered"
@@ -310,6 +427,7 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_SUCCESS = "paywall_purchase_success"
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
+    const val BILLING_PRODUCT_CATALOG_STATUS = "billing_product_catalog_status"
 
     // Loop
     const val LOOP_ROUND_COMPLETED = "loop_round_completed"
@@ -323,10 +441,18 @@ object AnalyticsEvents {
     // Free trial
     const val FREE_TRIAL_STARTED = "free_trial_started"
 
+    /** Canonical paywall → trial → purchase funnel (same `funnel_step` values on iOS). */
+    const val SUBSCRIPTION_FUNNEL_STEP = "subscription_funnel_step"
+
     // Feature engagement
     const val VOICE_GENDER_SELECTED = "voice_gender_selected"
     const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val QUALIFIED_TRAINING_PAYWALL_ELIGIBLE = "qualified_training_paywall_eligible"
+    const val REWARDED_AD_REQUESTED = "rewarded_ad_requested"
+    const val REWARDED_AD_COMPLETED = "rewarded_ad_completed"
+    const val REWARDED_AD_UNLOCK = "rewarded_ad_unlock"
     const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
+    const val TRAINING_PRESET_APPLIED = "training_preset_applied"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
@@ -342,6 +468,9 @@ object AnalyticsProperties {
     /** Mirrors iOS; consumed by executive_metrics_snapshot PRAGMATIC filter. */
     const val DISTRIBUTION_CHANNEL = "distribution_channel"
 
+    const val SETTING_NAME = "setting_name"
+    const val SETTING_VALUE = "setting_value"
+    const val PREVIOUS_VALUE = "previous_value"
     const val ENTRY_POINT = "entry_point"
     const val RESULT = "result"
     const val SUCCESS = "success"
@@ -358,11 +487,20 @@ object AnalyticsProperties {
     const val RUNTIME_TARGET = "runtime_target"
     const val GENDER = "gender"
     const val FEATURE = "feature"
+    const val PRESET_ID = "preset_id"
     const val ALARM_RESPONSE_TIME = "alarm_response_time"
+    const val DURATION_SECONDS = "duration_seconds"
     const val ABANDON_REASON = "abandon_reason"
     const val SCREEN = "screen"
     const val REASON = "reason"
     const val REVENUE = "revenue"
+    const val PAYWALL_EXPERIMENT_VARIANT = "paywall_experiment_variant"
+    const val PAYWALL_VALUE_FRAMING_VARIANT = "paywall_value_framing_variant"
+    const val PAYWALL_SELECTION_SOURCE = "paywall_selection_source"
+    const val STATUS = "status"
+    const val AVAILABLE_PRODUCT_IDS = "available_product_ids"
+    const val MISSING_PRODUCT_IDS = "missing_product_ids"
+    const val PRODUCT_COUNT = "product_count"
 }
 
 object AnalyticsScreens {

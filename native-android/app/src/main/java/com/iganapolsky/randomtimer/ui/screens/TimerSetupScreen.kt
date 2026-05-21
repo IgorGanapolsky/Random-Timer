@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui.screens
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -36,7 +37,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
@@ -58,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -81,12 +82,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
+import com.iganapolsky.randomtimer.domain.model.TrainingPreset
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
-import com.iganapolsky.randomtimer.domain.model.activationPresetForFirstCompletionIfEligible
+import com.iganapolsky.randomtimer.domain.model.activationLegacyRangePresetIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
 import com.iganapolsky.randomtimer.domain.model.toggleExtendedRange
 import com.iganapolsky.randomtimer.ui.components.GlassCard
@@ -133,6 +140,25 @@ private object SetupSpacing {
         )
 }
 
+internal fun primaryStartButtonText(hasFirstCompleted: Boolean): String =
+    if (hasFirstCompleted) {
+        "Start Timer"
+    } else {
+        "Start First Drill"
+    }
+
+internal fun primaryStartButtonCaption(hasFirstCompleted: Boolean): String? =
+    if (hasFirstCompleted) {
+        null
+    } else {
+        "Quick start: the default drill fires in 5-30 seconds."
+    }
+
+internal fun readHasFirstCompleted(context: Context): Boolean =
+    context
+        .getSharedPreferences(AnalyticsService.PREFS_NAME, Context.MODE_PRIVATE)
+        .getBoolean(AnalyticsService.KEY_HAS_COMPLETED, false)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TimerSetupScreen(
@@ -144,17 +170,20 @@ fun TimerSetupScreen(
     onCommandCuePreview: (VoiceGender) -> Unit,
     totalSessions: Int = 0,
     currentStreak: Int = 0,
-    hasCompletedFirstTimer: Boolean = false,
     isPro: Boolean = false,
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
+    onTrainingPresetApplied: (TrainingPreset) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var hasFirstCompleted by remember(context) { mutableStateOf(readHasFirstCompleted(context)) }
     val haptic = LocalHapticFeedback.current
     var showArsenal by remember { mutableStateOf(!isPro) }
+    var showCompetitionPrep by remember { mutableStateOf(false) }
     var storedFreeMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
     var storedFreeMaxSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.maxSeconds) }
     var storedExtendedMinSeconds by rememberSaveable { mutableIntStateOf(TimerConfig.DEFAULT.minSeconds) }
@@ -164,15 +193,25 @@ fun TimerSetupScreen(
         showArsenal = true
     }
 
+    DisposableEffect(lifecycleOwner, context) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    hasFirstCompleted = readHasFirstCompleted(context)
+                }
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(
-        hasCompletedFirstTimer,
         config.useExtendedRange,
         config.minSeconds,
         config.maxSeconds,
     ) {
         val prefs = context.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
         if (prefs.getBoolean("activation_first_run_range_nudge_applied", false)) return@LaunchedEffect
-        val next = activationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer, config)
+        val next = activationLegacyRangePresetIfEligible(config)
         if (next != null) {
             prefs.edit().putBoolean("activation_first_run_range_nudge_applied", true).apply()
             onConfigChange(next)
@@ -257,21 +296,37 @@ fun TimerSetupScreen(
                 }
             },
             bottomBar = {
-                PrimaryButton(
-                    text = "Start Timer",
-                    onClick = onStartTimer,
+                Column(
                     modifier =
                         Modifier
-                            .semantics { testTagsAsResourceId = true }
-                            .testTag("start_timer")
+                            .fillMaxWidth()
                             .padding(horizontal = spacing.outerHorizontal)
                             .padding(bottom = 16.dp, top = 8.dp)
-                            .navigationBarsPadding()
-                            .graphicsLayer {
-                                scaleX = 1.02f
-                                scaleY = 1.02f
-                            },
-                )
+                            .navigationBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    primaryStartButtonCaption(hasFirstCompleted)?.let { caption ->
+                        Text(
+                            text = caption,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextMuted,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
+                    PrimaryButton(
+                        text = primaryStartButtonText(hasFirstCompleted),
+                        onClick = onStartTimer,
+                        modifier =
+                            Modifier
+                                .semantics { testTagsAsResourceId = true }
+                                .testTag("start_timer")
+                                .graphicsLayer {
+                                    scaleX = 1.02f
+                                    scaleY = 1.02f
+                                },
+                    )
+                }
             },
             containerColor = TimerColors.BackgroundDark,
             modifier = Modifier.fillMaxSize(),
@@ -289,26 +344,24 @@ fun TimerSetupScreen(
                         bottom = spacing.listBottom,
                     ),
             ) {
-                // Training Stats
-                if (hasCompletedFirstTimer) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                // Training Stats (always visible — never hide behind a "first completion" gate)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Session #${totalSessions + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TimerColors.TextSecondary,
+                        )
+                        if (currentStreak > 1) {
                             Text(
-                                text = "Session #${totalSessions + 1}",
+                                text = "\uD83D\uDD25 $currentStreak day streak",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TimerColors.TextSecondary,
+                                color = TimerColors.AccentPrimary,
                             )
-                            if (currentStreak > 1) {
-                                Text(
-                                    text = "\uD83D\uDD25 $currentStreak day streak",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TimerColors.AccentPrimary,
-                                )
-                            }
                         }
                     }
                 }
@@ -367,13 +420,14 @@ fun TimerSetupScreen(
                                         label = {
                                             Text(
                                                 text = if (config.useExtendedRange) "1H" else "5m",
-                                                style = MaterialTheme.typography.labelSmall,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = if (config.useExtendedRange) FontWeight.Bold else FontWeight.Normal,
                                             )
                                         },
                                         colors =
                                             FilterChipDefaults.filterChipColors(
                                                 containerColor = TimerColors.GlassBackground,
-                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.2f),
+                                                selectedContainerColor = TimerColors.AccentPrimary.copy(alpha = 0.3f),
                                                 labelColor = TimerColors.TextSecondary,
                                                 selectedLabelColor = TimerColors.AccentPrimary,
                                             ),
@@ -416,6 +470,7 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMinSeconds = newMin,
                                             maxSecondsLimit = maxRange,
+                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = min, maxSeconds = max)
                                 },
@@ -426,6 +481,7 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMaxSeconds = newMax,
                                             maxSecondsLimit = maxRange,
+                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                                 },
@@ -815,6 +871,63 @@ fun TimerSetupScreen(
                     }
                 }
 
+                if (isPro) {
+                    item {
+                        GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Training Presets",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TimerColors.TextPrimary,
+                                )
+
+                                TrainingPreset.ALL.forEach { preset ->
+                                    Surface(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onTrainingPresetApplied(preset)
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = TimerColors.GlassBackground,
+                                        border = BorderStroke(1.dp, TimerColors.GlassBorder),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                            ) {
+                                                Text(
+                                                    text = preset.title,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = TimerColors.TextPrimary,
+                                                )
+                                                Text(
+                                                    text = preset.subtitle,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = TimerColors.TextMuted,
+                                                )
+                                            }
+                                            Text(
+                                                text = "${formatTime(preset.minSeconds)}-${formatTime(preset.maxSeconds)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TimerColors.AccentPrimary,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // 3. Sound Arsenal
                 item {
                     Spacer(modifier = Modifier.height(if (isCompactHeight) 8.dp else 16.dp))
@@ -852,22 +965,32 @@ fun TimerSetupScreen(
                             )
 
                             if (!isPro) {
-                                IconButton(
+                                Surface(
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onUpgradeTap("pro_sounds")
                                     },
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = TimerColors.AccentPrimary.copy(alpha = 0.1f),
                                     modifier =
-                                        Modifier
-                                            .size(28.dp)
-                                            .semantics { contentDescription = "Unlock Sound Arsenal" },
+                                        Modifier.semantics { contentDescription = "Unlock Sound Arsenal" },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Lock,
-                                        contentDescription = null,
-                                        tint = TimerColors.TextMuted,
-                                        modifier = Modifier.size(14.dp),
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = "PRO ",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                        Text(
+                                            text = "\uD83D\uDD12",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TimerColors.AccentPrimary,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1029,17 +1152,6 @@ private fun SoundArsenalCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = TimerColors.TextMuted,
                         textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Unlock Pro",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TimerColors.AccentPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier =
-                            Modifier.clickable(onClick = {
-                                onUpgradeTap("pro_sounds")
-                            }),
                     )
                 }
             }
@@ -1282,16 +1394,28 @@ private fun SoundTypeButton(
             },
         border =
             BorderStroke(
-                width = 1.dp,
+                width = if (selected) 2.dp else 1.dp,
                 color = if (selected) TimerColors.AccentPrimary else TimerColors.GlassBorder,
             ),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "✓",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = TimerColors.AccentPrimary.copy(alpha = if (selected) 1f else 0f),
+                modifier = Modifier.width(18.dp),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) TimerColors.AccentPrimary else TimerColors.TextPrimary,
+            )
+        }
     }
 }
 

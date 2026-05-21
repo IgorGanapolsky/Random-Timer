@@ -1,6 +1,190 @@
 {
-  "generated_at": "2026-03-27T21:10:07+00:00",
-  "status": "skipped",
-  "reason": "missing POSTHOG credentials",
-  "wqtu": 0
+  "generated_at": "2026-05-21T18:21:52+00:00",
+  "status": "ok",
+  "nsm": {
+    "wqtu": 10,
+    "definition": "Users with >= 3 timer_completed in trailing 7 days",
+    "alert_threshold": 1,
+    "alert_fired": false
+  },
+  "engagement": {
+    "dau": 8,
+    "wau": 106
+  },
+  "abandon_rate": {
+    "started_30d": 1465,
+    "completed_30d": 598,
+    "abandon_rate_pct": 59.2
+  },
+  "monetization_funnel": {
+    "paywall_viewed_users": 99,
+    "purchase_attempted_users": 5,
+    "purchase_succeeded_users": 0,
+    "conversion_pct": 0.0
+  },
+  "wqtu_trend": [
+    {
+      "week_start": "2026-04-19",
+      "wqtu": 1
+    },
+    {
+      "week_start": "2026-04-26",
+      "wqtu": 3
+    },
+    {
+      "week_start": "2026-05-03",
+      "wqtu": 7
+    },
+    {
+      "week_start": "2026-05-10",
+      "wqtu": 11
+    },
+    {
+      "week_start": "2026-05-17",
+      "wqtu": 4
+    }
+  ],
+  "query_errors": [],
+  "history": [
+    {
+      "timestamp": "2026-05-20T18:08:00+00:00",
+      "wqtu": 12,
+      "dau": 31
+    },
+    {
+      "timestamp": "2026-05-20T18:47:58+00:00",
+      "wqtu": 12,
+      "dau": 29
+    },
+    {
+      "timestamp": "2026-05-20T19:04:56+00:00",
+      "wqtu": 12,
+      "dau": 27
+    },
+    {
+      "timestamp": "2026-05-20T19:23:12+00:00",
+      "wqtu": 12,
+      "dau": 24
+    },
+    {
+      "timestamp": "2026-05-20T19:56:47+00:00",
+      "wqtu": 12,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T20:48:24+00:00",
+      "wqtu": 11,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T21:23:44+00:00",
+      "wqtu": 11,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T22:05:07+00:00",
+      "wqtu": 11,
+      "dau": 18
+    },
+    {
+      "timestamp": "2026-05-20T22:45:10+00:00",
+      "wqtu": 11,
+      "dau": 12
+    },
+    {
+      "timestamp": "2026-05-20T23:14:29+00:00",
+      "wqtu": 11,
+      "dau": 11
+    },
+    {
+      "timestamp": "2026-05-20T23:45:48+00:00",
+      "wqtu": 11,
+      "dau": 12
+    },
+    {
+      "timestamp": "2026-05-21T00:35:43+00:00",
+      "wqtu": 11,
+      "dau": 9
+    },
+    {
+      "timestamp": "2026-05-21T01:28:21+00:00",
+      "wqtu": 10,
+      "dau": 8
+    },
+    {
+      "timestamp": "2026-05-21T02:27:05+00:00",
+      "wqtu": 10,
+      "dau": 8
+    },
+    {
+      "timestamp": "2026-05-21T03:47:38+00:00",
+      "wqtu": 10,
+      "dau": 8
+    },
+    {
+      "timestamp": "2026-05-21T05:24:24+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T06:47:01+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T08:12:52+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T09:27:46+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T10:46:57+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T12:02:52+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T13:26:11+00:00",
+      "wqtu": 10,
+      "dau": 5
+    },
+    {
+      "timestamp": "2026-05-21T14:24:00+00:00",
+      "wqtu": 10,
+      "dau": 6
+    },
+    {
+      "timestamp": "2026-05-21T15:44:50+00:00",
+      "wqtu": 10,
+      "dau": 6
+    },
+    {
+      "timestamp": "2026-05-21T16:43:32+00:00",
+      "wqtu": 10,
+      "dau": 6
+    },
+    {
+      "timestamp": "2026-05-21T17:23:44+00:00",
+      "wqtu": 10,
+      "dau": 7
+    },
+    {
+      "timestamp": "2026-05-21T17:35:25+00:00",
+      "wqtu": 10,
+      "dau": 9
+    },
+    {
+      "timestamp": "2026-05-21T18:21:52+00:00",
+      "wqtu": 10,
+      "dau": 8
+    }
+  ]
 }

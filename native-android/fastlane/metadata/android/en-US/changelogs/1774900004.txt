@@ -1,0 +1,4 @@
+Paywall and Pro:
+- Primary purchase button label stays readable on iOS and Android.
+- Monthly Pro, clearer upgrade copy, and post-first-session paywall timing.
+- April Pro audio and Sound Arsenal freshness.

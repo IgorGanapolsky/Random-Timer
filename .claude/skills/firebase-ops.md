@@ -61,6 +61,10 @@ bq query --use_legacy_sql=false \
 - App ID format: `1:PROJECT_NUMBER:android:APP_ID` (e.g. `1:624873778337:android:4503588605a3273edc14e0`).
 - To see group alias: Firebase Console → App Distribution → Testers & groups → select group.
 
+### App Testing agent (Android, preview)
+
+AI-guided tests via App Distribution + Test Lab devices. Canonical doc: `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` (App Testing agent section + troubleshooting). In-repo YAML: `firebase-apptesting/tests/`. Manual CI: `.github/workflows/firebase-app-testing-agent.yml`. Runner: `scripts/ci_firebase_apptesting_execute.sh` (uses `firebase --non-interactive -P <project_id from SA>`). If upload succeeds but **`createReleaseTest`** returns **403** on **`firebaseappdistribution.googleapis.com`**, grant **`roles/firebaseappdistro.admin`** to the CI SA (not a upload-only custom role). If the failure is on **Test Lab**, enable **Cloud Testing** + **Tool Results** APIs and grant **`roles/cloudtestservice.testAdmin`** (see doc).
+
 ### Automated Crash Check (CI)
 
 ```bash

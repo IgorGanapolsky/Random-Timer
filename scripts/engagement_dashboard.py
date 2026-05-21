@@ -141,6 +141,11 @@ def compute_alarm_engagement(key: str, project_id: str, days: int, errors: List[
 
 
 def compute_paywall_funnel(key: str, project_id: str, days: int, errors: List[str]) -> Dict[str, Any]:
+    """Funnel uses paywall_viewed vs paywall_purchase_attempt vs success/dismiss.
+
+    ``paywall_purchase_attempt`` = native purchase flow start (see
+    ``docs/POSTHOG_ANALYTICS.md`` § Paywall funnel semantics), not generic CTA taps.
+    """
     viewed = query_scalar(
         f"""
         SELECT count(DISTINCT person_id) FROM events
@@ -164,7 +169,7 @@ def compute_paywall_funnel(key: str, project_id: str, days: int, errors: List[st
         SELECT count(DISTINCT person_id) FROM events
         WHERE (event = 'paywall_purchase_success'
           OR (event = 'paywall_purchase_result'
-              AND lower(coalesce(properties.success, '')) = 'true'))
+              AND lower(coalesce(toString(properties.success), '')) = 'true'))
           AND timestamp > now() - interval {days} day
           AND {LIVE}
         """,

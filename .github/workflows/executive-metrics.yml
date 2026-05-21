@@ -1,6 +1,8 @@
 name: Executive metrics snapshot
 
 on:
+  schedule:
+    - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
       posthog_days:
@@ -39,11 +41,12 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_VENDOR_NUMBER: ${{ secrets.APPSTORE_VENDOR_NUMBER }}
           CRASHLYTICS_SERVICE_ACCOUNT_JSON: ${{ secrets.CRASHLYTICS_SERVICE_ACCOUNT_JSON }}
           # Must match the Firebase project where Crashlytics → BigQuery streaming is linked.
           CRASHLYTICS_PROJECT_ID: random-timer-dist-new
-          POSTHOG_DAYS: ${{ inputs.posthog_days }}
-          CRASHLYTICS_HOURS: ${{ inputs.crashlytics_hours }}
+          POSTHOG_DAYS: ${{ inputs.posthog_days || '30' }}
+          CRASHLYTICS_HOURS: ${{ inputs.crashlytics_hours || '168' }}
         run: |
           set -euo pipefail
           python3 scripts/executive_metrics_snapshot.py \
@@ -52,7 +55,45 @@ jobs:
             --crashlytics-hours "$CRASHLYTICS_HOURS" \
             --no-dotenv
 
+      - name: Verify iOS refund ground-truth signal
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("marketing/data/executive_metrics.json")
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          refunds = payload.get("refunds") or {}
+          errors = []
+
+          if refunds.get("ios_status") != "ok":
+              errors.append("refunds.ios_status is not ok")
+          if refunds.get("ios_sales_report_vendor_number_present") is not True:
+              errors.append("refunds.ios_sales_report_vendor_number_present is not true")
+          metric_id = refunds.get("ios_refund_count_metric_id") or ""
+          if (
+              metric_id
+              != "app_store_connect_sales_reports_daily_summary_negative_units_sum"
+          ):
+              errors.append("refunds.ios_refund_count_metric_id missing expected token")
+
+          if errors:
+              raise SystemExit(
+                  "iOS refund ground-truth verification failed: " + "; ".join(errors)
+              )
+
+          print("iOS refund ground-truth verification passed.")
+          print(
+              "ios_refund_units_30d="
+              + str(refunds.get("ios_refund_units_30d"))
+              + ", ios_sales_report_days_with_data="
+              + str(refunds.get("ios_sales_report_days_with_data"))
+          )
+          PY
+
       - uses: actions/upload-artifact@v7.0.0
+        if: always()
         with:
           name: executive-metrics
           path: marketing/data/executive_metrics.json

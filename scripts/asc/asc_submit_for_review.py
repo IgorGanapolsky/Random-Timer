@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import plistlib
 import sys
 import time
 from dataclasses import dataclass
@@ -17,9 +18,18 @@ from typing import Any, Dict, Iterable, Optional
 from scripts.asc.asc_client import APP_STORE_CONNECT_API, ASCClient, AscClientError
 
 FASTLANE_METADATA_DIR = os.path.join("native-ios", "fastlane", "metadata")
+IOS_INFO_PLIST_PATH = os.path.join("native-ios", "RandomTimer", "Info.plist")
 SUBSCRIPTION_REVIEW_DOC_URL = (
     "https://developer.apple.com/documentation/appstoreconnectapi/"
     "submitting-subscriptions-and-subscription-groups-for-app-review"
+)
+BACKGROUND_AUDIO_REVIEW_NOTE = (
+    "Background audio testing: This build declares UIBackgroundModes=audio because Random Tactical Timer plays "
+    "user-enabled training audio while an active timer continues in the background or with the screen locked. "
+    "To test it, open the app, unlock Pro through StoreKit sandbox if needed, enable Voice Callouts on the setup "
+    "screen, start a timer, then background the app or lock the device. Voice callouts/time checks and the final "
+    "alarm remain audible while the timer continues. Free users can preview a voice callout from Voice Callouts > "
+    "PREVIEW; persistent timer callouts are Pro."
 )
 
 
@@ -240,6 +250,21 @@ def find_or_create_app_store_version(client: ASCClient, app_id: str, version: st
     return vid, state
 
 
+def list_app_store_version_locale_codes(client: ASCClient, version_id: str) -> list[str]:
+    """Return locale codes (e.g. en-US, ja, de-DE) that have an App Store version localization row."""
+    rows = client.get_all(
+        f"/appStoreVersions/{version_id}/appStoreVersionLocalizations",
+        params={"limit": 200},
+    )
+    codes: list[str] = []
+    for row in rows:
+        a = row.get("attributes") or {}
+        loc = (a.get("locale") or "").strip()
+        if loc:
+            codes.append(loc)
+    return sorted(set(codes))
+
+
 def get_version_localization(client: ASCClient, version_id: str, locale: str) -> dict:
     locs = client.get_all(
         f"/appStoreVersions/{version_id}/appStoreVersionLocalizations",
@@ -264,6 +289,8 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
     for field, filename in fastlane_files.items():
         if not (attrs.get(field) or "").strip():
             val = _read_text_file(os.path.join(FASTLANE_METADATA_DIR, locale, filename))
+            if field == "whatsNew" and not val and locale != "en-US":
+                val = _read_text_file(os.path.join(FASTLANE_METADATA_DIR, "en-US", filename))
             if val:
                 patch[field] = val
 
@@ -300,10 +327,15 @@ def get_version_localization(client: ASCClient, version_id: str, locale: str) ->
             loc = refreshed
             attrs = loc.get("attributes") or {}
 
-    # whatsNew ("Release Notes") is not always editable, and is not required for all submissions.
     for field in ("description", "keywords"):
         if not (attrs.get(field) or "").strip():
             die(f"App Store version localization {locale} missing required field: {field}")
+    # App Store Connect rejects submission when any active localization has empty "What's New".
+    if not (attrs.get("whatsNew") or "").strip():
+        die(
+            f"App Store version localization {locale} missing required field: whatsNew "
+            f"(native-ios/fastlane/metadata/{locale}/release_notes.txt, or en-US fallback)"
+        )
     return loc
 
 
@@ -678,6 +710,60 @@ def verify_review_detail(client: ASCClient, version_id: str) -> None:
         die("App Review contactPhone is missing.")
 
 
+def declares_background_audio(info_plist_path: str = IOS_INFO_PLIST_PATH) -> bool:
+    try:
+        with open(info_plist_path, "rb") as f:
+            info_plist = plistlib.load(f)
+    except FileNotFoundError:
+        return False
+    modes = info_plist.get("UIBackgroundModes") or []
+    return isinstance(modes, list) and "audio" in modes
+
+
+def ensure_background_audio_review_note(
+    client: ASCClient,
+    version_id: str,
+    *,
+    info_plist_path: str = IOS_INFO_PLIST_PATH,
+) -> None:
+    data = client.request("GET", f"/appStoreVersions/{version_id}/appStoreReviewDetail")
+    detail = data.get("data") or {}
+    detail_id = detail.get("id") or ""
+    attrs = detail.get("attributes") or {}
+    current_notes = (attrs.get("notes") or "").strip()
+    if not declares_background_audio(info_plist_path):
+        cleaned_notes = current_notes.replace(BACKGROUND_AUDIO_REVIEW_NOTE, "").strip()
+        if cleaned_notes != current_notes:
+            if not detail_id:
+                die("App Review detail is missing an id; cannot remove stale background-audio review notes.")
+            patch_resource_attributes(
+                client,
+                path=f"/appStoreReviewDetails/{detail_id}",
+                type_name="appStoreReviewDetails",
+                resource_id=detail_id,
+                attrs={"notes": cleaned_notes},
+            )
+            info("Removed stale background-audio App Review notes.")
+        elif "UIBackgroundModes=audio" in current_notes:
+            die("App Review notes still mention UIBackgroundModes=audio, but Info.plist no longer declares it.")
+        return
+
+    if "UIBackgroundModes=audio" in current_notes and "Voice Callouts" in current_notes:
+        return
+    if not detail_id:
+        die("App Review detail is missing an id; cannot update background-audio review notes.")
+
+    notes = f"{current_notes}\n\n{BACKGROUND_AUDIO_REVIEW_NOTE}".strip()
+    patch_resource_attributes(
+        client,
+        path=f"/appStoreReviewDetails/{detail_id}",
+        type_name="appStoreReviewDetails",
+        resource_id=detail_id,
+        attrs={"notes": notes},
+    )
+    info("Updated App Review notes with background-audio test instructions.")
+
+
 def _list_app_infos(client: ASCClient, app_id: str) -> list[dict[str, Any]]:
     params = {
         "limit": 200,
@@ -764,13 +850,17 @@ def _list_review_submissions(client: ASCClient, app_id: str) -> list[dict[str, A
 
 
 def _list_review_submission_items(client: ASCClient, submission_id: str) -> list[dict[str, Any]]:
+    # JSON:API sparse fieldset: if we list only "state", the server omits the
+    # relationships block, and _find_submission_for_version will never match on
+    # appStoreVersion id — producing STATE_ERROR.ITEM_PART_OF_ANOTHER_SUBMISSION
+    # 409s when the version is silently retained on an older submission.
     data = client.request(
         "GET",
         f"/reviewSubmissions/{submission_id}/items",
         params={
             "limit": 200,
             "include": "appStoreVersion,appCustomProductPageVersion",
-            "fields[reviewSubmissionItems]": "state",
+            "fields[reviewSubmissionItems]": "state,appStoreVersion,appCustomProductPageVersion",
         },
     )
     return data.get("data") or []
@@ -804,6 +894,14 @@ def _find_reusable_empty_submission(client: ASCClient, *, app_id: str) -> dict[s
             continue
         return submission
     return None
+
+
+def _is_terminal_review_submission_state(state: str) -> bool:
+    return state.upper() in {
+        "CANCELED",
+        "CANCELLED",
+        "COMPLETE",
+    }
 
 
 def _create_review_submission(client: ASCClient, *, app_id: str) -> dict[str, Any]:
@@ -988,7 +1086,14 @@ def submit_for_review(client: ASCClient, app_id: str, version_id: str, *, attach
     if submission:
         sub_state = (submission.get("attributes") or {}).get("state", "UNKNOWN")
         info(f"Found existing review submission {submission.get('id')} (state={sub_state}).")
-        if attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
+        if _is_terminal_review_submission_state(str(sub_state)):
+            info(
+                f"Ignoring terminal review submission {submission.get('id')} "
+                f"(state={sub_state}); creating a fresh submission for this version."
+            )
+            submission = None
+            item = None
+        elif attach_subscriptions and sub_state in ("WAITING_FOR_REVIEW", "IN_REVIEW"):
             if pending_subs:
                 pending_names = ", ".join(name or sub_id for sub_id, name in pending_subs)
                 die(
@@ -1105,6 +1210,7 @@ def main() -> int:
     version_id, state = find_or_create_app_store_version(client, app_id, args.version)
     info(f"App Store version id={version_id} state={state}")
     verify_review_detail(client, version_id)
+    ensure_background_audio_review_note(client, version_id)
     verify_age_rating(client, app_id, version_id)
 
     # If already in a submitted/in-review state, do nothing — unless attaching subscriptions.
@@ -1115,9 +1221,19 @@ def main() -> int:
             info(f"Already submitted: {state}")
             return 0
 
-    loc = get_version_localization(client, version_id, args.locale)
-    loc_id = loc["id"]
-    loc_attrs = loc.get("attributes") or {}
+    locale_codes = list_app_store_version_locale_codes(client, version_id)
+    if not locale_codes:
+        die("No App Store version localizations found for this version.")
+    info(f"Syncing App Store version metadata for locales: {', '.join(locale_codes)}")
+    primary_loc: dict[str, Any] | None = None
+    for code in locale_codes:
+        loc = get_version_localization(client, version_id, code)
+        if code == args.locale:
+            primary_loc = loc
+    if primary_loc is None:
+        die(f"Primary locale {args.locale!r} not found in version localizations: {locale_codes}")
+    loc_id = primary_loc["id"]
+    loc_attrs = primary_loc.get("attributes") or {}
 
     # Support URL may live on App Store version localization (newer ASC API) or on App Info localization
     # (older ASC API). Accept either, but require a non-empty https:// URL.

@@ -1,10 +1,10 @@
 package com.iganapolsky.randomtimer.ui.viewmodel
 
-import android.content.Context
-import android.content.SharedPreferences
 import com.google.common.truth.Truth.assertThat
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
+import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
+import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
@@ -50,19 +50,17 @@ class TimerViewModelAnalyticsTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        val appContext = mockk<Context>()
-        val mockPrefs = mockk<SharedPreferences>(relaxed = true)
-        every { appContext.getSharedPreferences(any(), any()) } returns mockPrefs
-
         repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
         val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
+        every { analyticsService.paywallValueFramingVariant() } returns "control"
         val storeReviewManager = mockk<StoreReviewManager>(relaxed = true)
         val trainingStatsService = mockk<TrainingStatsService>(relaxed = true)
         val proManager = mockk<ProManager>(relaxed = true)
         every { proManager.entitlementLevel } returns MutableStateFlow(EntitlementLevel.ELITE)
+        every { proManager.isPro } returns MutableStateFlow(true)
 
         configFlow = MutableStateFlow(TimerConfig.DEFAULT)
         every { repository.getTimerConfig() } returns configFlow
@@ -73,7 +71,6 @@ class TimerViewModelAnalyticsTest {
 
         viewModel =
             TimerViewModel(
-                appContext = appContext,
                 repository = repository,
                 startTimerUseCase = startTimerUseCase,
                 soundPreviewManager = soundPreviewManager,
@@ -141,23 +138,121 @@ class TimerViewModelAnalyticsTest {
     }
 
     @Test
-    fun `trackPaywallViewed tracks with entry point`() {
-        viewModel.trackPaywallViewed("setup_upgrade_cta")
+    fun `trackPaywallViewed tracks with entry point and experiment variant`() {
+        viewModel.trackPaywallViewed("sound_arsenal_gate", defaultAnnualExperiment = false)
+        verify {
+            analyticsService.setPaywallSurfaceContext("sound_arsenal_gate", "monthly_default")
+        }
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_VIEW,
+                match {
+                    it["entry_point"] == "sound_arsenal_gate" &&
+                        it["paywall_experiment_variant"] == "monthly_default" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_VIEWED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
+                match {
+                    it["entry_point"] == "sound_arsenal_gate" &&
+                        it["paywall_experiment_variant"] == "monthly_default" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+        verify {
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_VIEWED,
+                match { it.isEmpty() },
             )
         }
     }
 
     @Test
     fun `trackPaywallDismissed tracks with entry point`() {
-        viewModel.trackPaywallDismissed("setup_upgrade_cta")
+        viewModel.trackPaywallDismissed("sound_arsenal_gate")
         verify {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
-                match { it["entry_point"] == "setup_upgrade_cta" },
+                match {
+                    it["entry_point"] == "sound_arsenal_gate" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `trackPaywallOfferSelected includes selection source`() {
+        viewModel.trackPaywallOfferSelected(
+            entryPoint = "range_gate",
+            productId = ProManager.ELITE_PRODUCT_ID,
+            plan = "annual",
+            selectionSource = "primary_cta",
+        )
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.PAYWALL_OFFER_SELECT,
+                match {
+                    it["entry_point"] == "range_gate" &&
+                        it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta" &&
+                        it["paywall_value_framing_variant"] == "control"
+                },
+            )
+        }
+        verify {
+            analyticsService.trackSubscriptionFunnelStep(
+                SubscriptionFunnelSteps.PAYWALL_PLAN_SELECTED,
+                match {
+                    it["product_id"] == ProManager.ELITE_PRODUCT_ID &&
+                        it["plan"] == "annual" &&
+                        it["paywall_selection_source"] == "primary_cta"
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `updateConfig emits per-setting analytics with setting_name`() {
+        val updated = TimerConfig.DEFAULT.copy(minSeconds = 10, maxSeconds = 45, voiceEnabled = true)
+
+        viewModel.updateConfig(updated)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "min_seconds" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == 5 &&
+                        it[AnalyticsProperties.SETTING_VALUE] == 10
+                },
+            )
+        }
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "max_seconds" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == 30 &&
+                        it[AnalyticsProperties.SETTING_VALUE] == 45
+                },
+            )
+        }
+        verify {
+            analyticsService.track(
+                AnalyticsEvents.SETTINGS_CHANGED,
+                match {
+                    it[AnalyticsProperties.SETTING_NAME] == "voice_callouts_enabled" &&
+                        it[AnalyticsProperties.PREVIOUS_VALUE] == false &&
+                        it[AnalyticsProperties.SETTING_VALUE] == true
+                },
             )
         }
     }

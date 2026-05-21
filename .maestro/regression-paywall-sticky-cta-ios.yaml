@@ -1,0 +1,18 @@
+appId: com.igorganapolsky.randomtimer
+---
+# Regression: primary CTA + restore stay in sticky chrome after scrolling long paywall content.
+- launchApp:
+    clearState: true
+- assertVisible: "Start First Drill"
+- tapOn:
+    text: ".*PRO: 1H.*"
+- extendedWaitUntil:
+    visible: "Restore purchase"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "CHOOSE A PLAN"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "Restore purchase"
+- takeScreenshot: evidence/ios-paywall-sticky-cta
+- stopApp

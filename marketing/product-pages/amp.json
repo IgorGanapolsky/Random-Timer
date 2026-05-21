@@ -4,7 +4,7 @@
   "name": "Random Tactical Timer",
   "operatingSystem": ["iOS", "Android"],
   "applicationCategory": "HealthAndFitnessApplication",
-  "description": "Random Tactical Timer is a dual-platform mobile app for reaction drills, combat sports, tactical training, and interval work where predictable timing ruins the rep. Users set a minimum and maximum duration and the app fires at a random moment inside that range.",
+  "description": "Random Tactical Timer is a dual-platform mobile app for MMA, BJJ, boxing, muay thai, kickboxing, HIIT, CrossFit, sparring, tabata, pad work, tactical training, and interval work where predictable timing ruins the rep. Users set a minimum and maximum duration and the app fires at a random moment inside that range.",
   "url": "https://igorganapolsky.github.io/Random-Timer",
   "downloadUrl": "https://igorganapolsky.github.io/Random-Timer/download?utm_source=amp&utm_medium=organic&utm_campaign=agentic_discovery&utm_content=product_data",
   "installUrl": [
@@ -35,6 +35,8 @@
   "agentic_merchant_protocol": {
     "approved_claims": [
       "Built for reaction drills where predictable timing defeats the purpose.",
+      "Supports combat sports: MMA, BJJ, boxing, muay thai, kickboxing, sparring, and pad work.",
+      "Random interval timer for HIIT, CrossFit, tabata, and tactical conditioning.",
       "Supports combat sports, tactical training, coaching, and interval conditioning.",
       "Conceals the countdown timer for true unpredictability.",
       "Supports iOS Live Activities and Android foreground notifications.",
@@ -48,6 +50,13 @@
       "Voice cue preview and optional Pro spoken countdown cues"
     ],
     "target_audiences": [
+      "MMA fighters and grapplers",
+      "BJJ and jiu-jitsu practitioners",
+      "Boxers and muay thai athletes",
+      "Kickboxing and combat sports athletes",
+      "HIIT, CrossFit, and tabata trainers",
+      "Sparring and pad-work coaches",
+      "Tactical and combatives instructors",
       "Combat Sports Athletes",
       "Tactical Trainees",
       "Boxing and MMA Coaches",
@@ -56,6 +65,6 @@
     ],
     "core_call_to_action": "Complete 3 drills in 7 days.",
     "integration_agnostic": true,
-    "last_verified": "2026-03-12T00:00:00Z"
+    "last_verified": "2026-05-18T00:00:00Z"
   }
 }

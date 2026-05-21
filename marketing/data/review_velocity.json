@@ -17,21 +17,57 @@
       "android_total": 0,
       "android_rating": 0.0,
       "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-05-19T15:15:30.359107+00:00",
+      "ios_total": 1,
+      "ios_rating": 5.0,
+      "ios_recent_7d": 0,
+      "android_total": 0,
+      "android_rating": 0.0,
+      "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-05-19T16:03:36.224453+00:00",
+      "ios_total": 1,
+      "ios_rating": 5.0,
+      "ios_recent_7d": 0,
+      "android_total": 1,
+      "android_rating": 5.0,
+      "android_recent_7d": 0
+    },
+    {
+      "timestamp": "2026-05-19T16:03:40.152393+00:00",
+      "ios_total": 1,
+      "ios_rating": 5.0,
+      "ios_recent_7d": 0,
+      "android_total": 1,
+      "android_rating": 5.0,
+      "android_recent_7d": 0
     }
   ],
-  "alerts": [],
+  "alerts": [
+    {
+      "platform": "ios",
+      "previous_velocity": 0.01,
+      "current_velocity": 0.0,
+      "change_pct": -100.0,
+      "severity": "high",
+      "timestamp": "2026-05-19T16:03:36.224453+00:00"
+    }
+  ],
   "ios": {
-    "total_reviews": 0,
-    "avg_rating": 0.0
+    "total_reviews": 1,
+    "avg_rating": 5.0
   },
   "android": {
-    "total_reviews": 0,
-    "avg_rating": 0.0
+    "total_reviews": 1,
+    "avg_rating": 5.0
   },
   "latest_velocity": {
     "ios_velocity": 0.0,
-    "android_velocity": 0.0,
-    "window_days": 19
+    "android_velocity": 1.0,
+    "window_days": 1
   },
   "review_prompt_config": {
     "completions_before_prompt": 3,

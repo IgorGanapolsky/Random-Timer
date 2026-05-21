@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.iganapolsky.randomtimer.data.SoundPreviewManagerImpl
 import com.iganapolsky.randomtimer.data.repository.TimerRepositoryImpl
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
@@ -49,6 +51,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    @Provides
+    @Singleton
+    fun provideAppUpdateManager(
+        @ApplicationContext context: Context,
+    ): AppUpdateManager = AppUpdateManagerFactory.create(context)
 }
 
 @Module

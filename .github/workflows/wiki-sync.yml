@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -53,6 +53,25 @@ jobs:
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: python scripts/store_downloads_snapshot.py --repo-root . --days 30
 
+      - name: Build paywall conversion snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/paywall_conversion_report.py --repo-root . --days 30
+
+      - name: Build WQTU health snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/wqtu_dashboard.py --repo-root . --alert-threshold 1 || true
+
+      - name: Build attribution and activation funnel snapshot from PostHog
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: python scripts/attribution_feedback.py --repo-root . --days 30
+
       - name: Build Apple Ads live metrics snapshot
         env:
           APPLE_ADS_CLIENT_ID: ${{ secrets.APPLE_ADS_CLIENT_ID }}
@@ -64,6 +83,23 @@ jobs:
 
       - name: Inject live data into dashboard
         run: python scripts/wiki_sync.py
+
+      - name: Commit refreshed marketing analytics snapshots
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add marketing/data \
+            marketing/keywords/posthog_feedback.json \
+            wiki/Daily-Metrics-Dashboard.md \
+            wiki/Paid-Acquisition.md
+          if git diff --staged --quiet; then
+            echo "No marketing snapshot changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(analytics): refresh marketing snapshots from wiki-sync"
+          git pull --rebase origin develop
+          git push origin HEAD:develop
 
       - name: Publish wiki pages
         uses: Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a # v4
@@ -80,5 +116,7 @@ jobs:
           path: |
             wiki/Daily-Metrics-Dashboard.md
             marketing/data/north_star.json
+            marketing/data/store_downloads.json
+            marketing/data/paywall_conversion_report.json
             marketing/data/apple_ads_live_metrics.json
           retention-days: 7

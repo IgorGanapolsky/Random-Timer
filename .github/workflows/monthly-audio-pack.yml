@@ -1,10 +1,12 @@
-name: Monthly Pro Audio Pack
+# DEPRECATED: Use monthly-pro-content-release.yml instead (the single end-to-end pipeline).
+# This workflow is kept as manual-only for ad-hoc audio pack testing.
+name: Monthly Pro Audio Pack (Manual Only)
 
+# Legacy manual generator only. Scheduled release automation is owned by
+# monthly-pro-content-release.yml, which performs version bump, regression
+# gates, store submission, and downstream public store read-back.
 on:
   workflow_dispatch:
-  schedule:
-    # 1st of every month at 6 AM UTC
-    - cron: "0 6 1 * *"
 
 jobs:
   generate-pack:
@@ -14,10 +16,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -25,24 +27,27 @@ jobs:
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
+          set -euo pipefail
           python scripts/generate_pro_audio_content.py \
-            --generate-voice-assets || true
+            --generate-voice-assets
 
       - name: Generate sound assets
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
+          set -euo pipefail
           python scripts/generate_pro_audio_content.py \
-            --generate-sound-assets || true
+            --generate-sound-assets
 
       - name: Sync to Android
         run: |
+          set -euo pipefail
           # Sync voice callouts
           for f in native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3; do
             [ -f "$f" ] || continue
             name=$(basename "$f")
             dst="native-android/app/src/main/res/raw/$name"
-            cp "$f" "$dst" 2>/dev/null && echo "Synced $name" || true
+            cp "$f" "$dst" 2>/dev/null && echo "Synced $name"
           done
           # Sync alarm sounds
           for sound in alarm gentle_chime klaxon whistle buzzer gong airhorn drum_roll siren bell; do
@@ -50,11 +55,15 @@ jobs:
             src="native-ios/RandomTimer/Resources/Sounds/${ios_name}.mp3"
             [ -f "$src" ] || src="native-ios/RandomTimer/Resources/Sounds/${sound}.mp3"
             dst="native-android/app/src/main/res/raw/${sound}.mp3"
-            [ -f "$src" ] && cp "$src" "$dst" && echo "Synced sound $sound" || true
+            if [ -f "$src" ]; then
+              cp "$src" "$dst"
+              echo "Synced sound $sound"
+            fi
           done
 
       - name: Verify pack
         run: |
+          set -euo pipefail
           echo "=== Voice Callouts ==="
           ls native-ios/RandomTimer/Resources/Audio/cmd_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} command cues"
           ls native-ios/RandomTimer/Resources/Audio/elapsed_*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} elapsed cues"
@@ -62,7 +71,7 @@ jobs:
           ls native-ios/RandomTimer/Resources/Sounds/*.mp3 2>/dev/null | wc -l | xargs -I{} echo "{} alarm sounds"
 
       - name: Upload audio pack artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: monthly-pro-audio-pack

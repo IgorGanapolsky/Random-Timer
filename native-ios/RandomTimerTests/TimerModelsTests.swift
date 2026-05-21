@@ -13,37 +13,36 @@ final class TimerConfigTests: XCTestCase {
         XCTAssertFalse(config.voiceEnabled)
     }
 
-    func testActivationPresetMigratesLegacy30To120WhenFirstTimerNotDone() {
+    func testLegacyActivationPresetMigrates30To120FreeRange() {
         let legacy = TimerConfig(minSeconds: 30, maxSeconds: 120)
-        let next = legacy.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        let next = legacy.applyingLegacyActivationRangePresetIfEligible()
         XCTAssertNotNil(next)
         XCTAssertEqual(next?.minSeconds, 5)
         XCTAssertEqual(next?.maxSeconds, 30)
         XCTAssertEqual(next?.soundType, legacy.soundType)
     }
 
-    func testActivationPresetSkippedWhenAlreadyOnNewDefault() {
+    func testLegacyActivationPresetSkippedWhenAlreadyOnNewDefault() {
         let next = TimerConfig.default
-            .applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+            .applyingLegacyActivationRangePresetIfEligible()
         XCTAssertNil(next)
     }
 
-    func testActivationPresetSkippedAfterFirstTimer() {
+    func testLegacyActivationPresetStillMigratesLegacy30To120Shape() {
         let legacy = TimerConfig(minSeconds: 30, maxSeconds: 120)
-        let next = legacy
-            .applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: true)
-        XCTAssertNil(next)
+        let next = legacy.applyingLegacyActivationRangePresetIfEligible()
+        XCTAssertNotNil(next)
     }
 
-    func testActivationPresetSkippedWhenRangeCustomized() {
+    func testLegacyActivationPresetSkippedWhenRangeCustomized() {
         let custom = TimerConfig(minSeconds: 45, maxSeconds: 120)
-        let next = custom.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        let next = custom.applyingLegacyActivationRangePresetIfEligible()
         XCTAssertNil(next)
     }
 
-    func testActivationPresetSkippedWhenExtendedRange() {
+    func testLegacyActivationPresetSkippedWhenExtendedRange() {
         let ext = TimerConfig(minSeconds: 30, maxSeconds: 120, useExtendedRange: true)
-        let next = ext.applyingActivationPresetForFirstCompletionIfEligible(hasCompletedFirstTimer: false)
+        let next = ext.applyingLegacyActivationRangePresetIfEligible()
         XCTAssertNil(next)
     }
 
@@ -63,6 +62,19 @@ final class TimerConfigTests: XCTestCase {
         )
 
         XCTAssertTrue(config.vibrationEnabled)
+    }
+
+    func testCompetitionWarmupPresetAppliesEventDaySettings() {
+        let base = TimerConfig.default
+        let config = TrainingPreset.competitionWarmup.applying(to: base)
+
+        XCTAssertEqual(config.minSeconds, 20)
+        XCTAssertEqual(config.maxSeconds, 90)
+        XCTAssertEqual(config.alarmDuration, 5)
+        XCTAssertTrue(config.repeatEnabled)
+        XCTAssertTrue(config.vibrationEnabled)
+        XCTAssertEqual(config.soundType, .intense)
+        XCTAssertFalse(config.useExtendedRange)
     }
 
     func testConfigDecodingFromLooseJSON() throws {

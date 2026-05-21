@@ -9,6 +9,7 @@ Unlike store_downloads_snapshot.py (PostHog proxy), this queries the actual stor
 Requires:
   Android: GOOGLE_PLAY_JSON_KEY or GOOGLE_PLAY_JSON_KEY_PATH
   iOS: APPSTORE_KEY_ID + APPSTORE_ISSUER_ID + APPSTORE_PRIVATE_KEY
+  Optional iOS: APPSTORE_APP_ID (defaults to resolving via ASC filter[bundleId], then built-in id)
 
 Usage:
   python scripts/real_store_downloads.py [--repo-root .] [--days 30]
@@ -17,7 +18,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime as dt
+import gzip
+import io
 import json
 import os
 import sys
@@ -28,6 +32,7 @@ from typing import Any
 ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
 IOS_BUNDLE_ID = "com.igorganapolsky.randomtimer"
 IOS_APP_ID = "6758355312"
+APP_STORE_CONNECT_API = "https://api.appstoreconnect.apple.com/v1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 _ASC_DIR = _SCRIPTS_DIR / "asc"
@@ -58,6 +63,66 @@ def _asc_get_with_retries(
     assert last_exc is not None
     raise last_exc
 
+
+def _asc_error_summary(resp: Any) -> str:
+    """Human-readable ASC failure (status + Apple errors detail or truncated body)."""
+    code = getattr(resp, "status_code", None)
+    base = f"HTTP {code}" if code is not None else "HTTP error"
+    try:
+        body = resp.json()
+    except Exception:
+        text = (getattr(resp, "text", None) or "").strip()
+        if text:
+            return f"{base}: {text[:500]}"
+        return base
+    if not isinstance(body, dict):
+        return base
+    errors = body.get("errors")
+    if isinstance(errors, list) and errors:
+        parts: list[str] = []
+        for item in errors[:5]:
+            if not isinstance(item, dict):
+                continue
+            chunk = item.get("detail") or item.get("title") or item.get("code")
+            if chunk:
+                parts.append(str(chunk))
+        if parts:
+            return f"{base}: " + " | ".join(parts)
+    return base
+
+
+def _resolve_ios_app_id(
+    requests_mod: Any,
+    headers: dict[str, str],
+) -> tuple[str, str | None]:
+    """Return (App Store Connect apps resource id, lookup_error_or_none).
+
+    Uses APPSTORE_APP_ID when set; otherwise GET /v1/apps?filter[bundleId]=…
+    falls back to IOS_APP_ID if lookup fails or returns no rows.
+    """
+    explicit = (os.environ.get("APPSTORE_APP_ID") or "").strip()
+    if explicit:
+        return explicit, None
+    resp = _asc_get_with_retries(
+        requests_mod,
+        f"{APP_STORE_CONNECT_API}/apps",
+        headers=headers,
+        params={"filter[bundleId]": IOS_BUNDLE_ID, "limit": 1},
+    )
+    if resp.status_code != 200:
+        return IOS_APP_ID, _asc_error_summary(resp)
+    try:
+        data = (resp.json() or {}).get("data") or []
+    except Exception:
+        return IOS_APP_ID, None
+    if not data or not isinstance(data[0], dict):
+        return IOS_APP_ID, None
+    rid = data[0].get("id")
+    if rid:
+        return str(rid), None
+    return IOS_APP_ID, None
+
+
 # Google Play Reply-to-Reviews API: list only includes reviews with user *comments*
 # (star-only ratings are omitted), and only those created or modified in the last 7 days.
 # Public Play Store totals can be higher. See:
@@ -66,8 +131,14 @@ def _asc_get_with_retries(
 ANDROID_REVIEW_COUNT_METRIC_ID = (
     "google_play_androidpublisher_reviews_list_7d_commented_paginated"
 )
+ANDROID_REFUND_COUNT_METRIC_ID = (
+    "google_play_androidpublisher_voidedpurchases_list_window_paginated"
+)
 IOS_REVIEW_COUNT_METRIC_ID = (
     "app_store_connect_customer_reviews_sort_created_desc_limit_50"
+)
+IOS_REFUND_COUNT_METRIC_ID = (
+    "app_store_connect_sales_reports_daily_summary_negative_units_sum"
 )
 
 
@@ -85,6 +156,114 @@ def _fetch_all_play_reviews_list(service: Any, package_name: str) -> list[dict[s
         if not page_token:
             break
     return accumulated
+
+
+def _fetch_all_android_voided_purchases(
+    service: Any,
+    package_name: str,
+    days: int,
+) -> list[dict[str, Any]]:
+    """Paginate purchases.voidedpurchases.list for the trailing window."""
+    window_days = max(1, min(int(days), 29))
+    end_ms = int(time.time() * 1000)
+    start_ms = end_ms - int(window_days * 24 * 60 * 60 * 1000)
+    accumulated: list[dict[str, Any]] = []
+    page_token: str | None = None
+    while True:
+        kwargs: dict[str, Any] = {
+            "packageName": package_name,
+            "startTime": str(start_ms),
+            "endTime": str(end_ms),
+            "maxResults": 1000,
+        }
+        if page_token:
+            kwargs["token"] = page_token
+        result = service.purchases().voidedpurchases().list(**kwargs).execute()
+        accumulated.extend(result.get("voidedPurchases", []))
+        page_token = (result.get("tokenPagination") or {}).get("nextPageToken")
+        if not page_token:
+            break
+    return accumulated
+
+
+def _summarize_voided_purchases(voided: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize refund/void records returned by Android Publisher API."""
+    reason_counts: dict[str, int] = {}
+    for item in voided:
+        reason = str(item.get("voidedReason", "unknown"))
+        reason_counts[reason] = reason_counts.get(reason, 0) + 1
+    return {
+        "refund_requests_30d": len(voided),
+        "voided_purchase_reason_counts": reason_counts,
+    }
+
+
+def _parse_asc_sales_report_rows(raw: bytes) -> list[dict[str, str]]:
+    """Parse ASC sales report bytes (gzip TSV or plain TSV) into row dicts."""
+    if not raw:
+        return []
+    try:
+        decoded = gzip.decompress(raw).decode("utf-8", errors="replace")
+    except Exception:
+        decoded = raw.decode("utf-8", errors="replace")
+    reader = csv.DictReader(io.StringIO(decoded), delimiter="\t")
+    rows: list[dict[str, str]] = []
+    for row in reader:
+        if not isinstance(row, dict):
+            continue
+        rows.append({str(k or ""): str(v or "") for k, v in row.items()})
+    return rows
+
+
+def _summarize_ios_refunds_from_sales_rows(rows: list[dict[str, str]]) -> dict[str, Any]:
+    """Treat negative Units rows as refund units in ASC daily sales summaries."""
+    refund_units = 0.0
+    gross_units = 0.0
+    for row in rows:
+        units_raw = (row.get("Units") or "").strip()
+        if not units_raw:
+            continue
+        try:
+            units = float(units_raw)
+        except ValueError:
+            continue
+        if units < 0:
+            refund_units += abs(units)
+        elif units > 0:
+            gross_units += units
+    return {
+        "ios_refund_units_30d": int(round(refund_units)),
+        "ios_gross_units_30d": int(round(gross_units)),
+        "ios_net_units_30d": int(round(gross_units - refund_units)),
+    }
+
+
+def _fetch_asc_sales_report_bytes(
+    requests_mod: Any,
+    headers: dict[str, str],
+    vendor_number: str,
+    report_date: dt.date,
+) -> bytes | None:
+    """Fetch one daily ASC sales summary report as raw bytes."""
+    resp = _asc_get_with_retries(
+        requests_mod,
+        f"{APP_STORE_CONNECT_API}/salesReports",
+        headers=headers,
+        params={
+            "filter[frequency]": "DAILY",
+            "filter[reportDate]": report_date.strftime("%Y-%m-%d"),
+            "filter[reportSubType]": "SUMMARY",
+            "filter[reportType]": "SALES",
+            "filter[vendorNumber]": vendor_number,
+            "filter[version]": "1_0",
+        },
+        timeout=90.0,
+    )
+    if resp.status_code == 404:
+        return None
+    if resp.status_code != 200:
+        raise RuntimeError(f"ASC salesReports HTTP {resp.status_code}")
+    return resp.content or b""
 
 
 def _get_android_data(days: int) -> dict[str, Any]:
@@ -148,11 +327,26 @@ def _get_android_data(days: int) -> dict[str, Any]:
                 "name": latest.get("name"),
             }
 
+        refund_summary: dict[str, Any] = {}
+        try:
+            voided = _fetch_all_android_voided_purchases(service, ANDROID_PACKAGE, days)
+            refund_summary = _summarize_voided_purchases(voided)
+            refund_summary["refund_count_metric_id"] = ANDROID_REFUND_COUNT_METRIC_ID
+            refund_summary["refund_window_days"] = max(1, min(int(days), 29))
+        except Exception as exc:
+            refund_summary = {
+                "refund_requests_30d": None,
+                "refund_count_metric_id": ANDROID_REFUND_COUNT_METRIC_ID,
+                "refund_window_days": max(1, min(int(days), 29)),
+                "refund_error": str(exc),
+            }
+
         return {
             "status": "ok",
             "review_count": review_count,
             "review_count_metric_id": ANDROID_REVIEW_COUNT_METRIC_ID,
             "production_release": production_version,
+            **refund_summary,
             "note": (
                 "Play reviews.list: comment-bearing reviews created or modified in the last "
                 "7 days only; star-only ratings are excluded. Not equal to public Play "
@@ -187,11 +381,16 @@ def _get_ios_data(days: int) -> dict[str, Any]:
 
     result: dict[str, Any] = {"status": "ok"}
 
+    app_id, lookup_err = _resolve_ios_app_id(requests, headers)
+    if lookup_err:
+        result["app_id_lookup_error"] = lookup_err
+    result["app_id"] = app_id
+
     # Get app info
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}",
             headers=headers,
         )
         if resp.status_code == 200:
@@ -200,7 +399,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
             result["bundle_id"] = app_data.get("bundleId")
             result["sku"] = app_data.get("sku")
         else:
-            result["app_info_error"] = f"HTTP {resp.status_code}"
+            result["app_info_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["app_info_error"] = str(e)
 
@@ -208,7 +407,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/appStoreVersions",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}/appStoreVersions",
             headers=headers,
             params={"filter[platform]": "IOS", "limit": 5},
         )
@@ -223,7 +422,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
                 for v in versions
             ]
         else:
-            result["versions_error"] = f"HTTP {resp.status_code}"
+            result["versions_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["versions_error"] = str(e)
 
@@ -231,7 +430,7 @@ def _get_ios_data(days: int) -> dict[str, Any]:
     try:
         resp = _asc_get_with_retries(
             requests,
-            f"{APP_STORE_CONNECT_API}/apps/{IOS_APP_ID}/customerReviews",
+            f"{APP_STORE_CONNECT_API}/apps/{app_id}/customerReviews",
             headers=headers,
             params={"limit": 50, "sort": "-createdDate"},
         )
@@ -250,18 +449,63 @@ def _get_ios_data(days: int) -> dict[str, Any]:
                 for r in reviews[:10]
             ]
         else:
-            result["reviews_error"] = f"HTTP {resp.status_code}"
+            result["reviews_error"] = _asc_error_summary(resp)
     except Exception as e:
         result["reviews_error"] = str(e)
 
     # Note: Sales and Trends API requires a separate report request
-    # which takes time to generate. For now, we use the review count
-    # and version state as ground truth.
+    # and may be unavailable for the current date until processing catches up.
+    vendor_number = (os.environ.get("APPSTORE_VENDOR_NUMBER") or "").strip()
+    if vendor_number:
+        try:
+            all_rows: list[dict[str, str]] = []
+            days_with_data = 0
+            today_utc = dt.datetime.now(dt.timezone.utc).date()
+            for offset in range(1, max(1, int(days)) + 1):
+                report_day = today_utc - dt.timedelta(days=offset)
+                blob = _fetch_asc_sales_report_bytes(
+                    requests,
+                    headers,
+                    vendor_number,
+                    report_day,
+                )
+                if not blob:
+                    continue
+                rows = _parse_asc_sales_report_rows(blob)
+                if rows:
+                    days_with_data += 1
+                    all_rows.extend(rows)
+            refund_summary = _summarize_ios_refunds_from_sales_rows(all_rows)
+            result.update(refund_summary)
+            result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+            result["sales_report_vendor_number_present"] = True
+            result["sales_report_days_scanned"] = int(days)
+            result["sales_report_days_with_data"] = days_with_data
+        except Exception as e:
+            result["refund_error"] = str(e)
+            result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+            result["sales_report_vendor_number_present"] = True
+    else:
+        result["refund_count_metric_id"] = IOS_REFUND_COUNT_METRIC_ID
+        result["sales_report_vendor_number_present"] = False
+
     result["note"] = (
         "App Store Connect Sales reports require async report generation. "
         "customerReviews count is the first page only (limit 50, newest first), "
-        "not total lifetime App Store reviews. Version state is live from the API."
+        "not total lifetime App Store reviews. Version state is live from the API. "
+        "iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY "
+        "reports when APPSTORE_VENDOR_NUMBER is configured."
     )
+
+    core_errs = [
+        k
+        for k in ("app_info_error", "versions_error", "reviews_error")
+        if result.get(k)
+    ]
+    if len(core_errs) == 3:
+        result["status"] = "error"
+    elif core_errs:
+        result["status"] = "partial"
 
     return result
 

@@ -1,0 +1,86 @@
+[
+  {
+    "filename": "cmd_drive_forward",
+    "text": "Drive forward. No hesitation.",
+    "category": "command",
+    "seed": 42001
+  },
+  {
+    "filename": "cmd_push_through",
+    "text": "Push through. Stay in the fight.",
+    "category": "command",
+    "seed": 42002
+  },
+  {
+    "filename": "cmd_keep_pressure",
+    "text": "Keep pressure. Don't let up.",
+    "category": "command",
+    "seed": 42003
+  },
+  {
+    "filename": "cmd_move_now",
+    "text": "Move now. Sharp and precise.",
+    "category": "command",
+    "seed": 42004
+  },
+  {
+    "filename": "cmd_stay_sharp",
+    "text": "Stay sharp. Eyes up.",
+    "category": "command",
+    "seed": 42005
+  },
+  {
+    "filename": "cmd_push_pace",
+    "text": "Push the pace. Don't coast.",
+    "category": "command",
+    "seed": 42006
+  },
+  {
+    "filename": "cmd_reset_breathe",
+    "text": "Reset. Breathe. Attack again.",
+    "category": "command",
+    "seed": 42007
+  },
+  {
+    "filename": "cmd_own_this_rep",
+    "text": "Own this rep. Make it count.",
+    "category": "command",
+    "seed": 42008
+  },
+  {
+    "filename": "elapsed_30s",
+    "text": "Thirty seconds elapsed. Stay disciplined.",
+    "category": "elapsed",
+    "seed": 42030
+  },
+  {
+    "filename": "elapsed_60s",
+    "text": "One minute elapsed. Keep your bearing.",
+    "category": "elapsed",
+    "seed": 42060
+  },
+  {
+    "filename": "elapsed_90s",
+    "text": "Ninety seconds elapsed. Maintain your interval.",
+    "category": "elapsed",
+    "seed": 42090
+  },
+  {
+    "filename": "elapsed_120s",
+    "text": "Two minutes elapsed. Strong feet, strong pace.",
+    "category": "elapsed",
+    "seed": 42120
+  },
+  {
+    "filename": "elapsed_180s",
+    "text": "Three minutes elapsed. Sound off and drive.",
+    "category": "elapsed",
+    "seed": 42180
+  },
+  {
+    "filename": "elapsed_300s",
+    "text": "Five minutes elapsed. Finish the rep, keep pushing.",
+    "category": "elapsed",
+    "seed": 42300
+  }
+]

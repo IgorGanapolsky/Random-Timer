@@ -59,7 +59,9 @@ def test_run_acquisition_preserves_unmanaged_campaigns_and_caps_budget(monkeypat
         tmp_path,
         budget_override={**pas.DEFAULT_BUDGET, "daily_budget_usd": 100.0},
     )
-    assert result["budget"]["daily_budget_usd"] == pytest.approx(35.0)
+    assert result["budget"]["daily_budget_usd"] == pytest.approx(0.65)
+    assert result["monthly_budget_cap_usd"] == pytest.approx(20.0)
+    assert result["budget_capped"] is True
 
     persisted = json.loads((tmp_path / "marketing" / "data" / "paid_campaigns.json").read_text(encoding="utf-8"))
     campaigns = {item["platform"]: item for item in persisted["campaigns"]}
@@ -67,10 +69,44 @@ def test_run_acquisition_preserves_unmanaged_campaigns_and_caps_budget(monkeypat
     assert campaigns["apple_search_ads"]["status"] == "active"
     assert campaigns["apple_search_ads"]["campaign_id"] == 12345
     assert campaigns["apple_search_ads"]["launched_at"] == "2026-02-24T16:30:00Z"
-    assert campaigns["reddit_ads"]["status"] == "ready_to_launch"
+    assert campaigns["apple_search_ads"]["daily_budget_usd"] == pytest.approx(0.39)
+    assert campaigns["google_uac"]["daily_budget_usd"] == pytest.approx(0.26)
+    assert campaigns["reddit_ads"]["status"] == "blocked_budget_guardrail"
+    assert campaigns["reddit_ads"]["daily_budget_usd"] == pytest.approx(0.0)
+    assert campaigns["reddit_ads"]["daily_budget_requested_usd"] == pytest.approx(10.0)
+    assert campaigns["reddit_ads"]["budget_guardrail_blocked"] is True
+    assert result["unmanaged_budget_guardrails"] == [
+        {
+            "platform": "reddit_ads",
+            "daily_budget_requested_usd": 10.0,
+            "status": "blocked_budget_guardrail",
+        }
+    ]
 
     history = persisted["history"][-1]
     assert history["action"] == "campaign_refresh"
     assert history["daily_budget_requested_usd"] == pytest.approx(100.0)
-    assert history["daily_budget_applied_usd"] == pytest.approx(35.0)
+    assert history["daily_budget_applied_usd"] == pytest.approx(0.65)
+    assert history["monthly_budget_cap_usd"] == pytest.approx(20.0)
     assert history["budget_capped"] is True
+
+
+def test_run_acquisition_caps_existing_budget_without_override(monkeypatch, tmp_path):
+    from scripts import paid_acquisition_seed as pas
+
+    _write_paid_campaigns(tmp_path / "marketing" / "data" / "paid_campaigns.json")
+    monkeypatch.setattr(pas, "load_blueprint", lambda _p: {})
+    monkeypatch.setattr(pas, "build_backlog", lambda _b: _sample_backlog())
+
+    result = pas.run_acquisition(tmp_path)
+
+    assert result["budget"]["daily_budget_usd"] == pytest.approx(0.65)
+    persisted = json.loads((tmp_path / "marketing" / "data" / "paid_campaigns.json").read_text(encoding="utf-8"))
+    assert persisted["budget_config"]["daily_budget_usd"] == pytest.approx(0.65)
+    campaigns = {item["platform"]: item for item in persisted["campaigns"]}
+    assert campaigns["apple_search_ads"]["daily_budget_usd"] == pytest.approx(0.39)
+    assert campaigns["google_uac"]["daily_budget_usd"] == pytest.approx(0.26)
+    assert campaigns["reddit_ads"]["daily_budget_usd"] == pytest.approx(0.0)
+    assert campaigns["reddit_ads"]["status"] == "blocked_budget_guardrail"
+    assert persisted["history"][-1]["daily_budget_requested_usd"] == pytest.approx(30.0)
+    assert persisted["history"][-1]["budget_capped"] is True
