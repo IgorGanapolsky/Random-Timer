@@ -16,12 +16,13 @@ final class TimerConfigProClampingTests: XCTestCase {
                 + "and the full sound arsenal built for pressure drills."
         )
         let expectedFooter =
-            "Cancel anytime. Subscription auto-renews until cancelled. "
-            + "Price shown on Apple's confirmation sheet."
+            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+            + "subscription auto-renews until cancelled."
         XCTAssertEqual(PaywallSheet.subscriptionFooter, expectedFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
+                "Ad-free training — Elite subscription removes rewarded ads",
                 "60-minute random windows for full-length drills",
                 "Combat and MMA voice callouts with live time checks",
                 "Round-capped loops for pad work, sparring, and circuits",
