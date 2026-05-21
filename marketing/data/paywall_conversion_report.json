@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-20T23:45:34+00:00",
+  "generated_at": "2026-05-21T00:35:31+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 365,
-    "offer_selects": 95,
+    "views": 361,
+    "offer_selects": 93,
     "purchase_attempts": 7,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2603,
-    "select_to_attempt_rate": 0.0737,
+    "view_to_select_rate": 0.2576,
+    "select_to_attempt_rate": 0.0753,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -74,7 +74,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 80,
+      "offer_selects": 78,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,14 +85,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 538,
-      "users": 136
+      "failures": 534,
+      "users": 135
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 378,
-      "users": 115
+      "failures": 374,
+      "users": 114
     },
     {
       "platform": "android",
@@ -124,7 +124,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 80,
+      "views": 76,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -182,7 +182,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 80,
+      "views": 76,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,18 +216,18 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 8075,
-      "users": 114
+      "changes": 7874,
+      "users": 111
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2235,
-      "users": 218
+      "changes": 2241,
+      "users": 219
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1795,
-      "users": 204
+      "changes": 1803,
+      "users": 205
     },
     {
       "setting_name": "alarm_duration",
@@ -241,8 +241,8 @@
     },
     {
       "setting_name": "volume",
-      "changes": 1260,
-      "users": 135
+      "changes": 1261,
+      "users": 136
     },
     {
       "setting_name": "repeat_enabled",
