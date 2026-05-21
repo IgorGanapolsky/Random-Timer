@@ -12,8 +12,8 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 9 |
-| WAU | 104 |
+| DAU | 8 |
+| WAU | 103 |
 | MAU | 480 |
 <!-- DOWNLOADS_END -->
 
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-21T19:11:32+00:00
+**Generated:** 2026-05-21T19:54:14+00:00
 
 ## Onboarding Funnel
 - First Open: **472**
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21"]
     y-axis "Downloads"
-    line [70 , 69 , 67 , 67 , 67 , 67 , 67 , 68 , 68 , 67 , 67 , 67 , 67 , 67]
-    line [398 , 398 , 398 , 398 , 398 , 398 , 397 , 397 , 392 , 392 , 393 , 395 , 395 , 394]
+    line [69 , 67 , 67 , 67 , 67 , 67 , 68 , 68 , 67 , 67 , 67 , 67 , 67 , 67]
+    line [398 , 398 , 398 , 398 , 398 , 397 , 397 , 392 , 392 , 393 , 395 , 395 , 394 , 394]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-21T19:11:33+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-21T19:54:15+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
