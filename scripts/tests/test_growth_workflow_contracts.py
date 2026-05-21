@@ -561,6 +561,8 @@ def test_play_iap_readback_workflow_scheduled_on_develop():
     assert "schedule:" in source
     assert 'cron: "45 7 * * *"' in source
     assert "play_verify_iap_products.py" in source
+    assert "play_activate_iap_products.py" in source
+    assert 'PYTHONPATH: ${{ github.workspace }}' in source
     assert "GOOGLE_PLAY_JSON_KEY" in source
 
 

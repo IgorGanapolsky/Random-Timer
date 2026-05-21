@@ -12,6 +12,8 @@ jobs:
   verify-play-iap-products:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v6
 
