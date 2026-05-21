@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-21T15:22:21+00:00",
+  "generated_at": "2026-05-21T18:54:57+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -17,25 +17,20 @@
     "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window."
   },
   "posthog": {
-    "status": "skipped",
-    "host": "https://us.posthog.com",
-    "project_id": null,
-    "audience": "pragmatic_live",
-    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ('testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test')\n)",
-    "audience_note": "Excludes debug/sim/emulator, is_internal, non\u2013App Store/TestFlight/Firebase-style distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. Legacy events without distribution_channel use coalesce 'legacy' (still included). Not a guarantee of human/non-team users\u2014set person exclusions for known IDs.",
-    "exclude_person_ids_configured": false,
+    "status": "ok",
     "window_days": 30,
-    "errors": [],
-    "reason": "missing POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID"
+    "wqtu_7d_distinct_persons": 12,
+    "distinct_persons_application_installed": 100,
+    "distinct_persons_timer_completed": 40,
+    "distinct_persons_paywall_purchase_success": 0,
+    "events_paywall_purchase_success": 0
   },
   "store_apis": {
     "android": {
-      "status": "skipped",
-      "reason": "google-api-python-client not installed"
+      "status": "skipped"
     },
     "ios": {
-      "status": "skipped",
-      "reason": "requests not installed"
+      "status": "skipped"
     }
   },
   "refunds": {
@@ -66,13 +61,15 @@
     "note": "Proxy only (not store truth): distinct Application Installed minus distinct Application Opened by platform over the same window."
   },
   "crashlytics_bigquery": {
-    "status": "error",
-    "reason": "No module named 'google'",
-    "source": "crashlytics"
+    "status": "skipped"
   },
   "canonical_users": {
     "metric_bundle_id": "executive_canonical_users_v1",
-    "status": "unavailable",
-    "reason": "skipped"
+    "window_days": 30,
+    "wqtu_7d": 12,
+    "installs_30d": 100,
+    "timer_completed_persons_30d": 40,
+    "paywall_purchase_success_persons_30d": 0,
+    "paywall_purchase_success_events_30d": 0
   }
 }
