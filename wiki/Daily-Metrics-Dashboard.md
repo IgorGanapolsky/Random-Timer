@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 67 | 393 | 460 |
-| Active Installs | — | 396 | — |
+| Distinct install users (30d) | 67 | 395 | 462 |
+| Active Installs | — | 398 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 7 |
-| WAU | 105 |
-| MAU | 478 |
+| DAU | 9 |
+| WAU | 107 |
+| MAU | 480 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -79,6 +79,8 @@
 | First Open | 471 | — |
 | First Timer Configured | 298 | 63.3% of opens |
 | First Timer Completed | 93 | 19.8% of opens |
+
+_Data quality: stale; showing last good metrics from `2026-05-21T17:24:03+00:00`; latest read issue: `http_504`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -156,8 +158,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21" , "2026-05-21"]
     y-axis "Downloads"
-    line [71 , 71 , 71 , 70 , 69 , 67 , 67 , 67 , 67 , 67 , 68 , 68 , 67 , 67]
-    line [404 , 402 , 398 , 398 , 398 , 398 , 398 , 398 , 398 , 397 , 397 , 392 , 392 , 393]
+    line [71 , 71 , 70 , 69 , 67 , 67 , 67 , 67 , 67 , 68 , 68 , 67 , 67 , 67]
+    line [402 , 398 , 398 , 398 , 398 , 398 , 398 , 398 , 397 , 397 , 392 , 392 , 393 , 395]
 ```
 
 ```mermaid
@@ -193,4 +195,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-21T17:24:05+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-21T17:35:57+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
