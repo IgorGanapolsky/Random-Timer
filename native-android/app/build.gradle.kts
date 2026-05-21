@@ -30,7 +30,7 @@ val enableFirebasePlugins =
 if (enableFirebasePlugins) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
-    apply(plugin = "com.google.firebase.firebase-perf")
+    // Firebase Perf Gradle plugin incompatible with AGP 9+ (removed Transform API).
 } else {
     logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }

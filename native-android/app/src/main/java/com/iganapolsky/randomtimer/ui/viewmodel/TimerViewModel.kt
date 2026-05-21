@@ -390,27 +390,6 @@ class TimerViewModel
             )
         }
 
-        fun trackVoiceGenderSelected(gender: VoiceGender) {
-            analyticsService.track(
-                AnalyticsEvents.VOICE_GENDER_SELECTED,
-                mapOf(AnalyticsProperties.GENDER to gender.name.lowercase()),
-            )
-        }
-
-        fun trackFeatureGateHit(feature: String) {
-            analyticsService.track(
-                AnalyticsEvents.FEATURE_GATE_HIT,
-                mapOf(AnalyticsProperties.FEATURE to feature),
-            )
-        }
-
-        fun trackPaywallGateFirstTimer(feature: String) {
-            analyticsService.track(
-                AnalyticsEvents.PAYWALL_GATE_FIRST_TIMER,
-                mapOf(AnalyticsProperties.FEATURE to feature),
-            )
-        }
-
         fun trackPaywallDismissed(entryPoint: String) {
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_DISMISSED,
