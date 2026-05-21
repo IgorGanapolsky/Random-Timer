@@ -22,7 +22,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsScreens
 import com.iganapolsky.randomtimer.analytics.PaywallValueFraming
 import com.iganapolsky.randomtimer.billing.ProManager
@@ -204,9 +203,6 @@ fun RandomTimerNavHost(
                 },
                 onTrainingPresetApplied = { preset ->
                     viewModel.applyPresetAndStart(preset)
-                },
-                onVoiceGenderSelected = { gender ->
-                    viewModel.trackVoiceGenderSelected(gender)
                 },
                 onSecretUnlock = {
                     viewModel.proManager.forcePro()

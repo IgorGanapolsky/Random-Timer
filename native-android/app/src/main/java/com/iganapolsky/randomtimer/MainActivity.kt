@@ -23,7 +23,6 @@ import com.iganapolsky.randomtimer.notifications.MonthlyContentWorker
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
-import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import com.iganapolsky.randomtimer.updates.InAppUpdateManager

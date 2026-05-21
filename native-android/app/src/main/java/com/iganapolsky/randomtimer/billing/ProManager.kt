@@ -608,9 +608,6 @@ class ProManager
             if (level.isPro) {
                 packStore.refreshIfNeeded(isPro = true)
             }
-            if (_entitlementLevel.value.isPro) {
-                packStore.refreshIfNeeded(isPro = true)
-            }
         }
 
         private suspend fun acknowledgePurchaseIfNeeded(purchase: Purchase) {

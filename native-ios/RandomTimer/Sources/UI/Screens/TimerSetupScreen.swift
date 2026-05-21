@@ -528,28 +528,6 @@ struct TimerSetupScreen: View {
         .background(Color.backgroundDark.ignoresSafeArea())
         .navigationTitle("Random Tactical Timer")
         .navigationBarTitleDisplayMode(.inline)
-        .overlay(alignment: .bottom) {
-            if showFirstTimerGate {
-                Text("Complete your first drill to unlock Pro features")
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.black.opacity(0.85))
-                    .cornerRadius(10)
-                    .padding(.bottom, 120)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: showFirstTimerGate)
-        .task(id: firstTimerGateDismissToken) {
-            guard showFirstTimerGate else { return }
-            try? await Task.sleep(for: .seconds(3))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.3)) {
-                showFirstTimerGate = false
-            }
-        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(
                 entryPoint: paywallEntryPoint,
@@ -696,46 +674,6 @@ struct TimerSetupScreen: View {
                 "max_duration": preset.maxSeconds,
             ]
         )
-    }
-
-    private var currentRangeProfiles: RangeToggleProfiles {
-        RangeToggleProfiles(
-            freeMinSeconds: storedFreeMinSeconds,
-            freeMaxSeconds: storedFreeMaxSeconds,
-            extendedMinSeconds: storedExtendedMinSeconds,
-            extendedMaxSeconds: storedExtendedMaxSeconds
-        )
-    }
-
-    private func applyRangeProfiles(_ profiles: RangeToggleProfiles) {
-        storedFreeMinSeconds = profiles.freeMinSeconds
-        storedFreeMaxSeconds = profiles.freeMaxSeconds
-        storedExtendedMinSeconds = profiles.extendedMinSeconds
-        storedExtendedMaxSeconds = profiles.extendedMaxSeconds
-    }
-
-    private func persistActiveRangeProfile(
-        minSeconds: Int,
-        maxSeconds: Int,
-        useExtendedRange: Bool
-    ) {
-        if useExtendedRange {
-            let sanitized = sanitizedStoredRange(
-                minSeconds: minSeconds,
-                maxSeconds: maxSeconds,
-                maxSecondsLimit: TimerConfig.maxSecondsPro
-            )
-            storedExtendedMinSeconds = sanitized.min
-            storedExtendedMaxSeconds = sanitized.max
-        } else {
-            let sanitized = sanitizedStoredRange(
-                minSeconds: minSeconds,
-                maxSeconds: maxSeconds,
-                maxSecondsLimit: TimerConfig.maxSecondsFree
-            )
-            storedFreeMinSeconds = sanitized.min
-            storedFreeMaxSeconds = sanitized.max
-        }
     }
 
     private var currentRangeProfiles: RangeToggleProfiles {
