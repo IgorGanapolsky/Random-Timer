@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-05-21T06:46:47+00:00",
+  "generated_at": "2026-05-21T08:12:41+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 352,
+    "views": 346,
     "offer_selects": 89,
-    "purchase_attempts": 7,
+    "purchase_attempts": 6,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2528,
-    "select_to_attempt_rate": 0.0787,
+    "view_to_select_rate": 0.2572,
+    "select_to_attempt_rate": 0.0674,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
     {
       "reason": "user_cancelled",
-      "count": 7
+      "count": 6
     }
   ],
   "failure_breakdown": [
@@ -30,8 +30,8 @@
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.pro",
       "reason": "user_cancelled",
-      "failures": 3,
-      "users": 3
+      "failures": 2,
+      "users": 2
     }
   ],
   "product_funnel": [
@@ -39,7 +39,7 @@
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.pro",
       "offer_selects": 0,
-      "attempts": 3,
+      "attempts": 2,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
@@ -148,7 +148,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 45,
+      "views": 40,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -164,10 +164,10 @@
     },
     {
       "entry_point": "sound_gate",
-      "views": 8,
-      "attempts": 5,
+      "views": 7,
+      "attempts": 4,
       "successes": 0,
-      "view_to_attempt_rate": 0.625,
+      "view_to_attempt_rate": 0.5714,
       "attempt_to_success_rate": 0.0
     }
   ],
@@ -206,7 +206,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 45,
+      "views": 40,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,8 +216,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 7840,
-      "users": 104
+      "changes": 7827,
+      "users": 102
     },
     {
       "setting_name": "max_seconds",

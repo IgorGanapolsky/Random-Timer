@@ -1,32 +1,32 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-21T06:46:47+00:00
+Generated: 2026-05-21T08:12:41+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **352**
+- Views: **346**
 - Offer Selects: **89**
-- Purchase Attempts: **7**
+- Purchase Attempts: **6**
 - Purchase Successes: **0**
-- View -> Offer Select: **25.3%**
-- Select -> Purchase Attempt: **7.9%**
+- View -> Offer Select: **25.7%**
+- Select -> Purchase Attempt: **6.7%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 7 |
+| user_cancelled | 6 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
 | android | unknown | user_cancelled | 4 | 1 |
-| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 3 | 3 |
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 2 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| ios | com.iganapolsky.randomtimer.pro | 0 | 3 | 0 | 0.0% | 0.0% |
+| ios | com.iganapolsky.randomtimer.pro | 0 | 2 | 0 | 0.0% | 0.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
@@ -48,21 +48,21 @@ Window (days): 30
 | setup_upgrade_cta | 68 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 45 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 40 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
-| sound_gate | 8 | 5 | 0 | 62.5% | 0.0% |
+| sound_gate | 7 | 4 | 0 | 57.1% | 0.0% |
 
 ## Leaky Entry Points
 - `range_gate` had **105** views and **0** purchase attempts.
 - `setup_upgrade_cta` had **68** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **45** views and **0** purchase attempts.
+- `unknown` had **40** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 7840 | 104 |
+| unknown | 7827 | 102 |
 | max_seconds | 2252 | 219 |
 | min_seconds | 1811 | 205 |
 | alarm_duration | 1708 | 200 |
