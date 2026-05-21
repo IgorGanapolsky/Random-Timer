@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-21T15:44:39+00:00
+Generated: 2026-05-21T16:43:19+00:00
 Window (days): 30
 
 ## Funnel
@@ -62,7 +62,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 7448 | 96 |
+| unknown | 7443 | 95 |
 | max_seconds | 2264 | 220 |
 | min_seconds | 1815 | 206 |
 | alarm_duration | 1711 | 201 |
