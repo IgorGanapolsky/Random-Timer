@@ -13,6 +13,8 @@
   uv run python scripts/executive_metrics_snapshot.py
   ```
 
+  **PostHog scripts** (`wqtu_dashboard.py`, `paywall_conversion_report.py`, `engagement_dashboard.py`) read the same keys from repo-root `.env` via `load_repo_dotenv`: `POSTHOG_PERSONAL_API_KEY` or `POSTHOG_API_KEY`, and `POSTHOG_PROJECT_ID`. If the shell exports empty placeholders, `.env` still wins when the on-disk value is non-empty.
+
 - **App Store Connect errors** (timeouts, etc.): the script **retries** a few times with a longer timeout. If ASC is still down or blocked, iOS store fields may be empty in that run—**re-run later**; you do not need to edit the JSON by hand.
 - **Crashlytics shows “no tables yet”:** BigQuery tables are created when the Firebase → BigQuery export receives data. Until then, crash counts stay at zero in this file—**not** proof that the app has never crashed.
 

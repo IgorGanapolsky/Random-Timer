@@ -27,6 +27,7 @@ from pathlib import Path
 
 # Reuse PostHog query helpers from existing infra
 sys.path.append(str(Path(__file__).parent.resolve()))
+from repo_dotenv import load_repo_dotenv
 from store_downloads_snapshot import LIVE_EVENTS_PREDICATE, posthog_query, query_rows, query_scalar
 
 
@@ -207,6 +208,7 @@ def compute_wqtu_trend(key: str, project_id: str, errors: list) -> list:
 
 
 def run(repo_root: Path, alert_threshold: int = 0) -> dict:
+    load_repo_dotenv(repo_root)
     output_path = repo_root / "marketing" / "data" / "wqtu_health.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

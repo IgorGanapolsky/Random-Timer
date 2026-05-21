@@ -35,6 +35,19 @@ def run_report_with_mocked_posthog(report, scalar_rows, table_rows):
 
 
 class PaywallConversionReportTests(unittest.TestCase):
+    def test_run_loads_repo_dotenv(self):
+        from scripts import paywall_conversion_report as report
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with mock.patch.object(report, "load_repo_dotenv") as load_dotenv, mock.patch.dict(
+                "os.environ",
+                {"POSTHOG_PERSONAL_API_KEY": "", "POSTHOG_PROJECT_ID": ""},
+                clear=True,
+            ):
+                report.run(root, days=7)
+            load_dotenv.assert_called_once_with(root)
+
     def test_build_markdown_includes_funnel_and_failure_reasons(self):
         from scripts import paywall_conversion_report as report
 

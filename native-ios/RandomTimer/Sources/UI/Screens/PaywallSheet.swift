@@ -112,6 +112,20 @@ func shouldShowPaywallPlan(
     return availableProductIDs.contains(requiredProductID)
 }
 
+/// True when StoreKit returned the product for this plan (required before launching purchase).
+func hasPurchasablePaywallPlan(
+    _ plan: PaywallPlanSelection,
+    availableProductIDs: Set<String>
+) -> Bool {
+    !availableProductIDs.isEmpty && shouldShowPaywallPlan(plan, availableProductIDs: availableProductIDs)
+}
+
+func hasAnyPurchasablePaywallPlan(availableProductIDs: Set<String>) -> Bool {
+    [PaywallPlanSelection.monthly, .annual, .lifetime].contains {
+        hasPurchasablePaywallPlan($0, availableProductIDs: availableProductIDs)
+    }
+}
+
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
     static let headline = "Unlock Full Fight-Ready Training"
@@ -217,7 +231,17 @@ struct PaywallSheet: View {
     }
 
     /// Never pass an all-whitespace title to `PrimaryButton` (empty labels can disappear in sheets).
+    private var canPurchaseSelectedPlan: Bool {
+        hasPurchasablePaywallPlan(selectedPlan, availableProductIDs: availableProductIDs)
+    }
+
     private var ctaButtonTitle: String {
+        if availableProductIDs.isEmpty {
+            return "Loading plans…"
+        }
+        if !canPurchaseSelectedPlan {
+            return "Purchases unavailable"
+        }
         let trimmed = ctaLabel.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "Continue" : trimmed
     }
@@ -384,7 +408,19 @@ struct PaywallSheet: View {
     @ViewBuilder
     private var paywallStickyChrome: some View {
         VStack(spacing: 12) {
+            if availableProductIDs.isEmpty {
+                Text("Loading subscription options from the App Store…")
+                    .font(.footnote)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+            } else if !canPurchaseSelectedPlan {
+                Text("This plan is not available in the App Store right now. Choose another plan or try again later.")
+                    .font(.footnote)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
             PrimaryButton(title: ctaButtonTitle) {
+                guard canPurchaseSelectedPlan else { return }
                 Task {
                     trackOfferSelected(
                         plan: planName(for: selectedPlan),
@@ -394,6 +430,8 @@ struct PaywallSheet: View {
                     await purchase(productID: selectedProductID)
                 }
             }
+            .opacity(canPurchaseSelectedPlan ? 1 : 0.55)
+            .allowsHitTesting(canPurchaseSelectedPlan)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color.white.opacity(0.95), lineWidth: 2.5)

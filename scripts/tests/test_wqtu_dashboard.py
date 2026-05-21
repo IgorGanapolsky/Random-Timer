@@ -6,6 +6,19 @@ from unittest import mock
 
 
 class WqtuDashboardTests(unittest.TestCase):
+    def test_run_loads_repo_dotenv(self):
+        from scripts import wqtu_dashboard as wd
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with mock.patch.object(wd, "load_repo_dotenv") as load_dotenv, mock.patch.dict(
+                "os.environ",
+                {"POSTHOG_PERSONAL_API_KEY": "", "POSTHOG_PROJECT_ID": ""},
+                clear=True,
+            ):
+                wd.run(root)
+            load_dotenv.assert_called_once_with(root)
+
     def test_missing_credentials_writes_skipped(self):
         from scripts import wqtu_dashboard as wd
 
