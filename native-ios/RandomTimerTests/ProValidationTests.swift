@@ -92,6 +92,21 @@ final class TimerConfigProClampingTests: XCTestCase {
         XCTAssertFalse(shouldShowPaywallPlan(.monthly, availableProductIDs: approvedProductIDs))
     }
 
+    func testHasPurchasablePaywallPlanRequiresLoadedStoreProducts() {
+        XCTAssertFalse(hasPurchasablePaywallPlan(.monthly, availableProductIDs: []))
+        XCTAssertFalse(hasPurchasablePaywallPlan(.lifetime, availableProductIDs: []))
+
+        let approvedProductIDs: Set<String> = [
+            ProManager.baseProductID,
+            ProManager.eliteProductID,
+        ]
+        XCTAssertTrue(hasPurchasablePaywallPlan(.lifetime, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(hasPurchasablePaywallPlan(.annual, availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(hasPurchasablePaywallPlan(.monthly, availableProductIDs: approvedProductIDs))
+        XCTAssertTrue(hasAnyPurchasablePaywallPlan(availableProductIDs: approvedProductIDs))
+        XCTAssertFalse(hasAnyPurchasablePaywallPlan(availableProductIDs: []))
+    }
+
     func testSetupUpgradeDefaultsToLifetimePlan() {
         XCTAssertEqual(
             initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: false),

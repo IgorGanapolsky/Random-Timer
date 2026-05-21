@@ -19,6 +19,7 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from repo_dotenv import load_repo_dotenv
 from store_downloads_snapshot import LIVE_EVENTS_PREDICATE, posthog_query
 
 
@@ -524,6 +525,7 @@ def build_markdown(payload: Dict[str, Any]) -> str:
 
 
 def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
+    load_repo_dotenv(repo_root)
     output_dir = repo_root / "marketing" / "data"
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / "paywall_conversion_report.json"
