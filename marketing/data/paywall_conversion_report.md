@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-21T02:26:52+00:00
+Generated: 2026-05-21T03:47:27+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **357**
-- Offer Selects: **91**
+- Views: **353**
+- Offer Selects: **89**
 - Purchase Attempts: **7**
 - Purchase Successes: **0**
-- View -> Offer Select: **25.5%**
-- Select -> Purchase Attempt: **7.7%**
+- View -> Offer Select: **25.2%**
+- Select -> Purchase Attempt: **7.9%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -30,13 +30,13 @@ Window (days): 30
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
-| android | elite_tactical_monthly | 76 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 74 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 530 | 134 |
-| android | elite_tactical | 370 | 113 |
+| android | elite_tactical_monthly | 526 | 132 |
+| android | elite_tactical | 366 | 111 |
 | android | pro_base | 156 | 73 |
 | android | unknown | 94 | 58 |
 | ios | unknown | 4 | 1 |
@@ -45,7 +45,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 105 | 0 | 0 | 0.0% | 0.0% |
-| setup_upgrade_cta | 72 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 68 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 46 | 0 | 0 | 0.0% | 0.0% |
@@ -54,7 +54,7 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `range_gate` had **105** views and **0** purchase attempts.
-- `setup_upgrade_cta` had **72** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **68** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **46** views and **0** purchase attempts.
@@ -62,7 +62,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 7871 | 110 |
+| unknown | 7848 | 106 |
 | max_seconds | 2252 | 219 |
 | min_seconds | 1811 | 205 |
 | alarm_duration | 1708 | 200 |
