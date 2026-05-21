@@ -46,6 +46,7 @@ internal fun normalizePaywallEntryPoint(value: String): String {
             "voice_gate",
             "repeat_gate",
             "sound_arsenal_gate",
+            "qualified_training_gate",
         )
     if (trimmed in knownEntryPoints) return trimmed
     return paywallEntryPointForFeature(trimmed)

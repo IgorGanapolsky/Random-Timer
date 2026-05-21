@@ -5,6 +5,8 @@ object PostHogExperimentKeys {
     const val PAYWALL_DEFAULT_PLAN_ANNUAL = "paywall_default_plan_annual"
     /** Multivariate / string flag: `control` vs `outcomes_first` (paywall copy experiment). */
     const val PAYWALL_VALUE_FRAMING = "paywall_value_framing"
+    /** P1: rewarded video on free tier. Default off until AdMob publisher account ships. */
+    const val REWARDED_ADS_ENABLED = "rewarded_ads_enabled"
 }
 
 /** Values for [PostHogExperimentKeys.PAYWALL_VALUE_FRAMING] (must match iOS). */

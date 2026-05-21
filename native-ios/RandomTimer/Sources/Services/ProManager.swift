@@ -19,6 +19,11 @@ final class ProManager: ObservableObject { // swiftlint:disable:this no_observab
         [baseProductID, eliteProductID, monthlyProductID, annualProductID]
     }
 
+    /// P2 scaffold — not fetched until App Store Connect products exist.
+    static nonisolated var disciplinePackProductIDs: Set<String> {
+        Set(DisciplinePackCatalog.iosProductIds)
+    }
+
     @Published private(set) var entitlementLevel: EntitlementLevel = .none
     @Published private(set) var products: [Product] = []
     private var debugOverrideActive = false

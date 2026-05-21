@@ -11,6 +11,7 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.PaywallExperimentVariants
 import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallAnalytics
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -379,6 +380,13 @@ class TimerViewModel
             analyticsService.track(
                 AnalyticsEvents.FEATURE_GATE_HIT,
                 mapOf(AnalyticsProperties.FEATURE to feature),
+            )
+        }
+
+        fun trackQualifiedTrainingPaywallEligible(completedSessionCount: Int) {
+            analyticsService.track(
+                AnalyticsEvents.QUALIFIED_TRAINING_PAYWALL_ELIGIBLE,
+                QualifiedTrainingPaywallAnalytics.eligibleProperties(completedSessionCount),
             )
         }
 

@@ -16,12 +16,13 @@ final class TimerConfigProClampingTests: XCTestCase {
                 + "and the full sound arsenal built for pressure drills."
         )
         let expectedFooter =
-            "Cancel anytime. Subscription auto-renews until cancelled. "
-            + "Price shown on Apple's confirmation sheet."
+            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+            + "subscription auto-renews until cancelled."
         XCTAssertEqual(PaywallSheet.subscriptionFooter, expectedFooter)
         XCTAssertEqual(
             PaywallSheet.featureRows,
             [
+                "Ad-free training — Elite subscription removes rewarded ads",
                 "60-minute random windows for full-length drills",
                 "Combat and MMA voice callouts with live time checks",
                 "Round-capped loops for pad work, sparring, and circuits",
@@ -54,6 +55,10 @@ final class TimerConfigProClampingTests: XCTestCase {
             rangeContext.valueCopy,
             "Pro removes the 5-minute cap so long rounds, circuits, and stress drills can run on your timing."
         )
+
+        let qualifiedContext = paywallFeatureContext(for: .qualifiedTrainingGate)
+        XCTAssertEqual(qualifiedContext.eyebrow, "Three sessions logged")
+        XCTAssertEqual(PaywallEntryPoint.qualifiedTrainingGate.featureGateName, "qualified_training_gate")
 
         XCTAssertEqual(paywallFeatureContext(for: .unknown).eyebrow, "Pro Tactical")
     }

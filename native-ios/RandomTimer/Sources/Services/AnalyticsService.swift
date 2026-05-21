@@ -274,6 +274,15 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
 #endif
     }
 
+    func rewardedAdsEnabled() -> Bool {
+#if canImport(PostHog)
+        guard initialized else { return false }
+        return PostHogSDK.shared.isFeatureEnabled(PostHogExperimentKeys.rewardedAdsEnabled)
+#else
+        return false
+#endif
+    }
+
     func setPaywallSurfaceContext(entryPoint: String, experimentVariant: String) {
         lastPaywallEntryPoint = entryPoint
         lastPaywallExperimentVariant = experimentVariant
@@ -491,6 +500,8 @@ enum PostHogExperimentKeys {
     static let paywallDefaultPlanAnnual = "paywall_default_plan_annual"
     /// Multivariate / string flag: `control` vs `outcomes_first` (paywall copy).
     static let paywallValueFraming = "paywall_value_framing"
+    /// P1: rewarded video on free tier. Default off until AdMob publisher account ships.
+    static let rewardedAdsEnabled = "rewarded_ads_enabled"
 }
 
 enum PaywallValueFraming {
@@ -547,6 +558,10 @@ enum AnalyticsEvents {
     // Feature gates & voice
     static let voiceGenderSelected = "voice_gender_selected"
     static let featureGateHit = "feature_gate_hit"
+    static let qualifiedTrainingPaywallEligible = "qualified_training_paywall_eligible"
+    static let rewardedAdRequested = "rewarded_ad_requested"
+    static let rewardedAdCompleted = "rewarded_ad_completed"
+    static let rewardedAdUnlock = "rewarded_ad_unlock"
     static let paywallGateFirstTimer = "paywall_gate_first_timer"
     static let trainingPresetApplied = "training_preset_applied"
 
@@ -578,6 +593,7 @@ enum AnalyticsProperties {
     static let previousValue = "previous_value"
     static let entryPoint = "entry_point"
     static let result = "result"
+    static let success = "success"
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"

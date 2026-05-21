@@ -22,6 +22,11 @@ class NavigationAnalyticsMappingTest {
     }
 
     @Test
+    fun qualifiedTrainingGateMapsToCanonicalEntryPoint() {
+        assertThat(paywallEntryPointForFeature("qualified_training_gate")).isEqualTo("qualified_training_gate")
+    }
+
+    @Test
     fun unknownUpgradeFallsBackToUnknownEntryPoint() {
         assertThat(paywallEntryPointForFeature("mystery_feature")).isEqualTo("unknown")
     }

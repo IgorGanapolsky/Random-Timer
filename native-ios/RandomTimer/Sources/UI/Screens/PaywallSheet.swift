@@ -6,6 +6,7 @@ enum PaywallEntryPoint: String {
     case voiceGate = "voice_gate"
     case repeatGate = "repeat_gate"
     case soundArsenalGate = "sound_arsenal_gate"
+    case qualifiedTrainingGate = "qualified_training_gate"
     case unknown = "unknown"
 
     /// Maps to the analytics feature name for feature_gate_hit events.
@@ -16,6 +17,7 @@ enum PaywallEntryPoint: String {
         case .voiceGate: return "voice_callouts"
         case .repeatGate: return "repeat_loop"
         case .soundArsenalGate: return "pro_sounds"
+        case .qualifiedTrainingGate: return "qualified_training_gate"
         case .unknown: return "unknown"
         }
     }
@@ -55,6 +57,12 @@ func paywallFeatureContext(for entryPoint: PaywallEntryPoint) -> PaywallFeatureC
         return PaywallFeatureContext(
             eyebrow: "You tapped the sound arsenal",
             valueCopy: "Pro lets you equip the full alarm arsenal instead of only previewing locked sounds."
+        )
+    case .qualifiedTrainingGate:
+        return PaywallFeatureContext(
+            eyebrow: "Three sessions logged",
+            valueCopy: "You are training like a serious athlete. Pro unlocks longer random windows, combat callouts, "
+                + "round caps, and the full sound arsenal for your next block."
         )
     case .unknown:
         return PaywallFeatureContext(
@@ -115,10 +123,11 @@ struct PaywallSheet: View {
         "Longer random windows, combat callouts, and full-spectrum sounds — "
         + "built so every rep feels closer to live pressure."
     static let subscriptionFooter =
-        "Cancel anytime. Subscription auto-renews until cancelled. "
-        + "Price shown on Apple's confirmation sheet."
+        "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+        + "subscription auto-renews until cancelled."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
+        "Ad-free training — Elite subscription removes rewarded ads",
         "60-minute random windows for full-length drills",
         "Combat and MMA voice callouts with live time checks",
         "Round-capped loops for pad work, sparring, and circuits",
