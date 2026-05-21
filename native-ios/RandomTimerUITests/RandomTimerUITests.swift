@@ -82,6 +82,16 @@ final class RandomTimerUITests: XCTestCase {
         }
     }
 
+    private func scrollUntilVisible(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        maxSwipes: Int = 4
+    ) {
+        for _ in 0..<maxSwipes where !element.exists {
+            app.swipeUp()
+        }
+    }
+
     func testSetupStateShowsStartTimer() {
         let app = launchApp()
         ensureSetupScreen(app)

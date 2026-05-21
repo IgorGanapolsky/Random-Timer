@@ -445,9 +445,138 @@ struct PaywallSheet: View {
             .font(.footnote)
             .foregroundColor(.textSecondary)
 
-            Button("Not now") {
-                trackDismiss(method: "footer_not_now")
-                dismiss()
+                    Spacer()
+
+                    Button {
+                        trackDismiss(method: "close_button")
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.textSecondary)
+                            .accessibilityLabel("Close paywall")
+                    }
+                }
+
+                VStack(spacing: 4) {
+                    Text(Self.headline)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.textPrimary)
+
+                    VStack(spacing: 4) {
+                        Text(Self.subheadline)
+                        Text(Self.subscriptionFooter)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration, maximumDistance: 100)
+                        .onEnded { _ in
+                            triggerDebugUnlock()
+                        }
+                )
+
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(Self.featureTitle)
+                            .font(.caption.bold())
+                            .foregroundColor(.accentPrimary)
+                        ForEach(Self.featureRows, id: \.self) { feature in
+                            ProFeatureRow(text: feature)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+
+                // Plan selector
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("CHOOSE A PLAN")
+                        .font(.caption.bold())
+                        .foregroundColor(.accentPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    PlanOptionRow(
+                        title: "Monthly",
+                        priceLabel: "\(monthlyPrice)/month",
+                        badge: nil,
+                        isSelected: selectedPlan == .monthly
+                    ) {
+                        selectedPlan = .monthly
+                    }
+
+                    PlanOptionRow(
+                        title: "Annual",
+                        priceLabel: "\(annualPrice)/year",
+                        badge: "Best Value",
+                        isSelected: selectedPlan == .annual
+                    ) {
+                        selectedPlan = .annual
+                    }
+
+                    PlanOptionRow(
+                        title: "Lifetime",
+                        priceLabel: lifetimePrice,
+                        badge: "One-time",
+                        isSelected: selectedPlan == .lifetime
+                    ) {
+                        selectedPlan = .lifetime
+                    }
+                }
+
+                VStack(spacing: 12) {
+                    PrimaryButton(title: ctaLabel) {
+                        Task {
+                            await purchase(productID: selectedProductID)
+                        }
+                    }
+                }
+
+                Button("Restore purchase") {
+                    Task {
+                        let result = await proManager.restorePurchases()
+                        AnalyticsService.shared.track(AnalyticsEvents.paywallRestoreResult, properties: [
+                            AnalyticsProperties.entryPoint: entryPoint.rawValue,
+                            AnalyticsProperties.result: result.rawValue,
+                        ])
+
+                        if result == .restored || result == .alreadyUnlocked {
+                            hasTrackedDismiss = true
+                            dismiss()
+                        }
+                    }
+                }
+                .font(.footnote)
+                .foregroundColor(.textSecondary)
+
+                Button("Not now") {
+                    trackDismiss(method: "footer_not_now")
+                    dismiss()
+                }
+                .font(.footnote)
+                .foregroundColor(.textSecondary)
+
+                // Required by App Store Guideline 3.1.2(c)
+                // swiftlint:disable force_unwrapping
+                HStack(spacing: 16) {
+                    Link(
+                        "Privacy Policy",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/privacy-policy/")!
+                    )
+                    Link(
+                        "Terms of Use (EULA)",
+                        destination: URL(string: "https://igorganapolsky.github.io/Random-Timer/eula/")!
+                    )
+                }
+                // swiftlint:enable force_unwrapping
+                .font(.caption2)
+                .foregroundColor(.textSecondary)
             }
             .font(.footnote)
             .foregroundColor(.textSecondary)

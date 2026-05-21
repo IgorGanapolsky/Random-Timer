@@ -66,6 +66,13 @@ class AnalyticsService
                 return
             }
 
+            val distributionChannel = resolveDistributionChannel(application)
+            val isInternalUser =
+                isEmulator() ||
+                    BuildConfig.DEBUG ||
+                    isUiTestSession(application) ||
+                    distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL
+
             val config =
                 PostHogAndroidConfig(
                     apiKey = apiKey,
@@ -453,6 +460,23 @@ object AnalyticsEvents {
     const val REWARDED_AD_UNLOCK = "rewarded_ad_unlock"
     const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
     const val TRAINING_PRESET_APPLIED = "training_preset_applied"
+
+    // Loop
+    const val LOOP_ROUND_COMPLETED = "loop_round_completed"
+
+    // Dwell time
+    const val SCREEN_DWELL_TIME = "screen_dwell_time"
+
+    // Purchase failure
+    const val PURCHASE_FAILED = "purchase_failed"
+
+    // Free trial
+    const val FREE_TRIAL_STARTED = "free_trial_started"
+
+    // Feature engagement
+    const val VOICE_GENDER_SELECTED = "voice_gender_selected"
+    const val FEATURE_GATE_HIT = "feature_gate_hit"
+    const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
