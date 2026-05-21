@@ -593,6 +593,7 @@ enum AnalyticsProperties {
     static let previousValue = "previous_value"
     static let entryPoint = "entry_point"
     static let result = "result"
+    static let success = "success"
     static let abandonReason = "abandon_reason"
     static let abandonSource = "abandon_source"
     static let dismissMethod = "dismiss_method"

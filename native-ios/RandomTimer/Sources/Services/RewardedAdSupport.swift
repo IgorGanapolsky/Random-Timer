@@ -37,7 +37,7 @@ enum RewardedAdAnalytics {
     private static func baseProperties(entryPoint: String) -> [String: Any] {
         [
             AnalyticsProperties.entryPoint: entryPoint,
-            "unlock_feature": unlockFeature,
+            "unlock_feature": RewardedAdPolicy.unlockFeature,
             "monetization_phase": "p1_rewarded_ads",
             "admob_blocker": RewardedAdConfig.admobBlocker,
         ]
