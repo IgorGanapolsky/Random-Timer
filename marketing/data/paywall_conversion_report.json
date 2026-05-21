@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-21T05:24:12+00:00",
+  "generated_at": "2026-05-21T06:46:47+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 353,
+    "views": 352,
     "offer_selects": 89,
     "purchase_attempts": 7,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2521,
+    "view_to_select_rate": 0.2528,
     "select_to_attempt_rate": 0.0787,
     "attempt_to_success_rate": 0.0
   },
@@ -148,7 +148,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 46,
+      "views": 45,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -206,7 +206,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 46,
+      "views": 45,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,8 +216,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 7841,
-      "users": 105
+      "changes": 7840,
+      "users": 104
     },
     {
       "setting_name": "max_seconds",
