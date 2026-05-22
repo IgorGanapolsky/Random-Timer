@@ -12,7 +12,7 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 23 |
+| DAU | 22 |
 | WAU | 131 |
 | MAU | 467 |
 <!-- DOWNLOADS_END -->
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-22T20:56:27+00:00
+**Generated:** 2026-05-22T21:27:01+00:00
 
 ## Onboarding Funnel
 - First Open: **460**
@@ -60,7 +60,7 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 304 |
+| Paywall Views | 306 |
 | Offer Selects | 67 |
 | Purchase Attempts | 5 |
 | Purchase Successes | 0 |
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22"]
     y-axis "Downloads"
-    line [66 , 66 , 66 , 66 , 66 , 66 , 67 , 67 , 67 , 67 , 67 , 67 , 65 , 65]
-    line [397 , 397 , 397 , 397 , 391 , 398 , 396 , 396 , 391 , 390 , 388 , 388 , 382 , 384]
+    line [66 , 66 , 66 , 66 , 66 , 67 , 67 , 67 , 67 , 67 , 67 , 65 , 65 , 65]
+    line [397 , 397 , 397 , 391 , 398 , 396 , 396 , 391 , 390 , 388 , 388 , 382 , 384 , 384]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-22T20:56:28+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-22T21:27:02+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-22T20:55:50+00:00
+Generated: 2026-05-22T21:26:26+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **304**
+- Views: **306**
 - Offer Selects: **67**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **22.0%**
+- View -> Offer Select: **21.9%**
 - Select -> Purchase Attempt: **7.5%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -44,7 +44,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 107 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 109 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 62 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 40 | 0 | 0 | 0.0% | 0.0% |
@@ -53,7 +53,7 @@ Window (days): 30
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
 
 ## Leaky Entry Points
-- `range_gate` had **107** views and **0** purchase attempts.
+- `range_gate` had **109** views and **0** purchase attempts.
 - `voice_gate` had **62** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **40** views and **0** purchase attempts.

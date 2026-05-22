@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T20:55:43+00:00",
+  "generated_at": "2026-05-22T21:26:19+00:00",
   "window_days": 30,
   "source": "posthog",
   "status": "ok",
@@ -15,7 +15,7 @@
     "downloads_30d": 449
   },
   "active_users": {
-    "dau": 23,
+    "dau": 22,
     "wau": 131,
     "mau": 467
   },
@@ -30,7 +30,7 @@
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-05-22T20:55:43+00:00",
+    "last_attempt_generated_at": "2026-05-22T21:26:19+00:00",
     "last_good_generated_at": "",
     "reason": ""
   },
@@ -925,6 +925,16 @@
       "combined_downloads_30d": 449,
       "android_active_installs": 387,
       "dau": 23,
+      "wau": 131,
+      "mau": 467
+    },
+    {
+      "timestamp": "2026-05-22T21:26:19+00:00",
+      "ios_downloads_30d": 65,
+      "android_downloads_30d": 384,
+      "combined_downloads_30d": 449,
+      "android_active_installs": 387,
+      "dau": 22,
       "wau": 131,
       "mau": 467
     }
