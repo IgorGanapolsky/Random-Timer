@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T23:23:49+00:00",
+  "generated_at": "2026-05-22T23:51:04+00:00",
   "status": "ok",
   "nsm": {
     "wqtu": 8,
@@ -12,8 +12,8 @@
     "wau": 133
   },
   "abandon_rate": {
-    "started_30d": 1499,
-    "completed_30d": 610,
+    "started_30d": 1497,
+    "completed_30d": 609,
     "abandon_rate_pct": 59.3
   },
   "monetization_funnel": {
@@ -364,6 +364,11 @@
     },
     {
       "timestamp": "2026-05-22T23:23:49+00:00",
+      "wqtu": 8,
+      "dau": 23
+    },
+    {
+      "timestamp": "2026-05-22T23:51:04+00:00",
       "wqtu": 8,
       "dau": 23
     }
