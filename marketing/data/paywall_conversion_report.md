@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-22T17:22:57+00:00
+Generated: 2026-05-22T18:01:25+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **305**
+- Views: **306**
 - Offer Selects: **69**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
@@ -47,7 +47,7 @@ Window (days): 30
 | range_gate | 107 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 39 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 40 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 28 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
@@ -56,21 +56,21 @@ Window (days): 30
 - `range_gate` had **107** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **39** views and **0** purchase attempts.
+- `unknown` had **40** views and **0** purchase attempts.
 - `setup_upgrade_cta` had **28** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 6411 | 70 |
-| max_seconds | 2335 | 237 |
-| min_seconds | 1851 | 223 |
-| alarm_duration | 1777 | 218 |
+| unknown | 6131 | 67 |
+| max_seconds | 2338 | 237 |
+| min_seconds | 1853 | 223 |
+| alarm_duration | 1780 | 218 |
 | sound_type | 1579 | 197 |
 | volume | 1367 | 148 |
-| repeat_enabled | 900 | 210 |
+| repeat_enabled | 915 | 210 |
 | voice_callouts_enabled | 618 | 132 |
-| vibration_enabled | 443 | 155 |
+| vibration_enabled | 444 | 155 |
 | repeat_rounds | 342 | 100 |
 | voice_gender | 284 | 169 |
 | use_extended_range | 199 | 121 |

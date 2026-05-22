@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-22T17:22:57+00:00",
+  "generated_at": "2026-05-22T18:01:25+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 305,
+    "views": 306,
     "offer_selects": 69,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2262,
+    "view_to_select_rate": 0.2255,
     "select_to_attempt_rate": 0.0725,
     "attempt_to_success_rate": 0.0
   },
@@ -113,6 +113,32 @@
       "users": 1
     }
   ],
+  "product_catalog_failures_play_store": [
+    {
+      "platform": "android",
+      "product_id": "elite_tactical_monthly",
+      "failures": 185,
+      "users": 72
+    },
+    {
+      "platform": "android",
+      "product_id": "unknown",
+      "failures": 86,
+      "users": 62
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "failures": 63,
+      "users": 55
+    },
+    {
+      "platform": "android",
+      "product_id": "pro_base",
+      "failures": 63,
+      "users": 55
+    }
+  ],
   "entry_points": [
     {
       "entry_point": "range_gate",
@@ -140,7 +166,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 40,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -198,7 +224,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 40,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,22 +242,22 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 6411,
-      "users": 70
+      "changes": 6131,
+      "users": 67
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2335,
+      "changes": 2338,
       "users": 237
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1851,
+      "changes": 1853,
       "users": 223
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1777,
+      "changes": 1780,
       "users": 218
     },
     {
@@ -246,7 +272,7 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 900,
+      "changes": 915,
       "users": 210
     },
     {
@@ -256,7 +282,7 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 443,
+      "changes": 444,
       "users": 155
     },
     {
