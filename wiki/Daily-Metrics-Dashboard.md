@@ -7,16 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 67 | 388 | 455 |
-| Active Installs | — | 391 | — |
+| Distinct install users (30d) | 65 | 382 | 447 |
+| Active Installs | — | 385 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 34 |
+| DAU | 26 |
 | WAU | 129 |
-| MAU | 472 |
-
-_Data quality: stale; showing last good metrics from `2026-05-22T18:53:02+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`._
+| MAU | 466 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -40,11 +38,11 @@ _Data quality: stale; showing last good metrics from `2026-05-22T18:53:02+00:00`
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-22T19:35:33+00:00
+**Generated:** 2026-05-22T20:22:14+00:00
 
 ## Onboarding Funnel
-- First Open: **459**
-- First Timer Configured: **282** (61.4% of opens)
+- First Open: **458**
+- First Timer Configured: **281** (61.4% of opens)
 - First Timer Completed: **89** (19.4% of opens)
 
 ## UTM Attribution (Top Sources)
@@ -78,8 +76,8 @@ _Data quality: stale; showing last good metrics from `2026-05-22T18:53:02+00:00`
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 459 | — |
-| First Timer Configured | 282 | 61.4% of opens |
+| First Open | 458 | — |
+| First Timer Configured | 281 | 61.4% of opens |
 | First Timer Completed | 89 | 19.4% of opens |
 <!-- FUNNEL_END -->
 
@@ -158,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22"]
     y-axis "Downloads"
-    line [66 , 66 , 66 , 66 , 66 , 66 , 66 , 66 , 67 , 67 , 67 , 67 , 67 , 67]
-    line [398 , 398 , 397 , 397 , 397 , 397 , 391 , 398 , 396 , 396 , 391 , 390 , 388 , 388]
+    line [66 , 66 , 66 , 66 , 66 , 66 , 66 , 67 , 67 , 67 , 67 , 67 , 67 , 65]
+    line [398 , 397 , 397 , 397 , 397 , 391 , 398 , 396 , 396 , 391 , 390 , 388 , 388 , 382]
 ```
 
 ```mermaid
@@ -195,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-22T19:35:34+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-22T20:22:15+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
