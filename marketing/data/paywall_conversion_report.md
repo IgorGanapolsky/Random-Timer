@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-22T18:53:08+00:00
+Generated: 2026-05-22T19:34:56+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **306**
-- Offer Selects: **69**
+- Views: **302**
+- Offer Selects: **67**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **22.6%**
-- Select -> Purchase Attempt: **7.2%**
+- View -> Offer Select: **22.2%**
+- Select -> Purchase Attempt: **7.5%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -30,13 +30,13 @@ Window (days): 30
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical_monthly | 54 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 52 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 490 | 133 |
-| android | elite_tactical | 340 | 115 |
+| android | elite_tactical_monthly | 486 | 131 |
+| android | elite_tactical | 336 | 113 |
 | android | pro_base | 174 | 87 |
 | android | unknown | 108 | 71 |
 | ios | unknown | 4 | 1 |
@@ -48,7 +48,7 @@ Window (days): 30
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 40 | 0 | 0 | 0.0% | 0.0% |
-| setup_upgrade_cta | 28 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 24 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
 
@@ -57,12 +57,12 @@ Window (days): 30
 - `voice_gate` had **60** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **40** views and **0** purchase attempts.
-- `setup_upgrade_cta` had **28** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **24** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 5743 | 58 |
+| unknown | 5365 | 52 |
 | max_seconds | 2353 | 241 |
 | min_seconds | 1858 | 226 |
 | alarm_duration | 1792 | 222 |

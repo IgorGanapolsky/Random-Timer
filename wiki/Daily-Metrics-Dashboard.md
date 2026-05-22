@@ -15,6 +15,8 @@
 | DAU | 34 |
 | WAU | 129 |
 | MAU | 472 |
+
+_Data quality: stale; showing last good metrics from `2026-05-22T18:53:02+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`._
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,12 +40,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-22T18:53:40+00:00
+**Generated:** 2026-05-22T19:35:33+00:00
 
 ## Onboarding Funnel
-- First Open: **466**
-- First Timer Configured: **289** (62.0% of opens)
-- First Timer Completed: **92** (19.7% of opens)
+- First Open: **459**
+- First Timer Configured: **282** (61.4% of opens)
+- First Timer Completed: **89** (19.4% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,15 +62,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 306 |
-| Offer Selects | 69 |
+| Paywall Views | 302 |
+| Offer Selects | 67 |
 | Purchase Attempts | 5 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
 **Top failure reasons:** user_cancelled (5)
 
-**Catalog failures (Android):** elite_tactical_monthly (490), elite_tactical (340), pro_base (174), unknown (108)
+**Catalog failures (Android):** elite_tactical_monthly (486), elite_tactical (336), pro_base (174), unknown (108)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -76,9 +78,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 466 | — |
-| First Timer Configured | 289 | 62.0% of opens |
-| First Timer Completed | 92 | 19.7% of opens |
+| First Open | 459 | — |
+| First Timer Configured | 282 | 61.4% of opens |
+| First Timer Completed | 89 | 19.4% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -165,7 +167,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22"]
     y-axis "Users"
-    line [9 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
+    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
 ```
 
 ```mermaid
@@ -193,4 +195,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-22T18:53:41+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-22T19:35:34+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
