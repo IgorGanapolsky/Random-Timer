@@ -246,6 +246,18 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         except (TypeError, ValueError):
             return 0.0
 
+    def distinct_persons_for_event(event: str, extra_filter: str = "") -> Optional[int]:
+        return scalar(
+            f"SELECT count(DISTINCT person_id) FROM events WHERE event = '{event}' "
+            f"AND timestamp > now() - interval {win} AND {f}{extra_filter}"
+        )
+
+    def event_count(event: str, extra_filter: str = "") -> Optional[int]:
+        return scalar(
+            f"SELECT count() FROM events WHERE event = '{event}' "
+            f"AND timestamp > now() - interval {win} AND {f}{extra_filter}"
+        )
+
     out["distinct_persons_application_installed"] = scalar(
         f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
         f"AND timestamp > now() - interval {win} AND {f}"
@@ -254,25 +266,19 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'first_open' "
         f"AND timestamp > now() - interval {win} AND {f}"
     )
-    out["distinct_persons_application_installed_ios"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
-        f"AND timestamp > now() - interval {win} AND {f} "
-        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'ios'"
+    os_ios = " AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'ios'"
+    os_android = " AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'android'"
+    out["distinct_persons_application_installed_ios"] = distinct_persons_for_event(
+        "Application Installed", os_ios
     )
-    out["distinct_persons_application_installed_android"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
-        f"AND timestamp > now() - interval {win} AND {f} "
-        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'android'"
+    out["distinct_persons_application_installed_android"] = distinct_persons_for_event(
+        "Application Installed", os_android
     )
-    out["distinct_persons_application_opened_ios"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Opened' "
-        f"AND timestamp > now() - interval {win} AND {f} "
-        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'ios'"
+    out["distinct_persons_application_opened_ios"] = distinct_persons_for_event(
+        "Application Opened", os_ios
     )
-    out["distinct_persons_application_opened_android"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Opened' "
-        f"AND timestamp > now() - interval {win} AND {f} "
-        f"AND lower(coalesce(properties.$os, properties.$os_name, '')) = 'android'"
+    out["distinct_persons_application_opened_android"] = distinct_persons_for_event(
+        "Application Opened", os_android
     )
     started = scalar(
         f"SELECT count() FROM events WHERE event = 'timer_started' "
@@ -318,42 +324,31 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
         out["timer_abandon_rate_event_level_pct"] = round(
             (started - completed) / started * 100, 2
         )
-    pf_ios = "AND coalesce(toString(properties.platform), '') = 'ios'"
-    pf_android = "AND coalesce(toString(properties.platform), '') = 'android'"
-    out["distinct_persons_paywall_purchase_success"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f}"
+    pf_ios = " AND coalesce(toString(properties.platform), '') = 'ios'"
+    pf_android = " AND coalesce(toString(properties.platform), '') = 'android'"
+    paywall_event = "paywall_purchase_success"
+    out["distinct_persons_paywall_purchase_success"] = distinct_persons_for_event(paywall_event)
+    out["events_paywall_purchase_success"] = event_count(paywall_event)
+    out["distinct_persons_paywall_purchase_success_ios"] = distinct_persons_for_event(
+        paywall_event, pf_ios
     )
-    out["events_paywall_purchase_success"] = scalar(
-        f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f}"
+    out["distinct_persons_paywall_purchase_success_android"] = distinct_persons_for_event(
+        paywall_event, pf_android
     )
-    out["distinct_persons_paywall_purchase_success_ios"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f} {pf_ios}"
-    )
-    out["distinct_persons_paywall_purchase_success_android"] = scalar(
-        f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
-    )
-    out["events_paywall_purchase_success_ios"] = scalar(
-        f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f} {pf_ios}"
-    )
-    out["events_paywall_purchase_success_android"] = scalar(
-        f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
-        f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
-    )
+    out["events_paywall_purchase_success_ios"] = event_count(paywall_event, pf_ios)
+    out["events_paywall_purchase_success_android"] = event_count(paywall_event, pf_android)
     out["paywall_revenue_sum_30d"] = scalar_float(
         f"SELECT sum(toFloat64OrZero(toString(coalesce(properties.revenue, properties.price, '0')))) "
         f"FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f}"
     )
-    out["billing_product_not_found_play_store_android_30d"] = scalar(
-        f"SELECT count() FROM events WHERE event = 'billing_product_not_found' "
-        f"AND timestamp > now() - interval {win} AND {f} {pf_android} "
-        f"AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') "
-        f"AND coalesce(toString(properties.billing_ready), 'true') = 'true'"
+    play_catalog_filter = (
+        " AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy')"
+        " AND coalesce(toString(properties.billing_ready), 'true') = 'true'"
+    )
+    out["billing_product_not_found_play_store_android_30d"] = event_count(
+        "billing_product_not_found",
+        f"{pf_android}{play_catalog_filter}",
     )
     q_reviews = posthog_query(
         f"SELECT count(), count(DISTINCT person_id) FROM events WHERE event = 'review_prompt_requested' "

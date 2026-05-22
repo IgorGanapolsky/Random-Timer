@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -104,7 +105,7 @@ class ProManager
                 ).build()
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
-        private val reportedBillingProductNotFound = mutableSetOf<String>()
+        private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Captures the exact trial offer submitted to Google Play for the pending flow. */
@@ -404,17 +405,9 @@ class ProManager
             billingResult: BillingResult,
         ) {
             val channel = analyticsService.distributionChannel()
-            if (
-                !shouldReportBillingProductNotFound(
-                    billingReady = billingClient.isReady,
-                    distributionChannel = channel,
-                    alreadyReported = reportedBillingProductNotFound,
-                    productId = productID,
-                )
-            ) {
-                return
-            }
-            reportedBillingProductNotFound.add(productID)
+            if (!billingClient.isReady) return
+            if (channel == AndroidInstallChannel.NON_PLAY_INSTALL) return
+            if (!reportedBillingProductNotFound.add(productID)) return
             analyticsService.track(
                 "billing_product_not_found",
                 mapOf(
