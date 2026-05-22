@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-22T22:48:00+00:00
+**Generated:** 2026-05-22T23:24:10+00:00
 
 ## Onboarding Funnel
 - First Open: **462**
@@ -68,7 +68,7 @@
 
 **Top failure reasons:** user_cancelled (5)
 
-**Catalog failures (Android):** elite_tactical_monthly (497), elite_tactical (347), pro_base (181), unknown (112)
+**Catalog failures (Android):** elite_tactical_monthly (496), elite_tactical (347), pro_base (181), unknown (112)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22" , "2026-05-22"]
     y-axis "Downloads"
-    line [66 , 66 , 67 , 67 , 67 , 67 , 67 , 67 , 65 , 65 , 65 , 65 , 65 , 64]
-    line [391 , 398 , 396 , 396 , 391 , 390 , 388 , 388 , 382 , 384 , 384 , 386 , 387 , 387]
+    line [66 , 67 , 67 , 67 , 67 , 67 , 67 , 65 , 65 , 65 , 65 , 65 , 64 , 64]
+    line [398 , 396 , 396 , 391 , 390 , 388 , 388 , 382 , 384 , 384 , 386 , 387 , 387 , 387]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-22T22:48:02+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-22T23:24:12+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
