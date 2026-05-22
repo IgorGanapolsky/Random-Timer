@@ -15,6 +15,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
+import com.iganapolsky.randomtimer.analytics.AndroidInstallChannel
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -63,6 +64,18 @@ class ProManager
 
             /** P2 scaffold — not queried until Play Console products exist. */
             fun disciplinePackProductIds(): Set<String> = DisciplinePackCatalog.androidProductIds.toSet()
+
+            internal fun shouldReportBillingProductNotFound(
+                billingReady: Boolean,
+                distributionChannel: String,
+                alreadyReported: Set<String>,
+                productId: String,
+            ): Boolean {
+                if (!billingReady) return false
+                if (distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL) return false
+                if (productId in alreadyReported) return false
+                return true
+            }
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -91,6 +104,7 @@ class ProManager
                 ).build()
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
+        private val reportedBillingProductNotFound = mutableSetOf<String>()
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Captures the exact trial offer submitted to Google Play for the pending flow. */
@@ -380,15 +394,37 @@ class ProManager
             if (details != null) {
                 cachedProductDetails[productID] = details
             } else {
-                analyticsService.track(
-                    "billing_product_not_found",
-                    mapOf(
-                        "product_id" to productID,
-                        "billing_ready" to billingClient.isReady,
-                    ),
-                )
+                maybeReportBillingProductNotFound(productID, result.billingResult)
             }
             return details
+        }
+
+        private fun maybeReportBillingProductNotFound(
+            productID: String,
+            billingResult: BillingResult,
+        ) {
+            val channel = analyticsService.distributionChannel()
+            if (
+                !shouldReportBillingProductNotFound(
+                    billingReady = billingClient.isReady,
+                    distributionChannel = channel,
+                    alreadyReported = reportedBillingProductNotFound,
+                    productId = productID,
+                )
+            ) {
+                return
+            }
+            reportedBillingProductNotFound.add(productID)
+            analyticsService.track(
+                "billing_product_not_found",
+                mapOf(
+                    "product_id" to productID,
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to channel,
+                    "billing_ready" to billingClient.isReady,
+                    "billing_response_code" to billingResult.responseCode,
+                    "billing_debug_message" to billingResult.debugMessage,
+                ),
+            )
         }
 
         /**

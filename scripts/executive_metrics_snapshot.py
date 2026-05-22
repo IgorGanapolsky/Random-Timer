@@ -121,7 +121,67 @@ POSTHOG_EXECUTIVE_METRIC_FIELD_IDS: Dict[str, str] = {
         "posthog_hogql_top_screens_by_distinct_persons_limit_12_order_desc"
     ),
     "posthog_exception_events": "posthog_hogql_count_events_dollar_exception",
+    "paywall_revenue_sum_30d": "posthog_hogql_sum_paywall_purchase_success_revenue_properties",
+    "billing_product_not_found_play_store_android_30d": (
+        "posthog_hogql_count_billing_product_not_found_android_play_store"
+    ),
 }
+
+REVENUE_GOAL_USD_PER_DAY_AFTER_TAX = 100.0
+REVENUE_GOAL_METRIC_BUNDLE_ID = "executive_revenue_goal_v1"
+REVENUE_GOAL_METRIC_FIELD_IDS: Dict[str, str] = {
+    "target_usd_per_day_after_tax": "business_goal_usd_per_day_after_tax_fixed",
+    "posthog_paywall_revenue_sum_30d": POSTHOG_EXECUTIVE_METRIC_FIELD_IDS["paywall_revenue_sum_30d"],
+    "posthog_paywall_revenue_avg_usd_per_day": (
+        "posthog_derived_paywall_revenue_sum_over_window_days"
+    ),
+    "posthog_usd_gap_per_day_vs_target": (
+        "posthog_derived_target_minus_avg_daily_paywall_revenue_proxy"
+    ),
+    "events_paywall_purchase_success_30d": POSTHOG_EXECUTIVE_METRIC_FIELD_IDS[
+        "events_paywall_purchase_success"
+    ],
+}
+
+
+def build_revenue_goal_section(posthog: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Dollar gap vs $100/day after-tax using PostHog paywall revenue proxy when available."""
+    window_days = int((posthog or {}).get("window_days") or 30)
+    base: Dict[str, Any] = {
+        "metric_bundle_id": REVENUE_GOAL_METRIC_BUNDLE_ID,
+        "metric_field_ids": dict(REVENUE_GOAL_METRIC_FIELD_IDS),
+        "target_usd_per_day_after_tax": REVENUE_GOAL_USD_PER_DAY_AFTER_TAX,
+        "window_days": window_days,
+        "note": (
+            "posthog_paywall_revenue_* is a telemetry proxy from paywall_purchase_success "
+            "properties.revenue/price — not App Store Connect or Google Play ledger proceeds. "
+            "Do not claim earned revenue until store billing confirms purchases."
+        ),
+    }
+    if (posthog or {}).get("status") != "ok":
+        return {**base, "status": "unavailable", "reason": (posthog or {}).get("status")}
+
+    revenue_sum = float((posthog or {}).get("paywall_revenue_sum_30d") or 0.0)
+    avg_per_day = round(revenue_sum / window_days, 2) if window_days > 0 else 0.0
+    gap = round(REVENUE_GOAL_USD_PER_DAY_AFTER_TAX - avg_per_day, 2)
+    return {
+        **base,
+        "status": "ok",
+        "posthog_paywall_revenue_sum_30d": revenue_sum,
+        "posthog_paywall_revenue_avg_usd_per_day": avg_per_day,
+        "posthog_usd_gap_per_day_vs_target": gap,
+        "events_paywall_purchase_success_30d": int(
+            (posthog or {}).get("events_paywall_purchase_success") or 0
+        ),
+        "distinct_persons_paywall_purchase_success_30d": int(
+            (posthog or {}).get("distinct_persons_paywall_purchase_success") or 0
+        ),
+        "billing_product_not_found_play_store_android_30d": int(
+            (posthog or {}).get("billing_product_not_found_play_store_android_30d") or 0
+        ),
+        "store_ledger_revenue_usd_30d": None,
+        "store_ledger_metric_id": "not_wired_in_executive_snapshot",
+    }
 
 
 def _posthog_credentials() -> tuple[str, str]:
@@ -173,6 +233,18 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
             return int(row[0] or 0)
         except (TypeError, ValueError):
             return None
+
+    def scalar_float(sql: str) -> float:
+        data = posthog_query(sql, api_key, project_id, errors)
+        if not data or not data.get("results"):
+            return 0.0
+        row = data["results"][0]
+        if not row:
+            return 0.0
+        try:
+            return float(row[0] or 0)
+        except (TypeError, ValueError):
+            return 0.0
 
     out["distinct_persons_application_installed"] = scalar(
         f"SELECT count(DISTINCT person_id) FROM events WHERE event = 'Application Installed' "
@@ -271,6 +343,17 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
     out["events_paywall_purchase_success_android"] = scalar(
         f"SELECT count() FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f} {pf_android}"
+    )
+    out["paywall_revenue_sum_30d"] = scalar_float(
+        f"SELECT sum(toFloat64OrZero(toString(coalesce(properties.revenue, properties.price, '0')))) "
+        f"FROM events WHERE event = 'paywall_purchase_success' "
+        f"AND timestamp > now() - interval {win} AND {f}"
+    )
+    out["billing_product_not_found_play_store_android_30d"] = scalar(
+        f"SELECT count() FROM events WHERE event = 'billing_product_not_found' "
+        f"AND timestamp > now() - interval {win} AND {f} {pf_android} "
+        f"AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') "
+        f"AND coalesce(toString(properties.billing_ready), 'true') = 'true'"
     )
     q_reviews = posthog_query(
         f"SELECT count(), count(DISTINCT person_id) FROM events WHERE event = 'review_prompt_requested' "
@@ -406,7 +489,12 @@ def run(
             "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
             "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
             "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
+            "revenue_goal": (
+                "Business target $100/day after-tax vs PostHog paywall revenue proxy (not store ledger). "
+                "See revenue_goal.metric_field_ids."
+            ),
         },
+        "revenue_goal": build_revenue_goal_section(posthog),
         "posthog": posthog,
         "store_apis": {"android": android, "ios": ios},
         "refunds": {
@@ -444,6 +532,9 @@ def run(
                 "subscription_lifecycle_by_type"
             ),
             "asn_v2_metric_id": (asn_refunds or {}).get("metric_id"),
+            "asn_v2_skip_reason": (asn_refunds or {}).get("reason")
+            if (asn_refunds or {}).get("status") == "skipped"
+            else None,
             "note": (
                 "Android uses Google Play voided purchases API. iOS uses two signals: "
                 "(1) negative Units in App Store Connect SALES/SUMMARY daily reports "
@@ -573,6 +664,19 @@ def main() -> int:
         f"total={rf.get('asn_v2_ios_refund_count_total')}  "
         f"lifecycle_events={rf.get('asn_v2_subscription_lifecycle_count')}"
     )
+    rg = payload.get("revenue_goal") or {}
+    if rg.get("status") == "ok":
+        print(
+            f"  Revenue goal: target=${rg.get('target_usd_per_day_after_tax')}/day  "
+            f"proxy_avg=${rg.get('posthog_paywall_revenue_avg_usd_per_day')}/day  "
+            f"gap=${rg.get('posthog_usd_gap_per_day_vs_target')}/day"
+        )
+    cr_skip = (payload.get("crashlytics_bigquery") or {}).get("reason") or ""
+    if (payload.get("crashlytics_bigquery") or {}).get("status") in ("error", "skipped"):
+        print(
+            "  Crashlytics BQ skip: set CRASHLYTICS_SERVICE_ACCOUNT_JSON in CI "
+            f"(executive-metrics.yml) or locally — {cr_skip[:80]}"
+        )
     print("=" * 60)
     if args.json_stdout:
         print(json.dumps(payload, indent=2))

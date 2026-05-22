@@ -22,6 +22,11 @@ if str(_SCRIPTS) not in sys.path:
 from repo_dotenv import load_repo_dotenv
 from store_downloads_snapshot import LIVE_EVENTS_PREDICATE, posthog_query
 
+PLAY_STORE_CATALOG_FILTER = (
+    "AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') "
+    "AND coalesce(toString(properties.billing_ready), 'true') = 'true'"
+)
+
 
 def _safe_int(value: Any) -> int:
     try:
@@ -220,8 +225,17 @@ def _product_funnel(api_key: str, project_id: str, days: int, errors: List[str])
     return out
 
 
-def _product_catalog_failures(api_key: str, project_id: str, days: int, errors: List[str]) -> list[dict[str, Any]]:
+def _product_catalog_failures(
+    api_key: str,
+    project_id: str,
+    days: int,
+    errors: List[str],
+    *,
+    play_store_only: bool = False,
+) -> list[dict[str, Any]]:
     win = f"{days} day"
+    channel_filter = PLAY_STORE_CATALOG_FILTER if play_store_only else ""
+    query_tag = "product_catalog_failures_play_store" if play_store_only else "product_catalog_failures"
     rows = _table(
         f"""
         SELECT
@@ -233,6 +247,7 @@ def _product_catalog_failures(api_key: str, project_id: str, days: int, errors: 
         WHERE event IN ('billing_product_not_found', 'billing_product_catalog_status')
           AND timestamp > now() - interval {win}
           AND {LIVE_EVENTS_PREDICATE}
+          {channel_filter}
           AND (
             event = 'billing_product_not_found'
             OR coalesce(toString(properties.status), '') IN ('empty', 'missing_required_products')
@@ -240,7 +255,7 @@ def _product_catalog_failures(api_key: str, project_id: str, days: int, errors: 
         GROUP BY platform, product_id
         ORDER BY failures DESC
         LIMIT 25
-        /* product_catalog_failures */
+        /* {query_tag} */
         """,
         api_key,
         project_id,
@@ -558,6 +573,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         "failure_breakdown": [],
         "product_funnel": [],
         "product_catalog_failures": [],
+        "product_catalog_failures_play_store": [],
         "entry_points": [],
         "leaky_entry_points": [],
         "settings_hotspots": [],
@@ -578,6 +594,9 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     failure_breakdown = _failure_breakdown(api_key, project_id, days, errors)
     product_funnel = _product_funnel(api_key, project_id, days, errors)
     product_catalog_failures = _product_catalog_failures(api_key, project_id, days, errors)
+    product_catalog_failures_play_store = _product_catalog_failures(
+        api_key, project_id, days, errors, play_store_only=True
+    )
     entry_points = _entry_point_funnel(api_key, project_id, days, errors)
     settings_hotspots = _settings_hotspots(api_key, project_id, days, errors)
 
@@ -591,6 +610,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
     payload["failure_breakdown"] = failure_breakdown
     payload["product_funnel"] = product_funnel
     payload["product_catalog_failures"] = product_catalog_failures
+    payload["product_catalog_failures_play_store"] = product_catalog_failures_play_store
     payload["entry_points"] = entry_points
     payload["leaky_entry_points"] = _leaky_entry_points(entry_points)
     payload["settings_hotspots"] = settings_hotspots
@@ -599,7 +619,7 @@ def run(repo_root: Path, days: int = 30) -> Dict[str, Any]:
         entry_points,
         settings_hotspots,
         failures,
-        product_catalog_failures,
+        product_catalog_failures_play_store or product_catalog_failures,
     )
     payload["query_errors"] = errors
     if errors:

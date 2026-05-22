@@ -34,6 +34,10 @@
 **Local Play / Crashlytics keys**
 
 - **Play:** use `GOOGLE_PLAY_JSON_KEY` (raw JSON from the secret) or `GOOGLE_PLAY_JSON_KEY_PATH` (path to a file). If the path is wrong, the snapshot now fails with a clear “not a file” error instead of a JSON parse error.
-- **Crashlytics BigQuery:** prefer `CRASHLYTICS_SERVICE_ACCOUNT_JSON` (same pattern as CI). If you use `GOOGLE_APPLICATION_CREDENTIALS`, the file must exist or the snapshot reports an explicit missing-file error.
+- **Crashlytics BigQuery:** prefer `CRASHLYTICS_SERVICE_ACCOUNT_JSON` (same pattern as CI). If you use `GOOGLE_APPLICATION_CREDENTIALS`, the file must exist or the snapshot reports an explicit missing-file error. When skipped locally, `crashlytics_bigquery.reason` explains the missing secret; CI uses `.github/workflows/executive-metrics.yml`.
+
+- **`revenue_goal`:** compares the $100/day after-tax business target to PostHog `paywall_purchase_success` revenue properties (proxy only — not Play/App Store ledger).
+
+- **ASN V2 refunds:** `refunds.asn_v2_*` requires `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_KV_NAMESPACE_ID` (wired in CI; see `server/apple-webhook`).
 
 See also `docs/OPERATIONAL_RELIABILITY.md` and `docs/OBSERVABILITY.md`.

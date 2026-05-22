@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-21T15:22:21+00:00",
+  "generated_at": "2026-05-22T17:23:06+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -14,28 +14,46 @@
     "uninstall_proxy": "Proxy only: distinct Application Installed (os) minus distinct Application Opened (os) over the same PostHog window. This is not store uninstall truth.",
     "wqtu": "Distinct persons with >=3 timer_completed events in the same window as window_days (supplementary).",
     "wqtu_7d": "North Star WQTU: distinct persons with >=3 timer_completed in trailing 7 days (canonical).",
-    "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window."
+    "started_and_completed_persons": "Distinct persons with at least one timer_completed in-window who also have at least one timer_started in-window.",
+    "revenue_goal": "Business target $100/day after-tax vs PostHog paywall revenue proxy (not store ledger). See revenue_goal.metric_field_ids."
+  },
+  "revenue_goal": {
+    "metric_bundle_id": "executive_revenue_goal_v1",
+    "metric_field_ids": {
+      "target_usd_per_day_after_tax": "business_goal_usd_per_day_after_tax_fixed",
+      "posthog_paywall_revenue_sum_30d": "posthog_hogql_sum_paywall_purchase_success_revenue_properties",
+      "posthog_paywall_revenue_avg_usd_per_day": "posthog_derived_paywall_revenue_sum_over_window_days",
+      "posthog_usd_gap_per_day_vs_target": "posthog_derived_target_minus_avg_daily_paywall_revenue_proxy",
+      "events_paywall_purchase_success_30d": "posthog_hogql_count_events_paywall_purchase_success"
+    },
+    "target_usd_per_day_after_tax": 100.0,
+    "window_days": 30,
+    "note": "posthog_paywall_revenue_* is a telemetry proxy from paywall_purchase_success properties.revenue/price \u2014 not App Store Connect or Google Play ledger proceeds. Do not claim earned revenue until store billing confirms purchases.",
+    "status": "ok",
+    "posthog_paywall_revenue_sum_30d": 0.0,
+    "posthog_paywall_revenue_avg_usd_per_day": 0.0,
+    "posthog_usd_gap_per_day_vs_target": 100.0,
+    "events_paywall_purchase_success_30d": 0,
+    "distinct_persons_paywall_purchase_success_30d": 0,
+    "billing_product_not_found_play_store_android_30d": 0,
+    "store_ledger_revenue_usd_30d": null,
+    "store_ledger_metric_id": "not_wired_in_executive_snapshot"
   },
   "posthog": {
-    "status": "skipped",
-    "host": "https://us.posthog.com",
-    "project_id": null,
-    "audience": "pragmatic_live",
-    "audience_sql": "(\n  lower(coalesce(properties.build_type, 'release')) != 'debug'\n  AND lower(coalesce(properties.runtime_target, 'device')) NOT IN ('simulator', 'emulator')\n  AND coalesce(toString(properties.is_internal), 'false') != 'true'\n  AND coalesce(toString(properties.distribution_channel), 'legacy') NOT IN ('testflight', 'non_play_install', 'dev', 'emulator', 'simulator', 'ui_test')\n)",
-    "audience_note": "Excludes debug/sim/emulator, is_internal, non\u2013App Store/TestFlight/Firebase-style distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. Legacy events without distribution_channel use coalesce 'legacy' (still included). Not a guarantee of human/non-team users\u2014set person exclusions for known IDs.",
-    "exclude_person_ids_configured": false,
+    "status": "ok",
     "window_days": 30,
-    "errors": [],
-    "reason": "missing POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID"
+    "wqtu_7d_distinct_persons": 12,
+    "distinct_persons_application_installed": 100,
+    "distinct_persons_timer_completed": 40,
+    "distinct_persons_paywall_purchase_success": 0,
+    "events_paywall_purchase_success": 0
   },
   "store_apis": {
     "android": {
-      "status": "skipped",
-      "reason": "google-api-python-client not installed"
+      "status": "skipped"
     },
     "ios": {
-      "status": "skipped",
-      "reason": "requests not installed"
+      "status": "skipped"
     }
   },
   "refunds": {
@@ -56,6 +74,7 @@
     "asn_v2_subscription_lifecycle_count": null,
     "asn_v2_subscription_lifecycle_by_type": null,
     "asn_v2_metric_id": null,
+    "asn_v2_skip_reason": null,
     "note": "Android uses Google Play voided purchases API. iOS uses two signals: (1) negative Units in App Store Connect SALES/SUMMARY daily reports (requires APPSTORE_VENDOR_NUMBER), and (2) real-time Apple Server Notifications V2 via Cloudflare KV webhook (server/apple-webhook \u2014 requires CLOUDFLARE_API_TOKEN + CLOUDFLARE_KV_NAMESPACE_ID)."
   },
   "uninstalls": {
@@ -66,13 +85,15 @@
     "note": "Proxy only (not store truth): distinct Application Installed minus distinct Application Opened by platform over the same window."
   },
   "crashlytics_bigquery": {
-    "status": "error",
-    "reason": "No module named 'google'",
-    "source": "crashlytics"
+    "status": "skipped"
   },
   "canonical_users": {
     "metric_bundle_id": "executive_canonical_users_v1",
-    "status": "unavailable",
-    "reason": "skipped"
+    "window_days": 30,
+    "wqtu_7d": 12,
+    "installs_30d": 100,
+    "timer_completed_persons_30d": 40,
+    "paywall_purchase_success_persons_30d": 0,
+    "paywall_purchase_success_events_30d": 0
   }
 }

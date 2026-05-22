@@ -112,6 +112,11 @@ class AnalyticsService
             trackFirstOpenIfNeeded()
         }
 
+        /** Installer channel for monetization diagnostics (matches executive-metrics HogQL). */
+        fun distributionChannel(): String =
+            analyticsContextProperties[AnalyticsProperties.DISTRIBUTION_CHANNEL] as? String
+                ?: AndroidInstallChannel.UNKNOWN_INSTALLER
+
         fun track(
             event: String,
             properties: Map<String, Any>? = null,
