@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-05-22T05:11:44+00:00",
+  "generated_at": "2026-05-22T06:34:09+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 332,
-    "offer_selects": 81,
-    "purchase_attempts": 6,
+    "views": 323,
+    "offer_selects": 78,
+    "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.244,
-    "select_to_attempt_rate": 0.0741,
+    "view_to_select_rate": 0.2415,
+    "select_to_attempt_rate": 0.0641,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
     {
       "reason": "user_cancelled",
-      "count": 6
+      "count": 5
     }
   ],
   "failure_breakdown": [
@@ -30,20 +30,11 @@
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.pro",
       "reason": "user_cancelled",
-      "failures": 2,
-      "users": 2
+      "failures": 1,
+      "users": 1
     }
   ],
   "product_funnel": [
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "offer_selects": 0,
-      "attempts": 2,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
     {
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.elite",
@@ -72,9 +63,18 @@
       "attempt_to_success_rate": 0.0
     },
     {
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.pro",
+      "offer_selects": 0,
+      "attempts": 1,
+      "successes": 0,
+      "select_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 66,
+      "offer_selects": 63,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,14 +85,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 519,
-      "users": 135
+      "failures": 510,
+      "users": 133
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 361,
-      "users": 116
+      "failures": 353,
+      "users": 114
     },
     {
       "platform": "android",
@@ -131,14 +131,6 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "setup_upgrade_cta",
-      "views": 52,
-      "attempts": 0,
-      "successes": 0,
-      "view_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
       "entry_point": "repeat_gate",
       "views": 50,
       "attempts": 0,
@@ -147,8 +139,16 @@
       "attempt_to_success_rate": 0.0
     },
     {
+      "entry_point": "setup_upgrade_cta",
+      "views": 46,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
       "entry_point": "unknown",
-      "views": 40,
+      "views": 39,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -164,10 +164,10 @@
     },
     {
       "entry_point": "sound_gate",
-      "views": 7,
-      "attempts": 4,
+      "views": 5,
+      "attempts": 3,
       "successes": 0,
-      "view_to_attempt_rate": 0.5714,
+      "view_to_attempt_rate": 0.6,
       "attempt_to_success_rate": 0.0
     }
   ],
@@ -189,14 +189,6 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "setup_upgrade_cta",
-      "views": 52,
-      "attempts": 0,
-      "successes": 0,
-      "view_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
       "entry_point": "repeat_gate",
       "views": 50,
       "attempts": 0,
@@ -205,8 +197,16 @@
       "attempt_to_success_rate": 0.0
     },
     {
+      "entry_point": "setup_upgrade_cta",
+      "views": 46,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
       "entry_point": "unknown",
-      "views": 40,
+      "views": 39,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -216,8 +216,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 7183,
-      "users": 86
+      "changes": 7160,
+      "users": 84
     },
     {
       "setting_name": "max_seconds",

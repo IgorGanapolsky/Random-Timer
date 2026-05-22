@@ -1,42 +1,42 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-22T05:11:44+00:00
+Generated: 2026-05-22T06:34:09+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **332**
-- Offer Selects: **81**
-- Purchase Attempts: **6**
+- Views: **323**
+- Offer Selects: **78**
+- Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **24.4%**
-- Select -> Purchase Attempt: **7.4%**
+- View -> Offer Select: **24.1%**
+- Select -> Purchase Attempt: **6.4%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 6 |
+| user_cancelled | 5 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
 | android | unknown | user_cancelled | 4 | 1 |
-| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 2 |
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 1 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| ios | com.iganapolsky.randomtimer.pro | 0 | 2 | 0 | 0.0% | 0.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
-| android | elite_tactical_monthly | 66 | 0 | 0 | 0.0% | 0.0% |
+| ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 63 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 519 | 135 |
-| android | elite_tactical | 361 | 116 |
+| android | elite_tactical_monthly | 510 | 133 |
+| android | elite_tactical | 353 | 114 |
 | android | pro_base | 169 | 82 |
 | android | unknown | 103 | 66 |
 | ios | unknown | 4 | 1 |
@@ -46,23 +46,23 @@ Window (days): 30
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 107 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
-| setup_upgrade_cta | 52 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 40 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 46 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 39 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
-| sound_gate | 7 | 4 | 0 | 57.1% | 0.0% |
+| sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
 
 ## Leaky Entry Points
 - `range_gate` had **107** views and **0** purchase attempts.
 - `voice_gate` had **60** views and **0** purchase attempts.
-- `setup_upgrade_cta` had **52** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **40** views and **0** purchase attempts.
+- `setup_upgrade_cta` had **46** views and **0** purchase attempts.
+- `unknown` had **39** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 7183 | 86 |
+| unknown | 7160 | 84 |
 | max_seconds | 2318 | 232 |
 | min_seconds | 1839 | 218 |
 | alarm_duration | 1762 | 213 |
