@@ -16,6 +16,8 @@ def run_report_with_mocked_posthog(report, scalar_rows, table_rows):
             return {"results": next(table_results)}
         if "product_funnel" in _query:
             return {"results": next(table_results)}
+        if "product_catalog_failures_play_store" in _query:
+            return {"results": []}
         if "product_catalog_failures" in _query:
             return {"results": next(table_results)}
         if "entry_point_funnel" in _query:
@@ -35,6 +37,12 @@ def run_report_with_mocked_posthog(report, scalar_rows, table_rows):
 
 
 class PaywallConversionReportTests(unittest.TestCase):
+    def test_play_store_catalog_filter_limits_android_billing_noise(self):
+        from scripts import paywall_conversion_report as report
+
+        self.assertIn("play_store", report.PLAY_STORE_CATALOG_FILTER)
+        self.assertIn("billing_ready", report.PLAY_STORE_CATALOG_FILTER)
+
     def test_run_loads_repo_dotenv(self):
         from scripts import paywall_conversion_report as report
 

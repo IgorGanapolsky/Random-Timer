@@ -9,6 +9,20 @@ from pathlib import Path
 import pytest
 
 
+def _patch_skipped_store_integrations(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_store = types.SimpleNamespace(
+        _get_android_data=lambda _d: {"status": "skipped"},
+        _get_ios_data=lambda _d: {"status": "skipped"},
+    )
+    fake_crash = types.SimpleNamespace(
+        collect_crashlytics_snapshot=lambda **_k: {"status": "skipped"}
+    )
+    fake_refunds = types.SimpleNamespace(run=lambda **_k: {"status": "skipped"})
+    monkeypatch.setitem(sys.modules, "real_store_downloads", fake_store)
+    monkeypatch.setitem(sys.modules, "check_crashlytics", fake_crash)
+    monkeypatch.setitem(sys.modules, "check_refunds", fake_refunds)
+
+
 def test_posthog_section_skipped_without_credentials() -> None:
     from scripts import executive_metrics_snapshot as ems
 
@@ -75,18 +89,7 @@ def test_run_payload_includes_canonical_users_when_posthog_ok(
 
     monkeypatch.setattr(ems, "_posthog_section", lambda *_a, **_k: {"status": "ok", "window_days": 30, "wqtu_7d_distinct_persons": 12, "distinct_persons_application_installed": 100, "distinct_persons_timer_completed": 40, "distinct_persons_paywall_purchase_success": 0, "events_paywall_purchase_success": 0})
     monkeypatch.setattr(ems, "load_repo_dotenv", lambda *_a, **_k: None)
-
-    fake_store = types.SimpleNamespace(
-        _get_android_data=lambda _d: {"status": "skipped"},
-        _get_ios_data=lambda _d: {"status": "skipped"},
-    )
-    fake_crash = types.SimpleNamespace(
-        collect_crashlytics_snapshot=lambda **_k: {"status": "skipped"}
-    )
-    fake_refunds = types.SimpleNamespace(run=lambda **_k: {"status": "skipped"})
-    monkeypatch.setitem(sys.modules, "real_store_downloads", fake_store)
-    monkeypatch.setitem(sys.modules, "check_crashlytics", fake_crash)
-    monkeypatch.setitem(sys.modules, "check_refunds", fake_refunds)
+    _patch_skipped_store_integrations(monkeypatch)
 
     payload = ems.run(Path("."), days=30, crashlytics_hours=168, load_dotenv=False)
     canonical = payload.get("canonical_users") or {}
@@ -155,6 +158,48 @@ def test_posthog_section_includes_wqtu_7d_from_queries(monkeypatch: pytest.Monke
     assert out["status"] == "ok"
     assert out["wqtu_7d_distinct_persons"] == 99
     assert out["window_days"] == 30
+
+
+def test_build_revenue_goal_section_computes_gap_from_posthog_proxy() -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    posthog = {
+        "status": "ok",
+        "window_days": 30,
+        "paywall_revenue_sum_30d": 45.0,
+        "events_paywall_purchase_success": 2,
+        "distinct_persons_paywall_purchase_success": 1,
+    }
+    goal = ems.build_revenue_goal_section(posthog)
+    assert goal["status"] == "ok"
+    assert goal["target_usd_per_day_after_tax"] == 100
+    assert goal["posthog_paywall_revenue_sum_30d"] == pytest.approx(45.0)
+    assert goal["posthog_paywall_revenue_avg_usd_per_day"] == pytest.approx(1.5)
+    assert goal["posthog_usd_gap_per_day_vs_target"] == pytest.approx(98.5)
+    assert goal["metric_bundle_id"] == ems.REVENUE_GOAL_METRIC_BUNDLE_ID
+    assert "proxy" in goal["note"].lower()
+
+
+def test_run_includes_revenue_goal_section(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    monkeypatch.setattr(
+        ems,
+        "_posthog_section",
+        lambda *_a, **_k: {
+            "status": "ok",
+            "window_days": 30,
+            "paywall_revenue_sum_30d": 10.0,
+            "events_paywall_purchase_success": 0,
+            "distinct_persons_paywall_purchase_success": 0,
+        },
+    )
+    monkeypatch.setattr(ems, "load_repo_dotenv", lambda *_a, **_k: None)
+    _patch_skipped_store_integrations(monkeypatch)
+
+    payload = ems.run(tmp_path, days=30, load_dotenv=False)
+    goal = payload.get("revenue_goal") or {}
+    assert goal.get("posthog_usd_gap_per_day_vs_target") == pytest.approx(99.67)
 
 
 def test_run_includes_refunds_and_uninstall_proxy_fields(
