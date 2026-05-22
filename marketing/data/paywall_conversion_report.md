@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-22T20:21:36+00:00
+Generated: 2026-05-22T20:55:50+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **302**
+- Views: **304**
 - Offer Selects: **67**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **22.2%**
+- View -> Offer Select: **22.0%**
 - Select -> Purchase Attempt: **7.5%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -35,17 +35,17 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 486 | 131 |
-| android | elite_tactical | 336 | 113 |
-| android | pro_base | 174 | 87 |
-| android | unknown | 108 | 71 |
+| android | elite_tactical_monthly | 492 | 133 |
+| android | elite_tactical | 342 | 115 |
+| android | pro_base | 178 | 89 |
+| android | unknown | 110 | 73 |
 | ios | unknown | 4 | 1 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 107 | 0 | 0 | 0.0% | 0.0% |
-| voice_gate | 60 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 62 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 40 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 24 | 0 | 0 | 0.0% | 0.0% |
@@ -54,7 +54,7 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `range_gate` had **107** views and **0** purchase attempts.
-- `voice_gate` had **60** views and **0** purchase attempts.
+- `voice_gate` had **62** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **40** views and **0** purchase attempts.
 - `setup_upgrade_cta` had **24** views and **0** purchase attempts.
@@ -62,17 +62,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 5301 | 51 |
-| max_seconds | 2353 | 241 |
-| min_seconds | 1858 | 226 |
-| alarm_duration | 1792 | 222 |
+| unknown | 5297 | 50 |
+| max_seconds | 2368 | 242 |
+| min_seconds | 1870 | 227 |
+| alarm_duration | 1793 | 223 |
 | sound_type | 1597 | 200 |
 | volume | 1394 | 151 |
 | repeat_enabled | 930 | 214 |
 | voice_callouts_enabled | 632 | 135 |
 | vibration_enabled | 457 | 158 |
 | repeat_rounds | 353 | 103 |
-| voice_gender | 288 | 173 |
+| voice_gender | 289 | 174 |
 | use_extended_range | 202 | 124 |
 
 ## Data Quality Warnings
