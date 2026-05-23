@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-23T22:46:32+00:00",
+  "generated_at": "2026-05-23T23:18:42+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 305,
-    "offer_selects": 64,
+    "views": 303,
+    "offer_selects": 63,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2098,
-    "select_to_attempt_rate": 0.0781,
+    "view_to_select_rate": 0.2079,
+    "select_to_attempt_rate": 0.0794,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -74,7 +74,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 49,
+      "offer_selects": 48,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,7 +85,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 495,
+      "failures": 492,
       "users": 137
     },
     {
@@ -117,7 +117,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 188,
+      "failures": 185,
       "users": 78
     },
     {
@@ -174,7 +174,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 18,
+      "views": 16,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -234,7 +234,7 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 4570,
+      "changes": 4284,
       "users": 42
     },
     {
