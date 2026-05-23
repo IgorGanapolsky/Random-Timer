@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-23T22:17:25+00:00",
+  "generated_at": "2026-05-23T22:46:46+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 7,
+    "wqtu": 6,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
   },
   "engagement": {
-    "dau": 17,
-    "wau": 141
+    "dau": 16,
+    "wau": 140
   },
   "abandon_rate": {
     "started_30d": 1554,
@@ -42,11 +42,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-05-20T23:45:48+00:00",
-      "wqtu": 11,
-      "dau": 12
-    },
     {
       "timestamp": "2026-05-21T00:35:43+00:00",
       "wqtu": 11,
@@ -491,6 +486,11 @@
       "timestamp": "2026-05-23T22:17:25+00:00",
       "wqtu": 7,
       "dau": 17
+    },
+    {
+      "timestamp": "2026-05-23T22:46:46+00:00",
+      "wqtu": 6,
+      "dau": 16
     }
   ]
 }

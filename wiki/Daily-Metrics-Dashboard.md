@@ -12,8 +12,8 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 17 |
-| WAU | 141 |
+| DAU | 16 |
+| WAU | 140 |
 | MAU | 476 |
 <!-- DOWNLOADS_END -->
 
@@ -22,10 +22,10 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 7 |
-| Timer Completed (7d) | 138 |
-| Completed Users (7d) | 28 |
-| Sessions/Completed User (7d) | 4.93 |
+| WQTU (7d) | 6 |
+| Timer Completed (7d) | 131 |
+| Completed Users (7d) | 27 |
+| Sessions/Completed User (7d) | 4.85 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-23T22:17:47+00:00
+**Generated:** 2026-05-23T22:47:04+00:00
 
 ## Onboarding Funnel
 - First Open: **468**
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Downloads"
-    line [62 , 62 , 62 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61]
-    line [394 , 395 , 395 , 397 , 397 , 397 , 397 , 397 , 397 , 396 , 396 , 396 , 396 , 396]
+    line [62 , 62 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61]
+    line [395 , 395 , 397 , 397 , 397 , 397 , 397 , 397 , 396 , 396 , 396 , 396 , 396 , 396]
 ```
 
 ```mermaid
@@ -165,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Users"
-    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 7 , 7 , 7 , 7 , 7 , 7]
+    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 7 , 7 , 7 , 7 , 7 , 7 , 6]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-23T22:17:48+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-23T22:47:06+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
