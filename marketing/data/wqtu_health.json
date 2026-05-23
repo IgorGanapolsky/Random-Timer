@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-23T15:50:03+00:00",
+  "generated_at": "2026-05-23T16:20:48+00:00",
   "status": "ok",
   "nsm": {
     "wqtu": 8,
@@ -8,8 +8,8 @@
     "alert_fired": false
   },
   "engagement": {
-    "dau": 29,
-    "wau": 140
+    "dau": 24,
+    "wau": 141
   },
   "abandon_rate": {
     "started_30d": 1568,
@@ -476,6 +476,11 @@
       "timestamp": "2026-05-23T15:50:03+00:00",
       "wqtu": 8,
       "dau": 29
+    },
+    {
+      "timestamp": "2026-05-23T16:20:48+00:00",
+      "wqtu": 8,
+      "dau": 24
     }
   ]
 }
