@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-23T14:46:11+00:00",
+  "generated_at": "2026-05-23T15:23:47+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -247,18 +247,18 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2445,
-      "users": 253
+      "changes": 2446,
+      "users": 254
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1916,
-      "users": 237
+      "changes": 1919,
+      "users": 238
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1832,
-      "users": 233
+      "changes": 1840,
+      "users": 234
     },
     {
       "setting_name": "sound_type",
@@ -272,8 +272,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 978,
-      "users": 223
+      "changes": 998,
+      "users": 224
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -282,8 +282,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 490,
-      "users": 164
+      "changes": 491,
+      "users": 165
     },
     {
       "setting_name": "repeat_rounds",

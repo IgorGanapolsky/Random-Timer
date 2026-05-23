@@ -9,7 +9,7 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-05-23T14:46:49+00:00` |
+| Snapshot (UTC) | `2026-05-23T15:24:26+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 0 |
@@ -19,7 +19,7 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 | WQTU (7d) | 8 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
-| Distinct install users (30d) | 455 |
+| Distinct install users (30d) | 456 |
 | Apple Ads Campaigns (API) | 1 |
 | Apple Ads Active Campaigns (API) | 0 |
 | Apple Ads Impressions (30d) | 0 |
@@ -58,7 +58,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["05-23T06:09" , "05-23T07:13" , "05-23T07:59" , "05-23T08:51" , "05-23T09:34" , "05-23T10:15" , "05-23T11:26" , "05-23T11:50" , "05-23T12:19" , "05-23T12:49" , "05-23T13:31" , "05-23T14:13" , "05-23T14:15" , "05-23T14:46"]
+    x-axis ["05-23T07:13" , "05-23T07:59" , "05-23T08:51" , "05-23T09:34" , "05-23T10:15" , "05-23T11:26" , "05-23T11:50" , "05-23T12:19" , "05-23T12:49" , "05-23T13:31" , "05-23T14:13" , "05-23T14:15" , "05-23T14:46" , "05-23T15:24"]
     y-axis "Taps" 0 --> 1
     line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
@@ -66,7 +66,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["05-23T06:09" , "05-23T07:13" , "05-23T07:59" , "05-23T08:51" , "05-23T09:34" , "05-23T10:15" , "05-23T11:26" , "05-23T11:50" , "05-23T12:19" , "05-23T12:49" , "05-23T13:31" , "05-23T14:13" , "05-23T14:15" , "05-23T14:46"]
+    x-axis ["05-23T07:13" , "05-23T07:59" , "05-23T08:51" , "05-23T09:34" , "05-23T10:15" , "05-23T11:26" , "05-23T11:50" , "05-23T12:19" , "05-23T12:49" , "05-23T13:31" , "05-23T14:13" , "05-23T14:15" , "05-23T14:46" , "05-23T15:24"]
     y-axis "USD" 0 --> 1
     line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```
