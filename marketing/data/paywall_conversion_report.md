@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-23T01:22:47+00:00
+Generated: 2026-05-23T02:18:28+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **307**
+- Views: **305**
 - Offer Selects: **67**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **21.8%**
+- View -> Offer Select: **22.0%**
 - Select -> Purchase Attempt: **7.5%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -47,7 +47,7 @@ Window (days): 30
 | range_gate | 111 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 62 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 39 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 37 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 24 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
@@ -56,13 +56,13 @@ Window (days): 30
 - `range_gate` had **111** views and **0** purchase attempts.
 - `voice_gate` had **62** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **39** views and **0** purchase attempts.
+- `unknown` had **37** views and **0** purchase attempts.
 - `setup_upgrade_cta` had **24** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 5260 | 48 |
+| unknown | 5233 | 47 |
 | max_seconds | 2389 | 245 |
 | min_seconds | 1879 | 229 |
 | alarm_duration | 1795 | 225 |
