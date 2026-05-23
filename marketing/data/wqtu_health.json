@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-23T13:31:23+00:00",
+  "generated_at": "2026-05-23T14:13:00+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 9,
+    "wqtu": 8,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
   },
   "engagement": {
     "dau": 23,
-    "wau": 132
+    "wau": 131
   },
   "abandon_rate": {
     "started_30d": 1513,
@@ -450,6 +450,11 @@
     {
       "timestamp": "2026-05-23T13:31:23+00:00",
       "wqtu": 9,
+      "dau": 23
+    },
+    {
+      "timestamp": "2026-05-23T14:13:00+00:00",
+      "wqtu": 8,
       "dau": 23
     }
   ]
