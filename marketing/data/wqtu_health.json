@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-05-23T19:27:31+00:00",
+  "generated_at": "2026-05-23T19:54:02+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 8,
+    "wqtu": 7,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
@@ -42,11 +42,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-05-20T19:56:47+00:00",
-      "wqtu": 12,
-      "dau": 18
-    },
     {
       "timestamp": "2026-05-20T20:48:24+00:00",
       "wqtu": 11,
@@ -490,6 +485,11 @@
     {
       "timestamp": "2026-05-23T19:27:31+00:00",
       "wqtu": 8,
+      "dau": 22
+    },
+    {
+      "timestamp": "2026-05-23T19:54:02+00:00",
+      "wqtu": 7,
       "dau": 22
     }
   ]

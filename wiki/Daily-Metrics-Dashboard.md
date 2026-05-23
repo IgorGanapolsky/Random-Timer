@@ -22,9 +22,9 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 8 |
-| Timer Completed (7d) | 143 |
-| Completed Users (7d) | 29 |
+| WQTU (7d) | 7 |
+| Timer Completed (7d) | 138 |
+| Completed Users (7d) | 28 |
 | Sessions/Completed User (7d) | 4.93 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-23T19:27:52+00:00
+**Generated:** 2026-05-23T19:54:28+00:00
 
 ## Onboarding Funnel
 - First Open: **469**
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Downloads"
-    line [61 , 61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 61 , 61 , 61 , 61 , 61]
-    line [386 , 386 , 386 , 386 , 394 , 394 , 394 , 395 , 395 , 397 , 397 , 397 , 397 , 397]
+    line [61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 61 , 61 , 61 , 61 , 61 , 61]
+    line [386 , 386 , 386 , 394 , 394 , 394 , 395 , 395 , 397 , 397 , 397 , 397 , 397 , 397]
 ```
 
 ```mermaid
@@ -165,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Users"
-    line [9 , 9 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
+    line [9 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 7]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-23T19:27:53+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-23T19:54:29+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
