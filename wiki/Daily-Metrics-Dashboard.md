@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-23T12:19:11+00:00
+**Generated:** 2026-05-23T12:49:20+00:00
 
 ## Onboarding Funnel
 - First Open: **458**
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Downloads"
-    line [64 , 64 , 63 , 63 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 61]
-    line [387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 386]
+    line [64 , 63 , 63 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 62 , 61 , 61]
+    line [387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 387 , 386 , 386]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-23T12:19:12+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-23T12:49:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
