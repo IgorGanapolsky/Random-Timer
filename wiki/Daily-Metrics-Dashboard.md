@@ -12,7 +12,7 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 21 |
+| DAU | 22 |
 | WAU | 141 |
 | MAU | 477 |
 <!-- DOWNLOADS_END -->
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 8 |
-| Timer Completed (7d) | 148 |
+| Timer Completed (7d) | 143 |
 | Completed Users (7d) | 29 |
-| Sessions/Completed User (7d) | 5.1 |
+| Sessions/Completed User (7d) | 4.93 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-23T18:48:48+00:00
+**Generated:** 2026-05-23T19:27:52+00:00
 
 ## Onboarding Funnel
 - First Open: **469**
@@ -60,15 +60,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 307 |
-| Offer Selects | 66 |
+| Paywall Views | 305 |
+| Offer Selects | 64 |
 | Purchase Attempts | 5 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
 **Top failure reasons:** user_cancelled (5)
 
-**Catalog failures (Android):** elite_tactical_monthly (499), elite_tactical (353), pro_base (187), unknown (120)
+**Catalog failures (Android):** elite_tactical_monthly (495), elite_tactical (349), pro_base (187), unknown (121)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Downloads"
-    line [61 , 61 , 61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 61 , 61 , 61 , 61]
-    line [386 , 386 , 386 , 386 , 386 , 394 , 394 , 394 , 395 , 395 , 397 , 397 , 397 , 397]
+    line [61 , 61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 61 , 61 , 61 , 61 , 61]
+    line [386 , 386 , 386 , 386 , 394 , 394 , 394 , 395 , 395 , 397 , 397 , 397 , 397 , 397]
 ```
 
 ```mermaid
@@ -165,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23"]
     y-axis "Users"
-    line [9 , 9 , 9 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
+    line [9 , 9 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-23T18:48:49+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-23T19:27:53+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
