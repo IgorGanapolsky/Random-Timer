@@ -13,7 +13,7 @@
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 15 |
-| WAU | 140 |
+| WAU | 139 |
 | MAU | 475 |
 <!-- DOWNLOADS_END -->
 
@@ -22,10 +22,10 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 6 |
-| Timer Completed (7d) | 131 |
-| Completed Users (7d) | 27 |
-| Sessions/Completed User (7d) | 4.85 |
+| WQTU (7d) | 5 |
+| Timer Completed (7d) | 128 |
+| Completed Users (7d) | 26 |
+| Sessions/Completed User (7d) | 4.92 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-24T01:26:49+00:00
+**Generated:** 2026-05-24T02:21:21+00:00
 
 ## Onboarding Funnel
 - First Open: **467**
@@ -154,18 +154,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24"]
+    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
     y-axis "Downloads"
     line [61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61]
-    line [397 , 397 , 397 , 397 , 396 , 396 , 396 , 396 , 396 , 396 , 395 , 395 , 395 , 395]
+    line [397 , 397 , 397 , 396 , 396 , 396 , 396 , 396 , 396 , 395 , 395 , 395 , 395 , 395]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24"]
+    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
     y-axis "Users"
-    line [8 , 8 , 8 , 7 , 7 , 7 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6]
+    line [8 , 8 , 7 , 7 , 7 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 5]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-24T01:26:50+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-24T02:21:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
