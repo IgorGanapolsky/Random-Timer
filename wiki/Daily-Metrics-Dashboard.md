@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 60 | 395 | 455 |
+| Distinct install users (30d) | 59 | 395 | 454 |
 | Active Installs | — | 398 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 15 |
 | WAU | 139 |
-| MAU | 473 |
+| MAU | 472 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-24T05:12:00+00:00
+**Generated:** 2026-05-24T06:26:41+00:00
 
 ## Onboarding Funnel
-- First Open: **465**
-- First Timer Configured: **285** (61.3% of opens)
-- First Timer Completed: **87** (18.7% of opens)
+- First Open: **464**
+- First Timer Configured: **284** (61.2% of opens)
+- First Timer Completed: **87** (18.8% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,7 +60,7 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 302 |
+| Paywall Views | 300 |
 | Offer Selects | 63 |
 | Purchase Attempts | 5 |
 | Purchase Successes | 0 |
@@ -76,9 +76,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 465 | — |
-| First Timer Configured | 285 | 61.3% of opens |
-| First Timer Completed | 87 | 18.7% of opens |
+| First Open | 464 | — |
+| First Timer Configured | 284 | 61.2% of opens |
+| First Timer Completed | 87 | 18.8% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -154,18 +154,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
+    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
     y-axis "Downloads"
-    line [61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 60 , 60]
-    line [397 , 396 , 396 , 396 , 396 , 396 , 396 , 395 , 395 , 395 , 395 , 395 , 395 , 395]
+    line [61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 61 , 60 , 60 , 59]
+    line [396 , 396 , 396 , 396 , 396 , 396 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
+    x-axis ["2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-23" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
     y-axis "Users"
-    line [7 , 7 , 7 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 5 , 5 , 5]
+    line [7 , 7 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 5 , 5 , 5 , 5]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-24T05:12:01+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-24T06:26:43+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
