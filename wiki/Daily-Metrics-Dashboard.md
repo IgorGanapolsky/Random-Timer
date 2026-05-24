@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 59 | 395 | 454 |
-| Active Installs | — | 398 | — |
+| Distinct install users (30d) | 59 | 392 | 451 |
+| Active Installs | — | 395 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 14 |
+| DAU | 6 |
 | WAU | 137 |
-| MAU | 472 |
+| MAU | 469 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-24T14:14:21+00:00
+**Generated:** 2026-05-24T14:46:16+00:00
 
 ## Onboarding Funnel
-- First Open: **464**
-- First Timer Configured: **285** (61.4% of opens)
-- First Timer Completed: **87** (18.8% of opens)
+- First Open: **461**
+- First Timer Configured: **282** (61.2% of opens)
+- First Timer Completed: **86** (18.7% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -76,9 +76,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 464 | — |
-| First Timer Configured | 285 | 61.4% of opens |
-| First Timer Completed | 87 | 18.8% of opens |
+| First Open | 461 | — |
+| First Timer Configured | 282 | 61.2% of opens |
+| First Timer Completed | 86 | 18.7% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24" , "2026-05-24"]
     y-axis "Downloads"
-    line [60 , 60 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59]
-    line [395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395]
+    line [60 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59]
+    line [395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 395 , 392]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-24T14:14:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-24T14:46:18+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
