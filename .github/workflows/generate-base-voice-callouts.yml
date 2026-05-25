@@ -10,7 +10,7 @@ on:
       male_voice_id:
         description: ElevenLabs male voice ID (drill sergeant default).
         required: false
-        default: DGzg6RaUqxGRTHSBjfgF
+        default: 2EiwWnXFnvU5JabPnv8n
         type: string
       female_voice_id:
         description: ElevenLabs female voice ID (empty skips female render).

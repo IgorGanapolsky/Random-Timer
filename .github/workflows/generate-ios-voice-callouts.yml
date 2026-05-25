@@ -13,7 +13,7 @@ on:
       voice_id:
         description: Optional exact ElevenLabs voice ID.
         required: false
-        default: DGzg6RaUqxGRTHSBjfgF
+        default: 2EiwWnXFnvU5JabPnv8n
         type: string
       model_id:
         description: ElevenLabs model ID used for synthesis.
@@ -46,7 +46,7 @@ jobs:
       - name: Generate monthly Pro audio assets from ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          DEFAULT_VOICE_ID: DGzg6RaUqxGRTHSBjfgF
+          DEFAULT_VOICE_ID: 2EiwWnXFnvU5JabPnv8n
           PACK_ID_INPUT: ${{ inputs.pack_id }}
           VOICE_ID_INPUT: ${{ inputs.voice_id }}
           MODEL_ID_INPUT: ${{ inputs.model_id }}

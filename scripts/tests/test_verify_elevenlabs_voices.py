@@ -13,8 +13,9 @@ import pytest
 
 from scripts import verify_elevenlabs_voices as vev
 
-MALE_ALLOWED_ID = "DGzg6RaUqxGRTHSBjfgF"
+MALE_ALLOWED_ID = "2EiwWnXFnvU5JabPnv8n"
 FEMALE_ALLOWED_ID = "EXAVITQu4vr4xnSDxMaL"
+FORBIDDEN_ANGST_VOICE_ID = "DGzg6RaUqxGRTHSBjfgF"
 
 
 @pytest.mark.parametrize("voice_id", [MALE_ALLOWED_ID, FEMALE_ALLOWED_ID, "sS5fXGlqomdGXa7mxBcy"])
@@ -25,6 +26,11 @@ def test_supported_voice_id_accepts_allowlisted(voice_id: str) -> None:
 def test_supported_voice_id_rejects_unknown() -> None:
     with pytest.raises(RuntimeError, match="allowlist"):
         vev._supported_voice_id("not_in_list")
+
+
+def test_supported_voice_id_rejects_angst_san_francisco_voice() -> None:
+    with pytest.raises(RuntimeError, match="allowlist"):
+        vev._supported_voice_id(FORBIDDEN_ANGST_VOICE_ID)
 
 
 def test_text_to_speech_url() -> None:
