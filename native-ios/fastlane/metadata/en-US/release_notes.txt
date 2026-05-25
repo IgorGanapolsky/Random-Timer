@@ -1,2 +1,5 @@
-• New Competition Warmup preset for BJJ, judo, wrestling, and event-day prep
-Monthly Pro content update — May 2026
+- Timer range slider supports 5-second minimum gaps
+- Voice callouts preview when you switch male/female
+- Volume keys silence the alarm during a drill
+- Clearer free vs Pro training options
+- Paywall and billing reliability improvements

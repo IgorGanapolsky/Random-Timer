@@ -1,0 +1,5 @@
+- Timer range slider now supports 5-second minimum gaps on Android
+- Voice callouts preview when you switch male/female
+- Volume keys silence the alarm during a drill (no accidental reset)
+- Training Presets paywall copy removed; Competition Prep stays free
+- Billing and paywall reliability improvements
