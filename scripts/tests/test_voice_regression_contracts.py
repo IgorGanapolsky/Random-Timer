@@ -8,6 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 VOICE_CONTRACT = ROOT / "content/pro_audio/voice_personas.json"
+FORBIDDEN_MALE_VOICE_ID = "DGzg6RaUqxGRTHSBjfgF"  # ElevenLabs "Angst" (San Francisco), not drill sergeant
+APPROVED_MALE_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"  # ElevenLabs "Clyde"
 IOS_AUDIO_DIR = ROOT / "native-ios/RandomTimer/Resources/Audio"
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
@@ -54,7 +56,9 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["schemaVersion"] == 1
     assert contract["provider"] == "elevenlabs"
     assert contract["male"]["modelId"] == "eleven_multilingual_v2"
-    assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
+    assert contract["male"]["voiceId"] == APPROVED_MALE_VOICE_ID
+    assert contract["male"]["voiceId"] != FORBIDDEN_MALE_VOICE_ID
+    assert contract["male"]["voiceName"] == "Clyde"
     assert contract["male"]["probeText"] == "Stay sharp."
     assert contract["female"]["modelId"] == "eleven_turbo_v2"
     assert contract["female"]["primaryVoice"]["voiceName"] == "Sarah"
