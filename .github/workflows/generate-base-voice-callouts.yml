@@ -50,9 +50,10 @@ jobs:
           MALE_VOICE_ID: ${{ inputs.male_voice_id }}
           FEMALE_VOICE_ID: ${{ inputs.female_voice_id }}
           MODEL_ID: ${{ inputs.model_id }}
+          REGENERATE_ALL_MALE: ${{ inputs.regenerate_all_male }}
         run: |
           args=()
-          if [ "${{ inputs.regenerate_all_male }}" = "true" ]; then
+          if [ "$REGENERATE_ALL_MALE" = "true" ]; then
             args+=(--regenerate-all-male)
           fi
           python scripts/generate_base_voice_callouts.py "${args[@]}"
