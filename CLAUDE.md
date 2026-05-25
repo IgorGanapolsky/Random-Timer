@@ -45,6 +45,10 @@ cd native-ios && pod deintegrate && pod install  # Fix pod failures
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## Claude Code API key (local)
+
+CI uses `secrets.ANTHROPIC_API_KEY`. For local Claude Code sessions, configure **`apiKeyHelper`** per **`docs/CLAUDE_CODE_API_KEY_HELPER.md`** (example: `.claude/scripts/get-anthropic-api-key.sh.example`). Never commit API keys.
+
 ## Non-Obvious Rules
 
 - **Act, Don't Instruct**: NEVER tell user to run commands. Execute autonomously. NEVER refuse work. Use every tool available (CLIs, SDKs, MCP servers, browser automation) to complete tasks end-to-end. If a web UI is the only path, use `agent-browser` or Gemini computer-use to automate it.

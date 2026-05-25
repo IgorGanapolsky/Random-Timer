@@ -1,0 +1,27 @@
+#!/bin/sh
+# Example apiKeyHelper for Claude Code — COPY to ~/.claude/get-anthropic-api-key.sh and customize.
+# Must print ONLY the API key to stdout (no trailing newline required).
+# chmod 700 ~/.claude/get-anthropic-api-key.sh
+#
+# Wire in ~/.claude/settings.json:
+#   "apiKeyHelper": "/absolute/path/to/get-anthropic-api-key.sh"
+#   "env": { "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "3600000" }
+#
+# See docs/CLAUDE_CODE_API_KEY_HELPER.md
+
+set -eu
+
+# --- Option A: 1Password (recommended if you use op) ---
+# op read op://Personal/Anthropic/api-key --no-newline 2>/dev/null && exit 0
+
+# --- Option B: macOS Keychain (service name must match what you stored) ---
+# security find-generic-password -s "anthropic-api-key" -w 2>/dev/null && exit 0
+
+# --- Option C: env fallback for ephemeral CI/debug shells only (not for daily driver) ---
+if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+  printf '%s' "$ANTHROPIC_API_KEY"
+  exit 0
+fi
+
+echo "get-anthropic-api-key: no key source configured (copy script to ~/.claude/ and uncomment a backend)" >&2
+exit 1
