@@ -13,7 +13,7 @@
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 7 |
-| WAU | 142 |
+| WAU | 140 |
 | MAU | 469 |
 <!-- DOWNLOADS_END -->
 
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-25T17:13:10+00:00
+**Generated:** 2026-05-25T17:52:21+00:00
 
 ## Onboarding Funnel
 - First Open: **461**
@@ -156,8 +156,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25"]
     y-axis "Downloads"
-    line [58 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 60 , 61 , 61 , 61 , 61]
-    line [393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 392 , 392]
+    line [59 , 59 , 59 , 59 , 59 , 59 , 59 , 59 , 60 , 61 , 61 , 61 , 61 , 61]
+    line [393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 393 , 392 , 392 , 392]
 ```
 
 ```mermaid
@@ -165,7 +165,7 @@ xychart-beta
     title "WQTU (7d)"
     x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25"]
     y-axis "Users"
-    line [5 , 5 , 5 , 5 , 5 , 4 , 4 , 4 , 4 , 4 , 6 , 6 , 6 , 6]
+    line [5 , 5 , 5 , 5 , 4 , 4 , 4 , 4 , 4 , 6 , 6 , 6 , 6 , 6]
 ```
 
 ```mermaid
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-25T17:13:12+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-25T17:52:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
