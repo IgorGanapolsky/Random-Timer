@@ -27,7 +27,7 @@ class RangeSliderUiTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Maximum: 1m").assertExists()
 
-        // Move min close to max; max should be pushed to keep a 30s gap.
+        // Move min close to max; max should be pushed to keep a 5s gap.
         composeRule
             .onNodeWithContentDescription("Minimum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
@@ -35,7 +35,7 @@ class RangeSliderUiTest {
             }
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Minimum: 50s").assertExists()
-        composeRule.onNodeWithText("Maximum: 1m 20s").assertExists()
+        composeRule.onNodeWithText("Maximum: 55s").assertExists()
     }
 
     @Test
@@ -49,7 +49,7 @@ class RangeSliderUiTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Minimum: 2m 30s").assertExists()
 
-        // Move max below min + 30s; min should be pulled back.
+        // Move max below min + 5s; min should be pulled back.
         composeRule
             .onNodeWithContentDescription("Maximum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
@@ -57,6 +57,6 @@ class RangeSliderUiTest {
             }
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Maximum: 2m 40s").assertExists()
-        composeRule.onNodeWithText("Minimum: 2m 10s").assertExists()
+        composeRule.onNodeWithText("Minimum: 2m 35s").assertExists()
     }
 }

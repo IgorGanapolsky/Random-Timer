@@ -26,7 +26,6 @@ class PaywallSheetTest {
                 "Ad-free training — Elite subscription removes rewarded ads",
                 "60-minute random windows for full-length drills",
                 "Combat and MMA voice callouts with live time checks",
-                "Expert training presets (Competition, Sparring, etc.)",
                 "Round-capped loops for pad work, sparring, and circuits",
                 "Full sound arsenal — bells, horns, sirens, and more",
                 "Fresh pro audio drops when new packs land",
