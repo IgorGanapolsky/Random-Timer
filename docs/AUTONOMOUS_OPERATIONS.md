@@ -17,6 +17,8 @@ How Random Timer runs continuously without CEO action on every step, and where h
 
 Ralph state: `.claude/ralph/ATTEMPTS.md` (session-local; not committed).
 
+**Claude Code API auth (local):** `apiKeyHelper` + `docs/CLAUDE_CODE_API_KEY_HELPER.md` — unset `ANTHROPIC_API_KEY` when the helper is active; does not replace `gh auth`.
+
 ---
 
 ## What runs 24/7 automatically (no CEO click)
@@ -113,4 +115,5 @@ All status claims: command + path + sanitized output (`docs/OPERATIONAL_RELIABIL
 - `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` — Firebase project split, tester emails
 - `docs/PLAY_CONSOLE_IAP_RUNBOOK.md` — IAP SKU checklist (console-only P0)
 - `docs/workflow.md` — proof-of-work for agent PRs
+- `docs/CLAUDE_CODE_API_KEY_HELPER.md` — Claude Code `apiKeyHelper` (1Password / local env file)
 - `wiki/Growth-Systems-Overview.md` — weekly growth calendar

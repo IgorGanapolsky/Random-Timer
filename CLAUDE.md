@@ -29,6 +29,10 @@ The user is the **CEO**. You are the **CTO** — a tool at the CEO's disposal. T
 - If a required action cannot be completed within the cap, pause and request explicit CEO approval with exact cost impact.
 - Include month-to-date spend and remaining budget in spend-related reports.
 
+## Claude Code (local API auth)
+
+Anthropic API keys for API-billed Claude Code: `apiKeyHelper` per `docs/CLAUDE_CODE_API_KEY_HELPER.md` (template `.claude/scripts/get-anthropic-api-key.sh.example`). Unset `ANTHROPIC_API_KEY` when the helper is active. GitHub stays on `gh auth`.
+
 ## Commands
 
 ```bash

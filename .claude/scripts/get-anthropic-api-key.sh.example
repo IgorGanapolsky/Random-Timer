@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# EXAMPLE ONLY — copy to ~/.claude/get-anthropic-api-key.sh and chmod +x.
+# Claude Code apiKeyHelper: print Anthropic API key to stdout (no trailing newline required).
+# Never commit the live script or real keys to the repo.
+#
+# Docs: docs/CLAUDE_CODE_API_KEY_HELPER.md
+# Unset ANTHROPIC_API_KEY in your shell when using apiKeyHelper (env wins over helper).
+
+set -euo pipefail
+
+# --- Level 1: gitignored env file on CEO machine ---
+ENV_FILE="${CLAUDE_ANTHROPIC_ENV_FILE:-${HOME}/.config/random-timer/anthropic.env}"
+if [[ -f "${ENV_FILE}" ]]; then
+  # shellcheck disable=SC1090
+  set -a
+  # shellcheck source=/dev/null
+  source "${ENV_FILE}"
+  set +a
+  if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+    printf '%s' "${ANTHROPIC_API_KEY}"
+    exit 0
+  fi
+fi
+
+# --- Level 2: 1Password CLI (replace placeholder before use) ---
+ANTHROPIC_OP_REF="${ANTHROPIC_OP_REF:-op://REPLACE/Vault/Item/credential}"
+if command -v op >/dev/null 2>&1; then
+  if [[ "${ANTHROPIC_OP_REF}" != op://REPLACE/* ]]; then
+    op read "${ANTHROPIC_OP_REF}"
+    exit 0
+  fi
+fi
+
+echo "get-anthropic-api-key: configure Level 1 (${ENV_FILE}) or Level 2 (ANTHROPIC_OP_REF)" >&2
+exit 1
