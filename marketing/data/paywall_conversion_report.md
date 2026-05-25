@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-25T23:24:14+00:00
+Generated: 2026-05-25T23:50:24+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **400**
-- Offer Selects: **63**
+- Views: **398**
+- Offer Selects: **62**
 - Purchase Attempts: **6**
 - Purchase Successes: **0**
-- View -> Offer Select: **15.8%**
-- Select -> Purchase Attempt: **9.5%**
+- View -> Offer Select: **15.6%**
+- Select -> Purchase Attempt: **9.7%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
-| android | elite_tactical_monthly | 48 | 1 | 0 | 2.1% | 0.0% |
+| android | elite_tactical_monthly | 47 | 1 | 0 | 2.1% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -37,7 +37,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 516 | 162 |
+| android | elite_tactical_monthly | 513 | 162 |
 | android | elite_tactical | 374 | 146 |
 | android | pro_base | 216 | 122 |
 | android | unknown | 198 | 112 |
@@ -51,7 +51,7 @@ Window (days): 30
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 34 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
-| setup_upgrade_cta | 16 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 14 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
 | qualified_training_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
@@ -63,7 +63,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 4022 | 33 |
+| unknown | 3972 | 33 |
 | max_seconds | 2670 | 286 |
 | alarm_duration | 2179 | 264 |
 | min_seconds | 2032 | 268 |
