@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-25T15:21:37+00:00",
+  "generated_at": "2026-05-25T16:16:38+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 304,
-    "offer_selects": 63,
+    "views": 302,
+    "offer_selects": 62,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2072,
-    "select_to_attempt_rate": 0.0794,
+    "view_to_select_rate": 0.2053,
+    "select_to_attempt_rate": 0.0806,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -74,7 +74,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 48,
+      "offer_selects": 47,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -85,14 +85,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 492,
-      "users": 137
+      "failures": 488,
+      "users": 136
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 350,
-      "users": 121
+      "failures": 346,
+      "users": 120
     },
     {
       "platform": "android",
@@ -142,7 +142,7 @@
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 117,
+      "views": 115,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -208,7 +208,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 117,
+      "views": 115,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -247,13 +247,13 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2527,
-      "users": 260
+      "changes": 2524,
+      "users": 259
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1951,
-      "users": 243
+      "changes": 1947,
+      "users": 242
     },
     {
       "setting_name": "alarm_duration",
@@ -267,8 +267,8 @@
     },
     {
       "setting_name": "volume",
-      "changes": 1536,
-      "users": 158
+      "changes": 1535,
+      "users": 157
     },
     {
       "setting_name": "repeat_enabled",
