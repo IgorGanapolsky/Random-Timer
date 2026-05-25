@@ -11,6 +11,7 @@ import com.iganapolsky.randomtimer.domain.model.EntitlementLevel
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -43,6 +44,7 @@ class TimerViewModelAnalyticsTest {
     private lateinit var analyticsService: AnalyticsService
     private lateinit var repository: TimerRepository
     private lateinit var serviceController: TimerServiceController
+    private lateinit var soundPreviewManager: SoundPreviewManager
     private lateinit var viewModel: TimerViewModel
     private lateinit var configFlow: MutableStateFlow<TimerConfig>
 
@@ -52,7 +54,7 @@ class TimerViewModelAnalyticsTest {
 
         repository = mockk<TimerRepository>()
         val startTimerUseCase = mockk<StartTimerUseCase>(relaxed = true)
-        val soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
+        soundPreviewManager = mockk<SoundPreviewManager>(relaxed = true)
         serviceController = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         every { analyticsService.paywallValueFramingVariant() } returns "control"
@@ -355,6 +357,13 @@ class TimerViewModelAnalyticsTest {
         assertThat(savedConfig.captured.voiceEnabled).isTrue()
         assertThat(savedConfig.captured.repeatRounds).isEqualTo(2)
         verify { serviceController.updateLoop(true) }
+    }
+
+    @Test
+    fun previewCommandCue_forwardsSelectedGenderToSoundPreviewManager() {
+        viewModel.previewCommandCue(VoiceGender.FEMALE)
+
+        verify { soundPreviewManager.previewCommandCue(VoiceGender.FEMALE) }
     }
 
     private fun timerState(status: TimerStatus): TimerState =

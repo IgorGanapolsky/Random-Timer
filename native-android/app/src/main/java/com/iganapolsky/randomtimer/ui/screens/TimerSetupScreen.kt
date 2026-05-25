@@ -718,6 +718,7 @@ fun TimerSetupScreen(
                                                 onClick = {
                                                     updateConfig(voiceGender = gender)
                                                     onVoiceGenderSelected(gender)
+                                                    onCommandCuePreview(gender)
                                                 },
                                                 label = {
                                                     Text(

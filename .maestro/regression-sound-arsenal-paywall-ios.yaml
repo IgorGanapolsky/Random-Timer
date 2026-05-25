@@ -10,9 +10,12 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
+- tapOn:
+    text: "Unlock Sound Arsenal"
+    optional: true
 - extendedWaitUntil:
-    visible: "Not now"
-    timeout: 15000
+    visible: "CHOOSE A PLAN"
+    timeout: 20000
 - scrollUntilVisible:
     element: "Restore purchase"
     direction: DOWN

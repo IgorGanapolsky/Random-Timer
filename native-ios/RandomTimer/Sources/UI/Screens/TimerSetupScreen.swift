@@ -253,6 +253,7 @@ struct TimerSetupScreen: View {
                                 get: { config.voiceGender },
                                 set: { newGender in
                                     updateConfig(voiceGender: newGender)
+                                    timerManager.previewCommandCue(gender: newGender)
                                     AnalyticsService.shared.track(
                                         AnalyticsEvents.voiceGenderSelected,
                                         properties: [
