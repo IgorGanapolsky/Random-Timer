@@ -596,7 +596,11 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     }
 
     func previewCommandCue() {
-        AIVoiceCalloutService.shared.previewCommandCue(gender: config.voiceGender)
+        previewCommandCue(gender: config.voiceGender)
+    }
+
+    func previewCommandCue(gender: VoiceGender) {
+        AIVoiceCalloutService.shared.previewCommandCue(gender: gender)
     }
 
     func updatePreviewVolume() {
