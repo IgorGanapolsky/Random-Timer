@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-25T12:50:29+00:00",
+  "generated_at": "2026-05-25T14:01:46+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 300,
+    "views": 304,
     "offer_selects": 63,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.21,
+    "view_to_select_rate": 0.2072,
     "select_to_attempt_rate": 0.0794,
     "attempt_to_success_rate": 0.0
   },
@@ -109,8 +109,8 @@
     {
       "platform": "ios",
       "product_id": "unknown",
-      "failures": 4,
-      "users": 1
+      "failures": 9,
+      "users": 4
     }
   ],
   "product_catalog_failures_play_store": [
@@ -166,7 +166,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 34,
+      "views": 36,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -194,6 +194,14 @@
       "attempts": 3,
       "successes": 0,
       "view_to_attempt_rate": 0.6,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "qualified_training_gate",
+      "views": 2,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     }
   ],
@@ -224,7 +232,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 34,
+      "views": 36,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -234,38 +242,38 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 4219,
-      "users": 37
+      "changes": 4194,
+      "users": 36
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2503,
-      "users": 258
+      "changes": 2527,
+      "users": 260
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1946,
-      "users": 242
+      "changes": 1951,
+      "users": 243
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1785,
-      "users": 234
+      "changes": 1792,
+      "users": 236
     },
     {
       "setting_name": "sound_type",
-      "changes": 1598,
-      "users": 209
+      "changes": 1600,
+      "users": 210
     },
     {
       "setting_name": "volume",
-      "changes": 1436,
-      "users": 157
+      "changes": 1536,
+      "users": 158
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 988,
-      "users": 223
+      "changes": 994,
+      "users": 225
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -274,8 +282,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 488,
-      "users": 163
+      "changes": 489,
+      "users": 164
     },
     {
       "setting_name": "repeat_rounds",
@@ -284,7 +292,7 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 301,
+      "changes": 302,
       "users": 184
     },
     {
