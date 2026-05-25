@@ -104,6 +104,19 @@ def test_timer_limits_and_gap_rules_match_across_mobile_platforms():
     assert "static let defaultMinGapSeconds = 5" in ios_models
 
 
+def test_timer_setup_screen_uses_five_second_range_gap_not_thirty():
+    """UI callbacks must use TimeRangeAdjuster gap (5s), not a legacy 30s floor."""
+    android_setup = ANDROID_SETUP_SCREEN.read_text(encoding="utf-8")
+    ios_setup = IOS_SETUP_SCREEN.read_text(encoding="utf-8")
+
+    assert "minGapSeconds = 30" not in android_setup
+    assert "maxRange - 30f" not in android_setup
+    assert "maxSliderRange - 30f" not in android_setup
+    assert "TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS" in android_setup
+    assert "defaultMinGapSeconds" in ios_setup
+    assert "maxSliderRange - 30" not in ios_setup
+
+
 def test_sound_catalog_matches_across_mobile_platforms():
     android_config = ANDROID_CONFIG.read_text(encoding="utf-8")
     ios_models = IOS_MODELS.read_text(encoding="utf-8")
