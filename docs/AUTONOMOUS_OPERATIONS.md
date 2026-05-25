@@ -107,8 +107,13 @@ All status claims: command + path + sanitized output (`docs/OPERATIONAL_RELIABIL
 
 ---
 
+## Claude Code local auth
+
+For interactive Claude Code (not CI), use **`apiKeyHelper`** so keys never land in repo or chat. See **`docs/CLAUDE_CODE_API_KEY_HELPER.md`** and copy **`.claude/scripts/get-anthropic-api-key.sh.example`** to `~/.claude/get-anthropic-api-key.sh`.
+
 ## Related docs
 
+- `docs/CLAUDE_CODE_API_KEY_HELPER.md` — Claude Code `apiKeyHelper` + TTL
 - `docs/RELEASE.md` — version bump, release branches, store metadata paths
 - `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` — Firebase project split, tester emails
 - `docs/PLAY_CONSOLE_IAP_RUNBOOK.md` — IAP SKU checklist (console-only P0)

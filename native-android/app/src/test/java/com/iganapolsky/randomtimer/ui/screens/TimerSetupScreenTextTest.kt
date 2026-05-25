@@ -56,4 +56,14 @@ class TimerSetupScreenTextTest {
 
         assertThat(readHasFirstCompleted(context)).isTrue()
     }
+
+    @Test
+    fun competitionPrepSectionTitleMatchesIOS() {
+        assertThat(competitionPrepSectionTitle()).isEqualTo("Competition Prep")
+    }
+
+    @Test
+    fun competitionPrepIsAvailableWithoutPro() {
+        assertThat(isCompetitionPrepProGated()).isFalse()
+    }
 }
