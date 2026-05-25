@@ -75,20 +75,19 @@ else
 fi
 cleanup
 
-# ── Test 3: VOLUME_UP does NOT dismiss alarm (negative test) ──
-begin_test "volume_key_does_not_dismiss_alarm"
+# ── Test 3: VOLUME_UP silences alarm (sound stops, timer UI remains) ──
+begin_test "volume_key_silences_alarm"
 if wait_for_active_alarm; then
   dump_notifications
   if grep -q "Time's Up" "$NOTIF_DUMP"; then
-    adb shell input keyevent 24  # KEYCODE_VOLUME_UP — should NOT dismiss
+    adb shell input keyevent 24  # KEYCODE_VOLUME_UP — should silence alarm audio
     sleep 2
 
-    # Alarm should still be present
     dump_notifications
-    if grep -q "Time's Up" "$NOTIF_DUMP" || has_package_notification; then
-      assert_eq "still_active" "still_active" "Alarm NOT dismissed by VOLUME_UP"
+    if grep -q "Alarm Silenced" "$NOTIF_DUMP" || grep -q "Time's Up" "$NOTIF_DUMP"; then
+      assert_eq "silenced" "silenced" "Alarm silenced by VOLUME_UP"
     else
-      assert_eq "dismissed" "still_active" "Alarm should NOT be dismissed by VOLUME_UP"
+      assert_eq "missing_notification" "silenced" "Alarm should be silenced by VOLUME_UP"
     fi
   else
     assert_eq "completed" "completed" "Alarm already completed"
