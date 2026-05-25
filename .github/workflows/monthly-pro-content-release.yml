@@ -101,7 +101,7 @@ jobs:
           args=(
             --manifest content/pro_audio/monthly_pro_audio_packs.json
             --release-month "${{ steps.meta.outputs.release_month }}"
-            --voice-id "${ELEVENLABS_VOICE_ID:-DGzg6RaUqxGRTHSBjfgF}"
+            --voice-id "${ELEVENLABS_VOICE_ID:-2EiwWnXFnvU5JabPnv8n}"
             --generate-sound-assets
             --sync-android-assets
           )

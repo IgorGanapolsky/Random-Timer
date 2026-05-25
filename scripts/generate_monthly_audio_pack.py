@@ -195,8 +195,8 @@ def fetch_freesound_pack(token: str, dry_run: bool = False) -> list[Path]:
 
 ELEVENLABS_BASE = "https://api.elevenlabs.io"
 VOICE_MODEL = "eleven_turbo_v2_5"
-# Default: Ivanna — warrior drill instructor voice
-DEFAULT_VOICE_ID = "cgSgspJ2msm6clMCkdW9"
+# Default male drill instructor (Clyde) — must match content/pro_audio/voice_personas.json
+DEFAULT_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"
 
 MONTHLY_CALLOUT_SCRIPTS: list[dict[str, str]] = [
     {"name": "cmd_go_monthly", "text": "Go! Push harder!"},

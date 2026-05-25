@@ -4,9 +4,9 @@
   "male": {
     "persona": "Marine Drill Instructor",
     "modelId": "eleven_multilingual_v2",
-    "voiceId": "DGzg6RaUqxGRTHSBjfgF",
-    "voiceName": "Configured drill instructor voice",
-    "voiceNamePattern": "marine|drill|instructor|sergeant",
+    "voiceId": "2EiwWnXFnvU5JabPnv8n",
+    "voiceName": "Clyde",
+    "voiceNamePattern": "marine|drill|instructor|sergeant|clyde",
     "probeText": "Stay sharp.",
     "runtimePackSource": "content/pro_audio/runtime/latest.json",
     "previewSamples": {
