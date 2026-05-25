@@ -25,7 +25,15 @@ final class NotificationService: NSObject, TimerNotificationHandling {
     /// Callback invoked when user taps "Silence" action on the notification
     var onNotificationSilence: (() -> Void)?
 
+    /// Supplies alarm state for hardware volume button handling.
+    var alarmVolumePolicyState: () -> (status: TimerStatus?, isAlarmSilenced: Bool) = { (nil, false) }
+
     // MARK: - Core Haptics
+
+    private var volumeObservation: NSKeyValueObservation?
+    private var observedOutputVolume: Float = 0
+    private var volumeSilenceObserverArmed = false
+    private var hiddenVolumeView: MPVolumeView?
 
     private var hapticEngine: CHHapticEngine?
     private var hapticPlayer: CHHapticPatternPlayer?
@@ -246,6 +254,7 @@ final class NotificationService: NSObject, TimerNotificationHandling {
 
         // Activate media session for Bluetooth/CarPlay dismiss
         activateMediaSession()
+        startVolumeButtonSilenceObserver()
 
         // Observe audio interruptions (phone calls, etc.)
         NotificationCenter.default.addObserver(
@@ -428,12 +437,79 @@ final class NotificationService: NSObject, TimerNotificationHandling {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
+    // MARK: - Hardware volume buttons
+
+    func startVolumeButtonSilenceObserver() {
+        stopVolumeButtonSilenceObserver()
+
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            return
+        }
+
+        installHiddenVolumeViewIfNeeded()
+
+        let session = AVAudioSession.sharedInstance()
+        observedOutputVolume = session.outputVolume
+        volumeSilenceObserverArmed = false
+
+        volumeObservation = session.observe(\.outputVolume, options: [.new]) { [weak self] observedSession, _ in
+            Task { @MainActor in
+                self?.handleOutputVolumeChange(observedSession.outputVolume)
+            }
+        }
+    }
+
+    func stopVolumeButtonSilenceObserver() {
+        volumeObservation?.invalidate()
+        volumeObservation = nil
+        volumeSilenceObserverArmed = false
+        hiddenVolumeView?.removeFromSuperview()
+        hiddenVolumeView = nil
+    }
+
+    func handleOutputVolumeChange(_ newVolume: Float) {
+        if !volumeSilenceObserverArmed {
+            volumeSilenceObserverArmed = true
+            observedOutputVolume = newVolume
+            return
+        }
+
+        let (status, isAlarmSilenced) = alarmVolumePolicyState()
+        guard AlarmVolumeKeyPolicy.shouldSilenceOnVolumeChange(
+            status: status,
+            isAlarmSilenced: isAlarmSilenced,
+            previousVolume: observedOutputVolume,
+            newVolume: newVolume
+        ) else {
+            observedOutputVolume = newVolume
+            return
+        }
+
+        observedOutputVolume = newVolume
+        handleMediaButtonSilenceAction()
+    }
+
+    private func installHiddenVolumeViewIfNeeded() {
+        guard hiddenVolumeView == nil else { return }
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow) else { return }
+
+        let volumeView = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
+        volumeView.isHidden = true
+        volumeView.alpha = 0.01
+        window.addSubview(volumeView)
+        hiddenVolumeView = volumeView
+    }
+
     func stopAlarmSound() {
         NotificationCenter.default.removeObserver(
             self,
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance()
         )
+        stopVolumeButtonSilenceObserver()
         deactivateMediaSession()
         audioPlayer?.stop()
         audioPlayer = nil

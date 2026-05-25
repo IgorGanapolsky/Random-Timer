@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,6 +22,7 @@ import com.iganapolsky.randomtimer.BuildConfig
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.notifications.MonthlyContentWorker
 import com.iganapolsky.randomtimer.notifications.ReengagementScheduler
+import com.iganapolsky.randomtimer.service.MediaButtonHandler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
@@ -91,6 +93,23 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // Tell service app is in background - show notifications
         sendAppStateToService(isInForeground = false)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (MediaButtonHandler.isVolumeKey(event.keyCode) &&
+            MediaButtonHandler.shouldSilenceAlarm(event.keyCode, event.action)
+        ) {
+            silenceAlarmFromVolumeKey()
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun silenceAlarmFromVolumeKey() {
+        val silenceIntent =
+            Intent(this, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_SILENCE_ALARM
+            }
+        startService(silenceIntent)
     }
 
     private fun handleAlarmNotificationTap(intent: Intent?) {

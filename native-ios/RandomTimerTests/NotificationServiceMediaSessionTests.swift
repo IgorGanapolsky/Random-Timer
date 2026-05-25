@@ -78,4 +78,30 @@ final class NotificationServiceMediaSessionTests: XCTestCase {
 
         XCTAssertTrue(didSilence)
     }
+
+    func testHandleOutputVolumeChangeSilencesDuringAlarm() {
+        let service = NotificationService()
+        var didSilence = false
+
+        service.alarmVolumePolicyState = { (.alarm, false) }
+        service.onMediaButtonSilence = { didSilence = true }
+
+        service.handleOutputVolumeChange(0.5)
+        service.handleOutputVolumeChange(0.6)
+
+        XCTAssertTrue(didSilence)
+    }
+
+    func testHandleOutputVolumeChangeIgnoredWhenAlreadySilenced() {
+        let service = NotificationService()
+        var didSilence = false
+
+        service.alarmVolumePolicyState = { (.alarm, true) }
+        service.onMediaButtonSilence = { didSilence = true }
+
+        service.handleOutputVolumeChange(0.5)
+        service.handleOutputVolumeChange(0.6)
+
+        XCTAssertFalse(didSilence)
+    }
 }
