@@ -461,7 +461,6 @@ fun TimerSetupScreen(
                                 minValue = config.minSeconds,
                                 maxValue = config.maxSeconds,
                                 maxSliderRange = maxRange.toFloat(),
-                                minSliderMax = maxRange - 30f,
                                 compactMode = isCompactHeight,
                                 onMinChange = { newMin ->
                                     val (min, max) =
@@ -470,7 +469,6 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMinSeconds = newMin,
                                             maxSecondsLimit = maxRange,
-                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = min, maxSeconds = max)
                                 },
@@ -481,7 +479,6 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMaxSeconds = newMax,
                                             maxSecondsLimit = maxRange,
-                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                                 },
@@ -1164,7 +1161,6 @@ private fun TimeRangeSliders(
     minValue: Int,
     maxValue: Int,
     maxSliderRange: Float = TimerConfig.MAX_SECONDS_FREE.toFloat(),
-    minSliderMax: Float = maxSliderRange - 30f,
     compactMode: Boolean = false,
     enabled: Boolean = true,
     onMinChange: (Int) -> Unit,
@@ -1176,7 +1172,6 @@ private fun TimeRangeSliders(
     val minFloorSeconds = TimeRangeAdjuster.DEFAULT_MIN_SECONDS
     val minGapSeconds = TimeRangeAdjuster.DEFAULT_MIN_GAP_SECONDS
     val maxSliderRangeInt = maxSliderRange.toInt()
-    val minSliderMaxInt = minSliderMax.toInt()
     val sectionGap = if (compactMode) 8.dp else 12.dp
     val rowGap = 4.dp
     val nudgeSize = 32.dp
