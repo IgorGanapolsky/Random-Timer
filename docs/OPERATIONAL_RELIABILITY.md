@@ -24,6 +24,21 @@ Every quantitative claim MUST identify:
 - **Public storefront version read-back** (`scripts/verify_public_store_versions.py`): iOS uses the **iTunes public lookup** `version` field (US storefront JSON — a public proxy, not a substitute for App Store Connect internal state). Android uses a **regex on the public Play HTML** (embedded `141` payload string — a fragile listing proxy, not Play Console track truth). Default expected version for automation is the **latest GitHub release tag** so integration-branch repo versions are not mistaken for “what must be live” in the US storefront.
 - **Store ratings snapshot** (`scripts/store_ratings_snapshot.py`, workflow `store-ratings-snapshot.yml`): iOS **`average_rating_sample_mean`** is computed over the **App Store Connect `customerReviews` paginated sample** (`review_count_metric_id` = `asc_customer_reviews_api_paginated_sample_mean_v1`). Android uses **`androidpublisher.reviews.list`** (`google_play_androidpublisher_reviews_list_paginated_sample_mean_v1`), which is **not** the same as public Play lifetime totals. Treat JSON `semantics` fields as binding; a **zero-size sample** is valid output when the API returns no rows.
 
+### Release verification tiers (binding)
+
+"Shipped" and "publicly visible" are **distinct** states. Never conflate.
+
+| Tier | Source | Lag after upload | Blocks `native-release`? |
+|------|--------|-----------------|--------------------------|
+| 0 — Uploaded / on track | Android Publisher API; ASC TestFlight builds API | Minutes | ✅ Yes — via `verify_release.py` |
+| 1 — In review / approved | ASC `appStoreVersions.appStoreState` | Minutes | ✅ Yes — via `asc_poll_version_state.py` |
+| 2 — Public storefront | iTunes lookup (US JSON); Play HTML `141` regex | **Hours to 24h+** | ❌ Never — `continue-on-error: true` |
+
+- **Tier 0 + GitHub tag = shipped.** The release is correct and complete when `native-release.yml` exits green and the tag exists.
+- **Tier 2 failures are propagation lag, not release failures.** Do not re-trigger the release pipeline because `public-store-version-readback.yml` fails or `verify_public_store_versions.py` times out.
+- Use `store-release-watcher.yml` (cron every 30 min) for asynchronous Tier 2 monitoring.
+- Full debug runbook: `.claude/skills/store-verify-ci.md`.
+
 ## 2. Evidence, not assertions
 
 For repo state, CI, releases, and metrics:
