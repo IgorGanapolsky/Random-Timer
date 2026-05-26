@@ -82,7 +82,13 @@ Approve **`testflight-signoff`** and **`firebase-signoff`** when prompted.
 gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f android_track=production
 ```
 
-Approve **`production-signoff`**. Do **not** claim shipped until `public-store-version-readback.yml` passes.
+Approve **`production-signoff`**.
+
+**Shipped = API verify + GitHub tag.** `native-release.yml` produces a GitHub release and verifies the build landed on the correct Play track and TestFlight slot. That is the release proof.
+
+**Publicly visible ≠ shipped.** `public-store-version-readback.yml` checks iTunes lookup and Play HTML — both are lagging proxies (hours to 24h+). Do **not** re-trigger the release pipeline because that workflow fails. Use `store-release-watcher.yml` (cron `*/30 * * * *`) or trigger `public-store-version-readback.yml` manually later.
+
+See `.claude/skills/store-verify-ci.md` for the full tiered truth model and debug runbook.
 
 ### Ralph / agent code change
 
