@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import sys
+
 import pytest
 
-from scripts.validate_release_branch import ValidationError, validate_release_branch
+from scripts.validate_release_branch import ValidationError, main, validate_release_branch
 
 
 def _write_version_files(repo_root, android_version: str, ios_version: str) -> None:
@@ -101,3 +103,32 @@ def test_validate_release_branch_rejects_placeholder_versioned_release_notes(tmp
     _write_release_notes(tmp_path, version="1.2.3", body="# Release 1.2.3\n\nTODO: fill this in.\n")
     with pytest.raises(ValidationError, match="placeholder"):
         validate_release_branch(repo_root=tmp_path, head_ref="release/v1.2.3")
+
+
+def test_validate_release_branch_raises_when_version_files_missing(tmp_path):
+    with pytest.raises(ValidationError):
+        validate_release_branch(repo_root=tmp_path, head_ref="release/v1.2.3")
+
+
+def test_main_prints_ok_on_success(tmp_path, monkeypatch, capsys):
+    _write_version_files(tmp_path, android_version="1.2.3", ios_version="1.2.3")
+    _write_release_notes(tmp_path, version="1.2.3")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["validate_release_branch.py", "--head-ref", "release/v1.2.3", "--repo-root", str(tmp_path)],
+    )
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert "[OK] Release branch validation passed" in captured.out
+    assert "release/v1.2.3" in captured.out
+
+
+def test_main_returns_one_on_validation_error(tmp_path, monkeypatch):
+    _write_version_files(tmp_path, android_version="1.2.3", ios_version="1.2.3")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["validate_release_branch.py", "--head-ref", "release/v1.2.4", "--repo-root", str(tmp_path)],
+    )
+    assert main() == 1

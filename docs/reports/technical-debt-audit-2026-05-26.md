@@ -71,7 +71,8 @@ Workflow: `ci.yml` on merge commit `2df33451` (includes #1614 + #1616).
 
 | Category | Finding | Recommended phase |
 |----------|---------|-------------------|
-| Coverage | `zernio_orchestrate.py` ~57%, `verify_release.py` ~61% | Add integration mocks / CLI smoke tests |
+| Coverage | `verify_release.py` ~61% | Add App Store Connect / Play CLI smoke tests |
+| Coverage | `zernio_orchestrate.py` live-publish path | Mock `zernio_create_post` + env `ZERNIO_AUTO_PUBLISH=1` |
 | Coverage | Native Android/iOS | JaCoCo / Xcode coverage gates (separate from `scripts/`) |
 | RAG | External memory gateway | Verify gateway in-session before prune/write |
 | Docs | 246 tracked `.md` files | Consolidate only with CEO-approved deletes |
@@ -107,6 +108,21 @@ Lines removed: ~1 (duplicate dict line)
 RAG entries cleaned: 0 (not verified)
 ```
 
+## Phase 3 — automation coverage (2026-05-26, PR follow-up)
+
+**Command:** `uv run pytest scripts/tests/ --cov=scripts --cov-report=term -q`
+
+| Metric | Baseline (#1617) | After Phase 3 |
+|--------|------------------|---------------|
+| Tests passed | 702 | **712** |
+| Aggregate `scripts/` coverage | 66% | **66%** (unchanged aggregate; targeted modules raised) |
+| `validate_release_branch.py` | ~56% | **93%** |
+| `verify_public_store_versions.py` | ~66% | **68%** (`poll_until_public` fail-fast path) |
+| `zernio_orchestrate.py` | ~57% | **65%** (`cmd_sync_latest` dry-run + routing) |
+| `upload_store_listing_anchor.py` | ~50% | CLI covered via `test_upload_store_listing_anchor_main.py` |
+
+**Still not claimed:** native Android/iOS 100% coverage, mass doc consolidation (246 `.md` files), RAG gateway prune (gateway **not verified**), `verify_release.py` ~61%, full `zernio_orchestrate` live-publish path.
+
 ## Accurate completion statement
 
-**Technical debt audit baseline complete for 2026-05-26. Core systems verified operational on `develop` CI (success). Hygiene gate passing. Python `scripts/` coverage 66% (702 tests). Full monorepo line-by-line cleanup and 100% coverage are phased work, not claimed in this session.**
+**Technical debt audit baseline complete for 2026-05-26. Phase 3 raised coverage on release-branch validation, public-store polling, Zernio sync dry-run, and Anchor upload CLI. Core systems verified operational on `develop` CI. Hygiene gate passing. Python `scripts/` coverage remains ~66% (712 tests). Literal “all debt” (native coverage, doc purge, RAG) is phased work — not claimed.**
