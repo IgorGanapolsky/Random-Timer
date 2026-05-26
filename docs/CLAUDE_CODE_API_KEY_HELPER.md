@@ -25,7 +25,7 @@ Official reference: [Claude Code settings — `apiKeyHelper`](https://code.claud
 
    ```json
    {
-     "apiKeyHelper": "/Users/YOU/.claude/get-anthropic-api-key.sh",
+     "apiKeyHelper": "$HOME/.claude/get-anthropic-api-key.sh",
      "env": {
        "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "3600000"
      }
