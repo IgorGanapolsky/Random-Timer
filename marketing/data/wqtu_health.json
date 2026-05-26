@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-05-26T22:01:47+00:00",
+  "generated_at": "2026-05-26T22:42:35+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 7,
+    "wqtu": 6,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
   },
   "engagement": {
-    "dau": 49,
+    "dau": 43,
     "wau": 155
   },
   "abandon_rate": {
-    "started_30d": 1714,
+    "started_30d": 1719,
     "completed_30d": 656,
-    "abandon_rate_pct": 61.7
+    "abandon_rate_pct": 61.8
   },
   "monetization_funnel": {
-    "paywall_viewed_users": 109,
+    "paywall_viewed_users": 110,
     "purchase_attempted_users": 5,
     "purchase_succeeded_users": 0,
     "conversion_pct": 0.0
@@ -46,11 +46,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-05-23T19:27:31+00:00",
-      "wqtu": 8,
-      "dau": 22
-    },
     {
       "timestamp": "2026-05-23T19:54:02+00:00",
       "wqtu": 7,
@@ -495,6 +490,11 @@
       "timestamp": "2026-05-26T22:01:47+00:00",
       "wqtu": 7,
       "dau": 49
+    },
+    {
+      "timestamp": "2026-05-26T22:42:35+00:00",
+      "wqtu": 6,
+      "dau": 43
     }
   ]
 }
