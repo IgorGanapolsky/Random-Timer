@@ -41,7 +41,7 @@ def test_main_exits_when_api_key_missing(tmp_path, monkeypatch):
 def test_main_happy_path(monkeypatch, tmp_path):
     monkeypatch.setattr(usa, "REPO", tmp_path)
     (tmp_path / ".env").write_text(
-        "ANCHOR_BROWSER_API_KEY=test-key\nFASTLANE_USER=ceo@example.com\nFASTLANE_PASSWORD=secret\n",
+        "ANCHOR_BROWSER_API_KEY=test-key\n",
         encoding="utf-8",
     )
     zip_path = tmp_path / "scripts" / "_screenshots_anchor.zip"
