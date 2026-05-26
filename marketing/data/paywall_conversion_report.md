@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-25T23:50:24+00:00
+Generated: 2026-05-26T00:33:14+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **398**
+- Views: **404**
 - Offer Selects: **62**
 - Purchase Attempts: **6**
 - Purchase Successes: **0**
-- View -> Offer Select: **15.6%**
+- View -> Offer Select: **15.3%**
 - Select -> Purchase Attempt: **9.7%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -41,7 +41,7 @@ Window (days): 30
 | android | elite_tactical | 374 | 146 |
 | android | pro_base | 216 | 122 |
 | android | unknown | 198 | 112 |
-| ios | unknown | 9 | 4 |
+| ios | unknown | 15 | 5 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
@@ -49,7 +49,7 @@ Window (days): 30
 | range_gate | 175 | 1 | 0 | 0.6% | 0.0% |
 | voice_gate | 100 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 34 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 40 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
 | setup_upgrade_cta | 14 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 5 | 3 | 0 | 60.0% | 0.0% |
@@ -58,20 +58,20 @@ Window (days): 30
 ## Leaky Entry Points
 - `voice_gate` had **100** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **34** views and **0** purchase attempts.
+- `unknown` had **40** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
 | unknown | 3972 | 33 |
-| max_seconds | 2670 | 286 |
-| alarm_duration | 2179 | 264 |
-| min_seconds | 2032 | 268 |
+| max_seconds | 2677 | 287 |
+| alarm_duration | 2185 | 265 |
+| min_seconds | 2036 | 269 |
 | sound_type | 1708 | 236 |
 | volume | 1637 | 179 |
-| repeat_enabled | 1106 | 258 |
+| repeat_enabled | 1117 | 259 |
 | voice_callouts_enabled | 722 | 162 |
-| vibration_enabled | 534 | 182 |
+| vibration_enabled | 535 | 183 |
 | repeat_rounds | 393 | 116 |
 | voice_gender | 327 | 202 |
 | use_extended_range | 220 | 140 |
