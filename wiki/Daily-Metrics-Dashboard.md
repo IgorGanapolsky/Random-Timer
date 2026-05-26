@@ -12,7 +12,7 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 54 |
+| DAU | 51 |
 | WAU | 160 |
 | MAU | 515 |
 <!-- DOWNLOADS_END -->
@@ -79,6 +79,8 @@
 | First Open | 506 | — |
 | First Timer Configured | 312 | 61.7% of opens |
 | First Timer Completed | 90 | 17.8% of opens |
+
+_Data quality: stale; showing last good metrics from `2026-05-26T13:22:05+00:00`; latest read issue: `http_504`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -154,16 +156,16 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26"]
+    x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26"]
     y-axis "Downloads"
-    line [59 , 59 , 59 , 59 , 59 , 60 , 60 , 60 , 60 , 60 , 60 , 60 , 60 , 60]
-    line [410 , 418 , 429 , 439 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438]
+    line [59 , 59 , 59 , 59 , 60 , 60 , 60 , 60 , 60 , 60 , 60 , 60 , 60 , 60]
+    line [418 , 429 , 439 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438 , 438]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26"]
+    x-axis ["2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-25" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26" , "2026-05-26"]
     y-axis "Users"
     line [7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7 , 7]
 ```
@@ -193,4 +195,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-26T13:22:07+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-26T14:24:07+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
