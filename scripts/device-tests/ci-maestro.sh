@@ -9,7 +9,6 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_ROOT="$(CDPATH= cd -- "${SCRIPT_DIR}/../.." && pwd)"
 
 adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
-adb shell pm clear com.iganapolsky.randomtimer 2>/dev/null || true
 
 cd "${REPO_ROOT}/native-android"
 chmod +x gradlew
@@ -21,7 +20,14 @@ echo "== Android Compose smoke (TimerSetupSmokeTest) =="
   -PenableFirebasePlugins=false \
   -Pandroid.testInstrumentationRunnerArguments.class=com.iganapolsky.randomtimer.ui.TimerSetupSmokeTest
 
-echo "== Android Maestro smoke (ci-smoke-test.yaml) =="
+echo "== Android Maestro smoke (ci-smoke-emulator.yaml) =="
+APK="${REPO_ROOT}/native-android/app/build/outputs/apk/debug/app-debug.apk"
+if [ ! -f "${APK}" ]; then
+  echo "Debug APK missing; assembling..."
+  ./gradlew assembleDebug --no-daemon -q -PenableFirebasePlugins=false
+fi
+adb install -r -d "${APK}" || adb install -r "${APK}"
+
 if ! command -v maestro >/dev/null 2>&1; then
   curl -Ls "https://get.maestro.mobile.dev" | bash
 fi
@@ -30,4 +36,4 @@ export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-180000}
 export MAESTRO_DISABLE_ANALYTICS=true
 
 cd "${REPO_ROOT}"
-maestro test .maestro/ci-smoke-test.yaml
+maestro test .maestro/ci-smoke-emulator.yaml

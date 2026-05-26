@@ -1,0 +1,25 @@
+appId: com.iganapolsky.randomtimer
+---
+# CI emulator: no clearState — Maestro cannot relaunch after wipe on API 30 runners.
+# App data is reset by adb install -r in ci-maestro.sh before this flow runs.
+- launchApp
+- waitForAnimationToEnd
+
+- tapOn:
+    text: 'Allow'
+    optional: true
+- tapOn:
+    text: 'While using the app'
+    optional: true
+
+- extendedWaitUntil:
+    visible:
+      id: 'start_timer'
+    timeout: 120000
+
+- tapOn:
+    id: 'start_timer'
+
+- assertVisible:
+    text: 'Pause'
+    optional: true
