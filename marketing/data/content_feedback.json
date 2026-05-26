@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-05-26T20:41:28+00:00",
+  "generated_at": "2026-05-26T21:18:12+00:00",
   "status": "ok",
   "onboarding_funnel": {
-    "first_open": 518,
+    "first_open": 522,
     "first_timer_configured": 312,
     "first_timer_completed": 89,
-    "open_to_configured_rate": 0.6023,
+    "open_to_configured_rate": 0.5977,
     "configured_to_completed_rate": 0.2853,
-    "open_to_completed_rate": 0.1718,
+    "open_to_completed_rate": 0.1705,
     "window_days": 30
   },
   "top_campaigns_by_activation": [],
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-05-26T20:41:28+00:00",
+    "last_attempt_generated_at": "2026-05-26T21:18:12+00:00",
     "last_good_generated_at": "",
     "reason": ""
   }
