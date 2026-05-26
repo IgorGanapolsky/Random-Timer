@@ -1,0 +1,4 @@
+# Maestro workspace config — shared baseline for local runs and CI.
+# https://maestro.mobile.dev/cli/workspace-configuration
+flows:
+  - .maestro

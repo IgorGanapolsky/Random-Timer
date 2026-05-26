@@ -3,8 +3,13 @@ appId: com.igorganapolsky.randomtimer
 # Smoke test: Tapping circle during alarm silences and stays on timer screen
 - launchApp
 
-# Start timer with minimum range so it fires quickly
-- tapOn: 'Start Timer'
+# Start timer (first-run CTA vs returning user)
+- tapOn:
+    text: 'Start First Drill'
+    optional: true
+- tapOn:
+    text: 'Start Timer'
+    optional: true
 
 # Wait for alarm to trigger (timer should fire within the configured range)
 - assertVisible:

@@ -9,6 +9,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+export DEVICE_TESTS_REPO_ROOT="$PROJECT_ROOT"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 
 SKIP_INSTALL=false
 ADB_ONLY=false
@@ -25,7 +28,10 @@ for arg in "$@"; do
   case $arg in
     --skip-install) SKIP_INSTALL=true ;;
     --adb-only) ADB_ONLY=true ;;
-    --maestro-only) MAESTRO_ONLY=true ;;
+    --maestro-only)
+      MAESTRO_ONLY=true
+      SKIP_INSTALL=true
+      ;;
     --help|-h)
       echo "Usage: $0 [--skip-install] [--adb-only] [--maestro-only]"
       echo ""
@@ -57,16 +63,24 @@ echo -e "  ${GREEN}Device connected${RESET} ($DEVICE_COUNT device(s))"
 # Install debug APK
 if [ "$SKIP_INSTALL" = false ]; then
   echo -e "  Building and installing debug APK..."
-  cd "$PROJECT_ROOT/native-android" && ./gradlew installDebug --no-daemon -q
-  echo -e "  ${GREEN}APK installed${RESET}"
+  ensure_android_java
+  disable_gradle_daemon_jvm_props
+  trap restore_gradle_daemon_jvm_props EXIT
+  cd "$PROJECT_ROOT/native-android" && ./gradlew --stop 2>/dev/null || true
+  cd "$PROJECT_ROOT/native-android" && ./gradlew assembleDebug --no-daemon -q \
+    -Dorg.gradle.java.home="$JAVA_HOME"
+  APK_PATH="$PROJECT_ROOT/native-android/app/build/outputs/apk/debug/app-debug.apk"
+  adb install -r -d "$APK_PATH" >/dev/null
+  echo -e "  ${GREEN}APK installed${RESET} (adb install -r)"
 fi
 
 # Grant runtime permissions
 adb shell pm grant com.iganapolsky.randomtimer android.permission.POST_NOTIFICATIONS 2>/dev/null || true
 echo -e "  ${GREEN}Permissions granted${RESET}"
 
-# Clean up any running timer
+# Clean up any running timer (uninstall when debug signature changed)
 adb shell am force-stop com.iganapolsky.randomtimer 2>/dev/null || true
+adb uninstall com.iganapolsky.randomtimer 2>/dev/null || true
 sleep 1
 
 # ── Phase 2: ADB Tests ──
@@ -107,10 +121,19 @@ if [ "$ADB_ONLY" = false ]; then
   echo -e "\n${CYAN}Phase 3: Maestro Flows${RESET}"
 
   if command -v maestro &>/dev/null; then
+    require_java
     MAESTRO_DIR="$PROJECT_ROOT/.maestro"
     MAESTRO_FLOWS=(
+      "ci-smoke-test.yaml"
       "smoke-test.yaml"
       "cross-app-return.yaml"
+      "persistence-test.yaml"
+      "paused-timer-background-shows-notification.yaml"
+      "paused-timer-cannot-show-setup.yaml"
+      "alarm-notification-stop-android.yaml"
+      "activation-banner-dismiss-android.yaml"
+      "activation-smoke-android.yaml"
+      "regression-pro-locks-visible-android.yaml"
     )
 
     for flow in "${MAESTRO_FLOWS[@]}"; do
