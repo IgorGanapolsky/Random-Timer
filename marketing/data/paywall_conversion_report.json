@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-26T21:17:37+00:00",
+  "generated_at": "2026-05-26T22:01:30+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -250,8 +250,8 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2677,
-      "users": 287
+      "changes": 2691,
+      "users": 288
     },
     {
       "setting_name": "alarm_duration",
@@ -260,8 +260,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2036,
-      "users": 269
+      "changes": 2048,
+      "users": 270
     },
     {
       "setting_name": "sound_type",
