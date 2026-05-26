@@ -93,7 +93,7 @@ Local `run-all.sh` runs **Maestro YAML** flows. That is a **parity gap**: green 
 - [x] `scripts/device-tests/bootstrap-macos.sh` — JDK 21, Maestro, remove daemon JVM pin
 - [x] `scripts/device-tests/lib/common.sh` — Java + Gradle daemon pin bypass
 - [x] `run-ios-xctest.sh` — local iOS E2E without Maestro device discovery
-- [x] `ci-maestro.sh` — Compose smoke + Maestro `ci-smoke-test.yaml`
+- [x] `ci-maestro.sh` — Compose smoke + Maestro `ci-smoke-emulator.yaml` (no `clearState` on API 30 emulator)
 - [x] `device-tests.yml` — Java **21**; job renamed **Compose + Maestro Smoke**
 
 ### Phase B — Honest gates (in progress)
