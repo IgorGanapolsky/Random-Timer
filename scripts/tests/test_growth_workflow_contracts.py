@@ -21,7 +21,7 @@ ANALYTICS_WORKFLOW = ROOT / ".github/workflows/analytics.yml"
 EXECUTIVE_METRICS_WORKFLOW = ROOT / ".github/workflows/executive-metrics.yml"
 PLAY_IAP_READBACK_WORKFLOW = ROOT / ".github/workflows/play-iap-product-readback.yml"
 WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
-WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
+ACTIONS_BUDGET_DOC = ROOT / "docs/ACTIONS_BUDGET.md"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
 AGENTS_DOC = ROOT / "AGENTS.md"
 ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
@@ -423,6 +423,9 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     assert "native-ios/build/device-tests-ios" not in source
     assert "regression-free-sound-preview-ios.yaml" in ios_script
     assert "regression-sound-arsenal-paywall-ios.yaml" in ios_script
+    assert "CI_IOS_DEVICE_TIER" in ios_script
+    assert "CI_IOS_DEVICE_TIER:" in source
+    assert "workflow_dispatch' && 'full' || 'smoke'" in source
     assert "retry_agent_device_capture" in ios_script
     assert "AGENT_DEVICE_SESSION" in ios_script
     assert "MAESTRO_DRIVER_STARTUP_TIMEOUT=300000" in ios_script
@@ -609,3 +612,15 @@ def test_ci_crashlytics_job_uses_dedicated_runtime_secret_and_is_not_best_effort
     assert "google-auth==" in crashlytics_section
     assert "Missing CRASHLYTICS_SERVICE_ACCOUNT_JSON secret" in crashlytics_section
     assert "continue-on-error: true" not in crashlytics_section
+
+
+def test_actions_budget_throttles_high_frequency_schedules():
+    wiki = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
+    watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(encoding="utf-8")
+    resolve = (ROOT / ".github/workflows/resolve-bot-comments.yml").read_text(encoding="utf-8")
+
+    assert "cron: '0 */6 * * *'" in wiki
+    assert "cron: '0 */6 * * *'" in watcher
+    assert "schedule:" not in resolve.split("workflow_dispatch:", 1)[0]
+    assert ACTIONS_BUDGET_DOC.exists()
+    assert "CI_IOS_DEVICE_TIER" in ACTIONS_BUDGET_DOC.read_text(encoding="utf-8")

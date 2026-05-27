@@ -3,7 +3,7 @@ name: Stack Overflow hourly triage digest
 # Read-only: fetches public Atom tag feeds, uploads markdown + RSS subscription list. Does not post to SO.
 on:
   schedule:
-    - cron: '12 * * * *' # Every hour at :12 UTC
+    - cron: '12 14 * * *' # Daily 14:12 UTC (was hourly — Actions budget)
   workflow_dispatch:
 
 permissions:

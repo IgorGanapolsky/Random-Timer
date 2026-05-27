@@ -2,7 +2,7 @@ name: Store Release Watcher
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */6 * * *' # Was */30 — shared Actions budget
   workflow_dispatch:
     inputs:
       version:
