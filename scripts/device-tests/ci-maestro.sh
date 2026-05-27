@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # ci-maestro.sh — Android device smoke on CI emulator.
 # 1) Compose instrumentation (stable on API 30 emulator)
-# 2) Maestro ci-smoke-test.yaml (parity with local Maestro flows)
+# 2) Maestro ci-smoke-emulator.yaml (parity with local Maestro flows)
 # Called by .github/workflows/device-tests.yml
 set -eu
 

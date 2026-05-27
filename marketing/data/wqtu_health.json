@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-05-26T17:05:53+00:00",
+  "generated_at": "2026-05-27T14:44:56+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 7,
+    "wqtu": 6,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
   },
   "engagement": {
-    "dau": 57,
-    "wau": 162
+    "dau": 39,
+    "wau": 158
   },
   "abandon_rate": {
-    "started_30d": 1714,
-    "completed_30d": 657,
-    "abandon_rate_pct": 61.7
+    "started_30d": 1730,
+    "completed_30d": 654,
+    "abandon_rate_pct": 62.2
   },
   "monetization_funnel": {
-    "paywall_viewed_users": 109,
-    "purchase_attempted_users": 5,
+    "paywall_viewed_users": 110,
+    "purchase_attempted_users": 4,
     "purchase_succeeded_users": 0,
     "conversion_pct": 0.0
   },
@@ -46,111 +46,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-05-23T16:20:48+00:00",
-      "wqtu": 8,
-      "dau": 24
-    },
-    {
-      "timestamp": "2026-05-23T16:47:41+00:00",
-      "wqtu": 8,
-      "dau": 24
-    },
-    {
-      "timestamp": "2026-05-23T17:22:11+00:00",
-      "wqtu": 8,
-      "dau": 25
-    },
-    {
-      "timestamp": "2026-05-23T17:49:07+00:00",
-      "wqtu": 8,
-      "dau": 25
-    },
-    {
-      "timestamp": "2026-05-23T18:19:49+00:00",
-      "wqtu": 8,
-      "dau": 23
-    },
-    {
-      "timestamp": "2026-05-23T18:48:28+00:00",
-      "wqtu": 8,
-      "dau": 21
-    },
-    {
-      "timestamp": "2026-05-23T19:27:31+00:00",
-      "wqtu": 8,
-      "dau": 22
-    },
-    {
-      "timestamp": "2026-05-23T19:54:02+00:00",
-      "wqtu": 7,
-      "dau": 22
-    },
-    {
-      "timestamp": "2026-05-23T20:17:51+00:00",
-      "wqtu": 7,
-      "dau": 22
-    },
-    {
-      "timestamp": "2026-05-23T20:46:14+00:00",
-      "wqtu": 7,
-      "dau": 21
-    },
-    {
-      "timestamp": "2026-05-23T21:17:27+00:00",
-      "wqtu": 7,
-      "dau": 20
-    },
-    {
-      "timestamp": "2026-05-23T21:46:52+00:00",
-      "wqtu": 7,
-      "dau": 18
-    },
-    {
-      "timestamp": "2026-05-23T22:17:25+00:00",
-      "wqtu": 7,
-      "dau": 17
-    },
-    {
-      "timestamp": "2026-05-23T22:46:46+00:00",
-      "wqtu": 6,
-      "dau": 16
-    },
-    {
-      "timestamp": "2026-05-23T23:18:57+00:00",
-      "wqtu": 6,
-      "dau": 16
-    },
-    {
-      "timestamp": "2026-05-23T23:47:26+00:00",
-      "wqtu": 6,
-      "dau": 16
-    },
-    {
-      "timestamp": "2026-05-24T00:33:10+00:00",
-      "wqtu": 6,
-      "dau": 15
-    },
-    {
-      "timestamp": "2026-05-24T01:26:27+00:00",
-      "wqtu": 6,
-      "dau": 15
-    },
-    {
-      "timestamp": "2026-05-24T02:20:57+00:00",
-      "wqtu": 5,
-      "dau": 15
-    },
-    {
-      "timestamp": "2026-05-24T03:45:28+00:00",
-      "wqtu": 5,
-      "dau": 15
-    },
-    {
-      "timestamp": "2026-05-24T05:11:36+00:00",
-      "wqtu": 5,
-      "dau": 15
-    },
     {
       "timestamp": "2026-05-24T06:26:22+00:00",
       "wqtu": 5,
@@ -495,6 +390,111 @@
       "timestamp": "2026-05-26T17:05:53+00:00",
       "wqtu": 7,
       "dau": 57
+    },
+    {
+      "timestamp": "2026-05-26T18:08:50+00:00",
+      "wqtu": 7,
+      "dau": 58
+    },
+    {
+      "timestamp": "2026-05-26T19:04:41+00:00",
+      "wqtu": 7,
+      "dau": 60
+    },
+    {
+      "timestamp": "2026-05-26T19:55:14+00:00",
+      "wqtu": 7,
+      "dau": 62
+    },
+    {
+      "timestamp": "2026-05-26T20:41:06+00:00",
+      "wqtu": 7,
+      "dau": 55
+    },
+    {
+      "timestamp": "2026-05-26T21:17:51+00:00",
+      "wqtu": 7,
+      "dau": 51
+    },
+    {
+      "timestamp": "2026-05-26T22:01:47+00:00",
+      "wqtu": 7,
+      "dau": 49
+    },
+    {
+      "timestamp": "2026-05-26T22:42:35+00:00",
+      "wqtu": 6,
+      "dau": 43
+    },
+    {
+      "timestamp": "2026-05-26T23:11:10+00:00",
+      "wqtu": 6,
+      "dau": 31
+    },
+    {
+      "timestamp": "2026-05-26T23:39:39+00:00",
+      "wqtu": 6,
+      "dau": 33
+    },
+    {
+      "timestamp": "2026-05-27T00:07:55+00:00",
+      "wqtu": 6,
+      "dau": 35
+    },
+    {
+      "timestamp": "2026-05-27T01:19:37+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T02:20:05+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T03:45:54+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T05:29:00+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T06:52:42+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T08:18:26+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T09:46:08+00:00",
+      "wqtu": 6,
+      "dau": 36
+    },
+    {
+      "timestamp": "2026-05-27T11:10:45+00:00",
+      "wqtu": 6,
+      "dau": 38
+    },
+    {
+      "timestamp": "2026-05-27T12:22:33+00:00",
+      "wqtu": 6,
+      "dau": 39
+    },
+    {
+      "timestamp": "2026-05-27T13:42:26+00:00",
+      "wqtu": 6,
+      "dau": 39
+    },
+    {
+      "timestamp": "2026-05-27T14:44:56+00:00",
+      "wqtu": 6,
+      "dau": 39
     }
   ]
 }

@@ -201,6 +201,8 @@ jobs:
         env:
           SIMULATOR_UDID: ${{ steps.sim.outputs.sim_id }}
           MAESTRO_FLOW_TIMEOUT_SECONDS: "180"
+          # Smoke on PR saves macOS minutes; full paywall regressions via workflow_dispatch.
+          CI_IOS_DEVICE_TIER: ${{ github.event_name == 'workflow_dispatch' && 'full' || 'smoke' }}
         run: bash scripts/device-tests/ci-maestro-ios.sh
 
       - name: Upload iOS device test artifacts
