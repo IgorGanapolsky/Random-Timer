@@ -65,6 +65,18 @@ class OperationalVerificationBundleTests(unittest.TestCase):
         self.assertEqual(summary["skip"], 1)
         self.assertEqual(summary["advisory_fail"], 1)
 
+    def test_asc_missing_version_is_advisory_not_blocking(self):
+        proc = unittest.mock.MagicMock()
+        proc.returncode = 1
+        proc.stdout = ""
+        proc.stderr = "❌ App Store version 1.3.42 not found for app id=6758355312\n"
+        with (
+            patch.object(bundle, "_has_asc_credentials", return_value=True),
+            patch.object(bundle.subprocess, "run", return_value=proc),
+        ):
+            result = bundle.check_asc_version_state("1.3.42")
+        self.assertEqual(result.status, "advisory_fail")
+
 
 if __name__ == "__main__":
     unittest.main()
