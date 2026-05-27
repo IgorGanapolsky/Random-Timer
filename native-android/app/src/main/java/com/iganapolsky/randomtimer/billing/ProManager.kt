@@ -108,9 +108,17 @@ class ProManager
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
         private var pendingPurchaseEntryPoint: String? = null
 
+        /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
+        private var pendingLaunchProductId: String? = null
+
         /** Captures the exact trial offer submitted to Google Play for the pending flow. */
         private var pendingPurchaseFreeTrialProductId: String? = null
         private var pendingPurchaseFreeTrialOfferToken: String? = null
+
+        private fun clearPendingPaywallLaunch() {
+            pendingPurchaseEntryPoint = null
+            pendingLaunchProductId = null
+        }
 
         init {
             connectAndRestore()
@@ -219,6 +227,7 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
+            pendingLaunchProductId = productID
             clearPendingTrialOffer()
             if (!ensureBillingReadyForPurchase()) {
                 trackPurchaseResult(
@@ -228,11 +237,17 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
                     debugMessage = "billing_not_ready",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
 
-            val productDetails = cachedProductDetails[productID] ?: fetchProductDetails(productID)
+            var productDetails = cachedProductDetails[productID] ?: fetchProductDetails(productID)
+            if (productDetails == null) {
+                delay(450)
+                cachedProductDetails.remove(productID)
+                reportedBillingProductNotFound.remove(productID)
+                productDetails = fetchProductDetails(productID)
+            }
             if (productDetails == null) {
                 trackPurchaseResult(
                     success = false,
@@ -241,12 +256,12 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "product_details_unavailable",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
             cachedProductDetails[productID] = productDetails
 
-            val selectedOffer =
+            var selectedOffer =
                 when (productID) {
                     ELITE_PRODUCT_ID ->
                         selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1Y")
@@ -255,6 +270,24 @@ class ProManager
                     else -> null
                 }
             if ((productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) && selectedOffer == null) {
+                delay(450)
+                cachedProductDetails.remove(productID)
+                reportedBillingProductNotFound.remove(productID)
+                val refreshed = fetchProductDetails(productID)
+                if (refreshed != null) {
+                    cachedProductDetails[productID] = refreshed
+                    productDetails = refreshed
+                    selectedOffer =
+                        when (productID) {
+                            ELITE_PRODUCT_ID ->
+                                selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1Y")
+                            MONTHLY_PRODUCT_ID ->
+                                selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1M")
+                            else -> null
+                        }
+                }
+            }
+            if ((productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) && selectedOffer == null) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -262,7 +295,7 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "subscription_offer_unavailable",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
 
@@ -313,7 +346,7 @@ class ProManager
                     responseCode = result.responseCode,
                     debugMessage = result.debugMessage,
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 clearPendingTrialOffer()
                 return false
             }
@@ -529,7 +562,14 @@ class ProManager
             }
             // Track purchase_failed for non-success outcomes (including cancellations)
             if (!hasPurchased) {
-                val failedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: "unknown"
+                val failedProductId =
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                        ?: "unknown"
                 val reason =
                     when (result.responseCode) {
                         BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
@@ -562,7 +602,14 @@ class ProManager
                 )
             }
             if (hasPurchased) {
-                val purchasedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: ""
+                val purchasedProductId =
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                        ?: ""
                 val revenueAmount = priceAmountFromCache(purchasedProductId)
                 analyticsService.track(
                     AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
@@ -604,7 +651,7 @@ class ProManager
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
             )
-            pendingPurchaseEntryPoint = null
+            clearPendingPaywallLaunch()
             clearPendingTrialOffer()
         }
 
