@@ -13,6 +13,9 @@ import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.service.TimerServiceControllerImpl
+import com.iganapolsky.randomtimer.monetization.AdMobRewardedAdPort
+import com.iganapolsky.randomtimer.monetization.RewardedAdPort
+import com.iganapolsky.randomtimer.monetization.RewardedAdUnlockStore
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import dagger.Binds
 import dagger.Module
@@ -57,6 +60,16 @@ object AppModule {
     fun provideAppUpdateManager(
         @ApplicationContext context: Context,
     ): AppUpdateManager = AppUpdateManagerFactory.create(context)
+
+    @Provides
+    @Singleton
+    fun provideRewardedAdUnlockStore(
+        @ApplicationContext context: Context,
+    ): RewardedAdUnlockStore = RewardedAdUnlockStore(context)
+
+    @Provides
+    @Singleton
+    fun provideRewardedAdPort(): RewardedAdPort = AdMobRewardedAdPort()
 }
 
 @Module

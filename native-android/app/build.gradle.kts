@@ -59,6 +59,15 @@ android {
             "PRO_AUDIO_MANIFEST_URL",
             "\"${project.findProperty("PRO_AUDIO_MANIFEST_URL") ?: "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/latest.json"}\"",
         )
+        val admobAppId =
+            System.getenv("ADMOB_APP_ID_ANDROID")
+                ?: "ca-app-pub-5173650670360699~4427145410"
+        val admobRewardedUnitId =
+            System.getenv("ADMOB_REWARDED_UNIT_ID_ANDROID")
+                ?: "ca-app-pub-5173650670360699/8693693481"
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+        buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$admobRewardedUnitId\"")
+        manifestPlaceholders["admobAppId"] = admobAppId
     }
 
     signingConfigs {
@@ -164,6 +173,9 @@ dependencies {
 
     // In-App Billing
     implementation(libs.play.billing)
+
+    // AdMob (rewarded ads; gated by PostHog flag at runtime)
+    implementation(libs.play.services.ads)
 
     // WorkManager
     implementation(libs.androidx.work.runtime)
