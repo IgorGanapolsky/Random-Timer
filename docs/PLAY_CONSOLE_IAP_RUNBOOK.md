@@ -7,7 +7,7 @@
 |------------|---------------------|
 | `pro_base` | One-time (INAPP) |
 | `elite_tactical` | Subscription (SUBS) |
-| `elite_tactical_monthly` | Subscription (SUBS), P1M |
+| `elite_tactical_monthly` | Logical paywall id only — **bill via `elite_tactical` P1M base plan** (Play has no active base plan on `elite_tactical_monthly`) |
 
 PostHog `billing_product_not_found` on Android means Play Billing returned none of these at runtime — fix in **Play Console**, not in app code alone.
 

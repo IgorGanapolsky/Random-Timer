@@ -370,8 +370,20 @@ class ProManager
         private suspend fun fetchAllProductDetails() {
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
-            fetchProductDetails(MONTHLY_PRODUCT_ID)
+            syncMonthlyCatalogFromElite()
             trackProductCatalogStatus()
+        }
+
+        /** Play Console bills monthly via `elite_tactical` P1M base plan, not orphan `elite_tactical_monthly`. */
+        private fun syncMonthlyCatalogFromElite() {
+            val eliteDetails = cachedProductDetails[ELITE_PRODUCT_ID]
+            if (eliteDetails != null &&
+                monthlyOfferAvailableFromEliteOffers(eliteDetails.toSubscriptionOffers())
+            ) {
+                cachedProductDetails[MONTHLY_PRODUCT_ID] = eliteDetails
+            } else {
+                cachedProductDetails.remove(MONTHLY_PRODUCT_ID)
+            }
         }
 
         suspend fun availablePaywallProductIds(): Set<String> {
@@ -401,8 +413,9 @@ class ProManager
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
+            val billingProductId = playBillingProductId(productID)
             val productType =
-                if (productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) {
+                if (billingProductId == ELITE_PRODUCT_ID) {
                     BillingClient.ProductType.SUBS
                 } else {
                     BillingClient.ProductType.INAPP
@@ -412,7 +425,7 @@ class ProManager
                 listOf(
                     QueryProductDetailsParams.Product
                         .newBuilder()
-                        .setProductId(productID)
+                        .setProductId(billingProductId)
                         .setProductType(productType)
                         .build(),
                 )
@@ -427,8 +440,14 @@ class ProManager
             val details = result.productDetailsList?.firstOrNull()
             if (details != null) {
                 cachedProductDetails[productID] = details
+                if (billingProductId != productID) {
+                    cachedProductDetails[billingProductId] = details
+                }
+                if (billingProductId == ELITE_PRODUCT_ID) {
+                    syncMonthlyCatalogFromElite()
+                }
             } else {
-                maybeReportBillingProductNotFound(productID, result.billingResult)
+                maybeReportBillingProductNotFound(billingProductId, result.billingResult)
             }
             return details
         }
@@ -818,6 +837,16 @@ internal data class SubscriptionOffer(
     val hasFreeTrial: Boolean
         get() = pricingPhases.any { it.isFree }
 }
+
+/** Maps paywall logical SKU to Play Billing product id (monthly → elite_tactical). */
+internal fun playBillingProductId(logicalProductId: String): String =
+    when (logicalProductId) {
+        ProManager.MONTHLY_PRODUCT_ID -> ProManager.ELITE_PRODUCT_ID
+        else -> logicalProductId
+    }
+
+internal fun monthlyOfferAvailableFromEliteOffers(offers: List<SubscriptionOffer>): Boolean =
+    selectSubscriptionOfferByPeriod(offers, "P1M") != null
 
 /** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M"). */
 internal fun selectSubscriptionOfferByPeriod(
