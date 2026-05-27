@@ -77,6 +77,10 @@ temp/
 venv/
 .venv-chatterbox/
 native-android/.venv-chatterbox/
+native-android/.venv-chatterbox/
+native-android/.local-jbr/
+native-android/.local-jbr-cache/
+native-android/gradle/gradle-daemon-jvm.properties.device-tests-bak
 
 # Python bytecode
 __pycache__/

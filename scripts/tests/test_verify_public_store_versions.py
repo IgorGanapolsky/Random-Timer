@@ -210,3 +210,31 @@ def test_resolve_expected_versions_explicit_fills_missing_from_repo(tmp_path: Pa
     assert label == "explicit_cli"
     assert ios_e == "1.0.0"
     assert android_e == "8.8.8"
+
+
+def test_poll_until_public_fail_fast_on_stable_mismatch(monkeypatch):
+    mismatch = vps.StoreVersionResult(
+        "ios",
+        False,
+        "VERSION_MISMATCH",
+        "https://apps.apple.com/app/id1",
+        "1.3.20",
+        "1.3.19",
+        "mismatch",
+    )
+    calls = {"n": 0}
+
+    def verify_once():
+        calls["n"] += 1
+        return [mismatch]
+
+    monkeypatch.setattr(vps.time, "sleep", lambda *_a, **_k: None)
+    results = vps.poll_until_public(
+        verify_once,
+        timeout=60,
+        poll_interval=1,
+        fail_fast_on_stable_mismatch=True,
+    )
+    assert calls["n"] == 2
+    assert results[0].status == "VERSION_MISMATCH_STABLE"
+    assert "stable mismatch" in results[0].details

@@ -102,14 +102,33 @@ set_test_timer_config() {
   sleep 0.3
 }
 
-# Start timer via UI: launch app, set short range, and tap "Start Timer".
+# Tap primary start CTA (first-run vs returning user).
+tap_start_timer_button() {
+  if wait_for_text "Start First Drill" 3; then
+    tap_text "Start First Drill"
+    return 0
+  fi
+  if wait_for_text "Start Timer" 3; then
+    tap_text "Start Timer"
+    return 0
+  fi
+  # Compose testTag exposed as view id on debug builds
+  if adb shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1 \
+    && adb shell cat /sdcard/window_dump.xml 2>/dev/null | grep -q 'resource-id="start_timer"'; then
+    adb shell input tap 540 2200
+    return 0
+  fi
+  echo "Start button not found (Start First Drill / Start Timer / start_timer)" >&2
+  return 1
+}
+
+# Start timer via UI: launch app, set short range, and tap start.
 start_timer_via_ui() {
   foreground_app
   sleep 2
-  wait_for_text "Start Timer" 10 || { echo "Start Timer button not found" >&2; return 1; }
   set_test_timer_config
   sleep 1
-  tap_text "Start Timer"
+  tap_start_timer_button || return 1
   sleep 1
 }
 
