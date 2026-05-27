@@ -144,3 +144,4 @@ native-android/gradle/gradle-daemon-jvm.properties
 
 # Local-only evidence artifacts (per-checkout screenshots, manual capture)
 evidence/
+marketing/data/operational_verification_bundle.json

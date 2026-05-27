@@ -1,0 +1,109 @@
+name: Operational Verification Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: "Expected semver (blank = latest GitHub release tag)"
+        required: false
+        default: ""
+      public_timeout:
+        description: "Tier-2 public store single-poll timeout (seconds)"
+        required: false
+        default: "10"
+  schedule:
+    - cron: "15 */6 * * *"
+  workflow_run:
+    workflows: ["Native App Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Operational verification bundle
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install requests==2.32.5
+
+      - name: Write Play service account (if secret present)
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
+            KEY_FILE="${RUNNER_TEMP}/play-service-account.json"
+            umask 077
+            printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$KEY_FILE"
+            chmod 600 "$KEY_FILE"
+            echo "GOOGLE_PLAY_JSON_KEY_PATH=$KEY_FILE" >> "$GITHUB_ENV"
+          fi
+
+      - name: Write ASC API key (if secrets present)
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${APPSTORE_PRIVATE_KEY:-}" ] && [ -n "${APPSTORE_KEY_ID:-}" ]; then
+            KEY_FILE="${RUNNER_TEMP}/asc_key.p8"
+            umask 077
+            printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_FILE"
+            chmod 600 "$KEY_FILE"
+            echo "APPSTORE_PRIVATE_KEY_PATH=$KEY_FILE" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run operational verification bundle
+        id: bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          EXPECTED_VERSION: ${{ github.event.inputs.expected_version || '' }}
+          PUBLIC_TIMEOUT: ${{ github.event.inputs.public_timeout || '10' }}
+        run: |
+          set -euo pipefail
+          CMD=(python3 scripts/operational_verification_bundle.py --public-timeout "$PUBLIC_TIMEOUT")
+          if [ -n "$EXPECTED_VERSION" ]; then
+            CMD+=(--expected-version "$EXPECTED_VERSION")
+          fi
+          "${CMD[@]}"
+
+      - name: Upload bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operational-verification-bundle
+          path: marketing/data/operational_verification_bundle.json
+          if-no-files-found: error
+
+      - name: Summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          p = Path("marketing/data/operational_verification_bundle.json")
+          d = json.loads(p.read_text())
+          s = d["summary"]
+          print(f"blocking_failures={s['blocking_failures']} pass={s['pass']} fail={s['fail']}")
+          for c in d["checks"]:
+              if c["status"] in ("fail", "advisory_fail", "skip"):
+                  print(f"  {c['status']}: {c['check_id']}")
+          if s["blocking_failures"] > 0:
+              sys.exit(1)
+          PY

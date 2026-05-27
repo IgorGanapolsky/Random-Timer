@@ -79,7 +79,30 @@ When the meaning of a field changes:
 - Never commit tokens, PATs, or private keys. Rotate anything exposed in logs or chat.
 - Verify `.env` key **names** and CI secret **names** exist before claiming “no access.”
 
-## 8. CEO veto
+## 8. Operational verification bundle (full session proof)
+
+Run one command to produce a single JSON artifact with **every check**, its **tier**, **metric_field_id**, **semantics**, **ground_truth** flag, **command**, and **evidence**:
+
+```bash
+python3 scripts/operational_verification_bundle.py
+# writes marketing/data/operational_verification_bundle.json
+```
+
+CI: workflow `operational-verification-bundle.yml` (on schedule, `workflow_dispatch`, and after successful `Native App Release`). Download artifact `operational-verification-bundle` for redacted session proof.
+
+**How to read results:**
+
+| `status` | Meaning |
+| --- | --- |
+| `pass` | Check succeeded for its tier |
+| `fail` | **Blocking** — do not claim “fixed” for that dimension (e.g. Play IAP catalog broken) |
+| `advisory_fail` | Real gap but not a release gate (tier2 storefront lag, $0 purchases vs $100/day goal, stale snapshot) |
+| `skip` | Credentials not available in this environment |
+| `unverified` | Could not run (missing file, API error) |
+
+**Revenue / $100 day:** use `revenue_goal` + live `posthog_paywall_purchase_success` check. PostHog is a **proxy**; store ledger is **not wired** in the executive snapshot (`store_ledger_metric_id: not_wired_in_executive_snapshot`). Never equate `pass` on GitHub release with hitting the business goal.
+
+## 9. CEO veto
 
 The CEO may require explicit approval for any irreversible or high-blast-radius action. Agents must honor that when stated for a task.
 
