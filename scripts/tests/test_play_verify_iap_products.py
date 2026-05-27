@@ -41,7 +41,7 @@ class PlayVerifyIapProductsTests(unittest.TestCase):
         products = client.list_one_time_products(service)
         self.assertEqual(products[0]["product_id"], "pro_base")
 
-    def test_subscription_purchase_blockers_requires_active_elite_base_plans(self):
+    def test_subscription_purchase_blockers_requires_monthly_somewhere(self):
         subscriptions = [
             {
                 "product_id": "elite_tactical",
@@ -50,6 +50,20 @@ class PlayVerifyIapProductsTests(unittest.TestCase):
         ]
         blockers = client.subscription_purchase_blockers(subscriptions)
         self.assertTrue(any("monthly" in item["reason"] for item in blockers))
+
+    def test_subscription_purchase_blockers_ok_when_monthly_on_elite_tactical_monthly(self):
+        subscriptions = [
+            {
+                "product_id": "elite_tactical",
+                "base_plans": [{"base_plan_id": "annual", "state": "ACTIVE"}],
+            },
+            {
+                "product_id": "elite_tactical_monthly",
+                "base_plans": [{"base_plan_id": "monthly", "state": "ACTIVE"}],
+            },
+        ]
+        blockers = client.subscription_purchase_blockers(subscriptions)
+        self.assertEqual(blockers, [])
 
     def test_subscription_purchase_blockers_ok_when_elite_annual_and_monthly_active(self):
         subscriptions = [

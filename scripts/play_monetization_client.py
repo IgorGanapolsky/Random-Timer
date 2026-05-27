@@ -8,9 +8,10 @@ from typing import Any
 
 PACKAGE = "com.iganapolsky.randomtimer"
 REQUIRED_ONE_TIME = ("pro_base",)
-# Monthly paywall bills via elite_tactical P1M base plan (see ProManager.playBillingProductId).
-REQUIRED_SUBSCRIPTIONS = ("elite_tactical",)
-REQUIRED_ELITE_BASE_PLAN_IDS = ("annual", "monthly")
+# App bills monthly via elite_tactical_monthly when Play hosts P1M there (see ProManager).
+REQUIRED_SUBSCRIPTIONS = ("elite_tactical", "elite_tactical_monthly")
+REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID = "annual"
+REQUIRED_MONTHLY_BASE_PLAN_ID = "monthly"
 TARGET_ONE_TIME = "pro_base"
 # P2 scaffold — document SKUs; not required for verify until Play Console products exist.
 SCAFFOLD_DISCIPLINE_PACKS = (
@@ -155,15 +156,28 @@ def subscription_purchase_blockers(subscriptions: list[dict[str, Any]]) -> list[
     if elite is None:
         return blockers
 
-    active_plans = _active_base_plan_ids(elite)
-    for required_plan in REQUIRED_ELITE_BASE_PLAN_IDS:
-        if required_plan not in active_plans:
-            blockers.append(
-                {
-                    "product_id": "elite_tactical",
-                    "reason": f"missing_active_base_plan:{required_plan}",
-                }
-            )
+    elite_active = _active_base_plan_ids(elite)
+    if REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID not in elite_active:
+        blockers.append(
+            {
+                "product_id": "elite_tactical",
+                "reason": f"missing_active_base_plan:{REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID}",
+            }
+        )
+
+    monthly_on_elite = REQUIRED_MONTHLY_BASE_PLAN_ID in elite_active
+    monthly_sub = by_id.get("elite_tactical_monthly")
+    monthly_on_dedicated = (
+        monthly_sub is not None
+        and REQUIRED_MONTHLY_BASE_PLAN_ID in _active_base_plan_ids(monthly_sub)
+    )
+    if not monthly_on_elite and not monthly_on_dedicated:
+        blockers.append(
+            {
+                "product_id": "elite_tactical",
+                "reason": "missing_active_monthly_base_plan",
+            }
+        )
 
     return blockers
 
