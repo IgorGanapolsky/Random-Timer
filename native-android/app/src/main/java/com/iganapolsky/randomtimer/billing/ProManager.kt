@@ -370,19 +370,19 @@ class ProManager
         private suspend fun fetchAllProductDetails() {
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
-            syncMonthlyCatalogFromElite()
+            fetchProductDetails(MONTHLY_PRODUCT_ID)
+            syncMonthlyCatalogFromEliteFallback()
             trackProductCatalogStatus()
         }
 
-        /** Play Console bills monthly via `elite_tactical` P1M base plan, not orphan `elite_tactical_monthly`. */
-        private fun syncMonthlyCatalogFromElite() {
-            val eliteDetails = cachedProductDetails[ELITE_PRODUCT_ID]
-            if (eliteDetails != null &&
-                monthlyOfferAvailableFromEliteOffers(eliteDetails.toSubscriptionOffers())
-            ) {
+        /** Fallback when Play hosts P1M on `elite_tactical` instead of `elite_tactical_monthly`. */
+        private fun syncMonthlyCatalogFromEliteFallback() {
+            if (cachedProductDetails[MONTHLY_PRODUCT_ID] != null) {
+                return
+            }
+            val eliteDetails = cachedProductDetails[ELITE_PRODUCT_ID] ?: return
+            if (monthlyOfferAvailableFromEliteOffers(eliteDetails.toSubscriptionOffers())) {
                 cachedProductDetails[MONTHLY_PRODUCT_ID] = eliteDetails
-            } else {
-                cachedProductDetails.remove(MONTHLY_PRODUCT_ID)
             }
         }
 
@@ -444,7 +444,7 @@ class ProManager
                     cachedProductDetails[billingProductId] = details
                 }
                 if (billingProductId == ELITE_PRODUCT_ID) {
-                    syncMonthlyCatalogFromElite()
+                    syncMonthlyCatalogFromEliteFallback()
                 }
             } else {
                 maybeReportBillingProductNotFound(billingProductId, result.billingResult)
@@ -838,12 +838,8 @@ internal data class SubscriptionOffer(
         get() = pricingPhases.any { it.isFree }
 }
 
-/** Maps paywall logical SKU to Play Billing product id (monthly → elite_tactical). */
-internal fun playBillingProductId(logicalProductId: String): String =
-    when (logicalProductId) {
-        ProManager.MONTHLY_PRODUCT_ID -> ProManager.ELITE_PRODUCT_ID
-        else -> logicalProductId
-    }
+/** Maps paywall logical SKU to Play Billing product id (identity — monthly uses Play catalog SKU). */
+internal fun playBillingProductId(logicalProductId: String): String = logicalProductId
 
 internal fun monthlyOfferAvailableFromEliteOffers(offers: List<SubscriptionOffer>): Boolean =
     selectSubscriptionOfferByPeriod(offers, "P1M") != null

@@ -5,13 +5,13 @@ import org.junit.Test
 
 class ProManagerPlayBillingProductIdTest {
     @Test
-    fun `playBillingProductId maps monthly logical id to elite_tactical`() {
+    fun `playBillingProductId uses Play catalog product ids`() {
         assertThat(playBillingProductId(ProManager.MONTHLY_PRODUCT_ID))
-            .isEqualTo(ProManager.ELITE_PRODUCT_ID)
+            .isEqualTo(ProManager.MONTHLY_PRODUCT_ID)
     }
 
     @Test
-    fun `playBillingProductId leaves other ids unchanged`() {
+    fun `playBillingProductId leaves elite and base ids unchanged`() {
         assertThat(playBillingProductId(ProManager.ELITE_PRODUCT_ID))
             .isEqualTo(ProManager.ELITE_PRODUCT_ID)
         assertThat(playBillingProductId(ProManager.BASE_PRODUCT_ID))

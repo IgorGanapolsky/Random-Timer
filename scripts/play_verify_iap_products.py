@@ -9,7 +9,8 @@ import sys
 
 from scripts.play_monetization_client import (
     PACKAGE,
-    REQUIRED_ELITE_BASE_PLAN_IDS,
+    REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID,
+    REQUIRED_MONTHLY_BASE_PLAN_ID,
     REQUIRED_ONE_TIME,
     REQUIRED_SUBSCRIPTIONS,
     build_android_publisher_service,
@@ -51,7 +52,8 @@ def main() -> int:
         "required_missing": missing,
         "subscription_purchase_blockers": blockers,
         "subscription_purchase_warnings": warnings,
-        "required_elite_base_plan_ids": list(REQUIRED_ELITE_BASE_PLAN_IDS),
+        "required_elite_annual_base_plan_id": REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID,
+        "required_monthly_base_plan_id": REQUIRED_MONTHLY_BASE_PLAN_ID,
         "status": (
             "ok"
             if not missing and not blockers
