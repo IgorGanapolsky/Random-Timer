@@ -40,4 +40,14 @@
 
 - **ASN V2 refunds:** `refunds.asn_v2_*` requires `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_KV_NAMESPACE_ID` (wired in CI; see `server/apple-webhook`).
 
+## `operational_verification_bundle.json` (generated)
+
+**What it is:** One JSON file with every release/revenue/store check, each with `metric_field_id`, `semantics`, `ground_truth`, `command`, and `evidence`. **Not committed** (see `.gitignore`); CI uploads artifact `operational-verification-bundle`.
+
+```bash
+python3 scripts/operational_verification_bundle.py
+```
+
+See `docs/OPERATIONAL_RELIABILITY.md` §8 and workflow `operational-verification-bundle.yml`.
+
 See also `docs/OPERATIONAL_RELIABILITY.md` and `docs/OBSERVABILITY.md`.
