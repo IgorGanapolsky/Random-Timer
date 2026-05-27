@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-27T02:19:43+00:00",
+  "generated_at": "2026-05-27T03:45:40+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -245,7 +245,7 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 3971,
+      "changes": 3828,
       "users": 33
     },
     {
