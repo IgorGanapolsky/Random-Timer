@@ -43,8 +43,11 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${GOOGLE_PLAY_JSON_KEY:-}" ]; then
-            printf '%s' "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
-            echo "GOOGLE_PLAY_JSON_KEY_PATH=/tmp/play-service-account.json" >> "$GITHUB_ENV"
+            KEY_FILE="${RUNNER_TEMP}/play-service-account.json"
+            umask 077
+            printf '%s' "$GOOGLE_PLAY_JSON_KEY" > "$KEY_FILE"
+            chmod 600 "$KEY_FILE"
+            echo "GOOGLE_PLAY_JSON_KEY_PATH=$KEY_FILE" >> "$GITHUB_ENV"
           fi
 
       - name: Write ASC API key (if secrets present)
@@ -55,11 +58,15 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${APPSTORE_PRIVATE_KEY:-}" ] && [ -n "${APPSTORE_KEY_ID:-}" ]; then
-            printf '%s' "$APPSTORE_PRIVATE_KEY" > /tmp/asc_key.p8
-            echo "APPSTORE_PRIVATE_KEY_PATH=/tmp/asc_key.p8" >> "$GITHUB_ENV"
+            KEY_FILE="${RUNNER_TEMP}/asc_key.p8"
+            umask 077
+            printf '%s' "$APPSTORE_PRIVATE_KEY" > "$KEY_FILE"
+            chmod 600 "$KEY_FILE"
+            echo "APPSTORE_PRIVATE_KEY_PATH=$KEY_FILE" >> "$GITHUB_ENV"
           fi
 
       - name: Run operational verification bundle
+        id: bundle
         env:
           GH_TOKEN: ${{ github.token }}
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
@@ -73,13 +80,10 @@ jobs:
           if [ -n "$EXPECTED_VERSION" ]; then
             CMD+=(--expected-version "$EXPECTED_VERSION")
           fi
-          "${CMD[@]}" || EC=$?
-          EC=${EC:-0}
-          echo "bundle_exit_code=$EC" >> "$GITHUB_OUTPUT"
-          # Tier-2 and revenue may fail while tier0 passed — upload evidence regardless.
-          exit 0
+          "${CMD[@]}"
 
       - name: Upload bundle artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: operational-verification-bundle
@@ -87,9 +91,11 @@ jobs:
           if-no-files-found: error
 
       - name: Summary
+        if: always()
         run: |
           python3 - <<'PY'
           import json
+          import sys
           from pathlib import Path
           p = Path("marketing/data/operational_verification_bundle.json")
           d = json.loads(p.read_text())
@@ -98,4 +104,6 @@ jobs:
           for c in d["checks"]:
               if c["status"] in ("fail", "advisory_fail", "skip"):
                   print(f"  {c['status']}: {c['check_id']}")
+          if s["blocking_failures"] > 0:
+              sys.exit(1)
           PY

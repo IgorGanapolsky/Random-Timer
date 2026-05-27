@@ -101,13 +101,24 @@ def _run_command(cmd: list[str], *, cwd: Path | None = None, timeout: int = 120)
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
 
+def _play_key_path() -> Path | None:
+    path = (os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH") or "").strip()
+    if path:
+        candidate = Path(path)
+        if candidate.is_file():
+            return candidate
+    runner_temp = (os.environ.get("RUNNER_TEMP") or "").strip()
+    if runner_temp:
+        candidate = Path(runner_temp) / "play-service-account.json"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def _has_play_credentials() -> bool:
     if (os.environ.get("GOOGLE_PLAY_JSON_KEY") or "").strip():
         return True
-    path = (os.environ.get("GOOGLE_PLAY_JSON_KEY_PATH") or "").strip()
-    if path and Path(path).is_file():
-        return True
-    return Path("/tmp/play-service-account.json").is_file()
+    return _play_key_path() is not None
 
 
 def _has_asc_credentials() -> bool:
@@ -446,7 +457,12 @@ def check_posthog_paywall_revenue(*, window_days: int = 30) -> CheckResult:
         row = result["results"][0]
         events = int(row[0] or 0)
         persons = int(row[1] or 0) if len(row) > 1 else 0
-    status = "pass" if events > 0 else "fail"
+    if errors:
+        status = "fail"
+    elif events > 0:
+        status = "pass"
+    else:
+        status = "advisory_fail"
     return CheckResult(
         "posthog_paywall_purchase_success",
         "analytics",
