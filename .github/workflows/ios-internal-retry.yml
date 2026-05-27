@@ -3,7 +3,7 @@ name: iOS Internal Retry
 
 "on":
   schedule:
-    - cron: "35 */3 * * *"
+    - cron: "35 */6 * * *" # Was */3 — Actions budget
   workflow_dispatch:
 
 permissions:

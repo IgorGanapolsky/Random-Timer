@@ -46,7 +46,7 @@ jobs:
           fi
 
   android-device-tests:
-    name: Android Emulator + Maestro Tests
+    name: Android Emulator + Compose + Maestro Smoke
     needs: changes
     if: needs.changes.outputs.android_device == 'true'
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Create dummy google-services.json for CI
         working-directory: native-android
@@ -201,6 +201,8 @@ jobs:
         env:
           SIMULATOR_UDID: ${{ steps.sim.outputs.sim_id }}
           MAESTRO_FLOW_TIMEOUT_SECONDS: "180"
+          # Smoke on PR saves macOS minutes; full paywall regressions via workflow_dispatch.
+          CI_IOS_DEVICE_TIER: ${{ github.event_name == 'workflow_dispatch' && 'full' || 'smoke' }}
         run: bash scripts/device-tests/ci-maestro-ios.sh
 
       - name: Upload iOS device test artifacts

@@ -157,10 +157,17 @@ record_stage "pregrant notification permission"
 xcrun simctl privacy "$SIMULATOR_UDID" grant notifications "$BUNDLE_ID" 2>/dev/null || true
 
 run_maestro_flow "ios-smoke" "$PROJECT_ROOT/.maestro/ios-smoke-test.yaml"
-run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
-run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
-run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
-run_maestro_flow "paywall-sticky-cta" "$PROJECT_ROOT/.maestro/regression-paywall-sticky-cta-ios.yaml"
+
+# PR CI uses smoke tier (~10+ macOS min saved). Full paywall regressions: workflow_dispatch device-tests.
+CI_IOS_DEVICE_TIER="${CI_IOS_DEVICE_TIER:-full}"
+if [ "$CI_IOS_DEVICE_TIER" = "full" ]; then
+  run_maestro_flow "pro-locks" "$PROJECT_ROOT/.maestro/regression-pro-locks-visible-ios.yaml"
+  run_maestro_flow "free-sound-preview" "$PROJECT_ROOT/.maestro/regression-free-sound-preview-ios.yaml"
+  run_maestro_flow "sound-arsenal-paywall" "$PROJECT_ROOT/.maestro/regression-sound-arsenal-paywall-ios.yaml"
+  run_maestro_flow "paywall-sticky-cta" "$PROJECT_ROOT/.maestro/regression-paywall-sticky-cta-ios.yaml"
+else
+  echo "CI_IOS_DEVICE_TIER=smoke — skipping paywall Maestro regressions (use workflow_dispatch for full tier)."
+fi
 
 # Reset app state before Agent Device validates the home screen. Regression
 # flows may leave transient setup overlays or sheets visible.
