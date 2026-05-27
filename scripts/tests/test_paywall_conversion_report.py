@@ -43,6 +43,22 @@ class PaywallConversionReportTests(unittest.TestCase):
         self.assertIn("play_store", report.PLAY_STORE_CATALOG_FILTER)
         self.assertIn("billing_ready", report.PLAY_STORE_CATALOG_FILTER)
 
+    def test_product_catalog_failures_query_counts_not_found_only(self):
+        from scripts import paywall_conversion_report as report
+
+        captured: list[str] = []
+
+        def fake_table(query: str, *_args, **_kwargs):
+            captured.append(query)
+            return []
+
+        with mock.patch.object(report, "_table", side_effect=fake_table):
+            report._product_catalog_failures("key", "proj", 30, [])
+
+        self.assertEqual(len(captured), 1)
+        self.assertIn("billing_product_not_found", captured[0])
+        self.assertNotIn("billing_product_catalog_status", captured[0])
+
     def test_run_loads_repo_dotenv(self):
         from scripts import paywall_conversion_report as report
 

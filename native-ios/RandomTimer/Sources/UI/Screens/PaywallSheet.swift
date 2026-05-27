@@ -79,6 +79,14 @@ enum PaywallPlanSelection {
     case lifetime
 }
 
+private let highIntentAnnualEntryPoints: Set<PaywallEntryPoint> = [
+    .qualifiedTrainingGate,
+    .voiceGate,
+    .rangeGate,
+    .soundArsenalGate,
+    .repeatGate,
+]
+
 func initialPaywallPlanSelection(
     entryPoint: PaywallEntryPoint,
     defaultToAnnualExperiment: Bool
@@ -88,6 +96,9 @@ func initialPaywallPlanSelection(
     }
     if entryPoint == .setupUpgradeCTA {
         return .lifetime
+    }
+    if highIntentAnnualEntryPoints.contains(entryPoint) {
+        return .annual
     }
     return .monthly
 }

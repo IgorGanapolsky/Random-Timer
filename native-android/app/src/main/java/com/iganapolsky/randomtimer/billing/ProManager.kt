@@ -106,6 +106,7 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
+        private var lastCatalogStatusSignature: String? = null
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
@@ -401,6 +402,11 @@ class ProManager
                     missingProductIds.isNotEmpty() -> "missing_required_products"
                     else -> "ok"
                 }
+            val signature = "$status|${availableProductIds.joinToString()}|${missingProductIds.joinToString()}"
+            if (lastCatalogStatusSignature == signature) {
+                return
+            }
+            lastCatalogStatusSignature = signature
             analyticsService.track(
                 AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS,
                 mapOf(

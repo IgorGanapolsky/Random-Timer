@@ -244,14 +244,10 @@ def _product_catalog_failures(
           count() AS failures,
           count(DISTINCT person_id) AS users
         FROM events
-        WHERE event IN ('billing_product_not_found', 'billing_product_catalog_status')
+        WHERE event = 'billing_product_not_found'
           AND timestamp > now() - interval {win}
           AND {LIVE_EVENTS_PREDICATE}
           {channel_filter}
-          AND (
-            event = 'billing_product_not_found'
-            OR coalesce(toString(properties.status), '') IN ('empty', 'missing_required_products')
-          )
         GROUP BY platform, product_id
         ORDER BY failures DESC
         LIMIT 25

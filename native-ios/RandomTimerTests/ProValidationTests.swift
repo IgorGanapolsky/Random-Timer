@@ -114,7 +114,15 @@ final class TimerConfigProClampingTests: XCTestCase {
         )
         XCTAssertEqual(
             initialPaywallPlanSelection(entryPoint: .rangeGate, defaultToAnnualExperiment: false),
-            .monthly
+            .annual
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .voiceGate, defaultToAnnualExperiment: false),
+            .annual
+        )
+        XCTAssertEqual(
+            initialPaywallPlanSelection(entryPoint: .qualifiedTrainingGate, defaultToAnnualExperiment: false),
+            .annual
         )
         XCTAssertEqual(
             initialPaywallPlanSelection(entryPoint: .setupUpgradeCTA, defaultToAnnualExperiment: true),
