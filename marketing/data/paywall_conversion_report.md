@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-26T23:39:25+00:00
+Generated: 2026-05-27T00:07:40+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **406**
+- Views: **408**
 - Offer Selects: **62**
 - Purchase Attempts: **6**
 - Purchase Successes: **0**
-- View -> Offer Select: **15.3%**
+- View -> Offer Select: **15.2%**
 - Select -> Purchase Attempt: **9.7%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -40,14 +40,14 @@ Window (days): 30
 | android | elite_tactical_monthly | 512 | 162 |
 | android | elite_tactical | 373 | 146 |
 | android | pro_base | 215 | 122 |
-| android | unknown | 199 | 113 |
+| android | unknown | 200 | 114 |
 | ios | unknown | 15 | 5 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 175 | 1 | 0 | 0.6% | 0.0% |
-| voice_gate | 102 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 104 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 40 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
@@ -56,7 +56,7 @@ Window (days): 30
 | qualified_training_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **102** views and **0** purchase attempts.
+- `voice_gate` had **104** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
 - `unknown` had **40** views and **0** purchase attempts.
 
@@ -64,14 +64,14 @@ Window (days): 30
 | Setting | Changes | Users |
 |---------|---------|-------|
 | unknown | 3972 | 33 |
-| max_seconds | 2717 | 291 |
-| alarm_duration | 2190 | 266 |
-| min_seconds | 2056 | 271 |
+| max_seconds | 2726 | 292 |
+| alarm_duration | 2194 | 267 |
+| min_seconds | 2065 | 272 |
 | sound_type | 1708 | 236 |
 | volume | 1637 | 179 |
-| repeat_enabled | 1121 | 260 |
+| repeat_enabled | 1124 | 261 |
 | voice_callouts_enabled | 722 | 162 |
-| vibration_enabled | 539 | 184 |
+| vibration_enabled | 542 | 185 |
 | repeat_rounds | 393 | 116 |
 | voice_gender | 327 | 202 |
 | use_extended_range | 220 | 140 |
