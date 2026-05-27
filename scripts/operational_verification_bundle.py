@@ -410,7 +410,13 @@ def check_asc_version_state(version: str) -> CheckResult:
     elif state in prepare:
         st = "advisory_fail"
     elif proc.returncode != 0 or not state:
-        st = "fail" if proc.returncode != 0 else "unverified"
+        not_found = "not found" in (proc.stderr or "").lower()
+        if proc.returncode != 0 and not_found:
+            st = "advisory_fail"
+        elif proc.returncode != 0:
+            st = "fail"
+        else:
+            st = "unverified"
     else:
         st = "advisory_fail"
     return CheckResult(

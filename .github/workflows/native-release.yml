@@ -701,6 +701,34 @@ jobs:
           fi
           echo "ios_version=$IOS_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Remove prior patch from review when shipping newer version
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PREFERRED_VERSION: ${{ steps.versions.outputs.ios_version }}
+        run: |
+          set -euo pipefail
+          IFS='.' read -r MAJ MIN PATCH <<< "$PREFERRED_VERSION"
+          if [ "${PATCH:-0}" -le 0 ]; then
+            echo "No prior patch to unblock for $PREFERRED_VERSION"
+            exit 0
+          fi
+          PREV="${MAJ}.${MIN}.$((PATCH - 1))"
+          STATE_JSON="$(python scripts/asc/asc_poll_version_state.py --version "$PREV" --json 2>/dev/null)" || true
+          STATE="$(echo "$STATE_JSON" | python -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("state","UNKNOWN"))' 2>/dev/null)" || STATE="UNKNOWN"
+          echo "Prior patch $PREV state=$STATE"
+          case "$STATE" in
+            IN_REVIEW|WAITING_FOR_REVIEW)
+              python scripts/asc/asc_remove_from_review.py --version "$PREV" --wait --json-out /tmp/asc_unblock_prior.json
+              cat /tmp/asc_unblock_prior.json
+              ;;
+            *)
+              echo "Prior patch not blocking review queue; no removal needed."
+              ;;
+          esac
+
       - name: Resolve editable App Store version
         if: steps.gate.outputs.enabled == 'true'
         id: asc_version
@@ -717,11 +745,21 @@ jobs:
             --json-out /tmp/asc_version.json
           SELECTED_VERSION=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json"))["selected_version"])')
           SELECTED_VERSION_ID=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("selected_id") or "")')
+          SELECTED_STATE=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("selected_state") or "")')
+          REASON=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("reason") or "")')
           APP_ID=$(python -c 'import json; print(json.load(open("/tmp/asc_version.json")).get("app_id") or "")')
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "selected_version_id=$SELECTED_VERSION_ID" >> "$GITHUB_OUTPUT"
+          echo "selected_state=$SELECTED_STATE" >> "$GITHUB_OUTPUT"
+          echo "resolve_reason=$REASON" >> "$GITHUB_OUTPUT"
           echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
-          echo "Using editable App Store version: $SELECTED_VERSION"
+          echo "Using editable App Store version: $SELECTED_VERSION (state=$SELECTED_STATE reason=$REASON)"
+          if [ -z "$SELECTED_VERSION_ID" ] || [ "$SELECTED_STATE" = "UNKNOWN_409_BLOCKED" ]; then
+            echo "❌ App Store version $PREFERRED_VERSION is not editable in ASC (id missing / 409 blocked)."
+            echo "ios_submit_blocked=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "ios_submit_blocked=false" >> "$GITHUB_OUTPUT"
 
       - name: Write App Store Connect key (for API)
         if: steps.gate.outputs.enabled == 'true'
@@ -780,7 +818,7 @@ jobs:
           echo "ASC version state (pre-metadata): $STATE"
 
       - name: Upload App Store metadata/screenshots
-        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_state_meta.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'IN_REVIEW' }}
+        if: ${{ steps.gate.outputs.enabled == 'true' && steps.asc_version.outputs.ios_submit_blocked != 'true' && steps.asc_version.outputs.selected_version_id != '' && steps.asc_state_meta.outputs.state != 'READY_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'WAITING_FOR_REVIEW' && steps.asc_state_meta.outputs.state != 'IN_REVIEW' }}
         env:
           CI: "true"
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
