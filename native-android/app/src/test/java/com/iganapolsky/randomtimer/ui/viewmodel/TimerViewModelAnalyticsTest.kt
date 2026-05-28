@@ -16,6 +16,8 @@ import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
 import com.iganapolsky.randomtimer.service.TimerServiceController
+import com.iganapolsky.randomtimer.monetization.RewardedAdCoordinator
+import com.iganapolsky.randomtimer.monetization.RewardedAdUnlockStore
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -71,6 +73,10 @@ class TimerViewModelAnalyticsTest {
         every { serviceController.bindService(any()) } just runs
         every { serviceController.unbindService(any()) } just runs
 
+        val rewardedAdCoordinator = mockk<RewardedAdCoordinator>(relaxed = true)
+        val rewardedAdUnlockStore = mockk<RewardedAdUnlockStore>(relaxed = true)
+        every { rewardedAdUnlockStore.hasActiveUnlock() } returns false
+
         viewModel =
             TimerViewModel(
                 repository = repository,
@@ -81,6 +87,8 @@ class TimerViewModelAnalyticsTest {
                 storeReviewManager = storeReviewManager,
                 trainingStatsService = trainingStatsService,
                 proManager = proManager,
+                rewardedAdCoordinator = rewardedAdCoordinator,
+                rewardedAdUnlockStore = rewardedAdUnlockStore,
             )
     }
 

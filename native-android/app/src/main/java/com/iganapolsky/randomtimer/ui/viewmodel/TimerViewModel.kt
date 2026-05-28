@@ -11,7 +11,11 @@ import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.analytics.PaywallExperimentVariants
 import com.iganapolsky.randomtimer.analytics.SubscriptionFunnelSteps
 import com.iganapolsky.randomtimer.billing.ProManager
+import com.iganapolsky.randomtimer.monetization.ProSoundAccess
 import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallAnalytics
+import com.iganapolsky.randomtimer.monetization.RewardedAdCoordinator
+import com.iganapolsky.randomtimer.monetization.RewardedAdPolicy
+import com.iganapolsky.randomtimer.monetization.RewardedAdUnlockStore
 import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
@@ -45,6 +49,8 @@ class TimerViewModel
         val storeReviewManager: StoreReviewManager,
         val trainingStatsService: TrainingStatsService,
         val proManager: ProManager,
+        private val rewardedAdCoordinator: RewardedAdCoordinator,
+        private val rewardedAdUnlockStore: RewardedAdUnlockStore,
     ) : ViewModel() {
         val totalSessions: Int get() = trainingStatsService.totalSessions
         val currentStreak: Int get() = trainingStatsService.currentStreak
@@ -60,6 +66,10 @@ class TimerViewModel
 
         private val _timerState = MutableStateFlow<TimerState?>(null)
         val timerState: StateFlow<TimerState?> = _timerState
+
+        private val _proSoundTrialActive =
+            MutableStateFlow(rewardedAdUnlockStore.hasActiveUnlock())
+        val proSoundTrialActive: StateFlow<Boolean> = _proSoundTrialActive
 
         /** Epoch millis when the alarm was triggered, used to compute alarm_response_time. */
         private var alarmTriggeredAtMs: Long = 0L
@@ -104,8 +114,37 @@ class TimerViewModel
             }
         }
 
+        fun rewardedAdOfferVisible(): Boolean =
+            RewardedAdPolicy.canOfferRewardedAd(
+                rewardedAdsEnabled = analyticsService.rewardedAdsEnabled(),
+                isPro = proManager.isPro.value,
+            )
+
+        fun requestRewardedProSoundUnlock(
+            entryPoint: String = RewardedAdPolicy.ENTRY_SOUND_ARSENAL,
+        ) {
+            rewardedAdCoordinator.requestUnlock(
+                entryPoint = entryPoint,
+                rewardedAdsEnabled = analyticsService.rewardedAdsEnabled(),
+                isPro = proManager.isPro.value,
+                onUnlocked = { _proSoundTrialActive.value = true },
+            )
+        }
+
         fun updateConfig(newConfig: TimerConfig) {
-            trackSettingsChanges(config.value, newConfig)
+            val previous = config.value
+            trackSettingsChanges(previous, newConfig)
+            if (
+                ProSoundAccess.shouldConsumeTrialOnEquip(
+                    isPro = proManager.isPro.value,
+                    hasTrialUnlock = rewardedAdUnlockStore.hasActiveUnlock(),
+                    previousSound = previous.soundType,
+                    newSound = newConfig.soundType,
+                )
+            ) {
+                rewardedAdUnlockStore.consumeUnlock()
+                _proSoundTrialActive.value = false
+            }
             viewModelScope.launch {
                 repository.saveTimerConfig(newConfig)
             }

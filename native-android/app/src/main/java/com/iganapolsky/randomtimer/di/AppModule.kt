@@ -13,7 +13,9 @@ import com.iganapolsky.randomtimer.domain.SoundPreviewManager
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.service.TimerServiceController
 import com.iganapolsky.randomtimer.service.TimerServiceControllerImpl
+import com.iganapolsky.randomtimer.analytics.AnalyticsService
 import com.iganapolsky.randomtimer.monetization.AdMobRewardedAdPort
+import com.iganapolsky.randomtimer.monetization.RewardedAdCoordinator
 import com.iganapolsky.randomtimer.monetization.RewardedAdPort
 import com.iganapolsky.randomtimer.monetization.RewardedAdUnlockStore
 import com.iganapolsky.randomtimer.stats.TrainingStatsService
@@ -70,6 +72,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRewardedAdPort(): RewardedAdPort = AdMobRewardedAdPort()
+
+    @Provides
+    @Singleton
+    fun provideRewardedAdCoordinator(
+        analyticsService: AnalyticsService,
+        unlockStore: RewardedAdUnlockStore,
+        port: RewardedAdPort,
+    ): RewardedAdCoordinator = RewardedAdCoordinator(analyticsService, unlockStore, port)
 }
 
 @Module
