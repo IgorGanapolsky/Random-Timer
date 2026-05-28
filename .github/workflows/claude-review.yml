@@ -6,6 +6,7 @@ on:
   issue_comment:
     types: [created]
   push:
+    branches: [develop, main, 'release/**', 'hotfix/**']
 
 env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
