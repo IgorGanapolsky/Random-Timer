@@ -180,6 +180,9 @@ fun TimerSetupScreen(
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
     onTrainingPresetApplied: (TrainingPreset) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
+    proSoundTrialActive: Boolean = false,
+    showRewardedAdOffer: Boolean = false,
+    onWatchRewardedAd: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -1042,6 +1045,8 @@ fun TimerSetupScreen(
                             SoundArsenalCard(
                                 config = config,
                                 isPro = isPro,
+                                proSoundTrialActive = proSoundTrialActive,
+                                showRewardedAdOffer = showRewardedAdOffer,
                                 padding = spacing.cardContent,
                                 headerToContent = spacing.headerToContent,
                                 onSelectSound = { sound ->
@@ -1051,6 +1056,7 @@ fun TimerSetupScreen(
                                 },
                                 onPreviewSound = onSoundPreview,
                                 onUpgradeTap = onUpgradeTap,
+                                onWatchRewardedAd = onWatchRewardedAd,
                             )
                         }
                     }
@@ -1066,6 +1072,8 @@ fun TimerSetupScreen(
                     SoundArsenalCard(
                         config = config,
                         isPro = isPro,
+                        proSoundTrialActive = proSoundTrialActive,
+                        showRewardedAdOffer = showRewardedAdOffer,
                         padding = spacing.cardContent,
                         headerToContent = spacing.headerToContent,
                         onSelectSound = { sound ->
@@ -1075,6 +1083,7 @@ fun TimerSetupScreen(
                         },
                         onPreviewSound = onSoundPreview,
                         onUpgradeTap = onUpgradeTap,
+                        onWatchRewardedAd = onWatchRewardedAd,
                     )
                 }
             }
@@ -1094,20 +1103,35 @@ internal fun repeatLoopDetailSummary(
         else -> "$repeatRounds Rounds"
     }
 
+internal fun soundArsenalFreeFooterText(
+    canEquipProSounds: Boolean,
+): String =
+    if (canEquipProSounds) {
+        "Trial active — tap a Pro sound to equip it for your next drill."
+    } else {
+        "Tap a sound to preview. Unlock Pro to equip it."
+    }
+
+internal const val SOUND_ARSENAL_REWARDED_AD_CTA = "Watch ad to try one Pro sound"
+
 @Composable
 private fun SoundArsenalCard(
     config: TimerConfig,
     isPro: Boolean,
+    proSoundTrialActive: Boolean,
+    showRewardedAdOffer: Boolean,
     padding: Dp,
     headerToContent: Dp,
     onSelectSound: (SoundType) -> Unit,
     onPreviewSound: (SoundType) -> Unit,
     onUpgradeTap: (String) -> Unit,
+    onWatchRewardedAd: () -> Unit,
 ) {
+    val canEquipProSounds = isPro || proSoundTrialActive
     GlassCard(
         modifier =
             Modifier.fillMaxWidth().graphicsLayer {
-                alpha = if (isPro) 1f else 0.6f
+                alpha = if (canEquipProSounds) 1f else 0.6f
             },
         padding = padding,
     ) {
@@ -1116,7 +1140,7 @@ private fun SoundArsenalCard(
                 text = "\uD83C\uDFA7 Sound Arsenal",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isPro) TimerColors.TextPrimary else TimerColors.TextMuted,
+                color = if (canEquipProSounds) TimerColors.TextPrimary else TimerColors.TextMuted,
             )
             Spacer(modifier = Modifier.height(headerToContent))
 
@@ -1133,10 +1157,10 @@ private fun SoundArsenalCard(
                                     .lowercase()
                                     .replaceFirstChar { it.uppercase() }
                                     .replace("_", " ") +
-                                    if (!isPro) " \uD83D\uDD12" else "",
+                                    if (!canEquipProSounds) " \uD83D\uDD12" else "",
                             selected = config.soundType == sound,
                             onClick = {
-                                if (isPro) {
+                                if (canEquipProSounds) {
                                     onSelectSound(sound)
                                 } else {
                                     onPreviewSound(sound)
@@ -1156,13 +1180,27 @@ private fun SoundArsenalCard(
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Tap a sound to preview. Unlock Pro to equip it.",
+                        text = soundArsenalFreeFooterText(canEquipProSounds),
                         style = MaterialTheme.typography.labelSmall,
                         color = TimerColors.TextMuted,
                         textAlign = TextAlign.Center,
                     )
+                    if (showRewardedAdOffer && !canEquipProSounds) {
+                        Text(
+                            text = SOUND_ARSENAL_REWARDED_AD_CTA,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TimerColors.AccentPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier =
+                                Modifier
+                                    .testTag("rewarded_ad_cta")
+                                    .clickable { onWatchRewardedAd() },
+                        )
+                    }
                 }
             }
         }

@@ -30,9 +30,6 @@
     <!-- In-App Billing for Pro upgrade -->
     <uses-permission android:name="com.android.vending.BILLING" />
 
-    <!-- Remove AD_ID permission added by dependencies (Firebase/PostHog) — app does not use advertising ID -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
-
     <application
         android:name=".RandomTimerApp"
         android:allowBackup="true"
@@ -45,6 +42,10 @@
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.RandomTimer"
         tools:targetApi="35">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"

@@ -129,8 +129,16 @@ class PaywallSheetTest {
             initialPlanSelection(entryPoint = "setup_upgrade_cta", defaultToAnnualPlan = false),
         )
         assertEquals(
-            SubscriptionPlanSelection.MONTHLY,
+            SubscriptionPlanSelection.ANNUAL,
             initialPlanSelection(entryPoint = "range_gate", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(entryPoint = "voice_gate", defaultToAnnualPlan = false),
+        )
+        assertEquals(
+            SubscriptionPlanSelection.ANNUAL,
+            initialPlanSelection(entryPoint = "qualified_training_gate", defaultToAnnualPlan = false),
         )
         assertEquals(
             SubscriptionPlanSelection.ANNUAL,

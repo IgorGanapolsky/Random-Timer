@@ -73,6 +73,16 @@ internal data class PaywallFeatureContext(
     val valueCopy: String,
 )
 
+/** Gates with strong purchase intent — default to annual and emit initial offer_select on open. */
+internal val HIGH_INTENT_ANNUAL_ENTRY_POINTS: Set<String> =
+    setOf(
+        "qualified_training_gate",
+        "voice_gate",
+        "range_gate",
+        "sound_arsenal_gate",
+        "repeat_gate",
+    )
+
 internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
     when (entryPoint) {
         "setup_upgrade_cta" ->
@@ -154,6 +164,21 @@ fun PaywallSheet(
         }
     }
     val hasPurchasablePlan = hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed)
+    var initialOfferSelectTracked by remember(entryPoint) { mutableStateOf(false) }
+    LaunchedEffect(entryPoint, billingCatalogProbed, hasPurchasablePlan, selectedPlan) {
+        if (
+            !initialOfferSelectTracked &&
+                entryPoint in HIGH_INTENT_ANNUAL_ENTRY_POINTS &&
+                hasPurchasablePlan
+        ) {
+            initialOfferSelectTracked = true
+            onPlanSelected(
+                planNameForSelection(selectedPlan),
+                productIdForPlan(selectedPlan),
+                "paywall_open",
+            )
+        }
+    }
     val featureContext = paywallFeatureContext(entryPoint)
     val headline =
         if (valueFramingVariant == PaywallValueFraming.OUTCOMES_FIRST) {
@@ -452,6 +477,7 @@ internal fun initialPlanSelection(
         when {
             defaultToAnnualPlan -> SubscriptionPlanSelection.ANNUAL
             entryPoint == "setup_upgrade_cta" -> SubscriptionPlanSelection.LIFETIME
+            entryPoint in HIGH_INTENT_ANNUAL_ENTRY_POINTS -> SubscriptionPlanSelection.ANNUAL
             else -> SubscriptionPlanSelection.MONTHLY
         }
     if (!billingCatalogProbed || availableProductIds.isEmpty()) {

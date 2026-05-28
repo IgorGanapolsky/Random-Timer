@@ -66,4 +66,16 @@ class TimerSetupScreenTextTest {
     fun competitionPrepIsAvailableWithoutPro() {
         assertThat(isCompetitionPrepProGated()).isFalse()
     }
+
+    @Test
+    fun soundArsenalFooterExplainsPreviewWhenTrialInactive() {
+        assertThat(soundArsenalFreeFooterText(canEquipProSounds = false))
+            .contains("preview")
+    }
+
+    @Test
+    fun soundArsenalFooterExplainsTrialEquipWhenActive() {
+        assertThat(soundArsenalFreeFooterText(canEquipProSounds = true))
+            .contains("Trial active")
+    }
 }
