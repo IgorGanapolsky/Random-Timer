@@ -538,7 +538,6 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMinSeconds = newMin,
                                             maxSecondsLimit = maxRange,
-                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = min, maxSeconds = max)
                                 },
@@ -549,7 +548,6 @@ fun TimerSetupScreen(
                                             currentMaxSeconds = config.maxSeconds,
                                             newMaxSeconds = newMax,
                                             maxSecondsLimit = maxRange,
-                                            minGapSeconds = 30,
                                         )
                                     updateConfig(minSeconds = adjMin, maxSeconds = adjMax)
                                 },
