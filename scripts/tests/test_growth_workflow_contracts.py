@@ -413,9 +413,9 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
     trigger_section = source.split("concurrency:", 1)[0]
 
-    assert "cancel-in-progress: false" in source
+    assert "cancel-in-progress: true" in source
     assert "pull_request:" in trigger_section
-    assert "branches: [develop, main]" in trigger_section
+    assert "branches: [develop, main, 'release/**', 'hotfix/**']" in trigger_section
     assert "paths:" not in trigger_section
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
