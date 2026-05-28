@@ -1,0 +1,1 @@
+Paywall: annual default on high-intent gates. Android: AdMob rewarded-ad trial for Pro sounds (flag off until enabled). Billing catalog dedupe.

@@ -64,6 +64,8 @@ fun RandomTimerNavHost(
     val timerState by viewModel.timerState.collectAsStateWithLifecycle()
     val isPro by viewModel.proManager.isPro.collectAsStateWithLifecycle()
     val isElite by viewModel.proManager.isElite.collectAsStateWithLifecycle()
+    val proSoundTrialActive by viewModel.proSoundTrialActive.collectAsStateWithLifecycle()
+    val showRewardedAdOffer = viewModel.rewardedAdOfferVisible()
     val currentRoute =
         navController
             .currentBackStackEntryAsState()
@@ -195,6 +197,9 @@ fun RandomTimerNavHost(
                 currentStreak = viewModel.currentStreak,
                 isPro = isPro,
                 isElite = isElite,
+                proSoundTrialActive = proSoundTrialActive,
+                showRewardedAdOffer = showRewardedAdOffer,
+                onWatchRewardedAd = viewModel::requestRewardedProSoundUnlock,
                 onUpgradeTap = { feature ->
                     presentPaywallForFeature(feature)
                 },

@@ -26,6 +26,7 @@ import com.iganapolsky.randomtimer.service.MediaButtonHandler
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 import com.iganapolsky.randomtimer.ui.navigation.RandomTimerNavHost
 import com.iganapolsky.randomtimer.ui.theme.RandomTimerTheme
+import com.iganapolsky.randomtimer.monetization.ForegroundActivityHolder
 import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import com.iganapolsky.randomtimer.updates.InAppUpdateManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -85,11 +86,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        ForegroundActivityHolder.setActivity(this)
         // Tell service app is in foreground - suppress notifications
         sendAppStateToService(isInForeground = true)
     }
 
     override fun onPause() {
+        ForegroundActivityHolder.setActivity(null)
         super.onPause()
         // Tell service app is in background - show notifications
         sendAppStateToService(isInForeground = false)

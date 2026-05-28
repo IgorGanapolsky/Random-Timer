@@ -3,8 +3,9 @@ import Foundation
 enum RewardedAdConfig {
     static let featureFlagKey = PostHogExperimentKeys.rewardedAdsEnabled
     static let testRewardedUnitIdIOS = "ca-app-pub-3940256099942544/1712485313"
+    static let publisherId = "pub-5173650670360699"
     static let admobBlocker =
-        "AdMob publisher account not approved — rewarded ads ship behind PostHog flag (default off)."
+        "Rewarded ads ship behind PostHog flag (default off) until production ad unit IDs are configured and app-ads.txt verifies."
 }
 
 enum RewardedAdPolicy {

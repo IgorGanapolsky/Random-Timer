@@ -1,21 +1,22 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-27T19:14:18+00:00
+Generated: 2026-05-28T13:19:06+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **443**
+- Views: **508**
 - Offer Selects: **61**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **13.8%**
+- View -> Offer Select: **12.0%**
 - Select -> Purchase Attempt: **8.2%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| (none) | 0 |
+| user_cancelled | 5 |
+| item_unavailable | 2 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
@@ -36,50 +37,46 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 507 | 162 |
-| android | elite_tactical | 376 | 149 |
-| android | unknown | 222 | 122 |
-| android | pro_base | 218 | 125 |
+| android | elite_tactical_monthly | 517 | 172 |
+| android | elite_tactical | 389 | 162 |
+| android | unknown | 268 | 136 |
+| android | pro_base | 231 | 138 |
 | ios | unknown | 15 | 5 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 193 | 1 | 0 | 0.5% | 0.0% |
-| voice_gate | 124 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 231 | 1 | 0 | 0.4% | 0.0% |
+| voice_gate | 152 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 39 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 38 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
 | qualified_training_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **124** views and **0** purchase attempts.
+- `voice_gate` had **152** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **39** views and **0** purchase attempts.
+- `unknown` had **38** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 3399 | 31 |
-| max_seconds | 2766 | 300 |
-| alarm_duration | 2275 | 275 |
-| min_seconds | 2089 | 279 |
-| sound_type | 1724 | 240 |
-| volume | 1709 | 186 |
-| repeat_enabled | 1150 | 269 |
-| voice_callouts_enabled | 734 | 167 |
-| vibration_enabled | 553 | 190 |
+| unknown | 3384 | 30 |
+| max_seconds | 2905 | 316 |
+| alarm_duration | 2524 | 291 |
+| min_seconds | 2178 | 295 |
+| volume | 1847 | 199 |
+| sound_type | 1766 | 253 |
+| repeat_enabled | 1236 | 286 |
+| voice_callouts_enabled | 769 | 179 |
+| vibration_enabled | 575 | 203 |
 | repeat_rounds | 396 | 116 |
-| voice_gender | 332 | 205 |
-| use_extended_range | 225 | 143 |
+| voice_gender | 338 | 210 |
+| use_extended_range | 241 | 151 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
 - settings_changed is still dominated by unknown setting_name rows in live data
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
-
-## Query Diagnostics
-- Query errors: **1**
-- Last error: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`

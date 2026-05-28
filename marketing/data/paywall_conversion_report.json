@@ -1,18 +1,27 @@
 {
-  "generated_at": "2026-05-27T19:14:18+00:00",
+  "generated_at": "2026-05-28T13:19:06+00:00",
   "window_days": 30,
-  "status": "degraded",
-  "reason": "one or more PostHog queries failed",
+  "status": "ok",
+  "reason": "",
   "funnel": {
-    "views": 443,
+    "views": 508,
     "offer_selects": 61,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1377,
+    "view_to_select_rate": 0.1201,
     "select_to_attempt_rate": 0.082,
     "attempt_to_success_rate": 0.0
   },
-  "top_failure_reasons": [],
+  "top_failure_reasons": [
+    {
+      "reason": "user_cancelled",
+      "count": 5
+    },
+    {
+      "reason": "item_unavailable",
+      "count": 2
+    }
+  ],
   "failure_breakdown": [
     {
       "platform": "android",
@@ -87,26 +96,26 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 507,
-      "users": 162
+      "failures": 517,
+      "users": 172
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 376,
-      "users": 149
+      "failures": 389,
+      "users": 162
     },
     {
       "platform": "android",
       "product_id": "unknown",
-      "failures": 222,
-      "users": 122
+      "failures": 268,
+      "users": 136
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 218,
-      "users": 125
+      "failures": 231,
+      "users": 138
     },
     {
       "platform": "ios",
@@ -118,41 +127,41 @@
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
-      "product_id": "elite_tactical_monthly",
-      "failures": 204,
-      "users": 104
-    },
-    {
-      "platform": "android",
       "product_id": "unknown",
-      "failures": 195,
-      "users": 109
+      "failures": 241,
+      "users": 123
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
-      "failures": 101,
-      "users": 92
+      "product_id": "elite_tactical_monthly",
+      "failures": 214,
+      "users": 114
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 101,
-      "users": 92
+      "failures": 114,
+      "users": 105
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "failures": 114,
+      "users": 105
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 193,
+      "views": 231,
       "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 0.0052,
+      "view_to_attempt_rate": 0.0043,
       "attempt_to_success_rate": 0.0
     },
     {
       "entry_point": "voice_gate",
-      "views": 124,
+      "views": 152,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -168,7 +177,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -210,7 +219,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 124,
+      "views": 152,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -226,7 +235,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -236,48 +245,48 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 3399,
-      "users": 31
+      "changes": 3384,
+      "users": 30
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2766,
-      "users": 300
+      "changes": 2905,
+      "users": 316
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2275,
-      "users": 275
+      "changes": 2524,
+      "users": 291
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2089,
-      "users": 279
-    },
-    {
-      "setting_name": "sound_type",
-      "changes": 1724,
-      "users": 240
+      "changes": 2178,
+      "users": 295
     },
     {
       "setting_name": "volume",
-      "changes": 1709,
-      "users": 186
+      "changes": 1847,
+      "users": 199
+    },
+    {
+      "setting_name": "sound_type",
+      "changes": 1766,
+      "users": 253
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1150,
-      "users": 269
+      "changes": 1236,
+      "users": 286
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 734,
-      "users": 167
+      "changes": 769,
+      "users": 179
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 553,
-      "users": 190
+      "changes": 575,
+      "users": 203
     },
     {
       "setting_name": "repeat_rounds",
@@ -286,13 +295,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 332,
-      "users": 205
+      "changes": 338,
+      "users": 210
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 225,
-      "users": 143
+      "changes": 241,
+      "users": 151
     }
   ],
   "data_quality_warnings": [
@@ -300,7 +309,5 @@
     "settings_changed is still dominated by unknown setting_name rows in live data",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
-  "query_errors": [
-    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
-  ]
+  "query_errors": []
 }
