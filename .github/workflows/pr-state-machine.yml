@@ -3,7 +3,9 @@ name: PR State Machine
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-  check_suite:
+  # Reconcile once per CI/Device Tests completion — not on every check_suite (GraphQL/workflow spam).
+  workflow_run:
+    workflows: [CI, Device Tests]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -448,27 +450,18 @@ jobs:
             const prCandidates = [];
             if (context.eventName === "pull_request_target") {
               prCandidates.push(context.payload.pull_request?.number);
-            } else if (context.eventName === "check_suite") {
-              const suite = context.payload.check_suite || {};
-              const suiteStatus = String(suite.status || "");
-              if (suiteStatus !== "completed") {
-                core.info(`Skipping check_suite event with non-terminal status "${suiteStatus || "unknown"}".`);
-              } else {
-                for (const pr of suite.pull_requests || []) {
-                  prCandidates.push(pr.number);
-                }
-
-                if (prCandidates.length === 0 && suite.head_sha) {
-                  const associatedPrs = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
-                    owner,
-                    repo,
-                    commit_sha: suite.head_sha,
-                    per_page: 100
-                  });
-                  for (const pr of associatedPrs) {
-                    if (pr.state === "open") {
-                      prCandidates.push(pr.number);
-                    }
+            } else if (context.eventName === "workflow_run") {
+              const run = context.payload.workflow_run || {};
+              if (run.event === "pull_request" && run.head_sha) {
+                const associatedPrs = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+                  owner,
+                  repo,
+                  commit_sha: run.head_sha,
+                  per_page: 100
+                });
+                for (const pr of associatedPrs) {
+                  if (pr.state === "open") {
+                    prCandidates.push(pr.number);
                   }
                 }
               }
