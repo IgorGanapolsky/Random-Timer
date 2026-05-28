@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 60 | 493 | 553 |
-| Active Installs | — | 497 | — |
+| Distinct install users (30d) | 61 | 524 | 585 |
+| Active Installs | — | 528 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 47 |
-| WAU | 178 |
-| MAU | 571 |
+| DAU | 59 |
+| WAU | 207 |
+| MAU | 603 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 6 |
-| Timer Completed (7d) | 108 |
-| Completed Users (7d) | 21 |
-| Sessions/Completed User (7d) | 5.14 |
+| Timer Completed (7d) | 110 |
+| Completed Users (7d) | 23 |
+| Sessions/Completed User (7d) | 4.78 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-27T19:18:01+00:00
+**Generated:** 2026-05-28T00:45:46+00:00
 
 ## Onboarding Funnel
-- First Open: **562**
-- First Timer Configured: **324** (57.6% of opens)
-- First Timer Completed: **90** (16.0% of opens)
+- First Open: **593**
+- First Timer Configured: **341** (57.5% of opens)
+- First Timer Completed: **92** (15.5% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -60,17 +60,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 443 |
+| Paywall Views | 508 |
 | Offer Selects | 61 |
 | Purchase Attempts | 5 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** none
+**Top failure reasons:** user_cancelled (5), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (507), elite_tactical (376), unknown (222), pro_base (218)
-
-_Data quality: stale; latest read issue: `paywall conversion snapshot degraded`._
+**Catalog failures (Android):** elite_tactical_monthly (517), elite_tactical (389), unknown (268), pro_base (231)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -78,9 +76,9 @@ _Data quality: stale; latest read issue: `paywall conversion snapshot degraded`.
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 562 | — |
-| First Timer Configured | 324 | 57.6% of opens |
-| First Timer Completed | 90 | 16.0% of opens |
+| First Open | 593 | — |
+| First Timer Configured | 341 | 57.5% of opens |
+| First Timer Completed | 92 | 15.5% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -156,16 +154,16 @@ _Data quality: stale; latest read issue: `paywall conversion snapshot degraded`.
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27"]
+    x-axis ["2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-28"]
     y-axis "Downloads"
-    line [60 , 60 , 60 , 60 , 60 , 60 , 60 , 59 , 59 , 58 , 58 , 58 , 60 , 60]
-    line [471 , 472 , 472 , 472 , 472 , 472 , 472 , 472 , 474 , 474 , 474 , 474 , 493 , 493]
+    line [60 , 60 , 60 , 60 , 60 , 60 , 59 , 59 , 58 , 58 , 58 , 60 , 60 , 61]
+    line [472 , 472 , 472 , 472 , 472 , 472 , 472 , 474 , 474 , 474 , 474 , 493 , 493 , 524]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27"]
+    x-axis ["2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-27" , "2026-05-28"]
     y-axis "Users"
     line [6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 6]
 ```
@@ -195,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-27T19:18:02+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-28T00:45:48+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
