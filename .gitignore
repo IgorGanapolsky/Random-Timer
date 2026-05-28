@@ -77,6 +77,10 @@ temp/
 venv/
 .venv-chatterbox/
 native-android/.venv-chatterbox/
+native-android/.venv-chatterbox/
+native-android/.local-jbr/
+native-android/.local-jbr-cache/
+native-android/gradle/gradle-daemon-jvm.properties.device-tests-bak
 
 # Python bytecode
 __pycache__/
@@ -140,3 +144,4 @@ native-android/gradle/gradle-daemon-jvm.properties
 
 # Local-only evidence artifacts (per-checkout screenshots, manual capture)
 evidence/
+marketing/data/operational_verification_bundle.json

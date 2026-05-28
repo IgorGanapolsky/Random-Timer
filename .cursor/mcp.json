@@ -10,7 +10,7 @@
       "command": "sh",
       "args": [
         "-lc",
-        "mkdir -p \"/Users/igorganapolsky/.thumbgate/runtime\" && npm \"install\" \"--prefix\" \"/Users/igorganapolsky/.thumbgate/runtime\" \"--no-save\" \"--omit=dev\" \"thumbgate@latest\" >/dev/null 2>&1 && exec \"/Users/igorganapolsky/.thumbgate/runtime/node_modules/.bin/thumbgate\" \"serve\""
+        "mkdir -p \"$HOME/.thumbgate/runtime\" && npm install --prefix \"$HOME/.thumbgate/runtime\" --no-save --omit=dev thumbgate@latest >/dev/null 2>&1 && exec \"$HOME/.thumbgate/runtime/node_modules/.bin/thumbgate\" serve"
       ]
     }
   }

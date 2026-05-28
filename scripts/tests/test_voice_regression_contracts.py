@@ -8,6 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 VOICE_CONTRACT = ROOT / "content/pro_audio/voice_personas.json"
+FORBIDDEN_MALE_VOICE_ID = "DGzg6RaUqxGRTHSBjfgF"  # ElevenLabs "Angst" (San Francisco), not drill sergeant
+APPROVED_MALE_VOICE_ID = "2EiwWnXFnvU5JabPnv8n"  # ElevenLabs "Clyde"
 IOS_AUDIO_DIR = ROOT / "native-ios/RandomTimer/Resources/Audio"
 ANDROID_RAW_DIR = ROOT / "native-android/app/src/main/res/raw"
 IOS_SETUP = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
@@ -54,7 +56,9 @@ def test_voice_contract_tracks_real_elevenlabs_personas() -> None:
     assert contract["schemaVersion"] == 1
     assert contract["provider"] == "elevenlabs"
     assert contract["male"]["modelId"] == "eleven_multilingual_v2"
-    assert contract["male"]["voiceId"] == "DGzg6RaUqxGRTHSBjfgF"
+    assert contract["male"]["voiceId"] == APPROVED_MALE_VOICE_ID
+    assert contract["male"]["voiceId"] != FORBIDDEN_MALE_VOICE_ID
+    assert contract["male"]["voiceName"] == "Clyde"
     assert contract["male"]["probeText"] == "Stay sharp."
     assert contract["female"]["modelId"] == "eleven_turbo_v2"
     assert contract["female"]["primaryVoice"]["voiceName"] == "Sarah"
@@ -144,6 +148,17 @@ def test_preview_calls_thread_selected_gender_on_both_platforms() -> None:
     assert "soundPreviewManager.previewCommandCue(gender)" in android_viewmodel
     assert "fun previewCommandCue(gender: VoiceGender)" in android_preview_manager
     assert "voiceCalloutManager.previewCommandCue(gender)" in android_preview_impl
+
+
+def test_gender_selection_triggers_voice_preview_on_both_platforms() -> None:
+    ios_setup = _read(IOS_SETUP)
+    android_setup = _read(ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/screens/TimerSetupScreen.kt")
+
+    gender_chip = _section(android_setup, "VoiceGender.entries.forEach", "colors =")
+    assert "onCommandCuePreview(gender)" in gender_chip
+
+    voice_picker = _section(ios_setup, 'Picker("Voice", selection:', ".pickerStyle(.segmented)")
+    assert "previewCommandCue(gender: newGender)" in voice_picker
 
 
 def test_android_voice_playback_stays_off_system_tts() -> None:

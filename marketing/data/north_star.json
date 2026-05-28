@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-21T18:21:24+00:00",
+  "generated_at": "2026-05-27T19:14:08+00:00",
   "source": "posthog",
   "status": "ok",
   "status_reason": "",
@@ -9,10 +9,10 @@
     "name": "Weekly Qualified Training Users",
     "key": "WQTU",
     "definition": "distinct users with >=3 timer_completed events in trailing 7 days",
-    "wqtu_7d": 10,
-    "timer_completed_7d": 174,
-    "completed_users_7d": 24,
-    "sessions_per_completed_user_7d": 7.25,
+    "wqtu_7d": 6,
+    "timer_completed_7d": 108,
+    "completed_users_7d": 21,
+    "sessions_per_completed_user_7d": 5.14,
     "targets": {
       "checkpoint_2026_03_31": 8,
       "quarter_2026_06_30": 25
@@ -48,7 +48,7 @@
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-05-21T18:21:24+00:00",
+    "last_attempt_generated_at": "2026-05-27T19:14:08+00:00",
     "last_good_generated_at": "",
     "reason": ""
   },
@@ -57,28 +57,1081 @@
   },
   "snapshots": [
     {
-      "timestamp": "2026-02-26T18:28:59+00:00",
-      "wqtu_7d": 2,
-      "timer_completed_7d": 47,
-      "completed_users_7d": 4,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 1,
-      "guardrail_violated": true
-    },
-    {
-      "timestamp": "2026-03-02T23:46:34+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 0,
-      "completed_users_7d": 0,
+      "timestamp": "2026-05-23T12:48:38+00:00",
+      "wqtu_7d": 9,
+      "timer_completed_7d": 156,
+      "completed_users_7d": 29,
       "paid_distinct_users_30d": 0,
       "active_campaign_count": 0,
       "guardrail_violated": false
     },
     {
-      "timestamp": "2026-03-03T00:08:07+00:00",
-      "wqtu_7d": 0,
-      "timer_completed_7d": 0,
-      "completed_users_7d": 0,
+      "timestamp": "2026-05-23T13:30:46+00:00",
+      "wqtu_7d": 9,
+      "timer_completed_7d": 156,
+      "completed_users_7d": 29,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T14:12:12+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 145,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T14:14:57+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 145,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T14:46:01+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T15:23:33+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T15:49:31+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T16:19:58+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T16:47:18+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T17:21:44+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T17:48:40+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T18:19:23+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 149,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T18:47:59+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 148,
+      "completed_users_7d": 29,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T19:27:03+00:00",
+      "wqtu_7d": 8,
+      "timer_completed_7d": 143,
+      "completed_users_7d": 29,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T19:53:36+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T20:17:20+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T20:45:40+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T21:16:59+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T21:46:17+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T22:16:53+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 138,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T22:46:18+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T23:18:30+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-23T23:47:01+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T00:32:48+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T01:25:59+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T02:20:25+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T03:44:55+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T05:11:01+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T06:25:52+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T07:33:40+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T08:36:35+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T09:26:42+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 127,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T10:10:06+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 118,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T10:48:27+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 118,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T11:27:56+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 116,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T11:53:53+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T12:21:13+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T12:49:22+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T13:31:09+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T14:13:32+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T14:45:32+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T15:24:34+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T15:49:49+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T16:20:26+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T16:47:17+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T17:20:59+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T17:47:17+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T18:20:28+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T18:51:01+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T19:29:05+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T19:55:05+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T20:19:50+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T20:46:18+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T21:18:17+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T21:46:41+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T22:18:36+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T22:46:50+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T23:21:03+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-24T23:47:21+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T00:34:20+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T01:27:58+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T02:26:45+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T03:47:34+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T05:31:07+00:00",
+      "wqtu_7d": 5,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T07:08:43+00:00",
+      "wqtu_7d": 4,
+      "timer_completed_7d": 104,
+      "completed_users_7d": 25,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T08:41:28+00:00",
+      "wqtu_7d": 4,
+      "timer_completed_7d": 104,
+      "completed_users_7d": 25,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T10:09:30+00:00",
+      "wqtu_7d": 4,
+      "timer_completed_7d": 110,
+      "completed_users_7d": 25,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T11:35:45+00:00",
+      "wqtu_7d": 4,
+      "timer_completed_7d": 108,
+      "completed_users_7d": 24,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T12:50:16+00:00",
+      "wqtu_7d": 4,
+      "timer_completed_7d": 110,
+      "completed_users_7d": 25,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T14:01:29+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T15:21:23+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T16:16:22+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T17:12:19+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T17:51:31+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 115,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T18:32:16+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 116,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T19:10:04+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 116,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T19:51:18+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 116,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T20:29:37+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 116,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T20:54:32+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 118,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T21:25:21+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 120,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T21:53:05+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 120,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T22:21:57+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 120,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T22:47:32+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 120,
+      "completed_users_7d": 28,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T23:24:02+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 122,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-25T23:50:12+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 122,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T00:33:01+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 122,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T01:24:08+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 122,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T02:18:27+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 122,
+      "completed_users_7d": 30,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T03:44:49+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 121,
+      "completed_users_7d": 29,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T05:11:34+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 119,
+      "completed_users_7d": 27,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T06:33:15+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 117,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T08:00:25+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 117,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T09:27:35+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 134,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T13:21:15+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 134,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T14:21:20+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 134,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T15:45:23+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 134,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T17:05:25+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 134,
+      "completed_users_7d": 26,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T18:08:20+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 132,
+      "completed_users_7d": 25,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T19:04:05+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 131,
+      "completed_users_7d": 24,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T19:54:38+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 22,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T20:40:06+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 22,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T21:17:25+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 22,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T22:01:16+00:00",
+      "wqtu_7d": 7,
+      "timer_completed_7d": 128,
+      "completed_users_7d": 22,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T22:42:08+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 125,
+      "completed_users_7d": 21,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T23:10:29+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 125,
+      "completed_users_7d": 21,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-26T23:38:57+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 125,
+      "completed_users_7d": 21,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T00:07:20+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 125,
+      "completed_users_7d": 21,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T01:19:10+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 123,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T02:19:15+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 123,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T03:45:26+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 123,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T05:28:34+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T06:52:14+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T08:17:54+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T09:45:42+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T11:10:20+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T12:22:11+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T13:41:58+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T14:44:29+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 107,
+      "completed_users_7d": 20,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T18:50:32+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 108,
+      "completed_users_7d": 21,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-05-27T19:14:08+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 108,
+      "completed_users_7d": 21,
       "paid_distinct_users_30d": 0,
       "active_campaign_count": 0,
       "guardrail_violated": false

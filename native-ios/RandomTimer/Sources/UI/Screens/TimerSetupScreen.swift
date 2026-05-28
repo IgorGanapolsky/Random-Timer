@@ -28,9 +28,6 @@ struct TimerSetupScreen: View {
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
 
-    private var maxSliderRange: Double { Double(proManager.maxSecondsLimit) }
-    private var minSliderMax: Double { maxSliderRange - 30 }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -256,6 +253,7 @@ struct TimerSetupScreen: View {
                                 get: { config.voiceGender },
                                 set: { newGender in
                                     updateConfig(voiceGender: newGender)
+                                    timerManager.previewCommandCue(gender: newGender)
                                     AnalyticsService.shared.track(
                                         AnalyticsEvents.voiceGenderSelected,
                                         properties: [

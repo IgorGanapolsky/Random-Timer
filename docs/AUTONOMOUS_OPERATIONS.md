@@ -82,7 +82,13 @@ Approve **`testflight-signoff`** and **`firebase-signoff`** when prompted.
 gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f android_track=production
 ```
 
-Approve **`production-signoff`**. Do **not** claim shipped until `public-store-version-readback.yml` passes.
+Approve **`production-signoff`**.
+
+**Shipped = API verify + GitHub tag.** `native-release.yml` produces a GitHub release and verifies the build landed on the correct Play track and TestFlight slot. That is the release proof.
+
+**Publicly visible ≠ shipped.** `public-store-version-readback.yml` checks iTunes lookup and Play HTML — both are lagging proxies (hours to 24h+). Do **not** re-trigger the release pipeline because that workflow fails. Use `store-release-watcher.yml` (cron `*/30 * * * *`) or trigger `public-store-version-readback.yml` manually later.
+
+See `.claude/skills/store-verify-ci.md` for the full tiered truth model and debug runbook.
 
 ### Ralph / agent code change
 
@@ -107,8 +113,13 @@ All status claims: command + path + sanitized output (`docs/OPERATIONAL_RELIABIL
 
 ---
 
+## Claude Code local auth
+
+For interactive Claude Code (not CI), use **`apiKeyHelper`** so keys never land in repo or chat. See **`docs/CLAUDE_CODE_API_KEY_HELPER.md`** and copy **`.claude/scripts/get-anthropic-api-key.sh.example`** to `~/.claude/get-anthropic-api-key.sh`.
+
 ## Related docs
 
+- `docs/CLAUDE_CODE_API_KEY_HELPER.md` — Claude Code `apiKeyHelper` + TTL
 - `docs/RELEASE.md` — version bump, release branches, store metadata paths
 - `docs/FIREBASE_ANDROID_INFRASTRUCTURE.md` — Firebase project split, tester emails
 - `docs/PLAY_CONSOLE_IAP_RUNBOOK.md` — IAP SKU checklist (console-only P0)

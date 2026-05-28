@@ -74,6 +74,10 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
                     self?.silenceAlarm()
                 }
             }
+            notificationService.alarmVolumePolicyState = { [weak self] in
+                guard let self else { return (nil, false) }
+                return (self.timerState?.status, self.isAlarmSilenced)
+            }
         }
 
         // Stop any alarm/vibration that might still be playing from a previous session
@@ -596,7 +600,11 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
     }
 
     func previewCommandCue() {
-        AIVoiceCalloutService.shared.previewCommandCue(gender: config.voiceGender)
+        previewCommandCue(gender: config.voiceGender)
+    }
+
+    func previewCommandCue(gender: VoiceGender) {
+        AIVoiceCalloutService.shared.previewCommandCue(gender: gender)
     }
 
     func updatePreviewVolume() {

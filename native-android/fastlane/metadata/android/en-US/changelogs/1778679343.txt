@@ -1,0 +1,1 @@
+Fix Android monthly subscription billing (elite_tactical P1M). Paywall purchases should complete on Play production.

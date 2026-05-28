@@ -25,11 +25,32 @@ class MediaButtonHandlerTest {
     }
 
     @Test
-    fun `non-media key is ignored`() {
-        val silence = MediaButtonHandler.shouldSilenceAlarm(
-            keyCode = KeyEvent.KEYCODE_VOLUME_UP,
-            action = KeyEvent.ACTION_DOWN
-        )
+    fun `ACTION_DOWN on volume up silences alarm`() {
+        val silence =
+            MediaButtonHandler.shouldSilenceAlarm(
+                keyCode = KeyEvent.KEYCODE_VOLUME_UP,
+                action = KeyEvent.ACTION_DOWN,
+            )
+        assertThat(silence).isTrue()
+    }
+
+    @Test
+    fun `ACTION_DOWN on volume down silences alarm`() {
+        val silence =
+            MediaButtonHandler.shouldSilenceAlarm(
+                keyCode = KeyEvent.KEYCODE_VOLUME_DOWN,
+                action = KeyEvent.ACTION_DOWN,
+            )
+        assertThat(silence).isTrue()
+    }
+
+    @Test
+    fun `unrelated key is ignored`() {
+        val silence =
+            MediaButtonHandler.shouldSilenceAlarm(
+                keyCode = KeyEvent.KEYCODE_HOME,
+                action = KeyEvent.ACTION_DOWN,
+            )
         assertThat(silence).isFalse()
     }
 
@@ -40,5 +61,12 @@ class MediaButtonHandlerTest {
             action = KeyEvent.ACTION_DOWN
         )
         assertThat(silence).isTrue()
+    }
+
+    @Test
+    fun `volume keys are identified`() {
+        assertThat(MediaButtonHandler.isVolumeKey(KeyEvent.KEYCODE_VOLUME_UP)).isTrue()
+        assertThat(MediaButtonHandler.isVolumeKey(KeyEvent.KEYCODE_VOLUME_DOWN)).isTrue()
+        assertThat(MediaButtonHandler.isVolumeKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)).isFalse()
     }
 }

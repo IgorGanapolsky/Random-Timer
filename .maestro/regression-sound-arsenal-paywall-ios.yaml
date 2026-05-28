@@ -10,8 +10,16 @@ appId: com.igorganapolsky.randomtimer
     timeout: 10000
 - assertVisible: "Unlock Sound Arsenal"
 - tapOn: "Unlock Sound Arsenal"
+- tapOn:
+    text: "Unlock Sound Arsenal"
+    optional: true
 - extendedWaitUntil:
-    visible: "Restore purchase"
-    timeout: 10000
+    visible: "CHOOSE A PLAN"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Restore purchase"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "Restore purchase"
 - takeScreenshot: evidence/ios-sound-arsenal-paywall
 - stopApp

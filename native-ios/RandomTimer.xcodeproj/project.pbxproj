@@ -80,6 +80,8 @@
 		DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */; };
 		BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */; };
+		VOLKEY00112233445566778802 /* AlarmVolumeKeyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = VOLKEY00112233445566778801 /* AlarmVolumeKeyPolicy.swift */; };
+		VOLKEY00112233445566778804 /* AlarmVolumeKeyPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = VOLKEY00112233445566778803 /* AlarmVolumeKeyPolicyTests.swift */; };
 		D6D5DBA2177110DF7C339F94 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB219B60074D5E0130A3D15 /* ServiceProtocols.swift */; };
 		D8BFD3BC04A1001EE7329508 /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4045FE32D7D1E2F9D4C423C /* StorageService.swift */; };
 		D91C11A4CCFA99B1AF1AEA34 /* RandomTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E4F1687D48222CB0AD3509 /* RandomTimerWidgetBundle.swift */; };
@@ -205,6 +207,8 @@
 		B9A84792F8E1380EF1A87461 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		BDB556957D054D23B9D4D664 /* RandomTimerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RandomTimerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceAndStopAlarmTests.swift; sourceTree = "<group>"; };
+		VOLKEY00112233445566778801 /* AlarmVolumeKeyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmVolumeKeyPolicy.swift; sourceTree = "<group>"; };
+		VOLKEY00112233445566778803 /* AlarmVolumeKeyPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmVolumeKeyPolicyTests.swift; sourceTree = "<group>"; };
 		C2A2B6F508A20346A871C6F5 /* whistle.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = whistle.mp3; sourceTree = "<group>"; };
 		CCFBE5D59081407DA7F38ED6 /* RandomTimerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomTimerUITests.swift; sourceTree = "<group>"; };
 		CE62A2F6E881E0CCA7DF2361 /* TimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerManager.swift; sourceTree = "<group>"; };
@@ -264,6 +268,7 @@
 				QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */,
 				RWAD00112233445566778803 /* RewardedAdSupportTests.swift */,
 				DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */,
+				VOLKEY00112233445566778803 /* AlarmVolumeKeyPolicyTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
 				7B55AFED96FE157EA7D0BF85 /* TimerModelsTests.swift */,
 				PMONTHMSGT011223344556676 /* ProMonthlyContentMessagingTests.swift */,
@@ -305,6 +310,7 @@
 				A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
 				CRSVC00112233445566778801 /* CrashReportingService.swift */,
 				A1B2C3D400000002DEADBEEF /* Logger.swift */,
+				VOLKEY00112233445566778801 /* AlarmVolumeKeyPolicy.swift */,
 				3BE6975376BF7C7C6B14F8BF /* NotificationService.swift */,
 				1F9A3C44B55D66E77F880010 /* ProSoundCatalog.swift */,
 				8EEB9F4FF4ED4C88A5232642 /* LiveActivityService.swift */,
@@ -656,6 +662,7 @@
 				0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */,
 				4F4A683B236AE94216503707 /* Colors.swift in Sources */,
 				96771424C44C551B73F7732B /* GlassCard.swift in Sources */,
+				VOLKEY00112233445566778802 /* AlarmVolumeKeyPolicy.swift in Sources */,
 				1128B196E27E8531DC06D2FF /* NotificationService.swift in Sources */,
 				1F9A3C44B55D66E77F880011 /* ProSoundCatalog.swift in Sources */,
 				E1DD7FFA2F3044B7A5F461C1 /* LiveActivityService.swift in Sources */,
@@ -707,6 +714,7 @@
 				QTWP00112233445566778804 /* QualifiedTrainingPaywallPolicyTests.swift in Sources */,
 				RWAD00112233445566778804 /* RewardedAdSupportTests.swift in Sources */,
 				DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */,
+				VOLKEY00112233445566778804 /* AlarmVolumeKeyPolicyTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
 				DB8217C38D6B214B931042F7 /* TimerModels.swift in Sources */,
 				840C3EEAD4E35D7D202C1C68 /* TimerModelsTests.swift in Sources */,
@@ -768,7 +776,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.36;
+				MARKETING_VERSION = 1.3.42;
 				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
@@ -790,7 +798,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.36;
+				MARKETING_VERSION = 1.3.42;
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -878,7 +886,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.36;
+				MARKETING_VERSION = 1.3.42;
 				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
@@ -900,7 +908,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.36;
+				MARKETING_VERSION = 1.3.42;
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

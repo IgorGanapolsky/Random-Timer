@@ -1158,7 +1158,8 @@ class TimerForegroundService : Service() {
                                 MediaButtonHandler.shouldSilenceAlarm(keyEvent.keyCode, keyEvent.action)
                             ) {
                                 silenceAlarm()
-                                return true
+                                // Let volume keys still adjust system volume.
+                                return !MediaButtonHandler.isVolumeKey(keyEvent.keyCode)
                             }
                             return super.onMediaButtonEvent(mediaButtonEvent)
                         }

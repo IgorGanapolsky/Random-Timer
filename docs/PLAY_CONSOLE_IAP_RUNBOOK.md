@@ -7,7 +7,7 @@
 |------------|---------------------|
 | `pro_base` | One-time (INAPP) |
 | `elite_tactical` | Subscription (SUBS) |
-| `elite_tactical_monthly` | Subscription (SUBS), P1M |
+| `elite_tactical_monthly` | Subscription (SUBS) — **monthly base plan must be ACTIVE** (app bills this SKU when Play hosts P1M here) |
 
 PostHog `billing_product_not_found` on Android means Play Billing returned none of these at runtime — fix in **Play Console**, not in app code alone.
 

@@ -9,12 +9,16 @@ import sys
 
 from scripts.play_monetization_client import (
     PACKAGE,
+    REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID,
+    REQUIRED_MONTHLY_BASE_PLAN_ID,
     REQUIRED_ONE_TIME,
     REQUIRED_SUBSCRIPTIONS,
     build_android_publisher_service,
     list_one_time_products,
     list_subscription_products,
     resolve_play_credentials,
+    subscription_purchase_blockers,
+    subscription_purchase_warnings,
 )
 
 
@@ -38,13 +42,25 @@ def main() -> int:
         *[pid for pid in REQUIRED_ONE_TIME if pid not in found_ids],
         *[pid for pid in REQUIRED_SUBSCRIPTIONS if pid not in found_ids],
     ]
+    blockers = subscription_purchase_blockers(subscriptions)
+    warnings = subscription_purchase_warnings(subscriptions)
 
     report = {
         "package": PACKAGE,
         "one_time_products": one_time,
         "subscriptions": subscriptions,
         "required_missing": missing,
-        "status": "ok" if not missing else "missing_products",
+        "subscription_purchase_blockers": blockers,
+        "subscription_purchase_warnings": warnings,
+        "required_elite_annual_base_plan_id": REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID,
+        "required_monthly_base_plan_id": REQUIRED_MONTHLY_BASE_PLAN_ID,
+        "status": (
+            "ok"
+            if not missing and not blockers
+            else "missing_products"
+            if missing
+            else "subscription_not_purchasable"
+        ),
     }
 
     print("== Play IAP Product Readiness ==")
@@ -54,7 +70,7 @@ def main() -> int:
         with open(args.json_out, "w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2, sort_keys=True)
 
-    return 0 if not missing else 1
+    return 0 if not missing and not blockers else 1
 
 
 if __name__ == "__main__":

@@ -29,8 +29,8 @@ from scripts import verify_play_public_listing as play
 DEFAULT_IOS_APP_ID = "6758355312"
 DEFAULT_ANDROID_PACKAGE = "com.iganapolsky.randomtimer"
 DEFAULT_COUNTRY = "US"
-DEFAULT_TIMEOUT = 900
-DEFAULT_POLL_INTERVAL = 60
+DEFAULT_TIMEOUT = 120
+DEFAULT_POLL_INTERVAL = 30
 
 
 @dataclass
@@ -239,14 +239,50 @@ def poll_until_public(
     verify_once,
     timeout: int,
     poll_interval: int,
+    fail_fast_on_stable_mismatch: bool = False,
 ) -> list[StoreVersionResult]:
+    """Poll public storefronts until all pass or timeout.
+
+    Args:
+        fail_fast_on_stable_mismatch: Exit immediately when the observed version
+            is stable across two consecutive polls but does not match expected.
+            Public storefronts lag hours to 24h+; this avoids burning the full
+            timeout on guaranteed mismatches. Use ``continue-on-error`` in CI.
+    """
     deadline = time.time() + timeout
     latest: list[StoreVersionResult] = []
+    last_observed: dict[str, str] = {}
 
     while True:
         latest = verify_once()
         if all(item.passed for item in latest):
             return latest
+
+        if fail_fast_on_stable_mismatch and last_observed:
+            stable_mismatch = all(
+                item.status == "VERSION_MISMATCH"
+                and last_observed.get(item.platform) == item.observed_version
+                for item in latest
+                if not item.passed
+            )
+            if stable_mismatch:
+                return [
+                    StoreVersionResult(
+                        item.platform,
+                        False,
+                        "VERSION_MISMATCH_STABLE",
+                        item.url,
+                        item.expected_version,
+                        item.observed_version,
+                        f"{item.details} (stable mismatch — propagation lag; advisory only)",
+                    )
+                    if not item.passed
+                    else item
+                    for item in latest
+                ]
+
+        for item in latest:
+            last_observed[item.platform] = item.observed_version
 
         remaining = deadline - time.time()
         if remaining <= 0:
@@ -263,7 +299,7 @@ def poll_until_public(
                             item.url,
                             item.expected_version,
                             item.observed_version,
-                            f"{item.details} (timed out after {timeout}s)",
+                            f"{item.details} (timed out after {timeout}s — propagation lag; advisory only)",
                         )
                     )
             return timed_out
@@ -309,6 +345,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--country", default=DEFAULT_COUNTRY)
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
     parser.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
+    parser.add_argument(
+        "--fail-fast-on-stable-mismatch",
+        action="store_true",
+        default=False,
+        help=(
+            "Exit immediately (without waiting for timeout) when the observed version is stable "
+            "across two consecutive polls but does not match expected. Avoids burning the full "
+            "timeout on propagation lag. Use continue-on-error in CI."
+        ),
+    )
     parser.add_argument("--json-out", default="", help="Optional path for JSON evidence output")
     return parser.parse_args()
 
@@ -344,7 +390,12 @@ def main() -> int:
             )
         return checks
 
-    results = poll_until_public(verify_once, args.timeout, args.poll_interval)
+    results = poll_until_public(
+        verify_once,
+        args.timeout,
+        args.poll_interval,
+        fail_fast_on_stable_mismatch=args.fail_fast_on_stable_mismatch,
+    )
     passed = print_results(results, expected_source_label)
 
     if args.json_out:

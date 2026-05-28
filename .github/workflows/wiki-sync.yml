@@ -2,7 +2,7 @@ name: Wiki Sync
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # Every 15 minutes for near-real-time paid + growth dashboard updates
+    - cron: '0 */6 * * *' # Every 6 hours (was */15 — Actions budget; push to develop still refreshes)
   workflow_dispatch:
   push:
     branches: [develop]

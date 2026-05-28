@@ -8,7 +8,10 @@ from typing import Any
 
 PACKAGE = "com.iganapolsky.randomtimer"
 REQUIRED_ONE_TIME = ("pro_base",)
+# App bills monthly via elite_tactical_monthly when Play hosts P1M there (see ProManager).
 REQUIRED_SUBSCRIPTIONS = ("elite_tactical", "elite_tactical_monthly")
+REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID = "annual"
+REQUIRED_MONTHLY_BASE_PLAN_ID = "monthly"
 TARGET_ONE_TIME = "pro_base"
 # P2 scaffold — document SKUs; not required for verify until Play Console products exist.
 SCAFFOLD_DISCIPLINE_PACKS = (
@@ -132,3 +135,61 @@ def activate_one_time_product(service: Any, product_id: str) -> dict[str, Any]:
             }
         )
     return {"product_id": product_id, "actions": actions}
+
+
+def _active_base_plan_ids(subscription: dict[str, Any]) -> set[str]:
+    active: set[str] = set()
+    for plan in subscription.get("base_plans") or []:
+        plan_id = plan.get("base_plan_id")
+        state = (plan.get("state") or "").upper()
+        if plan_id and state == "ACTIVE":
+            active.add(plan_id)
+    return active
+
+
+def subscription_purchase_blockers(subscriptions: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Return human-readable blockers when Play subscriptions cannot be purchased."""
+    blockers: list[dict[str, str]] = []
+    by_id = {item["product_id"]: item for item in subscriptions}
+
+    elite = by_id.get("elite_tactical")
+    if elite is None:
+        return blockers
+
+    elite_active = _active_base_plan_ids(elite)
+    if REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID not in elite_active:
+        blockers.append(
+            {
+                "product_id": "elite_tactical",
+                "reason": f"missing_active_base_plan:{REQUIRED_ELITE_ANNUAL_BASE_PLAN_ID}",
+            }
+        )
+
+    monthly_on_elite = REQUIRED_MONTHLY_BASE_PLAN_ID in elite_active
+    monthly_sub = by_id.get("elite_tactical_monthly")
+    monthly_on_dedicated = (
+        monthly_sub is not None
+        and REQUIRED_MONTHLY_BASE_PLAN_ID in _active_base_plan_ids(monthly_sub)
+    )
+    if not monthly_on_elite and not monthly_on_dedicated:
+        blockers.append(
+            {
+                "product_id": "elite_tactical",
+                "reason": "missing_active_monthly_base_plan",
+            }
+        )
+
+    return blockers
+
+
+def subscription_purchase_warnings(subscriptions: list[dict[str, Any]]) -> list[dict[str, str]]:
+    warnings: list[dict[str, str]] = []
+    for item in subscriptions:
+        if item.get("product_id") == "elite_tactical_monthly" and not item.get("base_plans"):
+            warnings.append(
+                {
+                    "product_id": "elite_tactical_monthly",
+                    "reason": "orphan_subscription_no_base_plans_app_uses_elite_tactical_p1m",
+                }
+            )
+    return warnings

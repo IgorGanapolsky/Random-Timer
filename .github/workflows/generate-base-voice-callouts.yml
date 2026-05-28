@@ -10,7 +10,7 @@ on:
       male_voice_id:
         description: ElevenLabs male voice ID (drill sergeant default).
         required: false
-        default: DGzg6RaUqxGRTHSBjfgF
+        default: 2EiwWnXFnvU5JabPnv8n
         type: string
       female_voice_id:
         description: ElevenLabs female voice ID (empty skips female render).
@@ -22,6 +22,11 @@ on:
         required: false
         default: eleven_multilingual_v2
         type: string
+      regenerate_all_male:
+        description: Regenerate every male bundled cue (not only missing files).
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -45,7 +50,13 @@ jobs:
           MALE_VOICE_ID: ${{ inputs.male_voice_id }}
           FEMALE_VOICE_ID: ${{ inputs.female_voice_id }}
           MODEL_ID: ${{ inputs.model_id }}
-        run: python scripts/generate_base_voice_callouts.py
+          REGENERATE_ALL_MALE: ${{ inputs.regenerate_all_male }}
+        run: |
+          args=()
+          if [ "$REGENERATE_ALL_MALE" = "true" ]; then
+            args+=(--regenerate-all-male)
+          fi
+          python scripts/generate_base_voice_callouts.py "${args[@]}"
 
       - name: Upload generated audio
         if: always()

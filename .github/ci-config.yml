@@ -66,7 +66,8 @@ automation:
 # Quality Gates
 quality:
   test_coverage:
-    minimum: 80
+    minimum: 80          # north-star target
+    enforced_floor: 66   # wired in ci.yml --cov-fail-under (2026-05-26)
     critical: 70
   sonar:
     reliability_rating: A

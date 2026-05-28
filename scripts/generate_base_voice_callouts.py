@@ -45,6 +45,25 @@ DEFAULT_VOICE_SETTINGS = {
     "style": 0.3,
     "use_speaker_boost": True,
 }
+VOICE_PERSONAS_PATH = REPO_ROOT / "content/pro_audio/voice_personas.json"
+FORBIDDEN_MALE_VOICE_ID = "DGzg6RaUqxGRTHSBjfgF"  # ElevenLabs "Angst" (San Francisco accent)
+
+
+def _default_male_voice_id() -> str:
+    contract = json.loads(VOICE_PERSONAS_PATH.read_text(encoding="utf-8"))
+    voice_id = contract["male"]["voiceId"].strip()
+    if voice_id == FORBIDDEN_MALE_VOICE_ID:
+        raise SystemExit(f"Refusing forbidden male voice ID (Angst): {voice_id}")
+    return voice_id
+
+
+def _all_male_cue_lines(catalog: dict) -> list[tuple[str, str]]:
+    lines: list[tuple[str, str]] = [(catalog["previewElapsed"]["filename"], catalog["previewElapsed"]["text"])]
+    for cue in catalog["elapsedCues"]:
+        lines.append((cue["filename"], cue["text"]))
+    for cue in catalog["commandCues"]:
+        lines.append((cue["filename"], cue["text"]))
+    return lines
 
 
 def _existing_android_raw_stems() -> set[str]:
@@ -74,22 +93,35 @@ def _write_mirror(src_dir: Path, dst_dir: Path, stem: str, dst_prefix: str = "")
 
 
 def main() -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--regenerate-all-male",
+        action="store_true",
+        help="Regenerate every male bundled cue (command, elapsed, preview), not only missing files.",
+    )
+    args = parser.parse_args()
+
     api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
     if not api_key:
         print("ELEVENLABS_API_KEY not set", file=sys.stderr)
         return 2
 
-    male_voice_id = os.environ.get("MALE_VOICE_ID", "DGzg6RaUqxGRTHSBjfgF").strip()
+    male_voice_id = os.environ.get("MALE_VOICE_ID", _default_male_voice_id()).strip()
+    if male_voice_id == FORBIDDEN_MALE_VOICE_ID:
+        print(f"Refusing forbidden male voice ID (Angst): {male_voice_id}", file=sys.stderr)
+        return 2
     female_voice_id = os.environ.get("FEMALE_VOICE_ID", "").strip()
     model_id = os.environ.get("MODEL_ID", "eleven_multilingual_v2").strip()
 
     catalog = json.loads(ANDROID_VOICE_CATALOG_PATH.read_text(encoding="utf-8"))
-    missing = _missing_male_cues(catalog)
+    missing = _all_male_cue_lines(catalog) if args.regenerate_all_male else _missing_male_cues(catalog)
     if not missing:
         print("No missing cues. Nothing to generate.")
         return 0
 
-    print(f"Generating {len(missing)} missing cue(s):")
+    print(f"Generating {len(missing)} male cue(s):")
     for stem, text in missing:
         print(f"  - {stem}: {text!r}")
 

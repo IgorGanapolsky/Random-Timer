@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-21T18:22:15+00:00",
+  "generated_at": "2026-05-27T19:18:01+00:00",
   "source": "apple_ads_api",
   "status": "ok",
   "status_reason": "",
@@ -34,52 +34,7 @@
   "finding": "API reports 1 campaign(s), 0 active; 30d taps 0, spend $0.00, installs 0.",
   "snapshots": [
     {
-      "timestamp": "2026-02-24T17:36:17+00:00",
-      "campaign_count": 1,
-      "active_campaign_count": 1,
-      "impressions": 0,
-      "taps": 0,
-      "spend_usd": 0.0,
-      "installs": 0
-    },
-    {
-      "timestamp": "2026-02-24T17:38:31+00:00",
-      "campaign_count": 1,
-      "active_campaign_count": 1,
-      "impressions": 0,
-      "taps": 0,
-      "spend_usd": 0.0,
-      "installs": 0
-    },
-    {
-      "timestamp": "2026-02-26T17:23:27+00:00",
-      "campaign_count": 1,
-      "active_campaign_count": 1,
-      "impressions": 624,
-      "taps": 11,
-      "spend_usd": 10.0,
-      "installs": 3
-    },
-    {
-      "timestamp": "2026-02-26T17:58:43+00:00",
-      "campaign_count": 1,
-      "active_campaign_count": 1,
-      "impressions": 624,
-      "taps": 11,
-      "spend_usd": 10.0,
-      "installs": 3
-    },
-    {
-      "timestamp": "2026-02-26T18:28:59+00:00",
-      "campaign_count": 1,
-      "active_campaign_count": 1,
-      "impressions": 624,
-      "taps": 11,
-      "spend_usd": 10.0,
-      "installs": 3
-    },
-    {
-      "timestamp": "2026-05-19T17:19:23+00:00",
+      "timestamp": "2026-05-23T12:49:20+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -88,7 +43,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T17:44:48+00:00",
+      "timestamp": "2026-05-23T13:31:45+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -97,7 +52,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T18:22:52+00:00",
+      "timestamp": "2026-05-23T14:13:26+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -106,7 +61,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T18:35:35+00:00",
+      "timestamp": "2026-05-23T14:15:08+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -115,7 +70,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T19:12:58+00:00",
+      "timestamp": "2026-05-23T14:46:48+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -124,7 +79,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T19:55:46+00:00",
+      "timestamp": "2026-05-23T15:24:25+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -133,7 +88,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T20:34:00+00:00",
+      "timestamp": "2026-05-23T15:50:27+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -142,7 +97,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T21:10:33+00:00",
+      "timestamp": "2026-05-23T16:21:12+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -151,7 +106,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T21:45:43+00:00",
+      "timestamp": "2026-05-23T16:48:00+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -160,7 +115,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T22:11:56+00:00",
+      "timestamp": "2026-05-23T17:22:41+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -169,7 +124,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T22:15:21+00:00",
+      "timestamp": "2026-05-23T17:49:27+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -178,7 +133,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T22:45:33+00:00",
+      "timestamp": "2026-05-23T18:20:08+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -187,7 +142,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T23:13:42+00:00",
+      "timestamp": "2026-05-23T18:48:48+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -196,7 +151,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-19T23:41:56+00:00",
+      "timestamp": "2026-05-23T19:27:52+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -205,7 +160,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T00:09:47+00:00",
+      "timestamp": "2026-05-23T19:54:28+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -214,7 +169,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T01:19:23+00:00",
+      "timestamp": "2026-05-23T20:18:13+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -223,7 +178,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T02:19:42+00:00",
+      "timestamp": "2026-05-23T20:46:35+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -232,7 +187,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T03:45:35+00:00",
+      "timestamp": "2026-05-23T21:17:47+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -241,7 +196,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T05:13:22+00:00",
+      "timestamp": "2026-05-23T21:47:13+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -250,7 +205,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T06:35:02+00:00",
+      "timestamp": "2026-05-23T22:17:47+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -259,7 +214,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T07:58:06+00:00",
+      "timestamp": "2026-05-23T22:47:04+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -268,7 +223,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T09:18:44+00:00",
+      "timestamp": "2026-05-23T23:19:16+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -277,7 +232,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T10:32:31+00:00",
+      "timestamp": "2026-05-23T23:47:45+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -286,7 +241,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T11:40:36+00:00",
+      "timestamp": "2026-05-24T00:33:30+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -295,7 +250,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T12:35:28+00:00",
+      "timestamp": "2026-05-24T01:26:49+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -304,7 +259,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T13:39:03+00:00",
+      "timestamp": "2026-05-24T02:21:22+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -313,7 +268,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T14:40:21+00:00",
+      "timestamp": "2026-05-24T03:45:49+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -322,7 +277,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T15:59:17+00:00",
+      "timestamp": "2026-05-24T05:12:00+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -331,7 +286,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T17:20:29+00:00",
+      "timestamp": "2026-05-24T06:26:42+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -340,7 +295,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T18:08:45+00:00",
+      "timestamp": "2026-05-24T07:34:30+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -349,7 +304,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T18:48:32+00:00",
+      "timestamp": "2026-05-24T08:37:17+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -358,7 +313,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T19:05:18+00:00",
+      "timestamp": "2026-05-24T09:27:49+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -367,7 +322,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T19:23:34+00:00",
+      "timestamp": "2026-05-24T10:11:00+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -376,7 +331,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T19:57:14+00:00",
+      "timestamp": "2026-05-24T10:49:10+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -385,7 +340,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T20:53:18+00:00",
+      "timestamp": "2026-05-24T11:28:40+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -394,7 +349,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T21:24:08+00:00",
+      "timestamp": "2026-05-24T11:54:42+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -403,7 +358,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T22:05:30+00:00",
+      "timestamp": "2026-05-24T12:21:59+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -412,7 +367,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T22:45:31+00:00",
+      "timestamp": "2026-05-24T12:50:08+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -421,7 +376,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T23:14:49+00:00",
+      "timestamp": "2026-05-24T13:32:00+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -430,7 +385,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-20T23:46:08+00:00",
+      "timestamp": "2026-05-24T14:14:21+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -439,7 +394,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T00:36:23+00:00",
+      "timestamp": "2026-05-24T14:46:17+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -448,7 +403,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T01:28:45+00:00",
+      "timestamp": "2026-05-24T15:25:29+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -457,7 +412,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T02:27:29+00:00",
+      "timestamp": "2026-05-24T15:50:39+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -466,7 +421,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T03:48:00+00:00",
+      "timestamp": "2026-05-24T16:21:32+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -475,7 +430,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T05:24:47+00:00",
+      "timestamp": "2026-05-24T16:48:09+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -484,7 +439,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T06:47:52+00:00",
+      "timestamp": "2026-05-24T17:21:51+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -493,7 +448,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T08:13:13+00:00",
+      "timestamp": "2026-05-24T17:48:07+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -502,7 +457,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T09:28:14+00:00",
+      "timestamp": "2026-05-24T18:21:18+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -511,7 +466,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T10:47:17+00:00",
+      "timestamp": "2026-05-24T18:51:52+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -520,7 +475,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T12:03:16+00:00",
+      "timestamp": "2026-05-24T19:29:54+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -529,7 +484,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T13:26:32+00:00",
+      "timestamp": "2026-05-24T19:55:58+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -538,7 +493,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T14:24:20+00:00",
+      "timestamp": "2026-05-24T20:20:43+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -547,7 +502,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T15:45:10+00:00",
+      "timestamp": "2026-05-24T20:47:11+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -556,7 +511,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T16:43:56+00:00",
+      "timestamp": "2026-05-24T21:19:04+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -565,7 +520,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T17:24:03+00:00",
+      "timestamp": "2026-05-24T21:47:26+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -574,7 +529,7 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T17:35:56+00:00",
+      "timestamp": "2026-05-24T22:19:29+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,
@@ -583,7 +538,574 @@
       "installs": 0
     },
     {
-      "timestamp": "2026-05-21T18:22:15+00:00",
+      "timestamp": "2026-05-24T22:47:56+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-24T23:21:53+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-24T23:48:19+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T00:35:07+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T01:28:44+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T02:27:41+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T03:48:22+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T05:32:05+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T07:09:26+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T08:43:05+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T10:10:28+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T11:36:39+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T12:51:02+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T14:02:29+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T15:22:16+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T16:17:14+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T17:13:10+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T17:52:21+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T18:33:02+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T19:10:54+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T19:52:11+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T20:30:39+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T20:55:19+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T21:26:12+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T21:53:44+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T22:22:44+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T22:48:22+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T23:24:46+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-25T23:50:53+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T00:33:49+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T01:24:51+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T02:19:21+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T03:45:33+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T05:12:57+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T06:34:02+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T08:01:34+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T09:28:38+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T13:22:05+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T14:24:06+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T15:46:16+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T17:06:18+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T18:09:16+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T19:05:04+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T19:55:50+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T20:41:28+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T21:18:13+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T22:02:09+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T22:42:55+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T23:11:31+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-26T23:40:04+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T00:08:18+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T01:19:59+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T02:21:04+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T03:46:17+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T05:29:21+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T06:53:05+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T08:18:50+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T09:46:28+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T11:11:06+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T12:22:52+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T13:42:49+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T14:45:17+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T18:51:24+00:00",
+      "campaign_count": 1,
+      "active_campaign_count": 0,
+      "impressions": 0,
+      "taps": 0,
+      "spend_usd": 0.0,
+      "installs": 0
+    },
+    {
+      "timestamp": "2026-05-27T19:18:01+00:00",
       "campaign_count": 1,
       "active_campaign_count": 0,
       "impressions": 0,

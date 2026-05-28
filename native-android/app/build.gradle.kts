@@ -30,7 +30,7 @@ val enableFirebasePlugins =
 if (enableFirebasePlugins) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
-    // Firebase Perf Gradle plugin incompatible with AGP 9+ (removed Transform API).
+    apply(plugin = "com.google.firebase.firebase-perf")
 } else {
     logger.lifecycle("google-services.json not found; skipping Firebase Gradle plugins for local verification.")
 }
@@ -47,8 +47,8 @@ android {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
         targetSdk = ciTargetSdk ?: 35
-        versionCode = ciVersionCode ?: 1778679338
-        versionName = "1.3.36"
+        versionCode = ciVersionCode ?: 1778679344
+        versionName = "1.3.42"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

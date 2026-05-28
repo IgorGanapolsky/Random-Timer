@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
+import pytest
 
 from scripts import upload_store_listing_anchor as usa
 

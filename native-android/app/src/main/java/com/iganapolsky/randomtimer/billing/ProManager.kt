@@ -15,6 +15,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
+import com.iganapolsky.randomtimer.analytics.AndroidInstallChannel
 import com.iganapolsky.randomtimer.analytics.AnalyticsEvents
 import com.iganapolsky.randomtimer.analytics.AnalyticsProperties
 import com.iganapolsky.randomtimer.analytics.AnalyticsService
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,6 +65,18 @@ class ProManager
 
             /** P2 scaffold — not queried until Play Console products exist. */
             fun disciplinePackProductIds(): Set<String> = DisciplinePackCatalog.androidProductIds.toSet()
+
+            internal fun shouldReportBillingProductNotFound(
+                billingReady: Boolean,
+                distributionChannel: String,
+                alreadyReported: Set<String>,
+                productId: String,
+            ): Boolean {
+                if (!billingReady) return false
+                if (distributionChannel == AndroidInstallChannel.NON_PLAY_INSTALL) return false
+                if (productId in alreadyReported) return false
+                return true
+            }
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -91,11 +105,20 @@ class ProManager
                 ).build()
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
+        private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
         private var pendingPurchaseEntryPoint: String? = null
+
+        /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
+        private var pendingLaunchProductId: String? = null
 
         /** Captures the exact trial offer submitted to Google Play for the pending flow. */
         private var pendingPurchaseFreeTrialProductId: String? = null
         private var pendingPurchaseFreeTrialOfferToken: String? = null
+
+        private fun clearPendingPaywallLaunch() {
+            pendingPurchaseEntryPoint = null
+            pendingLaunchProductId = null
+        }
 
         init {
             connectAndRestore()
@@ -204,6 +227,7 @@ class ProManager
             entryPoint: String,
         ): Boolean {
             pendingPurchaseEntryPoint = entryPoint
+            pendingLaunchProductId = productID
             clearPendingTrialOffer()
             if (!ensureBillingReadyForPurchase()) {
                 trackPurchaseResult(
@@ -213,11 +237,17 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
                     debugMessage = "billing_not_ready",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
 
-            val productDetails = cachedProductDetails[productID] ?: fetchProductDetails(productID)
+            var productDetails = cachedProductDetails[productID] ?: fetchProductDetails(productID)
+            if (productDetails == null) {
+                delay(450)
+                cachedProductDetails.remove(productID)
+                reportedBillingProductNotFound.remove(productID)
+                productDetails = fetchProductDetails(productID)
+            }
             if (productDetails == null) {
                 trackPurchaseResult(
                     success = false,
@@ -226,12 +256,12 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "product_details_unavailable",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
             cachedProductDetails[productID] = productDetails
 
-            val selectedOffer =
+            var selectedOffer =
                 when (productID) {
                     ELITE_PRODUCT_ID ->
                         selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1Y")
@@ -240,6 +270,24 @@ class ProManager
                     else -> null
                 }
             if ((productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) && selectedOffer == null) {
+                delay(450)
+                cachedProductDetails.remove(productID)
+                reportedBillingProductNotFound.remove(productID)
+                val refreshed = fetchProductDetails(productID)
+                if (refreshed != null) {
+                    cachedProductDetails[productID] = refreshed
+                    productDetails = refreshed
+                    selectedOffer =
+                        when (productID) {
+                            ELITE_PRODUCT_ID ->
+                                selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1Y")
+                            MONTHLY_PRODUCT_ID ->
+                                selectSubscriptionOfferByPeriod(productDetails.toSubscriptionOffers(), "P1M")
+                            else -> null
+                        }
+                }
+            }
+            if ((productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) && selectedOffer == null) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -247,7 +295,7 @@ class ProManager
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "subscription_offer_unavailable",
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 return false
             }
 
@@ -298,7 +346,7 @@ class ProManager
                     responseCode = result.responseCode,
                     debugMessage = result.debugMessage,
                 )
-                pendingPurchaseEntryPoint = null
+                clearPendingPaywallLaunch()
                 clearPendingTrialOffer()
                 return false
             }
@@ -323,7 +371,19 @@ class ProManager
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
             fetchProductDetails(MONTHLY_PRODUCT_ID)
+            syncMonthlyCatalogFromEliteFallback()
             trackProductCatalogStatus()
+        }
+
+        /** Fallback when Play hosts P1M on `elite_tactical` instead of `elite_tactical_monthly`. */
+        private fun syncMonthlyCatalogFromEliteFallback() {
+            if (cachedProductDetails[MONTHLY_PRODUCT_ID] != null) {
+                return
+            }
+            val eliteDetails = cachedProductDetails[ELITE_PRODUCT_ID] ?: return
+            if (monthlyOfferAvailableFromEliteOffers(eliteDetails.toSubscriptionOffers())) {
+                cachedProductDetails[MONTHLY_PRODUCT_ID] = eliteDetails
+            }
         }
 
         suspend fun availablePaywallProductIds(): Set<String> {
@@ -353,8 +413,9 @@ class ProManager
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
+            val billingProductId = playBillingProductId(productID)
             val productType =
-                if (productID == ELITE_PRODUCT_ID || productID == MONTHLY_PRODUCT_ID) {
+                if (billingProductId == ELITE_PRODUCT_ID) {
                     BillingClient.ProductType.SUBS
                 } else {
                     BillingClient.ProductType.INAPP
@@ -364,7 +425,7 @@ class ProManager
                 listOf(
                     QueryProductDetailsParams.Product
                         .newBuilder()
-                        .setProductId(productID)
+                        .setProductId(billingProductId)
                         .setProductType(productType)
                         .build(),
                 )
@@ -379,16 +440,36 @@ class ProManager
             val details = result.productDetailsList?.firstOrNull()
             if (details != null) {
                 cachedProductDetails[productID] = details
+                if (billingProductId != productID) {
+                    cachedProductDetails[billingProductId] = details
+                }
+                if (billingProductId == ELITE_PRODUCT_ID) {
+                    syncMonthlyCatalogFromEliteFallback()
+                }
             } else {
-                analyticsService.track(
-                    "billing_product_not_found",
-                    mapOf(
-                        "product_id" to productID,
-                        "billing_ready" to billingClient.isReady,
-                    ),
-                )
+                maybeReportBillingProductNotFound(billingProductId, result.billingResult)
             }
             return details
+        }
+
+        private fun maybeReportBillingProductNotFound(
+            productID: String,
+            billingResult: BillingResult,
+        ) {
+            val channel = analyticsService.distributionChannel()
+            if (!billingClient.isReady) return
+            if (channel == AndroidInstallChannel.NON_PLAY_INSTALL) return
+            if (!reportedBillingProductNotFound.add(productID)) return
+            analyticsService.track(
+                "billing_product_not_found",
+                mapOf(
+                    "product_id" to productID,
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to channel,
+                    "billing_ready" to billingClient.isReady,
+                    "billing_response_code" to billingResult.responseCode,
+                    "billing_debug_message" to billingResult.debugMessage,
+                ),
+            )
         }
 
         /**
@@ -500,7 +581,14 @@ class ProManager
             }
             // Track purchase_failed for non-success outcomes (including cancellations)
             if (!hasPurchased) {
-                val failedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: "unknown"
+                val failedProductId =
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                        ?: "unknown"
                 val reason =
                     when (result.responseCode) {
                         BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
@@ -533,7 +621,14 @@ class ProManager
                 )
             }
             if (hasPurchased) {
-                val purchasedProductId = purchases?.firstOrNull()?.products?.firstOrNull() ?: ""
+                val purchasedProductId =
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                        ?: ""
                 val revenueAmount = priceAmountFromCache(purchasedProductId)
                 analyticsService.track(
                     AnalyticsEvents.PAYWALL_PURCHASE_SUCCESS,
@@ -575,7 +670,7 @@ class ProManager
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
             )
-            pendingPurchaseEntryPoint = null
+            clearPendingPaywallLaunch()
             clearPendingTrialOffer()
         }
 
@@ -742,6 +837,12 @@ internal data class SubscriptionOffer(
     val hasFreeTrial: Boolean
         get() = pricingPhases.any { it.isFree }
 }
+
+/** Maps paywall logical SKU to Play Billing product id (identity — monthly uses Play catalog SKU). */
+internal fun playBillingProductId(logicalProductId: String): String = logicalProductId
+
+internal fun monthlyOfferAvailableFromEliteOffers(offers: List<SubscriptionOffer>): Boolean =
+    selectSubscriptionOfferByPeriod(offers, "P1M") != null
 
 /** Selects the subscription offer that matches a specific ISO 8601 billing period (e.g. "P1Y", "P1M"). */
 internal fun selectSubscriptionOfferByPeriod(

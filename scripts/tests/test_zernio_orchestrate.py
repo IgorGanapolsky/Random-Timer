@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -287,3 +289,53 @@ def test_main_routes_post_text(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(zo, "cmd_post_text", lambda _a: 43)
     monkeypatch.setattr("sys.argv", ["zernio", "post-text", "--content", "hello"])
     assert zo.main() == 43
+
+
+def test_main_routes_sync_latest(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(zo, "cmd_sync_latest", lambda _a: 44)
+    monkeypatch.setattr("sys.argv", ["zernio", "sync-latest", "--dry-run"])
+    assert zo.main() == 44
+
+
+def test_cmd_sync_latest_skipped_without_key(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    args = argparse.Namespace(repo_root=str(tmp_path), output_root=str(tmp_path), dry_run=True)
+    with patch.object(zo, "zernio_api_key", return_value=""):
+        code = zo.cmd_sync_latest(args)
+    assert code == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "skipped"
+
+
+def test_cmd_sync_latest_dry_run(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from scripts.growth_content_pipeline import PostAsset
+
+    md = tmp_path / "posts" / "2026-05-26-sample.md"
+    md.parent.mkdir(parents=True)
+    md.write_text("# Sample\n", encoding="utf-8")
+    post = PostAsset(
+        slug="2026-05-26-sample",
+        title="Sample",
+        description="Desc",
+        created_at="2026-05-26T00:00:00+00:00",
+        markdown_path=md,
+        diagram_svg_path=None,
+        diagram_mermaid_path=None,
+        html_path=tmp_path / "site" / "posts" / "2026-05-26-sample.html",
+        tags=["testing"],
+    )
+    args = argparse.Namespace(repo_root=str(tmp_path), output_root=str(tmp_path), dry_run=False)
+    accounts_json = json.dumps([{"platform": "twitter", "accountId": "tw_1"}])
+    with patch.object(zo, "zernio_api_key", return_value="sk"):
+        with patch.object(zo, "load_repo_dotenv"):
+            with patch("growth_content_pipeline.latest_post_asset", return_value=post):
+                with patch("growth_content_pipeline.resolve_blog_base_url", return_value="https://blog.example"):
+                    with patch("growth_content_pipeline.compose_social_post_text", return_value="Sample title"):
+                        with patch("growth_content_pipeline.campaign_from_slug", return_value="camp"):
+                            with patch("growth_content_pipeline.add_utm", return_value="https://blog.example/posts/x.html"):
+                                with patch.dict(os.environ, {"ZERNIO_PUBLISH_ACCOUNTS": accounts_json}, clear=False):
+                                    os.environ.pop("ZERNIO_AUTO_PUBLISH", None)
+                                    code = zo.cmd_sync_latest(args)
+    assert code == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "dry_run"
+    assert out["slug"] == "2026-05-26-sample"

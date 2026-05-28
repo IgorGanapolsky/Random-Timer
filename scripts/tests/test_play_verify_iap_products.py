@@ -41,6 +41,43 @@ class PlayVerifyIapProductsTests(unittest.TestCase):
         products = client.list_one_time_products(service)
         self.assertEqual(products[0]["product_id"], "pro_base")
 
+    def test_subscription_purchase_blockers_requires_monthly_somewhere(self):
+        subscriptions = [
+            {
+                "product_id": "elite_tactical",
+                "base_plans": [{"base_plan_id": "annual", "state": "ACTIVE"}],
+            }
+        ]
+        blockers = client.subscription_purchase_blockers(subscriptions)
+        self.assertTrue(any("monthly" in item["reason"] for item in blockers))
+
+    def test_subscription_purchase_blockers_ok_when_monthly_on_elite_tactical_monthly(self):
+        subscriptions = [
+            {
+                "product_id": "elite_tactical",
+                "base_plans": [{"base_plan_id": "annual", "state": "ACTIVE"}],
+            },
+            {
+                "product_id": "elite_tactical_monthly",
+                "base_plans": [{"base_plan_id": "monthly", "state": "ACTIVE"}],
+            },
+        ]
+        blockers = client.subscription_purchase_blockers(subscriptions)
+        self.assertEqual(blockers, [])
+
+    def test_subscription_purchase_blockers_ok_when_elite_annual_and_monthly_active(self):
+        subscriptions = [
+            {
+                "product_id": "elite_tactical",
+                "base_plans": [
+                    {"base_plan_id": "annual", "state": "ACTIVE"},
+                    {"base_plan_id": "monthly", "state": "ACTIVE"},
+                ],
+            }
+        ]
+        blockers = client.subscription_purchase_blockers(subscriptions)
+        self.assertEqual(blockers, [])
+
     def test_missing_required_products_fails_main(self):
         service = Mock()
         service.monetization.return_value = _FakeMonetization(one_time=[], subscriptions=[])

@@ -1,0 +1,144 @@
+{
+  "app_id": "6758355312",
+  "app_store_state": "PREPARE_FOR_SUBMISSION",
+  "bundle_id": "com.igorganapolsky.randomtimer",
+  "checks": [
+    {
+      "details": "Found version 1.3.36 (state=PREPARE_FOR_SUBMISSION)",
+      "evidence": {
+        "appStoreState": "PREPARE_FOR_SUBMISSION"
+      },
+      "name": "App Store Version Exists",
+      "passed": true
+    },
+    {
+      "details": "build=454 processingState=VALID",
+      "evidence": {
+        "buildNumber": "454",
+        "processingState": "VALID",
+        "skipped": false
+      },
+      "name": "Build Attached",
+      "passed": true
+    },
+    {
+      "details": "locale=en-US OK",
+      "evidence": {
+        "description_len": 2041,
+        "keywords_len": 99,
+        "locale": "en-US",
+        "supportUrl": "https://igorganapolsky.github.io/Random-Timer/support/"
+      },
+      "name": "Localization Metadata",
+      "passed": true
+    },
+    {
+      "details": "Description includes a Terms of Use (EULA) link",
+      "evidence": {
+        "description_len": 2041,
+        "locale": "en-US"
+      },
+      "name": "Terms of Use Link",
+      "passed": true
+    },
+    {
+      "details": "https://igorganapolsky.github.io/Random-Timer/privacy-policy/",
+      "evidence": {
+        "locale": "en-US",
+        "privacyPolicyUrl": "https://igorganapolsky.github.io/Random-Timer/privacy-policy/"
+      },
+      "name": "Privacy Policy URL",
+      "passed": true
+    },
+    {
+      "details": "OK",
+      "evidence": {
+        "contactEmail": "igorganapolsky@gmail.com",
+        "contactPhone": "+14127221640"
+      },
+      "name": "App Review Contact",
+      "passed": true
+    },
+    {
+      "details": "Skipped check (endpoint/API unavailable): GET /apps/6758355312/appPriceSchedules failed: HTTP 404 {'errors': [{'id': '4d227efc-9558-460a-bc20-fd0ae22f0f11', 'status': '404', 'code': 'PATH_ERROR', 'title': 'The URL path is not valid', 'detail': \"The relationship 'appPriceSchedules' does not exist\"}]}",
+      "evidence": {
+        "skipped": true
+      },
+      "name": "Pricing Set",
+      "passed": true
+    },
+    {
+      "details": "OK",
+      "evidence": null,
+      "name": "Age Rating Completed",
+      "passed": true
+    },
+    {
+      "details": "need >= 3 COMPLETE in a large iPhone set; complete={'APP_IPAD_PRO_3GEN_129': 3, 'APP_IPHONE_67': 4} total={'APP_IPAD_PRO_3GEN_129': 3, 'APP_IPHONE_67': 4}",
+      "evidence": {
+        "complete_counts": {
+          "APP_IPAD_PRO_3GEN_129": 3,
+          "APP_IPHONE_67": 4
+        },
+        "incomplete_assets": {},
+        "state_counts": {
+          "APP_IPAD_PRO_3GEN_129": {
+            "COMPLETE": 3
+          },
+          "APP_IPHONE_67": {
+            "COMPLETE": 4
+          }
+        },
+        "total_counts": {
+          "APP_IPAD_PRO_3GEN_129": 3,
+          "APP_IPHONE_67": 4
+        }
+      },
+      "name": "Screenshots (iPhone)",
+      "passed": true
+    },
+    {
+      "details": "need >= 3 COMPLETE in a large iPad set; complete={'APP_IPAD_PRO_3GEN_129': 3, 'APP_IPHONE_67': 4} total={'APP_IPAD_PRO_3GEN_129': 3, 'APP_IPHONE_67': 4}",
+      "evidence": {
+        "complete_counts": {
+          "APP_IPAD_PRO_3GEN_129": 3,
+          "APP_IPHONE_67": 4
+        },
+        "incomplete_assets": {},
+        "state_counts": {
+          "APP_IPAD_PRO_3GEN_129": {
+            "COMPLETE": 3
+          },
+          "APP_IPHONE_67": {
+            "COMPLETE": 4
+          }
+        },
+        "total_counts": {
+          "APP_IPAD_PRO_3GEN_129": 3,
+          "APP_IPHONE_67": 4
+        }
+      },
+      "name": "Screenshots (iPad)",
+      "passed": true
+    }
+  ],
+  "locale": "en-US",
+  "screenshot_asset_states": {
+    "APP_IPAD_PRO_3GEN_129": {
+      "COMPLETE": 3
+    },
+    "APP_IPHONE_67": {
+      "COMPLETE": 4
+    }
+  },
+  "screenshot_counts": {
+    "APP_IPAD_PRO_3GEN_129": 3,
+    "APP_IPHONE_67": 4
+  },
+  "screenshot_incomplete_assets": {},
+  "screenshot_total_counts": {
+    "APP_IPAD_PRO_3GEN_129": 3,
+    "APP_IPHONE_67": 4
+  },
+  "version": "1.3.36"
+}
