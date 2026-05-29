@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: admob-app-ads-verify
@@ -24,3 +24,20 @@ jobs:
 
       - name: Verify hosted app-ads.txt (all Play/AdMob crawl paths)
         run: python3 scripts/admob_status.py --also-check-play-contact-path
+
+      - name: Write admob_status.json (GSD snapshot)
+        run: python3 scripts/admob_metrics_snapshot.py --also-check-play-contact-path
+
+      - name: Commit admob_status.json when changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add marketing/data/admob_status.json
+          if git diff --staged --quiet; then
+            echo "No admob_status.json changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(admob): refresh admob_status.json from app-ads verify"
+          git pull --rebase origin develop
+          git push origin HEAD:develop

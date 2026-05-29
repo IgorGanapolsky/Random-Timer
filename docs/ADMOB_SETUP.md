@@ -18,9 +18,11 @@
 2. After deploy, run:
    ```bash
    python3 scripts/admob_status.py --also-check-play-contact-path
+   python3 scripts/admob_metrics_snapshot.py --also-check-play-contact-path
    ```
    (`app-ads.txt` must exist at **repo root** and `support/` for Jekyll Pages on `develop`, plus under `marketing/site/` for the growth artifact deploy.)
-3. In AdMob UI → **Verify app** → **Check for updates** (no API for app-ads crawl; up to ~24h).
+3. **GSD artifact:** `marketing/data/admob_status.json` is refreshed daily by [`admob-app-ads-verify.yml`](../.github/workflows/admob-app-ads-verify.yml) (hosted checks; API section only when CI has creds).
+4. In AdMob UI → **Verify app** → **Check for updates** (no API for app-ads crawl; up to ~24h).
 
 ## IDs in AdMob vs OAuth (do not confuse)
 
@@ -119,7 +121,11 @@ Debug builds use [Google test ad units](https://developers.google.com/admob/andr
 
 ## iOS app in AdMob
 
-Add iOS app (App Store link `6758355312`) and a rewarded ad unit — same publisher ID.
+Add iOS app (App Store `6758355312` / `https://apps.apple.com/app/id6758355312`) and a rewarded ad unit — same publisher ID.
+
+**UI (CEO one click if automation blocked):** AdMob → **Add app** → iOS → listed on store → search App Store URL → **Add** on row **Random Tactical Timer Free | iOS** → create rewarded unit.
+
+**API:** `accounts.apps.create` needs `admob.monetization` scope (not readonly ADC); often 403 until account manager enables write access.
 
 ## Code
 

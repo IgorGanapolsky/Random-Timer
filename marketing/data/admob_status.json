@@ -1,0 +1,41 @@
+{
+  "source": "admob_metrics_snapshot",
+  "generated_at": "2026-05-29T20:38:24Z",
+  "publisher_id": "pub-5173650670360699",
+  "app_ads": {
+    "expected_line": "google.com, pub-5173650670360699, DIRECT, f08c47fec0942fa0",
+    "checks": [
+      {
+        "url": "https://igorganapolsky.github.io/Random-Timer/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/Random-Timer/app-ads.txt"
+      },
+      {
+        "url": "https://igorganapolsky.github.io/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/app-ads.txt"
+      },
+      {
+        "url": "https://igorganapolsky.github.io/Random-Timer/support/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/Random-Timer/support/app-ads.txt"
+      }
+    ],
+    "all_pass": true
+  },
+  "api": {
+    "skipped": false,
+    "token_source": "application-default-credentials",
+    "quota_project": "random-timer-dist-new",
+    "account": "accounts/pub-5173650670360699",
+    "app_count": 1,
+    "apps": [
+      {
+        "platform": "ANDROID",
+        "appId": "ca-app-pub-5173650670360699~4427145410",
+        "appApprovalState": "IN_REVIEW",
+        "displayName": "Random Tactical Timer"
+      }
+    ]
+  }
+}
