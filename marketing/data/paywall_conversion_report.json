@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-29T07:25:03+00:00",
+  "generated_at": "2026-05-29T13:10:23+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -96,7 +96,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 512,
+      "failures": 511,
       "users": 172
     },
     {
@@ -116,7 +116,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 209,
+      "failures": 208,
       "users": 114
     },
     {
