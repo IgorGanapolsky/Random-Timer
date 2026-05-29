@@ -32,8 +32,10 @@ def test_admob_app_ads_verify_workflow_checks_hosted_files():
     source = ADMOB_APP_ADS_VERIFY_WORKFLOW.read_text(encoding="utf-8")
 
     assert "admob_status.py" in source
+    assert "admob_metrics_snapshot.py" in source
     assert "--also-check-play-contact-path" in source
-    assert "contents: read" in source
+    assert "contents: write" in source
+    assert "marketing/data/admob_status.json" in source
 
 
 def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
