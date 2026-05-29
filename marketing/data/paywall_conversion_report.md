@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-29T00:51:56+00:00
+Generated: 2026-05-29T07:25:03+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **508**
+- Views: **509**
 - Offer Selects: **60**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
@@ -37,7 +37,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 513 | 172 |
+| android | elite_tactical_monthly | 512 | 172 |
 | android | elite_tactical | 389 | 162 |
 | android | pro_base | 231 | 138 |
 
@@ -51,7 +51,7 @@ Window (days): 30
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
 | setup_upgrade_cta | 10 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
-| qualified_training_gate | 2 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 3 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **154** views and **0** purchase attempts.
@@ -61,13 +61,13 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 3347 | 28 |
+| unknown | 3318 | 27 |
 | max_seconds | 3007 | 320 |
-| alarm_duration | 2525 | 292 |
+| alarm_duration | 2526 | 293 |
 | min_seconds | 2246 | 297 |
-| volume | 1883 | 200 |
+| volume | 2102 | 201 |
 | sound_type | 1766 | 253 |
-| repeat_enabled | 1240 | 288 |
+| repeat_enabled | 1241 | 289 |
 | voice_callouts_enabled | 769 | 179 |
 | vibration_enabled | 576 | 204 |
 | repeat_rounds | 396 | 116 |

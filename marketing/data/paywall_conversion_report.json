@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-29T00:51:56+00:00",
+  "generated_at": "2026-05-29T07:25:03+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 508,
+    "views": 509,
     "offer_selects": 60,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1181,
+    "view_to_select_rate": 0.1179,
     "select_to_attempt_rate": 0.0833,
     "attempt_to_success_rate": 0.0
   },
@@ -96,7 +96,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 513,
+      "failures": 512,
       "users": 172
     },
     {
@@ -116,18 +116,18 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 210,
+      "failures": 209,
       "users": 114
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
+      "product_id": "elite_tactical",
       "failures": 114,
       "users": 105
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
+      "product_id": "pro_base",
       "failures": 114,
       "users": 105
     }
@@ -191,7 +191,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 2,
+      "views": 3,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -227,8 +227,8 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 3347,
-      "users": 28
+      "changes": 3318,
+      "users": 27
     },
     {
       "setting_name": "max_seconds",
@@ -237,8 +237,8 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2525,
-      "users": 292
+      "changes": 2526,
+      "users": 293
     },
     {
       "setting_name": "min_seconds",
@@ -247,8 +247,8 @@
     },
     {
       "setting_name": "volume",
-      "changes": 1883,
-      "users": 200
+      "changes": 2102,
+      "users": 201
     },
     {
       "setting_name": "sound_type",
@@ -257,8 +257,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1240,
-      "users": 288
+      "changes": 1241,
+      "users": 289
     },
     {
       "setting_name": "voice_callouts_enabled",
