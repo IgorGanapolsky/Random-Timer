@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-29T13:10:23+00:00",
+  "generated_at": "2026-05-29T18:55:24+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 509,
-    "offer_selects": 60,
+    "views": 516,
+    "offer_selects": 58,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1179,
-    "select_to_attempt_rate": 0.0833,
+    "view_to_select_rate": 0.1124,
+    "select_to_attempt_rate": 0.0862,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -49,10 +49,10 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 45,
+      "offer_selects": 43,
       "attempts": 1,
       "successes": 0,
-      "select_to_attempt_rate": 0.0222,
+      "select_to_attempt_rate": 0.0233,
       "attempt_to_success_rate": 0.0
     },
     {
@@ -96,54 +96,54 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 511,
-      "users": 172
+      "failures": 504,
+      "users": 175
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 389,
-      "users": 162
+      "failures": 391,
+      "users": 164
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 231,
-      "users": 138
+      "failures": 233,
+      "users": 140
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 208,
-      "users": 114
+      "failures": 201,
+      "users": 117
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 114,
-      "users": 105
+      "failures": 116,
+      "users": 107
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 114,
-      "users": 105
+      "failures": 116,
+      "users": 107
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 231,
+      "views": 237,
       "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 0.0043,
+      "view_to_attempt_rate": 0.0042,
       "attempt_to_success_rate": 0.0
     },
     {
       "entry_point": "voice_gate",
-      "views": 154,
+      "views": 158,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -159,7 +159,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 38,
+      "views": 39,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -175,7 +175,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 10,
+      "views": 6,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -201,7 +201,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 154,
+      "views": 158,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -217,7 +217,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 38,
+      "views": 39,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -226,49 +226,49 @@
   ],
   "settings_hotspots": [
     {
-      "setting_name": "unknown",
-      "changes": 3318,
-      "users": 27
+      "setting_name": "max_seconds",
+      "changes": 3035,
+      "users": 323
     },
     {
-      "setting_name": "max_seconds",
-      "changes": 3007,
-      "users": 320
+      "setting_name": "unknown",
+      "changes": 2742,
+      "users": 26
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2526,
-      "users": 293
+      "changes": 2554,
+      "users": 296
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2246,
-      "users": 297
+      "changes": 2265,
+      "users": 300
     },
     {
       "setting_name": "volume",
-      "changes": 2102,
-      "users": 201
+      "changes": 2107,
+      "users": 203
     },
     {
       "setting_name": "sound_type",
-      "changes": 1766,
-      "users": 253
+      "changes": 1770,
+      "users": 255
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1241,
-      "users": 289
+      "changes": 1253,
+      "users": 293
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 769,
-      "users": 179
+      "changes": 773,
+      "users": 181
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 576,
-      "users": 204
+      "changes": 581,
+      "users": 207
     },
     {
       "setting_name": "repeat_rounds",
@@ -277,18 +277,17 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 338,
-      "users": 210
+      "changes": 340,
+      "users": 211
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 241,
-      "users": 151
+      "changes": 245,
+      "users": 153
     }
   ],
   "data_quality_warnings": [
     "unknown paywall entry_point is still receiving meaningful traffic",
-    "settings_changed is still dominated by unknown setting_name rows in live data",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []
