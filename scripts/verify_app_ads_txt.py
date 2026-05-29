@@ -10,6 +10,11 @@ import urllib.error
 import urllib.request
 
 DEFAULT_URL = "https://igorganapolsky.github.io/Random-Timer/app-ads.txt"
+# Play contactWebsite uses igorganapolsky.github.io; AdMob crawls hostname root first.
+ADMOB_CRAWLER_ROOT_APP_ADS_URL = "https://igorganapolsky.github.io/app-ads.txt"
+PLAY_CONTACT_WEBSITE_APP_ADS_URL = (
+    "https://igorganapolsky.github.io/Random-Timer/support/app-ads.txt"
+)
 EXPECTED_PUBLISHER = "pub-5173650670360699"
 EXPECTED_LINE = f"google.com, {EXPECTED_PUBLISHER}, DIRECT, f08c47fec0942fa0"
 
@@ -46,12 +51,26 @@ def verify_app_ads_txt(
 def main() -> int:
     p = argparse.ArgumentParser(description="Verify app-ads.txt is published and authorized.")
     p.add_argument("--url", default=DEFAULT_URL)
+    p.add_argument(
+        "--also-check-play-contact-path",
+        action="store_true",
+        help="Also verify app-ads.txt at Play contactWebsite path (/support/).",
+    )
     p.add_argument("--publisher-id", default=EXPECTED_PUBLISHER)
     p.add_argument("--timeout", type=int, default=30)
     args = p.parse_args()
-    ok, msg = verify_app_ads_txt(url=args.url, publisher_id=args.publisher_id, timeout=args.timeout)
-    print(msg)
-    return 0 if ok else 1
+    urls = [args.url]
+    if args.also_check_play_contact_path and args.url == DEFAULT_URL:
+        urls.extend([ADMOB_CRAWLER_ROOT_APP_ADS_URL, PLAY_CONTACT_WEBSITE_APP_ADS_URL])
+    failed = False
+    for url in urls:
+        ok, msg = verify_app_ads_txt(
+            url=url, publisher_id=args.publisher_id, timeout=args.timeout
+        )
+        print(msg)
+        if not ok:
+            failed = True
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
