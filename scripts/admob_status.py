@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import urllib.error
 import urllib.request
@@ -15,10 +14,12 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
+import admob_api_auth as auth_mod
 import verify_app_ads_txt as ads_mod
 
 DEFAULT_URL = ads_mod.DEFAULT_URL
 EXPECTED_PUBLISHER = ads_mod.EXPECTED_PUBLISHER
+ADMOB_CRAWLER_ROOT_APP_ADS_URL = ads_mod.ADMOB_CRAWLER_ROOT_APP_ADS_URL
 PLAY_CONTACT_WEBSITE_APP_ADS_URL = ads_mod.PLAY_CONTACT_WEBSITE_APP_ADS_URL
 verify_app_ads_txt = ads_mod.verify_app_ads_txt
 
@@ -27,33 +28,28 @@ DEFAULT_ACCOUNT = f"accounts/{EXPECTED_PUBLISHER}"
 ANDROID_APP_ID_NUMERIC = "4427145410"
 
 
-def _fetch_admob_json(path: str, token: str, timeout: int = 30) -> dict:
+def _fetch_admob_json(path: str, auth: auth_mod.AdmobAuth, timeout: int = 30) -> dict:
     url = f"{ADMOB_API_BASE}/{path.lstrip('/')}"
     req = urllib.request.Request(
         url,
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        headers={
+            "Authorization": f"Bearer {auth.access_token}",
+            "Accept": "application/json",
+            "X-Goog-User-Project": auth.quota_project,
+        },
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def resolve_access_token(explicit: str | None) -> tuple[str | None, str]:
-    if explicit:
-        return explicit.strip(), "--access-token"
-    env = (os.environ.get("ADMOB_ACCESS_TOKEN") or "").strip()
-    if env:
-        return env, "ADMOB_ACCESS_TOKEN"
-    return None, ""
-
-
-def list_apps(token: str, account: str) -> list[dict]:
+def list_apps(auth: auth_mod.AdmobAuth, account: str) -> list[dict]:
     apps: list[dict] = []
     page_token = ""
     while True:
         query = f"{account}/apps?pageSize=100"
         if page_token:
             query += f"&pageToken={page_token}"
-        data = _fetch_admob_json(query, token)
+        data = _fetch_admob_json(query, auth)
         apps.extend(data.get("apps") or [])
         page_token = data.get("nextPageToken") or ""
         if not page_token:
@@ -64,7 +60,7 @@ def list_apps(token: str, account: str) -> list[dict]:
 def print_app_ads_report(*, also_play_path: bool) -> int:
     urls = [DEFAULT_URL]
     if also_play_path:
-        urls.append(PLAY_CONTACT_WEBSITE_APP_ADS_URL)
+        urls.extend([ADMOB_CRAWLER_ROOT_APP_ADS_URL, PLAY_CONTACT_WEBSITE_APP_ADS_URL])
     failed = False
     print("## app-ads.txt (hosted)")
     for url in urls:
@@ -76,18 +72,28 @@ def print_app_ads_report(*, also_play_path: bool) -> int:
     return 1 if failed else 0
 
 
-def print_api_report(token: str, account: str, android_app_id: str) -> int:
+def print_api_report(auth: auth_mod.AdmobAuth, account: str, android_app_id: str) -> int:
     print("## AdMob API (apps)")
+    print(f"- token_source: {auth.source}")
+    print(f"- quota_project: {auth.quota_project}")
     try:
-        apps = list_apps(token, account)
+        apps = list_apps(auth, account)
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
         print(f"- [FAIL] HTTP {exc.code}: {body[:500]}")
-        if exc.code == 403 and "ACCESS_TOKEN_SCOPE_INSUFFICIENT" in body:
+        if exc.code == 401:
             print(
-                "  Hint: create OAuth token with scope "
-                "https://www.googleapis.com/auth/admob.readonly "
-                "(AdMob API has no app-ads.txt verification field; approval state only)."
+                "  Hint: Playground access_token expires ~1h. Prefer ADC:\n"
+                "  gcloud auth application-default login "
+                f"--scopes={auth_mod.ADMOB_READONLY_SCOPE},"
+                "https://www.googleapis.com/auth/cloud-platform",
+                file=sys.stderr,
+            )
+        if exc.code == 403 and "quota project" in body.lower():
+            print(
+                f"  Hint: set ADMOB_QUOTA_PROJECT={auth_mod.DEFAULT_QUOTA_PROJECT} "
+                "or re-run ADC login with quota project.",
+                file=sys.stderr,
             )
         return 1
 
@@ -115,7 +121,11 @@ def print_api_report(token: str, account: str, android_app_id: str) -> int:
 def main() -> int:
     p = argparse.ArgumentParser(description="AdMob setup readback (CLI).")
     p.add_argument("--also-check-play-contact-path", action="store_true")
-    p.add_argument("--api", action="store_true", help="Call AdMob API (needs OAuth token).")
+    p.add_argument(
+        "--api",
+        action="store_true",
+        help="Call AdMob API (uses ADC, ADMOB_ACCESS_TOKEN, or --access-token).",
+    )
     p.add_argument("--access-token", default=None)
     p.add_argument("--account", default=DEFAULT_ACCOUNT)
     p.add_argument("--android-app-id", default=ANDROID_APP_ID_NUMERIC)
@@ -125,19 +135,20 @@ def main() -> int:
     ads_rc = print_app_ads_report(also_play_path=args.also_check_play_contact_path)
     api_rc = 0
     if args.api:
-        token, source = resolve_access_token(args.access_token)
-        if not token:
+        auth = auth_mod.resolve_admob_auth(args.access_token)
+        if not auth:
             print(
                 "## AdMob API\n"
-                "- [SKIP] Set ADMOB_ACCESS_TOKEN or pass --access-token "
-                "(scope: https://www.googleapis.com/auth/admob.readonly).",
+                "- [SKIP] No credentials. Run once:\n"
+                "  gcloud auth application-default login "
+                f"--scopes={auth_mod.ADMOB_READONLY_SCOPE},"
+                "https://www.googleapis.com/auth/cloud-platform\n"
+                "  Or set ADMOB_ACCESS_TOKEN from OAuth Playground (short-lived).",
                 file=sys.stderr,
             )
             api_rc = 2
         else:
-            if not args.json:
-                print(f"(token source: {source})")
-            api_rc = print_api_report(token, args.account, args.android_app_id)
+            api_rc = print_api_report(auth, args.account, args.android_app_id)
 
     if args.json:
         print(
