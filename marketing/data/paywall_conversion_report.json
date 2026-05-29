@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-28T18:56:30+00:00",
+  "generated_at": "2026-05-29T00:51:56+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
     "views": 508,
-    "offer_selects": 61,
+    "offer_selects": 60,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1201,
-    "select_to_attempt_rate": 0.082,
+    "view_to_select_rate": 0.1181,
+    "select_to_attempt_rate": 0.0833,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -49,10 +49,10 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 46,
+      "offer_selects": 45,
       "attempts": 1,
       "successes": 0,
-      "select_to_attempt_rate": 0.0217,
+      "select_to_attempt_rate": 0.0222,
       "attempt_to_success_rate": 0.0
     },
     {
@@ -96,7 +96,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 517,
+      "failures": 513,
       "users": 172
     },
     {
@@ -116,7 +116,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 214,
+      "failures": 210,
       "users": 114
     },
     {
@@ -143,7 +143,7 @@
     },
     {
       "entry_point": "voice_gate",
-      "views": 152,
+      "views": 154,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -175,7 +175,7 @@
     },
     {
       "entry_point": "setup_upgrade_cta",
-      "views": 12,
+      "views": 10,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -201,7 +201,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 152,
+      "views": 154,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -227,28 +227,28 @@
   "settings_hotspots": [
     {
       "setting_name": "unknown",
-      "changes": 3380,
-      "users": 29
+      "changes": 3347,
+      "users": 28
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2905,
-      "users": 316
+      "changes": 3007,
+      "users": 320
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2524,
-      "users": 291
+      "changes": 2525,
+      "users": 292
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2178,
-      "users": 295
+      "changes": 2246,
+      "users": 297
     },
     {
       "setting_name": "volume",
-      "changes": 1847,
-      "users": 199
+      "changes": 1883,
+      "users": 200
     },
     {
       "setting_name": "sound_type",
@@ -257,8 +257,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1236,
-      "users": 286
+      "changes": 1240,
+      "users": 288
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -267,8 +267,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 575,
-      "users": 203
+      "changes": 576,
+      "users": 204
     },
     {
       "setting_name": "repeat_rounds",
