@@ -23,8 +23,17 @@ PLAY_IAP_READBACK_WORKFLOW = ROOT / ".github/workflows/play-iap-product-readback
 WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
 ACTIONS_BUDGET_DOC = ROOT / "docs/ACTIONS_BUDGET.md"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+ADMOB_APP_ADS_VERIFY_WORKFLOW = ROOT / ".github/workflows/admob-app-ads-verify.yml"
 AGENTS_DOC = ROOT / "AGENTS.md"
 ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
+
+
+def test_admob_app_ads_verify_workflow_checks_hosted_files():
+    source = ADMOB_APP_ADS_VERIFY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "admob_status.py" in source
+    assert "--also-check-play-contact-path" in source
+    assert "contents: read" in source
 
 
 def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
