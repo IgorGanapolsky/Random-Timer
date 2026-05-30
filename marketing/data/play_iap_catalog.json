@@ -1,0 +1,42 @@
+{
+  "one_time_products": [
+    {
+      "kind": "one_time",
+      "product_id": "pro_base",
+      "state": "unknown"
+    }
+  ],
+  "package": "com.iganapolsky.randomtimer",
+  "required_elite_annual_base_plan_id": "annual",
+  "required_missing": [],
+  "required_monthly_base_plan_id": "monthly",
+  "status": "ok",
+  "subscription_purchase_blockers": [],
+  "subscription_purchase_warnings": [],
+  "subscriptions": [
+    {
+      "base_plans": [
+        {
+          "base_plan_id": "annual",
+          "state": "ACTIVE"
+        }
+      ],
+      "kind": "subscription",
+      "product_id": "elite_tactical",
+      "state": "unknown"
+    },
+    {
+      "base_plans": [
+        {
+          "base_plan_id": "monthly",
+          "state": "ACTIVE"
+        }
+      ],
+      "kind": "subscription",
+      "product_id": "elite_tactical_monthly",
+      "state": "unknown"
+    }
+  ],
+  "source": "play_iap_product_readback",
+  "generated_at": "2026-05-30T15:50:20Z"
+}
