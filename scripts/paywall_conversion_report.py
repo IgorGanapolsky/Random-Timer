@@ -27,6 +27,22 @@ PLAY_STORE_CATALOG_FILTER = (
     "AND coalesce(toString(properties.billing_ready), 'true') = 'true'"
 )
 
+# Include legacy paywall_purchase_result failures (pre-reason instrumentation).
+_PURCHASE_FAILURE_EVENTS = (
+    "('paywall_purchase_fail_reason', 'purchase_failed', 'paywall_purchase_result')"
+)
+_PURCHASE_FAILURE_RESULT_FILTER = """
+          AND (
+            event != 'paywall_purchase_result'
+            OR (
+              lower(coalesce(toString(properties.success), '')) != 'true'
+              AND lower(coalesce(toString(properties.result), '')) NOT IN (
+                'success', 'restored', 'already_unlocked'
+              )
+            )
+          )
+"""
+
 
 def _safe_int(value: Any) -> int:
     try:
@@ -133,9 +149,10 @@ def _failure_reasons(api_key: str, project_id: str, days: int, errors: List[str]
           ) AS reason,
           count() AS failures
         FROM events
-        WHERE event IN ('paywall_purchase_fail_reason', 'purchase_failed')
+        WHERE event IN {_PURCHASE_FAILURE_EVENTS}
           AND timestamp > now() - interval {win}
           AND {LIVE_EVENTS_PREDICATE}
+          {_PURCHASE_FAILURE_RESULT_FILTER}
         GROUP BY reason
         ORDER BY failures DESC
         LIMIT 12
@@ -159,9 +176,10 @@ def _failure_breakdown(api_key: str, project_id: str, days: int, errors: List[st
           count() AS failures,
           count(DISTINCT person_id) AS users
         FROM events
-        WHERE event IN ('paywall_purchase_fail_reason', 'purchase_failed')
+        WHERE event IN {_PURCHASE_FAILURE_EVENTS}
           AND timestamp > now() - interval {win}
           AND {LIVE_EVENTS_PREDICATE}
+          {_PURCHASE_FAILURE_RESULT_FILTER}
         GROUP BY platform, product_id, reason
         ORDER BY failures DESC
         LIMIT 25
