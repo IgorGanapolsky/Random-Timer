@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-29T20:43:33+00:00
+Generated: 2026-05-30T00:47:56+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **516**
-- Offer Selects: **58**
+- Views: **514**
+- Offer Selects: **57**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **11.2%**
-- Select -> Purchase Attempt: **8.6%**
+- View -> Offer Select: **11.1%**
+- Select -> Purchase Attempt: **8.8%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -28,7 +28,7 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical_monthly | 43 | 1 | 0 | 2.3% | 0.0% |
+| android | elite_tactical_monthly | 42 | 1 | 0 | 2.4% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -37,7 +37,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 504 | 175 |
+| android | elite_tactical_monthly | 498 | 173 |
 | android | elite_tactical | 391 | 164 |
 | android | pro_base | 233 | 140 |
 
@@ -49,8 +49,8 @@ Window (days): 30
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 39 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
-| setup_upgrade_cta | 6 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
+| setup_upgrade_cta | 4 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 3 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
@@ -61,11 +61,11 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3035 | 323 |
-| unknown | 2742 | 26 |
-| alarm_duration | 2554 | 296 |
-| min_seconds | 2265 | 300 |
-| volume | 2107 | 203 |
+| max_seconds | 3090 | 324 |
+| unknown | 2615 | 24 |
+| alarm_duration | 2555 | 297 |
+| min_seconds | 2307 | 301 |
+| volume | 2121 | 204 |
 | sound_type | 1770 | 255 |
 | repeat_enabled | 1253 | 293 |
 | voice_callouts_enabled | 773 | 181 |
