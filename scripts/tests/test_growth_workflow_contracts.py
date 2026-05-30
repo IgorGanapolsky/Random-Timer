@@ -578,6 +578,8 @@ def test_play_iap_readback_workflow_scheduled_on_develop():
     assert "play_activate_iap_products.py" in source
     assert 'PYTHONPATH: ${{ github.workspace }}' in source
     assert "GOOGLE_PLAY_JSON_KEY" in source
+    assert "marketing/data/play_iap_catalog.json" in source
+    assert "contents: write" in source
 
 
 def test_wiki_sync_builds_wqtu_health_snapshot():
