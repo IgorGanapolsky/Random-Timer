@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-31T00:51:42+00:00
+Generated: 2026-05-31T07:22:47+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **514**
+- Views: **515**
 - Offer Selects: **57**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
@@ -50,8 +50,8 @@ Window (days): 30
 | unknown | 39 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
 | sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
+| qualified_training_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 4 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 3 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **158** views and **0** purchase attempts.
@@ -61,8 +61,8 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3230 | 326 |
-| alarm_duration | 2557 | 298 |
+| max_seconds | 3256 | 326 |
+| alarm_duration | 2559 | 298 |
 | unknown | 2473 | 23 |
 | min_seconds | 2314 | 303 |
 | volume | 2121 | 204 |
