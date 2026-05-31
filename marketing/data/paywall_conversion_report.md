@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-31T13:38:29+00:00
+Generated: 2026-05-31T18:36:21+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **515**
-- Offer Selects: **57**
+- Views: **513**
+- Offer Selects: **56**
 - Purchase Attempts: **5**
 - Purchase Successes: **0**
-- View -> Offer Select: **11.1%**
-- Select -> Purchase Attempt: **8.8%**
+- View -> Offer Select: **10.9%**
+- Select -> Purchase Attempt: **8.9%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -33,7 +33,7 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical_monthly | 42 | 1 | 0 | 2.4% | 0.0% |
+| android | elite_tactical_monthly | 41 | 1 | 0 | 2.4% | 0.0% |
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -42,7 +42,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 496 | 173 |
+| android | elite_tactical_monthly | 492 | 173 |
 | android | elite_tactical | 391 | 164 |
 | android | pro_base | 233 | 140 |
 
@@ -56,7 +56,7 @@ Window (days): 30
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
 | sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
 | qualified_training_gate | 4 | 0 | 0 | 0.0% | 0.0% |
-| setup_upgrade_cta | 4 | 0 | 0 | 0.0% | 0.0% |
+| setup_upgrade_cta | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **158** views and **0** purchase attempts.
@@ -68,9 +68,9 @@ Window (days): 30
 |---------|---------|-------|
 | max_seconds | 3256 | 326 |
 | alarm_duration | 2560 | 299 |
-| unknown | 2473 | 23 |
 | min_seconds | 2316 | 304 |
 | volume | 2294 | 205 |
+| unknown | 2033 | 23 |
 | sound_type | 1770 | 255 |
 | repeat_enabled | 1264 | 296 |
 | voice_callouts_enabled | 773 | 181 |
