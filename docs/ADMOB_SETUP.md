@@ -117,7 +117,16 @@ Android IDs are baked into `BuildConfig` (override via env if needed):
 | `ADMOB_APP_ID_ANDROID` | `ca-app-pub-5173650670360699~4427145410` |
 | `ADMOB_REWARDED_UNIT_ID_ANDROID` | `ca-app-pub-5173650670360699/8693693481` |
 
-Debug builds use [Google test ad units](https://developers.google.com/admob/android/test-ads). PostHog flag `rewarded_ads_enabled` stays **off** until app-ads.txt verifies and you enable the experiment.
+Debug builds use [Google test ad units](https://developers.google.com/admob/android/test-ads).
+
+**Android approval (2026-05-30):** AdMob email + API `appApprovalState: APPROVED` for `ca-app-pub-5173650670360699~4427145410`. Hosted app-ads.txt remains **3/3 PASS**.
+
+PostHog flag `rewarded_ads_enabled` stays **off** by default. After approval, safe sequence:
+
+1. Refresh GSD: `python3 scripts/admob_metrics_snapshot.py --also-check-play-contact-path --api` → `marketing/data/admob_status.json` (`rewarded_rollout.ready_for_internal_flag_test`).
+2. Complete **Payment setup** in AdMob (required for payouts / full serving).
+3. Enable flag for **internal testers only** (5–10%), verify `rewarded_ad_requested` / `rewarded_ad_completed` in PostHog.
+4. Ship `AdMobRewardedAdPort` (replace stub) before broad rollout.
 
 ## iOS app in AdMob
 
