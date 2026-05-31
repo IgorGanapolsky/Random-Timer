@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-31T12:33:07+00:00",
+  "generated_at": "2026-05-31T13:33:27+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -14,8 +14,16 @@
   },
   "top_failure_reasons": [
     {
+      "reason": "failed",
+      "count": 405
+    },
+    {
       "reason": "user_cancelled",
-      "count": 5
+      "count": 7
+    },
+    {
+      "reason": "cancelled",
+      "count": 2
     },
     {
       "reason": "item_unavailable",
@@ -26,8 +34,22 @@
     {
       "platform": "android",
       "product_id": "unknown",
+      "reason": "failed",
+      "failures": 405,
+      "users": 176
+    },
+    {
+      "platform": "android",
+      "product_id": "unknown",
       "reason": "user_cancelled",
       "failures": 4,
+      "users": 1
+    },
+    {
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.pro",
+      "reason": "user_cancelled",
+      "failures": 2,
       "users": 1
     },
     {
@@ -38,8 +60,15 @@
       "users": 1
     },
     {
+      "platform": "android",
+      "product_id": "unknown",
+      "reason": "cancelled",
+      "failures": 2,
+      "users": 1
+    },
+    {
       "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
+      "product_id": "com.iganapolsky.randomtimer.elite",
       "reason": "user_cancelled",
       "failures": 1,
       "users": 1
@@ -121,13 +150,13 @@
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
+      "product_id": "pro_base",
       "failures": 116,
       "users": 107
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
+      "product_id": "elite_tactical",
       "failures": 116,
       "users": 107
     }

@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-05-31T12:33:40+00:00
+**Generated:** 2026-05-31T13:33:53+00:00
 
 ## Onboarding Funnel
 - First Open: **651**
@@ -67,7 +67,7 @@
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** user_cancelled (5), item_unavailable (2)
+**Top failure reasons:** failed (405), user_cancelled (7), cancelled (2), item_unavailable (2)
 
 **Catalog failures (Android):** elite_tactical_monthly (496), elite_tactical (391), pro_base (233)
 <!-- PAYWALL_END -->
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-28" , "2026-05-28" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31"]
+    x-axis ["2026-05-28" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31"]
     y-axis "Downloads"
-    line [62 , 61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 62 , 62 , 61 , 61 , 62]
-    line [537 , 550 , 558 , 561 , 561 , 570 , 570 , 571 , 571 , 571 , 580 , 581 , 581 , 581]
+    line [61 , 61 , 61 , 61 , 62 , 62 , 62 , 62 , 62 , 62 , 61 , 61 , 62 , 62]
+    line [550 , 558 , 561 , 561 , 570 , 570 , 571 , 571 , 571 , 580 , 581 , 581 , 581 , 581]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-28" , "2026-05-28" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31"]
+    x-axis ["2026-05-28" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-29" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31"]
     y-axis "Users"
-    line [6 , 5 , 5 , 6 , 6 , 6 , 6 , 5 , 5 , 5 , 5 , 5 , 6 , 6]
+    line [5 , 5 , 6 , 6 , 6 , 6 , 5 , 5 , 5 , 5 , 5 , 6 , 6 , 6]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-05-31T12:33:41+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-05-31T13:33:55+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
