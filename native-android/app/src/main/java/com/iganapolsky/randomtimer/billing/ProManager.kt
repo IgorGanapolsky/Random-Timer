@@ -237,6 +237,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
                     debugMessage = "billing_not_ready",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -256,6 +257,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "product_details_unavailable",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -295,6 +297,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "subscription_offer_unavailable",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -346,6 +349,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = result.responseCode,
                     debugMessage = result.debugMessage,
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 clearPendingTrialOffer()
@@ -669,12 +673,40 @@ class ProManager
                     mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
                 )
             }
+            val failureReason =
+                if (hasPurchased) {
+                    null
+                } else {
+                    when (result.responseCode) {
+                        BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
+                        BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
+                        BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
+                        BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
+                        BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> "billing_unavailable"
+                        BillingClient.BillingResponseCode.ERROR -> "billing_error"
+                        BillingClient.BillingResponseCode.NETWORK_ERROR -> "network_error"
+                        else -> "unknown_${result.responseCode}"
+                    }
+                }
+            val failureProductId =
+                if (hasPurchased) {
+                    null
+                } else {
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                }
             trackPurchaseResult(
                 success = hasPurchased,
                 source = if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL,
                 entryPoint = pendingPurchaseEntryPoint,
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
+                productId = failureProductId,
+                reason = failureReason,
             )
             clearPendingPaywallLaunch()
             clearPendingTrialOffer()
@@ -735,7 +767,19 @@ class ProManager
             entryPoint: String?,
             responseCode: Int,
             debugMessage: String?,
+            productId: String? = null,
+            reason: String? = null,
         ) {
+            val resolvedProductId =
+                productId?.takeIf { it.isNotBlank() }
+                    ?: pendingLaunchProductId?.takeIf { it.isNotBlank() }
+                    ?: "unknown"
+            val resolvedReason =
+                when {
+                    success -> null
+                    !reason.isNullOrBlank() -> reason
+                    else -> billingFailureReason(responseCode)
+                }
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_PURCHASE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
@@ -745,6 +789,8 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = responseCode,
                     debugMessage = debugMessage,
+                    productId = resolvedProductId,
+                    reason = resolvedReason,
                 ),
             )
         }
@@ -768,6 +814,18 @@ class ProManager
                 ),
             )
         }
+
+        private fun billingFailureReason(responseCode: Int): String =
+            when (responseCode) {
+                BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
+                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
+                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
+                BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> "billing_unavailable"
+                BillingClient.BillingResponseCode.ERROR -> "billing_error"
+                BillingClient.BillingResponseCode.NETWORK_ERROR -> "network_error"
+                else -> "unknown_$responseCode"
+            }
 
         private fun purchaseResultValue(
             success: Boolean,
@@ -922,13 +980,17 @@ internal object MonetizationAnalyticsPayload {
         entryPoint: String?,
         responseCode: Int,
         debugMessage: String?,
+        productId: String? = null,
+        reason: String? = null,
     ): Map<String, Any> =
-        mapOf(
-            AnalyticsProperties.RESULT to result,
-            AnalyticsProperties.SUCCESS to success,
-            AnalyticsProperties.SOURCE to source,
-            AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),
-            AnalyticsProperties.RESPONSE_CODE to responseCode,
-            AnalyticsProperties.DEBUG_MESSAGE to (debugMessage ?: ""),
-        )
+        buildMap {
+            put(AnalyticsProperties.RESULT, result)
+            put(AnalyticsProperties.SUCCESS, success)
+            put(AnalyticsProperties.SOURCE, source)
+            put(AnalyticsProperties.ENTRY_POINT, entryPoint ?: source)
+            put(AnalyticsProperties.RESPONSE_CODE, responseCode)
+            put(AnalyticsProperties.DEBUG_MESSAGE, debugMessage ?: "")
+            productId?.let { put(AnalyticsProperties.PRODUCT_ID, it) }
+            reason?.let { put(AnalyticsProperties.REASON, it) }
+        }
 }
