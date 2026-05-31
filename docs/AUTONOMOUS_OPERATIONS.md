@@ -4,6 +4,8 @@ How Random Timer runs continuously without CEO action on every step, and where h
 
 **Budget:** Hard cap **$20/month** external spend (`CLAUDE.md`). Scheduled jobs use GitHub Actions minutes, PostHog/ASC/Play APIs already in use — no new paid services without CEO approval.
 
+**Actions:** This repo is **public** — standard hosted runner minutes are **free**. Org caps and **Anthropic** (`claude-review`) still matter. See `docs/ACTIONS_BUDGET.md`.
+
 **GSD (Get Shit Done):** Each automation cycle must end with a concrete artifact: merge SHA, workflow run URL, committed JSON snapshot, or wiki update — not a plan.
 
 **Ralph Loop:** Multi-step implement → test → fix cycles for code tasks. See `.claude/skills/ralph-mode.md` and `.claude/scripts/ralph-loop.sh`.
@@ -23,7 +25,7 @@ Ralph state: `.claude/ralph/ATTEMPTS.md` (session-local; not committed).
 
 | Schedule | Workflow | Purpose |
 |----------|----------|---------|
-| Every 15 min | `wiki-sync.yml` | PostHog → `marketing/data/*.json`, commit to `develop`, publish GitHub Wiki |
+| Every 6 h (:05 UTC) | `wiki-sync.yml` | PostHog → `marketing/data/*.json`, commit to `develop`, publish GitHub Wiki |
 | Daily 06:17 UTC | `executive-metrics.yml` | `executive_metrics.json` artifact (WQTU, paywall, stores) |
 | Daily 14:10 UTC | `north-star-guardrail.yml` | WQTU guardrail snapshot |
 | Daily 13:15 UTC | `daily-growth-publishing.yml` | Blog / Pages growth pipeline |

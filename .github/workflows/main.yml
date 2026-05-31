@@ -2,7 +2,7 @@ name: Project Automation
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Run metrics every 6 hours (reduced from 30 min)
+    - cron: '20 */6 * * *' # Staggered :20 UTC (see docs/ACTIONS_BUDGET.md)
   issues:
     types: [opened, labeled, unlabeled, assigned, unassigned]
   issue_comment:
