@@ -2,7 +2,7 @@ name: Wiki Sync
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours (was */15 — Actions budget; push to develop still refreshes)
+    - cron: '5 */6 * * *' # Staggered :05 UTC (see docs/ACTIONS_BUDGET.md)
   workflow_dispatch:
   push:
     branches: [develop]
