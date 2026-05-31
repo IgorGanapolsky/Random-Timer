@@ -23,5 +23,34 @@
     ],
     "all_pass": true
   },
-  "api": null
+  "api": {
+    "skipped": false,
+    "token_source": "application-default-credentials",
+    "quota_project": "random-timer-dist-new",
+    "account": "accounts/pub-5173650670360699",
+    "app_count": 1,
+    "apps": [
+      {
+        "platform": "ANDROID",
+        "appId": "ca-app-pub-5173650670360699~4427145410",
+        "appApprovalState": "APPROVED",
+        "displayName": "Random Tactical Timer"
+      }
+    ]
+  },
+  "rewarded_rollout": {
+    "posthog_flag": "rewarded_ads_enabled",
+    "posthog_flag_default": "off",
+    "android_app_approval_state": "APPROVED",
+    "app_ads_hosting_all_pass": true,
+    "ready_for_internal_flag_test": true,
+    "ready_for_production_rewarded": false,
+    "production_blockers": [
+      "Complete AdMob payment setup (payouts / full serving)",
+      "Enable PostHog flag with staged rollout (start internal / 5%)",
+      "Wire AdMobRewardedAdPort (SDK) — StubRewardedAdPort is default",
+      "IAP catalog must be healthy before mixing ads + paywall (see monetization_decision_brief)"
+    ],
+    "ceo_email_evidence": "AdMob app approved email 2026-05-30 aligns with appApprovalState APPROVED when API creds present"
+  }
 }

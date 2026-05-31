@@ -57,6 +57,7 @@ def build_snapshot(
             "all_pass": all(c["ok"] for c in checks),
         },
         "api": None,
+        "rewarded_rollout": None,
     }
 
     if include_api:
@@ -86,7 +87,36 @@ def build_snapshot(
             except Exception as exc:  # noqa: BLE001 — snapshot must always write
                 payload["api"] = {"skipped": False, "error": str(exc)[:500]}
 
+    payload["rewarded_rollout"] = _rewarded_rollout_readiness(payload)
     return payload
+
+
+def _rewarded_rollout_readiness(payload: dict) -> dict:
+    """Data-driven gate for PostHog `rewarded_ads_enabled` (default off)."""
+    app_ads_ok = bool((payload.get("app_ads") or {}).get("all_pass"))
+    android_state: str | None = None
+    api_block = payload.get("api")
+    if isinstance(api_block, dict) and not api_block.get("skipped") and not api_block.get("error"):
+        for app in api_block.get("apps") or []:
+            if app.get("platform") == "ANDROID":
+                android_state = app.get("appApprovalState")
+                break
+    approved = android_state == "APPROVED"
+    return {
+        "posthog_flag": "rewarded_ads_enabled",
+        "posthog_flag_default": "off",
+        "android_app_approval_state": android_state,
+        "app_ads_hosting_all_pass": app_ads_ok,
+        "ready_for_internal_flag_test": app_ads_ok and approved,
+        "ready_for_production_rewarded": False,
+        "production_blockers": [
+            "Complete AdMob payment setup (payouts / full serving)",
+            "Enable PostHog flag with staged rollout (start internal / 5%)",
+            "Wire AdMobRewardedAdPort (SDK) — StubRewardedAdPort is default",
+            "IAP catalog must be healthy before mixing ads + paywall (see monetization_decision_brief)",
+        ],
+        "ceo_email_evidence": "AdMob app approved email 2026-05-30 aligns with appApprovalState APPROVED when API creds present",
+    }
 
 
 def write_snapshot(repo_root: Path, payload: dict) -> Path:
@@ -101,12 +131,18 @@ def main() -> int:
     p.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     p.add_argument("--also-check-play-contact-path", action="store_true")
     p.add_argument("--api", action="store_true", help="Include AdMob API apps when creds exist.")
+    p.add_argument(
+        "--no-api",
+        action="store_true",
+        help="Skip AdMob API even if ADC / ADMOB_ACCESS_TOKEN is available.",
+    )
     p.add_argument("--access-token", default=None)
     args = p.parse_args()
 
+    auto_api = not args.no_api and auth_mod.resolve_admob_auth(args.access_token) is not None
     payload = build_snapshot(
         also_play_path=args.also_check_play_contact_path,
-        include_api=args.api,
+        include_api=(args.api or auto_api) and not args.no_api,
         access_token=args.access_token,
     )
     out_path = write_snapshot(args.repo_root.resolve(), payload)

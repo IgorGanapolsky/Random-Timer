@@ -18,6 +18,8 @@ class AdmobMetricsSnapshotTests(unittest.TestCase):
         self.assertTrue(payload["app_ads"]["all_pass"])
         self.assertEqual(len(payload["app_ads"]["checks"]), 1)
         self.assertIsNone(payload["api"])
+        self.assertIsNotNone(payload["rewarded_rollout"])
+        self.assertFalse(payload["rewarded_rollout"]["ready_for_internal_flag_test"])
 
     def test_write_snapshot_creates_json(self):
         with patch.object(mod, "verify_app_ads_txt", return_value=(True, "ok")):
@@ -33,6 +35,17 @@ class AdmobMetricsSnapshotTests(unittest.TestCase):
         with patch.object(mod, "verify_app_ads_txt", return_value=(False, "HTTP 404")):
             payload = mod.build_snapshot(also_play_path=False, include_api=False, access_token=None)
         self.assertFalse(payload["app_ads"]["all_pass"])
+
+    def test_rewarded_rollout_ready_when_approved_and_hosting_pass(self):
+        with patch.object(mod, "verify_app_ads_txt", return_value=(True, "ok")):
+            payload = mod.build_snapshot(also_play_path=False, include_api=False, access_token=None)
+        payload["api"] = {
+            "skipped": False,
+            "apps": [{"platform": "ANDROID", "appApprovalState": "APPROVED"}],
+        }
+        rollout = mod._rewarded_rollout_readiness(payload)
+        self.assertTrue(rollout["ready_for_internal_flag_test"])
+        self.assertFalse(rollout["ready_for_production_rewarded"])
 
 
 if __name__ == "__main__":
