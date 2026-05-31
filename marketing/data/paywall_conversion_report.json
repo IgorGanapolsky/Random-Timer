@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-31T07:22:47+00:00",
+  "generated_at": "2026-05-31T12:33:07+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -96,8 +96,8 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 497,
-      "users": 174
+      "failures": 496,
+      "users": 173
     },
     {
       "platform": "android",
@@ -116,8 +116,8 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 194,
-      "users": 116
+      "failures": 193,
+      "users": 115
     },
     {
       "platform": "android",
@@ -232,8 +232,8 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2559,
-      "users": 298
+      "changes": 2560,
+      "users": 299
     },
     {
       "setting_name": "unknown",
@@ -242,13 +242,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2314,
-      "users": 303
+      "changes": 2316,
+      "users": 304
     },
     {
       "setting_name": "volume",
-      "changes": 2121,
-      "users": 204
+      "changes": 2294,
+      "users": 205
     },
     {
       "setting_name": "sound_type",
@@ -257,8 +257,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1262,
-      "users": 295
+      "changes": 1264,
+      "users": 296
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -277,8 +277,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 341,
-      "users": 212
+      "changes": 343,
+      "users": 213
     },
     {
       "setting_name": "use_extended_range",
