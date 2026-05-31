@@ -630,10 +630,14 @@ def test_ci_crashlytics_job_uses_dedicated_runtime_secret_and_is_not_best_effort
 def test_actions_budget_throttles_high_frequency_schedules():
     wiki = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
     watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(encoding="utf-8")
+    main_metrics = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     resolve = (ROOT / ".github/workflows/resolve-bot-comments.yml").read_text(encoding="utf-8")
+    budget_doc = ACTIONS_BUDGET_DOC.read_text(encoding="utf-8")
 
-    assert "cron: '0 */6 * * *'" in wiki
-    assert "cron: '0 */6 * * *'" in watcher
+    assert "cron: '5 */6 * * *'" in wiki
+    assert "cron: '10 */6 * * *'" in watcher
+    assert "cron: '20 */6 * * *'" in main_metrics
     assert "schedule:" not in resolve.split("workflow_dispatch:", 1)[0]
     assert ACTIONS_BUDGET_DOC.exists()
-    assert "CI_IOS_DEVICE_TIER" in ACTIONS_BUDGET_DOC.read_text(encoding="utf-8")
+    assert "CI_IOS_DEVICE_TIER" in budget_doc
+    assert "public" in budget_doc.lower()
