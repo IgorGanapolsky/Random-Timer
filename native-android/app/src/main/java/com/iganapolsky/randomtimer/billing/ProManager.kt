@@ -424,12 +424,7 @@ class ProManager
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
             val billingProductId = playBillingProductId(productID)
-            val productType =
-                if (billingProductId == ELITE_PRODUCT_ID) {
-                    BillingClient.ProductType.SUBS
-                } else {
-                    BillingClient.ProductType.INAPP
-                }
+            val productType = billingProductTypeForLogicalProductId(productID)
 
             val productList =
                 listOf(
@@ -904,6 +899,14 @@ internal data class SubscriptionOffer(
 
 /** Maps paywall logical SKU to Play Billing product id (identity — monthly uses Play catalog SKU). */
 internal fun playBillingProductId(logicalProductId: String): String = logicalProductId
+
+/** Play Billing product type for [logicalProductId] (monthly SKU is a subscription, not INAPP). */
+internal fun billingProductTypeForLogicalProductId(logicalProductId: String): String {
+    return when (playBillingProductId(logicalProductId)) {
+        ProManager.ELITE_PRODUCT_ID, ProManager.MONTHLY_PRODUCT_ID -> BillingClient.ProductType.SUBS
+        else -> BillingClient.ProductType.INAPP
+    }
+}
 
 internal fun monthlyOfferAvailableFromEliteOffers(offers: List<SubscriptionOffer>): Boolean =
     selectSubscriptionOfferByPeriod(offers, "P1M") != null

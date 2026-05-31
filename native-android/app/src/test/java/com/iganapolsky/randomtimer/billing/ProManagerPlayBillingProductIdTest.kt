@@ -1,9 +1,23 @@
 package com.iganapolsky.randomtimer.billing
 
+import com.android.billingclient.api.BillingClient
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class ProManagerPlayBillingProductIdTest {
+    @Test
+    fun `billingProductTypeForLogicalProductId treats monthly subscription as SUBS`() {
+        assertThat(billingProductTypeForLogicalProductId(ProManager.MONTHLY_PRODUCT_ID))
+            .isEqualTo(BillingClient.ProductType.SUBS)
+    }
+
+    @Test
+    fun `billingProductTypeForLogicalProductId treats annual elite as SUBS and base as INAPP`() {
+        assertThat(billingProductTypeForLogicalProductId(ProManager.ELITE_PRODUCT_ID))
+            .isEqualTo(BillingClient.ProductType.SUBS)
+        assertThat(billingProductTypeForLogicalProductId(ProManager.BASE_PRODUCT_ID))
+            .isEqualTo(BillingClient.ProductType.INAPP)
+    }
     @Test
     fun `playBillingProductId uses Play catalog product ids`() {
         assertThat(playBillingProductId(ProManager.MONTHLY_PRODUCT_ID))
