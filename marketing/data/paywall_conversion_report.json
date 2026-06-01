@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-01T14:11:35+00:00",
+  "generated_at": "2026-06-01T14:22:19+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -257,7 +257,7 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 1590,
+      "changes": 1589,
       "users": 22
     },
     {
