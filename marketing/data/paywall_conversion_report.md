@@ -1,22 +1,22 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-01T01:24:20+00:00
+Generated: 2026-06-01T08:10:35+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **532**
+- Views: **531**
 - Offer Selects: **56**
-- Purchase Attempts: **5**
+- Purchase Attempts: **4**
 - Purchase Successes: **0**
 - View -> Offer Select: **10.5%**
-- Select -> Purchase Attempt: **8.9%**
+- Select -> Purchase Attempt: **7.1%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
 | failed | 405 |
-| user_cancelled | 7 |
+| user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
 
@@ -28,7 +28,6 @@ Window (days): 30
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
 | android | unknown | cancelled | 2 | 1 |
-| ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
@@ -37,12 +36,11 @@ Window (days): 30
 | android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 493 | 176 |
+| android | elite_tactical_monthly | 491 | 176 |
 | android | elite_tactical | 394 | 167 |
 | android | pro_base | 236 | 143 |
 
@@ -52,16 +50,16 @@ Window (days): 30
 | range_gate | 247 | 1 | 0 | 0.4% | 0.0% |
 | voice_gate | 166 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 39 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 38 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
-| sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
+| sound_gate | 5 | 1 | 0 | 20.0% | 0.0% |
 | qualified_training_gate | 5 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **166** views and **0** purchase attempts.
 - `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **39** views and **0** purchase attempts.
+- `unknown` had **38** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
@@ -70,7 +68,7 @@ Window (days): 30
 | alarm_duration | 2641 | 304 |
 | min_seconds | 2346 | 309 |
 | volume | 2312 | 208 |
-| unknown | 2033 | 23 |
+| unknown | 2013 | 22 |
 | sound_type | 1781 | 259 |
 | repeat_enabled | 1291 | 301 |
 | voice_callouts_enabled | 783 | 184 |

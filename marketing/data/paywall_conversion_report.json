@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-01T01:24:20+00:00",
+  "generated_at": "2026-06-01T08:10:35+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 532,
+    "views": 531,
     "offer_selects": 56,
-    "purchase_attempts": 5,
+    "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1053,
-    "select_to_attempt_rate": 0.0893,
+    "view_to_select_rate": 0.1055,
+    "select_to_attempt_rate": 0.0714,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -19,7 +19,7 @@
     },
     {
       "reason": "user_cancelled",
-      "count": 7
+      "count": 6
     },
     {
       "reason": "cancelled",
@@ -65,13 +65,6 @@
       "reason": "cancelled",
       "failures": 2,
       "users": 1
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.elite",
-      "reason": "user_cancelled",
-      "failures": 1,
-      "users": 1
     }
   ],
   "product_funnel": [
@@ -110,22 +103,13 @@
       "successes": 0,
       "select_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.elite",
-      "offer_selects": 0,
-      "attempts": 1,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
     }
   ],
   "product_catalog_failures": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 493,
+      "failures": 491,
       "users": 176
     },
     {
@@ -145,18 +129,18 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 190,
+      "failures": 188,
       "users": 118
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
+      "product_id": "elite_tactical",
       "failures": 119,
       "users": 110
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
+      "product_id": "pro_base",
       "failures": 119,
       "users": 110
     }
@@ -188,7 +172,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -205,9 +189,9 @@
     {
       "entry_point": "sound_gate",
       "views": 5,
-      "attempts": 2,
+      "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 0.4,
+      "view_to_attempt_rate": 0.2,
       "attempt_to_success_rate": 0.0
     },
     {
@@ -246,7 +230,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -276,8 +260,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 2033,
-      "users": 23
+      "changes": 2013,
+      "users": 22
     },
     {
       "setting_name": "sound_type",
