@@ -129,7 +129,17 @@ class ProManager
             billingClient.startConnection(
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(result: BillingResult) {
-                        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        val responseCode = result.responseCode
+                        analyticsService.track(
+                            AnalyticsEvents.BILLING_CLIENT_SETUP,
+                            mapOf(
+                                "billing_response_code" to responseCode,
+                                "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                                "billing_debug_message" to result.debugMessage,
+                                AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
+                            ),
+                        )
+                        if (responseCode == BillingClient.BillingResponseCode.OK) {
                             externalScope.launch {
                                 restorePurchases(
                                     source = MonetizationSources.AUTO_RESTORE,
@@ -418,6 +428,7 @@ class ProManager
                     AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
                     AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
                     AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
                 ),
             )
         }
@@ -441,20 +452,41 @@ class ProManager
                     .setProductList(productList)
                     .build()
 
-            val result = billingClient.queryProductDetails(params)
-            val details = result.productDetailsList?.firstOrNull()
-            if (details != null) {
-                cachedProductDetails[productID] = details
-                if (billingProductId != productID) {
-                    cachedProductDetails[billingProductId] = details
+            var attempt = 0
+            while (true) {
+                attempt++
+                val result = billingClient.queryProductDetails(params)
+                val details = result.productDetailsList?.firstOrNull()
+                if (details != null) {
+                    cachedProductDetails[productID] = details
+                    if (billingProductId != productID) {
+                        cachedProductDetails[billingProductId] = details
+                    }
+                    if (billingProductId == ELITE_PRODUCT_ID) {
+                        syncMonthlyCatalogFromEliteFallback()
+                    }
+                    return details
                 }
-                if (billingProductId == ELITE_PRODUCT_ID) {
-                    syncMonthlyCatalogFromEliteFallback()
+
+                val responseCode = result.billingResult.responseCode
+                if (BillingResponseLabels.shouldRetryProductDetailsQuery(responseCode, attempt)) {
+                    analyticsService.track(
+                        AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
+                        mapOf(
+                            "logical_product_id" to productID,
+                            "billing_product_id" to billingProductId,
+                            "attempt" to attempt,
+                            "billing_response_code" to responseCode,
+                            "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                        ),
+                    )
+                    delay(400L * attempt)
+                    continue
                 }
-            } else {
+
                 maybeReportBillingProductNotFound(billingProductId, result.billingResult)
+                return null
             }
-            return details
         }
 
         private fun maybeReportBillingProductNotFound(
@@ -462,18 +494,39 @@ class ProManager
             billingResult: BillingResult,
         ) {
             val channel = analyticsService.distributionChannel()
-            if (!billingClient.isReady) return
-            if (channel == AndroidInstallChannel.NON_PLAY_INSTALL) return
-            if (!reportedBillingProductNotFound.add(productID)) return
+            if (
+                !shouldReportBillingProductNotFound(
+                    billingReady = billingClient.isReady,
+                    distributionChannel = channel,
+                    alreadyReported = reportedBillingProductNotFound,
+                    productId = productID,
+                )
+            ) {
+                return
+            }
+            reportedBillingProductNotFound.add(productID)
+            val responseCode = billingResult.responseCode
+            val responseLabel = BillingResponseLabels.labelFor(responseCode)
             analyticsService.track(
                 "billing_product_not_found",
                 mapOf(
                     "product_id" to productID,
                     AnalyticsProperties.DISTRIBUTION_CHANNEL to channel,
                     "billing_ready" to billingClient.isReady,
-                    "billing_response_code" to billingResult.responseCode,
+                    "billing_response_code" to responseCode,
+                    "billing_response_label" to responseLabel,
                     "billing_debug_message" to billingResult.debugMessage,
                 ),
+            )
+            analyticsService.trackBillingDiagnostic(
+                message = "billing_product_not_found",
+                level = "error",
+                properties =
+                    mapOf(
+                        "product_id" to productID,
+                        "billing_response_code" to responseCode,
+                        "billing_response_label" to responseLabel,
+                    ),
             )
         }
 

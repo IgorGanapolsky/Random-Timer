@@ -35,6 +35,7 @@ Events emitted on both platforms:
 - `paywall_purchase_fail_reason`
 - `paywall_restore_result`
 - `subscription_funnel_step` — canonical paywall → plan → purchase → trial funnel; use property **`funnel_step`** (`paywall_viewed` \| `paywall_plan_selected` \| `purchase_flow_launched` \| `purchase_succeeded` \| `trial_started`) with the same `entry_point` / `paywall_experiment_variant` / `paywall_value_framing_variant` context as other paywall events.
+- **Android billing diagnostics:** `billing_client_setup`, `billing_product_catalog_status`, `billing_product_not_found`, `billing_product_query_retry`, `billing_diagnostic` — include **`billing_response_code`** and **`billing_response_label`** where applicable. See `docs/POSTHOG_LOGS_PLAYBOOK.md`.
 
 ### Paywall funnel semantics (single definition of “attempt”)
 
