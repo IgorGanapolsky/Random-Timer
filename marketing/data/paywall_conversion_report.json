@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-01T17:40:24+00:00",
+  "generated_at": "2026-06-01T19:48:05+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 548,
+    "views": 578,
     "offer_selects": 55,
     "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1004,
+    "view_to_select_rate": 0.0952,
     "select_to_attempt_rate": 0.0727,
     "attempt_to_success_rate": 0.0
   },
@@ -46,16 +46,16 @@
       "users": 1
     },
     {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "reason": "user_cancelled",
+      "platform": "android",
+      "product_id": "unknown",
+      "reason": "item_unavailable",
       "failures": 2,
       "users": 1
     },
     {
-      "platform": "android",
-      "product_id": "unknown",
-      "reason": "item_unavailable",
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.pro",
+      "reason": "user_cancelled",
       "failures": 2,
       "users": 1
     },
@@ -115,14 +115,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 397,
-      "users": 170
+      "failures": 400,
+      "users": 173
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 239,
-      "users": 146
+      "failures": 242,
+      "users": 149
     }
   ],
   "product_catalog_failures_play_store": [
@@ -134,29 +134,29 @@
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
-      "failures": 122,
-      "users": 113
+      "product_id": "pro_base",
+      "failures": 125,
+      "users": 116
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
-      "failures": 122,
-      "users": 113
+      "product_id": "elite_tactical",
+      "failures": 125,
+      "users": 116
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 259,
+      "views": 275,
       "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 0.0039,
+      "view_to_attempt_rate": 0.0036,
       "attempt_to_success_rate": 0.0
     },
     {
       "entry_point": "voice_gate",
-      "views": 172,
+      "views": 186,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -206,7 +206,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 172,
+      "views": 186,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -232,48 +232,48 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3350,
-      "users": 337
+      "changes": 3383,
+      "users": 343
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2705,
-      "users": 309
+      "changes": 2816,
+      "users": 316
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2384,
-      "users": 313
+      "changes": 2410,
+      "users": 319
     },
     {
       "setting_name": "volume",
-      "changes": 2325,
-      "users": 211
+      "changes": 2348,
+      "users": 216
     },
     {
       "setting_name": "sound_type",
-      "changes": 1796,
-      "users": 263
+      "changes": 1818,
+      "users": 268
     },
     {
       "setting_name": "unknown",
-      "changes": 1589,
+      "changes": 1583,
       "users": 22
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1307,
-      "users": 307
+      "changes": 1330,
+      "users": 312
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 791,
-      "users": 187
+      "changes": 806,
+      "users": 192
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 593,
-      "users": 214
+      "changes": 602,
+      "users": 219
     },
     {
       "setting_name": "repeat_rounds",
@@ -282,13 +282,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 352,
-      "users": 218
+      "changes": 359,
+      "users": 222
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 253,
-      "users": 157
+      "changes": 259,
+      "users": 160
     }
   ],
   "data_quality_warnings": [
