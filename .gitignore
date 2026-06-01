@@ -1,5 +1,8 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# Generated PostHog observability evidence (scripts/posthog_observability_bootstrap.py)
+marketing/data/posthog_observability_status.json
+
 # dependencies
 node_modules/
 
