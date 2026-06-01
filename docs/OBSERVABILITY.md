@@ -16,6 +16,7 @@ This document is the **source of truth** for what is **implemented in code** ver
 | **Firebase Performance** | **No** (SPM product not linked) | **Yes** (Gradle plugin + `firebase-perf` dependency) | iOS auto-instrumentation was removed to stabilize CI; can be re-added later with the same CI skip pattern if validated. |
 | **Firebase Remote Config** | **No** | **No** | Not referenced in app sources; use PostHog feature flags until/unless RC is added. |
 | **PostHog feature flags (in-app)** | Yes | Yes | SDK `isFeatureEnabled` / `reloadFeatureFlags` (see `AnalyticsService` on each platform). Flags load at init with `preloadFeatureFlags` on Android; iOS reloads before paywall when needed. |
+| **PostHog billing diagnostics (events)** | Partial | Yes | Android emits `billing_*` events with `billing_response_label`; saved HogQL in `marketing/data/posthog_observability.json`. **PostHog Logs OTLP** not wired on native yet — see `docs/POSTHOG_LOGS_PLAYBOOK.md`. |
 | **Firebase Cloud Messaging** | Not wired for product analytics | Not wired for product analytics | Listed only as a future option if you add push. |
 
 **Firebase Analytics (Google Analytics)** in-app collection is **disabled on Android** (`setAnalyticsCollectionEnabled(false)`) so telemetry is not duplicated with PostHog.
