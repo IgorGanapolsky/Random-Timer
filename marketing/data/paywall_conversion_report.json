@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-31T18:36:21+00:00",
+  "generated_at": "2026-06-01T01:24:20+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 513,
+    "views": 532,
     "offer_selects": 56,
     "purchase_attempts": 5,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.1092,
+    "view_to_select_rate": 0.1053,
     "select_to_attempt_rate": 0.0893,
     "attempt_to_success_rate": 0.0
   },
@@ -125,54 +125,54 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 492,
-      "users": 173
+      "failures": 493,
+      "users": 176
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 391,
-      "users": 164
+      "failures": 394,
+      "users": 167
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 233,
-      "users": 140
+      "failures": 236,
+      "users": 143
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 189,
-      "users": 115
+      "failures": 190,
+      "users": 118
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 116,
-      "users": 107
+      "failures": 119,
+      "users": 110
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 116,
-      "users": 107
+      "failures": 119,
+      "users": 110
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 237,
+      "views": 247,
       "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 0.0042,
+      "view_to_attempt_rate": 0.004,
       "attempt_to_success_rate": 0.0
     },
     {
       "entry_point": "voice_gate",
-      "views": 158,
+      "views": 166,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -212,7 +212,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 4,
+      "views": 5,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -230,7 +230,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 158,
+      "views": 166,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -256,23 +256,23 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3256,
-      "users": 326
+      "changes": 3290,
+      "users": 331
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2560,
-      "users": 299
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 2316,
+      "changes": 2641,
       "users": 304
     },
     {
+      "setting_name": "min_seconds",
+      "changes": 2346,
+      "users": 309
+    },
+    {
       "setting_name": "volume",
-      "changes": 2294,
-      "users": 205
+      "changes": 2312,
+      "users": 208
     },
     {
       "setting_name": "unknown",
@@ -281,23 +281,23 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 1770,
-      "users": 255
+      "changes": 1781,
+      "users": 259
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1264,
-      "users": 296
+      "changes": 1291,
+      "users": 301
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 773,
-      "users": 181
+      "changes": 783,
+      "users": 184
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 581,
-      "users": 207
+      "changes": 588,
+      "users": 210
     },
     {
       "setting_name": "repeat_rounds",
@@ -306,13 +306,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 343,
-      "users": 213
+      "changes": 347,
+      "users": 215
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 245,
-      "users": 153
+      "changes": 251,
+      "users": 156
     }
   ],
   "data_quality_warnings": [
