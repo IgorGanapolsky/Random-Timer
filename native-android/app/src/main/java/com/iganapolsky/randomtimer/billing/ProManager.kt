@@ -897,13 +897,17 @@ internal data class SubscriptionOffer(
         get() = pricingPhases.any { it.isFree }
 }
 
-/** Maps paywall logical SKU to Play Billing product id (identity — monthly uses Play catalog SKU). */
-internal fun playBillingProductId(logicalProductId: String): String = logicalProductId
+/** Maps paywall logical SKU to Play Billing product id (monthly bills via elite_tactical P1M). */
+internal fun playBillingProductId(logicalProductId: String): String =
+    when (logicalProductId) {
+        ProManager.MONTHLY_PRODUCT_ID -> ProManager.ELITE_PRODUCT_ID
+        else -> logicalProductId
+    }
 
-/** Play Billing product type for [logicalProductId] (monthly SKU is a subscription, not INAPP). */
+/** Play Billing product type for the Play product id returned by [playBillingProductId]. */
 internal fun billingProductTypeForLogicalProductId(logicalProductId: String): String {
     return when (playBillingProductId(logicalProductId)) {
-        ProManager.ELITE_PRODUCT_ID, ProManager.MONTHLY_PRODUCT_ID -> BillingClient.ProductType.SUBS
+        ProManager.ELITE_PRODUCT_ID -> BillingClient.ProductType.SUBS
         else -> BillingClient.ProductType.INAPP
     }
 }
