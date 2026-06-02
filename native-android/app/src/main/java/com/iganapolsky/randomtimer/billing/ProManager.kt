@@ -107,6 +107,7 @@ class ProManager
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
         private var lastCatalogStatusSignature: String? = null
+        private var productDetailsFeatureSupported: Boolean? = null
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
@@ -140,13 +141,29 @@ class ProManager
                             ),
                         )
                         if (responseCode == BillingClient.BillingResponseCode.OK) {
+                            val featureResult =
+                                billingClient.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
+                            productDetailsFeatureSupported =
+                                featureResult.responseCode == BillingClient.BillingResponseCode.OK
+                            analyticsService.track(
+                                AnalyticsEvents.BILLING_DIAGNOSTIC,
+                                mapOf(
+                                    "message" to "billing_product_details_feature",
+                                    "level" to "info",
+                                    "product_details_supported" to productDetailsFeatureSupported,
+                                    "billing_response_code" to featureResult.responseCode,
+                                    "billing_response_label" to BillingResponseLabels.labelFor(featureResult.responseCode),
+                                ),
+                            )
                             externalScope.launch {
                                 restorePurchases(
                                     source = MonetizationSources.AUTO_RESTORE,
                                     entryPoint = null,
                                     trackResult = false,
                                 )
-                                fetchAllProductDetails()
+                                if (productDetailsFeatureSupported == true) {
+                                    fetchAllProductDetails()
+                                }
                             }
                         }
                     }
@@ -434,6 +451,12 @@ class ProManager
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
+            if (!billingClient.isReady) {
+                return null
+            }
+            if (productDetailsFeatureSupported == false) {
+                return null
+            }
             val billingProductId = playBillingProductId(productID)
             val productType = billingProductTypeForLogicalProductId(productID)
 

@@ -64,7 +64,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         # exposes a "+5 min" extend-running-timer action (see
         # TimerForegroundService.kt around line 430). iOS doesn't ship that
         # affordance, so the event has no legitimate iOS emission point.
-        android_only_events = {"timer_extended"}
+        android_only_events = {
+            "timer_extended",
+            "billing_client_setup",
+            "billing_product_query_retry",
+            "billing_diagnostic",
+        }
         self.assertEqual(
             android_events - android_only_events,
             ios_events - ios_only_events,
