@@ -1,0 +1,1 @@
+Fix billing catalog telemetry: distinguish probe failures from empty Play SKUs; wait for billing ready before paywall catalog fetch.
