@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-02T07:57:15+00:00",
+  "generated_at": "2026-06-02T13:37:39+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -109,7 +109,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 488,
+      "failures": 487,
       "users": 178
     },
     {
@@ -129,7 +129,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 185,
+      "failures": 184,
       "users": 120
     },
     {
@@ -232,18 +232,18 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3436,
-      "users": 344
+      "changes": 3438,
+      "users": 346
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2817,
-      "users": 317
+      "changes": 2818,
+      "users": 318
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2490,
-      "users": 320
+      "changes": 2495,
+      "users": 321
     },
     {
       "setting_name": "volume",
