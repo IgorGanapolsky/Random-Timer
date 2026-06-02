@@ -400,6 +400,15 @@ class ProManager
         }
 
         private suspend fun fetchAllProductDetails() {
+            if (!billingClient.isReady) {
+                trackProductCatalogStatus()
+                return
+            }
+            refreshProductDetailsFeatureSupport()
+            if (productDetailsFeatureSupported != true) {
+                trackProductCatalogStatus()
+                return
+            }
             fetchProductDetails(BASE_PRODUCT_ID)
             fetchProductDetails(ELITE_PRODUCT_ID)
             fetchProductDetails(MONTHLY_PRODUCT_ID)
@@ -419,34 +428,64 @@ class ProManager
         }
 
         suspend fun availablePaywallProductIds(): Set<String> {
+            if (!ensureBillingReadyForPurchase()) {
+                trackProductCatalogStatus()
+                return emptySet()
+            }
             fetchAllProductDetails()
-            return cachedProductDetails.keys.toSet()
+            return cachedProductDetails.keys.intersect(
+                setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID),
+            )
+        }
+
+        private fun refreshProductDetailsFeatureSupport(): Boolean {
+            if (!billingClient.isReady) {
+                return false
+            }
+            val featureResult =
+                billingClient.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
+            productDetailsFeatureSupported =
+                featureResult.responseCode == BillingClient.BillingResponseCode.OK
+            return productDetailsFeatureSupported == true
         }
 
         private fun trackProductCatalogStatus() {
             val requiredProductIds = setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID)
-            val availableProductIds = cachedProductDetails.keys.sorted()
-            val missingProductIds = requiredProductIds.minus(availableProductIds.toSet()).sorted()
-            val status =
-                when {
-                    availableProductIds.isEmpty() -> "empty"
-                    missingProductIds.isNotEmpty() -> "missing_required_products"
-                    else -> "ok"
-                }
-            val signature = "$status|${availableProductIds.joinToString()}|${missingProductIds.joinToString()}"
+            val cachedLogicalProductIds =
+                cachedProductDetails.keys.intersect(requiredProductIds)
+            val catalogStatus =
+                resolveBillingProductCatalogStatus(
+                    billingReady = billingClient.isReady,
+                    productDetailsSupported = productDetailsFeatureSupported,
+                    requiredProductIds = requiredProductIds,
+                    cachedLogicalProductIds = cachedLogicalProductIds,
+                )
+            val signature =
+                "${catalogStatus.status}|${catalogStatus.probeBlockedReason.orEmpty()}|" +
+                    "${catalogStatus.availableProductIds.joinToString()}|" +
+                    catalogStatus.missingProductIds.joinToString()
             if (lastCatalogStatusSignature == signature) {
                 return
             }
             lastCatalogStatusSignature = signature
             analyticsService.track(
                 AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS,
-                mapOf(
-                    AnalyticsProperties.STATUS to status,
-                    AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
-                    AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
-                    AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
-                    AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
-                ),
+                buildMap {
+                    put(AnalyticsProperties.STATUS, catalogStatus.status)
+                    put(AnalyticsProperties.AVAILABLE_PRODUCT_IDS, catalogStatus.availableProductIds)
+                    put(AnalyticsProperties.MISSING_PRODUCT_IDS, catalogStatus.missingProductIds)
+                    put(AnalyticsProperties.PRODUCT_COUNT, catalogStatus.availableProductIds.size)
+                    put(
+                        AnalyticsProperties.DISTRIBUTION_CHANNEL,
+                        analyticsService.distributionChannel(),
+                    )
+                    catalogStatus.probeBlockedReason?.let { put("probe_blocked_reason", it) }
+                    put("billing_ready", billingClient.isReady)
+                    put(
+                        "product_details_supported",
+                        productDetailsFeatureSupported == true,
+                    )
+                },
             )
         }
 
