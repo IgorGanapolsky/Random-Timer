@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-02T01:26:46+00:00",
+  "generated_at": "2026-06-02T07:57:15+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -109,8 +109,8 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 487,
-      "users": 177
+      "failures": 488,
+      "users": 178
     },
     {
       "platform": "android",
@@ -129,18 +129,18 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 184,
-      "users": 119
+      "failures": 185,
+      "users": 120
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
+      "product_id": "elite_tactical",
       "failures": 125,
       "users": 116
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
+      "product_id": "pro_base",
       "failures": 125,
       "users": 116
     }
@@ -232,7 +232,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3426,
+      "changes": 3436,
       "users": 344
     },
     {
@@ -242,18 +242,18 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2475,
+      "changes": 2490,
       "users": 320
     },
     {
       "setting_name": "volume",
-      "changes": 2358,
+      "changes": 2360,
       "users": 217
     },
     {
       "setting_name": "sound_type",
-      "changes": 1820,
-      "users": 268
+      "changes": 1821,
+      "users": 269
     },
     {
       "setting_name": "unknown",
@@ -282,12 +282,12 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 360,
+      "changes": 361,
       "users": 223
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 260,
+      "changes": 261,
       "users": 161
     }
   ],
