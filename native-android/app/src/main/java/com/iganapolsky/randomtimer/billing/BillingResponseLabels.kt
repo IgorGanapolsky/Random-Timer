@@ -35,4 +35,10 @@ internal object BillingResponseLabels {
         attempt: Int,
         maxAttempts: Int = 3,
     ): Boolean = attempt < maxAttempts && responseCode in retryableProductQueryResponseCodes
+
+    /** Caps `billing_product_query_retry` telemetry per logical SKU per session. */
+    internal fun shouldEmitProductQueryRetryTelemetry(
+        emittedCount: Int,
+        maxPerSessionPerSku: Int = 3,
+    ): Boolean = emittedCount < maxPerSessionPerSku
 }

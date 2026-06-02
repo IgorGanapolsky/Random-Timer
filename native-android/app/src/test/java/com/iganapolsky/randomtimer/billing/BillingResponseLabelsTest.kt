@@ -44,4 +44,11 @@ class BillingResponseLabelsTest {
             ),
         )
     }
+
+    @Test
+    fun `shouldEmitProductQueryRetryTelemetry allows up to three events per sku`() {
+        assertTrue(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 0))
+        assertTrue(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 2))
+        assertFalse(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 3))
+    }
 }
