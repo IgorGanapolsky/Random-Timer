@@ -1,14 +1,20 @@
 {
   "schema_version": 1,
-  "updated": "2026-06-01T00:00:00Z",
+  "updated": "2026-06-02T20:40:00Z",
   "description": "Canonical HogQL saved queries and alert templates for billing/revenue observability. Apply via scripts/posthog_observability_bootstrap.py.",
   "posthog_host": "https://us.i.posthog.com",
   "saved_queries": [
     {
       "id": "billing_catalog_empty_play",
       "title": "Android Play — empty billing catalog (7d)",
-      "purpose": "Detect production Play builds where SKU queries return no catalog.",
-      "hogql": "SELECT count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_catalog_status' AND coalesce(toString(properties.status), '') = 'empty' AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day"
+      "purpose": "Detect production Play builds where SKU queries succeeded but returned no catalog (billing ready + product details supported).",
+      "hogql": "SELECT count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_catalog_status' AND coalesce(toString(properties.status), '') = 'empty' AND coalesce(toString(properties.probe_blocked_reason), '') = '' AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day"
+    },
+    {
+      "id": "billing_catalog_probe_blocked_play",
+      "title": "Android Play — billing catalog probe blocked (7d)",
+      "purpose": "Billing unavailable, product-details unsupported, or client not ready (not a Play SKU miss).",
+      "hogql": "SELECT coalesce(toString(properties.status), 'unknown') AS status, count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_catalog_status' AND coalesce(toString(properties.status), '') IN ('billing_not_ready', 'product_details_unsupported', 'catalog_probe_pending') AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day GROUP BY status ORDER BY events DESC"
     },
     {
       "id": "billing_product_not_found_feature_unsupported",
