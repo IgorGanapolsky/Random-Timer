@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-02T13:37:39+00:00",
+  "generated_at": "2026-06-02T17:20:08+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 580,
+    "views": 577,
     "offer_selects": 56,
     "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0966,
+    "view_to_select_rate": 0.0971,
     "select_to_attempt_rate": 0.0714,
     "attempt_to_success_rate": 0.0
   },
@@ -115,14 +115,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 400,
-      "users": 173
+      "failures": 401,
+      "users": 174
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 242,
-      "users": 149
+      "failures": 243,
+      "users": 150
     }
   ],
   "product_catalog_failures_play_store": [
@@ -135,14 +135,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 125,
-      "users": 116
+      "failures": 126,
+      "users": 117
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 125,
-      "users": 116
+      "failures": 126,
+      "users": 117
     }
   ],
   "entry_points": [
@@ -172,7 +172,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 36,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -222,7 +222,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 36,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -232,8 +232,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3438,
-      "users": 346
+      "changes": 3468,
+      "users": 347
     },
     {
       "setting_name": "alarm_duration",
@@ -242,7 +242,7 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2495,
+      "changes": 2502,
       "users": 321
     },
     {
@@ -257,8 +257,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 1538,
-      "users": 21
+      "changes": 1513,
+      "users": 20
     },
     {
       "setting_name": "repeat_enabled",
