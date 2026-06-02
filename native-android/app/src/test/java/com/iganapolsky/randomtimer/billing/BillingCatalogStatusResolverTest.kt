@@ -94,4 +94,60 @@ class BillingCatalogStatusResolverTest {
         assertThat(result.status).isEqualTo("missing_required_products")
         assertThat(result.missingProductIds).contains(ProManager.BASE_PRODUCT_ID)
     }
+
+    @Test
+    fun `catalog_query_failed when all required SKUs failed with network error after retries`() {
+        val networkFailures =
+            mapOf(
+                ProManager.BASE_PRODUCT_ID to "network_error",
+                ProManager.ELITE_PRODUCT_ID to "network_error",
+                ProManager.MONTHLY_PRODUCT_ID to "network_error",
+            )
+        val result =
+            resolveBillingProductCatalogStatus(
+                billingReady = true,
+                productDetailsSupported = true,
+                requiredProductIds = required,
+                cachedLogicalProductIds = emptySet(),
+                productQueryFailureReasons = networkFailures,
+            )
+
+        assertThat(result.status).isEqualTo("catalog_query_failed")
+        assertThat(result.probeBlockedReason).isEqualTo("network_error")
+    }
+
+    @Test
+    fun `empty when cache empty and Play returned no SKUs without network failure`() {
+        val result =
+            resolveBillingProductCatalogStatus(
+                billingReady = true,
+                productDetailsSupported = true,
+                requiredProductIds = required,
+                cachedLogicalProductIds = emptySet(),
+                productQueryFailureReasons = emptyMap(),
+            )
+
+        assertThat(result.status).isEqualTo("empty")
+        assertThat(result.probeBlockedReason).isNull()
+    }
+
+    @Test
+    fun `missing_required_products when partial cache despite network failures on others`() {
+        val networkFailures =
+            mapOf(
+                ProManager.BASE_PRODUCT_ID to "network_error",
+                ProManager.MONTHLY_PRODUCT_ID to "network_error",
+            )
+        val result =
+            resolveBillingProductCatalogStatus(
+                billingReady = true,
+                productDetailsSupported = true,
+                requiredProductIds = required,
+                cachedLogicalProductIds = setOf(ProManager.ELITE_PRODUCT_ID),
+                productQueryFailureReasons = networkFailures,
+            )
+
+        assertThat(result.status).isEqualTo("missing_required_products")
+        assertThat(result.probeBlockedReason).isNull()
+    }
 }

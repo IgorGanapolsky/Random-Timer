@@ -17,6 +17,7 @@ internal fun resolveBillingProductCatalogStatus(
     productDetailsSupported: Boolean?,
     requiredProductIds: Set<String>,
     cachedLogicalProductIds: Set<String>,
+    productQueryFailureReasons: Map<String, String> = emptyMap(),
 ): BillingCatalogStatusResult {
     if (!billingReady) {
         return blockedCatalogStatus(
@@ -43,8 +44,15 @@ internal fun resolveBillingProductCatalogStatus(
 
     val availableProductIds = cachedLogicalProductIds.intersect(requiredProductIds).sorted()
     val missingProductIds = requiredProductIds.minus(cachedLogicalProductIds).sorted()
+    val catalogQueryBlockedReason =
+        resolveCatalogQueryBlockedReason(
+            requiredProductIds = requiredProductIds,
+            cachedLogicalProductIds = cachedLogicalProductIds,
+            productQueryFailureReasons = productQueryFailureReasons,
+        )
     val status =
         when {
+            catalogQueryBlockedReason != null -> "catalog_query_failed"
             availableProductIds.isEmpty() -> "empty"
             missingProductIds.isNotEmpty() -> "missing_required_products"
             else -> "ok"
@@ -53,8 +61,31 @@ internal fun resolveBillingProductCatalogStatus(
         status = status,
         availableProductIds = availableProductIds,
         missingProductIds = missingProductIds,
-        probeBlockedReason = null,
+        probeBlockedReason = catalogQueryBlockedReason,
     )
+}
+
+/**
+ * When every required SKU failed to load due to network error after retries, distinguish that
+ * from Play returning an empty catalog (`empty`).
+ */
+internal fun resolveCatalogQueryBlockedReason(
+    requiredProductIds: Set<String>,
+    cachedLogicalProductIds: Set<String>,
+    productQueryFailureReasons: Map<String, String>,
+): String? {
+    if (cachedLogicalProductIds.intersect(requiredProductIds).isNotEmpty()) {
+        return null
+    }
+    val missingRequired = requiredProductIds.minus(cachedLogicalProductIds)
+    if (missingRequired.isEmpty()) {
+        return null
+    }
+    return if (missingRequired.all { productQueryFailureReasons[it] == "network_error" }) {
+        "network_error"
+    } else {
+        null
+    }
 }
 
 private fun blockedCatalogStatus(

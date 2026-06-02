@@ -106,6 +106,8 @@ class ProManager
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
+        private val productQueryFailureReasons = ConcurrentHashMap<String, String>()
+        private val productQueryRetryTelemetryCounts = ConcurrentHashMap<String, Int>()
         private var lastCatalogStatusSignature: String? = null
         private var productDetailsFeatureSupported: Boolean? = null
         private var pendingPurchaseEntryPoint: String? = null
@@ -459,6 +461,7 @@ class ProManager
                     productDetailsSupported = productDetailsFeatureSupported,
                     requiredProductIds = requiredProductIds,
                     cachedLogicalProductIds = cachedLogicalProductIds,
+                    productQueryFailureReasons = productQueryFailureReasons,
                 )
             val signature =
                 "${catalogStatus.status}|${catalogStatus.probeBlockedReason.orEmpty()}|" +
@@ -520,6 +523,7 @@ class ProManager
                 val result = billingClient.queryProductDetails(params)
                 val details = result.productDetailsList?.firstOrNull()
                 if (details != null) {
+                    productQueryFailureReasons.remove(productID)
                     cachedProductDetails[productID] = details
                     if (billingProductId != productID) {
                         cachedProductDetails[billingProductId] = details
@@ -532,22 +536,38 @@ class ProManager
 
                 val responseCode = result.billingResult.responseCode
                 if (BillingResponseLabels.shouldRetryProductDetailsQuery(responseCode, attempt)) {
-                    analyticsService.track(
-                        AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
-                        mapOf(
-                            "logical_product_id" to productID,
-                            "billing_product_id" to billingProductId,
-                            "attempt" to attempt,
-                            "billing_response_code" to responseCode,
-                            "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
-                        ),
-                    )
+                    val emittedCount = productQueryRetryTelemetryCounts[productID] ?: 0
+                    if (BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount)) {
+                        productQueryRetryTelemetryCounts[productID] = emittedCount + 1
+                        analyticsService.track(
+                            AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
+                            mapOf(
+                                "logical_product_id" to productID,
+                                "billing_product_id" to billingProductId,
+                                "attempt" to attempt,
+                                "billing_response_code" to responseCode,
+                                "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                            ),
+                        )
+                    }
                     delay(400L * attempt)
                     continue
                 }
 
+                recordProductQueryFailure(productID, responseCode)
                 maybeReportBillingProductNotFound(billingProductId, result.billingResult)
                 return null
+            }
+        }
+
+        private fun recordProductQueryFailure(
+            productID: String,
+            responseCode: Int,
+        ) {
+            when (responseCode) {
+                BillingClient.BillingResponseCode.NETWORK_ERROR ->
+                    productQueryFailureReasons[productID] = "network_error"
+                else -> productQueryFailureReasons.remove(productID)
             }
         }
 
