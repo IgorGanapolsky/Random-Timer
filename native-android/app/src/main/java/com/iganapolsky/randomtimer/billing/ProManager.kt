@@ -147,10 +147,10 @@ class ProManager
                                 featureResult.responseCode == BillingClient.BillingResponseCode.OK
                             analyticsService.track(
                                 AnalyticsEvents.BILLING_DIAGNOSTIC,
-                                mapOf(
+                                mapOf<String, Any>(
                                     "message" to "billing_product_details_feature",
                                     "level" to "info",
-                                    "product_details_supported" to productDetailsFeatureSupported,
+                                    "product_details_supported" to (productDetailsFeatureSupported == true),
                                     "billing_response_code" to featureResult.responseCode,
                                     "billing_response_label" to BillingResponseLabels.labelFor(featureResult.responseCode),
                                 ),
