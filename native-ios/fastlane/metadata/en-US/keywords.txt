@@ -1,1 +1,1 @@
-mma,crossfit,boxing,bjj,sparring,muay,thai,kickboxing,tabata,wod,interval,jiujitsu,fighter,reaction
+bjj,hiit,sparring,wrestling,muaythai,tabata,crossfit,reaction,jiujitsu,wod,kickboxing

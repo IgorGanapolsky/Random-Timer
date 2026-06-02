@@ -1,55 +1,43 @@
 TRAIN FOR CHAOS. NOT RHYTHM.
 
-Unpredictable random timer for boxing, MMA, BJJ, HIIT, CrossFit, and tactical drills.
+Random Tactical Timer is an unpredictable interval and round timer built for combat sports, reaction training, and HIIT—not another metronome you can anticipate.
 
-Most timers teach anticipation. Random Tactical Timer trains reaction.
+Set a min–max window; the app fires at a random moment inside it. You stay ready, react to the cue, and train real composure under pressure.
 
-Instead of firing on a predictable beat, it triggers at an unpredictable moment inside your chosen time window, forcing real response under pressure. This is pattern-interrupt training built for combat sports, sparring, drills, and reaction work.
+WHY FIGHTERS & COACHES USE IT
+• Stop counting down—train response to the signal
+• Pattern-interrupt rounds for sparring, pads, and conditioning
+• Hidden countdown so athletes cannot watch the clock
+• Loop mode for continuous random rounds (Pro: cap rounds 1–100)
 
-BUILT FOR:
-- Boxing pad rounds, bag intervals, and shadowboxing flurries
-- MMA, Muay Thai, and kickboxing reaction drills
-- BJJ scramble and positional transition drills
-- Military combatives and self-defense scenario training
-- HIIT, CrossFit, and tabata sessions that punish predictability
+BUILT FOR
+• Boxing: pad rounds, bag work, shadowboxing flurries
+• MMA, Muay Thai, kickboxing: reaction and combo drills
+• BJJ & wrestling: scrambles, transitions, competition warmup preset
+• Military combatives, self-defense scenarios, first-responder drills
+• HIIT, Tabata, CrossFit WODs that punish predictability
 
-WHY IT WORKS:
-- Stop anticipation: react to the cue, not the countdown.
-- Stay present: uncertainty keeps your nervous system engaged.
-- Train under pressure: build composure when the trigger is not on your schedule.
+KEY FEATURES
+• True random trigger inside your chosen range
+• Loud alarms, haptics, and volume control for gym floor use
+• Competition Warmup preset (BJJ, judo, wrestling, fight-day prep)
+• Reliable background timing (Android foreground service)
 
-KEY FEATURES:
-- True random trigger within your selected min/max range
-- Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
-- Hidden countdown mode — no timer watching allowed
-- Loop mode for continuous random chaos rounds
-- High-intensity alarm + haptic vibration + volume precision
-- Stable background behavior via Foreground Service
-- Full-screen tactical alerts that command attention
+PRO TACTICAL (OPTIONAL)
+• Coach voice callouts—male or female cues mid-round
+• Command-style previews and elapsed-time callouts for pressure drills
+• Sound Arsenal: bells, horns, sirens, and expanded alarm library
+• Up to 60-minute sessions and structured round loops
 
-PRO FEATURES:
-- AI voice callouts: male or female coach voice with tactical cues so you stay sharp mid-round
-- Command-cue previews and elapsed-time style callouts for pressure drills
-- Sound Arsenal: expanded alarm library for serious training sessions
-- Round selection (1–100) for structured training cycles
-- Extended timer range up to 60 minutes for long sessions
-
-SUBSCRIPTION & UPGRADE:
-- Pro is optional. Monthly and annual subscriptions are available where offered; pricing is shown on the purchase sheet before you confirm.
-- A one-time upgrade may be offered depending on product configuration in your region.
-
-HOW IT WORKS:
+HOW IT WORKS
 1. Set your range (e.g. 15 seconds to 3 minutes)
-2. Press Start
-3. Train normally — move, drill, spar, or hold position
-4. React with explosive intensity when the cue hits
-5. Loop for continuous stress rounds
+2. Tap Start and train—move, drill, spar, or hold position
+3. Explode on the cue; loop for stress rounds
 
-WORKS FOR:
-- Random countdown timer for combat sports training
-- Reaction time training for MMA fighters and boxers
-- Pattern-interrupt conditioning for military and first responders
-- HIIT and CrossFit WOD timer that punishes predictability
-- Unpredictable round timer for sparring and pad work
+SEARCH TERMS THIS APP SERVES
+Random interval timer • Round timer • Boxing timer • MMA timer • BJJ timer • Reaction training • Tabata timer • HIIT timer • Sparring timer • Wrestling drills
 
-No ads in the training experience. Optional anonymous product analytics (for example via PostHog) may be used to improve stability and features—see the Privacy Policy linked on the store listing. Optional Pro subscription unlocks advanced training features above.
+SUBSCRIPTION
+Pro is optional. Monthly and annual plans and regional pricing appear on the purchase sheet before you confirm. A one-time upgrade may be offered depending on Play configuration in your region.
+
+Privacy Policy and terms are linked on this store listing. Optional anonymous product analytics may be used to improve stability and features.
