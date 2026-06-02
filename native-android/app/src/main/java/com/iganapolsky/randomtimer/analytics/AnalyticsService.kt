@@ -125,6 +125,22 @@ class AnalyticsService
             PostHog.capture(event, properties = mergeProperties(properties))
         }
 
+        /** Structured billing signal for HogQL dashboards (complements PostHog Logs when OTLP is added). */
+        fun trackBillingDiagnostic(
+            message: String,
+            level: String = "info",
+            properties: Map<String, Any>? = null,
+        ) {
+            val payload =
+                mutableMapOf<String, Any>(
+                    "message" to message,
+                    "level" to level,
+                    "subsystem" to "billing",
+                )
+            properties?.let { payload.putAll(it) }
+            track(AnalyticsEvents.BILLING_DIAGNOSTIC, payload)
+        }
+
         fun screen(
             screenName: String,
             properties: Map<String, Any>? = null,
@@ -433,6 +449,9 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
     const val BILLING_PRODUCT_CATALOG_STATUS = "billing_product_catalog_status"
+    const val BILLING_CLIENT_SETUP = "billing_client_setup"
+    const val BILLING_PRODUCT_QUERY_RETRY = "billing_product_query_retry"
+    const val BILLING_DIAGNOSTIC = "billing_diagnostic"
 
     // Loop
     const val LOOP_ROUND_COMPLETED = "loop_round_completed"

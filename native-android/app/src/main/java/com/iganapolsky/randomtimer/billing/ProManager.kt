@@ -107,6 +107,7 @@ class ProManager
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
         private var lastCatalogStatusSignature: String? = null
+        private var productDetailsFeatureSupported: Boolean? = null
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
@@ -129,14 +130,40 @@ class ProManager
             billingClient.startConnection(
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(result: BillingResult) {
-                        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        val responseCode = result.responseCode
+                        analyticsService.track(
+                            AnalyticsEvents.BILLING_CLIENT_SETUP,
+                            mapOf(
+                                "billing_response_code" to responseCode,
+                                "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                                "billing_debug_message" to result.debugMessage,
+                                AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
+                            ),
+                        )
+                        if (responseCode == BillingClient.BillingResponseCode.OK) {
+                            val featureResult =
+                                billingClient.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
+                            productDetailsFeatureSupported =
+                                featureResult.responseCode == BillingClient.BillingResponseCode.OK
+                            analyticsService.track(
+                                AnalyticsEvents.BILLING_DIAGNOSTIC,
+                                mapOf<String, Any>(
+                                    "message" to "billing_product_details_feature",
+                                    "level" to "info",
+                                    "product_details_supported" to (productDetailsFeatureSupported == true),
+                                    "billing_response_code" to featureResult.responseCode,
+                                    "billing_response_label" to BillingResponseLabels.labelFor(featureResult.responseCode),
+                                ),
+                            )
                             externalScope.launch {
                                 restorePurchases(
                                     source = MonetizationSources.AUTO_RESTORE,
                                     entryPoint = null,
                                     trackResult = false,
                                 )
-                                fetchAllProductDetails()
+                                if (productDetailsFeatureSupported == true) {
+                                    fetchAllProductDetails()
+                                }
                             }
                         }
                     }
@@ -418,11 +445,18 @@ class ProManager
                     AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
                     AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
                     AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
+                    AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
                 ),
             )
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
+            if (!billingClient.isReady) {
+                return null
+            }
+            if (productDetailsFeatureSupported == false) {
+                return null
+            }
             val billingProductId = playBillingProductId(productID)
             val productType = billingProductTypeForLogicalProductId(productID)
 
@@ -441,20 +475,41 @@ class ProManager
                     .setProductList(productList)
                     .build()
 
-            val result = billingClient.queryProductDetails(params)
-            val details = result.productDetailsList?.firstOrNull()
-            if (details != null) {
-                cachedProductDetails[productID] = details
-                if (billingProductId != productID) {
-                    cachedProductDetails[billingProductId] = details
+            var attempt = 0
+            while (true) {
+                attempt++
+                val result = billingClient.queryProductDetails(params)
+                val details = result.productDetailsList?.firstOrNull()
+                if (details != null) {
+                    cachedProductDetails[productID] = details
+                    if (billingProductId != productID) {
+                        cachedProductDetails[billingProductId] = details
+                    }
+                    if (billingProductId == ELITE_PRODUCT_ID) {
+                        syncMonthlyCatalogFromEliteFallback()
+                    }
+                    return details
                 }
-                if (billingProductId == ELITE_PRODUCT_ID) {
-                    syncMonthlyCatalogFromEliteFallback()
+
+                val responseCode = result.billingResult.responseCode
+                if (BillingResponseLabels.shouldRetryProductDetailsQuery(responseCode, attempt)) {
+                    analyticsService.track(
+                        AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
+                        mapOf(
+                            "logical_product_id" to productID,
+                            "billing_product_id" to billingProductId,
+                            "attempt" to attempt,
+                            "billing_response_code" to responseCode,
+                            "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                        ),
+                    )
+                    delay(400L * attempt)
+                    continue
                 }
-            } else {
+
                 maybeReportBillingProductNotFound(billingProductId, result.billingResult)
+                return null
             }
-            return details
         }
 
         private fun maybeReportBillingProductNotFound(
@@ -462,18 +517,39 @@ class ProManager
             billingResult: BillingResult,
         ) {
             val channel = analyticsService.distributionChannel()
-            if (!billingClient.isReady) return
-            if (channel == AndroidInstallChannel.NON_PLAY_INSTALL) return
-            if (!reportedBillingProductNotFound.add(productID)) return
+            if (
+                !shouldReportBillingProductNotFound(
+                    billingReady = billingClient.isReady,
+                    distributionChannel = channel,
+                    alreadyReported = reportedBillingProductNotFound,
+                    productId = productID,
+                )
+            ) {
+                return
+            }
+            reportedBillingProductNotFound.add(productID)
+            val responseCode = billingResult.responseCode
+            val responseLabel = BillingResponseLabels.labelFor(responseCode)
             analyticsService.track(
                 "billing_product_not_found",
                 mapOf(
                     "product_id" to productID,
                     AnalyticsProperties.DISTRIBUTION_CHANNEL to channel,
                     "billing_ready" to billingClient.isReady,
-                    "billing_response_code" to billingResult.responseCode,
+                    "billing_response_code" to responseCode,
+                    "billing_response_label" to responseLabel,
                     "billing_debug_message" to billingResult.debugMessage,
                 ),
+            )
+            analyticsService.trackBillingDiagnostic(
+                message = "billing_product_not_found",
+                level = "error",
+                properties =
+                    mapOf(
+                        "product_id" to productID,
+                        "billing_response_code" to responseCode,
+                        "billing_response_label" to responseLabel,
+                    ),
             )
         }
 
