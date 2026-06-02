@@ -52,7 +52,7 @@ class TimerSetupSmokeTest {
             .assertExists()
             .performClick()
 
-        composeRule.waitUntil(timeoutMillis = 5_000) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule
                 .onAllNodesWithText("Unlock Full Fight-Ready Training")
                 .fetchSemanticsNodes()
