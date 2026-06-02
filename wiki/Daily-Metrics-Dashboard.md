@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 63 | 609 | 672 |
-| Active Installs | — | 614 | — |
+| Distinct install users (30d) | 63 | 611 | 674 |
+| Active Installs | — | 615 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 19 |
-| WAU | 238 |
-| MAU | 691 |
+| DAU | 20 |
+| WAU | 191 |
+| MAU | 692 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 4 |
-| Timer Completed (7d) | 86 |
-| Completed Users (7d) | 16 |
-| Sessions/Completed User (7d) | 5.38 |
+| Timer Completed (7d) | 87 |
+| Completed Users (7d) | 13 |
+| Sessions/Completed User (7d) | 6.69 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-01T19:48:32+00:00
+**Generated:** 2026-06-02T01:26:17+00:00
 
 ## Onboarding Funnel
-- First Open: **680**
-- First Timer Configured: **366** (53.8% of opens)
-- First Timer Completed: **94** (13.8% of opens)
+- First Open: **681**
+- First Timer Configured: **366** (53.7% of opens)
+- First Timer Completed: **95** (14.0% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -61,15 +61,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 578 |
-| Offer Selects | 55 |
+| Paywall Views | 580 |
+| Offer Selects | 56 |
 | Purchase Attempts | 4 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
 **Top failure reasons:** failed (405), user_cancelled (6), cancelled (2), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (489), elite_tactical (400), pro_base (242)
+**Catalog failures (Android):** elite_tactical_monthly (487), elite_tactical (400), pro_base (242)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -77,9 +77,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 680 | — |
-| First Timer Configured | 366 | 53.8% of opens |
-| First Timer Completed | 94 | 13.8% of opens |
+| First Open | 681 | — |
+| First Timer Configured | 366 | 53.7% of opens |
+| First Timer Completed | 95 | 14.0% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01"]
+    x-axis ["2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-02"]
     y-axis "Downloads"
-    line [62 , 61 , 61 , 62 , 62 , 62 , 62 , 63 , 62 , 63 , 63 , 63 , 63 , 63]
-    line [580 , 581 , 581 , 581 , 581 , 581 , 590 , 594 , 594 , 596 , 596 , 596 , 599 , 609]
+    line [61 , 61 , 62 , 62 , 62 , 62 , 63 , 62 , 63 , 63 , 63 , 63 , 63 , 63]
+    line [581 , 581 , 581 , 581 , 581 , 590 , 594 , 594 , 596 , 596 , 596 , 599 , 609 , 611]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-05-30" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01"]
+    x-axis ["2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-05-31" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-01" , "2026-06-02"]
     y-axis "Users"
-    line [5 , 5 , 6 , 6 , 6 , 6 , 6 , 7 , 7 , 5 , 5 , 5 , 5 , 4]
+    line [5 , 6 , 6 , 6 , 6 , 6 , 7 , 7 , 5 , 5 , 5 , 5 , 4 , 4]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-01T19:48:33+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-02T01:26:18+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
