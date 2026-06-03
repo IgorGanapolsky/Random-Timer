@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-03T13:58:40+00:00
+Generated: 2026-06-03T16:59:15+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **679**
+- Views: **681**
 - Offer Selects: **56**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
@@ -40,14 +40,14 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 483 | 178 |
-| android | elite_tactical | 407 | 180 |
-| android | pro_base | 249 | 156 |
+| android | elite_tactical_monthly | 481 | 178 |
+| android | elite_tactical | 408 | 181 |
+| android | pro_base | 250 | 157 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 323 | 1 | 0 | 0.3% | 0.0% |
+| range_gate | 325 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 232 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 36 | 0 | 0 | 0.0% | 0.0% |
@@ -63,18 +63,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3659 | 366 |
-| alarm_duration | 3071 | 338 |
-| min_seconds | 2593 | 341 |
-| volume | 2409 | 231 |
-| sound_type | 1878 | 282 |
-| repeat_enabled | 1387 | 331 |
-| unknown | 1245 | 19 |
-| voice_callouts_enabled | 831 | 203 |
-| vibration_enabled | 626 | 234 |
-| repeat_rounds | 401 | 119 |
-| voice_gender | 381 | 235 |
-| use_extended_range | 278 | 169 |
+| max_seconds | 3672 | 372 |
+| alarm_duration | 3197 | 345 |
+| min_seconds | 2610 | 348 |
+| volume | 2442 | 237 |
+| sound_type | 1959 | 289 |
+| repeat_enabled | 1410 | 337 |
+| unknown | 972 | 17 |
+| voice_callouts_enabled | 867 | 209 |
+| vibration_enabled | 634 | 240 |
+| repeat_rounds | 422 | 125 |
+| voice_gender | 393 | 242 |
+| use_extended_range | 291 | 175 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
