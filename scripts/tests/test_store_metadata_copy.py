@@ -20,7 +20,8 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert len(short_description) <= 80
     assert "interval timer" in short_description.lower()
     assert "mma" in short_description.lower()
-    assert "coach" in short_description.lower()
+    assert "tactical" in short_description.lower()
+    assert "coach voices" not in short_description.lower()
     assert "ai coach" not in short_description.lower()
 
 
