@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T01:28:14+00:00",
+  "generated_at": "2026-06-03T08:00:54+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -256,14 +256,14 @@
       "users": 283
     },
     {
-      "setting_name": "unknown",
-      "changes": 1513,
-      "users": 20
-    },
-    {
       "setting_name": "repeat_enabled",
       "changes": 1394,
       "users": 332
+    },
+    {
+      "setting_name": "unknown",
+      "changes": 1394,
+      "users": 20
     },
     {
       "setting_name": "voice_callouts_enabled",
