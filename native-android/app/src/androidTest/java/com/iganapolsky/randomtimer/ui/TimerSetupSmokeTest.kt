@@ -9,17 +9,23 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TimerSetupSmokeTest {
-    @get:Rule(order = 0)
-    val forceStopRule = ForceStopBeforeMainActivityRule()
-
-    @get:Rule(order = 1)
+    @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun coldStart() {
+            DeviceTestSupport.prepareColdStart()
+        }
+    }
 
     @Test
     fun setupScreenRendersCoreControls() {

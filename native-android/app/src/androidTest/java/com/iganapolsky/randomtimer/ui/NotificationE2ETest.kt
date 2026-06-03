@@ -10,6 +10,7 @@ import com.iganapolsky.randomtimer.MainActivity
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,17 +18,28 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class NotificationE2ETest {
 
-    @get:Rule(order = 0)
-    val forceStopRule = ForceStopBeforeMainActivityRule()
-
-    @get:Rule(order = 1)
+    @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private lateinit var device: UiDevice
+    private var firstTest = true
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun coldStart() {
+            DeviceTestSupport.prepareColdStart()
+        }
+    }
 
     @Before
     fun setup() {
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (firstTest) {
+            firstTest = false
+        } else {
+            DeviceTestSupport.prepareNextTest(composeRule)
+        }
     }
 
     @Test

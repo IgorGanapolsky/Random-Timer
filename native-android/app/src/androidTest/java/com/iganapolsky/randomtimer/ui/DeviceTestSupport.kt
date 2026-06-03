@@ -9,7 +9,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.service.TimerForegroundService
-import org.junit.rules.ExternalResource
 
 /** Shared helpers for slow GitHub Actions emulators (API 30, swiftshader). */
 object DeviceTestSupport {
@@ -32,6 +31,21 @@ object DeviceTestSupport {
         context.startService(stopIntent)
     }
 
+    /** Cold start once per test class (safe before instrumentation launches MainActivity). */
+    fun prepareColdStart() {
+        stopTimerService()
+        forceStopApp()
+    }
+
+    /** Reset UI between test methods without killing the instrumentation process. */
+    fun prepareNextTest(
+        rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
+    ) {
+        stopTimerService()
+        rule.activityRule.scenario.recreate()
+        waitForSetupScreen(rule)
+    }
+
     fun waitForSetupScreen(
         rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
         timeoutMillis: Long = SETUP_READY_TIMEOUT_MS,
@@ -48,13 +62,5 @@ object DeviceTestSupport {
         rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
     ) {
         rule.onNodeWithTag("start_timer", useUnmergedTree = true).performClick()
-    }
-}
-
-/** Runs before [androidx.compose.ui.test.junit4.createAndroidComposeRule] launches MainActivity. */
-class ForceStopBeforeMainActivityRule : ExternalResource() {
-    override fun before() {
-        DeviceTestSupport.stopTimerService()
-        DeviceTestSupport.forceStopApp()
     }
 }
