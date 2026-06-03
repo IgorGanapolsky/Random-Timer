@@ -241,16 +241,22 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     assert "fastlane submit_review" not in source
 
 
-def test_ios_metadata_sync_falls_back_to_live_storefront_when_metadata_only_version_is_review_locked():
+def test_ios_metadata_sync_fails_fast_when_no_editable_app_store_version():
     source = IOS_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
 
     resolve_section = source.split("- name: Resolve editable App Store version", 1)[1].split(
         "- name: Strict screenshot replacement + metadata upload", 1
     )[0]
-    assert 'if [[ "$IOS_METADATA_ONLY" == "true" ]]' in resolve_section
+    upload_section = source.split("- name: Strict screenshot replacement + metadata upload", 1)[1].split(
+        "- name: Upload readiness report", 1
+    )[0]
+    assert "asc_resolve_version.py" in resolve_section
     assert "from scripts.asc.asc_resolve_version import _is_editable_state" in resolve_section
-    assert "selected version state '$SELECTED_STATE' is not editable" in resolve_section
-    assert 'SELECTED_VERSION="LIVE"' in resolve_section
+    assert "Blocked on ASC" in resolve_section
+    assert "asc_list_versions.py" in resolve_section
+    assert 'SELECTED_VERSION="LIVE"' not in resolve_section
+    assert "use_live_version:true" not in upload_section
+    assert "asc_strict_screenshot_sync.py" in upload_section
 
 
 def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():
