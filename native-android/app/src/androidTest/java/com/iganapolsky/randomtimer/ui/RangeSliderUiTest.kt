@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,9 +17,15 @@ class RangeSliderUiTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @Before
+    fun setup() {
+        DeviceTestSupport.clearAppData()
+    }
+
     @Test
     fun draggingMinBeyondGapPushesMaxForward() {
-        // Reduce max to 60s.
+        DeviceTestSupport.waitForSetupScreen(composeRule)
+
         composeRule
             .onNodeWithContentDescription("Maximum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
@@ -27,7 +34,6 @@ class RangeSliderUiTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Maximum: 1m").assertExists()
 
-        // Move min close to max; max should be pushed to keep a 5s gap.
         composeRule
             .onNodeWithContentDescription("Minimum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
@@ -40,7 +46,8 @@ class RangeSliderUiTest {
 
     @Test
     fun draggingMaxBelowGapPullsMinBack() {
-        // Set min to 150s (2m 30s). Max is still 5m so this should not push max.
+        DeviceTestSupport.waitForSetupScreen(composeRule)
+
         composeRule
             .onNodeWithContentDescription("Minimum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
@@ -49,7 +56,6 @@ class RangeSliderUiTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Minimum: 2m 30s").assertExists()
 
-        // Move max below min + 5s; min should be pulled back.
         composeRule
             .onNodeWithContentDescription("Maximum time slider")
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
