@@ -33,8 +33,10 @@ Behavior:
 ## Workflow integration
 
 - `.github/workflows/ios-metadata-sync.yml`
-  - Resolves editable version before `fastlane metadata`.
-  - Uses `asc_verify_ready.py --skip-build-check` because this workflow is listing-only.
+  - Resolves editable version before `asc_strict_screenshot_sync.py` (which calls `fastlane metadata` for that version).
+  - **Does not** use `fastlane deliver` `use_live_version:true`. When ASC has zero editable IOS versions (e.g. preferred `1.3.48` is `WAITING_FOR_REVIEW` and create-next-patch returns HTTP 409), the job fails fast with `asc_list_versions.py` inventory instead of retrying deliver for ~20 minutes.
+  - `metadata_only=true` only skips the VALID build gate (`--skip-build-check`); it does not bypass the editable-version requirement.
+  - `use_live_version` input is deprecated/ignored.
   - Uploads `asc-version-resolution` artifact.
 
 - `.github/workflows/ios-submit-review.yml`

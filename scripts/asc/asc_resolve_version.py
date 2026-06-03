@@ -62,6 +62,8 @@ def _is_editable_state(state: Optional[str]) -> bool:
     s = (state or "").strip().upper()
     if not s:
         return False
+    if s == "UNKNOWN" or "BLOCKED" in s or "409" in s:
+        return False
     return s not in NON_EDITABLE_STATES
 
 
