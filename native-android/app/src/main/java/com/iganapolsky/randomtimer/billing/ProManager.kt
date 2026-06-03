@@ -101,6 +101,7 @@ class ProManager
                     PendingPurchasesParams
                         .newBuilder()
                         .enableOneTimeProducts()
+                        .enablePrepaidPlans()
                         .build(),
                 ).build()
 
@@ -411,11 +412,21 @@ class ProManager
                 trackProductCatalogStatus()
                 return
             }
-            fetchProductDetails(BASE_PRODUCT_ID)
-            fetchProductDetails(ELITE_PRODUCT_ID)
-            fetchProductDetails(MONTHLY_PRODUCT_ID)
+            fetchPaywallCatalogBatched()
             syncMonthlyCatalogFromEliteFallback()
             trackProductCatalogStatus()
+        }
+
+        /** Batched INAPP + SUBS probes (deduped Play ids) with shared retry/reconnect policy. */
+        private suspend fun fetchPaywallCatalogBatched() {
+            val specsByType =
+                groupPaywallCatalogSpecsByProductType(buildPaywallCatalogQuerySpecs())
+            paywallCatalogProductTypesInFetchOrder().forEach { productType ->
+                val specs = specsByType[productType].orEmpty()
+                if (specs.isNotEmpty()) {
+                    fetchProductDetailsBatch(productType, specs)
+                }
+            }
         }
 
         /** Fallback when Play hosts P1M on `elite_tactical` instead of `elite_tactical_monthly`. */
@@ -493,71 +504,98 @@ class ProManager
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
-            if (!billingClient.isReady) {
+            if (!billingClient.isReady || productDetailsFeatureSupported == false) {
                 return null
             }
-            if (productDetailsFeatureSupported == false) {
-                return null
+            val spec =
+                buildPaywallCatalogQuerySpecs(listOf(productID))
+                    .firstOrNull { it.logicalProductId == productID }
+                    ?: return null
+            fetchProductDetailsBatch(spec.productType, listOf(spec))
+            return cachedProductDetails[productID]
+        }
+
+        private suspend fun fetchProductDetailsBatch(
+            productType: String,
+            specs: List<BillingProductQuerySpec>,
+        ) {
+            if (!billingClient.isReady || productDetailsFeatureSupported == false || specs.isEmpty()) {
+                return
             }
-            val billingProductId = playBillingProductId(productID)
-            val productType = billingProductTypeForLogicalProductId(productID)
-
-            val productList =
-                listOf(
-                    QueryProductDetailsParams.Product
-                        .newBuilder()
-                        .setProductId(billingProductId)
-                        .setProductType(productType)
-                        .build(),
-                )
-
-            val params =
-                QueryProductDetailsParams
-                    .newBuilder()
-                    .setProductList(productList)
-                    .build()
+            val billingProductIds = specs.map { it.billingProductId }.distinct()
+            val params = buildQueryProductDetailsParams(productType, billingProductIds)
+            val telemetryKey = "${productType}:${billingProductIds.joinToString()}"
 
             var attempt = 0
             while (true) {
                 attempt++
                 val result = billingClient.queryProductDetails(params)
-                val details = result.productDetailsList?.firstOrNull()
-                if (details != null) {
-                    productQueryFailureReasons.remove(productID)
-                    cachedProductDetails[productID] = details
-                    if (billingProductId != productID) {
-                        cachedProductDetails[billingProductId] = details
+                val detailsByPlayId = result.productDetailsList.orEmpty().associateBy { it.productId }
+                specs.forEach { spec ->
+                    detailsByPlayId[spec.billingProductId]?.let { details ->
+                        cacheProductDetailsForSpec(spec, details)
                     }
-                    if (billingProductId == ELITE_PRODUCT_ID) {
+                }
+                val unresolvedBillingIds =
+                    billingProductIds.filter { playId -> cachedProductDetails[playId] == null }
+                if (unresolvedBillingIds.isEmpty()) {
+                    if (billingProductIds.any { it == ELITE_PRODUCT_ID }) {
                         syncMonthlyCatalogFromEliteFallback()
                     }
-                    return details
+                    return
                 }
 
                 val responseCode = result.billingResult.responseCode
                 if (BillingResponseLabels.shouldRetryProductDetailsQuery(responseCode, attempt)) {
-                    val emittedCount = productQueryRetryTelemetryCounts[productID] ?: 0
+                    val emittedCount = productQueryRetryTelemetryCounts[telemetryKey] ?: 0
                     if (BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount)) {
-                        productQueryRetryTelemetryCounts[productID] = emittedCount + 1
-                        analyticsService.track(
-                            AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
-                            mapOf(
-                                "logical_product_id" to productID,
-                                "billing_product_id" to billingProductId,
-                                "attempt" to attempt,
-                                "billing_response_code" to responseCode,
-                                "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
-                            ),
-                        )
+                        productQueryRetryTelemetryCounts[telemetryKey] = emittedCount + 1
+                        specs.forEach { spec ->
+                            analyticsService.track(
+                                AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
+                                mapOf(
+                                    "logical_product_id" to spec.logicalProductId,
+                                    "billing_product_id" to spec.billingProductId,
+                                    "attempt" to attempt,
+                                    "billing_response_code" to responseCode,
+                                    "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                                    "query_batch" to productType,
+                                ),
+                            )
+                        }
                     }
-                    delay(400L * attempt)
+                    if (BillingResponseLabels.shouldReconnectBillingClient(responseCode)) {
+                        reconnectBillingClientForCatalogProbe()
+                    }
+                    delay(BillingResponseLabels.productQueryRetryDelayMs(attempt))
                     continue
                 }
 
-                recordProductQueryFailure(productID, responseCode)
-                maybeReportBillingProductNotFound(billingProductId, result.billingResult)
-                return null
+                unresolvedBillingIds.forEach { billingProductId ->
+                    logicalProductIdsForPlayProduct(specs, billingProductId).forEach { logicalProductId ->
+                        recordProductQueryFailure(logicalProductId, responseCode)
+                    }
+                    maybeReportBillingProductNotFound(billingProductId, result.billingResult)
+                }
+                return
             }
+        }
+
+        private fun cacheProductDetailsForSpec(
+            spec: BillingProductQuerySpec,
+            details: com.android.billingclient.api.ProductDetails,
+        ) {
+            productQueryFailureReasons.remove(spec.logicalProductId)
+            cachedProductDetails[spec.logicalProductId] = details
+            if (spec.billingProductId != spec.logicalProductId) {
+                cachedProductDetails[spec.billingProductId] = details
+            }
+        }
+
+        private suspend fun reconnectBillingClientForCatalogProbe() {
+            connectAndRestore()
+            ensureBillingReadyForPurchase()
+            refreshProductDetailsFeatureSupport()
         }
 
         private fun recordProductQueryFailure(

@@ -30,7 +30,21 @@ class BillingResponseLabelsTest {
         assertFalse(
             BillingResponseLabels.shouldRetryProductDetailsQuery(
                 BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
-                attempt = 3,
+                attempt = BillingResponseLabels.DEFAULT_PRODUCT_QUERY_MAX_ATTEMPTS,
+            ),
+        )
+    }
+
+    @Test
+    fun `shouldReconnectBillingClient only for service disconnected`() {
+        assertTrue(
+            BillingResponseLabels.shouldReconnectBillingClient(
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+            ),
+        )
+        assertFalse(
+            BillingResponseLabels.shouldReconnectBillingClient(
+                BillingClient.BillingResponseCode.NETWORK_ERROR,
             ),
         )
     }

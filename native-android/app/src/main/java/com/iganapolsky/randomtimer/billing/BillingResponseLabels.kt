@@ -30,11 +30,27 @@ internal object BillingResponseLabels {
             BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
         )
 
+    internal const val DEFAULT_PRODUCT_QUERY_MAX_ATTEMPTS: Int = 5
+
     internal fun shouldRetryProductDetailsQuery(
         responseCode: Int,
         attempt: Int,
-        maxAttempts: Int = 3,
+        maxAttempts: Int = DEFAULT_PRODUCT_QUERY_MAX_ATTEMPTS,
     ): Boolean = attempt < maxAttempts && responseCode in retryableProductQueryResponseCodes
+
+    /** Exponential backoff capped at 3.2s between catalog probe retries. */
+    internal fun productQueryRetryDelayMs(
+        attempt: Int,
+        baseDelayMs: Long = 400L,
+        maxDelayMs: Long = 3200L,
+    ): Long {
+        val exponent = (attempt - 1).coerceAtLeast(0)
+        val scaled = baseDelayMs * (1L shl exponent.coerceAtMost(3))
+        return scaled.coerceAtMost(maxDelayMs)
+    }
+
+    internal fun shouldReconnectBillingClient(responseCode: Int): Boolean =
+        responseCode == BillingClient.BillingResponseCode.SERVICE_DISCONNECTED
 
     /** Caps `billing_product_query_retry` telemetry per logical SKU per session. */
     internal fun shouldEmitProductQueryRetryTelemetry(
