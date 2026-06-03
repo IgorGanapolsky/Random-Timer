@@ -77,6 +77,18 @@ class ProManager
                 if (productId in alreadyReported) return false
                 return true
             }
+
+            /**
+             * Play can connect billing while [BillingClient.FeatureType.PRODUCT_DETAILS] returns
+             * FEATURE_NOT_SUPPORTED. Emit [AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS] on setup
+             * so catalog probes are not silent until paywall (fetchAllProductDetails skips query).
+             */
+            internal fun shouldTrackCatalogStatusOnBillingSetupFinished(
+                billingSetupResponseCode: Int,
+                productDetailsFeatureSupported: Boolean?,
+            ): Boolean =
+                billingSetupResponseCode == BillingClient.BillingResponseCode.OK &&
+                    productDetailsFeatureSupported == false
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -158,6 +170,14 @@ class ProManager
                                     "billing_response_label" to BillingResponseLabels.labelFor(featureResult.responseCode),
                                 ),
                             )
+                            if (
+                                shouldTrackCatalogStatusOnBillingSetupFinished(
+                                    billingSetupResponseCode = responseCode,
+                                    productDetailsFeatureSupported = productDetailsFeatureSupported,
+                                )
+                            ) {
+                                trackProductCatalogStatus()
+                            }
                             externalScope.launch {
                                 restorePurchases(
                                     source = MonetizationSources.AUTO_RESTORE,
