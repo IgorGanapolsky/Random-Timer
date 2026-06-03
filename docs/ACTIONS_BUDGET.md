@@ -21,9 +21,9 @@ You may still hit:
 
 | Tier | Purpose | Trigger |
 |------|---------|---------|
-| **0** | Ship path | PR `ci.yml`, path-aware `device-tests.yml`, security scan |
-| **1** | Revenue ops | `daily-growth-publishing`, `native-release` (dispatch), store verify (dispatch) |
-| **2** | Dashboards / hygiene | Throttled `schedule` (6h or daily); `workflow_dispatch` always available |
+| **0** | Ship path (three contracts only) | PR: `ci.yml` + `app-debug` artifact, path-aware `device-tests.yml`, `security.yml`; push `develop`/`main`: `internal-distribution.yml`; production: `native-release.yml` (`workflow_dispatch` only). See [`CI_CD_GAP_VS_AGENTLEASH.md`](CI_CD_GAP_VS_AGENTLEASH.md). |
+| **1** | Revenue ops | `daily-growth-publishing`, store verify (dispatch), growth orchestration |
+| **2** | Dashboards / hygiene | Throttled `schedule` (6h or daily); everything else defaults to `workflow_dispatch` unless path-triggered on Tier 0 |
 
 ## Random-Timer schedule caps (2026-05-26)
 
