@@ -6,7 +6,6 @@ Most timers teach anticipation. This one trains reaction: the cue hits at a rand
 
 FEATURES
 • Random trigger timing inside your selected min/max range
-• Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
 • Hidden countdown mode—no clock watching
 • High-intensity alarms and haptics for gym use
 • Loop mode for continuous random rounds

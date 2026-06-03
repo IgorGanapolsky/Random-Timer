@@ -47,6 +47,49 @@ def test_select_pack_fails_when_release_month_is_missing() -> None:
         raise AssertionError("Expected missing releaseMonth to fail fast")
 
 
+def test_ensure_release_month_pack_is_noop_when_month_exists() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    before_ids = {pack["id"] for pack in manifest["packs"]}
+
+    updated, created = module.ensure_release_month_pack(manifest, "2026-05")
+
+    assert created is False
+    assert updated["activePackId"] == manifest["activePackId"]
+    assert {pack["id"] for pack in updated["packs"]} == before_ids
+
+
+def test_ensure_release_month_pack_clones_active_pack_for_missing_month() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+    active_pack_id = manifest["activePackId"]
+
+    updated, created = module.ensure_release_month_pack(manifest, "2099-11")
+
+    assert created is True
+    assert updated["activePackId"] == "2099-11_m11_rotation"
+    new_pack = next(pack for pack in updated["packs"] if pack["id"] == "2099-11_m11_rotation")
+    assert new_pack["releaseMonth"] == "2099-11"
+    assert "November 2099" in new_pack["theme"]
+    source_pack = next(pack for pack in updated["packs"] if pack["id"] == active_pack_id)
+    assert len(new_pack["commandCues"]) == len(source_pack["commandCues"])
+    assert len(new_pack["soundArsenal"]) == len(source_pack["soundArsenal"])
+
+
+def test_ensure_release_month_pack_uses_known_june_theme_slug() -> None:
+    module = _load_module()
+    manifest = module._load_manifest(MANIFEST_PATH)
+
+    updated, created = module.ensure_release_month_pack(manifest, "2026-06")
+
+    assert updated["activePackId"] == "2026-06_conditioning_lane"
+    june_pack = next(pack for pack in updated["packs"] if pack["id"] == "2026-06_conditioning_lane")
+    assert june_pack["releaseMonth"] == "2026-06"
+    assert "Conditioning lane" in june_pack["theme"]
+    if created:
+        assert len(updated["packs"]) == len(manifest["packs"]) + 1
+
+
 def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
     module = _load_module()
     manifest = module._load_manifest(MANIFEST_PATH)

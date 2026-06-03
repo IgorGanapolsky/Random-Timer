@@ -13,14 +13,13 @@ WHY FIGHTERS & COACHES USE IT
 BUILT FOR
 • Boxing: pad rounds, bag work, shadowboxing flurries
 • MMA, Muay Thai, kickboxing: reaction and combo drills
-• BJJ & wrestling: scrambles, transitions, competition warmup preset
+• BJJ & wrestling: scrambles, transitions, positional drills
 • Military combatives, self-defense scenarios, first-responder drills
 • HIIT, Tabata, CrossFit WODs that punish predictability
 
 KEY FEATURES
 • True random trigger inside your chosen range
 • Loud alarms, haptics, and volume control for gym floor use
-• Competition Warmup preset (BJJ, judo, wrestling, fight-day prep)
 • Reliable background timing (Android foreground service)
 
 PRO TACTICAL (OPTIONAL)
