@@ -30,18 +30,17 @@ class BillingProductQueryPlanTest {
     }
 
     @Test
-    fun `logical ids for play product include monthly alias`() {
+    fun `deduped specs expose single logical id per play product`() {
         val specs = buildPaywallCatalogQuerySpecs()
-        val logicalIds =
+        val eliteLogicalIds =
             logicalProductIdsForPlayProduct(
                 specs,
                 ProManager.ELITE_PRODUCT_ID,
             )
 
-        assertThat(logicalIds).containsExactly(
-            ProManager.ELITE_PRODUCT_ID,
-            ProManager.MONTHLY_PRODUCT_ID,
-        )
+        assertThat(eliteLogicalIds).containsExactly(ProManager.ELITE_PRODUCT_ID)
+        assertThat(playBillingProductId(ProManager.MONTHLY_PRODUCT_ID))
+            .isEqualTo(ProManager.ELITE_PRODUCT_ID)
     }
 
     @Test
