@@ -1,0 +1,1 @@
+Billing catalog telemetry when PRODUCT_DETAILS unsupported; release CI instrumented test gate.
