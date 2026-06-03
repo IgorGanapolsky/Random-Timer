@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Preflight release checks (Android listing assets)
+        run: bash scripts/shell/preflight-release.sh --platform android --layer 1
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
