@@ -1,0 +1,1 @@
+Faster, more reliable Pro checkout on Android: improved Play billing catalog loading, smarter retries, and subscription pending-purchase support.
