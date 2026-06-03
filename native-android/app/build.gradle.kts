@@ -47,8 +47,8 @@ android {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
         targetSdk = ciTargetSdk ?: 35
-        versionCode = ciVersionCode ?: 1778679352
-        versionName = "1.3.50"
+        versionCode = ciVersionCode ?: 1778679353
+        versionName = "1.3.51"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
