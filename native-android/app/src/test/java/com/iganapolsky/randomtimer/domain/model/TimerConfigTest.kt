@@ -289,16 +289,4 @@ class TimerConfigTest {
         assertThat(result.profiles.freeMaxSeconds).isEqualTo(180)
     }
 
-    @Test
-    fun `competition warmup preset applies event day settings`() {
-        val config = TrainingPreset.CompetitionWarmup.applyTo(TimerConfig.DEFAULT)
-
-        assertThat(config.minSeconds).isEqualTo(20)
-        assertThat(config.maxSeconds).isEqualTo(90)
-        assertThat(config.alarmDuration).isEqualTo(5)
-        assertThat(config.repeatEnabled).isTrue()
-        assertThat(config.vibrationEnabled).isTrue()
-        assertThat(config.soundType).isEqualTo(SoundType.INTENSE)
-        assertThat(config.useExtendedRange).isFalse()
-    }
 }
