@@ -15,7 +15,10 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TimerSetupSmokeTest {
-    @get:Rule
+    @get:Rule(order = 0)
+    val forceStopRule = ForceStopBeforeMainActivityRule()
+
+    @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
