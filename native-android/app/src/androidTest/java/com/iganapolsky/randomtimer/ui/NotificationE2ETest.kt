@@ -24,7 +24,6 @@ class NotificationE2ETest {
 
     @Before
     fun setup() {
-        DeviceTestSupport.clearAppData()
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     }
 

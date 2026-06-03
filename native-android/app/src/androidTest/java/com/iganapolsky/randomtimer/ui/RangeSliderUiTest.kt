@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,11 +15,6 @@ import org.junit.runner.RunWith
 class RangeSliderUiTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
-
-    @Before
-    fun setup() {
-        DeviceTestSupport.clearAppData()
-    }
 
     @Test
     fun draggingMinBeyondGapPushesMaxForward() {

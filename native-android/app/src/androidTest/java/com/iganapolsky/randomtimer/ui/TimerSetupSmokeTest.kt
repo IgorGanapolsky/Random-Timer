@@ -9,7 +9,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,11 +17,6 @@ import org.junit.runner.RunWith
 class TimerSetupSmokeTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
-
-    @Before
-    fun setup() {
-        DeviceTestSupport.clearAppData()
-    }
 
     @Test
     fun setupScreenRendersCoreControls() {
