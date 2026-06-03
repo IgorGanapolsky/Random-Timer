@@ -1,25 +1,39 @@
 {
-  "generated_at": "2026-06-03T16:51:27Z",
-  "source": "audit_98232663_followup",
-  "window_days": 30,
+  "generated_at": "2026-06-03T18:00:31Z",
+  "source": "posthog_execute_sql_2026_06_03",
+  "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
-  "snapshot": "Android 1.3.50 (VC 1780500214) is on the Play API while the public listing still shows 1.3.43; iOS 1.3.50 was not shipped (native-release run 26894611247: android-release success, ios-testflight skipped). PostHog 30d: 0 purchase_success, 4 purchase attempts; WQTU 4. Billing catalog telemetry reported empty on 1.3.49 only with no 1.3.50 events yet — hold paid ads and do not claim revenue until listing parity, catalog health on 1.3.50, and purchase funnel are verified.",
+  "posthog_queries": [
+    "billing_product_catalog_status 7d breakdown by app_version/os/device_model/status",
+    "paywall funnel 7d for 1.3.49 vs 1.3.50",
+    "1.3.50 billing_* event detail (client_setup, diagnostic)"
+  ],
+  "snapshot": "Android 1.3.50 (VC 1780500214) is on Play API; public listing still 1.3.43. PostHog 7d: 1.3.50 has 326 events from 4 users but zero billing_product_catalog_status and zero catalog ok; billing_diagnostic shows product_details_supported=false (FEATURE_NOT_SUPPORTED). 1.3.49 shows catalog empty (1 event). 30d: 0 purchase_success, 4 attempts; WQTU 4. Do not claim revenue fixed.",
   "counts": {
     "wqtu_7d": 4,
     "purchase_attempts_30d": 4,
     "purchase_success_30d": 0,
+    "catalog_ok_30d": 20,
+    "catalog_empty_30d": 299,
     "play_api_version_name": "1.3.50",
     "play_api_version_code": 1780500214,
     "public_listing_version_name": "1.3.43",
     "ios_shipped_1_3_50": false,
-    "billing_catalog_empty_play_7d_app_versions": ["1.3.49"],
-    "billing_catalog_events_1_3_50": 0
+    "billing_catalog_ok_1_3_50_7d": 0,
+    "billing_catalog_events_1_3_50_7d": 0,
+    "billing_catalog_empty_1_3_49_7d": 1,
+    "billing_catalog_ok_1_3_49_7d": 0,
+    "users_1_3_50_7d": 4,
+    "billing_client_setup_ok_1_3_50_7d": 5,
+    "billing_client_setup_unavailable_1_3_50_7d": 3,
+    "billing_diagnostic_feature_not_supported_1_3_50_7d": 5
   },
-  "decision": "issue_1684_stays_open",
-  "next_actions": [
-    "Verify Play public listing reaches 1.3.50 and billing_product_catalog_status on 1.3.50",
-    "iOS: internal-distribution TestFlight signoff then native-release platform=ios on release/v1.3.50",
-    "Do not scale paid ads until paywall attempt→success improves with catalog proof"
+  "decision": "reopen_issue_1684_billing_probe_on_1780500214",
+  "recommended_next_actions": [
+    "billing_probe_on_1780500214: investigate why 1.3.50 emits billing_diagnostic FEATURE_NOT_SUPPORTED (product_details_supported=false) and never billing_product_catalog_status",
+    "reopen_1684_if_still_zero: catalog ok on 1.3.50 remains 0 after 7d telemetry — issue reopened with PostHog counts",
+    "iOS: CEO testflight-signoff on bb459080 then internal-distribution target=ios + native-release platform=ios",
+    "Hold paid ads until catalog ok on production cohort and paywall attempt→success > 0"
   ]
 }
