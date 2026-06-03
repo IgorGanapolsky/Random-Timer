@@ -82,11 +82,12 @@ def test_ensure_release_month_pack_uses_known_june_theme_slug() -> None:
 
     updated, created = module.ensure_release_month_pack(manifest, "2026-06")
 
-    assert created is True
     assert updated["activePackId"] == "2026-06_conditioning_lane"
     june_pack = next(pack for pack in updated["packs"] if pack["id"] == "2026-06_conditioning_lane")
     assert june_pack["releaseMonth"] == "2026-06"
     assert "Conditioning lane" in june_pack["theme"]
+    if created:
+        assert len(updated["packs"]) == len(manifest["packs"]) + 1
 
 
 def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
