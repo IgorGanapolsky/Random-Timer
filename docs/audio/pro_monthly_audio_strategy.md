@@ -45,6 +45,10 @@ Turn ElevenLabs into a recurring Pro content engine instead of a one-off asset g
 
 ## Generation Workflow
 
+Scheduled CI (`monthly-pro-content-release.yml`, cron `0 8 1 * *`) passes `--release-month YYYY-MM`.
+If that month is missing from `monthly_pro_audio_packs.json`, `generate_pro_audio_content.py`
+auto-scaffolds a new pack from the active pack before ElevenLabs generation (no manual manifest edit).
+
 Use `scripts/generate_pro_audio_content.py` to:
 
 - export generated platform catalogs from the canonical manifest
