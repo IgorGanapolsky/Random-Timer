@@ -321,7 +321,7 @@ jobs:
           path: |
             native-android/app/build/reports/androidTests/connected
             native-android/app/build/outputs/androidTest-results/connected
-          retention-days: 7
+          retention-days: 1
 
   android-release:
     needs:
