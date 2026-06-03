@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T16:59:15+00:00",
+  "generated_at": "2026-06-03T18:24:25+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -46,16 +46,16 @@
       "users": 1
     },
     {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "reason": "user_cancelled",
+      "platform": "android",
+      "product_id": "unknown",
+      "reason": "item_unavailable",
       "failures": 2,
       "users": 1
     },
     {
-      "platform": "android",
-      "product_id": "unknown",
-      "reason": "item_unavailable",
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.pro",
+      "reason": "user_cancelled",
       "failures": 2,
       "users": 1
     },
@@ -262,8 +262,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 972,
-      "users": 17
+      "changes": 913,
+      "users": 16
     },
     {
       "setting_name": "voice_callouts_enabled",

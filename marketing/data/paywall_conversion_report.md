@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-03T16:59:15+00:00
+Generated: 2026-06-03T18:24:25+00:00
 Window (days): 30
 
 ## Funnel
@@ -25,8 +25,8 @@ Window (days): 30
 |----------|------------|--------|----------|-------|
 | android | unknown | failed | 405 | 176 |
 | android | unknown | user_cancelled | 4 | 1 |
-| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | cancelled | 2 | 1 |
 
 ## Product Funnel
@@ -69,7 +69,7 @@ Window (days): 30
 | volume | 2442 | 237 |
 | sound_type | 1959 | 289 |
 | repeat_enabled | 1410 | 337 |
-| unknown | 972 | 17 |
+| unknown | 913 | 16 |
 | voice_callouts_enabled | 867 | 209 |
 | vibration_enabled | 634 | 240 |
 | repeat_rounds | 422 | 125 |
