@@ -1,19 +1,28 @@
 package com.iganapolsky.randomtimer.ui
 
 import android.content.Intent
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.iganapolsky.randomtimer.MainActivity
 import com.iganapolsky.randomtimer.service.TimerForegroundService
 
-/** Shared helpers for slow GitHub Actions emulators (API 30, swiftshader). */
+/** Shared helpers for slow GitHub Actions emulators (API 30–34, swiftshader). */
 object DeviceTestSupport {
     const val SETUP_READY_TIMEOUT_MS = 30_000L
+    const val LABEL_READY_TIMEOUT_MS = 45_000L
     const val NOTIFICATION_UI_TIMEOUT_MS = 15_000L
+
+    private const val MIN_TIME_SLIDER = "Minimum time slider"
 
     /**
      * Stops the app process so the next MainActivity lands on setup.
@@ -61,6 +70,32 @@ object DeviceTestSupport {
                 .isNotEmpty()
         }
         rule.waitForIdle()
+        scrollToTimeRangeSliders(rule)
+    }
+
+    /** Time range sliders live in setup [LazyColumn]; scroll before slider/label interaction. */
+    fun scrollToTimeRangeSliders(
+        rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
+    ) {
+        rule.onNode(hasScrollAction())
+            .performScrollToNode(hasContentDescription(MIN_TIME_SLIDER))
+        rule.waitForIdle()
+    }
+
+    fun waitForLabel(
+        rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
+        text: String,
+        timeoutMillis: Long = LABEL_READY_TIMEOUT_MS,
+    ) {
+        rule.waitUntil(timeoutMillis = timeoutMillis) {
+            scrollToTimeRangeSliders(rule)
+            rule.onAllNodesWithText(text, useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        rule.onNodeWithText(text, useUnmergedTree = true)
+            .performScrollTo()
+            .assertExists()
     }
 
     fun clickPrimaryStart(
