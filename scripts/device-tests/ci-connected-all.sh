@@ -10,11 +10,11 @@ REPO_ROOT="$(CDPATH= cd -- "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}/native-android"
 chmod +x gradlew
 
-# Stable order: isolated Compose screens first, MainActivity UI, service, notification last.
+# Stable order: RangeSlider first (fresh emulator), then isolated screens, service, notification last.
 TEST_CLASSES="
+com.iganapolsky.randomtimer.ui.RangeSliderUiTest
 com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreenLandscapeLayoutTest
 com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreenTapCircleTest
-com.iganapolsky.randomtimer.ui.RangeSliderUiTest
 com.iganapolsky.randomtimer.ui.TimerSetupSmokeTest
 com.iganapolsky.randomtimer.service.TimerForegroundServiceResetTest
 com.iganapolsky.randomtimer.ui.NotificationE2ETest

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -70,6 +71,7 @@ class RangeSliderUiTest {
     ) {
         composeRule
             .onNodeWithContentDescription(contentDescription, useUnmergedTree = true)
+            .performScrollTo()
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(progress)
             }
