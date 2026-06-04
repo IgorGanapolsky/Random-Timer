@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-04T07:54:16+00:00
+Generated: 2026-06-04T13:26:06+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **681**
-- Offer Selects: **56**
+- Views: **677**
+- Offer Selects: **54**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
-- View -> Offer Select: **8.2%**
-- Select -> Purchase Attempt: **7.1%**
+- View -> Offer Select: **8.0%**
+- Select -> Purchase Attempt: **7.4%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -25,14 +25,14 @@ Window (days): 30
 |----------|------------|--------|----------|-------|
 | android | unknown | failed | 405 | 176 |
 | android | unknown | user_cancelled | 4 | 1 |
-| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | cancelled | 2 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical_monthly | 40 | 1 | 0 | 2.5% | 0.0% |
+| android | elite_tactical_monthly | 38 | 1 | 0 | 2.6% | 0.0% |
 | android | elite_tactical | 9 | 1 | 0 | 11.1% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -40,14 +40,14 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 475 | 177 |
-| android | elite_tactical | 408 | 181 |
-| android | pro_base | 250 | 157 |
+| android | elite_tactical_monthly | 468 | 172 |
+| android | elite_tactical | 403 | 178 |
+| android | pro_base | 249 | 156 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 325 | 1 | 0 | 0.3% | 0.0% |
+| range_gate | 321 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 232 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 36 | 0 | 0 | 0.0% | 0.0% |
@@ -63,18 +63,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3663 | 371 |
-| alarm_duration | 3196 | 344 |
-| min_seconds | 2482 | 346 |
-| volume | 2270 | 236 |
-| sound_type | 1955 | 287 |
-| repeat_enabled | 1410 | 337 |
-| unknown | 912 | 15 |
-| voice_callouts_enabled | 867 | 209 |
-| vibration_enabled | 634 | 240 |
+| max_seconds | 3631 | 364 |
+| alarm_duration | 3143 | 337 |
+| min_seconds | 2465 | 340 |
+| volume | 2257 | 232 |
+| sound_type | 1838 | 280 |
+| repeat_enabled | 1395 | 330 |
+| voice_callouts_enabled | 852 | 205 |
+| unknown | 818 | 13 |
+| vibration_enabled | 631 | 237 |
 | repeat_rounds | 422 | 125 |
-| voice_gender | 392 | 241 |
-| use_extended_range | 291 | 175 |
+| voice_gender | 387 | 238 |
+| use_extended_range | 288 | 173 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic

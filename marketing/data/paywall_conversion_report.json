@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-04T07:54:16+00:00",
+  "generated_at": "2026-06-04T13:26:06+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 681,
-    "offer_selects": 56,
+    "views": 677,
+    "offer_selects": 54,
     "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0822,
-    "select_to_attempt_rate": 0.0714,
+    "view_to_select_rate": 0.0798,
+    "select_to_attempt_rate": 0.0741,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -46,16 +46,16 @@
       "users": 1
     },
     {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "reason": "user_cancelled",
+      "platform": "android",
+      "product_id": "unknown",
+      "reason": "item_unavailable",
       "failures": 2,
       "users": 1
     },
     {
-      "platform": "android",
-      "product_id": "unknown",
-      "reason": "item_unavailable",
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.pro",
+      "reason": "user_cancelled",
       "failures": 2,
       "users": 1
     },
@@ -71,10 +71,10 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "offer_selects": 40,
+      "offer_selects": 38,
       "attempts": 1,
       "successes": 0,
-      "select_to_attempt_rate": 0.025,
+      "select_to_attempt_rate": 0.0263,
       "attempt_to_success_rate": 0.0
     },
     {
@@ -109,28 +109,28 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 475,
-      "users": 177
+      "failures": 468,
+      "users": 172
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 408,
-      "users": 181
+      "failures": 403,
+      "users": 178
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 250,
-      "users": 157
+      "failures": 249,
+      "users": 156
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 172,
-      "users": 119
+      "failures": 170,
+      "users": 117
     },
     {
       "platform": "android",
@@ -148,7 +148,7 @@
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 325,
+      "views": 321,
       "attempts": 1,
       "successes": 0,
       "view_to_attempt_rate": 0.0031,
@@ -232,48 +232,48 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3663,
-      "users": 371
+      "changes": 3631,
+      "users": 364
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 3196,
-      "users": 344
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 2482,
-      "users": 346
-    },
-    {
-      "setting_name": "volume",
-      "changes": 2270,
-      "users": 236
-    },
-    {
-      "setting_name": "sound_type",
-      "changes": 1955,
-      "users": 287
-    },
-    {
-      "setting_name": "repeat_enabled",
-      "changes": 1410,
+      "changes": 3143,
       "users": 337
     },
     {
-      "setting_name": "unknown",
-      "changes": 912,
-      "users": 15
+      "setting_name": "min_seconds",
+      "changes": 2465,
+      "users": 340
+    },
+    {
+      "setting_name": "volume",
+      "changes": 2257,
+      "users": 232
+    },
+    {
+      "setting_name": "sound_type",
+      "changes": 1838,
+      "users": 280
+    },
+    {
+      "setting_name": "repeat_enabled",
+      "changes": 1395,
+      "users": 330
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 867,
-      "users": 209
+      "changes": 852,
+      "users": 205
+    },
+    {
+      "setting_name": "unknown",
+      "changes": 818,
+      "users": 13
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 634,
-      "users": 240
+      "changes": 631,
+      "users": 237
     },
     {
       "setting_name": "repeat_rounds",
@@ -282,13 +282,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 392,
-      "users": 241
+      "changes": 387,
+      "users": 238
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 291,
-      "users": 175
+      "changes": 288,
+      "users": 173
     }
   ],
   "data_quality_warnings": [
