@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-04T13:26:06+00:00
+Generated: 2026-06-04T19:01:21+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **677**
+- Views: **675**
 - Offer Selects: **54**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
@@ -25,8 +25,8 @@ Window (days): 30
 |----------|------------|--------|----------|-------|
 | android | unknown | failed | 405 | 176 |
 | android | unknown | user_cancelled | 4 | 1 |
-| android | unknown | item_unavailable | 2 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
+| android | unknown | item_unavailable | 2 | 1 |
 | android | unknown | cancelled | 2 | 1 |
 
 ## Product Funnel
@@ -40,14 +40,14 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 468 | 172 |
-| android | elite_tactical | 403 | 178 |
+| android | elite_tactical_monthly | 464 | 170 |
+| android | elite_tactical | 399 | 176 |
 | android | pro_base | 249 | 156 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 321 | 1 | 0 | 0.3% | 0.0% |
+| range_gate | 319 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 232 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 36 | 0 | 0 | 0.0% | 0.0% |
@@ -63,18 +63,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3631 | 364 |
-| alarm_duration | 3143 | 337 |
-| min_seconds | 2465 | 340 |
-| volume | 2257 | 232 |
-| sound_type | 1838 | 280 |
-| repeat_enabled | 1395 | 330 |
-| voice_callouts_enabled | 852 | 205 |
+| max_seconds | 3622 | 360 |
+| alarm_duration | 3141 | 334 |
+| min_seconds | 2460 | 338 |
+| volume | 2258 | 230 |
+| sound_type | 1674 | 277 |
+| repeat_enabled | 1399 | 327 |
+| voice_callouts_enabled | 853 | 203 |
 | unknown | 818 | 13 |
-| vibration_enabled | 631 | 237 |
-| repeat_rounds | 422 | 125 |
-| voice_gender | 387 | 238 |
-| use_extended_range | 288 | 173 |
+| vibration_enabled | 635 | 236 |
+| repeat_rounds | 438 | 130 |
+| voice_gender | 397 | 242 |
+| use_extended_range | 300 | 177 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
