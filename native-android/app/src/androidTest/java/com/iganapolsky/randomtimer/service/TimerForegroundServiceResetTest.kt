@@ -5,9 +5,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ServiceTestRule
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.ui.DeviceTestSupport
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -19,6 +21,12 @@ import kotlin.time.Duration.Companion.milliseconds
 class TimerForegroundServiceResetTest {
     @get:Rule
     val serviceRule = ServiceTestRule()
+
+    @After
+    fun tearDown() {
+        DeviceTestSupport.stopTimerService()
+        DeviceTestSupport.forceStopApp()
+    }
 
     private fun waitForCondition(
         timeoutMs: Long = 3_000,

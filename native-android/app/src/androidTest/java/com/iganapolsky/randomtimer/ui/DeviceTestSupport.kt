@@ -1,5 +1,6 @@
 package com.iganapolsky.randomtimer.ui
 
+import android.content.Intent
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -7,16 +8,42 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.iganapolsky.randomtimer.MainActivity
+import com.iganapolsky.randomtimer.service.TimerForegroundService
 
 /** Shared helpers for slow GitHub Actions emulators (API 30, swiftshader). */
 object DeviceTestSupport {
     const val SETUP_READY_TIMEOUT_MS = 30_000L
 
-    fun clearAppData() {
+    /** Stops process + foreground timer so the next MainActivity lands on setup. */
+    fun forceStopApp() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.uiAutomation.executeShellCommand(
-            "pm clear com.iganapolsky.randomtimer",
+            "am force-stop com.iganapolsky.randomtimer",
         )
+    }
+
+    fun stopTimerService() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val stopIntent =
+            Intent(context, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_STOP
+            }
+        context.startService(stopIntent)
+    }
+
+    /** Cold start once per test class (safe before instrumentation launches MainActivity). */
+    fun prepareColdStart() {
+        stopTimerService()
+        forceStopApp()
+    }
+
+    /** Reset UI between test methods without killing the instrumentation process. */
+    fun prepareNextTest(
+        rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
+    ) {
+        stopTimerService()
+        rule.activityRule.scenario.recreate()
+        waitForSetupScreen(rule)
     }
 
     fun waitForSetupScreen(
