@@ -31,7 +31,9 @@ class TimerForegroundServiceResetTest {
         @JvmStatic
         @AfterClass
         fun tearDownClass() {
-            DeviceTestSupport.prepareColdStart()
+            // Do not force-stop here: it kills the instrumentation process before Gradle
+            // collects results (native-release android-device-test-gate "Process crashed").
+            DeviceTestSupport.stopTimerService()
         }
     }
 
