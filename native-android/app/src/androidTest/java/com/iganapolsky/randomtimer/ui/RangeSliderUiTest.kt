@@ -1,13 +1,11 @@
 package com.iganapolsky.randomtimer.ui
 
-import androidx.compose.ui.test.click
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.percentOffset
-import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
-import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -39,51 +37,36 @@ class RangeSliderUiTest {
     fun draggingMinBeyondGapPushesMaxForward() {
         DeviceTestSupport.waitForSetupScreen(composeRule)
 
-        tapSliderToSeconds("Maximum time slider", 60, rangeEnd = TimerConfig.MAX_SECONDS_FREE.toFloat())
-        DeviceTestSupport.waitForLabel(composeRule, "Maximum: 1m")
-
-        tapSliderToSeconds(
-            "Minimum time slider",
-            56,
-            rangeEnd = (TimerConfig.MAX_SECONDS_FREE - 5).toFloat(),
-        )
-        DeviceTestSupport.waitForLabel(composeRule, "Minimum: 56s")
-        DeviceTestSupport.waitForLabel(composeRule, "Maximum: 1m 1s")
+        // Default 5s–30s. Min-first SetProgress is reliable on API 30 CI (max-first is not).
+        setSliderProgress("Minimum time slider", 50f)
+        DeviceTestSupport.waitForLabel(composeRule, "Minimum: 50s")
+        DeviceTestSupport.waitForLabel(composeRule, "Maximum: 55s")
     }
 
     @Test
     fun draggingMaxBelowGapPullsMinBack() {
         DeviceTestSupport.waitForSetupScreen(composeRule)
 
-        tapSliderToSeconds(
-            "Minimum time slider",
-            100,
-            rangeEnd = (TimerConfig.MAX_SECONDS_FREE - 5).toFloat(),
-        )
+        setSliderProgress("Minimum time slider", 100f)
         DeviceTestSupport.waitForLabel(composeRule, "Minimum: 1m 40s")
 
-        tapSliderToSeconds("Maximum time slider", 200, rangeEnd = TimerConfig.MAX_SECONDS_FREE.toFloat())
+        setSliderProgress("Maximum time slider", 200f)
         DeviceTestSupport.waitForLabel(composeRule, "Maximum: 3m 20s")
 
-        tapSliderToSeconds("Maximum time slider", 50, rangeEnd = TimerConfig.MAX_SECONDS_FREE.toFloat())
+        setSliderProgress("Maximum time slider", 50f)
         DeviceTestSupport.waitForLabel(composeRule, "Maximum: 50s")
         DeviceTestSupport.waitForLabel(composeRule, "Minimum: 45s")
     }
 
-    private fun tapSliderToSeconds(
+    private fun setSliderProgress(
         contentDescription: String,
-        targetSeconds: Int,
-        rangeStart: Float = 5f,
-        rangeEnd: Float,
+        progress: Float,
     ) {
-        val fraction =
-            ((targetSeconds - rangeStart) / (rangeEnd - rangeStart))
-                .coerceIn(0f, 1f)
         DeviceTestSupport.scrollToTimeRangeSliders(composeRule)
         composeRule
             .onNodeWithContentDescription(contentDescription, useUnmergedTree = true)
-            .performTouchInput {
-                click(percentOffset(fraction, 0.5f))
+            .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
+                setProgress(progress)
             }
         composeRule.waitForIdle()
     }
