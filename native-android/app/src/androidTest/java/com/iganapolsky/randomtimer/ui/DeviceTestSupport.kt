@@ -14,7 +14,11 @@ import com.iganapolsky.randomtimer.service.TimerForegroundService
 object DeviceTestSupport {
     const val SETUP_READY_TIMEOUT_MS = 30_000L
 
-    /** Stops process + foreground timer so the next MainActivity lands on setup. */
+    /**
+     * Stops the app process so the next MainActivity lands on setup.
+     * Call only from @BeforeClass / @AfterClass, never from per-method @After —
+     * force-stop kills the instrumentation process mid-suite.
+     */
     fun forceStopApp() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.uiAutomation.executeShellCommand(

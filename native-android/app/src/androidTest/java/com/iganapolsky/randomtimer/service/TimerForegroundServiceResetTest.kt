@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -22,10 +23,21 @@ class TimerForegroundServiceResetTest {
     @get:Rule
     val serviceRule = ServiceTestRule()
 
+    companion object {
+        /**
+         * Force-stop is only safe between test classes. Per-method force-stop in @After
+         * kills the instrumentation process (native-release run 26952693730).
+         */
+        @JvmStatic
+        @AfterClass
+        fun tearDownClass() {
+            DeviceTestSupport.prepareColdStart()
+        }
+    }
+
     @After
     fun tearDown() {
         DeviceTestSupport.stopTimerService()
-        DeviceTestSupport.forceStopApp()
     }
 
     private fun waitForCondition(
@@ -69,8 +81,8 @@ class TimerForegroundServiceResetTest {
             ) as TimerForegroundService.LocalBinder
         val service = binder.getService()
 
-        // Wait for timer state to transition into alarm.
-        waitForCondition(timeoutMs = 4_000) {
+        // Wait for timer state to transition into alarm (CI emulators can be slow).
+        waitForCondition(timeoutMs = 8_000) {
             service.timerState.value?.status == TimerStatus.ALARM
         }
 
