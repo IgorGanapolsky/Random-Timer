@@ -10,7 +10,9 @@ def test_ci_connected_all_runs_full_connected_debug_android_test_suite():
     source = SCRIPT.read_text(encoding="utf-8")
 
     assert "./gradlew connectedDebugAndroidTest" in source
-    assert "testInstrumentationRunnerArguments.class" not in source
+    assert "testInstrumentationRunnerArguments.class" in source
+    assert "am force-stop com.iganapolsky.randomtimer" in source
+    assert "NotificationE2ETest" in source
     assert "-PenableFirebasePlugins=false" in source
 
 
