@@ -13,6 +13,7 @@ import com.iganapolsky.randomtimer.service.TimerForegroundService
 /** Shared helpers for slow GitHub Actions emulators (API 30, swiftshader). */
 object DeviceTestSupport {
     const val SETUP_READY_TIMEOUT_MS = 30_000L
+    const val NOTIFICATION_UI_TIMEOUT_MS = 15_000L
 
     /**
      * Stops the app process so the next MainActivity lands on setup.
