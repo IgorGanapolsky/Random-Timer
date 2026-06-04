@@ -1212,7 +1212,9 @@ private fun TimeRangeSliders(
                     modifier =
                         Modifier
                             .weight(1f)
-                            .semantics { contentDescription = "Minimum time slider" },
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Minimum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
@@ -1261,7 +1263,9 @@ private fun TimeRangeSliders(
                     modifier =
                         Modifier
                             .weight(1f)
-                            .semantics { contentDescription = "Maximum time slider" },
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Maximum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
