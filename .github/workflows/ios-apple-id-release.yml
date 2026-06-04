@@ -129,3 +129,4 @@ jobs:
           name: ios-ipa-apple-id
           path: native-ios/RandomTimer.ipa
           if-no-files-found: warn
+          retention-days: 1

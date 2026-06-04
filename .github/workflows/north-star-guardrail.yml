@@ -70,4 +70,4 @@ jobs:
         with:
           name: north-star-snapshot
           path: marketing/data/north_star.json
-          retention-days: 14
+          retention-days: 1

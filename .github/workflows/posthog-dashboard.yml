@@ -48,12 +48,12 @@ jobs:
         with:
           name: posthog-dashboard
           path: posthog_dashboard_output.json
-          retention-days: 90
+          retention-days: 1
 
       - name: Upload marketing data
         uses: actions/upload-artifact@v7.0.0
         with:
           name: posthog-dashboard-marketing
           path: marketing/data/posthog_dashboard.json
-          retention-days: 90
+          retention-days: 1
           if-no-files-found: ignore

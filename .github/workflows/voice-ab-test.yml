@@ -126,4 +126,5 @@ jobs:
         with:
           name: voice-ab-test-samples
           path: /tmp/voice-samples/
+          retention-days: 1
 # Voice A/B test added

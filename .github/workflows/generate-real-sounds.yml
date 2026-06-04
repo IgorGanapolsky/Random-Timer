@@ -133,6 +133,7 @@ jobs:
         with:
           name: real-alarm-sounds
           path: /tmp/gen-sounds/
+          retention-days: 1
 
       - name: Create PR
         env:

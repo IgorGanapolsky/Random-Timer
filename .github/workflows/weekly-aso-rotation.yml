@@ -89,3 +89,4 @@ jobs:
         with:
           name: aso-rotation-report
           path: marketing/data/aso_rotation_report.md
+          retention-days: 1

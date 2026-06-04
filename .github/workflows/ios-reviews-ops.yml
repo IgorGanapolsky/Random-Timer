@@ -101,3 +101,4 @@ jobs:
             /tmp/asc-reviews-policy.json
             /tmp/asc-reviews-policy.md
             /tmp/asc-reviews-history.jsonl
+            retention-days: 1

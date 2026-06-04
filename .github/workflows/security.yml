@@ -142,6 +142,7 @@ jobs:
             native-android/npm-audit.json
             dependency-check-report.html
             mobile-security-results.json
+            retention-days: 1
 
   notify:
     needs: security-scan

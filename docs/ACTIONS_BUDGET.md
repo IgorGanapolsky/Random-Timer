@@ -59,6 +59,45 @@ Avoid stacking every `*/6` job at **:00** UTC (queue spikes). Current offsets:
 - Raise org Actions budget broadly before capping high-burn repos.
 - Add new `*/15` or `*/30` schedules without CEO approval and minute estimate.
 
+## Artifact storage (2026-06-04)
+
+GitHub enforces an **org-wide Actions artifact storage cap** (currently **0.5 GiB** on this
+account). Stale artifacts from CI APK uploads, release IPAs/AABs, and dashboard JSON exports
+were the primary fill source (~11k artifacts at audit `8cbdb830`).
+
+### Policy
+
+| Control | Value |
+|---------|-------|
+| **`retention-days` on every `upload-artifact`** | **1** (repo-wide; was 7–90 on some workflows) |
+| **One-off bulk prune** | `python3 scripts/prune_actions_artifacts.py --execute` deletes artifacts **>7 days** old via `gh api` |
+| **Default prune mode** | Dry-run (no flag) — always review counts before `--execute` |
+
+Re-download debug APKs from the latest green CI run when needed; do not rely on week-old
+artifact retention for ship path evidence.
+
+### `native-release.yml` concurrency
+
+`concurrency.cancel-in-progress` stays **`false`** for `mobile-release-pipeline-*`. A second
+`workflow_dispatch` while a release is running must **not** cancel an in-flight App Store /
+Play upload or signing step. Operators should wait for the active run to finish (or cancel it
+manually in the Actions UI after confirming it is safe).
+
+### Prune script
+
+```bash
+# Preview deletions (default)
+python3 scripts/prune_actions_artifacts.py
+
+# Delete artifacts older than 7 days
+python3 scripts/prune_actions_artifacts.py --execute
+
+# Optional: cap deletions per run
+python3 scripts/prune_actions_artifacts.py --execute --limit 500
+```
+
+Requires `gh auth login` with permission to delete Actions artifacts on this repo.
+
 ## Off-Actions alternatives
 
 Recurring agent loops → local cron, Railway, or a cheap self-hosted runner.

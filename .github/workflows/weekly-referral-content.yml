@@ -59,3 +59,4 @@ jobs:
             marketing/data/referral_report.md
             marketing/data/referral_campaigns.json
             marketing/referral_content/
+            retention-days: 1

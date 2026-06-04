@@ -76,3 +76,4 @@ jobs:
         with:
           name: ios-release-context
           path: /tmp/release-context.json
+          retention-days: 1

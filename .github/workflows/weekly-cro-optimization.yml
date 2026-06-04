@@ -74,3 +74,4 @@ jobs:
             marketing/data/cro_report.md
             marketing/data/cro_experiments.json
             marketing/data/localization_status.json
+            retention-days: 1

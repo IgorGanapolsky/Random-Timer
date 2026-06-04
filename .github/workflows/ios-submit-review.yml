@@ -301,6 +301,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Upload submission readiness artifacts
         if: always()
@@ -311,6 +312,7 @@ jobs:
             /tmp/asc_ready.json
             /tmp/delegation_contract.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup key
         if: always()

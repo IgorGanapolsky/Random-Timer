@@ -80,6 +80,7 @@ jobs:
             native-ios/RandomTimer/Resources/Sounds/
             native-android/app/src/main/res/raw/
             content/pro_audio/
+            retention-days: 1
 
       - name: Create PR with new pack
         env:
