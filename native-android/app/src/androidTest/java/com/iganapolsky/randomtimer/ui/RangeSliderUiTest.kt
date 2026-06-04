@@ -18,10 +18,15 @@ class RangeSliderUiTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    private var firstTest = true
+
     @Before
     fun prepareTest() {
-        // Notification E2E leaves MainActivity off setup; recreate every method.
-        DeviceTestSupport.prepareNextTest(composeRule)
+        if (firstTest) {
+            firstTest = false
+        } else {
+            DeviceTestSupport.prepareNextTest(composeRule)
+        }
     }
 
     @After
@@ -34,21 +39,21 @@ class RangeSliderUiTest {
         DeviceTestSupport.waitForSetupScreen(composeRule)
 
         composeRule
-            .onNodeWithContentDescription("Maximum time slider")
+            .onNodeWithContentDescription("Maximum time slider", useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(60f)
             }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Maximum: 1m").assertExists()
+        composeRule.onNodeWithText("Maximum: 1m", useUnmergedTree = true).assertExists()
 
         composeRule
-            .onNodeWithContentDescription("Minimum time slider")
+            .onNodeWithContentDescription("Minimum time slider", useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(50f)
             }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Minimum: 50s").assertExists()
-        composeRule.onNodeWithText("Maximum: 55s").assertExists()
+        composeRule.onNodeWithText("Minimum: 50s", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithText("Maximum: 55s", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -56,20 +61,20 @@ class RangeSliderUiTest {
         DeviceTestSupport.waitForSetupScreen(composeRule)
 
         composeRule
-            .onNodeWithContentDescription("Minimum time slider")
+            .onNodeWithContentDescription("Minimum time slider", useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(150f)
             }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Minimum: 2m 30s").assertExists()
+        composeRule.onNodeWithText("Minimum: 2m 30s", useUnmergedTree = true).assertExists()
 
         composeRule
-            .onNodeWithContentDescription("Maximum time slider")
+            .onNodeWithContentDescription("Maximum time slider", useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(160f)
             }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Maximum: 2m 40s").assertExists()
-        composeRule.onNodeWithText("Minimum: 2m 35s").assertExists()
+        composeRule.onNodeWithText("Maximum: 2m 40s", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithText("Minimum: 2m 35s", useUnmergedTree = true).assertExists()
     }
 }
