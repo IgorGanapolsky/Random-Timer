@@ -12,7 +12,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
 import org.junit.After
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,14 +22,6 @@ class RangeSliderUiTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private var firstTest = true
-
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun coldStart() {
-            DeviceTestSupport.prepareColdStart()
-        }
-    }
 
     @Before
     fun prepareTest() {
