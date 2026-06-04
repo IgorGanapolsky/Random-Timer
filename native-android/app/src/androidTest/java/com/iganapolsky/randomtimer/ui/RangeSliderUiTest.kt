@@ -18,15 +18,10 @@ class RangeSliderUiTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    private var firstTest = true
-
     @Before
     fun prepareTest() {
-        if (firstTest) {
-            firstTest = false
-        } else {
-            DeviceTestSupport.prepareNextTest(composeRule)
-        }
+        // Notification E2E leaves MainActivity off setup; recreate every method.
+        DeviceTestSupport.prepareNextTest(composeRule)
     }
 
     @After
