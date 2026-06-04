@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T01:28:16+00:00",
+  "generated_at": "2026-06-04T07:54:16+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -109,8 +109,8 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 477,
-      "users": 178
+      "failures": 475,
+      "users": 177
     },
     {
       "platform": "android",
@@ -129,18 +129,18 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 174,
-      "users": 120
+      "failures": 172,
+      "users": 119
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
+      "product_id": "elite_tactical",
       "failures": 133,
       "users": 124
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
+      "product_id": "pro_base",
       "failures": 133,
       "users": 124
     }
@@ -262,8 +262,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 913,
-      "users": 16
+      "changes": 912,
+      "users": 15
     },
     {
       "setting_name": "voice_callouts_enabled",
