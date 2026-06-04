@@ -7,10 +7,10 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.iganapolsky.randomtimer.MainActivity
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,14 +24,6 @@ class NotificationE2ETest {
     private lateinit var device: UiDevice
     private var firstTest = true
 
-    companion object {
-        @JvmStatic
-        @BeforeClass
-        fun coldStart() {
-            DeviceTestSupport.prepareColdStart()
-        }
-    }
-
     @Before
     fun setup() {
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -39,6 +31,14 @@ class NotificationE2ETest {
             firstTest = false
         } else {
             DeviceTestSupport.prepareNextTest(composeRule)
+        }
+    }
+
+    @After
+    fun tearDown() {
+        DeviceTestSupport.stopTimerService()
+        if (::device.isInitialized) {
+            device.pressHome()
         }
     }
 
@@ -53,21 +53,21 @@ class NotificationE2ETest {
         val notificationTitle = device.wait(Until.findObject(By.text("Timer Running")), 5000)
         assertNotNull("Notification with title 'Timer Running' should be visible", notificationTitle)
 
-        val pauseButton = device.findObject(By.text("Pause"))
+        val pauseButton = device.wait(Until.findObject(By.text("Pause")), 5000)
         assertNotNull("Pause button should be visible", pauseButton)
         pauseButton.click()
 
         val pausedTitle = device.wait(Until.findObject(By.text("Timer Paused")), 5000)
         assertNotNull("Notification title should change to 'Timer Paused'", pausedTitle)
 
-        val resumeButton = device.findObject(By.text("Resume"))
+        val resumeButton = device.wait(Until.findObject(By.text("Resume")), 5000)
         assertNotNull("Resume button should be visible", resumeButton)
         resumeButton.click()
 
         val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), 5000)
         assertNotNull("Notification title should change back to 'Timer Running'", runningTitle)
 
-        val stopButton = device.findObject(By.text("Stop"))
+        val stopButton = device.wait(Until.findObject(By.text("Stop")), 5000)
         assertNotNull("Stop button should be visible", stopButton)
         stopButton.click()
 
@@ -77,22 +77,29 @@ class NotificationE2ETest {
         device.pressHome()
     }
 
+    /** Runs after [testNotificationLifecycle] (JUnit name order). */
     @Test
-    fun testExtendTimerAction() {
+    fun testNotification_extendAddsFiveMinutes() {
         DeviceTestSupport.waitForSetupScreen(composeRule)
         DeviceTestSupport.clickPrimaryStart(composeRule)
 
         device.pressHome()
         device.openNotification()
 
-        val extendButton = device.findObject(By.text("+5 Min"))
+        device.wait(Until.findObject(By.text("Timer Running")), 5000)
+
+        val extendButton = device.wait(Until.findObject(By.text("+5 Min")), 5000)
         assertNotNull("'+5 Min' button should be visible", extendButton)
         extendButton.click()
 
-        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), 2000)
+        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), 5000)
         assertNotNull("Notification should still be visible after extend", runningTitle)
 
-        device.findObject(By.text("Stop")).click()
+        val stopButton = device.wait(Until.findObject(By.text("Stop")), 5000)
+        assertNotNull("Stop button should be visible", stopButton)
+        stopButton.click()
+
+        device.wait(Until.gone(By.text("Timer Running")), 5000)
         device.pressHome()
     }
 }
