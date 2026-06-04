@@ -42,4 +42,4 @@ jobs:
         marketing/data/llm_recommendation_share.json
         wiki/Daily-Metrics-Dashboard.md
         wiki/Paid-Acquisition.md
-      artifact_retention_days: "14"
+      artifact_retention_days: "1"

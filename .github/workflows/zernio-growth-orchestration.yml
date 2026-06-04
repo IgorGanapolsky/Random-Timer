@@ -72,3 +72,4 @@ jobs:
           name: zernio-orchestration-jsonl
           path: marketing/data/zernio_orchestration.jsonl
           if-no-files-found: ignore
+          retention-days: 1

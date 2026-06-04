@@ -65,3 +65,4 @@ jobs:
         with:
           name: alarm-variants
           path: /tmp/alarm-variants/
+          retention-days: 1

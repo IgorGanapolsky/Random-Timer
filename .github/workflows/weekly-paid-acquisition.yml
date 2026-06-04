@@ -112,3 +112,4 @@ jobs:
           path: |
             marketing/data/paid_acquisition_report.md
             marketing/data/paid_campaigns.json
+            retention-days: 1

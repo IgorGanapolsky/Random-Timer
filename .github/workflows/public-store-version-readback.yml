@@ -74,3 +74,4 @@ jobs:
           name: public-store-version-readback
           path: public-store-version-readback.json
           if-no-files-found: warn
+          retention-days: 1

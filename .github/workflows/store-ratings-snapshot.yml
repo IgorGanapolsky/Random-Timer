@@ -44,3 +44,4 @@ jobs:
           name: store-ratings-snapshot
           path: store-ratings-snapshot.json
           if-no-files-found: warn
+          retention-days: 1

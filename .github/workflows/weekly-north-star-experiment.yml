@@ -72,4 +72,4 @@ jobs:
             marketing/data/north_star_ops.md
             marketing/data/north_star_experiment.json
             marketing/data/north_star_experiment.md
-          retention-days: 14
+          retention-days: 1

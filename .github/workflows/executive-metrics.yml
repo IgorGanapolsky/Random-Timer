@@ -97,3 +97,4 @@ jobs:
         with:
           name: executive-metrics
           path: marketing/data/executive_metrics.json
+          retention-days: 1

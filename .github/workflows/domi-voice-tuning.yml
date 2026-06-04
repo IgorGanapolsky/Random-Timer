@@ -60,3 +60,4 @@ jobs:
         with:
           name: domi-tuning-samples
           path: /tmp/domi-tuning/
+          retention-days: 1

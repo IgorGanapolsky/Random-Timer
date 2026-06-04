@@ -84,3 +84,4 @@ jobs:
             play-iap-activation.json
             marketing/data/play_iap_catalog.json
           if-no-files-found: ignore
+          retention-days: 1

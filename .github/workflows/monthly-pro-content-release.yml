@@ -245,6 +245,7 @@ jobs:
             native-ios/RandomTimer/Resources/Sounds/
             native-android/app/src/main/res/raw/
           if-no-files-found: warn
+          retention-days: 1
 
   # ============================================================
   # Job 2 — Merge content PR into develop + cut release

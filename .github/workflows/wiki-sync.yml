@@ -119,4 +119,4 @@ jobs:
             marketing/data/store_downloads.json
             marketing/data/paywall_conversion_report.json
             marketing/data/apple_ads_live_metrics.json
-          retention-days: 7
+          retention-days: 1

@@ -68,3 +68,4 @@ jobs:
         with:
           name: domi-v3-human-samples
           path: /tmp/domi-v3/
+          retention-days: 1

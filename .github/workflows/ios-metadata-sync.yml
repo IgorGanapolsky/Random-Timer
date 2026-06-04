@@ -198,6 +198,7 @@ jobs:
             /tmp/asc_ready.json
             /tmp/asc_screenshot_sync.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload version resolution report
         if: always()
@@ -205,6 +206,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Write iOS listing snapshot
         if: always()
@@ -225,6 +227,7 @@ jobs:
           name: ios-listing-snapshot
           path: /tmp/ios-listing-snapshot.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()
