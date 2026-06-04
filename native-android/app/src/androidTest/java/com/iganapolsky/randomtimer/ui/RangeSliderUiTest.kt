@@ -6,13 +6,13 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iganapolsky.randomtimer.MainActivity
 import org.junit.After
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,14 +23,6 @@ class RangeSliderUiTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private var firstTest = true
-
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun coldStart() {
-            DeviceTestSupport.prepareColdStart()
-        }
-    }
 
     @Before
     fun prepareTest() {
@@ -79,6 +71,7 @@ class RangeSliderUiTest {
     ) {
         composeRule
             .onNodeWithContentDescription(contentDescription, useUnmergedTree = true)
+            .performScrollTo()
             .performSemanticsAction(SemanticsActions.SetProgress) { setProgress ->
                 setProgress(progress)
             }
