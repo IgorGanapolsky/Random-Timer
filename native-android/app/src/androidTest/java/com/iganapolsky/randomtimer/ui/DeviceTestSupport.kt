@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -70,13 +71,17 @@ object DeviceTestSupport {
                 .isNotEmpty()
         }
         rule.waitForIdle()
-        scrollToTimeRangeSliders(rule)
     }
 
-    /** Time range sliders live in setup [LazyColumn]; scroll before slider/label interaction. */
+    /** Time range sliders live in setup [LazyColumn]; scroll once before slider/label work. */
     fun scrollToTimeRangeSliders(
         rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
     ) {
+        rule.waitUntil(timeoutMillis = SETUP_READY_TIMEOUT_MS) {
+            rule.onAllNodesWithContentDescription(MIN_TIME_SLIDER, useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
         rule.onNode(hasScrollAction())
             .performScrollToNode(hasContentDescription(MIN_TIME_SLIDER))
         rule.waitForIdle()
@@ -87,8 +92,8 @@ object DeviceTestSupport {
         text: String,
         timeoutMillis: Long = LABEL_READY_TIMEOUT_MS,
     ) {
+        scrollToTimeRangeSliders(rule)
         rule.waitUntil(timeoutMillis = timeoutMillis) {
-            scrollToTimeRangeSliders(rule)
             rule.onAllNodesWithText(text, useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
