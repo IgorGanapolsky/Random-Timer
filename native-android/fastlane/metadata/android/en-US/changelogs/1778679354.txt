@@ -1,0 +1,1 @@
+Fix paywall billing on older Android devices: restore product catalog when Play Billing does not support PRODUCT_DETAILS.
