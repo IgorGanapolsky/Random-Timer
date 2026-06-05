@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-05T07:46:30+00:00
+Generated: 2026-06-05T13:20:20+00:00
 Window (days): 30
 
 ## Funnel
@@ -70,7 +70,7 @@ Window (days): 30
 | sound_type | 1529 | 272 |
 | repeat_enabled | 1390 | 321 |
 | voice_callouts_enabled | 845 | 200 |
-| unknown | 818 | 13 |
+| unknown | 764 | 12 |
 | vibration_enabled | 633 | 235 |
 | repeat_rounds | 444 | 131 |
 | voice_gender | 399 | 241 |

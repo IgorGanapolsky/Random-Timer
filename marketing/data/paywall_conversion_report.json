@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-05T07:46:30+00:00",
+  "generated_at": "2026-06-05T13:20:20+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -267,8 +267,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 818,
-      "users": 13
+      "changes": 764,
+      "users": 12
     },
     {
       "setting_name": "vibration_enabled",
