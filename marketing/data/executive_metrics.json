@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T17:23:06+00:00",
+  "generated_at": "2026-06-05T18:03:48+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -42,11 +42,18 @@
   "posthog": {
     "status": "ok",
     "window_days": 30,
-    "wqtu_7d_distinct_persons": 12,
+    "wqtu_7d_distinct_persons": 4,
     "distinct_persons_application_installed": 100,
     "distinct_persons_timer_completed": 40,
     "distinct_persons_paywall_purchase_success": 0,
-    "events_paywall_purchase_success": 0
+    "events_paywall_purchase_success": 0,
+    "paywall_purchase_attempts_30d": 4,
+    "sync_source": "north_star.json+paywall_conversion_report.json+wqtu_health.json",
+    "sync_evidence": {
+      "north_star_generated_at": "2026-06-05T17:30:50+00:00",
+      "paywall_generated_at": "2026-06-05T17:31:05+00:00",
+      "wqtu_health_generated_at": "2026-06-05T17:31:18+00:00"
+    }
   },
   "store_apis": {
     "android": {
@@ -90,10 +97,11 @@
   "canonical_users": {
     "metric_bundle_id": "executive_canonical_users_v1",
     "window_days": 30,
-    "wqtu_7d": 12,
+    "wqtu_7d": 4,
     "installs_30d": 100,
     "timer_completed_persons_30d": 40,
     "paywall_purchase_success_persons_30d": 0,
-    "paywall_purchase_success_events_30d": 0
+    "paywall_purchase_success_events_30d": 0,
+    "paywall_purchase_attempts_30d": 4
   }
 }
