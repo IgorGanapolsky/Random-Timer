@@ -10,9 +10,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
+
+MAX_RETRIES = 6
+INITIAL_BACKOFF_SEC = 30
+MAX_BACKOFF_SEC = 300
 
 
 def _run_gh(args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -24,39 +30,85 @@ def _run_gh(args: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def gh_api_json(path: str, *, paginate: bool = False) -> list[dict]:
-    if paginate:
-        return _paginate_artifacts(path)
+def _is_rate_limited(result: subprocess.CompletedProcess[str]) -> bool:
+    text = f"{result.stderr}\n{result.stdout}".lower()
+    return result.returncode != 0 and (
+        "403" in text or "rate limit" in text or "secondary rate limit" in text
+    )
 
-    result = _run_gh(["api", path])
+
+def _retry_after_seconds(result: subprocess.CompletedProcess[str], attempt: int) -> float:
+    text = f"{result.stderr}\n{result.stdout}"
+    match = re.search(r"retry.after[:\s]+(\d+)", text, re.IGNORECASE)
+    if match:
+        return float(match.group(1))
+    return min(INITIAL_BACKOFF_SEC * (2**attempt), MAX_BACKOFF_SEC)
+
+
+def _run_gh_with_retry(args: list[str], *, label: str) -> subprocess.CompletedProcess[str]:
+    last: subprocess.CompletedProcess[str] | None = None
+    for attempt in range(MAX_RETRIES):
+        last = _run_gh(args)
+        if last.returncode == 0:
+            return last
+        if _is_rate_limited(last) and attempt < MAX_RETRIES - 1:
+            wait = _retry_after_seconds(last, attempt)
+            print(
+                f"Rate limited on {label}; sleeping {wait:.0f}s (attempt {attempt + 1}/{MAX_RETRIES})",
+                file=sys.stderr,
+            )
+            time.sleep(wait)
+            continue
+        return last
+    assert last is not None
+    return last
+
+
+def gh_api_json(path: str, *, paginate: bool = False, start_page: int = 1) -> tuple[list[dict], int | None, bool]:
+    """Return (artifacts, total_count, pagination_complete)."""
+    if paginate:
+        return _paginate_artifacts(path, start_page=start_page)
+
+    result = _run_gh_with_retry(["api", path], label=path)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or f"gh api failed: {path}")
 
     payload = json.loads(result.stdout or "{}")
+    total_count = payload.get("total_count") if isinstance(payload, dict) else None
     if isinstance(payload, dict) and "artifacts" in payload:
-        return payload["artifacts"]
+        return payload["artifacts"], total_count, True
     if isinstance(payload, list):
-        return payload
-    return [payload]
+        return payload, total_count, True
+    return [payload], total_count, True
 
 
-def _paginate_artifacts(path: str) -> list[dict]:
-    """Page through Actions artifacts; ``gh api --paginate`` concatenates JSON blobs."""
+def _paginate_artifacts(path: str, *, start_page: int = 1) -> tuple[list[dict], int | None, bool]:
+    """Page through Actions artifacts; resume from ``start_page`` after rate limits."""
     items: list[dict] = []
-    page = 1
+    total_count: int | None = None
+    page = start_page
     while True:
         sep = "&" if "?" in path else "?"
         page_path = f"{path}{sep}per_page=100&page={page}"
-        result = _run_gh(["api", page_path])
+        result = _run_gh_with_retry(["api", page_path], label=f"page {page}")
         if result.returncode != 0:
+            if _is_rate_limited(result):
+                print(
+                    f"Pagination stopped at page {page} after retries; "
+                    f"resume with --start-page {page}",
+                    file=sys.stderr,
+                )
+                return items, total_count, False
             raise RuntimeError(result.stderr.strip() or f"gh api failed: {page_path}")
         payload = json.loads(result.stdout or "{}")
+        if total_count is None and isinstance(payload, dict):
+            total_count = payload.get("total_count")
         batch = payload.get("artifacts", [])
         items.extend(batch)
         if len(batch) < 100:
-            break
+            return items, total_count, True
         page += 1
-    return items
+    return items, total_count, True
 
 
 def parse_github_ts(value: str) -> datetime:
@@ -67,8 +119,11 @@ def parse_github_ts(value: str) -> datetime:
 
 
 def delete_artifact(repo: str, artifact_id: int) -> None:
-    result = _run_gh(["api", "-X", "DELETE", f"repos/{repo}/actions/artifacts/{artifact_id}"])
+    path = f"repos/{repo}/actions/artifacts/{artifact_id}"
+    result = _run_gh_with_retry(["api", "-X", "DELETE", path], label=f"delete {artifact_id}")
     if result.returncode != 0:
+        if _is_rate_limited(result):
+            raise RuntimeError(f"rate limited deleting artifact {artifact_id}")
         raise RuntimeError(
             f"delete artifact {artifact_id} failed: {result.stderr.strip() or result.stdout.strip()}"
         )
@@ -98,6 +153,12 @@ def main() -> int:
         default=0,
         help="Max deletions per run (0 = no limit)",
     )
+    parser.add_argument(
+        "--start-page",
+        type=int,
+        default=1,
+        help="Resume artifact list pagination from this page (default: 1)",
+    )
     args = parser.parse_args()
 
     repo = args.repo
@@ -118,7 +179,11 @@ def main() -> int:
     print(f"{mode}: repo={repo} cutoff={cutoff.isoformat()} (>{args.days}d old)")
 
     try:
-        artifacts = gh_api_json(f"repos/{repo}/actions/artifacts", paginate=True)
+        artifacts, total_count, pagination_complete = gh_api_json(
+            f"repos/{repo}/actions/artifacts",
+            paginate=True,
+            start_page=args.start_page,
+        )
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -133,9 +198,16 @@ def main() -> int:
             stale.append(artifact)
 
     total_bytes = sum(int(a.get("size_in_bytes") or 0) for a in stale)
-    print(f"Listed {len(artifacts)} artifacts; {len(stale)} older than {args.days}d (~{total_bytes / (1024**3):.2f} GiB)")
+    total_label = total_count if total_count is not None else "?"
+    print(
+        f"Listed {len(artifacts)} artifacts (total_count={total_label}); "
+        f"{len(stale)} older than {args.days}d (~{total_bytes / (1024**3):.2f} GiB)"
+    )
+    if not pagination_complete:
+        print("Pagination incomplete — stale count may be understated.", file=sys.stderr)
 
     deleted = 0
+    rate_limited = False
     for artifact in stale:
         if args.limit and deleted >= args.limit:
             print(f"Stopped at --limit {args.limit}")
@@ -150,7 +222,11 @@ def main() -> int:
             try:
                 delete_artifact(repo, aid)
             except RuntimeError as exc:
-                print(f"  FAIL id={aid} name={name}: {exc}", file=sys.stderr)
+                msg = str(exc)
+                print(f"  FAIL id={aid} name={name}: {msg}", file=sys.stderr)
+                if "rate limited" in msg.lower():
+                    rate_limited = True
+                    break
                 continue
             deleted += 1
             if deleted % 100 == 0:
@@ -164,6 +240,11 @@ def main() -> int:
 
     action = "Deleted" if args.execute else "Would delete"
     print(f"{action} {deleted} artifact(s)")
+    if rate_limited:
+        print("Stopped: delete rate limit hit.", file=sys.stderr)
+        return 2
+    if not pagination_complete:
+        return 2
     return 0
 
 
