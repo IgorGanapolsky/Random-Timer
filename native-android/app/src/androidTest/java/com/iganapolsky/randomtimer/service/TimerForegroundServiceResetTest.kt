@@ -5,9 +5,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ServiceTestRule
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
+import com.iganapolsky.randomtimer.ui.DeviceTestSupport
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -19,6 +22,25 @@ import kotlin.time.Duration.Companion.milliseconds
 class TimerForegroundServiceResetTest {
     @get:Rule
     val serviceRule = ServiceTestRule()
+
+    companion object {
+        /**
+         * Force-stop is only safe between test classes. Per-method force-stop in @After
+         * kills the instrumentation process (native-release run 26952693730).
+         */
+        @JvmStatic
+        @AfterClass
+        fun tearDownClass() {
+            // Do not force-stop here: it kills the instrumentation process before Gradle
+            // collects results (native-release android-device-test-gate "Process crashed").
+            DeviceTestSupport.stopTimerService()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        DeviceTestSupport.stopTimerService()
+    }
 
     private fun waitForCondition(
         timeoutMs: Long = 3_000,
@@ -61,8 +83,8 @@ class TimerForegroundServiceResetTest {
             ) as TimerForegroundService.LocalBinder
         val service = binder.getService()
 
-        // Wait for timer state to transition into alarm.
-        waitForCondition(timeoutMs = 4_000) {
+        // Wait for timer state to transition into alarm (CI emulators can be slow).
+        waitForCondition(timeoutMs = 8_000) {
             service.timerState.value?.status == TimerStatus.ALARM
         }
 
