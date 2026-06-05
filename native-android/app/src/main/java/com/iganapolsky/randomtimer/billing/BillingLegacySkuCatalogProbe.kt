@@ -13,13 +13,12 @@ internal fun shouldAttemptLegacySkuCatalogProbe(productDetailsSupported: Boolean
     productDetailsSupported == false
 
 internal fun logicalProductIdsResolvedFromLegacySkuQuery(
-    specs: List<BillingProductQuerySpec>,
+    @Suppress("UNUSED_PARAMETER") specs: List<BillingProductQuerySpec>,
     foundBillingProductIds: List<String>,
 ): Set<String> {
     val found = foundBillingProductIds.toSet()
-    return specs
-        .filter { spec -> spec.billingProductId in found }
-        .map { it.logicalProductId }
+    return paywallCatalogLogicalProductIds()
+        .filter { logicalProductId -> playBillingProductId(logicalProductId) in found }
         .toSet()
 }
 
