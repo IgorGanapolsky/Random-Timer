@@ -123,6 +123,7 @@ class ProManager
         private val productQueryRetryTelemetryCounts = ConcurrentHashMap<String, Int>()
         private var lastCatalogStatusSignature: String? = null
         private var productDetailsFeatureSupported: Boolean? = null
+        private var legacySkuCatalogProbed = false
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
@@ -184,9 +185,7 @@ class ProManager
                                     entryPoint = null,
                                     trackResult = false,
                                 )
-                                if (productDetailsFeatureSupported == true) {
-                                    fetchAllProductDetails()
-                                }
+                                fetchAllProductDetails()
                             }
                         }
                     }
@@ -429,6 +428,9 @@ class ProManager
             }
             refreshProductDetailsFeatureSupport()
             if (productDetailsFeatureSupported != true) {
+                if (shouldAttemptLegacySkuCatalogProbe(productDetailsFeatureSupported)) {
+                    fetchPaywallCatalogViaLegacySkuFallback()
+                }
                 trackProductCatalogStatus()
                 return
             }
@@ -437,14 +439,36 @@ class ProManager
             trackProductCatalogStatus()
         }
 
+        /**
+         * BL7 removed querySkuDetailsAsync; when PRODUCT_DETAILS is unsupported we still attempt
+         * queryProductDetails (Play may return backward-compatible SKU payloads on older stores).
+         */
+        private suspend fun fetchPaywallCatalogViaLegacySkuFallback() {
+            if (!shouldAttemptLegacySkuCatalogProbe(productDetailsFeatureSupported)) {
+                return
+            }
+            legacySkuCatalogProbed = true
+            analyticsService.track(
+                AnalyticsEvents.BILLING_DIAGNOSTIC,
+                mapOf(
+                    "message" to "billing_legacy_sku_catalog_probe",
+                    "level" to "info",
+                    "catalog_probe_path" to "legacy_sku_query",
+                    "product_details_supported" to false,
+                ),
+            )
+            fetchPaywallCatalogBatched(forceLegacySkuQuery = true)
+            syncMonthlyCatalogFromEliteFallback()
+        }
+
         /** Batched INAPP + SUBS probes (deduped Play ids) with shared retry/reconnect policy. */
-        private suspend fun fetchPaywallCatalogBatched() {
+        private suspend fun fetchPaywallCatalogBatched(forceLegacySkuQuery: Boolean = false) {
             val specsByType =
                 groupPaywallCatalogSpecsByProductType(buildPaywallCatalogQuerySpecs())
             paywallCatalogProductTypesInFetchOrder().forEach { productType ->
                 val specs = specsByType[productType].orEmpty()
                 if (specs.isNotEmpty()) {
-                    fetchProductDetailsBatch(productType, specs)
+                    fetchProductDetailsBatch(productType, specs, forceLegacySkuQuery = forceLegacySkuQuery)
                 }
             }
         }
@@ -493,6 +517,7 @@ class ProManager
                     requiredProductIds = requiredProductIds,
                     cachedLogicalProductIds = cachedLogicalProductIds,
                     productQueryFailureReasons = productQueryFailureReasons,
+                    legacySkuCatalogProbed = legacySkuCatalogProbed,
                 )
             val signature =
                 "${catalogStatus.status}|${catalogStatus.probeBlockedReason.orEmpty()}|" +
@@ -519,13 +544,24 @@ class ProManager
                         "product_details_supported",
                         productDetailsFeatureSupported == true,
                     )
+                    put("legacy_sku_catalog_probed", legacySkuCatalogProbed)
+                    if (legacySkuCatalogProbed) {
+                        put("catalog_probe_path", "legacy_sku_query")
+                    }
                 },
             )
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
-            if (!billingClient.isReady || productDetailsFeatureSupported == false) {
+            if (!billingClient.isReady) {
                 return null
+            }
+            if (productDetailsFeatureSupported == false) {
+                if (!legacySkuCatalogProbed) {
+                    fetchPaywallCatalogViaLegacySkuFallback()
+                    trackProductCatalogStatus()
+                }
+                return cachedProductDetails[productID]
             }
             val spec =
                 buildPaywallCatalogQuerySpecs(listOf(productID))
@@ -538,8 +574,12 @@ class ProManager
         private suspend fun fetchProductDetailsBatch(
             productType: String,
             specs: List<BillingProductQuerySpec>,
+            forceLegacySkuQuery: Boolean = false,
         ) {
-            if (!billingClient.isReady || productDetailsFeatureSupported == false || specs.isEmpty()) {
+            if (!billingClient.isReady || specs.isEmpty()) {
+                return
+            }
+            if (!forceLegacySkuQuery && productDetailsFeatureSupported == false) {
                 return
             }
             val billingProductIds = specs.map { it.billingProductId }.distinct()
