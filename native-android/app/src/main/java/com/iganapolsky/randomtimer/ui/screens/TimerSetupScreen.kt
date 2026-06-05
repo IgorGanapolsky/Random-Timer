@@ -1209,7 +1209,12 @@ private fun TimeRangeSliders(
                     },
                     enabled = enabled,
                     valueRange = minFloorSeconds.toFloat()..(maxSliderRangeInt - minGapSeconds).toFloat(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Minimum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
@@ -1255,7 +1260,12 @@ private fun TimeRangeSliders(
                     },
                     enabled = enabled,
                     valueRange = minGapSeconds.toFloat()..maxSliderRange,
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Maximum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
