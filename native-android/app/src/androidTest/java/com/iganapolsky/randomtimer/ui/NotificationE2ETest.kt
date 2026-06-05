@@ -7,6 +7,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.iganapolsky.randomtimer.MainActivity
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -21,63 +22,89 @@ class NotificationE2ETest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private lateinit var device: UiDevice
+    private var firstTest = true
 
     @Before
     fun setup() {
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (firstTest) {
+            firstTest = false
+        } else {
+            DeviceTestSupport.prepareNextTest(composeRule)
+        }
+    }
+
+    @After
+    fun tearDown() {
+        DeviceTestSupport.stopTimerService()
+        if (::device.isInitialized) {
+            device.pressHome()
+        }
     }
 
     @Test
     fun testNotificationLifecycle() {
+        val uiTimeout = DeviceTestSupport.NOTIFICATION_UI_TIMEOUT_MS
         DeviceTestSupport.waitForSetupScreen(composeRule)
         DeviceTestSupport.clickPrimaryStart(composeRule)
+        composeRule.waitForIdle()
 
         device.pressHome()
         device.openNotification()
 
-        val notificationTitle = device.wait(Until.findObject(By.text("Timer Running")), 5000)
+        val notificationTitle =
+            device.wait(Until.findObject(By.text("Timer Running")), uiTimeout)
         assertNotNull("Notification with title 'Timer Running' should be visible", notificationTitle)
 
-        val pauseButton = device.findObject(By.text("Pause"))
+        val pauseButton = device.wait(Until.findObject(By.text("Pause")), uiTimeout)
         assertNotNull("Pause button should be visible", pauseButton)
         pauseButton.click()
 
-        val pausedTitle = device.wait(Until.findObject(By.text("Timer Paused")), 5000)
+        val pausedTitle = device.wait(Until.findObject(By.text("Timer Paused")), uiTimeout)
         assertNotNull("Notification title should change to 'Timer Paused'", pausedTitle)
 
-        val resumeButton = device.findObject(By.text("Resume"))
+        val resumeButton = device.wait(Until.findObject(By.text("Resume")), uiTimeout)
         assertNotNull("Resume button should be visible", resumeButton)
         resumeButton.click()
 
-        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), 5000)
+        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), uiTimeout)
         assertNotNull("Notification title should change back to 'Timer Running'", runningTitle)
 
-        val stopButton = device.findObject(By.text("Stop"))
+        val stopButton = device.wait(Until.findObject(By.text("Stop")), uiTimeout)
         assertNotNull("Stop button should be visible", stopButton)
         stopButton.click()
 
-        val dismissed = device.wait(Until.gone(By.text("Timer Running")), 5000)
+        val dismissed = device.wait(Until.gone(By.text("Timer Running")), uiTimeout)
         assertTrue("Notification should be dismissed after clicking 'Stop'", dismissed)
 
         device.pressHome()
     }
 
+    /** Runs after [testNotificationLifecycle] (JUnit name order). */
     @Test
-    fun testExtendTimerAction() {
+    fun testNotification_extendAddsFiveMinutes() {
+        val uiTimeout = DeviceTestSupport.NOTIFICATION_UI_TIMEOUT_MS
         DeviceTestSupport.waitForSetupScreen(composeRule)
         DeviceTestSupport.clickPrimaryStart(composeRule)
+        composeRule.waitForIdle()
 
         device.pressHome()
         device.openNotification()
 
-        val extendButton = device.findObject(By.text("+5 Min"))
+        device.wait(Until.findObject(By.text("Timer Running")), uiTimeout)
+
+        val extendButton = device.wait(Until.findObject(By.text("+5 Min")), uiTimeout)
         assertNotNull("'+5 Min' button should be visible", extendButton)
         extendButton.click()
 
-        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), 2000)
+        val runningTitle = device.wait(Until.findObject(By.text("Timer Running")), uiTimeout)
         assertNotNull("Notification should still be visible after extend", runningTitle)
 
-        device.findObject(By.text("Stop")).click()
+        val stopButton = device.wait(Until.findObject(By.text("Stop")), uiTimeout)
+        assertNotNull("Stop button should be visible", stopButton)
+        stopButton.click()
+
+        device.wait(Until.gone(By.text("Timer Running")), uiTimeout)
         device.pressHome()
     }
 }
