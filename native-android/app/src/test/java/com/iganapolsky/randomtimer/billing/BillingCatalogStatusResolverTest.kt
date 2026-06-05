@@ -54,6 +54,36 @@ class BillingCatalogStatusResolverTest {
     }
 
     @Test
+    fun `play_store_update_required when legacy sku probe finds nothing`() {
+        val result =
+            resolveBillingProductCatalogStatus(
+                billingReady = true,
+                productDetailsSupported = false,
+                requiredProductIds = required,
+                cachedLogicalProductIds = emptySet(),
+                legacySkuCatalogProbed = true,
+            )
+
+        assertThat(result.status).isEqualTo("play_store_update_required")
+        assertThat(result.probeBlockedReason).isEqualTo("legacy_sku_degraded")
+    }
+
+    @Test
+    fun `ok when legacy sku probe populates required products`() {
+        val result =
+            resolveBillingProductCatalogStatus(
+                billingReady = true,
+                productDetailsSupported = false,
+                requiredProductIds = required,
+                cachedLogicalProductIds = required,
+                legacySkuCatalogProbed = true,
+            )
+
+        assertThat(result.status).isEqualTo("ok")
+        assertThat(result.probeBlockedReason).isNull()
+    }
+
+    @Test
     fun `product_details_unsupported when Play reports feature unsupported`() {
         val result =
             resolveBillingProductCatalogStatus(

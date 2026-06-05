@@ -18,6 +18,7 @@ internal fun resolveBillingProductCatalogStatus(
     requiredProductIds: Set<String>,
     cachedLogicalProductIds: Set<String>,
     productQueryFailureReasons: Map<String, String> = emptyMap(),
+    legacySkuCatalogProbed: Boolean = false,
 ): BillingCatalogStatusResult {
     if (!billingReady) {
         return blockedCatalogStatus(
@@ -28,6 +29,29 @@ internal fun resolveBillingProductCatalogStatus(
         )
     }
     if (productDetailsSupported != true) {
+        if (productDetailsSupported == false && legacySkuCatalogProbed) {
+            val availableProductIds = cachedLogicalProductIds.intersect(requiredProductIds).sorted()
+            val missingProductIds = requiredProductIds.minus(cachedLogicalProductIds).sorted()
+            if (availableProductIds.isNotEmpty()) {
+                val status =
+                    when {
+                        missingProductIds.isNotEmpty() -> "missing_required_products"
+                        else -> "ok"
+                    }
+                return BillingCatalogStatusResult(
+                    status = status,
+                    availableProductIds = availableProductIds,
+                    missingProductIds = missingProductIds,
+                    probeBlockedReason = null,
+                )
+            }
+            return blockedCatalogStatus(
+                status = "play_store_update_required",
+                reason = "legacy_sku_degraded",
+                requiredProductIds = requiredProductIds,
+                cachedLogicalProductIds = cachedLogicalProductIds,
+            )
+        }
         val blockedStatus =
             if (productDetailsSupported == false) {
                 "product_details_unsupported"
