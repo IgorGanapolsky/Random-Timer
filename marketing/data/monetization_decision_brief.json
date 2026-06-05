@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-04T20:05:28Z",
-  "source": "native_release_26968817087_posthog_2026_06_04",
+  "generated_at": "2026-06-05T17:23:26Z",
+  "source": "posthog_execute_sql_1684_followup_2026_06_05",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
@@ -16,7 +16,7 @@
     "paywall funnel 7d",
     "purchase_success 30d (telemetry proxy, not ledger revenue)"
   ],
-  "snapshot": "Android 1.3.51 (VC 1780596004) shipped via native-release run 26968817087 (tag v1.3.51 fd0d700e). Play API production track on 1.3.51. PostHog: 0 purchase_success on 1.3.51; billing_product_catalog_status reports product_details_unsupported. Revenue not verified — 30d purchase_success remains 0 (telemetry). WQTU 7d unchanged vs prior brief. Issue #1684 stays open for billing catalog probe.",
+  "snapshot": "Android 1.3.51 (VC 1780596004) on Play API. PostHog 7d (2026-06-05): billing_product_catalog_status on 1.3.51 = 9 product_details_unsupported + 1 empty + 0 ok; cohort is OnePlus8Pro-only (12 users, 1 device model). Play Billing FEATURE_NOT_SUPPORTED on most sessions; 1 session had product_details_supported=true then NETWORK_ERROR. Play IAP API readback ok (2026-06-04). 30d purchase_success remains 0 (telemetry). WQTU 7d=4 unchanged. Not a SKU/config bug — test-device environment blocker until retail-device QA proves catalog ok.",
   "counts": {
     "wqtu_7d": 4,
     "purchase_attempts_30d": 4,
@@ -28,15 +28,19 @@
     "play_api_version_code": 1780596004,
     "public_listing_version_name": "1.3.43",
     "ios_shipped_1_3_51": false,
-    "billing_catalog_product_details_unsupported_1_3_51_7d": "observed_posthog",
+    "billing_catalog_product_details_unsupported_1_3_51_7d": 9,
+    "billing_catalog_empty_1_3_51_7d": 1,
     "billing_catalog_ok_1_3_51_7d": 0,
-    "billing_catalog_events_1_3_51_7d": "not_verified_full_breakdown"
+    "billing_catalog_users_1_3_51_7d": 10,
+    "billing_catalog_device_models_1_3_51_7d": 1,
+    "billing_catalog_primary_device_1_3_51_7d": "OnePlus8Pro"
   },
-  "decision": "keep_issue_1684_open_billing_catalog_unsupported_on_1780596004",
+  "decision": "keep_issue_1684_open_test_device_feature_not_supported_not_store_bug",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "issue_1684: keep open; attach 7d PostHog catalog breakdown on 1.3.51 production cohort",
-    "billing_probe_on_1780596004: confirm product_details_unsupported vs ok on real devices; see june_2026_monetization_research.md P0",
+    "issue_1684: keep open; verified 1.3.51 = 9 unsupported + 1 empty + 0 ok (OnePlus8Pro-only cohort)",
+    "ceo_qa: Play-installed Samsung/Pixel device — require billing_product_catalog_status.status=ok before revenue claims",
+    "ceo_oneplus8pro: update Google Play Store + Play Services; confirm license tester account",
     "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
     "paywall_gates: fix voice_gate/repeat_gate after catalog ok on production cohort",
     "iOS: CEO testflight-signoff then internal-distribution target=ios + native-release platform=ios for 1.3.51",
