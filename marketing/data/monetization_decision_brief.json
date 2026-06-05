@@ -1,22 +1,30 @@
 {
-  "generated_at": "2026-06-05T17:23:26Z",
-  "source": "posthog_execute_sql_1684_followup_2026_06_05",
+  "generated_at": "2026-06-05T22:31:12Z",
+  "source": "native_release_27042160601_play_api_verify_2026_06_05",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
   "ship_evidence": {
-    "workflow_run_id": 26968817087,
+    "workflow_run_id": 27042160601,
     "workflow_conclusion": "success",
-    "git_tag": "v1.3.51",
-    "git_tag_sha": "fd0d700e",
-    "ship_date_utc": "2026-06-04"
+    "git_tag": "v1.3.52",
+    "git_tag_sha": "c23cb3b1",
+    "ship_date_utc": "2026-06-05",
+    "play_api_track": "production",
+    "play_api_version_name": "1.3.52",
+    "play_api_version_code": 1780697170,
+    "play_api_status": "completed",
+    "repo_version_code": 1778679354,
+    "ci_version_code_note": "CI -PciVersionCode override at upload; Play ground truth is 1780697170",
+    "public_listing_version_name": "1.3.43",
+    "public_listing_note": "Storefront HTML proxy still 1.3.43 at verify-releases timeout; API completed"
   },
   "posthog_queries": [
-    "billing_product_catalog_status 7d breakdown by app_version (1.3.51 product_details_unsupported)",
+    "billing_product_catalog_status 7d breakdown by app_version (1.3.52 cohort after propagation)",
     "paywall funnel 7d",
     "purchase_success 30d (telemetry proxy, not ledger revenue)"
   ],
-  "snapshot": "Android 1.3.51 (VC 1780596004) on Play API. PostHog 7d (2026-06-05): billing_product_catalog_status on 1.3.51 = 9 product_details_unsupported + 1 empty + 0 ok; cohort is OnePlus8Pro-only (12 users, 1 device model). Play Billing FEATURE_NOT_SUPPORTED on most sessions; 1 session had product_details_supported=true then NETWORK_ERROR. Play IAP API readback ok (2026-06-04). 30d purchase_success remains 0 (telemetry). WQTU 7d=4 unchanged. Not a SKU/config bug — test-device environment blocker until retail-device QA proves catalog ok.",
+  "snapshot": "Android 1.3.52 shipped Play production via native-release run 27042160601. Play Publisher API readback: versionCode 1780697170 (1.3.52) status=completed on production track (2026-06-05T22:13:48Z). Public listing HTML proxy still 1.3.43 after 900s poll (propagation lag; non-blocking). Prior 1.3.51 cohort on OnePlus8Pro showed product_details_unsupported — monetization unverified until retail-device catalog ok. Issue #1684 reopened.",
   "counts": {
     "wqtu_7d": 4,
     "purchase_attempts_30d": 4,
@@ -24,10 +32,10 @@
     "purchase_success_1_3_51_7d": 0,
     "catalog_ok_30d": 20,
     "catalog_empty_30d": 299,
-    "play_api_version_name": "1.3.51",
-    "play_api_version_code": 1780596004,
+    "play_api_version_name": "1.3.52",
+    "play_api_version_code": 1780697170,
     "public_listing_version_name": "1.3.43",
-    "ios_shipped_1_3_51": false,
+    "ios_shipped_1_3_52": false,
     "billing_catalog_product_details_unsupported_1_3_51_7d": 9,
     "billing_catalog_empty_1_3_51_7d": 1,
     "billing_catalog_ok_1_3_51_7d": 0,
@@ -35,15 +43,14 @@
     "billing_catalog_device_models_1_3_51_7d": 1,
     "billing_catalog_primary_device_1_3_51_7d": "OnePlus8Pro"
   },
-  "decision": "keep_issue_1684_open_test_device_feature_not_supported_not_store_bug",
+  "decision": "keep_issue_1684_open_monetization_unverified_until_retail_catalog_ok",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "issue_1684: keep open; verified 1.3.51 = 9 unsupported + 1 empty + 0 ok (OnePlus8Pro-only cohort)",
-    "ceo_qa: Play-installed Samsung/Pixel device — require billing_product_catalog_status.status=ok before revenue claims",
-    "ceo_oneplus8pro: update Google Play Store + Play Services; confirm license tester account",
+    "issue_1684: keep open; require billing_product_catalog_status.status=ok on retail Play-installed Samsung/Pixel",
+    "ceo_qa: Play-installed retail device after 1.3.52 propagates — do not use OnePlus8Pro-only cohort for revenue claims",
     "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
     "paywall_gates: fix voice_gate/repeat_gate after catalog ok on production cohort",
-    "iOS: CEO testflight-signoff then internal-distribution target=ios + native-release platform=ios for 1.3.51",
+    "iOS: CEO testflight-signoff then internal-distribution target=ios + native-release platform=ios for 1.3.52",
     "Hold paid ads until catalog ok on production cohort and paywall attempt→success > 0",
     "zero_budget_growth: ASO intent clusters + annual/trial paywall tests (PostHog); no new SaaS over $20/mo cap"
   ]
