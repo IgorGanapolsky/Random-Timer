@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-06T12:42:30+00:00
+Generated: 2026-06-06T18:38:36+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 292 |
+| failed | 293 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 292 | 130 |
+| android | unknown | failed | 293 | 131 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -63,18 +63,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3551 | 332 |
-| alarm_duration | 2852 | 309 |
-| min_seconds | 2359 | 313 |
-| volume | 2179 | 213 |
-| sound_type | 1339 | 252 |
-| repeat_enabled | 1319 | 305 |
-| voice_callouts_enabled | 772 | 187 |
-| vibration_enabled | 616 | 223 |
+| max_seconds | 3533 | 324 |
+| alarm_duration | 2740 | 301 |
+| min_seconds | 2340 | 307 |
+| volume | 2157 | 207 |
+| repeat_enabled | 1295 | 298 |
+| sound_type | 1263 | 245 |
+| voice_callouts_enabled | 741 | 181 |
+| vibration_enabled | 610 | 218 |
 | unknown | 514 | 9 |
-| repeat_rounds | 403 | 118 |
-| voice_gender | 362 | 220 |
-| use_extended_range | 272 | 162 |
+| repeat_rounds | 387 | 112 |
+| voice_gender | 349 | 213 |
+| use_extended_range | 260 | 156 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
