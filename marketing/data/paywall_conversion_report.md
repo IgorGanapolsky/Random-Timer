@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-06T07:18:55+00:00
+Generated: 2026-06-06T12:42:30+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **655**
+- Views: **654**
 - Offer Selects: **49**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 298 |
+| failed | 292 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 298 | 131 |
+| android | unknown | failed | 292 | 130 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -52,8 +52,8 @@ Window (days): 30
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 36 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
-| sound_gate | 5 | 1 | 0 | 20.0% | 0.0% |
 | qualified_training_gate | 5 | 0 | 0 | 0.0% | 0.0% |
+| sound_gate | 4 | 1 | 0 | 25.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **230** views and **0** purchase attempts.
@@ -63,17 +63,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3550 | 332 |
-| alarm_duration | 2841 | 309 |
+| max_seconds | 3551 | 332 |
+| alarm_duration | 2852 | 309 |
 | min_seconds | 2359 | 313 |
-| volume | 2176 | 213 |
-| sound_type | 1332 | 252 |
-| repeat_enabled | 1318 | 305 |
-| voice_callouts_enabled | 770 | 187 |
-| vibration_enabled | 615 | 223 |
-| unknown | 597 | 10 |
-| repeat_rounds | 402 | 118 |
-| voice_gender | 361 | 220 |
+| volume | 2179 | 213 |
+| sound_type | 1339 | 252 |
+| repeat_enabled | 1319 | 305 |
+| voice_callouts_enabled | 772 | 187 |
+| vibration_enabled | 616 | 223 |
+| unknown | 514 | 9 |
+| repeat_rounds | 403 | 118 |
+| voice_gender | 362 | 220 |
 | use_extended_range | 272 | 162 |
 
 ## Data Quality Warnings
