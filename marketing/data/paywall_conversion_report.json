@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-05T22:54:37+00:00",
+  "generated_at": "2026-06-06T01:13:41+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -15,7 +15,7 @@
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 300
+      "count": 298
     },
     {
       "reason": "user_cancelled",
@@ -35,8 +35,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 300,
-      "users": 133
+      "failures": 298,
+      "users": 131
     },
     {
       "platform": "android",
@@ -266,14 +266,14 @@
       "users": 184
     },
     {
-      "setting_name": "unknown",
-      "changes": 672,
-      "users": 11
-    },
-    {
       "setting_name": "vibration_enabled",
       "changes": 612,
       "users": 220
+    },
+    {
+      "setting_name": "unknown",
+      "changes": 597,
+      "users": 10
     },
     {
       "setting_name": "repeat_rounds",
