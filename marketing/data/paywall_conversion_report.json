@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-06-06T18:38:36+00:00",
+  "generated_at": "2026-06-07T01:22:22+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 654,
+    "views": 652,
     "offer_selects": 49,
     "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0749,
+    "view_to_select_rate": 0.0752,
     "select_to_attempt_rate": 0.0816,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 293
+      "count": 277
     },
     {
       "reason": "user_cancelled",
@@ -35,8 +35,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 293,
-      "users": 131
+      "failures": 277,
+      "users": 124
     },
     {
       "platform": "android",
@@ -109,14 +109,14 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 434,
-      "users": 162
+      "failures": 432,
+      "users": 161
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 374,
-      "users": 173
+      "failures": 372,
+      "users": 172
     },
     {
       "platform": "android",
@@ -156,7 +156,7 @@
     },
     {
       "entry_point": "voice_gate",
-      "views": 230,
+      "views": 228,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -206,7 +206,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 230,
+      "views": 228,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -232,63 +232,63 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3533,
-      "users": 324
+      "changes": 3511,
+      "users": 321
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2740,
-      "users": 301
+      "changes": 2708,
+      "users": 297
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2340,
-      "users": 307
+      "changes": 2344,
+      "users": 303
     },
     {
       "setting_name": "volume",
-      "changes": 2157,
-      "users": 207
+      "changes": 2150,
+      "users": 206
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1295,
-      "users": 298
+      "changes": 1276,
+      "users": 292
     },
     {
       "setting_name": "sound_type",
-      "changes": 1263,
-      "users": 245
+      "changes": 1234,
+      "users": 241
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 741,
-      "users": 181
+      "changes": 733,
+      "users": 179
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 610,
-      "users": 218
-    },
-    {
-      "setting_name": "unknown",
-      "changes": 514,
-      "users": 9
+      "changes": 607,
+      "users": 215
     },
     {
       "setting_name": "repeat_rounds",
-      "changes": 387,
-      "users": 112
+      "changes": 383,
+      "users": 110
     },
     {
       "setting_name": "voice_gender",
-      "changes": 349,
-      "users": 213
+      "changes": 342,
+      "users": 210
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 260,
-      "users": 156
+      "changes": 255,
+      "users": 154
+    },
+    {
+      "setting_name": "unknown",
+      "changes": 138,
+      "users": 7
     }
   ],
   "data_quality_warnings": [

@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-06T18:38:36+00:00
+Generated: 2026-06-07T01:22:22+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **654**
+- Views: **652**
 - Offer Selects: **49**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 293 |
+| failed | 277 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 293 | 131 |
+| android | unknown | failed | 277 | 124 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -40,15 +40,15 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 434 | 162 |
-| android | elite_tactical | 374 | 173 |
+| android | elite_tactical_monthly | 432 | 161 |
+| android | elite_tactical | 372 | 172 |
 | android | pro_base | 254 | 161 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 301 | 1 | 0 | 0.3% | 0.0% |
-| voice_gate | 230 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 228 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 36 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
@@ -56,25 +56,25 @@ Window (days): 30
 | sound_gate | 4 | 1 | 0 | 25.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **230** views and **0** purchase attempts.
+- `voice_gate` had **228** views and **0** purchase attempts.
 - `repeat_gate` had **54** views and **0** purchase attempts.
 - `unknown` had **36** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3533 | 324 |
-| alarm_duration | 2740 | 301 |
-| min_seconds | 2340 | 307 |
-| volume | 2157 | 207 |
-| repeat_enabled | 1295 | 298 |
-| sound_type | 1263 | 245 |
-| voice_callouts_enabled | 741 | 181 |
-| vibration_enabled | 610 | 218 |
-| unknown | 514 | 9 |
-| repeat_rounds | 387 | 112 |
-| voice_gender | 349 | 213 |
-| use_extended_range | 260 | 156 |
+| max_seconds | 3511 | 321 |
+| alarm_duration | 2708 | 297 |
+| min_seconds | 2344 | 303 |
+| volume | 2150 | 206 |
+| repeat_enabled | 1276 | 292 |
+| sound_type | 1234 | 241 |
+| voice_callouts_enabled | 733 | 179 |
+| vibration_enabled | 607 | 215 |
+| repeat_rounds | 383 | 110 |
+| voice_gender | 342 | 210 |
+| use_extended_range | 255 | 154 |
+| unknown | 138 | 7 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
