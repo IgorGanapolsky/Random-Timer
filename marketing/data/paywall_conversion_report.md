@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-07T12:46:22+00:00
+Generated: 2026-06-07T18:39:25+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **650**
+- Views: **653**
 - Offer Selects: **49**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 277 |
+| failed | 270 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 277 | 124 |
+| android | unknown | failed | 270 | 121 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -50,29 +50,29 @@ Window (days): 30
 | range_gate | 301 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 228 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 34 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 35 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
-| qualified_training_gate | 5 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 7 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 4 | 1 | 0 | 25.0% | 0.0% |
 
 ## Leaky Entry Points
 - `voice_gate` had **228** views and **0** purchase attempts.
 - `repeat_gate` had **54** views and **0** purchase attempts.
-- `unknown` had **34** views and **0** purchase attempts.
+- `unknown` had **35** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3512 | 322 |
-| alarm_duration | 2709 | 298 |
-| min_seconds | 2345 | 304 |
-| volume | 2150 | 206 |
+| max_seconds | 3325 | 323 |
+| alarm_duration | 2701 | 299 |
+| min_seconds | 2342 | 305 |
+| volume | 2104 | 206 |
 | repeat_enabled | 1277 | 293 |
 | sound_type | 1234 | 241 |
 | voice_callouts_enabled | 733 | 179 |
 | vibration_enabled | 610 | 216 |
 | repeat_rounds | 383 | 110 |
-| voice_gender | 342 | 210 |
+| voice_gender | 339 | 210 |
 | use_extended_range | 255 | 154 |
 | unknown | 115 | 6 |
 
