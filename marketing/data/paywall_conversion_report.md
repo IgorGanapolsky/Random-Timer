@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-07T07:38:50+00:00
+Generated: 2026-06-07T12:46:22+00:00
 Window (days): 30
 
 ## Funnel
@@ -40,7 +40,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 432 | 161 |
+| android | elite_tactical_monthly | 433 | 162 |
 | android | elite_tactical | 372 | 172 |
 | android | pro_base | 254 | 161 |
 
@@ -63,14 +63,14 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3511 | 321 |
-| alarm_duration | 2708 | 297 |
-| min_seconds | 2344 | 303 |
+| max_seconds | 3512 | 322 |
+| alarm_duration | 2709 | 298 |
+| min_seconds | 2345 | 304 |
 | volume | 2150 | 206 |
-| repeat_enabled | 1276 | 292 |
+| repeat_enabled | 1277 | 293 |
 | sound_type | 1234 | 241 |
 | voice_callouts_enabled | 733 | 179 |
-| vibration_enabled | 607 | 215 |
+| vibration_enabled | 610 | 216 |
 | repeat_rounds | 383 | 110 |
 | voice_gender | 342 | 210 |
 | use_extended_range | 255 | 154 |
