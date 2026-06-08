@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-08T17:33:03+00:00
+Generated: 2026-06-08T19:02:52+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 257 |
+| failed | 256 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 257 | 113 |
+| android | unknown | failed | 256 | 112 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
