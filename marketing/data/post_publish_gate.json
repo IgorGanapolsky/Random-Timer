@@ -1,22 +1,22 @@
 {
   "source": "post_publish_revenue_gate",
-  "generated_at": "2026-06-08T17:25:22Z",
+  "generated_at": "2026-06-08T20:04:21Z",
   "expected_source": "github_latest_release",
-  "expected_ios": "1.3.52",
-  "expected_android": "1.3.52",
+  "expected_ios": "1.3.53",
+  "expected_android": "1.3.53",
   "store_public_pass": false,
   "stores": [
     {
       "platform": "ios",
       "passed": false,
-      "expected_version": "1.3.52",
+      "expected_version": "1.3.53",
       "observed_version": "1.3.43",
       "status": "VERSION_MISMATCH"
     },
     {
       "platform": "android",
       "passed": false,
-      "expected_version": "1.3.52",
+      "expected_version": "1.3.53",
       "observed_version": "1.3.43",
       "status": "VERSION_MISMATCH"
     }
