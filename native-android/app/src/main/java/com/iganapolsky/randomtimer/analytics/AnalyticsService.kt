@@ -7,7 +7,6 @@ import android.os.Build
 import com.iganapolsky.randomtimer.BuildConfig
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
-import com.posthog.android.PostHogAndroidConfig
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,26 +66,10 @@ class AnalyticsService
             }
 
             val config =
-                PostHogAndroidConfig(
+                PostHogAnalyticsConfigFactory.create(
                     apiKey = apiKey,
-                    host = "https://us.i.posthog.com",
-                ).apply {
-                    // Emit lifecycle events manually so every event includes our live/dev context tags.
-                    captureApplicationLifecycleEvents = false
-                    captureDeepLinks = true
-                    captureScreenViews = false // We track manually for better control
-                    preloadFeatureFlags = true
-                    // Session replay: production installs only (enable in PostHog Project Settings → Session replay).
-                    // Jetpack Compose requires screenshot mode. No client sampleRate in SDK 3.8.2 — tune in PostHog + debouncerDelayMs.
-                    if (!isInternalUser) {
-                        sessionReplay = true
-                        sessionReplayConfig.maskAllTextInputs = true
-                        sessionReplayConfig.maskAllImages = true
-                        sessionReplayConfig.captureLogcat = true
-                        sessionReplayConfig.screenshot = true
-                        sessionReplayConfig.debouncerDelayMs = 1000L
-                    }
-                }
+                    isInternalUser = isInternalUser,
+                )
 
             PostHogAndroid.setup(application, config)
             analyticsContextProperties =
