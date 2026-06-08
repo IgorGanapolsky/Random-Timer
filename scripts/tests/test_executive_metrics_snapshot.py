@@ -202,6 +202,43 @@ def test_run_includes_revenue_goal_section(monkeypatch: pytest.MonkeyPatch, tmp_
     assert goal.get("posthog_usd_gap_per_day_vs_target") == pytest.approx(99.67)
 
 
+def test_posthog_section_paywall_revenue_query_uses_toFloatOrZero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts import executive_metrics_snapshot as ems
+
+    import store_downloads_snapshot as sds
+
+    captured: list[str] = []
+
+    def fake_posthog_query(
+        query: str,
+        api_key: str,
+        project_id: str,
+        errors: list,
+        **kwargs: object,
+    ):
+        captured.append(query)
+        if "interval 7 day" in query and "HAVING count() >= 3" in query:
+            return {"results": [[0]]}
+        if "review_prompt_requested" in query:
+            return {"results": [[0, 0]]}
+        if "$screen" in query:
+            return {"results": []}
+        return {"results": [[0]]}
+
+    monkeypatch.setattr(sds, "posthog_query", fake_posthog_query)
+
+    ems._posthog_section("299775", "test-key", 30)
+
+    revenue_queries = [
+        q for q in captured if "paywall_purchase_success" in q and "sum(" in q.lower()
+    ]
+    assert revenue_queries, "expected paywall revenue HogQL query"
+    assert "toFloatOrZero" in revenue_queries[0]
+    assert "toFloat64OrZero" not in revenue_queries[0]
+
+
 def test_run_includes_refunds_and_uninstall_proxy_fields(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

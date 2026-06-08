@@ -338,7 +338,7 @@ def _posthog_section(project_id: str, api_key: str, days: int) -> Dict[str, Any]
     out["events_paywall_purchase_success_ios"] = event_count(paywall_event, pf_ios)
     out["events_paywall_purchase_success_android"] = event_count(paywall_event, pf_android)
     out["paywall_revenue_sum_30d"] = scalar_float(
-        f"SELECT sum(toFloat64OrZero(toString(coalesce(properties.revenue, properties.price, '0')))) "
+        f"SELECT sum(toFloatOrZero(toString(coalesce(properties.revenue, toString(properties.price), '0')))) "
         f"FROM events WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f}"
     )

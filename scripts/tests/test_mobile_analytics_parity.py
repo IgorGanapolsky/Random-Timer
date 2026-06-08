@@ -5,6 +5,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ANDROID_ANALYTICS = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/analytics/AnalyticsService.kt"
+ANDROID_POSTHOG_CONFIG = (
+    ROOT
+    / "native-android/app/src/main/java/com/iganapolsky/randomtimer/analytics/PostHogAnalyticsConfigFactory.kt"
+)
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 IOS_ANALYTICS = ROOT / "native-ios/RandomTimer/Sources/Services/AnalyticsService.swift"
 IOS_TIMER_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift"
@@ -115,8 +119,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
 
     def test_lifecycle_autocapture_disabled_on_both_platforms(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        android_config = ANDROID_POSTHOG_CONFIG.read_text(encoding="utf-8")
         ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
-        self.assertIn("captureApplicationLifecycleEvents = false", android_source)
+        self.assertIn(
+            "captureApplicationLifecycleEvents = false",
+            android_source + android_config,
+        )
         self.assertIn("config.captureApplicationLifecycleEvents = false", ios_source)
 
     def test_manual_lifecycle_events_tracked_on_initialize(self):
