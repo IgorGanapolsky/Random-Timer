@@ -6,8 +6,7 @@ import java.io.File
 
 class CompetitionWarmupRemovalGuardTest {
     private val repoRoot: File by lazy {
-        sequenceOf(System.getProperty("user.dir"))
-            .plus(generateSequence(File(System.getProperty("user.dir"))) { it.parentFile })
+        generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .first { dir -> File(dir, "native-android").isDirectory }
     }
 
