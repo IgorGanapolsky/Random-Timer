@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-09T18:57:00+00:00",
+  "generated_at": "2026-06-09T19:58:03+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 654,
-    "offer_selects": 49,
+    "views": 658,
+    "offer_selects": 51,
     "purchase_attempts": 4,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0749,
-    "select_to_attempt_rate": 0.0816,
+    "view_to_select_rate": 0.0775,
+    "select_to_attempt_rate": 0.0784,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -80,10 +80,10 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 9,
+      "offer_selects": 11,
       "attempts": 1,
       "successes": 0,
-      "select_to_attempt_rate": 0.1111,
+      "select_to_attempt_rate": 0.0909,
       "attempt_to_success_rate": 0.0
     },
     {
@@ -109,19 +109,19 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 436,
-      "users": 166
+      "failures": 435,
+      "users": 167
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 377,
-      "users": 181
+      "failures": 375,
+      "users": 180
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 266,
+      "failures": 264,
       "users": 173
     }
   ],
@@ -129,26 +129,26 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 180,
-      "users": 124
+      "failures": 179,
+      "users": 125
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 150,
+      "failures": 148,
       "users": 141
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 149,
-      "users": 140
+      "failures": 147,
+      "users": 139
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 299,
+      "views": 303,
       "attempts": 1,
       "successes": 0,
       "view_to_attempt_rate": 0.0033,
@@ -240,7 +240,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3310,
+      "changes": 3311,
       "users": 344
     },
     {

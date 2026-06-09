@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-09T18:57:00+00:00
+Generated: 2026-06-09T19:58:03+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **654**
-- Offer Selects: **49**
+- Views: **658**
+- Offer Selects: **51**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
-- View -> Offer Select: **7.5%**
-- Select -> Purchase Attempt: **8.2%**
+- View -> Offer Select: **7.8%**
+- Select -> Purchase Attempt: **7.8%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -33,21 +33,21 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | elite_tactical_monthly | 33 | 1 | 0 | 3.0% | 0.0% |
-| android | elite_tactical | 9 | 1 | 0 | 11.1% | 0.0% |
+| android | elite_tactical | 11 | 1 | 0 | 9.1% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 436 | 166 |
-| android | elite_tactical | 377 | 181 |
-| android | pro_base | 266 | 173 |
+| android | elite_tactical_monthly | 435 | 167 |
+| android | elite_tactical | 375 | 180 |
+| android | pro_base | 264 | 173 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 299 | 1 | 0 | 0.3% | 0.0% |
+| range_gate | 303 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 226 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 35 | 0 | 0 | 0.0% | 0.0% |
@@ -64,7 +64,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3310 | 344 |
+| max_seconds | 3311 | 344 |
 | alarm_duration | 3089 | 321 |
 | volume | 2207 | 223 |
 | min_seconds | 2109 | 322 |
