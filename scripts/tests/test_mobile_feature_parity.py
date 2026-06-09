@@ -262,14 +262,14 @@ def test_android_purchase_waits_for_billing_reconnect_before_failing():
         1,
     )[0]
 
-    assert "ensureBillingReadyForPurchase()" in launch_purchase
-    assert "private suspend fun ensureBillingReadyForPurchase()" in android_pro_manager
+    assert "ensureBillingReadyForPurchase(purchaseLaunch = true)" in launch_purchase
+    assert "private suspend fun ensureBillingReadyForPurchase(purchaseLaunch: Boolean = false)" in android_pro_manager
     assert "connectAndRestore()" in android_pro_manager
     assert "delay(500)" in android_pro_manager
-    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+    assert launch_purchase.index("ensureBillingReadyForPurchase(purchaseLaunch = true)") < launch_purchase.index(
         'debugMessage = "billing_not_ready"'
     )
-    assert launch_purchase.index("ensureBillingReadyForPurchase()") < launch_purchase.index(
+    assert launch_purchase.index("ensureBillingReadyForPurchase(purchaseLaunch = true)") < launch_purchase.index(
         "fetchProductDetails(productID)"
     )
 

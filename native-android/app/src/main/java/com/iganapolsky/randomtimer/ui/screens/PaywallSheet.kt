@@ -141,6 +141,7 @@ fun PaywallSheet(
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     availableProductIds: Set<String> = emptySet(),
     billingCatalogProbed: Boolean = false,
+    billingReady: Boolean = true,
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String, selectionSource: String) -> Unit = { _, _, _ -> },
     onRestore: () -> Unit,
@@ -163,7 +164,8 @@ fun PaywallSheet(
             selectedPlan = fallbackPaywallPlan(availableProductIds, billingCatalogProbed)
         }
     }
-    val hasPurchasablePlan = hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed)
+    val hasPurchasablePlan =
+        hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed, billingReady)
     var initialOfferSelectTracked by remember(entryPoint) { mutableStateOf(false) }
     LaunchedEffect(entryPoint, billingCatalogProbed, hasPurchasablePlan, selectedPlan) {
         if (
@@ -235,7 +237,14 @@ fun PaywallSheet(
                     PrimaryButton(
                         text = if (hasPurchasablePlan) ctaLabel else "Purchases unavailable",
                         onClick = {
-                            if (!hasPurchasablePlan) {
+                            if (
+                                !isPaywallPurchaseAllowed(
+                                    billingCatalogProbed = billingCatalogProbed,
+                                    billingReady = billingReady,
+                                    availableProductIds = availableProductIds,
+                                    selectedProductId = purchaseProductId,
+                                )
+                            ) {
                                 return@PrimaryButton
                             }
                             onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")
@@ -511,11 +520,24 @@ internal fun shouldShowPaywallPlan(
 internal fun hasPurchasablePaywallPlan(
     availableProductIds: Set<String>,
     billingCatalogProbed: Boolean,
+    billingReady: Boolean = true,
 ): Boolean =
     billingCatalogProbed &&
+        billingReady &&
         SubscriptionPlanSelection.entries.any {
             shouldShowPaywallPlan(it, availableProductIds, billingCatalogProbed)
         }
+
+/** Gate purchase taps on a live billing connection, not only the catalog snapshot from paywall open. */
+internal fun isPaywallPurchaseAllowed(
+    billingCatalogProbed: Boolean,
+    billingReady: Boolean,
+    availableProductIds: Set<String>,
+    selectedProductId: String,
+): Boolean =
+    billingCatalogProbed &&
+        billingReady &&
+        availableProductIds.contains(selectedProductId)
 
 internal fun fallbackPaywallPlan(
     availableProductIds: Set<String>,

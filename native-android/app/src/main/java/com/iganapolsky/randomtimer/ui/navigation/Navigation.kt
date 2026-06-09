@@ -29,6 +29,7 @@ import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallPolicy
 import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallStore
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
+import com.iganapolsky.randomtimer.ui.screens.isPaywallPurchaseAllowed
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
 import kotlinx.coroutines.launch
@@ -83,6 +84,7 @@ fun RandomTimerNavHost(
     var paywallTrialEligibilityByProductId by remember { mutableStateOf(emptyMap<String, Boolean>()) }
     var paywallAvailableProductIds by remember { mutableStateOf(emptySet<String>()) }
     var paywallBillingCatalogProbed by remember { mutableStateOf(false) }
+    var paywallBillingReady by remember { mutableStateOf(false) }
     var paywallDefaultToAnnual by remember { mutableStateOf(false) }
     var paywallValueFramingVariant by remember { mutableStateOf(PaywallValueFraming.CONTROL) }
     val qualifiedTrainingPaywallStore = remember { QualifiedTrainingPaywallStore(context) }
@@ -95,6 +97,7 @@ fun RandomTimerNavHost(
             lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
             paywallAvailableProductIds = viewModel.proManager.availablePaywallProductIds()
             paywallBillingCatalogProbed = true
+            paywallBillingReady = viewModel.proManager.isBillingClientReady()
             paywallEntryPoint = paywallEntryPointForFeature(feature)
             paywallTrialEligibilityByProductId =
                 mapOf(
@@ -284,6 +287,7 @@ fun RandomTimerNavHost(
             trialEligibilityByProductId = paywallTrialEligibilityByProductId,
             availableProductIds = paywallAvailableProductIds,
             billingCatalogProbed = paywallBillingCatalogProbed,
+            billingReady = paywallBillingReady,
             onPlanSelected = { plan, productId, selectionSource ->
                 viewModel.trackPaywallOfferSelected(
                     entryPoint = paywallEntryPoint,
@@ -294,13 +298,33 @@ fun RandomTimerNavHost(
             },
             onPurchase = { productID ->
                 scope.launch {
+                    paywallAvailableProductIds =
+                        viewModel.proManager.availablePaywallProductIds(forPurchaseLaunch = true)
+                    paywallBillingReady = viewModel.proManager.isBillingClientReady()
+                    if (
+                        !isPaywallPurchaseAllowed(
+                            billingCatalogProbed = paywallBillingCatalogProbed,
+                            billingReady = paywallBillingReady,
+                            availableProductIds = paywallAvailableProductIds,
+                            selectedProductId = productID,
+                        )
+                    ) {
+                        android.widget.Toast
+                            .makeText(
+                                activity ?: return@launch,
+                                "Purchase unavailable. Please try again later.",
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
+                        return@launch
+                    }
                     val launched =
                         activity?.let {
                             viewModel.proManager.launchPurchase(it, productID, paywallEntryPoint)
                         } ?: false
                     if (!launched) {
-                        // Purchase failed to launch — keep paywall open
-                        // The billing dialog didn't appear, so user needs feedback
+                        paywallAvailableProductIds =
+                            viewModel.proManager.availablePaywallProductIds(forPurchaseLaunch = true)
+                        paywallBillingReady = viewModel.proManager.isBillingClientReady()
                         android.widget.Toast
                             .makeText(
                                 activity ?: return@launch,
@@ -308,7 +332,6 @@ fun RandomTimerNavHost(
                                 android.widget.Toast.LENGTH_LONG,
                             ).show()
                     }
-                    // Keep the sheet open until entitlement changes so cancellation/errors can retry.
                 }
             },
             onDebugUnlock = {

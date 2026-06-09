@@ -191,6 +191,7 @@ class ProManager
                     }
 
                     override fun onBillingServiceDisconnected() {
+                        invalidatePaywallCatalogCache()
                         externalScope.launch {
                             delay(1000)
                             connectAndRestore()
@@ -279,7 +280,7 @@ class ProManager
             pendingPurchaseEntryPoint = entryPoint
             pendingLaunchProductId = productID
             clearPendingTrialOffer()
-            if (!ensureBillingReadyForPurchase()) {
+            if (!ensureBillingReadyForPurchase(purchaseLaunch = true)) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
@@ -407,18 +408,27 @@ class ProManager
             return true
         }
 
-        private suspend fun ensureBillingReadyForPurchase(): Boolean {
+        private suspend fun ensureBillingReadyForPurchase(purchaseLaunch: Boolean = false): Boolean {
             if (billingClient.isReady) {
                 return true
             }
             connectAndRestore()
-            repeat(6) {
+            val maxAttempts = if (purchaseLaunch) 16 else 6
+            repeat(maxAttempts) {
                 delay(500)
                 if (billingClient.isReady) {
                     return true
                 }
             }
             return billingClient.isReady
+        }
+
+        fun isBillingClientReady(): Boolean = billingClient.isReady
+
+        internal fun invalidatePaywallCatalogCache() {
+            cachedProductDetails.clear()
+            productQueryFailureReasons.clear()
+            lastCatalogStatusSignature = null
         }
 
         private suspend fun fetchAllProductDetails() {
@@ -484,8 +494,8 @@ class ProManager
             }
         }
 
-        suspend fun availablePaywallProductIds(): Set<String> {
-            if (!ensureBillingReadyForPurchase()) {
+        suspend fun availablePaywallProductIds(forPurchaseLaunch: Boolean = false): Set<String> {
+            if (!ensureBillingReadyForPurchase(purchaseLaunch = forPurchaseLaunch)) {
                 trackProductCatalogStatus()
                 return emptySet()
             }

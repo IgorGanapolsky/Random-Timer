@@ -203,6 +203,14 @@ class PaywallSheetTest {
             shouldShowPaywallPlan(SubscriptionPlanSelection.MONTHLY, emptySet(), billingCatalogProbed = true),
         )
         assertEquals(false, hasPurchasablePaywallPlan(emptySet(), billingCatalogProbed = true))
+        assertEquals(
+            false,
+            hasPurchasablePaywallPlan(
+                setOf(ProManager.ELITE_PRODUCT_ID),
+                billingCatalogProbed = true,
+                billingReady = false,
+            ),
+        )
     }
 
     @Test
