@@ -1,1 +1,1 @@
-Monthly Pro content update — June 2026
+Fix Play billing on Samsung and retail Android: monthly subscription catalog probe and paywall purchase reliability improvements.
