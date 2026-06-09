@@ -1,1 +1,1 @@
-- Fixed "Upgrade to Pro" backdoor gesture.
+- Improved Pro upgrade reliability and purchase flow.
