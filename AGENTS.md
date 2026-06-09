@@ -153,6 +153,7 @@ Do not infer progress from draft campaign configs.
 
 ## Android Agent Acceleration
 
+- **Google Play:** default `android_track=production` in `native-release.yml`; never open testing unless CEO explicitly requests — see `docs/PLAY_TESTING_TRACKS.md`.
 - Before Android platform/build/store-policy work, run `python3 scripts/android_agent_doctor.py --json` and use `docs/ANDROID_AGENT_WORKFLOW.md`.
 - If Android CLI is installed, run `android update`, use `android docs search '<topic>'` for current official guidance, and use `android skills` for AGP, R8, edge-to-edge, Navigation, Compose, emulator, and release-build work.
 - Do not make preview Android CLI tooling a hard CI dependency; CI remains Gradle wrapper, repo scripts, store API read-back, and explicit evidence.
