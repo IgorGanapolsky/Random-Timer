@@ -13,7 +13,7 @@
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 9 |
-| WAU | 188 |
+| WAU | 186 |
 | MAU | 695 |
 <!-- DOWNLOADS_END -->
 
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 8 |
-| Timer Completed (7d) | 170 |
-| Completed Users (7d) | 23 |
-| Sessions/Completed User (7d) | 7.39 |
+| Timer Completed (7d) | 163 |
+| Completed Users (7d) | 22 |
+| Sessions/Completed User (7d) | 7.41 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-08T20:58:21+00:00
+**Generated:** 2026-06-09T01:13:55+00:00
 
 ## Onboarding Funnel
 - First Open: **681**
@@ -69,7 +69,7 @@
 
 **Top failure reasons:** failed (256), user_cancelled (6), cancelled (2), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (429), elite_tactical (366), pro_base (255)
+**Catalog failures (Android):** elite_tactical_monthly (427), elite_tactical (366), pro_base (255)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-06" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08"]
+    x-axis ["2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09"]
     y-axis "Downloads"
-    line [54 , 53 , 52 , 53 , 56 , 56 , 56 , 58 , 58 , 58 , 58 , 58 , 58 , 59]
-    line [650 , 640 , 640 , 640 , 634 , 620 , 619 , 619 , 618 , 618 , 618 , 617 , 618 , 621]
+    line [53 , 52 , 53 , 56 , 56 , 56 , 58 , 58 , 58 , 58 , 58 , 58 , 59 , 59]
+    line [640 , 640 , 640 , 634 , 620 , 619 , 619 , 618 , 618 , 618 , 617 , 618 , 621 , 621]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-06" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08"]
+    x-axis ["2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-07" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09"]
     y-axis "Users"
-    line [5 , 5 , 5 , 5 , 7 , 7 , 7 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
+    line [5 , 5 , 5 , 7 , 7 , 7 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-08T20:58:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-09T01:13:56+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
