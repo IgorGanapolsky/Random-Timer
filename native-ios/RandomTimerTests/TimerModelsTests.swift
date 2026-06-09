@@ -344,3 +344,46 @@ final class TimerStateTests: XCTestCase {
         XCTAssertTrue(state.isComplete)
     }
 }
+
+final class CompetitionWarmupRemovalGuardTests: XCTestCase {
+    private let forbiddenFragments = [
+        "Competition Warmup",
+        "Competition Prep",
+        "STANDARD OPS",
+        "TrainingPreset",
+        "competition_warmup",
+        "onTrainingPresetApplied",
+        "showCompetitionPrep",
+    ]
+
+    private let guardedRelativePaths = [
+        "RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift",
+        "SharedModels/TimerModels.swift",
+        "RandomTimer/Sources/Services/TimerManager.swift",
+    ]
+
+    func testTimerSetupSourcesContainNoCompetitionWarmupUi() throws {
+        let repoRoot = try XCTUnwrap(locateRepoRoot())
+        for relativePath in guardedRelativePaths {
+            let fileURL = repoRoot.appendingPathComponent("native-ios").appendingPathComponent(relativePath)
+            let source = try String(contentsOf: fileURL, encoding: .utf8)
+            for fragment in forbiddenFragments {
+                XCTAssertFalse(
+                    source.range(of: fragment, options: .caseInsensitive) != nil,
+                    "\(relativePath) must not contain '\(fragment)'"
+                )
+            }
+        }
+    }
+
+    private func locateRepoRoot() -> URL? {
+        var current = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        while current.path != "/" {
+            if FileManager.default.fileExists(atPath: current.appendingPathComponent("native-ios").path) {
+                return current
+            }
+            current.deleteLastPathComponent()
+        }
+        return nil
+    }
+}
