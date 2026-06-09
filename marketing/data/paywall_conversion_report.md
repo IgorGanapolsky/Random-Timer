@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-09T13:15:45+00:00
+Generated: 2026-06-09T14:10:21+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **646**
+- Views: **650**
 - Offer Selects: **49**
 - Purchase Attempts: **4**
 - Purchase Successes: **0**
-- View -> Offer Select: **7.6%**
+- View -> Offer Select: **7.5%**
 - Select -> Purchase Attempt: **8.2%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -40,14 +40,14 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 428 | 158 |
-| android | elite_tactical | 367 | 171 |
-| android | pro_base | 256 | 163 |
+| android | elite_tactical_monthly | 432 | 162 |
+| android | elite_tactical | 374 | 178 |
+| android | pro_base | 263 | 170 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 295 | 1 | 0 | 0.3% | 0.0% |
+| range_gate | 299 | 1 | 0 | 0.3% | 0.0% |
 | voice_gate | 226 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 35 | 0 | 0 | 0.0% | 0.0% |
@@ -63,17 +63,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3259 | 323 |
-| alarm_duration | 2685 | 299 |
-| volume | 2159 | 206 |
-| min_seconds | 2053 | 303 |
-| repeat_enabled | 1271 | 293 |
-| sound_type | 1242 | 241 |
-| voice_callouts_enabled | 728 | 178 |
-| vibration_enabled | 612 | 219 |
-| repeat_rounds | 378 | 109 |
-| voice_gender | 339 | 210 |
-| use_extended_range | 254 | 153 |
+| max_seconds | 3294 | 340 |
+| alarm_duration | 2951 | 314 |
+| volume | 2222 | 218 |
+| min_seconds | 2104 | 318 |
+| sound_type | 1424 | 258 |
+| repeat_enabled | 1333 | 308 |
+| voice_callouts_enabled | 800 | 191 |
+| vibration_enabled | 629 | 231 |
+| repeat_rounds | 414 | 121 |
+| voice_gender | 366 | 225 |
+| use_extended_range | 290 | 166 |
 | unknown | 115 | 6 |
 
 ## Data Quality Warnings
