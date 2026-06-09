@@ -133,6 +133,7 @@ if [ "$ADB_ONLY" = false ]; then
       "alarm-notification-stop-android.yaml"
       "activation-banner-dismiss-android.yaml"
       "activation-smoke-android.yaml"
+      "activation-paywall-from-pro-tap-android.yaml"
       "regression-pro-locks-visible-android.yaml"
     )
 
