@@ -563,7 +563,6 @@ enum AnalyticsEvents {
     static let rewardedAdCompleted = "rewarded_ad_completed"
     static let rewardedAdUnlock = "rewarded_ad_unlock"
     static let paywallGateFirstTimer = "paywall_gate_first_timer"
-    static let trainingPresetApplied = "training_preset_applied"
 
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
@@ -603,7 +602,6 @@ enum AnalyticsProperties {
     static let trialVerified = "trial_verified"
     static let gender = "gender"
     static let feature = "feature"
-    static let presetId = "preset_id"
     static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"

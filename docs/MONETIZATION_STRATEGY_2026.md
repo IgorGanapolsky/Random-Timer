@@ -43,7 +43,6 @@ Paywall merchandises monthly + annual (+ lifetime on iOS where catalog returns `
 - **Sounds:** free = intense + chime; Pro = full arsenal
 - **Range:** free max 5 min; Pro up to 60 min
 - **Voice callouts, repeat round caps:** Pro only
-- **Presets:** one built-in (`Competition Warmup`); not paywalled per pack
 - **Pro audio “packs”:** remote manifest (`ProAudioPackStore`) — **not** separate IAP products
 
 ### Ads

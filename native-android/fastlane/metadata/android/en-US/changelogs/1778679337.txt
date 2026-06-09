@@ -1,3 +1,2 @@
 • Bluetooth headset & AirPods buttons can now stop the alarm
 • Tap the timer circle to dismiss when an alarm fires (ALARM or COMPLETE)
-• Competition Prep training presets organized into a collapsible section
