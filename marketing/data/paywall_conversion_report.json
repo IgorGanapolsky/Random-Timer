@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-09T07:31:26+00:00",
+  "generated_at": "2026-06-09T13:15:45+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -109,40 +109,40 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 427,
+      "failures": 428,
       "users": 158
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 366,
-      "users": 170
+      "failures": 367,
+      "users": 171
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 255,
-      "users": 162
+      "failures": 256,
+      "users": 163
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 171,
+      "failures": 172,
       "users": 116
     },
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 139,
-      "users": 130
+      "failures": 140,
+      "users": 131
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 138,
-      "users": 129
+      "failures": 139,
+      "users": 130
     }
   ],
   "entry_points": [
