@@ -139,16 +139,18 @@ This validates:
 
 ### 5. Merge `release/*` to `main` and Release
 
+**Play testing policy:** Random Timer uses a business Play account. Ship **production** only for store releases and CEO device QA. Do **not** dispatch Open testing (`android_track=beta`) unless the CEO explicitly requests it. See `docs/PLAY_TESTING_TRACKS.md` for leaving Open testing and installing the public listing.
+
 After the PR is approved and CI passes:
 
 1. **Merge** the PR (squash merge)
 2. **Trigger** the release workflow:
 
 ```bash
-# Release both platforms to production (default platform is both — use this for versioned releases)
+# Release both platforms to production (default platform=both, android_track=production)
 gh workflow run native-release.yml --ref release/vX.Y.Z -f platform=both -f android_track=production
 
-# Or release to beta/alpha first
+# Alpha/closed testing — explicit opt-in only; never default for CEO QA
 gh workflow run native-release.yml -f platform=android -f android_track=alpha
 gh workflow run native-release.yml -f platform=ios -f confirm_ios_only_release=true
 

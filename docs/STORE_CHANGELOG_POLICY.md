@@ -38,8 +38,17 @@ python3 -m pytest scripts/tests/test_check_store_changelog_policy.py -q
 
 `preflight-release.sh` (Android layer 1) runs the checker before Play uploads.
 
-## Beta propagation notes
+## Production-first QA (no Open testing default)
+
+CEO and internal device validation use the **production** Play Store listing, not Open testing. See `docs/PLAY_TESTING_TRACKS.md`.
+
+- Production **What's New** comes from `changelogs/{versionCode}.txt` for the **production-track** upload.
+- Public storefront HTML can lag the Play Publisher API; Tier 0 API `verify-releases` is ground truth.
+- If automation accidentally dispatches `android_track=beta`, that does **not** update production — re-run with `android_track=production`.
+
+## Beta track (explicit opt-in only)
+
+Only when the CEO requests Open testing:
 
 - Beta **What's New** comes from the changelog file for the **version code on the beta track**, not from `default.txt`.
-- If the uploaded `versionCode` has no matching changelog file, Play may keep showing text from an older beta release.
 - Devices must be **beta enrolled** and on a lower `versionCode` than the beta artifact to show **Update** (not **Open**).

@@ -13,7 +13,7 @@ on:
         required: true
         default: 'both'
       android_track:
-        description: 'Android only: Google Play track to publish to'
+        description: 'Android only: Play track (default production; beta=Open testing — CEO opt-in only, see docs/PLAY_TESTING_TRACKS.md)'
         type: choice
         options:
           - production
