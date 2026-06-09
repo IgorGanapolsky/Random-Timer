@@ -205,6 +205,11 @@ if [[ "$PLATFORM" == "android" || "$PLATFORM" == "both" ]]; then
     warn "Could not detect Android versionCode — skipping changelog check"
   fi
 
+  info "Store changelog policy (denylist scan)"
+  if ! python3 "$PROJECT_ROOT/scripts/check_store_changelog_policy.py"; then
+    err "Store changelog policy check failed — see docs/STORE_CHANGELOG_POLICY.md"
+  fi
+
   # Screenshots
   SCREENSHOTS_DIR="$ANDROID_META/images/phoneScreenshots"
   if [[ -d "$SCREENSHOTS_DIR" ]]; then
