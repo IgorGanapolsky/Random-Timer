@@ -1,54 +1,47 @@
 {
-  "generated_at": "2026-06-08T20:03:40Z",
-  "source": "native_release_27161374477_play_api_verify_2026_06_08",
+  "generated_at": "2026-06-09T14:05:00Z",
+  "source": "native_release_27209581950_play_api_verify_2026_06_09",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
   "ship_evidence": {
-    "workflow_run_id": 27161374477,
+    "workflow_run_id": 27209581950,
     "workflow_conclusion": "success",
-    "git_tag": "v1.3.53",
-    "git_tag_sha": "ac2f22dc",
-    "ship_date_utc": "2026-06-08",
+    "git_tag": "v1.3.55",
+    "git_tag_sha": "2a03f3f8",
+    "ship_date_utc": "2026-06-09",
     "play_api_track": "production",
-    "play_api_version_name": "1.3.53",
-    "play_api_version_code": 1780947164,
+    "play_api_version_name": "1.3.55",
+    "play_api_version_code": 1781012436,
     "play_api_status": "completed",
-    "ovb_blocking_count": 0,
     "public_listing_version_name": "1.3.43",
-    "public_listing_note": "Storefront HTML proxy still 1.3.43 at post_publish_gate verify; API completed; propagation lag non-blocking"
+    "public_listing_note": "Storefront HTML proxy still 1.3.43 at verify-releases 900s timeout; Play Publisher API production completed",
+    "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
-    "billing_product_catalog_status 7d breakdown by app_version (1.3.53 cohort after propagation)",
+    "billing_product_catalog_status 1h by app_version=1.3.55 and device_model=SM-S931U1",
+    "billing_product_catalog_status 7d breakdown by status",
     "paywall funnel 7d",
-    "purchase_success 30d (telemetry proxy, not ledger revenue)",
-    "error tracking $exception by app_version (1.3.53 shipped #1749)"
+    "purchase_success 30d (telemetry proxy, not ledger revenue)"
   ],
-  "snapshot": "Android 1.3.53 shipped Play production via native-release run 27161374477. Play Publisher API readback: versionCode 1780947164 (1.3.53) status=completed on production track (2026-06-08T19:21:58Z). OVB blocking=0. Public listing HTML proxy still 1.3.43 after gate poll (propagation lag; non-blocking). PostHog error tracking shipped (#1749). Billing/monetization still unverified until retail-device catalog ok. Issue #1684 stays open.",
+  "snapshot": "Android 1.3.55 shipped Play production via native-release run 27209581950. Play Publisher API readback: versionCode 1781012436 (1.3.55) status=completed on production track. Public listing HTML proxy still 1.3.43 after 900s poll (propagation lag; non-blocking). PR #1757 monthly catalog fix merged. PostHog last 1h: 8 billing_product_catalog_status events / 4 users on 1.3.55 (OnePlus8Pro) — statuses play_store_update_required and product_details_unsupported; zero status=ok; no SM-S931U1 events. S25 (R3CY90QPM7E) not connected via adb. Issue #1684 remains open pending retail Play update + catalog ok with elite_tactical_monthly.",
   "counts": {
-    "wqtu_7d": 4,
-    "purchase_attempts_30d": 4,
-    "purchase_success_30d": 0,
-    "catalog_ok_30d": 20,
-    "catalog_empty_30d": 299,
-    "play_api_version_name": "1.3.53",
-    "play_api_version_code": 1780947164,
+    "billing_catalog_status_events_1_3_55_1h": 8,
+    "billing_catalog_users_1_3_55_1h": 4,
+    "billing_catalog_ok_1_3_55_1h": 0,
+    "billing_catalog_sm_s931u1_1h": 0,
+    "play_api_version_name": "1.3.55",
+    "play_api_version_code": 1781012436,
     "public_listing_version_name": "1.3.43",
-    "posthog_events_1_3_53_7d": 22,
-    "posthog_users_1_3_53_7d": 4,
-    "posthog_exception_events_1_3_53_7d": 0,
-    "ios_shipped_1_3_53": false
+    "purchase_attempts_30d": 4,
+    "purchase_success_30d": 0
   },
-  "decision": "keep_issue_1684_open_monetization_unverified_until_retail_catalog_ok",
+  "decision": "keep_issue_1684_open_awaiting_play_update_on_s25",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "issue_1684: keep open; require billing_product_catalog_status.status=ok on retail Play-installed Samsung/Pixel",
-    "ceo_qa: Play-installed retail device after 1.3.53 propagates — do not use OnePlus8Pro-only cohort for revenue claims",
+    "issue_1684: keep open; require billing_product_catalog_status.status=ok with elite_tactical_monthly on Play-installed S25 after public listing propagates",
+    "ceo_qa: tap Update on S25 Play Store (market://details?id=com.iganapolsky.randomtimer) then run verify-billing-catalog.sh",
     "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
-    "posthog_error_tracking: verify $exception ingestion on 1.3.53 retail cohort (#1749)",
-    "paywall_gates: fix voice_gate/repeat_gate after catalog ok on production cohort",
-    "iOS: CEO testflight-signoff then internal-distribution target=ios + native-release platform=ios for 1.3.53",
-    "Hold paid ads until catalog ok on production cohort and paywall attempt→success > 0",
-    "zero_budget_growth: ASO intent clusters + annual/trial paywall tests (PostHog); no new SaaS over $20/mo cap"
+    "Hold paid ads until catalog ok on production retail cohort and paywall attempt→success > 0"
   ]
 }
