@@ -73,14 +73,32 @@ class BillingLegacySkuCatalogProbeTest {
     @Test
     fun `legacy sku query maps billing ids to logical ids`() {
         val specs = buildPaywallCatalogQuerySpecs()
+        val foundBillingIds =
+            listOf(
+                ProManager.BASE_PRODUCT_ID,
+                ProManager.ELITE_PRODUCT_ID,
+                ProManager.MONTHLY_PRODUCT_ID,
+            )
+
+        val logicalIds = logicalProductIdsResolvedFromLegacySkuQuery(specs, foundBillingIds)
+
+        assertThat(logicalIds).containsExactly(
+            ProManager.BASE_PRODUCT_ID,
+            ProManager.ELITE_PRODUCT_ID,
+            ProManager.MONTHLY_PRODUCT_ID,
+        )
+    }
+
+    @Test
+    fun `legacy sku query omits monthly when only annual subs product found`() {
+        val specs = buildPaywallCatalogQuerySpecs()
         val foundBillingIds = listOf(ProManager.BASE_PRODUCT_ID, ProManager.ELITE_PRODUCT_ID)
 
         val logicalIds = logicalProductIdsResolvedFromLegacySkuQuery(specs, foundBillingIds)
 
-        assertThat(logicalIds).containsAtLeast(
+        assertThat(logicalIds).containsExactly(
             ProManager.BASE_PRODUCT_ID,
             ProManager.ELITE_PRODUCT_ID,
-            ProManager.MONTHLY_PRODUCT_ID,
         )
     }
 

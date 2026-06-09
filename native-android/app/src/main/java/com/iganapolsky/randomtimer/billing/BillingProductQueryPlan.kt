@@ -9,7 +9,7 @@ internal data class BillingProductQuerySpec(
     val productType: String,
 )
 
-/** Deduplicated Play catalog probes for paywall SKUs (monthly shares elite_tactical). */
+/** Deduplicated Play catalog probes for paywall SKUs (elite annual + monthly are separate Play products). */
 internal fun buildPaywallCatalogQuerySpecs(
     logicalProductIds: List<String> = paywallCatalogLogicalProductIds(),
 ): List<BillingProductQuerySpec> =

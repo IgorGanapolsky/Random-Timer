@@ -6,15 +6,16 @@ import org.junit.Test
 
 class BillingProductQueryPlanTest {
     @Test
-    fun `paywall catalog dedupes monthly to elite subs probe`() {
+    fun `paywall catalog probes each Play subscription product id`() {
         val specs = buildPaywallCatalogQuerySpecs()
 
-        assertThat(specs).hasSize(2)
+        assertThat(specs).hasSize(3)
         assertThat(specs.map { it.billingProductId }).containsExactly(
             ProManager.BASE_PRODUCT_ID,
             ProManager.ELITE_PRODUCT_ID,
+            ProManager.MONTHLY_PRODUCT_ID,
         )
-        assertThat(specs.count { it.productType == BillingClient.ProductType.SUBS }).isEqualTo(1)
+        assertThat(specs.count { it.productType == BillingClient.ProductType.SUBS }).isEqualTo(2)
     }
 
     @Test
@@ -26,7 +27,7 @@ class BillingProductQueryPlanTest {
             BillingClient.ProductType.SUBS,
         )
         assertThat(grouped[BillingClient.ProductType.INAPP]).hasSize(1)
-        assertThat(grouped[BillingClient.ProductType.SUBS]).hasSize(1)
+        assertThat(grouped[BillingClient.ProductType.SUBS]).hasSize(2)
     }
 
     @Test
@@ -40,7 +41,7 @@ class BillingProductQueryPlanTest {
 
         assertThat(eliteLogicalIds).containsExactly(ProManager.ELITE_PRODUCT_ID)
         assertThat(playBillingProductId(ProManager.MONTHLY_PRODUCT_ID))
-            .isEqualTo(ProManager.ELITE_PRODUCT_ID)
+            .isEqualTo(ProManager.MONTHLY_PRODUCT_ID)
     }
 
     @Test
