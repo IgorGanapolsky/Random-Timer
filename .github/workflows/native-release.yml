@@ -450,6 +450,31 @@ jobs:
           ./gradlew -PciVersionCode="$VERSION_CODE" bundleRelease
         working-directory: native-android
 
+      - name: Ensure Play changelog for computed versionCode
+        env:
+          VERSION_CODE: ${{ steps.build_meta.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          CHANGELOG_DIR="native-android/fastlane/metadata/android/en-US/changelogs"
+          TARGET="${CHANGELOG_DIR}/${VERSION_CODE}.txt"
+          if [ -f "$TARGET" ]; then
+            echo "Changelog already present: ${VERSION_CODE}.txt"
+            exit 0
+          fi
+          for SOURCE in \
+            "${CHANGELOG_DIR}/1781016382.txt" \
+            "${CHANGELOG_DIR}/1778679357.txt" \
+            "${CHANGELOG_DIR}/default.txt"; do
+            if [ -f "$SOURCE" ]; then
+              cp "$SOURCE" "$TARGET"
+              echo "Copied $(basename "$SOURCE") -> ${VERSION_CODE}.txt"
+              python3 scripts/check_store_changelog_policy.py
+              exit 0
+            fi
+          done
+          echo "❌ No changelog source found for versionCode ${VERSION_CODE}"
+          exit 1
+
       - name: Upload to Google Play (track)
         env:
           GOOGLE_PLAY_JSON_KEY: /tmp/play-service-account.json
