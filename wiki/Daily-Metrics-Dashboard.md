@@ -8,13 +8,13 @@
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
 | Distinct install users (30d) | 59 | 668 | 727 |
-| Active Installs | — | 673 | — |
+| Active Installs | — | 672 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 52 |
-| WAU | 201 |
-| MAU | 741 |
+| WAU | 192 |
+| MAU | 740 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 10 |
-| Timer Completed (7d) | 179 |
-| Completed Users (7d) | 27 |
-| Sessions/Completed User (7d) | 6.63 |
+| Timer Completed (7d) | 177 |
+| Completed Users (7d) | 25 |
+| Sessions/Completed User (7d) | 7.08 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,11 +38,11 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-09T20:01:46+00:00
+**Generated:** 2026-06-10T01:23:14+00:00
 
 ## Onboarding Funnel
 - First Open: **728**
-- First Timer Configured: **356** (48.9% of opens)
+- First Timer Configured: **357** (49.0% of opens)
 - First Timer Completed: **81** (11.1% of opens)
 
 ## UTM Attribution (Top Sources)
@@ -61,15 +61,17 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 658 |
+| Paywall Views | 664 |
 | Offer Selects | 51 |
 | Purchase Attempts | 4 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** failed (257), user_cancelled (6), cancelled (2), item_unavailable (2)
+**Top failure reasons:** failed (255), user_cancelled (6), cancelled (2), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (435), elite_tactical (375), pro_base (264)
+**Catalog failures (Android):** none
+
+_Data quality: stale; latest read issue: `paywall conversion snapshot degraded`._
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -78,7 +80,7 @@
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
 | First Open | 728 | — |
-| First Timer Configured | 356 | 48.9% of opens |
+| First Timer Configured | 357 | 49.0% of opens |
 | First Timer Completed | 81 | 11.1% of opens |
 <!-- FUNNEL_END -->
 
@@ -155,18 +157,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09"]
+    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10"]
     y-axis "Downloads"
-    line [56 , 58 , 58 , 58 , 58 , 58 , 58 , 59 , 59 , 60 , 60 , 60 , 59 , 59]
-    line [619 , 619 , 618 , 618 , 618 , 617 , 618 , 621 , 621 , 621 , 623 , 638 , 664 , 668]
+    line [58 , 58 , 58 , 58 , 58 , 58 , 59 , 59 , 60 , 60 , 60 , 59 , 59 , 59]
+    line [619 , 618 , 618 , 618 , 617 , 618 , 621 , 621 , 621 , 623 , 638 , 664 , 668 , 668]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09"]
+    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10"]
     y-axis "Users"
-    line [7 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 9 , 10 , 10]
+    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 9 , 10 , 10 , 10]
 ```
 
 ```mermaid
@@ -194,4 +196,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-09T20:01:48+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-10T01:23:16+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
