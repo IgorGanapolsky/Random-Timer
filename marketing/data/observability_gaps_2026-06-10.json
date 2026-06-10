@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-06-10T19:52:00Z",
+  "audit_id": "observability_gaps_2026-06-10",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "posthog_project_id": 299775,
+  "summary": {
+    "highest_gap": "ios_posthog_error_tracking_autocapture_missing",
+    "fix_action": "PR feat/ios-posthog-error-tracking — PostHogAnalyticsConfigFactory + SDK bump ≥3.46",
+    "blocking_failures_operational_bundle": 0
+  },
+  "gaps": [
+    {
+      "id": "exception_taxonomy_empty",
+      "severity": "critical",
+      "status": "open",
+      "evidence": "execute-sql 30d: $exception total=0; taxonomy warns event not in project; error_tracking issues=0",
+      "root_cause": "iOS never enabled errorTrackingConfig.autoCapture; Android enabled in #1749 but no field $exception yet (likely no fatals in window)"
+    },
+    {
+      "id": "ios_error_tracking_parity",
+      "severity": "critical",
+      "status": "fix_in_pr",
+      "evidence": "Android PostHogAnalyticsConfigFactory.kt L21 autoCapture; iOS AnalyticsService.swift had no errorTrackingConfig (develop 3.41.1 lacks API)",
+      "fix": "feat/ios-posthog-error-tracking"
+    },
+    {
+      "id": "sdk_version_skew",
+      "severity": "high",
+      "status": "fix_in_pr",
+      "evidence": "repo: Android posthog-android 3.47.4 (libs.versions.toml); iOS Package.resolved 3.41.1; live 7d: android 3.47.4=3354 vs ios 3.41.1=2126 events",
+      "fix": "iOS minimumVersion 3.46.0 → resolved 3.59.3 in PR"
+    },
+    {
+      "id": "error_tracking_symbol_sets",
+      "severity": "high",
+      "status": "open",
+      "evidence": "error-tracking-symbol-sets-list count=0",
+      "fix": "Wire R8/ProGuard + dSYM upload in native-release CI"
+    },
+    {
+      "id": "crashlytics_bq_empty",
+      "severity": "high",
+      "status": "open",
+      "evidence": "executive_metrics.json crashlytics_bigquery.status=skipped reason=BigQuery dataset exists but no tables yet",
+      "fix": "Enable Crashlytics BQ streaming export; set CRASHLYTICS_SERVICE_ACCOUNT_JSON in CI"
+    },
+    {
+      "id": "engagement_dashboard_stale",
+      "severity": "medium",
+      "status": "open",
+      "evidence": "engagement_dashboard.json generated_at=2026-05-12; local run skipped missing POSTHOG credentials",
+      "fix": "Refresh via wqtu-health.yml / engagement_dashboard.py when POSTHOG_* present"
+    },
+    {
+      "id": "store_ledger_not_wired",
+      "severity": "medium",
+      "status": "open",
+      "evidence": "operational_verification_bundle revenue_goal.store_ledger_metric_id=not_wired_in_executive_snapshot; store_ledger_revenue_usd_30d=null",
+      "fix": "Wire ASC+Play ledger into executive_metrics_snapshot.py"
+    },
+    {
+      "id": "executive_metrics_stale",
+      "severity": "advisory",
+      "status": "open",
+      "evidence": "operational_verification_bundle artifact_fresh_executive_metrics.json age_hours=51.55 stale=true",
+      "fix": "Run executive_metrics_snapshot.py in CI/local"
+    }
+  ],
+  "operational_verification_bundle": {
+    "path": "marketing/data/operational_verification_bundle.json",
+    "generated_at": "2026-06-10T19:48:35Z",
+    "blocking_failures": 0,
+    "advisory_fail": ["public_store_ios", "artifact_fresh_executive_metrics.json"],
+    "command": "python3 scripts/operational_verification_bundle.py"
+  }
+}
