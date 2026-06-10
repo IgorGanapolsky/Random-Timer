@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-10T17:05:34Z",
-  "source": "issue_1684_closed_s25_catalog_ok_2026_06_10",
+  "generated_at": "2026-06-10T18:02:05Z",
+  "source": "posthog_first_purchase_success_s25_2026_06_10",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
@@ -24,27 +24,44 @@
     "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
-    "paywall_purchase_attempt today app_version=1.3.55 device_model=SM-S931U1",
-    "paywall_purchase_success 30d (telemetry proxy, not ledger revenue)",
+    "paywall_purchase_success 7d count (telemetry proxy, not ledger revenue)",
+    "paywall_purchase_success properties on SM-S931U1 1.3.55",
     "billing_product_catalog_status 7d breakdown by status"
   ],
-  "snapshot": "Issue #1684 CLOSED 2026-06-10T17:04:50Z. S25 (SM-S931U1) on Play-installed 1.3.55: billing catalog ok + paywall_purchase_attempt @ 2026-06-10T17:03:49Z (elite_tactical). paywall_purchase_success still 0 (30d and today). Next gate: convert attempt→success on retail cohort before paid ads.",
+  "snapshot": "First paywall_purchase_success telemetry on S25 (SM-S931U1) Play-installed 1.3.55 @ 2026-06-10T18:00:04Z — product_id=elite_tactical, revenue_telemetry=29.99. Unintended retail charge GPA.3311-0689-1321-89557 (CEO not on license testers). PostHog 7d: 1 success / 1 user. Issue #1684 CLOSED.",
   "counts": {
+    "purchase_success_7d": 1,
+    "purchase_success_30d": 1,
+    "purchase_success_distinct_users_7d": 1,
     "purchase_attempts_today_1_3_55": 1,
     "purchase_attempts_today_total": 1,
-    "purchase_success_today": 0,
+    "purchase_success_today": 1,
     "purchase_attempts_30d": 5,
-    "purchase_success_30d": 0,
     "play_api_version_name": "1.3.55",
     "play_api_version_code": 1781012436,
     "public_listing_version_name": "1.3.43",
     "issue_1684_state": "CLOSED"
   },
-  "decision": "issue_1684_closed_pursue_attempt_to_success",
+  "first_purchase_success_telemetry": {
+    "timestamp": "2026-06-10T18:00:04Z",
+    "app_version": "1.3.55",
+    "device_model": "SM-S931U1",
+    "platform": "android",
+    "product_id": "elite_tactical",
+    "revenue_telemetry": 29.99,
+    "source": "paywall",
+    "entry_point": "range_gate",
+    "license_tester": false,
+    "play_order_id": "GPA.3311-0689-1321-89557",
+    "ledger_revenue": true,
+    "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
+  },
+  "decision": "first_purchase_success_telemetry_confirmed_retail_charge_refund",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "attempt_to_success: reproduce S25 purchase flow; capture paywall_purchase_success or paywall_purchase_result failure reason on 1.3.55",
+    "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
+    "license_tester: add iganapolsky@gmail.com to Play Console Settings → License testing",
     "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
-    "Hold paid ads until paywall attempt→success > 0 on production retail cohort"
+    "Hold paid ads until license-tester IAP QA and attempt→success validated without retail charges"
   ]
 }
