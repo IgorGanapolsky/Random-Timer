@@ -83,6 +83,10 @@ internal val HIGH_INTENT_ANNUAL_ENTRY_POINTS: Set<String> =
         "repeat_gate",
     )
 
+/** High-intent gates keep dismiss in the sticky footer only so users see value + CTA first. */
+internal fun shouldShowTopPaywallDismiss(entryPoint: String): Boolean =
+    entryPoint !in HIGH_INTENT_ANNUAL_ENTRY_POINTS
+
 internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
     when (entryPoint) {
         "setup_upgrade_cta" ->
@@ -312,17 +316,19 @@ fun PaywallSheet(
                         .padding(bottom = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    text = "Not now",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TimerColors.TextSecondary,
-                    modifier =
-                        Modifier
-                            .align(Alignment.Start)
-                            .clickable(onClick = onDismiss),
-                )
+                if (shouldShowTopPaywallDismiss(entryPoint)) {
+                    Text(
+                        text = "Not now",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TimerColors.TextSecondary,
+                        modifier =
+                            Modifier
+                                .align(Alignment.Start)
+                                .clickable(onClick = onDismiss),
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 Text(
                     text = headline,
