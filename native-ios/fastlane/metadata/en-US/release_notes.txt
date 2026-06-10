@@ -1,1 +1,1 @@
-Monthly Pro content update — June 2026
+Version 1.3.55 — billing catalog parity with Android, paywall telemetry improvements, and training stability fixes. Unlock Pro with annual, monthly, or lifetime plans; combat voice callouts and 60-minute random windows for fight-ready drills.

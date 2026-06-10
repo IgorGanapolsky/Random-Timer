@@ -59,6 +59,16 @@ class ProManager
              *  subscription product with billing period P1M under the same base plan as ELITE. */
             const val MONTHLY_PRODUCT_ID = "elite_tactical_monthly"
 
+            internal const val BILLING_READY_DEFAULT_ATTEMPTS = 6
+            internal const val BILLING_READY_PURCHASE_LAUNCH_ATTEMPTS = 16
+
+            internal fun billingReadyMaxAttempts(forPurchaseLaunch: Boolean): Int =
+                if (forPurchaseLaunch) {
+                    BILLING_READY_PURCHASE_LAUNCH_ATTEMPTS
+                } else {
+                    BILLING_READY_DEFAULT_ATTEMPTS
+                }
+
             internal fun canUseDebugUnlock(
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
             ): Boolean = true
@@ -413,7 +423,7 @@ class ProManager
                 return true
             }
             connectAndRestore()
-            val maxAttempts = if (purchaseLaunch) 16 else 6
+            val maxAttempts = billingReadyMaxAttempts(purchaseLaunch)
             repeat(maxAttempts) {
                 delay(500)
                 if (billingClient.isReady) {

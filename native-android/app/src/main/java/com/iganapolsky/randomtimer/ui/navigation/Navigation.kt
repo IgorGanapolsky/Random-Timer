@@ -95,7 +95,8 @@ fun RandomTimerNavHost(
             proPrice = viewModel.proManager.getFormattedPrice(ProManager.PRO_PRODUCT_ID)
             monthlyPrice = viewModel.proManager.getFormattedMonthlyPrice()
             lifetimePrice = viewModel.proManager.getFormattedPrice(ProManager.BASE_PRODUCT_ID)
-            paywallAvailableProductIds = viewModel.proManager.availablePaywallProductIds()
+            paywallAvailableProductIds =
+                viewModel.proManager.availablePaywallProductIds(forPurchaseLaunch = true)
             paywallBillingCatalogProbed = true
             paywallBillingReady = viewModel.proManager.isBillingClientReady()
             paywallEntryPoint = paywallEntryPointForFeature(feature)

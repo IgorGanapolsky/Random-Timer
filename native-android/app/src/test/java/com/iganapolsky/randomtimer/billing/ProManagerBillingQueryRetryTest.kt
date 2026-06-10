@@ -13,4 +13,12 @@ class ProManagerBillingQueryRetryTest {
             ),
         )
     }
+
+    @Test
+    fun paywallOpenCatalogProbeUsesExtendedBillingReadyRetry() {
+        assertTrue(
+            ProManager.billingReadyMaxAttempts(forPurchaseLaunch = true) >
+                ProManager.billingReadyMaxAttempts(forPurchaseLaunch = false),
+        )
+    }
 }
