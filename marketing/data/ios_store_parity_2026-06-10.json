@@ -1,0 +1,70 @@
+{
+  "source": "gsd_ios_store_parity_stream_a",
+  "generated_at": "2026-06-10T19:52:14Z",
+  "revenue_goal_usd_per_day": 100,
+  "repo_parity": {
+    "develop_ios_marketing_version": "1.3.55",
+    "develop_android_version_name": "1.3.55",
+    "release_branch": "release/v1.3.55",
+    "release_sha": "3acb5ebc7714",
+    "bump_needed": false,
+    "evidence": "git show origin/develop:native-ios/RandomTimer.xcodeproj/project.pbxproj | rg MARKETING_VERSION; git show origin/develop:native-android/app/build.gradle.kts | rg versionName"
+  },
+  "public_store_readback": {
+    "command": "python3 scripts/verify_public_store_versions.py --platform both --json-out /tmp/store_versions.json",
+    "expected_source": "github_latest_release",
+    "ios": {
+      "status": "VERSION_MISMATCH",
+      "expected_version": "1.3.55",
+      "observed_version": "1.3.43",
+      "url": "https://itunes.apple.com/lookup?id=6758355312&country=US",
+      "semantics": "itunes_lookup_public_version_field_not_App_Store_Connect_ground_truth"
+    },
+    "android": {
+      "status": "PUBLIC",
+      "expected_version": "1.3.55",
+      "observed_version": "1.3.55",
+      "url": "https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer",
+      "semantics": "embedded_play_html_141_string_proxy_not_Play_Console_ground_truth"
+    },
+    "public_parity_pass": false
+  },
+  "release_readiness": {
+    "ios_fastlane_metadata_en_us_release_notes": "Monthly Pro content update — June 2026",
+    "missing_release_notes_md": "release-notes/1.3.55.md",
+    "missing_android_changelog": "native-android/fastlane/metadata/android/en-US/changelogs/1778679357.txt",
+    "fix_pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1785"
+  },
+  "native_release_dispatch": {
+    "can_dispatch_now": false,
+    "workflow": "https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/native-release.yml",
+    "latest_failed_run": {
+      "url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27301825232",
+      "branch": "release/v1.3.55",
+      "failed_job": "internal-proof-or-waive",
+      "reason": "missing required status internal-signoff/testflight on release SHA (firebase present, testflight absent)"
+    },
+    "last_android_only_success": {
+      "url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27219020294",
+      "note": "ios-testflight skipped; Android shipped 1.3.55 to Play production"
+    }
+  },
+  "signoff_gates": {
+    "testflight_signoff": {
+      "environment_url": "https://github.com/IgorGanapolsky/Random-Timer/deployments/activity_log?environments_filter=testflight-signoff",
+      "required_reviewer": "IgorGanapolsky",
+      "internal_distribution_run_waiting": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27301876671",
+      "waiting_job": "iOS TestFlight Signoff"
+    },
+    "production_signoff": {
+      "environment_url": "https://github.com/IgorGanapolsky/Random-Timer/deployments/activity_log?environments_filter=production-signoff",
+      "required_reviewer": "IgorGanapolsky",
+      "blocks": "native-release require-production-signoff job after internal proof"
+    },
+    "release_sha_statuses": {
+      "internal-signoff/firebase": "success",
+      "internal-signoff/testflight": "missing"
+    }
+  },
+  "next_action": "CEO approve testflight-signoff on internal-distribution run 27301876671; merge PR 1785 for release-notes/1.3.55.md; re-dispatch native-release on release/v1.3.55 with platform=both"
+}
