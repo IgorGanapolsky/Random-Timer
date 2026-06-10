@@ -147,6 +147,15 @@ class PaywallSheetTest {
     }
 
     @Test
+    fun `high intent gates hide top dismiss link`() {
+        assertEquals(false, shouldShowTopPaywallDismiss("voice_gate"))
+        assertEquals(false, shouldShowTopPaywallDismiss("repeat_gate"))
+        assertEquals(false, shouldShowTopPaywallDismiss("qualified_training_gate"))
+        assertEquals(true, shouldShowTopPaywallDismiss("unknown"))
+        assertEquals(true, shouldShowTopPaywallDismiss("setup_upgrade_cta"))
+    }
+
+    @Test
     fun `known billing catalog hides unavailable paywall plans`() {
         val availableProductIds =
             setOf(
