@@ -1,21 +1,24 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-10T17:11:33+00:00
+Generated: 2026-06-10T18:10:04+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **679**
-- Offer Selects: **55**
-- Purchase Attempts: **5**
-- Purchase Successes: **0**
-- View -> Offer Select: **8.1%**
-- Select -> Purchase Attempt: **9.1%**
-- Attempt -> Purchase Success: **0.0%**
+- Views: **680**
+- Offer Selects: **56**
+- Purchase Attempts: **6**
+- Purchase Successes: **1**
+- View -> Offer Select: **8.2%**
+- Select -> Purchase Attempt: **10.7%**
+- Attempt -> Purchase Success: **16.7%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| (none) | 0 |
+| failed | 255 |
+| user_cancelled | 6 |
+| cancelled | 2 |
+| item_unavailable | 2 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
@@ -29,7 +32,7 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical | 15 | 2 | 0 | 13.3% | 0.0% |
+| android | elite_tactical | 16 | 3 | 1 | 18.8% | 33.3% |
 | android | elite_tactical_monthly | 33 | 1 | 0 | 3.0% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -44,7 +47,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 310 | 2 | 0 | 0.7% | 0.0% |
+| range_gate | 311 | 3 | 1 | 1.0% | 33.3% |
 | voice_gate | 230 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 35 | 0 | 0 | 0.0% | 0.0% |
@@ -71,13 +74,9 @@ Window (days): 30
 | vibration_enabled | 638 | 237 |
 | repeat_rounds | 432 | 127 |
 | voice_gender | 378 | 231 |
-| use_extended_range | 307 | 171 |
+| use_extended_range | 308 | 172 |
 | unknown | 115 | 6 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
-
-## Query Diagnostics
-- Query errors: **1**
-- Last error: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`
