@@ -27,7 +27,7 @@ echo "== Launch + paywall affordance tap =="
 adb logcat -c
 adb shell am force-stop "$PACKAGE" 2>/dev/null || true
 sleep 1
-adb shell am start -n "$PACKAGE/$ACTIVITY"
+adb shell am start -n "$ACTIVITY"
 sleep 8
 
 if wait_for_text "PRO: 1H" 15; then
