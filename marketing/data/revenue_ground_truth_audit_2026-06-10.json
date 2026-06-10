@@ -1,0 +1,236 @@
+{
+  "generated_at": "2026-06-10T19:52:19Z",
+  "audit_id": "revenue_ground_truth_audit_2026-06-10",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "business_goal_usd_per_day_after_tax": 100.0,
+  "evidence": {
+    "posthog_mcp": "execute-sql project 299775 @ 2026-06-10T19:50-19:52Z",
+    "admob_snapshot": "python3 scripts/admob_metrics_snapshot.py @ 2026-06-10T19:48:48Z",
+    "gh_secrets": "gh secret list (names only, no values)",
+    "artifact_reads": [
+      "marketing/data/executive_metrics.json",
+      "marketing/data/monetization_decision_brief.json",
+      "marketing/data/post_publish_gate.json",
+      "marketing/data/admob_status.json",
+      "marketing/data/apple_ads_live_metrics.json",
+      "marketing/data/north_star.json",
+      "marketing/data/play_iap_catalog.json"
+    ]
+  },
+  "verdict": {
+    "ledger_revenue_usd_30d": "unknown_not_wired",
+    "posthog_purchase_success_telemetry_30d": 1,
+    "posthog_revenue_telemetry_usd_30d": 29.99,
+    "gap_vs_100_per_day_goal": 100.0,
+    "claim_safe_revenue": false,
+    "summary": "One Android retail IAP telemetry event ($29.99) on 1.3.55; store ledger proceeds not wired; executive snapshot stale (shows 0 successes)."
+  },
+  "posthog_90d": {
+    "window_days": 90,
+    "query": "events WHERE event LIKE paywall_% OR billing_% (90d)",
+    "paywall_purchase_success": {
+      "events_90d": 2,
+      "events_30d": 1,
+      "events_7d": 1,
+      "distinct_persons_90d": 2,
+      "revenue_telemetry_usd_30d": 29.99,
+      "metric_id": "posthog_hogql_count_events_paywall_purchase_success",
+      "note": "Telemetry proxy — not App Store Connect or Play ledger proceeds."
+    },
+    "paywall_purchase_attempt": {
+      "events_90d": 111,
+      "events_30d": 6
+    },
+    "paywall_purchase_result": {
+      "events_90d": 721,
+      "distinct_persons_90d": 382
+    },
+    "billing_product_not_found": {
+      "events_90d": 2081,
+      "distinct_persons_90d": 442
+    },
+    "billing_product_catalog_status_90d": {
+      "empty": 302,
+      "missing_required_products": 60,
+      "ok": 58,
+      "product_details_unsupported": 27,
+      "play_store_update_required": 14,
+      "billing_not_ready": 9,
+      "catalog_query_failed": 2
+    },
+    "purchase_success_rows": [
+      {
+        "timestamp": "2026-06-10T18:00:04Z",
+        "app_version": "1.3.55",
+        "platform": "android",
+        "product_id": "elite_tactical",
+        "revenue_telemetry": 29.99,
+        "note": "Unintended retail charge GPA.3311-0689-1321-89557 per monetization_decision_brief"
+      },
+      {
+        "timestamp": "2026-03-31T21:52:05Z",
+        "app_version": "1.3.15",
+        "platform": "ios",
+        "product_id": "com.igorganapolsky.randomtimer.elite",
+        "revenue_telemetry": null,
+        "note": "Legacy success without revenue property"
+      }
+    ],
+    "other_paywall_billing_events_top": [
+      {"event": "paywall_restore_result", "events": 2926},
+      {"event": "paywall_viewed", "events": 1810},
+      {"event": "paywall_dismissed", "events": 1522},
+      {"event": "billing_client_setup", "events": 232},
+      {"event": "billing_product_query_retry", "events": 319},
+      {"event": "paywall_purchase_failed", "events": 5}
+    ]
+  },
+  "play_developer_api": {
+    "gh_secret_names": ["GOOGLE_PLAY_JSON_KEY"],
+    "local_status": "skipped",
+    "local_reason": "Missing GOOGLE_PLAY_JSON_KEY or GOOGLE_PLAY_JSON_KEY_PATH",
+    "committed_catalog_snapshot": {
+      "path": "marketing/data/play_iap_catalog.json",
+      "generated_at": "2026-06-10T09:01:34Z",
+      "status": "ok",
+      "subscriptions": ["elite_tactical", "elite_tactical_monthly"],
+      "subscription_purchase_blockers": []
+    },
+    "revenue_from_play_api": {
+      "wired": false,
+      "note": "GOOGLE_PLAY_JSON_KEY enables Publisher API (catalog, voidedpurchases.list). Earnings/proceeds require Play Developer Reporting financial stats or Console earnings export — not implemented."
+    }
+  },
+  "admob": {
+    "committed_path": "marketing/data/admob_status.json",
+    "previous_generated_at": "2026-06-10T15:32:45Z",
+    "live_generated_at": "2026-06-10T19:48:48Z",
+    "freshness_hours_at_audit": 4.3,
+    "stale_threshold_hours": 24,
+    "stale": false,
+    "app_ads_txt_all_pass": true,
+    "api_read": {
+      "attempted": true,
+      "result": "HTTP 403 Forbidden",
+      "note": "No ADMOB_* GitHub secret; local ADC lacks AdMob API quota/project. app-ads.txt hosting verified; rewarded ads not production-ready."
+    },
+    "rewarded_rollout_ready": false
+  },
+  "artifact_contradictions": [
+    {
+      "severity": "high",
+      "id": "executive_metrics_stale_zero_success",
+      "artifacts": ["executive_metrics.json", "live PostHog"],
+      "field": "revenue_goal.events_paywall_purchase_success_30d",
+      "artifact_value": 0,
+      "live_value": 1,
+      "artifact_generated_at": "2026-06-08T16:15:37+00:00",
+      "resolution": "Re-run scripts/executive_metrics_snapshot.py in CI"
+    },
+    {
+      "severity": "high",
+      "id": "ledger_revenue_flag_misleading",
+      "artifacts": ["monetization_decision_brief.json", "post_publish_gate.json"],
+      "field": "first_purchase_success_telemetry.ledger_revenue",
+      "artifact_value": true,
+      "contract_expectation": "false_or_null_until_store_ledger_wired",
+      "resolution": "Rename to retail_charge_confirmed or wire ASC/Play proceeds before true"
+    },
+    {
+      "severity": "medium",
+      "id": "public_listing_vs_play_api",
+      "artifacts": ["post_publish_gate.json", "monetization_decision_brief.json"],
+      "field": "store_public_pass / observed_version",
+      "artifact_value": "1.3.43 public vs 1.3.55 Play API production completed",
+      "resolution": "Advisory tier-2 lag; not a revenue contradiction"
+    },
+    {
+      "severity": "aligned",
+      "id": "monetization_brief_success_count",
+      "artifacts": ["monetization_decision_brief.json", "post_publish_gate.json", "live PostHog"],
+      "field": "purchase_success_30d",
+      "value": 1
+    },
+    {
+      "severity": "aligned",
+      "id": "store_ledger_null_everywhere",
+      "artifacts": ["executive_metrics.json", "operational_verification_bundle"],
+      "field": "store_ledger_metric_id",
+      "value": "not_wired_in_executive_snapshot"
+    }
+  ],
+  "apple_ads_and_paid_attribution_30d": {
+    "apple_ads_api": {
+      "path": "marketing/data/apple_ads_live_metrics.json",
+      "generated_at": "2026-06-10T18:10:51+00:00",
+      "campaign_status": "PAUSED",
+      "serving_status": "NOT_RUNNING",
+      "spend_usd": 0.0,
+      "taps": 0,
+      "installs": 0
+    },
+    "posthog_paid_attribution": {
+      "north_star_guardrail_paid_distinct_users_30d": 0,
+      "north_star_reason": "no active paid campaigns (apple_ads PAUSED)",
+      "apple_ads_attribution_event_30d": {
+        "events": 13,
+        "distinct_persons": 13
+      },
+      "paid_utm_broad_query_distinct_persons_30d": 29,
+      "paid_utm_note": "Broad UTM predicate includes web/gmail noise; north_star guardrail correctly reports 0 while campaigns paused."
+    },
+    "gh_secret_names_apple_ads": [
+      "APPLE_ADS_CLIENT_ID",
+      "APPLE_ADS_KEY_ID",
+      "APPLE_ADS_ORG_ID",
+      "APPLE_ADS_PRIVATE_KEY",
+      "APPLE_ADS_TEAM_ID"
+    ]
+  },
+  "store_ledger_not_wired": {
+    "current_state": {
+      "store_ledger_revenue_usd_30d": null,
+      "store_ledger_metric_id": "not_wired_in_executive_snapshot",
+      "hardcoded_in": [
+        "scripts/executive_metrics_snapshot.py",
+        "scripts/operational_verification_bundle.py"
+      ]
+    },
+    "path_to_wire": [
+      {
+        "step": 1,
+        "action": "Extend scripts/real_store_downloads.py (or new scripts/store_ledger_snapshot.py) to sum iOS Developer Proceeds from ASC SALES/SUMMARY daily reports (Developer Proceeds column) over trailing 30d",
+        "secrets": ["APPSTORE_VENDOR_NUMBER", "APPSTORE_KEY_ID", "APPSTORE_ISSUER_ID", "APPSTORE_PRIVATE_KEY"],
+        "metric_id": "app_store_connect_sales_reports_developer_proceeds_sum_30d"
+      },
+      {
+        "step": 2,
+        "action": "Add Android Play earnings: Play Developer Reporting API financial stats or Play Console earnings export parsed to USD proceeds (Publisher API voidedpurchases is refunds-only)",
+        "secrets": ["GOOGLE_PLAY_JSON_KEY"],
+        "metric_id": "google_play_developer_reporting_earnings_usd_30d"
+      },
+      {
+        "step": 3,
+        "action": "Populate revenue_goal.store_ledger_revenue_usd_30d in executive_metrics_snapshot.py _revenue_goal_section(); set store_ledger_metric_id to combined metric bundle id",
+        "file": "scripts/executive_metrics_snapshot.py"
+      },
+      {
+        "step": 4,
+        "action": "Add operational_verification_bundle check comparing posthog paywall revenue proxy vs store_ledger delta; fail advisory when proxy>0 and ledger null",
+        "file": "scripts/operational_verification_bundle.py"
+      },
+      {
+        "step": 5,
+        "action": "Schedule in .github/workflows/executive-metrics.yml alongside existing executive_metrics_snapshot.py run"
+      }
+    ],
+    "related_gap_doc": "marketing/data/observability_gaps_2026-06-10.json gaps[].id=store_ledger_not_wired"
+  },
+  "recommended_actions": [
+    "Refund Play order GPA.3311-0689-1321-89557; add CEO to Play license testers before further IAP QA",
+    "Refresh executive_metrics.json (stale 2d; shows 0 purchase successes)",
+    "Remove or relabel ledger_revenue:true in monetization/post_publish artifacts until store ledger wired",
+    "Wire store ledger proceeds per store_ledger_not_wired.path_to_wire before claiming earned revenue",
+    "Hold paid ads until license-tester IAP QA validated (Apple Ads already PAUSED $0 spend)"
+  ]
+}
