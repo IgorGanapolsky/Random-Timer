@@ -27,6 +27,7 @@ PRO TACTICAL (OPTIONAL)
 • Command-style previews and elapsed-time callouts for pressure drills
 • Sound Arsenal: bells, horns, sirens, and expanded alarm library
 • Up to 60-minute sessions and structured round loops
+• Fresh Pro voice callouts and sounds added monthly
 
 HOW IT WORKS
 1. Set your range (e.g. 15 seconds to 3 minutes)
