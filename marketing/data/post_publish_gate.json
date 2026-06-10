@@ -53,7 +53,11 @@
       "entry_point": "range_gate",
       "license_tester": false,
       "play_order_id": "GPA.3311-0689-1321-89557",
-      "ledger_revenue": true,
+      "revenue_semantics": "telemetry_proxy",
+      "telemetry_proxy": true,
+      "ledger_revenue": false,
+      "ground_truth": false,
+      "metric_id": "posthog_hogql_paywall_purchase_success_not_store_ledger",
       "note": "Unintended retail charge — CEO account not on Play license testers; refund initiated via Play Console Orders."
     }
   },
