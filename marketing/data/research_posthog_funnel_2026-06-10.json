@@ -1,0 +1,193 @@
+{
+  "generated_at": "2026-06-10T19:50:22Z",
+  "source": "posthog_mcp_execute_sql",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "proxy_labels": {
+    "paywall_purchase_success": "telemetry proxy — not App Store / Play ledger revenue",
+    "revenue_gap": "modeled from annual price; store fee assumed 15% (85% net) unless noted"
+  },
+  "query_window_utc": "2026-06-10T19:48–19:50Z",
+  "north_star": {
+    "metric": "WQTU",
+    "definition": "distinct persons with >=3 timer_completed in trailing 7 days",
+    "wqtu_7d": 11,
+    "window": "trailing 7d as of 2026-06-10",
+    "quarter_target_2026_06_30": 25,
+    "checkpoint_target_2026_03_31": 8,
+    "on_track_vs_quarter": false,
+    "timer_completed_7d_events": 153,
+    "timer_completed_7d_users": 24,
+    "trend_30d_rolling_wqtu": {
+      "window": "daily snapshot, trailing 7d per snapshot_date, 2026-05-12 → 2026-06-10",
+      "min": 4,
+      "max": 13,
+      "latest": 10,
+      "series": [
+        {"date": "2026-05-12", "wqtu": 6},
+        {"date": "2026-05-19", "wqtu": 13},
+        {"date": "2026-05-26", "wqtu": 7},
+        {"date": "2026-06-02", "wqtu": 4},
+        {"date": "2026-06-09", "wqtu": 10},
+        {"date": "2026-06-10", "wqtu": 10}
+      ],
+      "note": "Dipped to 4 early Jun; recovered to 10–11 by 2026-06-09"
+    }
+  },
+  "paywall_funnel_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "viewed_users": 238,
+    "attempt_users": 4,
+    "success_users": 1,
+    "viewed_events": 793,
+    "attempt_events": 6,
+    "success_events": 1,
+    "ratios": {
+      "view_to_attempt_user_rate": 0.0168,
+      "attempt_to_success_user_rate": 0.25,
+      "view_to_success_user_rate": 0.0042,
+      "view_to_attempt_pct": "1.68%",
+      "attempt_to_success_pct": "25.00%",
+      "view_to_success_pct": "0.42%"
+    }
+  },
+  "cohort_app_version_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "split_rule": "1.3.55+ = properties.$app_version exactly '1.3.55' (only >=1.3.55 build in window)",
+    "cohorts": {
+      "1.3.55+": {
+        "catalog_probe_users": 11,
+        "catalog_ok_users": 1,
+        "catalog_ok_rate": 0.0909,
+        "paywall_view_users": 2,
+        "attempt_users": 1,
+        "success_users": 1,
+        "attempt_rate_of_viewers": 0.5,
+        "success_rate_of_attempts": 1.0
+      },
+      "older": {
+        "catalog_probe_users": 225,
+        "catalog_ok_users": 8,
+        "catalog_ok_rate": 0.0356,
+        "paywall_view_users": 168,
+        "attempt_users": 3,
+        "success_users": 0,
+        "attempt_rate_of_viewers": 0.0179,
+        "success_rate_of_attempts": 0.0
+      }
+    },
+    "interpretation": "1.3.55+ shows first purchase success (1/1 attempt) and 2.5× catalog-ok user rate vs older; sample tiny (11 probe users)"
+  },
+  "failure_breakdown_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "billing_product_catalog_status": [
+      {"status": "empty", "events": 302, "users": 175},
+      {"status": "missing_required_products", "events": 60, "users": 21},
+      {"status": "ok", "events": 58, "users": 9},
+      {"status": "product_details_unsupported", "events": 27, "users": 27},
+      {"status": "play_store_update_required", "events": 14, "users": 13},
+      {"status": "billing_not_ready", "events": 9, "users": 8},
+      {"status": "catalog_query_failed", "events": 2, "users": 2}
+    ],
+    "paywall_purchase_result": [
+      {"result": "failed", "events": 254, "users": 112},
+      {"result": "cancelled", "events": 2, "users": 1},
+      {"result": "user_cancelled", "events": 1, "users": 1},
+      {"result": "success", "events": 1, "users": 1}
+    ],
+    "product_not_found": {
+      "events": 0,
+      "users": 0,
+      "note": "no billing_product_catalog_status rows with status=product_not_found in 30d; nearest proxy is missing_required_products (60 events / 21 users)"
+    }
+  },
+  "activation_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "open_users": 1105,
+    "completed_users": 88,
+    "open_to_completed_rate": 0.0796,
+    "open_to_completed_pct": "7.96%",
+    "guardrail_target_pct": "25%",
+    "guardrail_met": false,
+    "events_used": ["Application Opened", "app_open"]
+  },
+  "stickiness_timer_completed_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "distinct_completers": 88,
+    "distribution": {
+      "1_completion": 40,
+      "2_completions": 20,
+      "3_completions": 8,
+      "4_plus_completions": 20,
+      "max_single_user_completions": 219
+    },
+    "users_with_3plus_in_30d": 28,
+    "median_bucket": "1 completion (40 users, 45% of completers)"
+  },
+  "platform_split_30d": {
+    "window": "2026-05-11 → 2026-06-10",
+    "property": "properties.platform",
+    "rows": [
+      {
+        "platform": "ios",
+        "timer_completed_users": 33,
+        "timer_completed_events": 519,
+        "paywall_view_users": 22,
+        "purchase_success_users": 0
+      },
+      {
+        "platform": "android",
+        "timer_completed_users": 55,
+        "timer_completed_events": 85,
+        "paywall_view_users": 147,
+        "purchase_success_users": 1
+      }
+    ],
+    "note": "Android drives paywall views (147 vs 22) but lower completions-per-user; only Android has purchase_success telemetry"
+  },
+  "revenue_gap_math": {
+    "business_target_usd_per_day_net": 100,
+    "price_usd_per_year": 29.99,
+    "store_fee_assumption": 0.15,
+    "net_retention_after_store": 0.85,
+    "gross_daily_per_active_annual_sub": 0.0821,
+    "net_daily_per_active_annual_sub": 0.0698,
+    "active_annual_subs_needed_for_100_day_net": 1432,
+    "current_telemetry_proxy_30d": {
+      "purchase_success_events": 1,
+      "implied_avg_daily_gross": 0.033,
+      "implied_avg_daily_net_85pct": 0.028
+    },
+    "gap_active_subs": 1431,
+    "formula": "100 / ((29.99/365) * 0.85) ≈ 1432 active annual subs at steady state"
+  },
+  "top_interventions_ranked": [
+    {
+      "rank": 1,
+      "title": "Eliminate Android billing catalog empty (175 users / 302 events)",
+      "expected_impact": "Revenue + WQTU",
+      "rationale": "empty catalog is #1 billing failure; Android has 147 paywall views vs 22 iOS; 1.3.55+ already shows ok→attempt→success on fixed build"
+    },
+    {
+      "rank": 2,
+      "title": "Raise open→timer_completed from 7.96% toward 25% guardrail",
+      "expected_impact": "WQTU",
+      "rationale": "40/88 completers stop at 1 session; WQTU needs >=3/7d — onboarding to second+ timer is largest qualified-user lever"
+    },
+    {
+      "rank": 3,
+      "title": "Convert paywall viewers to attempts (1.68% today)",
+      "expected_impact": "Revenue",
+      "rationale": "238 viewers → 4 attempts; older cohort 0% success on 3 attempts; fix catalog first then A/B paywall CTA on range_gate (first success entry_point)"
+    }
+  ],
+  "evidence_queries": [
+    "WQTU canonical 7d: SELECT count(*) FROM (SELECT person_id FROM events WHERE event='timer_completed' AND timestamp > now()-interval 7 day GROUP BY person_id HAVING count()>=3)",
+    "Paywall funnel 30d: uniq users viewed/attempt/success on paywall_view|paywall_viewed, paywall_purchase_attempt, paywall_purchase_success",
+    "WQTU trend: daily snapshot trailing-7d count 2026-05-12..2026-06-10",
+    "Cohort: app_version='1.3.55' vs older on catalog/paywall events 30d",
+    "Failures: billing_product_catalog_status by status + paywall_purchase_result by result 30d",
+    "Activation: open_users vs timer_completed users 30d (Application Opened + app_open)",
+    "Stickiness: timer_completed count distribution per person 30d",
+    "Platform: breakdown by properties.platform 30d"
+  ]
+}
