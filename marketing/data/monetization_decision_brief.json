@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-10T19:48:13Z",
-  "source": "gsd_cycle_1_posthog_live_mcp_execute_sql",
+  "generated_at": "2026-06-10T19:49:02Z",
+  "source": "posthog_hogql_gsd_stream_c_2026_06_10",
   "gsd_cycle": 1,
   "window_days": 30,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
@@ -11,40 +11,101 @@
     "closed_at": "2026-06-10T17:04:50Z",
     "close_evidence": "billing_product_catalog_status=ok + paywall_purchase_attempt on S25 (SM-S931U1) 1.3.55 @ 2026-06-10T17:03:49Z product_id=elite_tactical"
   },
+  "posthog_queries": [
+    "WQTU: distinct person_id with >=3 timer_completed in trailing 7d",
+    "timer_completed daily trend 14d",
+    "paywall funnel 7d and 30d (view/attempt/success/failed)",
+    "paywall_purchase_success revenue telemetry sum 7d/30d (not ledger)"
+  ],
   "north_star": {
     "wqtu_7d": 11,
+    "timer_completed_7d": 153,
+    "completed_users_7d": 24,
     "wqtu_target_q2_2026": 25,
-    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-10T19:47:36Z)",
-    "status": "below_target"
+    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-10T19:47:48Z)",
+    "targets": {
+      "checkpoint_2026_03_31": 8,
+      "quarter_2026_06_30": 25
+    },
+    "on_track_checkpoint": true,
+    "on_track_quarter": false,
+    "status": "below_target",
+    "metric_id": "posthog_hogql_wqtu_distinct_persons_timer_completed_ge3_7d"
   },
+  "timer_completed_trend_14d": [
+    {"day": "2026-06-10", "events": 19, "users": 3},
+    {"day": "2026-06-09", "events": 17, "users": 8},
+    {"day": "2026-06-08", "events": 7, "users": 2},
+    {"day": "2026-06-07", "events": 37, "users": 5},
+    {"day": "2026-06-06", "events": 19, "users": 3},
+    {"day": "2026-06-05", "events": 3, "users": 2},
+    {"day": "2026-06-04", "events": 49, "users": 5},
+    {"day": "2026-06-03", "events": 45, "users": 5},
+    {"day": "2026-06-02", "events": 5, "users": 5},
+    {"day": "2026-06-01", "events": 9, "users": 3},
+    {"day": "2026-05-31", "events": 33, "users": 4},
+    {"day": "2026-05-30", "events": 1, "users": 1},
+    {"day": "2026-05-29", "events": 17, "users": 2},
+    {"day": "2026-05-28", "events": 4, "users": 3}
+  ],
   "revenue_goal": {
     "target_usd_per_day_after_tax": 100.0,
     "pro_annual_price_usd": 29.99,
     "net_per_sale_usd_estimate": 17.84,
-    "sales_per_day_needed": 6,
-    "posthog_revenue_proxy_usd_per_day": 0.0,
+    "sales_per_day_needed": 5.6,
+    "posthog_revenue_proxy_usd_per_day": 0.59,
     "posthog_revenue_proxy_30d_sum": 29.99,
-    "gap_usd_per_day": 100.0,
-    "gap_math_note": "$29.99 gross → ~$17.84 net after 15% store fee + 30% tax → ~6 annual Pro subs/day for $100/day net (docs/marketing/monetization-roadmap.md)",
-    "metric_id": "paywall_purchase_success properties.revenue is telemetry proxy not ledger"
+    "posthog_revenue_proxy_7d_sum": 29.99,
+    "gap_usd_per_day": 99.41,
+    "gap_annual_subs_per_day": 5.57,
+    "gap_math_note": "$29.99 gross → ~$17.84 net after 15% store fee + 30% tax → ~5.6 annual Pro subs/day for $100/day net (docs/marketing/monetization-roadmap.md)",
+    "metric_id": "paywall_purchase_success properties.revenue is telemetry proxy not ledger",
+    "ledger_revenue": false
+  },
+  "gap_math": {
+    "source_doc": "docs/marketing/monetization-roadmap.md",
+    "store_fee_pct": 0.15,
+    "tax_pct": 0.30,
+    "telemetry_proxy_net_usd_per_day_30d": 0.59,
+    "telemetry_proxy_net_usd_per_day_7d": 2.55,
+    "calculation_note": "net_per_sub = gross * (1-store_fee) * (1-tax); daily proxy = (success_count * net_per_sub) / window_days"
+  },
+  "paywall_funnel": {
+    "metric_note": "PostHog event counts; paywall_purchase_success is telemetry proxy, not store ledger revenue",
+    "7d": {
+      "paywall_view": {"events": 27, "users": 13},
+      "paywall_purchase_attempt": {"events": 2, "users": 1},
+      "paywall_purchase_success": {"events": 1, "users": 1},
+      "view_to_success_rate": 0.037,
+      "attempt_to_success_rate": 0.5
+    },
+    "30d": {
+      "paywall_view": {"events": 415, "users": 216},
+      "paywall_purchase_attempt": {"events": 6, "users": 4},
+      "paywall_purchase_failed": {"events": 5, "users": 4},
+      "paywall_purchase_success": {"events": 1, "users": 1},
+      "view_to_success_rate": 0.0024,
+      "attempt_to_success_rate": 0.1667
+    }
   },
   "paywall_funnel_30d": {
-    "paywall_viewed_users": 169,
-    "paywall_viewed_events": 378,
+    "paywall_viewed_users": 216,
+    "paywall_viewed_events": 415,
     "paywall_offer_select_events": 61,
     "paywall_purchase_attempt_users": 4,
     "paywall_purchase_attempt_events": 6,
     "paywall_purchase_success_users": 1,
     "paywall_purchase_success_events": 1,
-    "view_to_attempt_pct": 2.4,
-    "attempt_to_success_pct": 25.0,
-    "view_to_success_pct": 0.6,
+    "view_to_attempt_pct": 1.9,
+    "attempt_to_success_pct": 16.7,
+    "view_to_success_pct": 0.24,
     "billing_product_not_found_android_30d": 1104,
-    "posthog_query_evidence": "execute-sql 2026-06-10T19:47:46Z project 299775"
+    "posthog_query_evidence": "execute-sql 2026-06-10T19:49:02Z project 299775"
   },
   "store_parity": {
     "android_play_api_version": "1.3.55",
     "android_play_api_version_code": 1781012436,
+    "android_public_version": "1.3.55",
     "ios_public_version": "1.3.43",
     "ios_repo_marketing_version": "1.3.55",
     "parity_gap": "iOS public 12 minor versions behind Android production",
@@ -57,7 +118,8 @@
     "android_git_tag_sha": "2a03f3f8",
     "android_ship_date_utc": "2026-06-09",
     "play_api_track": "production",
-    "play_api_status": "completed"
+    "play_api_status": "completed",
+    "public_listing_note": "post_publish_revenue_gate 2026-06-10: Android PUBLIC 1.3.55; iOS VERSION_MISMATCH 1.3.43"
   },
   "ceo_gates": {
     "testflight_signoff": {
@@ -81,6 +143,7 @@
       "job": "Android Firebase Signoff"
     }
   },
+  "snapshot": "WQTU 7d=11 (quarter target 25). First paywall_purchase_success on S25 1.3.55 ($29.99 telemetry). Revenue telemetry proxy ~$0.59/day net (30d) vs $100/day goal — gap ~$99.41/day (~5.6 annual subs/day). Android public 1.3.55; iOS public 1.3.43. Issue #1684 CLOSED.",
   "first_purchase_success_telemetry": {
     "timestamp": "2026-06-10T18:00:04Z",
     "app_version": "1.3.55",
@@ -95,11 +158,11 @@
     "ledger_revenue": true,
     "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
   },
-  "decision": "gsd_cycle_1_ios_parity_blocked_testflight_signoff_android_billing_unblocked",
+  "decision": "gsd_cycle_1_ios_parity_blocked_revenue_proxy_far_from_100_per_day",
   "priority_blocker": {
     "rank": 3,
     "category": "store_parity_ios",
-    "reason": "Revenue blocker #1684 closed (Android 1.3.55 live). Paywall view→attempt 2.4% largely historical Android billing_product_not_found (1104/30d pre-fix). iOS 1.3.55 cannot ship until CEO approves testflight-signoff on run 27296749967.",
+    "reason": "Revenue blocker #1684 closed (Android 1.3.55 live + public). Paywall view→success 0.24% (30d). iOS 1.3.55 blocked on testflight-signoff run 27296749967.",
     "next_code_cycle": "paywall_attempt_rate_after_ios_parity — validate view→attempt on 1.3.55+ cohorts post license-tester QA"
   },
   "recommended_next_actions": [
@@ -107,10 +170,10 @@
     "CEO: approve firebase-signoff on same run (Android internal proof for production gate)",
     "After signoffs: gh workflow run native-release.yml --ref release/v1.3.55 -f platform=ios",
     "refund_play_order GPA.3311-0689-1321-89557 + add iganapolsky@gmail.com to Play license testers",
-    "Hold paid ads until iOS parity + license-tester IAP QA"
+    "Hold paid ads until iOS parity + license-tester IAP QA; revenue proxy ~$0.59/day vs $100/day target"
   ],
   "gsd_cycle_1_artifact": {
     "type": "marketing_data_json_pr",
-    "branch": "feat/gsd-monetization-cycle1"
+    "branch": "feat/gsd-monetization-brief"
   }
 }
