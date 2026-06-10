@@ -106,7 +106,6 @@ jobs:
               commit = svc.edits().commit(
                   packageName=pkg,
                   editId=eid,
-                  changesNotSentForReview=True,
               ).execute()
               committed = True
               print(f"✅ Edit committed. edit_id={commit.get('id','')}")
