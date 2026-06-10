@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-10T19:08:05+00:00
+Generated: 2026-06-10T19:53:46+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **680**
+- Views: **681**
 - Offer Selects: **56**
 - Purchase Attempts: **6**
 - Purchase Successes: **1**
@@ -15,7 +15,7 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 256 |
+| failed | 251 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 256 | 113 |
+| android | unknown | failed | 251 | 110 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -53,7 +53,7 @@ Window (days): 30
 | unknown | 35 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 10 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 11 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 4 | 1 | 0 | 25.0% | 0.0% |
 
 ## Leaky Entry Points
@@ -64,16 +64,16 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3289 | 345 |
-| alarm_duration | 3091 | 323 |
-| volume | 2207 | 223 |
+| max_seconds | 3296 | 346 |
+| alarm_duration | 3092 | 324 |
+| volume | 2287 | 224 |
 | min_seconds | 2135 | 325 |
-| sound_type | 1513 | 263 |
-| repeat_enabled | 1364 | 313 |
+| sound_type | 1515 | 264 |
+| repeat_enabled | 1367 | 314 |
 | voice_callouts_enabled | 829 | 196 |
 | vibration_enabled | 638 | 237 |
 | repeat_rounds | 432 | 127 |
-| voice_gender | 378 | 231 |
+| voice_gender | 380 | 232 |
 | use_extended_range | 308 | 172 |
 | unknown | 115 | 6 |
 
