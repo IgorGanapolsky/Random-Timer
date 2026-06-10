@@ -1,6 +1,6 @@
 # Attribution Feedback Report
 
-**Generated:** 2026-06-10T20:10:53+00:00
+**Generated:** 2026-06-10T20:12:03+00:00
 
 ## Onboarding Funnel
 - First Open: **732**
